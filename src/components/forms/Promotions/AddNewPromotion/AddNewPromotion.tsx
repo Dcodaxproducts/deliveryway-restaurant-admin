@@ -190,14 +190,14 @@ export default function AddNewPromotion() {
   const pageTitle = isEditMode ? "Update Promotion" : "Add New Promotion";
 
   useEffect(() => {
-    if (isEditMode) return;
+    if (isEditMode || !isBranchAdmin) return;
     if (!authBranchId || selectedBranch) return;
 
     setSelectedBranch({
       id: authBranchId,
       name: "Current Branch",
     });
-  }, [authBranchId, isEditMode, selectedBranch]);
+  }, [authBranchId, isBranchAdmin, isEditMode, selectedBranch]);
 
   useEffect(() => {
     if (!isEditMode || !detailResponse) return;
@@ -268,7 +268,9 @@ export default function AddNewPromotion() {
     }));
   };
 
-  const selectedBranchId = getOptionId(selectedBranch) || authBranchId || "";
+  const selectedBranchId = isBranchAdmin
+    ? getOptionId(selectedBranch) || authBranchId || ""
+    : getOptionId(selectedBranch) || "";
 
   const fetchBranchOptions = async ({ search }: { search: string; page: number }) => {
     return getBranches({
@@ -323,7 +325,7 @@ export default function AddNewPromotion() {
       title: form.title.trim(),
       description: form.description.trim(),
       restaurantId,
-      branchId: selectedBranchId,
+      branchId: selectedBranchId || undefined,
       discountType: form.discountType,
       discountValue: toNumber(form.discountValue),
       maxDiscountAmount: toNumber(form.maxDiscountAmount),
@@ -353,11 +355,6 @@ export default function AddNewPromotion() {
   const validateForm = () => {
     if (!restaurantId) {
       toast.error("Restaurant ID is missing.");
-      return false;
-    }
-
-    if (!selectedBranchId) {
-      toast.error("Branch is required.");
       return false;
     }
 
@@ -453,9 +450,13 @@ export default function AddNewPromotion() {
       <form onSubmit={handleSubmit} className="space-y-8">
         <Section label="Setup Basic Info">
           <div className="space-y-2">
-            <Label className="text-[16px]">Branch *</Label>
+            <Label className="text-[16px]">
+              Branch{isBranchAdmin ? " *" : " (optional)"}
+            </Label>
             <p className="text-sm text-gray-500">
-              Select the branch where this promotion should be available.
+              {isBranchAdmin
+                ? "Select the branch where this promotion should be available."
+                : "Leave blank to make this promotion available across all branches, or choose a branch to scope it."}
             </p>
 
             {isBranchAdmin ? (
@@ -466,7 +467,7 @@ export default function AddNewPromotion() {
               <AsyncSelect
                 value={selectedBranch}
                 onChange={setSelectedBranch}
-                placeholder="Search branch"
+                placeholder="Search branch (optional)"
                 fetchOptions={fetchBranchOptions}
                 labelKey="name"
                 valueKey="id"
