@@ -59,7 +59,7 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-onest), 'Onest', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans: var(--font-onest), 'Onest', 'Onest Fallback', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'Geist Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 
   --color-background: var(--background);
@@ -114,6 +114,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-onest), 'Onest', 'Onest Fallback', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 }
 
@@ -158,7 +159,7 @@ div[role="option"][data-disabled] {
 
 @layer utilities {
   .font-onest {
-    font-family: Onest, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: var(--font-onest), Onest, "Onest Fallback", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
   .font-barlow {

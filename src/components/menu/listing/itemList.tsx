@@ -33,7 +33,7 @@ export default function ItemList({
   const pathname = usePathname();
   const isPOS = pathname?.includes("/pos");
   const { isBranchAdmin } = useAuth();
-  const canManageItems = Boolean(editing && !isBranchAdmin);
+  const canManageItems = !isBranchAdmin;
 
   const gridCols = isPOS
     ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3"
