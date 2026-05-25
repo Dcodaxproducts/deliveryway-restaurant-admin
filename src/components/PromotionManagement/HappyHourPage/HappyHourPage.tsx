@@ -66,6 +66,8 @@ export default function HappyHoursPage() {
         title="Happy Hours"
         description="Create time-based offers to increase sales during selected hours"
         showViewAll={false}
+        actionLabel="Add Happy Hour"
+        actionHref="/promotion-management/happy-hour/add"
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

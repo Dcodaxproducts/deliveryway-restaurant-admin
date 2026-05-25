@@ -463,7 +463,7 @@ export default function AddHappyHour() {
                 onChange={(e) =>
                   updateField("discountType", e.target.value as DiscountType)
                 }
-                className="h-[44px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                className="h-[52px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-base outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               >
                 <option value="FLAT">Flat Discount</option>
                 <option value="PERCENTAGE">Percentage Discount</option>

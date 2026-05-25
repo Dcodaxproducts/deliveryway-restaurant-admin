@@ -66,6 +66,8 @@ export default function PromotionsPage() {
         title="Promotions"
         description="Boost Customer Loyalty with Custom Coupon Offers"
         showViewAll={false}
+        actionLabel="Add Promotion"
+        actionHref="/promotion-management/promotions/add"
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

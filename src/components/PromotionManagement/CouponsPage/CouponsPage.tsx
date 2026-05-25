@@ -13,6 +13,8 @@ export default function CouponsPage() {
         title="Coupons"
         description="Boost Customer Loyalty with Custom Coupon Offers"
         showViewAll={false}
+        actionLabel="Add Coupon"
+        actionHref="/promotion-management/coupons/add"
       />
 
       {/* ================= STATS ================= */}
