@@ -42,7 +42,7 @@ export default function BranchesEditPage() {
   const searchParams = useSearchParams();
   const requestedBranchId = searchParams.get("branchId");
   const { token, isBranchAdmin, branchId: authBranchId } = useAuth();
-  const api = useHttpClient(token);
+  const { request } = useHttpClient(token);
   const branchId = isBranchAdmin ? authBranchId || requestedBranchId : requestedBranchId;
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function BranchesEditPage() {
     if (!branchId || !token) return;
 
     const fetchBranch = async () => {
-      const response = await api.get(`/v1/branches/${branchId}`);
+      const response = await request(`/v1/branches/${branchId}`);
 
       if (response?.error) {
         toast.error(response.error);
@@ -67,11 +67,12 @@ export default function BranchesEditPage() {
     };
 
     fetchBranch();
-  }, [api, authBranchId, branchId, isBranchAdmin, requestedBranchId, router, token]);
+  }, [authBranchId, branchId, isBranchAdmin, requestedBranchId, request, router, token]);
 
   const saveBasicInfo = async (fullSettings: any) => {
-    const response = await api.patch(
+    const response = await request(
       `/v1/branches/${branchId}`,
+      "PATCH",
       buildBranchPatchPayload(branchData as BranchFormData, fullSettings)
     );
 
@@ -85,7 +86,7 @@ export default function BranchesEditPage() {
   };
 
   const saveDeliveryConfig = async (fullSettings: any) => {
-    const response = await api.patch(`/v1/branches/${branchId}`, {
+    const response = await request(`/v1/branches/${branchId}`, "PATCH", {
       settings: fullSettings,
     });
 
@@ -101,20 +102,25 @@ export default function BranchesEditPage() {
   const saveWorkingHours = async (fullSettings: any) => {
     const settings = branchData?.settings || {};
 
-    const openingHoursResponse = await api.put(`/v1/branches/${branchId}/opening-hours`, {
-      openingHours: normalizeOpeningHoursForApi(settings.openingHours),
-      settings: {
-        holidayRanges: normalizeHolidayRangesForApi(settings.holidayRanges),
-      },
-    });
+    const openingHoursResponse = await request(
+      `/v1/branches/${branchId}/opening-hours`,
+      "PUT",
+      {
+        openingHours: normalizeOpeningHoursForApi(settings.openingHours),
+        settings: {
+          holidayRanges: normalizeHolidayRangesForApi(settings.holidayRanges),
+        },
+      }
+    );
 
     if (openingHoursResponse?.error) {
       toast.error(openingHoursResponse.error);
       return false;
     }
 
-    const branchResponse = await api.patch(
+    const branchResponse = await request(
       `/v1/branches/${branchId}`,
+      "PATCH",
       buildBranchPatchPayload(branchData as BranchFormData, fullSettings)
     );
 
