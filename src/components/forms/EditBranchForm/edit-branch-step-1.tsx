@@ -76,7 +76,11 @@ export default function EditBranchStepOne({ data, setData }: any) {
             onChange={(val) => update(["address", "country"], val)}
           />
 
-          <div /> {/* spacing */}
+          <FormInput
+            label="Postal Code"
+            value={data.address?.postalCode || data.postalCode || ""}
+            onChange={(val) => update(["address", "postalCode"], val)}
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -191,17 +195,6 @@ export default function EditBranchStepOne({ data, setData }: any) {
       {/* ================= SETTINGS ================= */}
       <Section label="Settings">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormInput
-            label="Tax Percentage"
-            value={data.settings?.taxation?.taxPercentage || ""}
-            onChange={(val) =>
-              update(
-                ["settings", "taxation", "taxPercentage"],
-                Number(val)
-              )
-            }
-          />
-
           <FormInput
             label="Estimated Prep Time"
             value={data.settings?.automation?.estimatedPrepTime || ""}

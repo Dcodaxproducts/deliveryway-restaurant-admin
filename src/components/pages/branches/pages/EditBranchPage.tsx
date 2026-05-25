@@ -20,7 +20,6 @@ import {
   normalizeDeliveryConfigForApi,
   normalizeHolidayRangesForApi,
   normalizeOpeningHoursForApi,
-  toNumber,
   type BranchFormData,
   type EditTab,
 } from "@/components/pages/branches/forms/EditBranchForm";
@@ -101,12 +100,6 @@ export default function BranchesEditPage() {
 
   const saveWorkingHours = async (fullSettings: any) => {
     const settings = branchData?.settings || {};
-    const deliveryTime =
-      branchData?.deliveryTime === "" ||
-      branchData?.deliveryTime === undefined ||
-      branchData?.deliveryTime === null
-        ? null
-        : toNumber(branchData.deliveryTime, 0);
 
     const openingHoursResponse = await api.put(`/v1/branches/${branchId}/opening-hours`, {
       openingHours: normalizeOpeningHoursForApi(settings.openingHours),
@@ -122,10 +115,7 @@ export default function BranchesEditPage() {
 
     const branchResponse = await api.patch(
       `/v1/branches/${branchId}`,
-      buildBranchPatchPayload(branchData as BranchFormData, {
-        ...fullSettings,
-        deliveryTime,
-      })
+      buildBranchPatchPayload(branchData as BranchFormData, fullSettings)
     );
 
     if (branchResponse?.error) {

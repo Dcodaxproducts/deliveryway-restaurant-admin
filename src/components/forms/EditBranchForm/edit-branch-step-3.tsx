@@ -266,16 +266,19 @@ export default function EditBranchStepThree({ data, setData }: any) {
               <Input
                 type="number"
                 min={0}
-                value={data.deliveryTime ?? ""}
+                value={data.settings?.deliveryTime ?? ""}
                 onKeyDown={blockInvalidNumberKeys}
                 onPaste={blockNegativeNumberPaste}
                 onChange={(e) =>
                   setData({
                     ...data,
-                    deliveryTime:
-                      e.target.value === ""
-                        ? null
-                        : Number(sanitizeNonNegativeNumber(e.target.value)),
+                    settings: {
+                      ...(data.settings || {}),
+                      deliveryTime:
+                        e.target.value === ""
+                          ? null
+                          : Number(sanitizeNonNegativeNumber(e.target.value)),
+                    },
                   })
                 }
                 placeholder="eg. 30"

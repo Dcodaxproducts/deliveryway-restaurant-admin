@@ -9,6 +9,7 @@ import type {
   DeliveryPolygonPoint,
   DeliveryZone,
   PostalCodeRule,
+  ZoneBand,
 } from "./types";
 
 const DAYS = [
@@ -96,6 +97,8 @@ const normalizeDeliveryZonesForApi = (zones: any): DeliveryZone[] => {
     ...(zone?.id ? { id: String(zone.id) } : {}),
     name: String(zone?.name || "").trim(),
     deliveryFee: toNumber(zone?.deliveryFee, 0),
+    minOrderAmount: toNumber(zone?.minOrderAmount, 0),
+    freeDeliveryThreshold: toNumber(zone?.freeDeliveryThreshold, 0),
     polygon: Array.isArray(zone?.polygon)
       ? zone.polygon
           .map((point: any) => normalizePolygonPoint(point))
@@ -103,6 +106,19 @@ const normalizeDeliveryZonesForApi = (zones: any): DeliveryZone[] => {
             Boolean(point)
           )
       : [],
+  }));
+};
+
+const normalizeZoneBandsForApi = (bands: any): ZoneBand[] => {
+  if (!Array.isArray(bands)) return [];
+
+  return bands.map((band) => ({
+    ...(band?.id ? { id: String(band.id) } : {}),
+    fromKm: toNumber(band?.fromKm, 0),
+    toKm: toNumber(band?.toKm, 0),
+    deliveryFee: toNumber(band?.deliveryFee, 0),
+    minOrderAmount: toNumber(band?.minOrderAmount, 0),
+    freeDeliveryThreshold: toNumber(band?.freeDeliveryThreshold, 0),
   }));
 };
 
@@ -124,6 +140,7 @@ export const normalizeDeliveryConfigForApi = (deliveryConfig: any): DeliveryConf
   isFreeDelivery: Boolean(deliveryConfig?.isFreeDelivery ?? false),
   freeDeliveryThreshold: toNumber(deliveryConfig?.freeDeliveryThreshold, 0),
   zones: normalizeDeliveryZonesForApi(deliveryConfig?.zones),
+  zoneBands: normalizeZoneBandsForApi(deliveryConfig?.zoneBands),
   postalCodeRules: normalizePostalCodeRulesForApi(deliveryConfig?.postalCodeRules),
 });
 
@@ -152,6 +169,8 @@ export const getDeliveryConfigValidationError = (deliveryConfig: DeliveryConfig)
 
       if (!zone.name) return `Zone ${index + 1} name is required`;
       if (zone.deliveryFee < 0) return `${label} delivery fee cannot be negative`;
+      if (zone.minOrderAmount < 0) return `${label} minimum order cannot be negative`;
+      if (zone.freeDeliveryThreshold < 0) return `${label} free delivery threshold cannot be negative`;
       if (!Array.isArray(zone.polygon) || zone.polygon.length < 3) {
         return `${label} must have at least 3 polygon points`;
       }
@@ -160,6 +179,16 @@ export const getDeliveryConfigValidationError = (deliveryConfig: DeliveryConfig)
         return `${label} has an invalid latitude/longitude point`;
       }
     }
+  }
+
+  for (const [index, band] of deliveryConfig.zoneBands.entries()) {
+    const label = `Zone band ${index + 1}`;
+
+    if (band.fromKm < 0 || band.toKm < 0) return `${label} distance cannot be negative`;
+    if (band.toKm <= band.fromKm) return `${label} To KM must be greater than From KM`;
+    if (band.deliveryFee < 0) return `${label} delivery fee cannot be negative`;
+    if (band.minOrderAmount < 0) return `${label} minimum order cannot be negative`;
+    if (band.freeDeliveryThreshold < 0) return `${label} free delivery threshold cannot be negative`;
   }
 
   if (deliveryConfig.mode === "POSTAL_CODE") {
@@ -183,13 +212,16 @@ export const buildBranchPatchPayload = (branchData: BranchFormData, settings: an
   name: branchData.name,
   isMain: branchData.isMain,
   branchAdmin: branchData.branchAdmin,
-  street: branchData.address?.street,
-  area: branchData.address?.area,
-  city: branchData.address?.city,
-  state: branchData.address?.state,
-  country: branchData.address?.country,
-  lat: branchData.address?.lat,
-  lng: branchData.address?.lng,
+  street: branchData.address?.street ?? branchData.street,
+  area: branchData.address?.area ?? branchData.area,
+  postalCode: branchData.address?.postalCode ?? branchData.postalCode,
+  city: branchData.address?.city ?? branchData.city,
+  state: branchData.address?.state ?? branchData.state,
+  country: branchData.address?.country ?? branchData.country,
+  lat: branchData.address?.lat ?? branchData.lat,
+  lng: branchData.address?.lng ?? branchData.lng,
+  logoUrl: branchData.logoUrl,
+  coverImage: branchData.coverImage,
   description: branchData.description,
   settings,
 });
@@ -218,6 +250,12 @@ export const buildSafeBranchSettings = (settings: any, deliveryConfig: DeliveryC
       ? settings.allowedPaymentMethods
       : DEFAULT_ALLOWED_PAYMENT_METHODS,
     tableReservationsEnabled: settings?.tableReservationsEnabled ?? false,
+    deliveryTime:
+      settings?.deliveryTime === "" ||
+      settings?.deliveryTime === undefined ||
+      settings?.deliveryTime === null
+        ? null
+        : toNumber(settings?.deliveryTime, 0),
     automation: {
       ...(settings?.automation || {}),
       autoAcceptOrders: Boolean(settings?.automation?.autoAcceptOrders ?? false),

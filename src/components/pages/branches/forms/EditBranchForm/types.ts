@@ -11,7 +11,18 @@ export type DeliveryZone = {
   id?: string;
   name: string;
   deliveryFee: number;
+  minOrderAmount: number;
+  freeDeliveryThreshold: number;
   polygon: DeliveryPolygonPoint[];
+};
+
+export type ZoneBand = {
+  id?: string;
+  fromKm: number;
+  toKm: number;
+  deliveryFee: number;
+  minOrderAmount: number;
+  freeDeliveryThreshold: number;
 };
 
 export type PostalCodeRule = {
@@ -28,6 +39,7 @@ export type DeliveryConfig = {
   isFreeDelivery: boolean;
   freeDeliveryThreshold: number;
   zones: DeliveryZone[];
+  zoneBands: ZoneBand[];
   postalCodeRules: PostalCodeRule[];
 };
 

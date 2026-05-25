@@ -113,6 +113,8 @@ const createDefaultZone = (deliveryFee = 0, center?: LatLngPoint | null) => {
     return {
       name: "",
       deliveryFee,
+      minOrderAmount: 0,
+      freeDeliveryThreshold: 0,
       polygon: [
         { lat: String(lat - offset), lng: String(lng - offset) },
         { lat: String(lat + offset), lng: String(lng - offset) },
@@ -125,6 +127,8 @@ const createDefaultZone = (deliveryFee = 0, center?: LatLngPoint | null) => {
   return {
     name: "",
     deliveryFee,
+    minOrderAmount: 0,
+    freeDeliveryThreshold: 0,
     polygon: [
       { lat: "", lng: "" },
       { lat: "", lng: "" },
@@ -132,6 +136,14 @@ const createDefaultZone = (deliveryFee = 0, center?: LatLngPoint | null) => {
     ],
   };
 };
+
+const createDefaultZoneBand = (fromKm = 0, deliveryFee = 0) => ({
+  fromKm,
+  toKm: fromKm + 5,
+  deliveryFee,
+  minOrderAmount: 0,
+  freeDeliveryThreshold: 0,
+});
 
 const createDefaultPostalCodeRule = (deliveryFee = 0) => ({
   postalCode: "",
@@ -205,6 +217,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
       : "RADIUS";
 
   const zones = Array.isArray(delivery.zones) ? delivery.zones : [];
+  const zoneBands = Array.isArray(delivery.zoneBands) ? delivery.zoneBands : [];
   const postalCodeRules = Array.isArray(delivery.postalCodeRules)
     ? delivery.postalCodeRules
     : [];
@@ -557,6 +570,46 @@ export default function EditBranchStepTwo({ data, setData }: any) {
 
     event.preventDefault();
     handleMapSearch();
+  };
+
+  const updateZoneBand = (index: number, key: string, value: any) => {
+    const nextBands = zoneBands.map((band: any, bandIndex: number) =>
+      bandIndex === index
+        ? {
+            ...band,
+            [key]: value,
+          }
+        : band
+    );
+
+    updateDeliveryConfig("zoneBands", nextBands);
+  };
+
+  const addZoneBand = () => {
+    const lastBand = zoneBands[zoneBands.length - 1];
+    const nextFromKm = lastBand ? toNumber(lastBand.toKm, 0) : 0;
+
+    updateDeliveryConfig("zoneBands", [
+      ...zoneBands,
+      createDefaultZoneBand(nextFromKm, toNumber(delivery.deliveryFee, 0)),
+    ]);
+  };
+
+  const duplicateZoneBand = (index: number) => {
+    const source = zoneBands[index];
+
+    if (!source) return;
+
+    const nextBands = [...zoneBands];
+    nextBands.splice(index + 1, 0, { ...source });
+    updateDeliveryConfig("zoneBands", nextBands);
+  };
+
+  const removeZoneBand = (index: number) => {
+    updateDeliveryConfig(
+      "zoneBands",
+      zoneBands.filter((_: any, bandIndex: number) => bandIndex !== index)
+    );
   };
 
   const updatePostalRule = (index: number, key: string, value: any) => {
@@ -1293,6 +1346,118 @@ export default function EditBranchStepTwo({ data, setData }: any) {
             </div>
           ) : null}
 
+          {deliveryMode === "RADIUS" ? (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">
+                    Distance Zone Bands
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Optional distance-based bands for delivery fee, minimum order,
+                    and free delivery threshold.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={addZoneBand}
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90"
+                >
+                  <Plus size={15} />
+                  Add Zone Band
+                </button>
+              </div>
+
+              {zoneBands.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-5 text-center text-sm text-gray-500">
+                  No distance bands configured yet. Base delivery values above
+                  will be used.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {zoneBands.map((band: any, index: number) => (
+                    <div
+                      key={`zone-band-${index}`}
+                      className="grid grid-cols-1 gap-3 rounded-2xl border border-gray-200 bg-white p-4 lg:grid-cols-3"
+                    >
+                      <FormInput
+                        label="From KM"
+                        value={toInputNumber(band?.fromKm)}
+                        onChange={(val) =>
+                          updateZoneBand(index, "fromKm", val ? Number(val) : 0)
+                        }
+                      />
+
+                      <FormInput
+                        label="To KM"
+                        value={toInputNumber(band?.toKm)}
+                        onChange={(val) =>
+                          updateZoneBand(index, "toKm", val ? Number(val) : 0)
+                        }
+                      />
+
+                      <FormInput
+                        label="Delivery Fee"
+                        value={toInputNumber(band?.deliveryFee)}
+                        onChange={(val) =>
+                          updateZoneBand(
+                            index,
+                            "deliveryFee",
+                            val ? Number(val) : 0
+                          )
+                        }
+                      />
+
+                      <FormInput
+                        label="Minimum Order Amount"
+                        value={toInputNumber(band?.minOrderAmount)}
+                        onChange={(val) =>
+                          updateZoneBand(
+                            index,
+                            "minOrderAmount",
+                            val ? Number(val) : 0
+                          )
+                        }
+                      />
+
+                      <FormInput
+                        label="Free Delivery Threshold"
+                        value={toInputNumber(band?.freeDeliveryThreshold)}
+                        onChange={(val) =>
+                          updateZoneBand(
+                            index,
+                            "freeDeliveryThreshold",
+                            val ? Number(val) : 0
+                          )
+                        }
+                      />
+
+                      <div className="flex items-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => duplicateZoneBand(index)}
+                          className="inline-flex h-11 items-center gap-2 rounded-full border border-gray-200 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        >
+                          <Copy size={14} />
+                          Duplicate
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => removeZoneBand(index)}
+                          className="inline-flex h-11 items-center justify-center rounded-full border border-red-100 bg-red-50 px-4 text-red-600 hover:bg-red-100"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : null}
+
           {deliveryMode === "ZONE" ? (
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1395,6 +1560,30 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                             updateZone(
                               zoneIndex,
                               "deliveryFee",
+                              val ? Number(val) : 0
+                            )
+                          }
+                        />
+
+                        <FormInput
+                          label="Zone Minimum Order Amount"
+                          value={toInputNumber(zone?.minOrderAmount)}
+                          onChange={(val) =>
+                            updateZone(
+                              zoneIndex,
+                              "minOrderAmount",
+                              val ? Number(val) : 0
+                            )
+                          }
+                        />
+
+                        <FormInput
+                          label="Zone Free Delivery Threshold"
+                          value={toInputNumber(zone?.freeDeliveryThreshold)}
+                          onChange={(val) =>
+                            updateZone(
+                              zoneIndex,
+                              "freeDeliveryThreshold",
                               val ? Number(val) : 0
                             )
                           }
@@ -1593,19 +1782,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
         </div>
       </Section>
 
-      {/* ================= TAXATION ================= */}
-      <Section label="Taxation">
-        <FormInput
-          label="Tax Percentage"
-          value={toInputNumber(settings.taxation?.taxPercentage)}
-          onChange={(val) =>
-            update(
-              ["settings", "taxation", "taxPercentage"],
-              val ? Number(val) : 0
-            )
-          }
-        />
-      </Section>
+      {/* Taxation is intentionally hidden for now. */}
     </div>
   );
 }

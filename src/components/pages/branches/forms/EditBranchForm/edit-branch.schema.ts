@@ -10,7 +10,18 @@ export const deliveryZoneSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(1, validationMessages.required),
   deliveryFee: z.coerce.number().min(0),
+  minOrderAmount: z.coerce.number().min(0),
+  freeDeliveryThreshold: z.coerce.number().min(0),
   polygon: z.array(deliveryPolygonPointSchema),
+});
+
+export const zoneBandSchema = z.object({
+  id: z.string().optional(),
+  fromKm: z.coerce.number().min(0),
+  toKm: z.coerce.number().min(0),
+  deliveryFee: z.coerce.number().min(0),
+  minOrderAmount: z.coerce.number().min(0),
+  freeDeliveryThreshold: z.coerce.number().min(0),
 });
 
 export const postalCodeRuleSchema = z.object({
@@ -27,6 +38,7 @@ export const deliveryConfigSchema = z.object({
   isFreeDelivery: z.boolean(),
   freeDeliveryThreshold: z.coerce.number().min(0),
   zones: z.array(deliveryZoneSchema),
+  zoneBands: z.array(zoneBandSchema),
   postalCodeRules: z.array(postalCodeRuleSchema),
 });
 

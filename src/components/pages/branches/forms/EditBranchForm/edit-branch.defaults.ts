@@ -8,6 +8,7 @@ export const DEFAULT_DELIVERY_CONFIG: DeliveryConfig = {
   isFreeDelivery: false,
   freeDeliveryThreshold: 0,
   zones: [],
+  zoneBands: [],
   postalCodeRules: [],
 };
 
