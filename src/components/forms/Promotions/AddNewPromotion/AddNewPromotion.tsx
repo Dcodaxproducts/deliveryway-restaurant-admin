@@ -449,6 +449,7 @@ export default function AddNewPromotion() {
     <PageWrapper title={pageTitle}>
       <form onSubmit={handleSubmit} className="space-y-8">
         <Section label="Setup Basic Info">
+          {/* Branch selection is intentionally hidden for now.
           <div className="space-y-2">
             <Label className="text-[16px]">
               Branch{isBranchAdmin ? " *" : " (optional)"}
@@ -474,6 +475,7 @@ export default function AddNewPromotion() {
               />
             )}
           </div>
+          */}
 
           <FormInput
             label="Offer Title *"
