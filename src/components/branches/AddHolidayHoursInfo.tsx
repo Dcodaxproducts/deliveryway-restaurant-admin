@@ -1,0 +1,594 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  AlertCircle,
+  CalendarDays,
+  Clock3,
+  Loader2,
+  Plus,
+  Save,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
+import { toast } from "sonner";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+
+import {
+  useGetBranchHolidayOpeningHours,
+  useUpdateBranchHolidayOpeningHours,
+} from "@/hooks/useBranches";
+
+type AddHolidayHoursInfoProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  branchId: string;
+  branchName?: string;
+};
+
+type HolidayHourRow = {
+  id: string;
+  date: string;
+  isClosed: boolean;
+  openTime: string;
+  closeTime: string;
+  note: string;
+};
+
+const createRowId = () =>
+  `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+const createEmptyHolidayRow = (): HolidayHourRow => ({
+  id: createRowId(),
+  date: "",
+  isClosed: false,
+  openTime: "10:00",
+  closeTime: "18:00",
+  note: "",
+});
+
+const extractHolidayOpeningHours = (response: any): any[] => {
+  const candidates = [
+    response?.data?.holidayOpeningHours,
+    response?.data?.data?.holidayOpeningHours,
+    response?.holidayOpeningHours,
+    response?.data,
+    response,
+  ];
+
+  const raw = candidates.find((candidate) => Array.isArray(candidate));
+
+  return Array.isArray(raw) ? raw : [];
+};
+
+const normalizeHolidayRow = (item: any): HolidayHourRow => ({
+  id: String(item?.id || createRowId()),
+  date: item?.date || "",
+  isClosed: Boolean(item?.isClosed),
+  openTime: item?.openTime || "",
+  closeTime: item?.closeTime || "",
+  note: item?.note || "",
+});
+
+export default function AddHolidayHoursInfo({
+  open,
+  onOpenChange,
+  branchId,
+  branchName,
+}: AddHolidayHoursInfoProps) {
+  const [rows, setRows] = useState<HolidayHourRow[]>([]);
+
+  const {
+    data: holidayHoursResponse,
+    isLoading,
+    isFetching,
+  } = useGetBranchHolidayOpeningHours(open ? branchId : undefined);
+
+  const { mutate: updateHolidayHours, isPending: isSaving } =
+    useUpdateBranchHolidayOpeningHours();
+
+  const fetching = isLoading || isFetching;
+
+  const closedCount = useMemo(() => {
+    return rows.filter((row) => row.isClosed).length;
+  }, [rows]);
+
+  const openCount = useMemo(() => {
+    return rows.filter((row) => !row.isClosed).length;
+  }, [rows]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const apiRows = extractHolidayOpeningHours(holidayHoursResponse);
+
+    if (apiRows.length > 0) {
+      setRows(apiRows.map(normalizeHolidayRow));
+      return;
+    }
+
+    if (!fetching) {
+      setRows([]);
+    }
+  }, [open, holidayHoursResponse, fetching]);
+
+  const handleAddRow = () => {
+    setRows((prev) => [...prev, createEmptyHolidayRow()]);
+  };
+
+  const handleRemoveRow = (rowId: string) => {
+    setRows((prev) => prev.filter((row) => row.id !== rowId));
+  };
+
+  const handleChange = (
+    rowId: string,
+    field: keyof HolidayHourRow,
+    value: string | boolean
+  ) => {
+    setRows((prev) =>
+      prev.map((row) => {
+        if (row.id !== rowId) return row;
+
+        return {
+          ...row,
+          [field]: value,
+        };
+      })
+    );
+  };
+
+  const validateRows = () => {
+    if (rows.length === 0) {
+      toast.error("Please add at least one holiday entry");
+      return false;
+    }
+
+    const usedDates = new Set<string>();
+
+    for (const row of rows) {
+      if (!row.date) {
+        toast.error("Holiday date is required");
+        return false;
+      }
+
+      if (usedDates.has(row.date)) {
+        toast.error("Duplicate holiday dates are not allowed");
+        return false;
+      }
+
+      usedDates.add(row.date);
+
+      if (!row.isClosed && (!row.openTime || !row.closeTime)) {
+        toast.error("Open time and close time are required for open holidays");
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleSubmit = () => {
+    if (!branchId || isSaving) return;
+
+    if (!validateRows()) return;
+
+    updateHolidayHours(
+      {
+        branchId,
+        payload: {
+          holidayOpeningHours: rows.map((row) => ({
+            date: row.date,
+            isClosed: row.isClosed,
+            openTime: row.openTime || null,
+            closeTime: row.closeTime || null,
+            note: row.note?.trim() || null,
+          })),
+        },
+      },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+        },
+      }
+    );
+  };
+
+  const handleClose = (value: boolean) => {
+    if (isSaving) return;
+    onOpenChange(value);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose} modal>
+      <DialogContent
+        className="
+          flex max-h-[92vh] w-[calc(100vw-24px)] max-w-[760px] flex-col
+          overflow-hidden rounded-[24px] border-0 bg-white p-0 shadow-2xl
+          sm:w-[calc(100vw-48px)]
+        "
+        onCloseAutoFocus={(event) => event.preventDefault()}
+      >
+        <DialogHeader className="shrink-0 border-b border-gray-100 bg-gradient-to-br from-primary/10 via-white to-orange-50 px-5 py-5 sm:px-6">
+          <div className="flex flex-col gap-5">
+            <div className="flex items-start gap-4 pr-8">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-primary text-white shadow-lg shadow-primary/25">
+                <CalendarDays size={23} />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-primary shadow-sm ring-1 ring-primary/10">
+                  <Sparkles size={13} />
+                  Special schedule
+                </div>
+
+                <DialogTitle className="text-[22px] font-semibold leading-tight tracking-tight text-gray-950 sm:text-[26px]">
+                  Holiday Opening Hours
+                </DialogTitle>
+
+                <p className="mt-2 max-w-[560px] text-sm leading-6 text-gray-600">
+                  Configure branch-specific holiday dates, closures, or custom
+                  operating hours.
+                </p>
+
+                <div className="mt-3 inline-flex max-w-full rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-gray-700 ring-1 ring-gray-100">
+                  <span className="truncate">{branchName || "Selected branch"}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <SummaryCard label="Entries" value={rows.length} />
+              <SummaryCard label="Open" value={openCount} />
+              <SummaryCard label="Closed" value={closedCount} />
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="min-h-0 flex-1 overflow-y-auto bg-[#F8FAFC] px-5 py-5 sm:px-6">
+          <div className="mb-4 rounded-[18px] border border-blue-100 bg-blue-50/80 p-4">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-white text-blue-600 shadow-sm">
+                <AlertCircle size={18} />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-sm font-semibold leading-5 text-gray-900">
+                  These hours override normal branch opening hours for selected
+                  dates.
+                </p>
+
+                <p className="mt-1 text-sm leading-6 text-gray-600">
+                  Add one row per holiday date. Mark it closed for full-day
+                  closure, or keep it open and provide custom operating times.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {fetching ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <HolidayRowSkeleton key={index} />
+              ))}
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="flex min-h-[260px] flex-col items-center justify-center rounded-[22px] border border-dashed border-gray-200 bg-white p-6 text-center sm:p-8">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-[18px] bg-primary/10 text-primary">
+                <CalendarDays size={26} />
+              </div>
+
+              <h3 className="text-base font-semibold text-gray-900">
+                No holiday hours added yet
+              </h3>
+
+              <p className="mt-2 max-w-[420px] text-sm leading-6 text-gray-500">
+                Create a holiday schedule for Eid, Christmas, New Year, public
+                holidays, or custom branch closure dates.
+              </p>
+
+              <Button
+                type="button"
+                onClick={handleAddRow}
+                className="mt-5 h-[44px] rounded-[14px] bg-primary px-5 text-white hover:bg-primary/90"
+              >
+                <Plus size={16} className="mr-2" />
+                Add Holiday Hours
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {rows.map((row, index) => (
+                <HolidayHourItem
+                  key={row.id}
+                  row={row}
+                  index={index}
+                  isSaving={isSaving}
+                  onChange={handleChange}
+                  onRemove={handleRemoveRow}
+                />
+              ))}
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddRow}
+                disabled={isSaving}
+                className="h-[46px] w-full rounded-[16px] border-dashed border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              >
+                <Plus size={16} className="mr-2" />
+                Add Another Holiday
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div className="shrink-0 border-t border-gray-100 bg-white px-5 py-4 sm:px-6">
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-gray-400">
+              Branch ID:{" "}
+              <span className="font-medium text-gray-600">{branchId}</span>
+            </p>
+
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSaving}
+                onClick={() => onOpenChange(false)}
+                className="h-[44px] rounded-[14px] border-gray-200 px-5 text-gray-700"
+              >
+                Cancel
+              </Button>
+
+              <Button
+                type="button"
+                disabled={isSaving || fetching}
+                onClick={handleSubmit}
+                className="h-[44px] rounded-[14px] bg-primary px-6 text-white shadow-sm hover:bg-primary/90 disabled:opacity-60"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 size={17} className="mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save size={17} className="mr-2" />
+                    Save Holiday Hours
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function HolidayHourItem({
+  row,
+  index,
+  isSaving,
+  onChange,
+  onRemove,
+}: {
+  row: HolidayHourRow;
+  index: number;
+  isSaving: boolean;
+  onChange: (
+    rowId: string,
+    field: keyof HolidayHourRow,
+    value: string | boolean
+  ) => void;
+  onRemove: (rowId: string) => void;
+}) {
+  return (
+    <div className="overflow-hidden rounded-[22px] border border-gray-100 bg-white shadow-sm">
+      <div className="flex flex-col gap-3 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-primary/10 text-sm font-semibold text-primary">
+            {index + 1}
+          </div>
+
+          <div className="min-w-0">
+            <h4 className="text-sm font-semibold text-gray-900">
+              Holiday Schedule
+            </h4>
+
+            <p className="truncate text-xs text-gray-500">
+              {row.date || "Select a holiday date"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 sm:justify-end">
+          <label className="flex cursor-pointer items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-100">
+            <Checkbox
+              checked={row.isClosed}
+              disabled={isSaving}
+              onCheckedChange={(checked) =>
+                onChange(row.id, "isClosed", Boolean(checked))
+              }
+              className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            />
+            Closed
+          </label>
+
+          <button
+            type="button"
+            disabled={isSaving}
+            onClick={() => onRemove(row.id)}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label="Remove holiday row"
+          >
+            <Trash2 size={17} />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 p-4 md:grid-cols-[180px_1fr]">
+        <FieldGroup label="Holiday Date" required>
+          <div className="relative">
+            <CalendarDays
+              size={17}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+
+            <input
+              type="date"
+              value={row.date}
+              disabled={isSaving}
+              onChange={(event) =>
+                onChange(row.id, "date", event.target.value)
+              }
+              className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+            />
+          </div>
+        </FieldGroup>
+
+        <div
+          className={`grid gap-4 ${
+            row.isClosed ? "md:grid-cols-1" : "md:grid-cols-2"
+          }`}
+        >
+          {row.isClosed ? (
+            <div className="flex min-h-[76px] items-center rounded-[16px] border border-red-100 bg-red-50 px-4">
+              <div>
+                <p className="text-sm font-semibold text-red-700">
+                  Closed for this holiday
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-red-500">
+                  Customers will see this branch as unavailable on this date.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <FieldGroup label="Open Time" required>
+                <div className="relative">
+                  <Clock3
+                    size={17}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+
+                  <input
+                    type="time"
+                    value={row.openTime}
+                    disabled={isSaving}
+                    onChange={(event) =>
+                      onChange(row.id, "openTime", event.target.value)
+                    }
+                    className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+                </div>
+              </FieldGroup>
+
+              <FieldGroup label="Close Time" required>
+                <div className="relative">
+                  <Clock3
+                    size={17}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+
+                  <input
+                    type="time"
+                    value={row.closeTime}
+                    disabled={isSaving}
+                    onChange={(event) =>
+                      onChange(row.id, "closeTime", event.target.value)
+                    }
+                    className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+                </div>
+              </FieldGroup>
+            </>
+          )}
+        </div>
+
+        <div className="md:col-span-2">
+          <FieldGroup label="Note">
+            <input
+              type="text"
+              value={row.note}
+              disabled={isSaving}
+              placeholder="Example: Eid holiday, Christmas closure, New Year schedule..."
+              onChange={(event) =>
+                onChange(row.id, "note", event.target.value)
+              }
+              className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+            />
+          </FieldGroup>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FieldGroup({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-semibold text-gray-600">
+        {label}
+        {required ? <span className="ml-1 text-primary">*</span> : null}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+function SummaryCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-[16px] bg-white/90 px-3 py-3 text-center shadow-sm ring-1 ring-gray-100 backdrop-blur">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 sm:text-[11px]">
+        {label}
+      </p>
+
+      <p className="mt-1 text-lg font-semibold leading-none text-gray-900">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function HolidayRowSkeleton() {
+  return (
+    <div className="animate-pulse rounded-[22px] border border-gray-100 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-[12px] bg-gray-200" />
+
+          <div>
+            <div className="h-4 w-[140px] rounded bg-gray-200" />
+            <div className="mt-2 h-3 w-[90px] rounded bg-gray-100" />
+          </div>
+        </div>
+
+        <div className="h-8 w-[90px] rounded-full bg-gray-100" />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="h-[44px] rounded-[14px] bg-gray-100" />
+        <div className="h-[44px] rounded-[14px] bg-gray-100" />
+        <div className="h-[44px] rounded-[14px] bg-gray-100" />
+      </div>
+    </div>
+  );
+}

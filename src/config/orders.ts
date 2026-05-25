@@ -1,0 +1,82 @@
+import { StatItem } from "@/types/stats";
+export const statsData: StatItem[] = [
+  {
+    _id: "1",
+    title: "Total Orders",
+    value: "24",
+    icon: "orders",
+    trend: { direction: "up", percentage: "+3%" },
+  },
+  {
+    _id: "2",
+    title: "Ongoing",
+    value: "12",
+    icon: "ongoing",
+    trend: { direction: "up", percentage: "+2%" },
+  },
+  {
+    _id: "3",
+    title: "Completed",
+    value: "18",
+    icon: "completed",
+    trend: { direction: "up", percentage: "+5%" },
+  },
+  {
+    _id: "4",
+    title: "Cancelled",
+    value: "2",
+    icon: "cancelled",
+    iconStyle: "danger",
+    trend: { direction: "down", percentage: "-1%" },
+  },
+];
+export const orders = [
+  {
+    id: "#5552375",
+    date: "26 March 2020, 02:12 AM",
+    customer: "Emilia Johanson",
+    location: "67 St. John’s Road, London",
+    status: "Delivered",
+    amount: "$251.16",
+  },
+  {
+    id: "#5552376",
+    date: "26 March 2020, 02:12 AM",
+    customer: "Emilia Johanson",
+    location: "67 St. John’s Road, London",
+    status: "Pending",
+    amount: "$251.16",
+  },
+  {
+    id: "#5552377",
+    date: "26 March 2020, 02:12 AM",
+    customer: "Emilia Johanson",
+    location: "67 St. John’s Road, London",
+    status: "Processing",
+    amount: "$251.16",
+  },
+  {
+    id: "#5552378",
+    date: "26 March 2020, 02:12 AM",
+    customer: "Emilia Johanson",
+    location: "67 St. John’s Road, London",
+    status: "Cancelled",
+    amount: "$251.16",
+  },
+  {
+    id: "#5552379",
+    date: "26 March 2020, 02:12 AM",
+    customer: "Emilia Johanson",
+    location: "67 St. John’s Road, London",
+    status: "Refunded",
+    amount: "$251.16",
+  },
+  {
+    id: "#5552380",
+    date: "26 March 2020, 02:12 AM",
+    customer: "Emilia Johanson",
+    location: "67 St. John’s Road, London",
+    status: "Delivered",
+    amount: "$251.16",
+  },
+];

@@ -1,0 +1,15 @@
+import type { DeliveryConfig } from "./types";
+
+export const DEFAULT_DELIVERY_CONFIG: DeliveryConfig = {
+  mode: "RADIUS",
+  radiusKm: 0,
+  minOrderAmount: 0,
+  deliveryFee: 0,
+  isFreeDelivery: false,
+  freeDeliveryThreshold: 0,
+  zones: [],
+  postalCodeRules: [],
+};
+
+export const DEFAULT_ALLOWED_ORDER_TYPES = ["DELIVERY"];
+export const DEFAULT_ALLOWED_PAYMENT_METHODS = ["COD"];
