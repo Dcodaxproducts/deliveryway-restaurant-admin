@@ -1,6 +1,8 @@
 import api from "@/lib/axios";
+import { parseSchema } from "@/lib/zod-errors";
 import {
   BranchValues,
+  BulkBranchSchema,
   BulkBranchValues,
   OpeningHoursValues,
 } from "@/validations/branches";
@@ -53,7 +55,17 @@ export const deleteBranch = async (id: string) => {
  */
 
 export const createBranchesBulk = async (payload: BulkBranchValues) => {
-  const { data } = await api.post("/branches/bulk", payload);
+  const result = parseSchema(BulkBranchSchema, payload);
+
+  if (!result.success) {
+    const message = Object.entries(result.errors)
+      .map(([path, error]) => `${path}: ${error}`)
+      .join("\n");
+
+    throw new Error(message || "Invalid branch import data");
+  }
+
+  const { data } = await api.post("/branches/bulk", result.data);
   return data;
 };
 

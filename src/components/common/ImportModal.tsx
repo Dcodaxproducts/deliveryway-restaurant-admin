@@ -12,11 +12,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateBranchesBulk } from "@/hooks/useBranches";
 
-import { validateSchema } from "@/lib/zod-errors";
-import {
-  BulkBranchSchema,
-  BulkBranchValues,
-} from "@/validations/branches";
+import { BulkBranchValues } from "@/validations/branches";
 
 type ImportModalProps = {
   open: boolean;
@@ -129,17 +125,6 @@ export default function ImportModal({
         restaurantId,
         branches,
       };
-
-      const result = validateSchema(BulkBranchSchema, payload);
-
-      if (!result.success) {
-        const formatted = Object.entries(result.errors)
-          .map(([path, message]) => `${path}: ${message}`)
-          .join("\n");
-
-        toast.error(formatted);
-        return;
-      }
 
       await bulkMutation.mutateAsync(payload);
 
