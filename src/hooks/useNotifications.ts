@@ -46,3 +46,32 @@ export const useUpdateNotificationSettings = () => {
     },
   });
 };
+
+import { getNotifications, markAllNotificationsSeen, type GetNotificationsParams } from "@/services/notifications";
+
+export const notificationQueryKeys = {
+  list: (params?: GetNotificationsParams) => [
+    "notifications",
+    params?.restaurantId,
+    params?.branchId,
+    params?.status,
+  ] as const,
+};
+
+export const useGetNotifications = (params?: GetNotificationsParams) => {
+  return useQuery({
+    queryKey: notificationQueryKeys.list(params),
+    queryFn: () => getNotifications(params as GetNotificationsParams),
+    enabled: Boolean(params?.restaurantId),
+  });
+};
+
+export const useMarkAllNotificationsSeen = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: markAllNotificationsSeen,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+};

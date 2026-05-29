@@ -10,22 +10,28 @@ import {
 } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
-import { useHttpClient } from "@/hooks/useHttpClient";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import {
+  useCheckoutCart,
+  useClearCart,
+  useDeleteCartItem,
+  useGetCart,
+  useGetCustomerAddresses,
+  useSetCartAddress,
+  useSetCartOrderType,
+  useUpdateCartItemQuantity,
+} from "@/hooks/usePos";
 
 export default function PosCart() {
-  const { token, branchId, isBranchAdmin } = useAuth();
-  const { get, patch, del, post } = useHttpClient(token);
+  const { branchId, isBranchAdmin } = useAuth();
 
   const [cartItems, setCartItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
 
   const [orderType, setOrderType] = useState<"TAKEAWAY" | "DELIVERY">("TAKEAWAY");
 
   const [addresses, setAddresses] = useState<any[]>([]);
-  const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
 
 const [customerId, setCustomerId] = useState<string | null>(null);
@@ -34,59 +40,35 @@ useEffect(() => {
   const id = localStorage.getItem("activeCustomerId");
   setCustomerId(id);
 }, []);
-  /* ================= FETCH CART ================= */
-  const fetchCart = async () => {
-    if (!customerId) return;
+  const cartQuery = useGetCart(customerId);
+  const addressesQuery = useGetCustomerAddresses(customerId);
+  const updateQuantityMutation = useUpdateCartItemQuantity();
+  const deleteCartItemMutation = useDeleteCartItem();
+  const clearCartMutation = useClearCart();
+  const setOrderTypeMutation = useSetCartOrderType();
+  const setAddressMutation = useSetCartAddress();
+  const checkoutMutation = useCheckoutCart();
+  const loading = cartQuery.isLoading;
+  const loadingAddresses = addressesQuery.isLoading;
 
-    try {
-      setLoading(true);
+useEffect(() => {
+  const items = cartQuery.data?.data?.items || [];
+  const formatted = items.map((i: any) => ({
+    id: i.id,
+    menuItemId: i.menuItemId,
+    name: i.menuItem.name,
+    price: Number(i.menuItem.unitPrice),
+    quantity: i.quantity,
+    img: i.menuItem.imageUrl,
+  }));
+  setCartItems(formatted);
+}, [cartQuery.data]);
 
-      const res = await get(`/v1/cart?customerId=${customerId}`);
-      const items = res?.data?.items || [];
-
-      const formatted = items.map((i: any) => ({
-        id: i.id,
-        menuItemId: i.menuItemId,
-        name: i.menuItem.name,
-        price: Number(i.menuItem.unitPrice),
-        quantity: i.quantity,
-        img: i.menuItem.imageUrl,
-      }));
-
-      setCartItems(formatted);
-    } catch (err) {
-      void err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* ================= FETCH ADDRESSES ================= */
-  const fetchAddresses = async () => {
-    if (!customerId) return;
-
-    try {
-      setLoadingAddresses(true);
-
-      const res = await get(`/v1/addresses?customerId=${customerId}`);
-      const list = res?.data || [];
-
-      setAddresses(list);
-
-      if (list.length > 0) {
-        setSelectedAddress(list[0].id);
-      }
-    } catch (err) {
-      void err;
-    } finally {
-      setLoadingAddresses(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCart();
-    fetchAddresses();
-  }, [customerId]);
+useEffect(() => {
+  const list = addressesQuery.data?.data || [];
+  setAddresses(list);
+  if (list.length > 0) setSelectedAddress(list[0].id);
+}, [addressesQuery.data]);
 
   /* ================= UPDATE ================= */
   const updateQuantity = async (id: string, type: "inc" | "dec") => {
@@ -99,9 +81,7 @@ useEffect(() => {
         : Math.max(1, item.quantity - 1);
 
     try {
-      await patch(`/v1/cart/items/${id}?customerId=${customerId}`, {
-        quantity: newQty,
-      });
+      await updateQuantityMutation.mutateAsync({ customerId, itemId: id, quantity: newQty });
 
       setCartItems((prev) =>
         prev.map((i) =>
@@ -118,7 +98,7 @@ useEffect(() => {
     if (!customerId) return;
 
     try {
-      await del(`/v1/cart/items/${id}?customerId=${customerId}`);
+      await deleteCartItemMutation.mutateAsync({ customerId, itemId: id });
       setCartItems((prev) => prev.filter((i) => i.id !== id));
       toast.success("Item removed");
     } catch {
@@ -131,7 +111,7 @@ useEffect(() => {
     if (!customerId) return;
 
     try {
-      await del(`/v1/cart?customerId=${customerId}`);
+      await clearCartMutation.mutateAsync(customerId);
       setCartItems([]);
          localStorage.removeItem("activeCustomerId");
       setAddresses([]);
@@ -144,9 +124,8 @@ setSelectedAddress(null);
   /* ================= ORDER FLOW ================= */
 
   const setOrderTypeApi = async () => {
-    const res = await patch(`/v1/cart/order-type?customerId=${customerId}`, {
-      orderType,
-    });
+    if (!customerId) return false;
+    const res = await setOrderTypeMutation.mutateAsync({ customerId, orderType });
 
     if (!res || res.error) {
       toast.error("Failed to set order type");
@@ -164,9 +143,8 @@ setSelectedAddress(null);
       return false;
     }
 
-    const res = await patch(`/v1/cart/address?customerId=${customerId}`, {
-      deliveryAddressId: selectedAddress,
-    });
+    if (!customerId) return false;
+    const res = await setAddressMutation.mutateAsync({ customerId, deliveryAddressId: selectedAddress });
 
     if (!res || res.error) {
       toast.error("Failed to set address");
@@ -192,10 +170,13 @@ setSelectedAddress(null);
       const okAddress = await setAddressApi();
       if (!okAddress) return;
 
-      const res = await post(`/v1/cart/checkout?customerId=${customerId}`, {
-        orderTime: new Date().toISOString(),
-        paymentMethod: "COD",
-        ...(isBranchAdmin && branchId ? { branchId } : {}),
+      const res = await checkoutMutation.mutateAsync({
+        customerId,
+        payload: {
+          orderTime: new Date().toISOString(),
+          paymentMethod: "COD",
+          ...(isBranchAdmin && branchId ? { branchId } : {}),
+        },
       });
 
       if (!res || res.error) {

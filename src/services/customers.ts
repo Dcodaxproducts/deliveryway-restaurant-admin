@@ -96,3 +96,16 @@ export const approveBusinessAdmin = async (id: string) => {
   );
   return data;
 };
+
+export const verifyCustomerEmail = async ({ token, otp }: { token: string; otp: string }) => {
+  const { data } = await api.post(
+    "/auth/verify-email",
+    { otp },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return data;
+};

@@ -204,3 +204,52 @@ export const getAdminPromotionStats = async (id: string) => {
 
   return response.data;
 };
+export type CouponPayload = {
+  code: string;
+  title: string;
+  discountType: "FLAT" | "PERCENTAGE" | string;
+  discountValue?: number;
+  startsAt?: string;
+  expiresAt?: string;
+  description?: string;
+  branchId?: string;
+  maxDiscountAmount?: number;
+  minOrderAmount?: number;
+  maxUses?: number;
+  maxUsesPerCustomer?: number;
+  scopeMenuItemId?: string;
+  scopeCategoryId?: string;
+  restaurantId?: string;
+};
+
+export type CouponQueryParams = {
+  restaurantId?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+};
+
+export const getCoupons = async (params?: CouponQueryParams) => {
+  const response = await api.get("/coupons", { params });
+  return response.data;
+};
+
+export const createCoupon = async (payload: Partial<CouponPayload>) => {
+  const response = await api.post("/coupons", payload);
+  return response.data;
+};
+
+export const updateCoupon = async (id: string, payload: Partial<CouponPayload>) => {
+  const response = await api.patch(`/coupons/${id}`, payload);
+  return response.data;
+};
+
+export const suspendCoupon = async (code: string) => {
+  const response = await api.post(`/coupons/${code}/suspend`, {});
+  return response.data;
+};
+
+export const activateCoupon = async (code: string) => {
+  const response = await api.post(`/coupons/${code}/activate`, {});
+  return response.data;
+};

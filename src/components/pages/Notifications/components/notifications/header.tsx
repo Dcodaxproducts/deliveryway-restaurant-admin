@@ -2,8 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import Header from "@/components/common/PageHeader";
-import { useHttpClient } from "@/hooks/useHttpClient";
-import { useAuth } from "@/hooks/useAuth";
+import { useMarkAllNotificationsSeen } from "@/hooks/useNotifications";
 import { toast } from "sonner";
 
 interface Props {
@@ -21,8 +20,8 @@ export default function NotificationsHeader({
   notifications,
   refetch,
 }: Props) {
-  const { token } = useAuth();
-  const { post, loading } = useHttpClient(token);
+  const markAllSeenMutation = useMarkAllNotificationsSeen();
+  const loading = markAllSeenMutation.isPending;
 
   const handleMarkAllRead = async () => {
     const hasPending = notifications.some((n) => n.status === "PENDING");
@@ -30,7 +29,7 @@ export default function NotificationsHeader({
     if (!hasPending) return;
 
     try {
-      await post("/v1/notifications/seen-all");
+      await markAllSeenMutation.mutateAsync();
 
       toast.success("All notifications marked as read");
       refetch();

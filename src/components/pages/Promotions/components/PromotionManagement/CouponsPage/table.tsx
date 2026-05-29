@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
@@ -11,8 +11,8 @@ import EmptyState from "@/components/common/EmptyState";
 import PromotionCreateLink from "../PromotionOverview/PromotionCreateLink";
 import PaginationSection from "@/components/common/PaginationSection";
 import { Eye, MoreHorizontal, Pencil } from "lucide-react";
-import { useHttpClient } from "@/hooks/useHttpClient";
 import { useAuth } from "@/hooks/useAuth";
+import { useGetCoupons, useToggleCouponStatus } from "@/hooks/usePromotions";
 import { useRouter } from "next/navigation";
 import {
   getString,
@@ -76,51 +76,30 @@ const toCoupon = (record: Record<string, unknown>): Coupon | null => {
 };
 
 const CouponsTable = () => {
-  const { token } = useAuth();
-  const { get, post } = useHttpClient(token);
+  const { restaurantId } = useAuth();
+  const toggleCouponStatusMutation = useToggleCouponStatus();
   const router = useRouter();
 
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [meta, setMeta] = useState<CouponsPaginationMeta | null>(null);
   const [page, setPage] = useState(1);
 
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [openView, setOpenView] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
 
-  const getStoredRestaurantId = () => {
-    const stored = localStorage.getItem("auth");
-    const parsed: unknown = stored ? JSON.parse(stored) : null;
-    return isRecord(parsed) && isRecord(parsed.user) ? getString(parsed.user, "restaurantId") : undefined;
-  };
+  const { data: couponsResponse, refetch } = useGetCoupons({
+    restaurantId: restaurantId || undefined,
+    page,
+    limit: 10,
+  });
 
-  const fetchCoupons = useCallback(async (pageNumber = 1) => {
-    const restaurantId = getStoredRestaurantId();
+  const coupons = normalizeApiRecords(couponsResponse).map(toCoupon).filter((coupon): coupon is Coupon => Boolean(coupon));
+  const meta = isRecord(couponsResponse) ? toPaginationMeta(couponsResponse.meta) : null;
 
-    if (!restaurantId) return;
 
-    const response = await get<unknown>(
-      `/v1/coupons?restaurantId=${restaurantId}&page=${pageNumber}&limit=10`
-    );
-
-    if (!response) return;
-
-    setCoupons(normalizeApiRecords(response).map(toCoupon).filter((coupon): coupon is Coupon => Boolean(coupon)));
-    setMeta(isRecord(response) ? toPaginationMeta(response.meta) : null);
-  }, [get]);
-
-  useEffect(() => {
-    if (!token) return;
-    fetchCoupons(page);
-  }, [fetchCoupons, token, page]);
 
   const toggleStatus = async (coupon: Coupon) => {
-    const endpoint = coupon.isActive
-      ? `/v1/coupons/${coupon.code}/suspend`
-      : `/v1/coupons/${coupon.code}/activate`;
-
-    await post(endpoint, {});
-    fetchCoupons(page);
+    await toggleCouponStatusMutation.mutateAsync({ code: coupon.code, isActive: coupon.isActive });
+    refetch();
   };
 
   const getSerial = (index: number) => {

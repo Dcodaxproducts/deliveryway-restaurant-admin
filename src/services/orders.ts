@@ -8,6 +8,8 @@ export interface GetOrdersParams {
   search?: string;
   status?: string;
   orderType?: string;
+  sortOrder?: string;
+  kind?: string;
 }
 
 export interface Order {
@@ -50,6 +52,8 @@ export const getOrders = async (
       ...(params.search ? { search: params.search } : {}),
       ...(params.status ? { status: params.status } : {}),
       ...(params.orderType ? { orderType: params.orderType } : {}),
+      ...(params.sortOrder ? { sortOrder: params.sortOrder } : {}),
+      ...(params.kind ? { kind: params.kind } : {}),
     },
   });
 

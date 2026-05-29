@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useHttpClient } from "@/hooks/useHttpClient"
-import { useAuth } from "./useAuth"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "./useAuth";
+import { deleteMenuCategory, getMenuCategories } from "@/services/menu/categories/menu-categories.api";
 
 export interface Category {
   id: string
@@ -11,38 +11,26 @@ export interface Category {
 }
 
 export default function useCategories() {
+  const { restaurantId } = useAuth();
+  const queryClient = useQueryClient();
 
-  const { token, restaurantId } = useAuth()
-  const { get, del, loading } = useHttpClient(token)
+  const categoriesQuery = useQuery({
+    queryKey: ["menu-categories", restaurantId],
+    queryFn: () => getMenuCategories({ restaurantId: restaurantId || undefined }),
+    enabled: Boolean(restaurantId),
+  });
 
-  const [categories, setCategories] = useState<Category[]>([])
-
-const fetchCategories = async () => {
-  if (!token || !restaurantId) return
-
-  const data = await get(`/v1/menu/categories?restaurantId=${restaurantId}`)
-
-  if (data.data) {
-    setCategories(data.data)
-  }
-}
-  const deleteCategory = async (id: string) => {
-    const res = await del(`/v1/menu/categories/${id}`)
-
-    if (res !== null) {
-      setCategories((prev) => prev.filter((c) => c.id !== id))
-    }
-  }
-
-useEffect(() => {
-  if (!token || !restaurantId) return
-  fetchCategories()
-}, [token, restaurantId])
+  const deleteCategoryMutation = useMutation({
+    mutationFn: deleteMenuCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["menu-categories"] });
+    },
+  });
 
   return {
-    categories,
-    loading,
-    refetch: fetchCategories,
-    deleteCategory,
+    categories: (categoriesQuery.data?.data || []) as Category[],
+    loading: categoriesQuery.isLoading || deleteCategoryMutation.isPending,
+    refetch: categoriesQuery.refetch,
+    deleteCategory: (id: string) => deleteCategoryMutation.mutateAsync(id),
   }
 }

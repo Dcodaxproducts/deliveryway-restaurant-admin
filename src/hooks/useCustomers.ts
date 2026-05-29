@@ -9,6 +9,7 @@ import {
   updateCustomerStatus,
   forceDeleteCustomers,
   approveBusinessAdmin,
+  verifyCustomerEmail,
 } from "@/services/customers/customers.api";
 
 /**
@@ -162,6 +163,21 @@ export const useApproveBusinessAdmin = () => {
       toast.error(
         err?.response?.data?.message || "Failed to approve business admin"
       );
+    },
+  });
+};
+
+export const useVerifyCustomerEmail = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ token, otp }: { token: string; otp: string }) =>
+      verifyCustomerEmail({ token, otp }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Verification failed");
     },
   });
 };

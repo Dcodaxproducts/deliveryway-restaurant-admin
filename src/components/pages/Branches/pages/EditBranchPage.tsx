@@ -8,7 +8,7 @@ import Header from "@/components/pages/Branches/components/header";
 import Container from "@/components/common/Container";
 import TabButton from "@/components/ui/TabButton";
 import { useAuth } from "@/hooks/useAuth";
-import { useHttpClient } from "@/hooks/useHttpClient";
+import { useGetBranchForEdit, useUpdateBranchForEdit, useUpdateOpeningHours } from "@/hooks/useBranches";
 import {
   buildBranchPatchPayload,
   buildSafeBranchSettings,
@@ -32,8 +32,6 @@ type StepConfig = {
   component: JSX.Element;
 };
 
-const getBranchResponseData = (response: any) => response?.data?.data || response?.data;
-
 export default function BranchesEditPage() {
   const [activeTab, setActiveTab] = useState<EditTab>("basicInfo");
   const [branchData, setBranchData] = useState<BranchFormData | null>(null);
@@ -41,9 +39,12 @@ export default function BranchesEditPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedBranchId = searchParams.get("branchId");
-  const { token, isBranchAdmin, branchId: authBranchId } = useAuth();
-  const { request } = useHttpClient(token);
+  const { isBranchAdmin, branchId: authBranchId } = useAuth();
+  const updateBranchMutation = useUpdateBranchForEdit();
+  const updateOpeningHoursMutation = useUpdateOpeningHours();
   const branchId = isBranchAdmin ? authBranchId || requestedBranchId : requestedBranchId;
+
+  const branchQuery = useGetBranchForEdit(branchId);
 
   useEffect(() => {
     if (isBranchAdmin && requestedBranchId && authBranchId && requestedBranchId !== authBranchId) {
@@ -52,48 +53,24 @@ export default function BranchesEditPage() {
       return;
     }
 
-    if (!branchId || !token) return;
-
-    const fetchBranch = async () => {
-      const response = await request(`/v1/branches/${branchId}`);
-
-      if (response?.error) {
-        toast.error(response.error);
-        return;
-      }
-
-      const nextBranchData = getBranchResponseData(response);
-      if (nextBranchData) setBranchData(nextBranchData);
-    };
-
-    fetchBranch();
-  }, [authBranchId, branchId, isBranchAdmin, requestedBranchId, request, router, token]);
+    if (branchQuery.data) setBranchData(branchQuery.data);
+  }, [authBranchId, branchQuery.data, isBranchAdmin, requestedBranchId, router]);
 
   const saveBasicInfo = async (fullSettings: any) => {
-    const response = await request(
-      `/v1/branches/${branchId}`,
-      "PATCH",
-      buildBranchPatchPayload(branchData as BranchFormData, fullSettings)
-    );
-
-    if (response?.error) {
-      toast.error(response.error);
-      return false;
-    }
+    await updateBranchMutation.mutateAsync({
+      id: branchId as string,
+      data: buildBranchPatchPayload(branchData as BranchFormData, fullSettings),
+    });
 
     toast.success("Basic info updated");
     return true;
   };
 
   const saveDeliveryConfig = async (fullSettings: any) => {
-    const response = await request(`/v1/branches/${branchId}`, "PATCH", {
-      settings: fullSettings,
+    await updateBranchMutation.mutateAsync({
+      id: branchId as string,
+      data: { settings: fullSettings },
     });
-
-    if (response?.error) {
-      toast.error(response.error);
-      return false;
-    }
 
     toast.success("Delivery config updated");
     return true;
@@ -102,32 +79,20 @@ export default function BranchesEditPage() {
   const saveWorkingHours = async (fullSettings: any) => {
     const settings = branchData?.settings || {};
 
-    const openingHoursResponse = await request(
-      `/v1/branches/${branchId}/opening-hours`,
-      "PUT",
-      {
+    await updateOpeningHoursMutation.mutateAsync({
+      branchId: branchId as string,
+      data: {
         openingHours: normalizeOpeningHoursForApi(settings.openingHours),
         settings: {
           holidayRanges: normalizeHolidayRangesForApi(settings.holidayRanges),
         },
-      }
-    );
+      },
+    });
 
-    if (openingHoursResponse?.error) {
-      toast.error(openingHoursResponse.error);
-      return false;
-    }
-
-    const branchResponse = await request(
-      `/v1/branches/${branchId}`,
-      "PATCH",
-      buildBranchPatchPayload(branchData as BranchFormData, fullSettings)
-    );
-
-    if (branchResponse?.error) {
-      toast.error(branchResponse.error);
-      return false;
-    }
+    await updateBranchMutation.mutateAsync({
+      id: branchId as string,
+      data: buildBranchPatchPayload(branchData as BranchFormData, fullSettings),
+    });
 
     toast.success("Working hours updated");
     return true;
@@ -164,8 +129,8 @@ export default function BranchesEditPage() {
       } else {
         setActiveTab("workingHours");
       }
-    } catch (error: any) {
-      toast.error(error?.message || "Something went wrong");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Something went wrong");
     }
   };
 

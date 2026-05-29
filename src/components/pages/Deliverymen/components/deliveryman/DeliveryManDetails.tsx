@@ -13,8 +13,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { useHttpClient } from "@/hooks/useHttpClient";
-import { useAuth } from "@/hooks/useAuth";
+import { useDeleteDeliveryman, useUpdateDeliveryman } from "@/hooks/useDeliverymen";
 import { toast } from "sonner";
 
 type DeliveryManDetailsProps = {
@@ -29,8 +28,9 @@ export default function DeliveryManDetails({
   data,
 }: DeliveryManDetailsProps) {
   const router = useRouter();
-  const { token } = useAuth();
-  const { patch, del, loading } = useHttpClient(token);
+  const updateDeliverymanMutation = useUpdateDeliveryman();
+  const deleteDeliverymanMutation = useDeleteDeliveryman();
+  const loading = updateDeliverymanMutation.isPending || deleteDeliverymanMutation.isPending;
 
   const [isBlocked, setIsBlocked] = useState(data?.isBlocked || false);
   const [showExtra, setShowExtra] = useState(false);
@@ -41,12 +41,12 @@ export default function DeliveryManDetails({
   const handleToggle = async (checked: boolean) => {
     setIsBlocked(checked);
 
-    const res = await patch(`/v1/deliverymen/${data.id}`, {
-      // isBlocked: checked,
-    });
-
-    if (res) {
+    try {
+      await updateDeliverymanMutation.mutateAsync({ id: data.id, payload: {} });
       toast.success(`Deliveryman ${checked ? "blocked" : "unblocked"}`);
+    } catch {
+      toast.error("Failed to update status");
+      setIsBlocked(!checked);
     }
   };
 
@@ -55,9 +55,9 @@ export default function DeliveryManDetails({
     const confirm = window.confirm("Are you sure you want to delete?");
     if (!confirm) return;
 
-    const res = await del(`/v1/deliverymen/${data.id}`);
+    await deleteDeliverymanMutation.mutateAsync(data.id);
 
-    if (res !== null) {
+    if (true) {
       toast.success("Deleted successfully");
       onOpenChange(false);
     }

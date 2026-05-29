@@ -10,9 +10,16 @@ import {
   getAdminPromotionCampaigns,
   getAdminPromotionsOverview,
   getAdminPromotionStats,
+  activateCoupon,
+  createCoupon,
+  getCoupons,
+  suspendCoupon,
+  updateCoupon,
   HappyHourPayload,
   PromotionCampaignPayload,
   PromotionQueryParams,
+  type CouponPayload,
+  type CouponQueryParams,
   updateAdminHappyHour,
   updateAdminPromotionCampaign,
 } from "@/services/promotions/promotions.api";
@@ -258,5 +265,56 @@ export const useGetAdminPromotionStats = (id?: string) => {
     queryKey: promotionQueryKeys.stats(id),
     queryFn: () => getAdminPromotionStats(id as string),
     enabled: Boolean(id),
+  });
+};
+
+export const couponQueryKeys = {
+  all: ["coupons"] as const,
+  list: (params?: CouponQueryParams) => [
+    "coupons",
+    params?.restaurantId,
+    params?.search,
+    params?.page,
+    params?.limit,
+  ] as const,
+};
+
+export const useGetCoupons = (params?: CouponQueryParams) => {
+  return useQuery({
+    queryKey: couponQueryKeys.list(params),
+    queryFn: () => getCoupons(params),
+    enabled: Boolean(params?.restaurantId),
+  });
+};
+
+export const useCreateCoupon = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Partial<CouponPayload>) => createCoupon(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: couponQueryKeys.all });
+    },
+  });
+};
+
+export const useUpdateCoupon = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: Partial<CouponPayload> }) =>
+      updateCoupon(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: couponQueryKeys.all });
+    },
+  });
+};
+
+export const useToggleCouponStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ code, isActive }: { code: string; isActive?: boolean }) =>
+      isActive ? suspendCoupon(code) : activateCoupon(code),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: couponQueryKeys.all });
+    },
   });
 };

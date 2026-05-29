@@ -1,42 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { toast } from "sonner";
-
-import { useAuthContext } from "@/components/providers/auth-provider";
-
 
 import OrderDetailsMain from "@/components/pages/Orders/components/orders/details/OrderDetails";
 import OrderDetailsHeader from "@/components/pages/Orders/components/orders/details/OrderDetailsHeader";
 import OrderTrackingSection from "@/components/pages/Orders/components/orders/details/OrderTrackingSection";
 import UserProfile from "@/components/pages/Orders/components/orders/details/UserProfile";
-import { useHttpClient } from "@/hooks/useHttpClient";
+import { useGetOrderById } from "@/hooks/useOrders";
 
 export default function OrderDetails() {
   const { orderId } = useParams();
-
-  const { user, token } = useAuthContext();
-  const { get, loading } = useHttpClient(token);
-
-  const [order, setOrder] = useState<any>(null);
-
-  useEffect(() => {
-    if (!orderId || !token) return;
-
-    const fetchOrder = async () => {
-      const res = await get(`/v1/orders/${orderId}`);
-
-      if (res?.error) {
-        toast.error(res.error);
-        return;
-      }
-
-      setOrder(res?.data);
-    };
-
-    fetchOrder();
-  }, [orderId, token]);
+  const { data: order, isLoading: loading } = useGetOrderById(orderId as string);
 
   if (loading || !order) {
     return <div className="p-6">Loading order...</div>;

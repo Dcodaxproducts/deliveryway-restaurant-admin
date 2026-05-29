@@ -1,48 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Container from "@/components/common/Container";
 import NotificationsHeader from "@/components/pages/Notifications/components/notifications/header";
 import Notifications from "@/components/pages/Notifications/components/notifications/Notification";
-import { useHttpClient } from "@/hooks/useHttpClient";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
+import { useGetNotifications } from "@/hooks/useNotifications";
 
 const NotificationsPage = () => {
-  const { token, restaurantId, branchId, isBranchAdmin } = useAuth();
-  const { get, loading } = useHttpClient(token);
-
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const { restaurantId, branchId, isBranchAdmin } = useAuth();
   const [selectedTab, setSelectedTab] = useState("all");
 
-  const fetchNotifications = async () => {
-    if (!restaurantId) return;
-
-    try {
-      let url = `/v1/notifications?restaurantId=${restaurantId}${isBranchAdmin && branchId ? `&branchId=${branchId}` : ""}`;
-
-      if (selectedTab === "pending") {
-        url += `&status=PENDING`;
-      }
-
-      const res = await get(url);
-      if (!res) return;
-
-      setNotifications(res?.data || []);
-    } catch (err) {
-      toast.error("Failed to fetch notifications");
-    }
-  };
-
-  useEffect(() => {
-    if (!token) return;
-    fetchNotifications();
-  }, [token, selectedTab, restaurantId, branchId, isBranchAdmin]);
-
-  /*  Check unread */
-  const hasUnread = notifications.some(
-    (n) => n.status === "PENDING"
+  const { data: notificationsResponse, isLoading: loading, refetch } = useGetNotifications(
+    restaurantId
+      ? {
+          restaurantId,
+          ...(isBranchAdmin && branchId ? { branchId } : {}),
+          ...(selectedTab === "pending" ? { status: "pending" } : {}),
+        }
+      : undefined
   );
+
+  const notifications = notificationsResponse?.data || [];
+  const hasUnread = notifications.some((notification: { seen?: boolean }) => !notification.seen);
 
   return (
     <Container>
@@ -55,7 +35,7 @@ const NotificationsPage = () => {
         }
         hasUnread={hasUnread}
         notifications={notifications}
-        refetch={fetchNotifications}
+        refetch={() => refetch()}
       />
 
       <Notifications

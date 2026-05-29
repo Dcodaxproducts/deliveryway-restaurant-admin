@@ -4,9 +4,9 @@ import { Check } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useGetRestaurants } from "@/hooks/useRestaurants";
 
 import { useAuthContext } from "@/components/providers/auth-provider";
-import { useHttpClient } from "@/hooks/useHttpClient";
 import {
   getRecordValue,
   getStoredAuth,
@@ -28,12 +28,11 @@ export default function ContextGate() {
   const pathname = usePathname();
 
   const { user, loading, setUser, token, logout } = useAuthContext();
-  const { get } = useHttpClient(token);
 
   const [open, setOpen] = useState(false);
   const [restaurants, setRestaurants] = useState<RestaurantOption[]>([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantOption | null>(null);
-  const [isFetching, setIsFetching] = useState(false);
+  const { data: restaurantsResponse, isFetching } = useGetRestaurants(Boolean(open && Boolean(token)));
 
   useEffect(() => {
     if (pathname === "/login") {
@@ -56,40 +55,27 @@ export default function ContextGate() {
     setOpen(!user.restaurantId);
   }, [user, loading, token, pathname]);
 
-  const fetchRestaurants = async () => {
-    try {
-      setIsFetching(true);
-
-      const res = await get("/v1/restaurants");
-      const data = isRecord(res) ? getRecordValue(res, "data") : undefined;
-      const rows = Array.isArray(data) ? data : [];
-      const filtered = rows.reduce<RestaurantOption[]>((acc, row) => {
-        if (!isRecord(row)) return acc;
-
-        const id = getStringValue(row, "id");
-        if (!id) return acc;
-
-        const restaurant = {
-          id,
-          name: getStringValue(row, "name"),
-          tenantId: getStringValue(row, "tenantId") ?? null,
-        };
-
-        if (restaurant.tenantId === user?.tenantId) acc.push(restaurant);
-        return acc;
-      }, []);
-
-      setRestaurants(filtered);
-    } catch {
-      toast.error("Failed to load restaurants");
-    } finally {
-      setIsFetching(false);
-    }
-  };
-
   useEffect(() => {
-    if (open && token) fetchRestaurants();
-  }, [open, token]);
+    const data = isRecord(restaurantsResponse) ? getRecordValue(restaurantsResponse, "data") : undefined;
+    const rows = Array.isArray(data) ? data : [];
+    const filtered = rows.reduce<RestaurantOption[]>((acc, row) => {
+      if (!isRecord(row)) return acc;
+
+      const id = getStringValue(row, "id");
+      if (!id) return acc;
+
+      const restaurant = {
+        id,
+        name: getStringValue(row, "name"),
+        tenantId: getStringValue(row, "tenantId") ?? null,
+      };
+
+      if (restaurant.tenantId === user?.tenantId) acc.push(restaurant);
+      return acc;
+    }, []);
+
+    setRestaurants(filtered);
+  }, [restaurantsResponse, user?.tenantId]);
 
   const handleConfirm = () => {
     if (!selectedRestaurant) {

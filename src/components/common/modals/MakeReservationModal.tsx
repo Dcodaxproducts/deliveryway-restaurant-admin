@@ -25,9 +25,10 @@ import ModalActionFooter from "@/components/pages/Pos/components/pos/PosModalAct
 import AsyncSelect from "@/components/ui/AsyncSelect";
 
 import { useAuthContext } from "@/components/providers/auth-provider";
-import { useHttpClient } from "@/hooks/useHttpClient";
 import { toast } from "sonner";
 import { useGetBranches } from "@/hooks/useBranches";
+import { useGetCustomersList } from "@/hooks/useCustomers";
+import { useCreateTableReservation } from "@/hooks/useReservations";
 
 export default function MakeReservationModal({
   open,
@@ -37,8 +38,9 @@ export default function MakeReservationModal({
   onOpenChange: (open: boolean) => void;
 }) {
   const router = useRouter();
-  const { user, token } = useAuthContext();
-  const { get, post, loading } = useHttpClient(token);
+  const { user } = useAuthContext();
+  const createReservationMutation = useCreateTableReservation();
+  const loading = createReservationMutation.isPending;
 
   const restaurantId = user?.restaurantId ?? undefined;
 
@@ -57,6 +59,12 @@ export default function MakeReservationModal({
     restaurantId,
   });
 
+
+  const customerQuery = useGetCustomersList({
+    restaurantId,
+    page: 1,
+  });
+
   const fetchBranches = async ({ search }: any) => {
     if (!restaurantId) return { data: [] };
 
@@ -72,14 +80,8 @@ export default function MakeReservationModal({
 const fetchCustomers = async ({ search, page }: any) => {
   if (!restaurantId) return { data: [], meta: {} };
 
-  let url = `/v1/admin/users/customers?restaurantId=${restaurantId}&page=${page}`;
-
-  if (search) url += `&search=${search}`;
-
-  const res = await get(url);
-
-  const raw =
-    res?.data?.data || res?.data || [];
+  const res = await customerQuery.refetch({ throwOnError: false });
+  const raw = res.data?.data?.data || res.data?.data || [];
 
   const normalized = raw.map((u: any) => ({
     ...u,
@@ -90,7 +92,7 @@ const fetchCustomers = async ({ search, page }: any) => {
 
   return {
     data: normalized,
-    meta: res?.data?.meta || res?.meta,
+    meta: res.data?.data?.meta || res.data?.meta,
   };
 };
 
@@ -118,10 +120,10 @@ const fetchCustomers = async ({ search, page }: any) => {
         note: note || "",
       };
 
-      const res = await post(
-        `/v1/customer-app/table-reservations?customerId=${selectedCustomer?.id}`,
-        payload
-      );
+      const res = await createReservationMutation.mutateAsync({
+        customerId: selectedCustomer?.id,
+        payload,
+      });
 
       if (res?.error) {
         toast.error(res.error);

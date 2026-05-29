@@ -795,3 +795,20 @@ export const useReorderMenuItems = () => {
     },
   });
 };
+
+export const useAttachModifierGroupToItemWithSort = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ itemId, groupId, sortOrder }: { itemId: string; groupId: string; sortOrder?: number }) =>
+      attachModifierGroupToItem(itemId, groupId, sortOrder !== undefined ? { sortOrder } : undefined),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["menu-items"] });
+      queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
+      toast.success("Modifier group attached successfully!");
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Failed to attach modifier group to item");
+    },
+  });
+};

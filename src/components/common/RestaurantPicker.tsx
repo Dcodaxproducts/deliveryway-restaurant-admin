@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Check, Store } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useHttpClient } from "@/hooks/useHttpClient";
 import { toast } from "sonner";
+import { useGetRestaurants } from "@/hooks/useRestaurants";
 import { useRouter } from "next/navigation";
 import {
   canSwitchRestaurant,
@@ -25,7 +25,6 @@ type RestaurantOption = {
 export default function RestaurantPicker() {
   const { token, user, setUser, isBranchAdmin, branchId } = useAuth();
   const { data: assignedBranch } = useGetBranch(isBranchAdmin && branchId ? branchId : "");
-  const { get } = useHttpClient(token);
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -33,7 +32,7 @@ export default function RestaurantPicker() {
   const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantOption | null>(null);
 
   const [open, setOpen] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
+  const { data: restaurantsResponse, isFetching } = useGetRestaurants(Boolean(token && user?.id && canSwitchRestaurant(user)));
 
   const handleLogout = (): void => {
     localStorage.removeItem("auth");
@@ -44,42 +43,27 @@ export default function RestaurantPicker() {
     }, 500);
   };
 
-  const fetchRestaurants = async () => {
-    if (!canSwitchRestaurant(user)) return;
-
-    try {
-      setIsFetching(true);
-
-      const res = await get("/v1/restaurants");
-      const data = isRecord(res) ? getRecordValue(res, "data") : undefined;
-      const rows = Array.isArray(data) ? data : [];
-      const filtered = rows.reduce<RestaurantOption[]>((acc, row) => {
-        if (!isRecord(row)) return acc;
-
-        const id = getStringValue(row, "id");
-        if (!id) return acc;
-
-        const restaurant = {
-          id,
-          name: getStringValue(row, "name"),
-          tenantId: getStringValue(row, "tenantId") ?? null,
-        };
-
-        if (restaurant.tenantId === user?.tenantId) acc.push(restaurant);
-        return acc;
-      }, []);
-
-      setRestaurants(filtered);
-    } catch {
-      toast.error("Failed to fetch restaurants");
-    } finally {
-      setIsFetching(false);
-    }
-  };
-
   useEffect(() => {
-    if (token && user?.id && canSwitchRestaurant(user)) fetchRestaurants();
-  }, [token, user?.id, user?.role]);
+    const data = isRecord(restaurantsResponse) ? getRecordValue(restaurantsResponse, "data") : undefined;
+    const rows = Array.isArray(data) ? data : [];
+    const filtered = rows.reduce<RestaurantOption[]>((acc, row) => {
+      if (!isRecord(row)) return acc;
+
+      const id = getStringValue(row, "id");
+      if (!id) return acc;
+
+      const restaurant = {
+        id,
+        name: getStringValue(row, "name"),
+        tenantId: getStringValue(row, "tenantId") ?? null,
+      };
+
+      if (restaurant.tenantId === user?.tenantId) acc.push(restaurant);
+      return acc;
+    }, []);
+
+    setRestaurants(filtered);
+  }, [restaurantsResponse, user?.tenantId]);
 
   useEffect(() => {
     if (!user?.restaurantId || restaurants.length === 0) return;

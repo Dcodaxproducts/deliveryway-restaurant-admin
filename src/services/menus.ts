@@ -193,10 +193,12 @@ export const deleteModifier = async (id: string) => {
 
 export const attachModifierGroupToItem = async (
   itemId: string,
-  groupId: string
+  groupId: string,
+  payload?: { sortOrder?: number }
 ) => {
   const { data } = await api.post(
-    `/menu/items/${itemId}/modifier-groups/${groupId}`
+    `/menu/items/${itemId}/modifier-groups/${groupId}`,
+    payload
   );
   return data;
 };

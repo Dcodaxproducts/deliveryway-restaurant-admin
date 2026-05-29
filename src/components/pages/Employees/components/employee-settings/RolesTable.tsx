@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useHttpClient } from "@/hooks/useHttpClient";
 import { useAuthContext } from "@/components/providers/auth-provider";
+import { useDeleteStaffRole, useGetStaffRoles, useUpdateStaffRole } from "@/hooks/useEmployees";
 
 import {
   Table,
@@ -45,51 +45,36 @@ const RolesTable = ({
   restaurantId?: string;
   branchId?: string;
 }) => {
-  const { token, user } = useAuthContext();
+  const { user } = useAuthContext();
   const isBranchAdmin = user?.role === "BRANCH_ADMIN";
-  const { get, patch, del } = useHttpClient(token);
-
-  const [roles, setRoles] = useState<StaffRoleRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const updateRoleMutation = useUpdateStaffRole();
+  const deleteRoleMutation = useDeleteStaffRole();
 
   const [editRole, setEditRole] = useState<StaffRoleRow | null>(null);
 const [open, setOpen] = useState(false);
 
   /* ---------- Fetch Roles ---------- */
-  const fetchRoles = async () => {
-    try {
-      setLoading(true);
-
-      const query = new URLSearchParams(
-        isBranchAdmin
-          ? {}
-          : {
-              ...(restaurantId ? { restaurantId } : {}),
-              ...(branchId ? { branchId } : {}),
-            }
-      ).toString();
-      const res = await get(`/v1/staff-roles${query ? `?${query}` : ""}`);
-
-      if (res?.data) {
-        setRoles(res.data as StaffRoleRow[]);
-      }
-    } catch (err) {
-      void err;
-      toast.error("Failed to fetch roles");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: rolesResponse, isLoading: loading, refetch } = useGetStaffRoles(
+    isBranchAdmin
+      ? undefined
+      : {
+          ...(restaurantId ? { restaurantId } : {}),
+          ...(branchId ? { branchId } : {}),
+        }
+  );
+  const roles = (rolesResponse?.data || []) as StaffRoleRow[];
+  const fetchRoles = () => refetch();
 
 useEffect(() => {
   fetchRoles();
-}, [token, refreshFlag, restaurantId, branchId, isBranchAdmin]);
+}, [refreshFlag, restaurantId, branchId, isBranchAdmin]);
 
   /* ---------- Toggle Active ---------- */
   const toggleStatus = async (role: StaffRoleRow) => {
     try {
-      await patch(`/v1/staff-roles/${role.id}`, {
-        isActive: !role.isActive,
+      await updateRoleMutation.mutateAsync({
+        id: role.id,
+        data: { isActive: !role.isActive },
       });
 
       toast.success("Status updated");
@@ -102,7 +87,7 @@ useEffect(() => {
   /* ---------- Delete ---------- */
   const handleDelete = async (id: string) => {
     try {
-      await del(`/v1/staff-roles/${id}`);
+      await deleteRoleMutation.mutateAsync(id);
       toast.success("Role deleted");
       fetchRoles();
     } catch {

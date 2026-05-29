@@ -16,8 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useCreateCustomer, useUpdateCustomer } from "@/hooks/useCustomers";
-import { httpClient } from "@/lib/axios";
+import { useCreateCustomer, useUpdateCustomer, useVerifyCustomerEmail } from "@/hooks/useCustomers";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
   customerModalSchema,
@@ -71,6 +70,7 @@ export default function AddCustomerModal({
 
   const createCustomerMutation = useCreateCustomer();
   const updateCustomerMutation = useUpdateCustomer();
+  const verifyCustomerEmailMutation = useVerifyCustomerEmail();
   const isSubmitting = createCustomerMutation.isPending || updateCustomerMutation.isPending;
 
   const [step, setStep] = useState<"form" | "otp">("form");
@@ -187,15 +187,7 @@ export default function AddCustomerModal({
     try {
       setIsVerifying(true);
 
-      await httpClient.post(
-        "/auth/verify-email",
-        { otp },
-        {
-          headers: {
-            Authorization: `Bearer ${tokenToUse}`,
-          },
-        }
-      );
+      await verifyCustomerEmailMutation.mutateAsync({ token: tokenToUse, otp });
 
       toast.success("Customer verified successfully!");
 

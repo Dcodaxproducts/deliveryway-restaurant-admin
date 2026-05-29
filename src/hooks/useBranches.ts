@@ -379,3 +379,27 @@ export const useUpdateBranchHolidayOpeningHours = () => {
     },
   });
 };
+
+export const useGetBranchForEdit = (id?: string | null) => {
+  return useQuery({
+    queryKey: ["branches", "edit", id],
+    queryFn: () => getBranch(id as string),
+    enabled: Boolean(id),
+  });
+};
+
+export const useUpdateBranchForEdit = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => updateBranch(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["branches"] });
+      queryClient.invalidateQueries({ queryKey: ["branches", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["branches", "edit", variables.id] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Failed to update branch");
+    },
+  });
+};

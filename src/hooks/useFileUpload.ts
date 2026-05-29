@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { useHttpClient } from "@/hooks/useHttpClient";
-import { useAuthContext } from "@/components/providers/auth-provider";
+import { createPresignedUpload } from "@/services/storage";
 
 interface UploadResult {
   key: string;
@@ -11,9 +10,6 @@ interface UploadResult {
 }
 
 export const useFileUpload = () => {
-  const { token } = useAuthContext();
-  const { post } = useHttpClient(token);
-
   const [uploading, setUploading] = useState(false);
 
   const uploadFile = async (e: React.ChangeEvent<HTMLInputElement>): Promise<UploadResult | null> => {
@@ -23,7 +19,7 @@ export const useFileUpload = () => {
     try {
       setUploading(true);
 
-      const presigned = await post("/v1/storage/presigned-upload", {
+      const presigned = await createPresignedUpload({
         fileName: file.name,
         contentType: file.type,
       });

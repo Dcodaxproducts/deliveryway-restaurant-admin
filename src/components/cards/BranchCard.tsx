@@ -26,8 +26,8 @@ import {
   useSuspendBranch,
   useUpdateBranchTemporaryClosure,
 } from "@/hooks/useBranches";
+import { useDeleteRestaurantMenu } from "@/hooks/useMenus";
 import { useAuth } from "@/hooks/useAuth";
-import { useHttpClient } from "@/hooks/useHttpClient";
 import { toast } from "sonner";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import BranchCoverModal from "@/components/pages/Branches/components/BranchCoverModal";
@@ -62,9 +62,9 @@ export default function BranchCard({
   const activateMutation = useActivateBranch();
   const suspendMutation = useSuspendBranch();
   const temporaryClosureMutation = useUpdateBranchTemporaryClosure();
+  const deleteMenuMutation = useDeleteRestaurantMenu();
 
-  const { token, isBranchAdmin } = useAuth();
-  const { del } = useHttpClient(token);
+  const { isBranchAdmin } = useAuth();
 
   const isTemporarilyClosed = Boolean(
     availability?.isTemporarilyClosed ||
@@ -92,11 +92,7 @@ export default function BranchCard({
       if (openDialog) {
         await deleteMutation.mutateAsync(id);
       } else {
-        const res = await del(`/v1/menus/${id}`);
-
-        if (res?.error) return;
-
-        toast.success(res?.message || "Menu deleted successfully");
+        await deleteMenuMutation.mutateAsync(id);
         window.location.reload();
       }
 

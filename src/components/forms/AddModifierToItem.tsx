@@ -8,9 +8,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useHttpClient } from "@/hooks/useHttpClient";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useAttachModifierGroupToItemWithSort, useGetModifierGroups } from "@/hooks/useMenus";
 import { toast } from "sonner";
 
 export default function AddModifierToItem({
@@ -18,28 +18,16 @@ export default function AddModifierToItem({
   onOpenChange,
   item,
 }: any) {
-  const { token, user } = useAuth();
-  const api = useHttpClient(token);
+  const { user } = useAuth();
+  const attachModifierGroupMutation = useAttachModifierGroupToItemWithSort();
+  const { data: groupsResponse } = useGetModifierGroups({
+    restaurantId: user?.restaurantId || undefined,
+  });
 
-  const [groups, setGroups] = useState<any[]>([]);
+  const groups = groupsResponse?.data || [];
   const [selectedGroup, setSelectedGroup] = useState("");
   const [sortOrder, setSortOrder] = useState(0);
-
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (open) fetchGroups();
-  }, [open]);
-
-  const fetchGroups = async () => {
-    const res = await api.get(
-      `/v1/menu/modifier-groups?restaurantId=${user?.restaurantId}`
-    );
-
-    if (!res?.error) {
-      setGroups(res.data || []);
-    }
-  };
 
   const handleSubmit = async () => {
     if (!selectedGroup) {
@@ -49,29 +37,28 @@ export default function AddModifierToItem({
 
     setLoading(true);
 
-    const res = await api.post(
-      `/v1/menu/items/${item.id}/modifier-groups/${selectedGroup}`,
-      {
+    try {
+      const res = await attachModifierGroupMutation.mutateAsync({
+        itemId: item.id,
+        groupId: selectedGroup,
         sortOrder,
+      });
+
+      if (res?.error) {
+        toast.error(res.error);
+        return;
       }
-    );
 
-    setLoading(false);
-
-    if (res?.error) {
-      toast.error(res.error);
-      return;
+      toast.success("Modifier group added to item");
+      onOpenChange(false);
+    } finally {
+      setLoading(false);
     }
-
-    toast.success("Modifier group added to item");
-    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[420px] rounded-[20px] p-6 bg-[#F5F5F5]">
-
-        {/* HEADER */}
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">
             Add Modifier Group
@@ -82,14 +69,12 @@ export default function AddModifierToItem({
           </p>
         </DialogHeader>
 
-        {/* FORM CARD */}
         <div className="mt-5 bg-white rounded-[16px] p-5 space-y-4">
-
-          {/* ITEM INFO */}
           <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl">
             <img
               src={item?.imageUrl || "/placeholder.png"}
               className="w-12 h-12 object-cover rounded-lg"
+              alt={item?.name || "Menu item"}
             />
             <div>
               <p className="font-medium text-gray-900 text-sm">
@@ -101,7 +86,6 @@ export default function AddModifierToItem({
             </div>
           </div>
 
-          {/* GROUP SELECT */}
           <div className="space-y-1">
             <p className="text-sm text-gray-600">Modifier Group</p>
             <select
@@ -110,7 +94,7 @@ export default function AddModifierToItem({
               className="w-full h-[40px] rounded-[10px] border border-gray-300 px-3 focus:border-gray-400 outline-none bg-white"
             >
               <option value="">Select Group</option>
-              {groups.map((g) => (
+              {groups.map((g: any) => (
                 <option key={g.id} value={g.id}>
                   {g.name}
                 </option>
@@ -118,7 +102,6 @@ export default function AddModifierToItem({
             </select>
           </div>
 
-          {/* SORT ORDER */}
           <div className="space-y-1">
             <p className="text-sm text-gray-600">Sort Order</p>
             <input
@@ -129,7 +112,6 @@ export default function AddModifierToItem({
             />
           </div>
 
-          {/* BUTTON */}
           <Button
             onClick={handleSubmit}
             disabled={loading}
@@ -137,14 +119,12 @@ export default function AddModifierToItem({
           >
             {loading ? (
               <span className="flex items-center gap-2">
-                <Loader2 className="animate-spin" size={18} />
-                Adding...
+                <Loader2 className="animate-spin" size={18} /> Adding...
               </span>
             ) : (
               "Add Modifier Group"
             )}
           </Button>
-
         </div>
       </DialogContent>
     </Dialog>

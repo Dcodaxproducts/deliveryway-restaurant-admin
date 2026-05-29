@@ -17,18 +17,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
-import { useHttpClient } from "@/hooks/useHttpClient";
 import {
   cleanPayload,
-  getApiMessage,
   getString,
-  isApiErrorResponse,
   isRecord,
   normalizeApiArray,
   normalizeApiRecords,
-  type SelectOption,
 } from "@/components/pages/Promotions/utils/option-normalizers";
 import { couponSchema, type CouponFormValues } from "@/validations/promotions";
+import { useGetBranches } from "@/hooks/useBranches";
+import { useGetMenuItems } from "@/hooks/useMenus";
+import { useCreateCoupon, useGetCoupons, useUpdateCoupon } from "@/hooks/usePromotions";
 
 const defaultValues: CouponFormValues = {
   code: "",
@@ -66,8 +65,9 @@ const showFirstValidationError = (errors: FieldErrors<CouponFormValues>) => {
 };
 
 export default function AddNewCoupon() {
-  const { token, restaurantId: authRestaurantId, user } = useAuth();
-  const { get, post, patch } = useHttpClient(token);
+  const { restaurantId: authRestaurantId, user } = useAuth();
+  const createCouponMutation = useCreateCoupon();
+  const updateCouponMutation = useUpdateCoupon();
   const router = useRouter();
   const searchParams = useSearchParams();
   const couponCode = searchParams.get("coupon");
@@ -75,8 +75,7 @@ export default function AddNewCoupon() {
   const [saving, setSaving] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [couponId, setCouponId] = useState("");
-  const [branches, setBranches] = useState<SelectOption[]>([]);
-  const [items, setItems] = useState<SelectOption[]>([]);
+
 
   const { control, handleSubmit, reset, setValue } = useForm<CouponFormValues>({
     resolver: zodResolver(couponSchema),
@@ -98,62 +97,47 @@ export default function AddNewCoupon() {
     return authRestaurantId || user?.restaurantId || getStoredRestaurantId() || "";
   }, [authRestaurantId, user?.restaurantId]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!restaurantId || !token) return;
+  const { data: branchResponse } = useGetBranches({
+    restaurantId: restaurantId || undefined,
+  });
+  const { data: itemResponse } = useGetMenuItems({
+    restaurantId: restaurantId || undefined,
+  });
+  const { data: couponResponse } = useGetCoupons({
+    restaurantId: restaurantId || undefined,
+    search: couponCode || undefined,
+  });
 
-      const [branchRes, itemRes] = await Promise.all([
-        get<unknown>(`/v1/branches?restaurantId=${restaurantId}`),
-        get<unknown>(`/v1/menu/items?restaurantId=${restaurantId}`),
-      ]);
-
-      if (!isApiErrorResponse(branchRes)) setBranches(normalizeApiArray(branchRes));
-      if (!isApiErrorResponse(itemRes)) setItems(normalizeApiArray(itemRes));
-    };
-
-    void fetchData();
-  }, [get, restaurantId, token]);
+  const branches = normalizeApiArray(branchResponse);
+  const items = normalizeApiArray(itemResponse);
 
   useEffect(() => {
-    const fetchCoupon = async () => {
-      if (!couponCode || !token) return;
+    if (!couponCode) return;
 
-      setIsEdit(true);
+    setIsEdit(true);
 
-      const params = new URLSearchParams({ search: couponCode });
-      if (restaurantId) params.set("restaurantId", restaurantId);
+    const coupon = normalizeApiRecords(couponResponse)[0];
+    if (!coupon) return;
 
-      const response = await get<unknown>(`/v1/coupons?${params.toString()}`);
-      if (isApiErrorResponse(response)) return;
-
-      const coupon = normalizeApiRecords(response)[0];
-      if (!coupon) {
-        toast.error("Coupon not found");
-        return;
-      }
-
-      const nextCouponId = getString(coupon, "id") ?? "";
-      setCouponId(nextCouponId);
-      reset({
-        code: getString(coupon, "code") ?? "",
-        title: getString(coupon, "title") ?? "",
-        discountType: coupon.discountType === "PERCENTAGE" ? "PERCENTAGE" : "FLAT",
-        discountValue: String(coupon.discountValue ?? ""),
-        startsAt: formatDate(getString(coupon, "startsAt") ?? ""),
-        expiresAt: formatDate(getString(coupon, "expiresAt") ?? ""),
-        description: getString(coupon, "description") ?? "",
-        branchId: getString(coupon, "branchId") ?? "",
-        maxDiscountAmount: String(coupon.maxDiscountAmount ?? ""),
-        minOrderAmount: String(coupon.minOrderAmount ?? ""),
-        maxUses: String(coupon.maxUses ?? ""),
-        maxUsesPerCustomer: String(coupon.maxUsesPerCustomer ?? ""),
-        scopeMenuItemId: getString(coupon, "scopeMenuItemId") ?? "",
-        scopeCategoryId: getString(coupon, "scopeCategoryId") ?? "",
-      });
-    };
-
-    void fetchCoupon();
-  }, [couponCode, get, restaurantId, reset, token]);
+    const nextCouponId = getString(coupon, "id") ?? "";
+    setCouponId(nextCouponId);
+    reset({
+      code: getString(coupon, "code") ?? "",
+      title: getString(coupon, "title") ?? "",
+      discountType: coupon.discountType === "PERCENTAGE" ? "PERCENTAGE" : "FLAT",
+      discountValue: String(coupon.discountValue ?? ""),
+      startsAt: formatDate(getString(coupon, "startsAt") ?? ""),
+      expiresAt: formatDate(getString(coupon, "expiresAt") ?? ""),
+      description: getString(coupon, "description") ?? "",
+      branchId: getString(coupon, "branchId") ?? "",
+      maxDiscountAmount: String(coupon.maxDiscountAmount ?? ""),
+      minOrderAmount: String(coupon.minOrderAmount ?? ""),
+      maxUses: String(coupon.maxUses ?? ""),
+      maxUsesPerCustomer: String(coupon.maxUsesPerCustomer ?? ""),
+      scopeMenuItemId: getString(coupon, "scopeMenuItemId") ?? "",
+      scopeCategoryId: getString(coupon, "scopeCategoryId") ?? "",
+    });
+  }, [couponCode, couponResponse, reset]);
 
   const handleItemSelect = (id: string) => {
     const item = items.find((currentItem) => currentItem.id === id);
@@ -190,13 +174,10 @@ export default function AddNewCoupon() {
     });
 
     try {
-      const response = isEdit
-        ? await patch<unknown, Partial<typeof payload>>(`/v1/coupons/${couponId}`, payload)
-        : await post<unknown, Partial<typeof payload>>("/v1/coupons", payload);
-
-      if (isApiErrorResponse(response)) {
-        toast.error(getApiMessage(response, isEdit ? "Failed to update coupon" : "Failed to create coupon"));
-        return;
+      if (isEdit) {
+        await updateCouponMutation.mutateAsync({ id: couponId, payload });
+      } else {
+        await createCouponMutation.mutateAsync(payload);
       }
 
       toast.success(isEdit ? "Coupon updated successfully" : "Coupon created successfully");

@@ -7,40 +7,21 @@ import Categories from "@/components/pages/Menu/legacy/root-menu-components/list
 import ItemList from "@/components/pages/Menu/legacy/root-menu-components/listing/itemList";
 import PosCart from "@/components/pages/Pos/components/pos/PosCart";
 
-import { useEffect, useState } from "react";
-import { useHttpClient } from "@/hooks/useHttpClient";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useGetMenuItems } from "@/hooks/useMenus";
 
 export default function Orders() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [items, setItems] = useState<any[]>([]);
+  const { user, isBranchAdmin } = useAuth();
+  const restaurantId = user?.restaurantId;
+  const { data: itemsResponse, isLoading, isFetching } = useGetMenuItems({
+    restaurantId: restaurantId || undefined,
+    categoryId: selectedCategory || undefined,
+  });
 
-  //  NEW: get user from context instead of localStorage
-  const { token, user, branchId, isBranchAdmin } = useAuth();
-  const { get, loading } = useHttpClient(token);
-  /* ================= FETCH ITEMS ================= */
-
-  const fetchItems = async () => {
-    const restaurantId = user?.restaurantId;
-
-    if (!restaurantId) return;
-
-    let url = `/v1/menu/items?restaurantId=${restaurantId}`;
-
-    if (selectedCategory) {
-      url += `&categoryId=${selectedCategory}`;
-    }
-
-    const res = await get(url);
-
-    if (!res) return;
-
-    setItems(res.data);
-  };
-
-  useEffect(() => {
-    fetchItems();
-  }, [token, user?.restaurantId, selectedCategory]);
+  const items = itemsResponse?.data || [];
+  const loading = isLoading || isFetching;
 
   return (
     <Container>

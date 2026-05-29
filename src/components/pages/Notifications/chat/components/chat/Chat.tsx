@@ -3,13 +3,19 @@
 import { useState, useEffect, useRef } from "react";
 import { Send, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useHttpClient } from "@/hooks/useHttpClient";
 import { io, Socket } from "socket.io-client";
 import { useSearchParams } from "next/navigation";
+import {
+  useCreateChatThread,
+  useGetChatThread,
+  useGetChatThreads,
+  useSendChatMessage,
+} from "@/hooks/useChat";
 
 export default function ChatUI() {
   const { token, user } = useAuth();
-  const api = useHttpClient(token);
+  const createThreadMutation = useCreateChatThread();
+  const sendMessageMutation = useSendChatMessage();
 const searchParams = useSearchParams();
 
 const orderId = searchParams.get("orderId");
@@ -23,6 +29,21 @@ const [creatingThread, setCreatingThread] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const activeThreadRef = useRef<any>(null);
+  const threadsQuery = useGetChatThreads(Boolean(token));
+  const messagesQuery = useGetChatThread(activeThread?.id);
+
+  useEffect(() => {
+    if (threadsQuery.data?.success) {
+      setThreads(threadsQuery.data.data || []);
+    }
+  }, [threadsQuery.data]);
+
+  useEffect(() => {
+    if (messagesQuery.data?.success) {
+      setMessages(messagesQuery.data.data?.messages || []);
+    }
+  }, [messagesQuery.data]);
+
 
   useEffect(() => {
     activeThreadRef.current = activeThread;
@@ -46,7 +67,7 @@ const [creatingThread, setCreatingThread] = useState(false);
   const shortId = orderId.slice(-6).toUpperCase(); // nice UX
   const subject = `Order #${shortId}`;
 
-  const res = await api.post("/v1/chat/threads", {
+  const res = await createThreadMutation.mutateAsync({
     message: "Hi, I need help regarding this order.",
     orderId,
     subject,
@@ -82,19 +103,19 @@ useEffect(() => {
 
   // 🔹 Fetch Threads
   const fetchThreads = async () => {
-    const res = await api.get("/v1/chat/threads");
-    if (res?.success) {
-      setThreads(res.data);
-     if (res.data.length > 0 && !activeThread && !orderId) {
-  setActiveThread(res.data[0]);
-}
+    const res = await threadsQuery.refetch();
+    if (res.data?.success) {
+      setThreads(res.data.data || []);
+      if (res.data.data.length > 0 && !activeThread && !orderId) {
+        setActiveThread(res.data.data[0]);
+      }
     }
   };
 
-const fetchMessages = async (id: string) => {
-  const res = await api.get(`/v1/chat/threads/${id}`);
-  if (res?.success) {
-    setMessages(res.data.messages || []);
+const fetchMessages = async () => {
+  const res = await messagesQuery.refetch();
+  if (res.data?.success) {
+    setMessages(res.data.data?.messages || []);
   }
 };
   // 🔹 Send Message
@@ -103,9 +124,7 @@ const fetchMessages = async (id: string) => {
 
     setSending(true);
 
-    await api.post(`/v1/chat/threads/${activeThread.id}/messages`, {
-      message,
-    });
+    await sendMessageMutation.mutateAsync({ id: activeThread.id, message });
 
     setMessage("");
 
@@ -132,7 +151,7 @@ const fetchMessages = async (id: string) => {
 
   useEffect(() => {
     if (activeThread?.id) {
-      fetchMessages(activeThread.id);
+      fetchMessages();
     }
   }, [activeThread]);
 

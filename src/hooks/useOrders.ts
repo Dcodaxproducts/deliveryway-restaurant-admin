@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { getOrders } from "@/services/orders/orders.api";
+import { getOrderById, getOrders } from "@/services/orders/orders.api";
 
 interface UseOrdersParams {
   page?: number;
@@ -10,6 +10,10 @@ interface UseOrdersParams {
   search?: string;
   status?: string;
   orderType?: string;
+  sortOrder?: string;
+  kind?: string;
+  restaurantId?: string;
+  branchId?: string;
   enabled?: boolean;
 }
 
@@ -37,8 +41,8 @@ interface OrdersMeta {
 export default function useOrders(params?: UseOrdersParams) {
   const { user, isBranchAdmin } = useAuth();
 
-  const restaurantId = user?.restaurantId;
-  const branchId = isBranchAdmin ? user?.branchId ?? undefined : undefined;
+  const restaurantId = params?.restaurantId ?? user?.restaurantId;
+  const branchId = params?.branchId ?? (isBranchAdmin ? user?.branchId ?? undefined : undefined);
 
   const query = useQuery({
     queryKey: [
@@ -50,6 +54,8 @@ export default function useOrders(params?: UseOrdersParams) {
       params?.search,
       params?.status,
       params?.orderType,
+      params?.sortOrder,
+      params?.kind,
     ],
     queryFn: () =>
       getOrders({
@@ -59,6 +65,8 @@ export default function useOrders(params?: UseOrdersParams) {
         search: params?.search,
         status: params?.status,
         orderType: params?.orderType,
+        sortOrder: params?.sortOrder,
+        kind: params?.kind,
         branchId,
       }),
     enabled: !!restaurantId && (params?.enabled ?? true),
@@ -73,3 +81,10 @@ export default function useOrders(params?: UseOrdersParams) {
     isFetching: query.isFetching,
   };
 }
+export const useGetOrderById = (id?: string) => {
+  return useQuery({
+    queryKey: ["orders", "detail", id],
+    queryFn: () => getOrderById(id as string),
+    enabled: Boolean(id),
+  });
+};

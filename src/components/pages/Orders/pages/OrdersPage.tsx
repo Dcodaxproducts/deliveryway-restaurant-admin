@@ -7,12 +7,12 @@ import Container from "@/components/common/Container";
 import Table from "@/components/pages/Orders/components/orders/table";
 import { Button } from "@/components/ui/button";
 import OrdersFilters from "@/components/pages/Orders/components/orders/OrdersFilters";
-import { useHttpClient } from "@/hooks/useHttpClient";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
 import PaginationSection from "@/components/common/pagination";
 import { sortData } from "@/lib/sort-data";
 import { useGetOrdersStats } from "@/hooks/useDashboard";
+import useOrders from "@/hooks/useOrders";
+import { useGetAdminTableReservations } from "@/hooks/useReservations";
 import {
   buildOrderStats,
   getOrdersHeaderContent,
@@ -23,8 +23,6 @@ import {
 
 export default function Orders() {
   const [activeTab, setActiveTab] = useState<OrderTab>("delivery");
-  const [orders, setOrders] = useState<Order[]>([]);
-
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
   const [status, setStatus] = useState("ALL");
@@ -34,16 +32,10 @@ export default function Orders() {
 
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [hasNext, setHasNext] = useState(false);
-  const [hasPrevious, setHasPrevious] = useState(false);
-
-  const { user, token, branchId, isBranchAdmin } = useAuth();
+  const { user, branchId, isBranchAdmin } = useAuth();
   const restaurantId = user?.restaurantId;
-  const scopedBranchId = isBranchAdmin ? branchId : undefined;
+  const scopedBranchId = isBranchAdmin ? branchId || undefined : undefined;
 
-  const { get, loading } = useHttpClient(token);
 
   const {
     data: orderStatsResponse,
@@ -63,68 +55,41 @@ export default function Orders() {
 
   const dynamicStats = buildOrderStats(orderStats);
 
-  useEffect(() => {
-    if (!restaurantId) return;
+  const orderType = activeTab === "delivery" ? "DELIVERY" : activeTab === "pickup" ? "TAKEAWAY" : undefined;
+  const orderKind = activeTab === "group" ? "group-orders" : "order";
 
-    const fetchData = async () => {
-      try {
-        if (activeTab === "reservations") {
-          const res = await get(
-            `/v1/customer-app/admin/table-reservations?restaurantId=${restaurantId}${scopedBranchId ? `&branchId=${scopedBranchId}` : ""}&page=${page}&limit=${limit}`
-          );
+  const ordersQuery = useOrders({
+    restaurantId: restaurantId || undefined,
+    branchId: scopedBranchId,
+    search: search || undefined,
+    status: status !== "ALL" ? status : undefined,
+    sortOrder,
+    page,
+    limit,
+    orderType,
+    kind: orderKind,
+    enabled: activeTab !== "reservations",
+  });
 
-          if (res?.error) {
-            toast.error(res.error);
-            return;
-          }
-
-          const mapped = (res?.data || []).map(mapReservationToOrder);
-
-          setOrders(mapped);
-
-          setTotalPages(res?.meta?.totalPages || 1);
-          setTotal(res?.meta?.total || 0);
-          setHasNext(res?.meta?.hasNext || false);
-          setHasPrevious(res?.meta?.hasPrevious || false);
-
-          return;
-        }
-
-        const queryParams: Record<string, string> = {
+  const reservationsQuery = useGetAdminTableReservations(
+    restaurantId
+      ? {
           restaurantId,
-          ...(search && { search }),
-          ...(status !== "ALL" && { status }),
-          ...(scopedBranchId && { branchId: scopedBranchId }),
-          sortOrder,
-          page: String(page),
-          limit: String(limit),
-        };
-
-        if (activeTab === "delivery") queryParams.orderType = "DELIVERY";
-        if (activeTab === "pickup") queryParams.orderType = "TAKEAWAY";
-
-        queryParams.kind = activeTab === "group" ? "group-orders" : "order";
-
-        const query = new URLSearchParams(queryParams).toString();
-        const res = await get(`/v1/orders?${query}`);
-
-        if (res?.error) {
-          toast.error(res.error);
-          return;
+          ...(scopedBranchId ? { branchId: scopedBranchId } : {}),
+          page,
+          limit,
         }
+      : undefined
+  );
 
-        setOrders(res?.data || []);
-        setTotalPages(res?.meta?.totalPages || 1);
-        setTotal(res?.meta?.total || 0);
-        setHasNext(res?.meta?.hasNext || false);
-        setHasPrevious(res?.meta?.hasPrevious || false);
-      } catch (err) {
-        void err;
-      }
-    };
-
-    fetchData();
-  }, [restaurantId, scopedBranchId, search, sortOrder, status, page, activeTab]);
+  const reservationOrders: Order[] = (reservationsQuery.data?.data || []).map(mapReservationToOrder);
+  const orders: Order[] = activeTab === "reservations" ? reservationOrders : ordersQuery.orders;
+  const paginationMeta = activeTab === "reservations" ? reservationsQuery.data?.meta : ordersQuery.meta;
+  const loading = activeTab === "reservations" ? reservationsQuery.isLoading : ordersQuery.loading;
+  const totalPages = paginationMeta?.totalPages || 1;
+  const total = paginationMeta?.total || 0;
+  const hasNext = paginationMeta?.hasNext || false;
+  const hasPrevious = paginationMeta?.hasPrevious || false;
 
   useEffect(() => {
     setPage(1);
@@ -139,13 +104,17 @@ export default function Orders() {
     }
   };
 
-  const sortedOrders = sortKey ? sortData(orders, sortKey, sortDir) : orders;
+  const sortedOrders = sortKey ? sortData(orders, sortKey as keyof Order, sortDir) : orders;
 
   const { title, description } = getOrdersHeaderContent(activeTab, isBranchAdmin);
 
   const handleRefresh = () => {
     refetchOrderStats();
-    setPage((prev) => prev);
+    if (activeTab === "reservations") {
+      reservationsQuery.refetch();
+    } else {
+      ordersQuery.refetch();
+    }
   };
 
   return (

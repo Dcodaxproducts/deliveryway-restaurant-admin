@@ -1,36 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Header from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
-import { useHttpClient } from "@/hooks/useHttpClient";
-import { useAuthContext } from "@/components/providers/auth-provider";
-import { toast } from "sonner";
+import { useGetOrderById } from "@/hooks/useOrders";
 
 export default function GroupOrderDetails() {
   const { orderId } = useParams();
-  const { token } = useAuthContext();
-  const { get, loading } = useHttpClient(token);
+  const { data: order, isLoading: loading } = useGetOrderById(orderId as string);
 
-  const [order, setOrder] = useState<any>(null);
 
-  useEffect(() => {
-    if (!orderId) return;
-
-    const fetchOrder = async () => {
-      const res = await get(`/v1/orders/${orderId}`);
-
-      if (res?.error) {
-        toast.error(res.error);
-        return;
-      }
-
-      setOrder(res?.data);
-    };
-
-    fetchOrder();
-  }, [orderId]);
 
   if (loading || !order) {
     return (

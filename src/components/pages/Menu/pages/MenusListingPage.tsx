@@ -4,19 +4,15 @@ import Container from "@/components/common/Container";
 import Categories from "@/components/pages/Menu/legacy/root-menu-components/listing/categories";
 import Header from "@/components/pages/Menu/legacy/root-menu-components/listing/header";
 import ItemList from "@/components/pages/Menu/legacy/root-menu-components/listing/itemList";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useHttpClient } from "@/hooks/useHttpClient";
 import { useAuth } from "@/hooks/useAuth";
+import { useGetMenuItems } from "@/hooks/useMenus";
 
 export default function MenusListingPage() {
   const [editing, setEditing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [items, setItems] = useState<any[]>([]);
-
-  //  CONSISTENT with Orders page
-  const { token, user } = useAuth();
-  const { get, loading } = useHttpClient(token);
+  const { user } = useAuth();
 
   const searchParams = useSearchParams();
   const menuId = searchParams.get("id");
@@ -25,28 +21,15 @@ export default function MenusListingPage() {
     setEditing((prev) => !prev);
   };
 
-  /* ================= FETCH ITEMS ================= */
-  const fetchItems = async () => {
-    const restaurantId = user?.restaurantId;
+  const restaurantId = user?.restaurantId;
+  const { data: itemsResponse, isLoading, isFetching, refetch } = useGetMenuItems({
+    restaurantId: restaurantId || undefined,
+    menuId: menuId || undefined,
+    categoryId: selectedCategory || undefined,
+  });
 
-    if (!restaurantId || !menuId) return;
-// &menuId=${menuId}
-    let url = `/v1/menu/items?restaurantId=${restaurantId}&menuId=${menuId}`;
-
-    if (selectedCategory) {
-      url += `&categoryId=${selectedCategory}`;
-    }
-
-    const res = await get(url);
-    if (!res) return;
-
-    setItems(res.data);
-  };
-
-  useEffect(() => {
-  
-    fetchItems();
-  }, [token, user?.restaurantId, menuId, selectedCategory]);
+  const items = itemsResponse?.data || [];
+  const loading = isLoading || isFetching;
   return (
     <Container>
       <Header
@@ -66,7 +49,7 @@ export default function MenusListingPage() {
         editing={editing}
         items={items}
         loading={loading}
-         refetch={fetchItems} 
+         refetch={refetch} 
       />
     </Container>
   );
