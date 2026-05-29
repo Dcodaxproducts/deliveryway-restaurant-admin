@@ -310,6 +310,7 @@ export default function AddCustomerModal({
             </div>
 
             <Button
+              type="button"
               onClick={handleVerifyOtp}
               disabled={isVerifying}
               className="mt-2 h-[48px] w-full rounded-[10px] bg-primary"
