@@ -1762,26 +1762,39 @@ export default function EditBranchStepTwo({ data, setData }: any) {
 
       <Section label="Automation">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <label className="flex h-fit w-fit cursor-pointer items-center gap-3 rounded-full border border-gray-200 bg-gray-50 px-4 py-2">
+          <label className="flex min-h-[88px] cursor-pointer items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white px-5 py-4 transition hover:border-primary/30 hover:bg-primary/5">
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-gray-900">
+                Auto Accept Orders
+              </span>
+              <span className="mt-1 block text-xs leading-relaxed text-gray-500">
+                Automatically accept incoming delivery orders for this branch.
+              </span>
+            </span>
             <Checkbox
               checked={Boolean(settings.automation?.autoAcceptOrders)}
               onCheckedChange={(val) =>
                 update(["settings", "automation", "autoAcceptOrders"], val === true)
               }
             />
-            <span className="text-sm">Auto Accept Orders</span>
           </label>
 
-          <FormInput
-            label="Estimated Prep Time (minutes)"
-            value={toInputNumber(settings.automation?.estimatedPrepTime)}
-            onChange={(val) =>
-              update(
-                ["settings", "automation", "estimatedPrepTime"],
-                val ? Number(val) : 0
-              )
-            }
-          />
+          <div className="rounded-2xl border border-gray-200 bg-white px-5 py-4">
+            <FormInput
+              label="Estimated Prep Time (minutes)"
+              value={toInputNumber(settings.automation?.estimatedPrepTime)}
+              onChange={(val) =>
+                update(
+                  ["settings", "automation", "estimatedPrepTime"],
+                  val ? Number(val) : 0
+                )
+              }
+            />
+            <p className="mt-2 text-xs leading-relaxed text-gray-500">
+              Used as the default preparation time shown to customers and order
+              operators.
+            </p>
+          </div>
         </div>
       </Section>
 
