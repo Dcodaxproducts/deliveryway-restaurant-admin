@@ -84,7 +84,7 @@ api.interceptors.response.use(
 );
 
 export const httpClient = {
-  request: async <TResponse = any, TBody = any>(
+  request: async <TResponse = unknown, TBody = unknown>(
     method: Method,
     endpoint: string,
     body?: TBody,
@@ -100,15 +100,24 @@ export const httpClient = {
 
     return data;
   },
-  get: <TResponse = any>(endpoint: string, options?: RequestOptions) =>
+  get: <TResponse = unknown>(endpoint: string, options?: RequestOptions) =>
     httpClient.request<TResponse>("GET", endpoint, undefined, options),
-  post: <TResponse = any, TBody = any>(endpoint: string, body?: TBody, options?: RequestOptions) =>
-    httpClient.request<TResponse, TBody>("POST", endpoint, body, options),
-  patch: <TResponse = any, TBody = any>(endpoint: string, body?: TBody, options?: RequestOptions) =>
-    httpClient.request<TResponse, TBody>("PATCH", endpoint, body, options),
-  put: <TResponse = any, TBody = any>(endpoint: string, body?: TBody, options?: RequestOptions) =>
-    httpClient.request<TResponse, TBody>("PUT", endpoint, body, options),
-  delete: <TResponse = any>(endpoint: string, options?: RequestOptions) =>
+  post: <TResponse = unknown, TBody = unknown>(
+    endpoint: string,
+    body?: TBody,
+    options?: RequestOptions
+  ) => httpClient.request<TResponse, TBody>("POST", endpoint, body, options),
+  patch: <TResponse = unknown, TBody = unknown>(
+    endpoint: string,
+    body?: TBody,
+    options?: RequestOptions
+  ) => httpClient.request<TResponse, TBody>("PATCH", endpoint, body, options),
+  put: <TResponse = unknown, TBody = unknown>(
+    endpoint: string,
+    body?: TBody,
+    options?: RequestOptions
+  ) => httpClient.request<TResponse, TBody>("PUT", endpoint, body, options),
+  delete: <TResponse = unknown>(endpoint: string, options?: RequestOptions) =>
     httpClient.request<TResponse>("DELETE", endpoint, undefined, options),
 };
 

@@ -1,1 +1,1 @@
-export { default } from "@/components/pages/legacy/menu/items/CreateMenuItemModalLegacy/CreateMenuItemModal";
+export { default } from "@/components/pages/Menu/legacy/items/CreateMenuItemModalLegacy/CreateMenuItemModal";

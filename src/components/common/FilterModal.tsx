@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Radio } from "@/components/ui/radioBtn";
-import FormInput from "../register/form/FormInput";
+import FormInput from "@/components/forms/common/FormInput";
 
 type FilterModalProps = {
   open: boolean;

@@ -1,0 +1,303 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow
+} from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import SortableHeader from "@/components/common/sortable-head";
+import EmptyState from "@/components/common/EmptyState";
+import PromotionCreateLink from "../PromotionOverview/PromotionCreateLink";
+import PaginationSection from "@/components/common/PaginationSection";
+import { Eye, MoreHorizontal, Pencil } from "lucide-react";
+import { useHttpClient } from "@/hooks/useHttpClient";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
+import {
+  getString,
+  isRecord,
+  normalizeApiRecords,
+} from "@/components/pages/Promotions/utils/option-normalizers";
+
+type Coupon = {
+  id: string;
+  code: string;
+  title?: string;
+  branchId?: string;
+  discountType?: string;
+  discountValue?: number;
+  maxDiscountAmount?: number;
+  minOrderAmount?: number;
+  maxUsesPerCustomer?: number;
+  usedCount?: number;
+  isActive?: boolean;
+};
+
+type CouponsPaginationMeta = {
+  page: number;
+  totalPages: number;
+  total: number;
+  limit: number;
+};
+
+const toNumber = (value: unknown, fallback: number) => {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+};
+
+const toPaginationMeta = (value: unknown): CouponsPaginationMeta | null => {
+  if (!isRecord(value)) return null;
+  return {
+    page: toNumber(value.page, 1),
+    totalPages: toNumber(value.totalPages, 1),
+    total: toNumber(value.total, 0),
+    limit: toNumber(value.limit, 10),
+  };
+};
+
+const toCoupon = (record: Record<string, unknown>): Coupon | null => {
+  const id = getString(record, "id");
+  const code = getString(record, "code");
+  if (!id || !code) return null;
+
+  return {
+    id,
+    code,
+    title: getString(record, "title"),
+    branchId: getString(record, "branchId"),
+    discountType: getString(record, "discountType"),
+    discountValue: typeof record.discountValue === "number" ? record.discountValue : undefined,
+    maxDiscountAmount: typeof record.maxDiscountAmount === "number" ? record.maxDiscountAmount : undefined,
+    minOrderAmount: typeof record.minOrderAmount === "number" ? record.minOrderAmount : undefined,
+    maxUsesPerCustomer: typeof record.maxUsesPerCustomer === "number" ? record.maxUsesPerCustomer : undefined,
+    usedCount: typeof record.usedCount === "number" ? record.usedCount : undefined,
+    isActive: Boolean(record.isActive),
+  };
+};
+
+const CouponsTable = () => {
+  const { token } = useAuth();
+  const { get, post } = useHttpClient(token);
+  const router = useRouter();
+
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [meta, setMeta] = useState<CouponsPaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
+
+  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
+  const [openView, setOpenView] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+
+  const getStoredRestaurantId = () => {
+    const stored = localStorage.getItem("auth");
+    const parsed: unknown = stored ? JSON.parse(stored) : null;
+    return isRecord(parsed) && isRecord(parsed.user) ? getString(parsed.user, "restaurantId") : undefined;
+  };
+
+  const fetchCoupons = useCallback(async (pageNumber = 1) => {
+    const restaurantId = getStoredRestaurantId();
+
+    if (!restaurantId) return;
+
+    const response = await get<unknown>(
+      `/v1/coupons?restaurantId=${restaurantId}&page=${pageNumber}&limit=10`
+    );
+
+    if (!response) return;
+
+    setCoupons(normalizeApiRecords(response).map(toCoupon).filter((coupon): coupon is Coupon => Boolean(coupon)));
+    setMeta(isRecord(response) ? toPaginationMeta(response.meta) : null);
+  }, [get]);
+
+  useEffect(() => {
+    if (!token) return;
+    fetchCoupons(page);
+  }, [fetchCoupons, token, page]);
+
+  const toggleStatus = async (coupon: Coupon) => {
+    const endpoint = coupon.isActive
+      ? `/v1/coupons/${coupon.code}/suspend`
+      : `/v1/coupons/${coupon.code}/activate`;
+
+    await post(endpoint, {});
+    fetchCoupons(page);
+  };
+
+  const getSerial = (index: number) => {
+    const currentPage = meta?.page || page || 1;
+    const limit = meta?.limit || 10;
+    return (currentPage - 1) * limit + index + 1;
+  };
+
+  if (!coupons.length) {
+    return (
+      <>
+        <EmptyState
+          title="Looks like there are no Coupons yet!"
+          description="You haven’t added any Coupons yet. Start by creating a new"
+        />
+        <PromotionCreateLink
+          label="Create New Coupon"
+          href="/promotion-management/coupons/add"
+        />
+      </>
+    );
+  }
+
+  return (
+    <>
+      {/* ================= DESKTOP (UNCHANGED) ================= */}
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-none">
+              <TableHead className="w-[40px]"><Checkbox /></TableHead>
+              <SortableHeader label="SL" />
+              <SortableHeader label="Coupon Code" />
+              <SortableHeader label="Coupon Info" />
+              <SortableHeader label="Branch" />
+              <SortableHeader label="Total Usage" />
+              <SortableHeader label="Status" />
+              <TableHead className="text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+
+          <TableBody>
+            {coupons.map((c, i) => (
+              <TableRow key={c.id} className="border-none h-[72px]">
+
+                <TableCell><Checkbox /></TableCell>
+
+                <TableCell>{getSerial(i)}</TableCell>
+
+                <TableCell>
+                  <p className="font-medium">{c.title}</p>
+                  <p className="text-gray-500 text-sm">code: {c.code}</p>
+                </TableCell>
+
+                <TableCell>
+                  <div className="text-sm text-gray-600">
+                    <p>Per User: {c.maxUsesPerCustomer}</p>
+                    <p>Amount: {c.discountValue}</p>
+                    <p>Type: {c.discountType}</p>
+                  </div>
+                </TableCell>
+
+                <TableCell className="text-sm">{c.branchId}</TableCell>
+
+                <TableCell>{c.usedCount}</TableCell>
+
+                <TableCell>
+                  <Switch
+                    checked={c.isActive}
+                    onCheckedChange={() => toggleStatus(c)}
+                  />
+                </TableCell>
+
+                {/*  UPDATED ACTIONS */}
+                <TableCell>
+                  <div className="flex justify-center gap-2 relative">
+
+                    <button
+                      onClick={() => {
+                        setSelectedCoupon(c);
+                        setOpenView(true);
+                      }}
+                    >
+                      <Eye size={18} />
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        setDropdownOpen(dropdownOpen === c.id ? null : c.id)
+                      }
+                    >
+                      <MoreHorizontal size={18} />
+                    </button>
+
+                    {dropdownOpen === c.id && (
+                      <div className="absolute right-0 top-8 bg-white border rounded-md shadow-md w-32 z-50">
+                        <button
+                          className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 w-full"
+                          onClick={() =>
+                            router.push(`/promotion-management/coupons/add?coupon=${c.code}`)
+                          }
+                        >
+                          <Pencil size={14} /> Edit
+                        </button>
+                      </div>
+                    )}
+
+                  </div>
+                </TableCell>
+
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* ================= PAGINATION ================= */}
+      <div className="mt-6">
+        <PaginationSection meta={meta} onPageChange={setPage} />
+      </div>
+
+      {/* =================  PREMIUM MODAL ================= */}
+      {openView && selectedCoupon && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+
+          <div className="bg-white w-[520px] rounded-2xl shadow-2xl overflow-hidden">
+
+            {/* Header */}
+            <div className="flex justify-between items-center px-6 py-4 border-b">
+              <div>
+                <h2 className="text-lg font-semibold">Coupon Details</h2>
+                <p className="text-sm text-gray-500">{selectedCoupon.code}</p>
+              </div>
+              <button
+                onClick={() => setOpenView(false)}
+                className="text-gray-400 hover:text-black text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 grid grid-cols-2 gap-5 text-sm">
+
+              {[
+                ["Title", selectedCoupon.title],
+                ["Discount", selectedCoupon.discountValue],
+                ["Type", selectedCoupon.discountType],
+                ["Min Order", selectedCoupon.minOrderAmount || 0],
+                ["Max Discount", selectedCoupon.maxDiscountAmount || 0],
+                ["Usage", selectedCoupon.usedCount],
+                ["Per User Limit", selectedCoupon.maxUsesPerCustomer],
+                ["Status", selectedCoupon.isActive ? "Active" : "Inactive"],
+              ].map(([label, value], idx) => (
+                <div key={idx} className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-gray-500 text-xs">{label}</p>
+                  <p className="font-semibold mt-1">{value}</p>
+                </div>
+              ))}
+
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t flex justify-end">
+              <button
+                onClick={() => setOpenView(false)}
+                className="px-5 py-2 bg-primary text-white rounded-md"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default CouponsTable;

@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
-import ContextGate from "@/components/ContextGate";
+import ContextGate from "@/components/layout/ContextGate";
 import Navbar from "@/components/layout/navbar/navbar";
 import Sidebar from "@/components/layout/sidebar/Sidebar";
 import { useAuth } from "@/hooks/useAuth";

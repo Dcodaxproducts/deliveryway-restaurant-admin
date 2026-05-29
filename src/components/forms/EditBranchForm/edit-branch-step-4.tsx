@@ -1,7 +1,7 @@
 "use client";
 
 import { Label } from "@/components/ui/label";
-import Section from "../Promotions/Section";
+import Section from "@/components/pages/Promotions/forms/Section";
 
 export default function EditBranchStepFour() {
   return (

@@ -1,7 +1,7 @@
 "use client";
 
-import Container from "@/components/container";
-import Header from "@/components/header";
+import Container from "@/components/common/Container";
+import Header from "@/components/common/PageHeader";
 import LabelsTable from "@/components/pages/Menu/labels/components/LabelsTable/LabelsTable";
 
 const LabelsPage = () => {

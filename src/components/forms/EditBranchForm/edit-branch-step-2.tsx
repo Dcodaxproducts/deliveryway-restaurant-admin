@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Section from "../Promotions/Section";
-import FormInput from "@/components/register/form/FormInput";
+import Section from "@/components/pages/Promotions/forms/Section";
+import FormInput from "@/components/forms/common/FormInput";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertCircle,

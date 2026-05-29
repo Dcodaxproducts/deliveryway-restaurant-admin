@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Container from "@/components/container";
-import Header from "@/components/header";
+import Container from "@/components/common/Container";
+import Header from "@/components/common/PageHeader";
 import MenuItemsTable from "@/components/pages/Menu/items/components/MenuItemsTable/MenuItemsTable";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";

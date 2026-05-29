@@ -1,4 +1,4 @@
-import LegacyMenuItemsTable from "@/components/pages/legacy/menu/items/MenuItemsTableLegacy";
+import LegacyMenuItemsTable from "@/components/pages/Menu/legacy/items/MenuItemsTableLegacy";
 
 export default function MenuItemsTable(props: any) {
   return <LegacyMenuItemsTable {...props} />;

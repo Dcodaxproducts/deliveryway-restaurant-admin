@@ -32,10 +32,57 @@ export type AuthStorage = {
   accessToken?: string;
   refreshToken?: string;
   user?: AuthUser | null;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 const AUTH_STORAGE_KEY = "auth";
+
+export const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+
+export const getStringValue = (
+  source: Record<string, unknown> | null | undefined,
+  key: string
+) => {
+  const value = source?.[key];
+  return typeof value === "string" ? value : undefined;
+};
+
+export const getRecordValue = (
+  source: Record<string, unknown> | null | undefined,
+  key: string
+): Record<string, unknown> | undefined => {
+  const value = source?.[key];
+  return isRecord(value) ? value : undefined;
+};
+
+const getBooleanValue = (
+  source: Record<string, unknown> | null | undefined,
+  key: string
+) => {
+  const value = source?.[key];
+  return typeof value === "boolean" ? value : undefined;
+};
+
+const getProfile = (
+  source: Record<string, unknown>,
+  fallback?: Partial<AuthUser> | null
+): AuthProfile => {
+  const profile = getRecordValue(source, "profile");
+
+  return {
+    ...(fallback?.profile ?? {}),
+    ...(profile ?? {}),
+    firstName: getStringValue(profile, "firstName") ?? fallback?.profile?.firstName,
+    lastName: getStringValue(profile, "lastName") ?? fallback?.profile?.lastName,
+    avatarUrl:
+      getStringValue(profile, "avatarUrl") ?? fallback?.profile?.avatarUrl ?? null,
+    phone: getStringValue(profile, "phone") ?? fallback?.profile?.phone ?? null,
+    bio: getStringValue(profile, "bio") ?? fallback?.profile?.bio ?? null,
+    createdAt: getStringValue(profile, "createdAt") ?? fallback?.profile?.createdAt,
+  };
+};
 
 export const isBranchAdminRole = (role?: string | null) => {
   return role === ADMIN_ROLES.BRANCH_ADMIN;
@@ -49,68 +96,82 @@ export const isAllowedAdminRole = (role?: string | null) => {
   return isBranchAdminRole(role) || isRestaurantAdminRole(role);
 };
 
-export const normalizeUser = (rawUser: any, fallback?: Partial<AuthUser> | null): AuthUser | null => {
-  const source = rawUser || fallback;
+export const normalizeUser = (
+  rawUser: unknown,
+  fallback?: Partial<AuthUser> | null
+): AuthUser | null => {
+  const rawRecord = isRecord(rawUser) ? rawUser : null;
+  const fallbackRecord = fallback ? (fallback as Partial<AuthUser> & Record<string, unknown>) : null;
+  const source = rawRecord ?? fallbackRecord;
 
   if (!source) return null;
 
+  const tenant = getRecordValue(source, "tenant");
+  const restaurant = getRecordValue(source, "restaurant");
+  const branch = getRecordValue(source, "branch");
+
   const tenantId =
-    source.tenantId ??
-    source.tid ??
-    source.tenant?.id ??
+    getStringValue(source, "tenantId") ??
+    getStringValue(source, "tid") ??
+    getStringValue(tenant, "id") ??
     fallback?.tenantId ??
-    (fallback as any)?.tid ??
     null;
 
   const restaurantId =
-    source.restaurantId ??
-    source.rid ??
-    source.restaurant?.id ??
+    getStringValue(source, "restaurantId") ??
+    getStringValue(source, "rid") ??
+    getStringValue(restaurant, "id") ??
     fallback?.restaurantId ??
-    (fallback as any)?.rid ??
     null;
 
   const branchId =
-    source.branchId ??
-    source.bid ??
-    source.branch?.id ??
+    getStringValue(source, "branchId") ??
+    getStringValue(source, "bid") ??
+    getStringValue(branch, "id") ??
     fallback?.branchId ??
-    (fallback as any)?.bid ??
     null;
 
   const branchName =
-    source.branchName ??
-    source.branch?.name ??
+    getStringValue(source, "branchName") ??
+    getStringValue(branch, "name") ??
     fallback?.branchName ??
     null;
 
   return {
     ...fallback,
-    ...source,
+    ...(rawRecord ?? {}),
     id: String(source.id ?? fallback?.id ?? ""),
-    email: source.email ?? fallback?.email ?? "",
-    role: source.role ?? fallback?.role ?? "",
+    email: getStringValue(source, "email") ?? fallback?.email ?? "",
+    role: getStringValue(source, "role") ?? fallback?.role ?? "",
     tenantId,
     restaurantId,
     branchId,
     branchName,
-    profile: {
-      ...(fallback?.profile || {}),
-      ...(source.profile || {}),
-    },
+    isVerified: getBooleanValue(source, "isVerified") ?? fallback?.isVerified,
+    isActive: getBooleanValue(source, "isActive") ?? fallback?.isActive,
+    profile: getProfile(source, fallback),
   };
 };
 
-export const normalizeAuthPayload = (payload: any, fallback?: AuthStorage | null): AuthStorage => {
-  const data = payload?.data ?? payload ?? {};
+export const normalizeAuthPayload = (
+  payload: unknown,
+  fallback?: AuthStorage | null
+): AuthStorage => {
+  const payloadRecord = isRecord(payload) ? payload : {};
+  const envelopeData = getRecordValue(payloadRecord, "data");
+  const data = envelopeData ?? payloadRecord;
   const fallbackUser = fallback?.user ?? null;
 
-  const accessToken = data.accessToken ?? data.token ?? fallback?.accessToken;
-  const refreshToken = data.refreshToken ?? fallback?.refreshToken;
-  const user = normalizeUser(data.user ?? data, fallbackUser);
+  const accessToken =
+    getStringValue(data, "accessToken") ??
+    getStringValue(data, "token") ??
+    fallback?.accessToken;
+  const refreshToken = getStringValue(data, "refreshToken") ?? fallback?.refreshToken;
+  const userPayload = data.user ?? data;
+  const user = normalizeUser(userPayload, fallbackUser);
 
   return {
-    ...fallback,
+    ...(fallback ?? {}),
     ...data,
     accessToken,
     refreshToken,
@@ -123,7 +184,7 @@ export const getStoredAuth = (): AuthStorage | null => {
 
   try {
     const stored = window.localStorage.getItem(AUTH_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : null;
+    return stored ? normalizeAuthPayload(JSON.parse(stored)) : null;
   } catch {
     return null;
   }

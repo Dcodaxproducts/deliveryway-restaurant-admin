@@ -1,4 +1,11 @@
-import { normalizeAuthPayload, normalizeUser, type AuthStorage, type AuthUser } from "@/lib/auth";
+import {
+  getRecordValue,
+  isRecord,
+  normalizeAuthPayload,
+  normalizeUser,
+  type AuthStorage,
+  type AuthUser,
+} from "@/lib/auth";
 import { httpClient } from "@/lib/axios";
 import type {
   ForgotPasswordPayload,
@@ -6,6 +13,11 @@ import type {
   ResendOtpPayload,
   ResetPasswordPayload,
 } from "@/types/auth";
+
+const unwrapEnvelope = (response: unknown) => {
+  if (!isRecord(response)) return response;
+  return getRecordValue(response, "data") ?? response;
+};
 
 export const authApi = {
   loginWithFallback: async (payload: LoginPayload) => {
@@ -33,7 +45,7 @@ export const authApi = {
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
     });
 
-    return normalizeUser((response as any)?.data ?? response, fallback?.user ?? null);
+    return normalizeUser(unwrapEnvelope(response), fallback?.user ?? null);
   },
   verifyEmail: (payload: Record<string, unknown>) =>
     httpClient.post("/auth/verify-email", payload),

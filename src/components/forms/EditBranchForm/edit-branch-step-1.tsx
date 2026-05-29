@@ -1,8 +1,8 @@
 "use client";
 
 import { Label } from "@/components/ui/label";
-import Section from "../Promotions/Section";
-import FormInput from "@/components/register/form/FormInput";
+import Section from "@/components/pages/Promotions/forms/Section";
+import FormInput from "@/components/forms/common/FormInput";
 import { Switch } from "@/components/ui/switch";
 
 export default function EditBranchStepOne({ data, setData }: any) {

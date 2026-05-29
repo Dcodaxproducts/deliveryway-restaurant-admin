@@ -1,14 +1,13 @@
-import Login from "@/components/login/Login";
 import { Suspense } from "react";
 
-const page = () => {
+import LoginForm from "@/components/pages/Auth/LoginForm";
+
+export default function LoginPage() {
   return (
     <div>
       <Suspense fallback={<div className="py-10 text-center">Loading login...</div>}>
-        <Login />
+        <LoginForm />
       </Suspense>
     </div>
   );
-};
-
-export default page;
+}

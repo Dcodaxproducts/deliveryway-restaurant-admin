@@ -1,7 +1,7 @@
- import Container from "@/components/container";
-import Table from "@/components/menu/list";
+ import Container from "@/components/common/Container";
+import Table from "@/components/pages/Menu/legacy/root-menu-components/list";
 
- import Header from "@/components/header";
+ import Header from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 const CustomerTrashPage = () => {
     return (

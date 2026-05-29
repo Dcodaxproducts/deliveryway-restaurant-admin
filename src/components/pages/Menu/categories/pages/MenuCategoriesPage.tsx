@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Container from "@/components/container";
-import Header from "@/components/header";
+import Container from "@/components/common/Container";
+import Header from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import CategoriesTable from "@/components/pages/Menu/categories/components/CategoriesTable/CategoriesTable";
-import CreateCategoryModalParent from "@/components/menu/listing/CreateCategoryModalParent";
+import CreateCategoryModalParent from "@/components/pages/Menu/legacy/root-menu-components/listing/CreateCategoryModalParent";
 
 const MenuCategoriesPage = () => {
   const { isBranchAdmin } = useAuth();

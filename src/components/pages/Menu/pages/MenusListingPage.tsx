@@ -1,9 +1,9 @@
 "use client";
 
-import Container from "@/components/container";
-import Categories from "@/components/menu/listing/categories";
-import Header from "@/components/menu/listing/header";
-import ItemList from "@/components/menu/listing/itemList";
+import Container from "@/components/common/Container";
+import Categories from "@/components/pages/Menu/legacy/root-menu-components/listing/categories";
+import Header from "@/components/pages/Menu/legacy/root-menu-components/listing/header";
+import ItemList from "@/components/pages/Menu/legacy/root-menu-components/listing/itemList";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useHttpClient } from "@/hooks/useHttpClient";

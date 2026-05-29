@@ -1,7 +1,7 @@
 "use client";
 
-import Container from "@/components/container";
-import Header from "@/components/header";
+import Container from "@/components/common/Container";
+import Header from "@/components/common/PageHeader";
 import VariationsTable from "@/components/pages/Menu/variations/components/VariationsTable/VariationsTable";
 
 const ModifierGroupsPage = () => {

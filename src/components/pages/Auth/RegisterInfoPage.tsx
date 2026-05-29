@@ -1,4 +1,4 @@
-const page = () => {
+const RegisterInfoPage = () => {
   return (
     <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6 lg:px-8">
       <section className="mx-auto flex min-h-[70vh] max-w-4xl items-center justify-center">
@@ -76,4 +76,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default RegisterInfoPage;

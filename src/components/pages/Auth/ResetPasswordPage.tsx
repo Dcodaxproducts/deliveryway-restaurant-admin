@@ -1,14 +1,13 @@
 import { Suspense } from "react";
-import ResetPassword from "@/components/pages/Auth/ResetPassword";
 
-const page = () => {
+import ResetPasswordForm from "@/components/pages/Auth/ResetPasswordForm";
+
+export default function ResetPasswordPage() {
   return (
     <div>
-      <Suspense fallback={<div className="py-10 text-center">Loading subcategories...</div>}>
-        <ResetPassword />
+      <Suspense fallback={<div className="py-10 text-center">Loading reset password...</div>}>
+        <ResetPasswordForm />
       </Suspense>
     </div>
   );
-};
-
-export default page;
+}

@@ -6,8 +6,21 @@ import { useAuth } from "@/hooks/useAuth";
 import { useHttpClient } from "@/hooks/useHttpClient";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { canSwitchRestaurant, saveStoredAuth, getStoredAuth } from "@/lib/auth";
+import {
+  canSwitchRestaurant,
+  getRecordValue,
+  getStoredAuth,
+  getStringValue,
+  isRecord,
+  saveStoredAuth,
+} from "@/lib/auth";
 import { useGetBranch } from "@/hooks/useBranches";
+
+type RestaurantOption = {
+  id: string;
+  name?: string;
+  tenantId?: string | null;
+};
 
 export default function RestaurantPicker() {
   const { token, user, setUser, isBranchAdmin, branchId } = useAuth();
@@ -16,8 +29,8 @@ export default function RestaurantPicker() {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const [restaurants, setRestaurants] = useState<any[]>([]);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
+  const [restaurants, setRestaurants] = useState<RestaurantOption[]>([]);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantOption | null>(null);
 
   const [open, setOpen] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
@@ -38,9 +51,23 @@ export default function RestaurantPicker() {
       setIsFetching(true);
 
       const res = await get("/v1/restaurants");
+      const data = isRecord(res) ? getRecordValue(res, "data") : undefined;
+      const rows = Array.isArray(data) ? data : [];
+      const filtered = rows.reduce<RestaurantOption[]>((acc, row) => {
+        if (!isRecord(row)) return acc;
 
-      const filtered =
-        res?.data?.filter((r: any) => r.tenantId === user?.tenantId) || [];
+        const id = getStringValue(row, "id");
+        if (!id) return acc;
+
+        const restaurant = {
+          id,
+          name: getStringValue(row, "name"),
+          tenantId: getStringValue(row, "tenantId") ?? null,
+        };
+
+        if (restaurant.tenantId === user?.tenantId) acc.push(restaurant);
+        return acc;
+      }, []);
 
       setRestaurants(filtered);
     } catch {
@@ -76,17 +103,21 @@ export default function RestaurantPicker() {
       document.removeEventListener("pointerdown", handleClickOutside);
   }, []);
 
-  const handleSelectRestaurant = (restaurant: any) => {
+  const handleSelectRestaurant = (restaurant: RestaurantOption) => {
     setSelectedRestaurant(restaurant);
     setOpen(false);
 
     const restaurantId = restaurant.id;
 
-    setUser((prev: any) => ({
-      ...prev,
-      restaurantId,
-      branchId: null,
-    }));
+    setUser((prev) =>
+      prev
+        ? {
+            ...prev,
+            restaurantId,
+            branchId: null,
+          }
+        : prev
+    );
 
     const stored = getStoredAuth() || {};
 

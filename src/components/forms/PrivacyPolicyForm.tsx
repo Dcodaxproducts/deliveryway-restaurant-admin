@@ -14,7 +14,7 @@ import {
   RotateCcw,
   ArrowRight,
 } from "lucide-react";
-import Header from "@/components/header";
+import Header from "@/components/common/PageHeader";
 
 export default function PrivacyPolicyPage() {
   const [title] = useState("Privacy Policy");

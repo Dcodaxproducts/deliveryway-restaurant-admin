@@ -17,8 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { BranchProps } from "@/types/branch";
 import ActionDropdown from "../common/ActionDropdown";
-import OpeningHoursModal from "../branches/OpeningHoursModal";
-import AddHolidayHoursInfo from "../branches/AddHolidayHoursInfo";
+import OpeningHoursModal from "@/components/pages/Branches/components/OpeningHoursModal";
+import AddHolidayHoursInfo from "@/components/pages/Branches/components/AddHolidayHoursInfo";
 
 import {
   useDeleteBranch,
@@ -29,8 +29,8 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useHttpClient } from "@/hooks/useHttpClient";
 import { toast } from "sonner";
-import DeleteDialog from "../dialogs/delete-dialog";
-import BranchCoverModal from "../branches/BranchCoverModal";
+import DeleteDialog from "@/components/common/dialogs/delete-dialog";
+import BranchCoverModal from "@/components/pages/Branches/components/BranchCoverModal";
 import TemporaryBranchClosureModal from "./TemporaryBranchClosureModal";
 
 export default function BranchCard({

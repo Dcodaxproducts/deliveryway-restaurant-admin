@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Container from "@/components/container";
-import Header from "@/components/menu/header";
-import Table from "@/components/menu/list";
-import BranchFilters from "@/components/branches/BranchFilters";
+import Container from "@/components/common/Container";
+import Header from "@/components/pages/Menu/legacy/root-menu-components/header";
+import Table from "@/components/pages/Menu/legacy/root-menu-components/list";
+import BranchFilters from "@/components/pages/Branches/components/BranchFilters";
 import PaginationSection from "@/components/common/pagination";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
