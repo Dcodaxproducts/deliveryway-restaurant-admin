@@ -56,7 +56,7 @@ export default function ContextGate() {
   }, [user, loading, token, pathname]);
 
   useEffect(() => {
-    const data = isRecord(restaurantsResponse) ? getRecordValue(restaurantsResponse, "data") : undefined;
+    const data = isRecord(restaurantsResponse) ? restaurantsResponse.data : undefined;
     const rows = Array.isArray(data) ? data : [];
     const userTenantId = user?.tenantId ?? null;
     const filtered = rows.reduce<RestaurantOption[]>((acc, row) => {
