@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, type FormEvent } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -74,6 +74,17 @@ const LoginForm = () => {
     }
   };
 
+  const submitLogin = handleSubmit(onSubmit);
+
+  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void submitLogin(event);
+  };
+
+  const handleLoginClick = () => {
+    void submitLogin();
+  };
+
   return (
     <div className="grid min-h-screen grid-cols-1 bg-white lg:grid-cols-2">
       <div className="relative hidden lg:block">
@@ -99,7 +110,7 @@ const LoginForm = () => {
             Digitalize your business and empowering growth
           </p>
 
-          <form className="mt-10 space-y-6" noValidate onSubmit={handleSubmit(onSubmit)}>
+          <form className="mt-10 space-y-6" noValidate onSubmit={handleFormSubmit}>
             <Controller
               control={control}
               name="email"
@@ -146,8 +157,9 @@ const LoginForm = () => {
             </div>
 
             <Button
-              type="submit"
+              type="button"
               disabled={isSubmitting}
+              onClick={handleLoginClick}
               className="h-[48px] w-full rounded-[12px] text-base"
             >
               {isSubmitting ? "Signing in..." : "Sign in"}
