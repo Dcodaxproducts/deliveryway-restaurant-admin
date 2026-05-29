@@ -21,18 +21,8 @@ const unwrapEnvelope = (response: unknown) => {
 
 export const authApi = {
   loginWithFallback: async (payload: LoginPayload) => {
-    let lastError: Error | null = null;
-
-    for (const endpoint of ["/auth/staff/login", "/auth/login"]) {
-      try {
-        const response = await httpClient.post(endpoint, payload);
-        return normalizeAuthPayload(response);
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error("Login failed");
-      }
-    }
-
-    throw lastError || new Error("Login failed");
+    const response = await httpClient.post("/auth/login", payload);
+    return normalizeAuthPayload(response);
   },
   forgotPassword: (payload: ForgotPasswordPayload) =>
     httpClient.post("/auth/forgot-password", payload),
