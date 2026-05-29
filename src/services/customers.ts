@@ -29,7 +29,9 @@ export const createCustomer = async (payload: CreateCustomerValues) => {
  * search, sortOrder, withDeleted, includeInactive, restaurantId
  */
 export const getCustomersList = async (params?: CustomerListParams) => {
-  const { data } = await api.get("/admin/users/customers", { params });
+  // Backend scopes branch admins by JWT and rejects branchId on this endpoint.
+  const { branchId: _branchId, ...allowedParams } = params || {};
+  const { data } = await api.get("/admin/users/customers", { params: allowedParams });
   return data;
 };
 
