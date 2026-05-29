@@ -58,19 +58,24 @@ export default function ContextGate() {
   useEffect(() => {
     const data = isRecord(restaurantsResponse) ? getRecordValue(restaurantsResponse, "data") : undefined;
     const rows = Array.isArray(data) ? data : [];
+    const userTenantId = user?.tenantId ?? null;
     const filtered = rows.reduce<RestaurantOption[]>((acc, row) => {
       if (!isRecord(row)) return acc;
 
       const id = getStringValue(row, "id");
       if (!id) return acc;
 
-      const restaurant = {
-        id,
-        name: getStringValue(row, "name"),
-        tenantId: getStringValue(row, "tenantId") ?? null,
-      };
+      const tenant = getRecordValue(row, "tenant");
+      const tenantId = getStringValue(row, "tenantId") ?? getStringValue(tenant, "id") ?? null;
 
-      if (restaurant.tenantId === user?.tenantId) acc.push(restaurant);
+      if (userTenantId && tenantId && tenantId !== userTenantId) return acc;
+
+      acc.push({
+        id,
+        name: getStringValue(row, "name") ?? id,
+        tenantId,
+      });
+
       return acc;
     }, []);
 
