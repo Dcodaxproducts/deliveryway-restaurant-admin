@@ -1217,7 +1217,6 @@ export default function EditBranchStepTwo({ data, setData }: any) {
 
   return (
     <div className="mt-10 space-y-8 rounded-[14px]">
-      {/* ================= ORDER TYPES ================= */}
       <Section label="Allowed Order Types">
         <div className="flex flex-wrap gap-4">
           {ORDER_TYPES.map((type) => (
@@ -1232,7 +1231,6 @@ export default function EditBranchStepTwo({ data, setData }: any) {
         </div>
       </Section>
 
-      {/* ================= PAYMENT METHODS ================= */}
       <Section label="Allowed Payment Methods">
         <div className="flex flex-wrap gap-4">
           {PAYMENT_METHODS.map((method) => (
@@ -1249,7 +1247,6 @@ export default function EditBranchStepTwo({ data, setData }: any) {
         </div>
       </Section>
 
-      {/* ================= DELIVERY CONFIG ================= */}
       <Section label="Delivery Configuration">
         <div className="space-y-6">
           <div>
@@ -1756,7 +1753,6 @@ export default function EditBranchStepTwo({ data, setData }: any) {
         </div>
       </Section>
 
-      {/* ================= AUTOMATION ================= */}
       <Section label="Automation">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <label className="flex h-fit w-fit cursor-pointer items-center gap-3 rounded-full border border-gray-200 bg-gray-50 px-4 py-2">

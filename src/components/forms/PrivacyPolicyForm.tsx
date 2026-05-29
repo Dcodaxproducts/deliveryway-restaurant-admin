@@ -27,7 +27,6 @@ export default function PrivacyPolicyPage() {
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.9fr_0.8fr]">
           {/* Left Section */}
           <div className="space-y-4">
-            {/* Header */}
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <Header
                 title={title}

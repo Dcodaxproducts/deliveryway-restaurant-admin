@@ -24,7 +24,6 @@ export default function BranchFilters({
     onFilterChange({ search, page: 1 });
   };
 
-  /* ================= EXPORT CSV ================= */
 
   const exportCSV = () => {
     if (!branches || branches.length === 0) return;
@@ -75,7 +74,6 @@ link.setAttribute("download", "data.csv");
     <div className="w-full bg-white rounded-lg">
       <div className="w-full flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-3">
 
-        {/* SEARCH */}
         <div className="relative flex-1 min-w-[300px]">
           <Search
             size={22}

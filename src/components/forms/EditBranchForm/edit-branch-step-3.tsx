@@ -242,7 +242,6 @@ export default function EditBranchStepThree({ data, setData }: any) {
 
   return (
     <div className="bg-white rounded-[14px]">
-      {/* ================= DELIVERY TIME ================= */}
       <div className="mb-[24px] rounded-[16px] border border-gray-100 bg-white p-[24px] shadow-sm">
         <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div className="flex items-start gap-3">
@@ -293,7 +292,6 @@ export default function EditBranchStepThree({ data, setData }: any) {
         </div>
       </div>
 
-      {/* ================= MODE ================= */}
       <div className="mb-[32px] rounded-[16px] border border-gray-100 bg-white p-[30px] shadow-sm">
         <div className="mb-[16px]">
           <span className="text-sm font-medium border-b border-black pb-[4px]">
@@ -311,7 +309,6 @@ export default function EditBranchStepThree({ data, setData }: any) {
           </button>
         </div>
 
-        {/* ================= GLOBAL TIME INPUT ================= */}
         {mode === "global" && (
           <div className="mt-6 flex flex-wrap items-center gap-[16px]">
             <TimeInput
@@ -333,7 +330,6 @@ export default function EditBranchStepThree({ data, setData }: any) {
         )}
       </div>
 
-      {/* ================= DAY ROWS ================= */}
       <div className="space-y-[18px] rounded-[16px] border border-gray-100 bg-white p-[30px] shadow-sm">
         <div className="mb-[16px] flex items-start justify-between gap-4">
           <div>
@@ -381,7 +377,6 @@ export default function EditBranchStepThree({ data, setData }: any) {
         })}
       </div>
 
-      {/* ================= HOLIDAY RANGES ================= */}
     
     </div>
   );

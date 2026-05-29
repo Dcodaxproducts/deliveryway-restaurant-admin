@@ -32,7 +32,6 @@ export default function FilterModal({
   const [creationDate, setCreationDate] = useState("");
   const [modifiedDate, setModifiedDate] = useState("");
 
-  /* ================= PREFILL FILTERS IF PROVIDED ================= */
 
   useEffect(() => {
     if (!filters) return;
@@ -48,7 +47,6 @@ export default function FilterModal({
     }
   }, [filters]);
 
-  /* ================= RESET ================= */
 
   const handleReset = () => {
     setStatus("all");
@@ -68,7 +66,6 @@ export default function FilterModal({
     onOpenChange(false);
   };
 
-  /* ================= APPLY ================= */
 
   const handleApply = () => {
     let includeInactive = false;
@@ -101,7 +98,6 @@ export default function FilterModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[420px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
 
-        {/* HEADER */}
 
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
@@ -193,7 +189,6 @@ export default function FilterModal({
 
         </div>
 
-        {/* FOOTER */}
 
         <div className="mt-6 flex items-center justify-center gap-6">
           <button

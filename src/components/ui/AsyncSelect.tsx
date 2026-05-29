@@ -117,7 +117,6 @@ export default function AsyncSelect({
       {open && (
         <div className="absolute z-50 mt-2 w-full rounded-xl border bg-white shadow-lg">
           
-          {/* SEARCH */}
           <div className="p-2 border-b">
             <div className="flex items-center gap-2 border rounded px-2 h-[36px]">
               <Search size={14} />

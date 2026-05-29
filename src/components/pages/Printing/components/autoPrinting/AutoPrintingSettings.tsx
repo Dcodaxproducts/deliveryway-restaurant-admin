@@ -211,7 +211,6 @@ export default function AutoPrintingSettings({
 
   return (
     <div className="mt-6 rounded-xl bg-white p-8">
-      {/* ================= PRINTER STATUS ================= */}
       <div className="mb-12 flex items-start justify-between gap-6">
         <div>
           <h3 className="text-2xl font-semibold">Printer Status</h3>
@@ -289,8 +288,6 @@ export default function AutoPrintingSettings({
         </div>
       </div>
 
-      {/* ================= CONNECT PRINTER ================= */}
-     {/* ================= CONNECT PRINTER ================= */}
 <div className="mb-12">
   <h3 className="mb-6 text-2xl font-semibold">Connect Printer</h3>
 
@@ -373,7 +370,6 @@ export default function AutoPrintingSettings({
   </div>
 </div>
 
-      {/* ================= PRINT SETTINGS ================= */}
       <div className="mb-12">
         <h3 className="mb-6 text-2xl font-semibold">Print Settings</h3>
 
@@ -425,7 +421,6 @@ export default function AutoPrintingSettings({
         </div>
       </div>
 
-      {/* ================= ORDER PRINT RULES ================= */}
       <div>
         <h3 className="mb-6 text-2xl font-semibold">Order Print Rules</h3>
 

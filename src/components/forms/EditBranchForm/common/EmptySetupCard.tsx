@@ -22,7 +22,6 @@ export default function EmptySetupCard({
 }: EmptySetupCardProps) {
   return (
     <div className="space-y-4 mb-9">
-      {/* Header */}
       <div>
         <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
           <Info size={16} className="text-gray-500" />

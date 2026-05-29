@@ -70,7 +70,6 @@ useEffect(() => {
   if (list.length > 0) setSelectedAddress(list[0].id);
 }, [addressesQuery.data]);
 
-  /* ================= UPDATE ================= */
   const updateQuantity = async (id: string, type: "inc" | "dec") => {
     const item = cartItems.find((i) => i.id === id);
     if (!item || !customerId) return;
@@ -93,7 +92,6 @@ useEffect(() => {
     }
   };
 
-  /* ================= DELETE ================= */
   const deleteItem = async (id: string) => {
     if (!customerId) return;
 
@@ -106,7 +104,6 @@ useEffect(() => {
     }
   };
 
-  /* ================= CLEAR ================= */
   const clearCart = async () => {
     if (!customerId) return;
 
@@ -121,7 +118,6 @@ setSelectedAddress(null);
     }
   };
 
-  /* ================= ORDER FLOW ================= */
 
   const setOrderTypeApi = async () => {
     if (!customerId) return false;
@@ -196,7 +192,6 @@ setSelectedAddress(null);
     }
   };
 
-  /* ================= CALCULATIONS ================= */
   const total = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
@@ -205,7 +200,6 @@ setSelectedAddress(null);
   return (
     <div className="w-full bg-white rounded-xl border p-4 flex flex-col gap-4">
 
-      {/* ================= CART ================= */}
       <Collapsible defaultOpen>
         <CollapsibleTrigger className="flex justify-between w-full text-sm font-medium">
           Cart List
@@ -259,7 +253,6 @@ setSelectedAddress(null);
         </CollapsibleContent>
       </Collapsible>
 
-      {/* ================= ORDER INFO ================= */}
       <Collapsible defaultOpen>
         <CollapsibleTrigger className="flex justify-between w-full text-sm font-medium">
           Order Information
@@ -341,7 +334,6 @@ setSelectedAddress(null);
         </CollapsibleContent>
       </Collapsible>
 
-      {/* ================= BILL ================= */}
       <Collapsible defaultOpen>
         <CollapsibleTrigger className="flex justify-between w-full text-sm font-medium">
           Billing
@@ -365,7 +357,6 @@ setSelectedAddress(null);
         </CollapsibleContent>
       </Collapsible>
 
-      {/* ================= ACTIONS ================= */}
       <div className="flex gap-2">
         <Button variant="outline" className="flex-1" onClick={clearCart}>
           Clear

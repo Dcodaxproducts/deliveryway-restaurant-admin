@@ -4,6 +4,7 @@ import { HelpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Header from '@/components/common/PageHeader'
 import { useRouter } from 'next/navigation'
+import type { HeaderProps } from '@/types/page-header'
 
 export default function RestaurantsHeader({ title, description }: HeaderProps) {
     const router = useRouter()

@@ -339,7 +339,6 @@ const handleNext = () => {
         </div>
       </div>
 
-      {/* Footer */}
       <div className="flex justify-between items-center mt-10">
         <Button
           onClick={back}

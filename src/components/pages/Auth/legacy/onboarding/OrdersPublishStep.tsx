@@ -17,7 +17,6 @@ export default function OrdersPublishStep() {
 
   return (
     <div className="max-w-6xl mx-auto bg-white rounded-xl p-8">
-      {/* ================= TABS ================= */}
       <div className="flex justify-center gap-12 mb-12 relative">
         {["orders", "publish"].map((tab) => (
           <button
@@ -35,7 +34,6 @@ export default function OrdersPublishStep() {
         ))}
       </div>
 
-      {/* ================= ORDERS ================= */}
       {activeTab === "orders" && (
         <>
         <div className="px-20">
@@ -84,7 +82,6 @@ export default function OrdersPublishStep() {
             <Switch />
           </div>
 
-          {/* Footer */}
           <div className="flex justify-end mt-12">
             <Button className="bg-primary hover:bg-red-800 px-16 py-3 rounded-[14px]">
               Save & Continue
@@ -94,7 +91,6 @@ export default function OrdersPublishStep() {
         </>
       )}
 
-      {/* ================= PUBLISH ================= */}
       {activeTab === "publish" && (
         <>
           <div className="max-w-xl mx-auto">
@@ -153,7 +149,6 @@ export default function OrdersPublishStep() {
   );
 }
 
-/* ================= REUSABLE CARD ================= */
 
 function OrderTypeCard({
   icon,

@@ -315,7 +315,6 @@ export default function NotificationForm() {
             />
           )}
 
-          {/* ACTIONS */}
           {hasVisibleSettings && (
             <div className="flex justify-end gap-4">
               <Button

@@ -6,7 +6,6 @@ import { Trash2, ChevronDown } from "lucide-react";
 export default function EditProfile() {
   return (
       <Card className="w-full  p-10 rounded-2xl shadow-sm bg-white shadow-none border-none ">
-        {/* ================= HEADER ================= */}
         <div className="flex flex-col items-center">
           {/* Avatar */}
           <div className="relative">
@@ -36,7 +35,6 @@ export default function EditProfile() {
           </p>
         </div>
 
-{/* ================= FORM ================= */}
 <div className="mt-10 space-y-6 min-w-[70%] max-w-[80%] mx-auto ">
   {/* Row 1 */}
   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -69,7 +67,6 @@ export default function EditProfile() {
   {/* Typography select */}
   <SelectInput label="Typography" value="Onest" />
 
-  {/* ================= COLORS ================= */}
   <div className="pt-4">
     <h3 className="text-lg font-semibold mb-4">Select Colors</h3>
 
@@ -85,7 +82,6 @@ export default function EditProfile() {
   );
 }
 
-/* ================= SMALL REUSABLE COMPONENTS ================= */
 function FormInput({
   label,
   placeholder,

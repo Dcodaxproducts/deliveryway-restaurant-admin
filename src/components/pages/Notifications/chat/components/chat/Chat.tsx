@@ -201,7 +201,6 @@ const fetchMessages = async () => {
 
   return (
     <div className="flex h-screen bg-[#f7f6f5] text-[13px] text-[#1f1f1f]">
-      {/* Sidebar */}
       <aside className="hidden md:flex flex-col w-[260px] bg-white px-4 py-5">
         <p className="text-[10px] tracking-widest text-gray-400 mb-3">
           USER CONTEXT
@@ -282,7 +281,6 @@ const fetchMessages = async () => {
 
       {/* MAIN */}
       <main className="flex flex-col flex-1 border border-[#F0EDED] rounded-sm">
-        {/* HEADER */}
         <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
          <h2 className="font-medium text-[14px]">
   {activeThread?.orderId

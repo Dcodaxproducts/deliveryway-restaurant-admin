@@ -86,7 +86,6 @@ const RevenueGraph = () => {
 
   return (
     <Card className="h-full rounded-[16px] border-none bg-white p-[24px] shadow-none">
-      {/* Header */}
       <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">

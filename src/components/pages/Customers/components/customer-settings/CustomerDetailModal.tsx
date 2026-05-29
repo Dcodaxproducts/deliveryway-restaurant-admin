@@ -42,7 +42,6 @@ export default function CustomerDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[420px] max-h-[85vh] overflow-y-auto rounded-[18px] px-6 py-8">
 
-        {/* Header */}
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-center">
             Customer #{customer.id?.slice(-6)}
@@ -106,7 +105,6 @@ export default function CustomerDetailModal({
           />
         </div>
 
-        {/* Footer */}
         <Button
           onClick={() => onOpenChange(false)}
           className="mt-6 w-full h-[44px] rounded-[12px] bg-primary text-white hover:bg-primary/90"

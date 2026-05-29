@@ -46,7 +46,6 @@ export default function OrdersFilters({
     <div className="w-full bg-white p-4 lg:p-[20px] rounded-lg">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-4">
 
-        {/* SEARCH */}
         <div className="relative flex-1">
           <Search
             size={22}

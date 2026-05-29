@@ -51,13 +51,11 @@ export default function OngoingOrdersModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
      <DialogContent className="w-full sm:max-w-[630px] rounded-[28px] px-10 py-8 bg-[#F5F5F5]">
 
-        {/* ================= HEADER ================= */}
        <PosModalHeader
               title="Ongoing Orders"
               description="Track your ongoing orders from here"
             />
        
-        {/* ================= SEARCH ================= */}
         <div className="mt-6">
           <BorderedSearchBar
             value={search}

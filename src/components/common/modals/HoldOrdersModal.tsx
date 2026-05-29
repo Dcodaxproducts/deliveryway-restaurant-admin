@@ -22,14 +22,12 @@ export default function HoldOrdersModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[720px] rounded-[28px] px-10 py-8 bg-[#F5F5F5]">
-        {/* ================= HEADER ================= */}
       
         <PosModalHeader
         title="Hold Orders"
         description="View your hold orders from here"
       />
       
-        {/* ================= SEARCH ================= */}
         <div className="mt-6">
           <BorderedSearchBar
             value={search}
@@ -38,7 +36,6 @@ export default function HoldOrdersModal({
           />
         </div>
 
-        {/* ================= HOLD ORDER CARD ================= */}
           <div className="mt-6 bg-white rounded-2xl border-none p-9 space-y-4">
             {/* Row 1 */}
             <div className="flex items-center justify-between">
@@ -64,7 +61,6 @@ export default function HoldOrdersModal({
           </div>
         
 
-        {/* ================= ACTIONS ================= */}
        <ModalActionFooter
   leftLabel="Remove"
   rightLabel="Resume"

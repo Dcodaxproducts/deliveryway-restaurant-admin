@@ -58,7 +58,6 @@ export const getNotificationSettings = async (): Promise<NotificationSettingsVal
 };
 
 /**
- * UPDATE GLOBAL NOTIFICATION SETTINGS
  */
 export const updateNotificationSettings = async (
   payload: NotificationSettingsValues

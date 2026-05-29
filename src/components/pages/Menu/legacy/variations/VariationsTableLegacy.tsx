@@ -405,7 +405,6 @@ export default function VariationsTable() {
         </div>
 
         <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
-          {/* SEARCH */}
           <div className="min-w-0 xl:col-span-4">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               Search
@@ -529,7 +528,6 @@ export default function VariationsTable() {
         </div>
       ) : null}
 
-      {/* DESKTOP TABLE */}
       <div className="hidden w-full max-w-full overflow-hidden rounded-[18px] border border-gray-100 bg-white shadow-sm md:block">
         <table className="w-full table-fixed text-sm">
           <thead>
@@ -648,7 +646,6 @@ export default function VariationsTable() {
         </div>
       </div>
 
-      {/* MOBILE CARDS */}
       <div className="w-full max-w-full space-y-4 md:hidden">
         {shouldShowInitialLoader ? (
           Array.from({ length: 5 }).map((_, index) => (

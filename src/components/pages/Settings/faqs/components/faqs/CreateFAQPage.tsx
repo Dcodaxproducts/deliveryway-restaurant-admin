@@ -130,7 +130,6 @@ export default function CreateFAQPage() {
   return (
     <div className="min-h-screen bg-[#F8F9FB] px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1400px]">
-        {/* Header */}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <Header
             title="FAQ Manager"

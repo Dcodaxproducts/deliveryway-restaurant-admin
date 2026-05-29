@@ -26,7 +26,6 @@ const { restaurantId } = useAuth();
   const [selected, setSelected] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  /* ================= DEBOUNCE ================= */
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search.trim());
@@ -36,7 +35,6 @@ const { restaurantId } = useAuth();
     return () => clearTimeout(timer);
   }, [search]);
 
-  /* ================= FETCH ================= */
   const {
   data: response,
   isLoading,
@@ -71,7 +69,6 @@ const { restaurantId } = useAuth();
     );
   }, [response]);
 
-  /* ================= PAGINATION ================= */
   const pagination = useMemo(() => {
     const source =
       response?.data?.pagination ||
@@ -98,7 +95,6 @@ const { restaurantId } = useAuth();
     };
   }, [response, items.length, page, limit]);
 
-  /* ================= DELETE ================= */
   const handleDelete = () => {
     if (!deleteId) return;
 
@@ -110,7 +106,6 @@ const { restaurantId } = useAuth();
     });
   };
 
-  /* ================= SKELETON ================= */
   const SkeletonRow = () => (
     <tr>
       <td colSpan={7} className="py-6">
@@ -138,7 +133,6 @@ const { restaurantId } = useAuth();
 
   return (
     <div className="w-full">
-      {/* HEADER */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-[18px] font-semibold text-gray-900">
           Modifier Groups
@@ -155,7 +149,6 @@ const { restaurantId } = useAuth();
         </Button>
       </div>
 
-      {/* SEARCH */}
       <div className="mb-6 flex items-center gap-3">
         <div className="relative w-full max-w-[420px]">
           <Search
@@ -178,7 +171,6 @@ const { restaurantId } = useAuth();
         </Button>
       </div>
 
-      {/* ================= DESKTOP TABLE ================= */}
       <div className="hidden md:block overflow-x-auto rounded-[16px] bg-white">
         <table className="w-full text-sm">
           <thead>
@@ -268,7 +260,6 @@ const { restaurantId } = useAuth();
         </div>
       </div>
 
-      {/* ================= MOBILE CARDS ================= */}
       <div className="space-y-4 md:hidden">
         {isLoading || isFetching ? (
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)

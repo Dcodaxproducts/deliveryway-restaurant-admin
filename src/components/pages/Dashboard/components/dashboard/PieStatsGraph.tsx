@@ -33,7 +33,6 @@ const PieStatsGraph = () => {
   return (
    <Card className="p-[24px] border-none shadow-none rounded-[16px] bg-white h-full ">
 
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-base font-medium text-dark">Pie Chart</h3>
 

@@ -685,9 +685,6 @@ export const useAttachModifierGroupToCategory = () => {
   });
 };
 
-/* =========================
-   GET SINGLE MENU
-========================= */
 export const useGetMenuById = (menuId?: string) => {
   return useQuery({
     queryKey: ["menu", menuId],
@@ -696,9 +693,6 @@ export const useGetMenuById = (menuId?: string) => {
   });
 };
 
-/* =========================
-   CREATE MENU
-========================= */
 export const useCreateMenu = () => {
   const queryClient = useQueryClient();
 
@@ -711,9 +705,6 @@ export const useCreateMenu = () => {
   });
 };
 
-/* =========================
-   UPDATE MENU
-========================= */
 export const useUpdateMenu = () => {
   const queryClient = useQueryClient();
 

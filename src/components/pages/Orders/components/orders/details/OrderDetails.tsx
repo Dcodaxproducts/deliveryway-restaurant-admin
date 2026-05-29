@@ -50,7 +50,6 @@ const OrderDetailsMain = ({ order }: { order: any }) => {
           {/*  Scroll wrapper for mobile ONLY */}
           <div className="w-full overflow-x-auto">
             
-            {/* HEADER */}
             <div className="min-w-[600px] grid grid-cols-[1fr_80px_100px_120px_40px] text-xs sm:text-sm font-semibold text-gray-600 pb-4 border-b">
               <span>Items</span>
               <span className="text-center">Qty</span>

@@ -44,7 +44,6 @@ export default function BusinessInfoStep() {
         <FormInput label="Support Email (Optional)" placeholder="Your email address" />
       </div>
 
-      {/* Footer */}
       <div className="flex justify-end mt-8">
         <Button className="bg-primary hover:bg-red-800 px-15 py-2.5 rounded-[10px]">
           Save & Continue

@@ -54,7 +54,6 @@ const [selectedDeliveryman, setSelectedDeliveryman] = useState<any>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
-  /* ================= MUTATIONS ================= */
   const statusMutation = useUpdateDeliverymanStatus();
   const deleteMutation = useDeleteDeliveryman();
 const handleAssignOrderClick = (dm: any) => {
@@ -62,7 +61,6 @@ const handleAssignOrderClick = (dm: any) => {
   setOpenAssignOrder(true);
   setMenu({ id: null, x: 0, y: 0 });
 };
-  /* ================= CLOSE ON OUTSIDE CLICK ================= */
   useEffect(() => {
     const handleClick = (e: any) => {
       if (
@@ -78,7 +76,6 @@ const handleAssignOrderClick = (dm: any) => {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  /* ================= STATUS TOGGLE ================= */
   const toggleStatus = async (dm: any) => {
   // AVAILABLE = active/online
   const newStatus =
@@ -95,7 +92,6 @@ const handleAssignOrderClick = (dm: any) => {
     void err;
   }
 };
-  /* ================= DELETE ================= */
   const handleDelete = async (id: string) => {
     const confirm = window.confirm(
       "Are you sure you want to delete this deliveryman?"
@@ -110,12 +106,10 @@ const handleAssignOrderClick = (dm: any) => {
     }
   };
 
-  /* ================= EDIT ================= */
   const handleEdit = (id: string) => {
     router.push(`/deliveryman/add?editId=${id}`);
   };
 
-  /* ================= DROPDOWN ================= */
   const openDropdown = (e: any, id: string) => {
     e.stopPropagation();
 
@@ -144,7 +138,6 @@ const handleAssignOrderClick = (dm: any) => {
 
   return (
     <>
-      {/* ================= DESKTOP ================= */}
       <div className="hidden md:block">
         <Table>
           <TableHeader>
@@ -233,7 +226,6 @@ const handleAssignOrderClick = (dm: any) => {
         />
       </div>
 
-      {/* ================= DROPDOWN ================= */}
      {menu.id &&
   createPortal(
     <div
@@ -286,7 +278,6 @@ const handleAssignOrderClick = (dm: any) => {
     document.body
   )}
 
-      {/* ================= MOBILE ================= */}
       <div className="flex flex-col gap-4 md:hidden">
         {data.map((dm) => (
           <div

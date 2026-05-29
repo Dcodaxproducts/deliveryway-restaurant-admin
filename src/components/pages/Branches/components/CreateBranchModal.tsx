@@ -46,7 +46,6 @@ export default function CreateBranchModal({
 
   /**
    * ==============================
-   * CREATE HANDLER (UPDATED)
    * ==============================
    */
   const handleCreateBranch = async () => {
@@ -83,7 +82,6 @@ export default function CreateBranchModal({
       onSuccess?.();
 
       /**
-       * RESET FORM
        */
       setBranchName("");
       setStreet("");
@@ -114,7 +112,6 @@ export default function CreateBranchModal({
 
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-[480px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
-          {/* Header */}
           <DialogHeader className="space-y-1">
             <DialogTitle className="text-xl font-semibold">Create Branch</DialogTitle>
             <p className="text-sm text-gray-500">Create a new branch from here</p>

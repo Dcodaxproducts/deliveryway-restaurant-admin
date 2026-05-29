@@ -100,7 +100,6 @@ export default function PromotionsOverview({ onViewAll }: PromotionsOverviewProp
 
   return (
     <div className="mt-1 space-y-14">
-      {/* ================= COUPONS ================= */}
       <PromotionSectionHeader
         title="Coupons"
         viewAllTab="coupons"
@@ -135,7 +134,6 @@ export default function PromotionsOverview({ onViewAll }: PromotionsOverviewProp
         href="/promotion-management/coupons/add"
       />
 
-      {/* ================= PROMOTIONS ================= */}
       <PromotionSectionHeader
         title="Promotions"
         viewAllTab="promotions"
@@ -170,7 +168,6 @@ export default function PromotionsOverview({ onViewAll }: PromotionsOverviewProp
         href="/promotion-management/promotions/add"
       />
 
-      {/* ================= HAPPY HOURS ================= */}
       <PromotionSectionHeader
         title="Happy Hours"
         viewAllTab="happy-hours"

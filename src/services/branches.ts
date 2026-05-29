@@ -49,7 +49,6 @@ export const deleteBranch = async (id: string) => {
 
 /**
  * ==============================
- * BULK CREATE
  * ==============================
  */
 

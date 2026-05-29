@@ -125,7 +125,6 @@ const CouponsTable = () => {
 
   return (
     <>
-      {/* ================= DESKTOP (UNCHANGED) ================= */}
       <div className="hidden md:block">
         <Table>
           <TableHeader>
@@ -173,7 +172,6 @@ const CouponsTable = () => {
                   />
                 </TableCell>
 
-                {/*  UPDATED ACTIONS */}
                 <TableCell>
                   <div className="flex justify-center gap-2 relative">
 
@@ -216,18 +214,15 @@ const CouponsTable = () => {
         </Table>
       </div>
 
-      {/* ================= PAGINATION ================= */}
       <div className="mt-6">
         <PaginationSection meta={meta} onPageChange={setPage} />
       </div>
 
-      {/* =================  PREMIUM MODAL ================= */}
       {openView && selectedCoupon && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
 
           <div className="bg-white w-[520px] rounded-2xl shadow-2xl overflow-hidden">
 
-            {/* Header */}
             <div className="flex justify-between items-center px-6 py-4 border-b">
               <div>
                 <h2 className="text-lg font-semibold">Coupon Details</h2>
@@ -262,7 +257,6 @@ const CouponsTable = () => {
 
             </div>
 
-            {/* Footer */}
             <div className="px-6 py-4 border-t flex justify-end">
               <button
                 onClick={() => setOpenView(false)}

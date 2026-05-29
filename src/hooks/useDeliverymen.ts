@@ -45,7 +45,6 @@ export const useDeliveryman = (id?: string) => {
 
 /**
  * ==============================
- * CREATE DELIVERYMAN
  * ==============================
  */
 export const useCreateDeliveryman = () => {
@@ -74,7 +73,6 @@ export const useCreateDeliveryman = () => {
 
 /**
  * ==============================
- * UPDATE DELIVERYMAN
  * ==============================
  */
 export const useUpdateDeliveryman = () => {
@@ -128,7 +126,6 @@ export const useDeleteDeliveryman = () => {
 
 /**
  * ==============================
- * UPDATE STATUS
  * ==============================
  */
 export const useUpdateDeliverymanStatus = () => {

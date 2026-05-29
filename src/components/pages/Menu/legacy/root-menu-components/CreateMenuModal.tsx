@@ -68,7 +68,6 @@ export default function CreateMenuModal({
   const creating =
     createMenuMutation.isPending || updateMenuMutation.isPending;
 
-  /* ================= LOAD AUTH ================= */
 
   useEffect(() => {
     if (!open) return;
@@ -108,7 +107,6 @@ export default function CreateMenuModal({
     setSelectedMenuItems(mappedSelectedItems);
   }, [open, isEdit, menuDetails]);
 
-  /* ================= FORM UPDATE ================= */
 
   const updateForm = (key: string, value: string) => {
     if (key === "name") {
@@ -129,7 +127,6 @@ export default function CreateMenuModal({
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  /* ================= MENU ITEMS FETCH FOR ASYNC SELECT ================= */
 
   const fetchMenuItemOptions = async ({
     search,
@@ -159,7 +156,6 @@ export default function CreateMenuModal({
     }
   };
 
-  /* ================= HANDLE MENU ITEM SELECTION ================= */
 
   const handleMenuItemsChange = (items: MenuItemOption[]) => {
     setSelectedMenuItems(items);
@@ -169,7 +165,6 @@ export default function CreateMenuModal({
     }));
   };
 
-  /* ================= SUBMIT ================= */
 
   const handleSubmit = async () => {
     setSubmitted(true);
@@ -211,7 +206,6 @@ export default function CreateMenuModal({
     }
   };
 
-  /* ================= RESET ================= */
 
   const handleReset = () => {
     setForm({

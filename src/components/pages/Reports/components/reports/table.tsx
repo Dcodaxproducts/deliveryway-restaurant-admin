@@ -25,7 +25,6 @@ const OrdersTable = () => {
 
   return (
     <>
-      {/* ================= MOBILE CARDS ================= */}
       <div className="space-y-4 md:hidden">
         {ordersReport.map((order, i) => (
           <div
@@ -67,7 +66,6 @@ const OrdersTable = () => {
         ))}
       </div>
 
-      {/* ================= DESKTOP TABLE ================= */}
       <div className="hidden md:block">
         <Table>
           <TableHeader>

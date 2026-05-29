@@ -54,7 +54,6 @@ export default function MakeReservationModal({
   const [selectedBranch, setSelectedBranch] = useState<any>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
 
-  // ================= FETCH BRANCHES =================
   const { data: branchesData } = useGetBranches({
     restaurantId,
   });
@@ -68,35 +67,43 @@ export default function MakeReservationModal({
   const fetchBranches = async ({ search }: any) => {
     if (!restaurantId) return { data: [] };
 
-    const list = branchesData?.data || [];
+    const list = branchesData?.data ?? [];
+    const query = String(search ?? "").toLowerCase();
 
     return {
-      data: list.filter((b: any) =>
-        b?.name?.toLowerCase().includes(search.toLowerCase())
+      data: list.filter((branch: any) =>
+        branch?.name?.toLowerCase().includes(query)
       ),
     };
   };
 
-const fetchCustomers = async ({ search, page }: any) => {
-  if (!restaurantId) return { data: [], meta: {} };
+  const fetchCustomers = async ({ search }: any) => {
+    if (!restaurantId) return { data: [], meta: {} };
 
-  const res = await customerQuery.refetch({ throwOnError: false });
-  const raw = res.data?.data?.data || res.data?.data || [];
+    const res = await customerQuery.refetch({ throwOnError: false });
+    const raw = res.data?.data?.data ?? res.data?.data ?? [];
+    const query = String(search ?? "").toLowerCase();
 
-  const normalized = raw.map((u: any) => ({
-    ...u,
-    firstName: u?.profile?.firstName || "No Name",
-    lastName: u?.profile?.lastName || "",
-    fullName: `${u?.profile?.firstName || ""} ${u?.profile?.lastName || ""}`,
-  }));
+    const normalized = raw
+      .map((customer: any) => {
+        const firstName = customer?.profile?.firstName ?? "No Name";
+        const lastName = customer?.profile?.lastName ?? "";
 
-  return {
-    data: normalized,
-    meta: res.data?.data?.meta || res.data?.meta,
+        return {
+          ...customer,
+          firstName,
+          lastName,
+          fullName: `${firstName} ${lastName}`,
+        };
+      })
+      .filter((customer: any) => customer.fullName.toLowerCase().includes(query));
+
+    return {
+      data: normalized,
+      meta: res.data?.data?.meta ?? res.data?.meta,
+    };
   };
-};
 
-  // ================= SUBMIT =================
   const handleSubmit = async () => {
     try {
       if (!selectedBranch || !selectedCustomer) {
@@ -151,7 +158,6 @@ const fetchCustomers = async ({ search, page }: any) => {
           description="Create a new Reservation by filling necessary info from here"
         />
 
-        {/* ================= RESERVATION INFO ================= */}
         <Collapsible defaultOpen className="mt-6">
           <CollapsibleTrigger className="flex items-center justify-between w-full text-[16px] text-[#909090]">
             Reservation Information
@@ -212,7 +218,6 @@ const fetchCustomers = async ({ search, page }: any) => {
           </CollapsibleContent>
         </Collapsible>
 
-        {/* ================= CUSTOMER ================= */}
         <div className="mt-6">
           <label className="block mb-2 text-[16px] text-black">
             Customer<span className="text-red-500">*</span>

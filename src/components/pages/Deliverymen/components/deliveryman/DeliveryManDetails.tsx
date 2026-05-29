@@ -37,7 +37,6 @@ export default function DeliveryManDetails({
 
   if (!data) return null;
 
-  /* ================= BLOCK / UNBLOCK ================= */
   const handleToggle = async (checked: boolean) => {
     setIsBlocked(checked);
 
@@ -50,7 +49,6 @@ export default function DeliveryManDetails({
     }
   };
 
-  /* ================= DELETE ================= */
   const handleDelete = async () => {
     const confirm = window.confirm("Are you sure you want to delete?");
     if (!confirm) return;
@@ -63,7 +61,6 @@ export default function DeliveryManDetails({
     }
   };
 
-  /* ================= EDIT ================= */
   const handleEdit = () => {
     router.push(`/deliveryman/add?editId=${data.id}`);
   };
@@ -71,7 +68,6 @@ export default function DeliveryManDetails({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[420px] max-h-[85vh] overflow-y-auto rounded-[18px] px-6 py-8">
-        {/* Header */}
         <DialogHeader className="text-center">
           <DialogTitle className="text-xl font-semibold text-center">
             Delivery Man #{data?.id || "N/A"}
@@ -171,7 +167,6 @@ export default function DeliveryManDetails({
           {/* <StatCard value="N/A" label="Order Limit" /> */}
         </div>
 
-        {/* Footer */}
         <Button
           onClick={handleEdit}
           className="mt-6 w-full h-[44px] rounded-[12px] bg-primary text-white hover:bg-primary/90"

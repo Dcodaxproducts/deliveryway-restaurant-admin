@@ -24,7 +24,6 @@ export default function EditBranchStepOne({ data, setData }: any) {
   return (
     <div className="rounded-[14px] space-y-8">
 
-      {/* ================= BASIC INFO ================= */}
       <Section label="Add branch Info">
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -98,7 +97,6 @@ export default function EditBranchStepOne({ data, setData }: any) {
         </div>
       </Section>
 
-      {/* ================= COVER IMAGE ================= */}
       {/* <Section label="Add Branch Logo">
         <div className="flex flex-col items-center text-center space-y-[12px]">
           <Label>Branch Cover Image</Label>
@@ -132,7 +130,6 @@ export default function EditBranchStepOne({ data, setData }: any) {
         </div>
       </Section> */}
 
-      {/* ================= ADMIN ================= */}
       {/* <Section label="Branch Admin">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
@@ -171,7 +168,6 @@ export default function EditBranchStepOne({ data, setData }: any) {
         </div>
       </Section> */}
 
-      {/* ================= CONTACT ================= */}
       <Section label="Contact Info">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
@@ -192,7 +188,6 @@ export default function EditBranchStepOne({ data, setData }: any) {
         </div>
       </Section>
 
-      {/* ================= SETTINGS ================= */}
       <Section label="Settings">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput

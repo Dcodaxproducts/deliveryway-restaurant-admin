@@ -41,7 +41,6 @@ export default function ItemList({
 
   return (
     <div className="w-full py-4">
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-[24px] font-semibold text-gray-900">
           {headerText}

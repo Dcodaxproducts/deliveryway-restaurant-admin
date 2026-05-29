@@ -30,7 +30,6 @@ export default function CreateCategoryModal({
   /*  CONTROL SELECT OPEN STATE */
   const [selectOpen, setSelectOpen] = useState(false);
 
-  /* ================= RESET ================= */
   const handleReset = () => {
     setSelectedCategory("");
     setCategories([]);
@@ -38,7 +37,6 @@ export default function CreateCategoryModal({
     setSelectOpen(false);
   };
 
-  /* ================= ADD CATEGORY ================= */
   const handleAddCategory = (val: string) => {
     if (!val) return;
 
@@ -50,12 +48,10 @@ export default function CreateCategoryModal({
     setSelectOpen(false); // close after select
   };
 
-  /* ================= REMOVE CATEGORY ================= */
   const handleRemoveCategory = (val: string) => {
     setCategories((prev) => prev.filter((c) => c !== val));
   };
 
-  /* ================= CREATE ================= */
   const handleCreate = () => {
     setSubmitted(true);
 
@@ -68,7 +64,6 @@ export default function CreateCategoryModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[420px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
-        {/* ================= HEADER ================= */}
         <DialogHeader className="space-y-1">
           <DialogTitle className="text-2xl font-semibold">
             Add Categories
@@ -78,7 +73,6 @@ export default function CreateCategoryModal({
           </p>
         </DialogHeader>
 
-        {/* ================= CARD ================= */}
         <div className="mt-5 rounded-[16px] bg-white p-5 space-y-4">
           
           {/* Category */}
@@ -165,7 +159,6 @@ export default function CreateCategoryModal({
           )}
         </div>
 
-        {/* ================= FOOTER ================= */}
         <div className="mt-5 flex items-center justify-center gap-4">
           <Button
             variant="ghost"

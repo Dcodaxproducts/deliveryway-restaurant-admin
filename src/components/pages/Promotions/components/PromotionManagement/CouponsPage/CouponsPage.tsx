@@ -8,7 +8,6 @@ import CouponsTable from "./table";
 export default function CouponsPage() {
   return (
     <div className="mt-1 space-y-10">
-      {/* ================= HEADER ================= */}
       <PromotionSectionHeader
         title="Coupons"
         description="Boost Customer Loyalty with Custom Coupon Offers"
@@ -17,7 +16,6 @@ export default function CouponsPage() {
         actionHref="/promotion-management/coupons/add"
       />
 
-      {/* ================= STATS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <PromotionStatCard
           icon={<Tag size={18} />}

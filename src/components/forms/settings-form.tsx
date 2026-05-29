@@ -37,7 +37,6 @@ export default function SettingsForm() {
                 </div>
             </div>
 
-            {/* Form Content */}
             <div className="lg:col-span-8 space-y-[48px]">
 
                 {/* Section: Tax Settings */}
@@ -148,7 +147,6 @@ export default function SettingsForm() {
                     <FormGroup label="Font Selection (Optional)" type="select" placeholder="Select font" />
                 </section>
 
-                {/* Footer Actions */}
                 <section className="flex flex-col sm:flex-row gap-4 justify-end">
                     <Button variant="outline" className="h-[52px] px-10 rounded-[10px] text-dark border-gray-200">Cancel</Button>
                     <Button variant="default" className="h-[52px] px-10 rounded-[10px]">Save & Activate</Button>

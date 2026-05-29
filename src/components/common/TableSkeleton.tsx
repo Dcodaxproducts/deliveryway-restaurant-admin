@@ -25,7 +25,6 @@ export default function TableSkeleton({
   return (
     <div className="hidden lg:block">
       <Table className="animate-pulse">
-        {/* HEADER */}
         <TableHeader>
           <TableRow className="border-none bg-gray-50">
             {showCheckbox && (

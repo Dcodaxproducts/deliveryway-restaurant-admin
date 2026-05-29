@@ -69,7 +69,6 @@ const paymentMethods = [
   return (
     <div className="max-w-5xl mx-auto bg-white rounded-xl p-8">
 
-      {/* DELIVERY SETTINGS */}
       <h2 className="text-[20px] font-semibold text-gray-900 mb-6">
         Delivery Settings
       </h2>
@@ -94,7 +93,6 @@ const paymentMethods = [
         />
       </div>
 
-      {/* ORDER TYPES */}
       <h2 className="text-[20px] font-semibold text-gray-900 mb-6">
         Order Types Supported
       </h2>
@@ -111,7 +109,6 @@ const paymentMethods = [
     />
   ))}
 </div>
-      {/* PAYMENT METHODS */}
       <h2 className="text-[20px] font-semibold text-gray-900 mb-6">
         Payment Methods
       </h2>
@@ -132,7 +129,6 @@ const paymentMethods = [
   ))}
       </div>
 
-      {/* ORDER PROCESSING */}
       <h2 className="text-[20px] font-semibold text-gray-900 mb-6">
         Order Processing
       </h2>
@@ -142,7 +138,6 @@ const paymentMethods = [
         <Switch checked={settings.autoAcceptOrders} onCheckedChange={toggleAutoAccept} />
       </div>
 
-      {/* FOOTER */}
       <div className="flex justify-between items-center">
         <Button
           onClick={back}

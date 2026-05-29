@@ -299,18 +299,11 @@ export const attachModifierGroupToCategory = async (
 };
 
 
-
-/* =========================
-   GET SINGLE MENU
-========================= */
 export const getMenuById = async (menuId: string) => {
   const { data } = await api.get(`/menus/${menuId}`);
   return data;
 };
 
-/* =========================
-   CREATE MENU
-========================= */
 export interface CreateMenuPayload {
   restaurantId: string;
   name: string;
@@ -326,9 +319,6 @@ export const createMenu = async (payload: CreateMenuPayload) => {
   return data;
 };
 
-/* =========================
-   UPDATE MENU
-========================= */
 export interface UpdateMenuPayload {
   name?: string;
   slug?: string;

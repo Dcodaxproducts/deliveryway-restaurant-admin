@@ -20,7 +20,6 @@ export const useGetNotificationSettings = () => {
 
 /**
  * ==============================
- * UPDATE NOTIFICATION SETTINGS
  * ==============================
  */
 export const useUpdateNotificationSettings = () => {

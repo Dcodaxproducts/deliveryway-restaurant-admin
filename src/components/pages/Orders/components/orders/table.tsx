@@ -75,9 +75,7 @@ const OrdersTable = ({
 
   return (
     <div className="space-y-4">
-      {/* MOBILE unchanged */}
 
-      {/* DESKTOP */}
       <div className="hidden lg:block">
         <Table>
          <TableHeader>

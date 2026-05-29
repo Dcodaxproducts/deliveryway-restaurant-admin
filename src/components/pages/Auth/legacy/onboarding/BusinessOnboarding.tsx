@@ -21,7 +21,6 @@ const steps = [
 export default function BusinessOnboarding() {
   const [activeStep, setActiveStep] = useState<number>(1);
 const router = useRouter();
-  /* ================= GLOBAL FORM DATA ================= */
 
   const [formData, setFormData] = useState({
     user: {
@@ -91,7 +90,6 @@ const router = useRouter();
     behavior: "smooth",
   });
 }, [activeStep]);
-  /* ================= UPDATE HELPER ================= */
 
   const updateFormData = (section: string, data: any) => {
     setFormData((prev) => ({
@@ -105,7 +103,6 @@ const router = useRouter();
 
   const activeIndex = steps.findIndex((s) => s.id === activeStep);
 
-  /* ================= API SUBMISSION ================= */
 
   const [loading, setLoading] = useState(false);
 
@@ -187,7 +184,6 @@ const router = useRouter();
     }
   };
 
-  /* ================= RENDER STEP ================= */
 
   const renderStepContent = () => {
     switch (activeStep) {
@@ -241,7 +237,6 @@ const router = useRouter();
 
   return (
     <div className="min-h-screen px-4 sm:px-6 md:px-10 py-10">
-      {/* HEADER */}
       <div className="text-center mb-8 sm:mb-10">
         <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
           Business Onboarding
@@ -251,7 +246,6 @@ const router = useRouter();
         </p>
       </div>
 
-      {/* ================= STEPPER ================= */}
       <div className="max-w-5xl mx-auto mb-10 relative overflow-x-auto">
         <div className="flex items-center justify-between relative min-w-[500px] sm:min-w-full">
           <div className="absolute top-5 left-0 w-full border-t border-dashed border-[#909090]" />

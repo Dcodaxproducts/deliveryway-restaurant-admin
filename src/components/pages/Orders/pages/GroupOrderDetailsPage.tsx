@@ -39,10 +39,8 @@ export default function GroupOrderDetails() {
         descriptionClassName="text-sm text-gray-500"
       />
 
-      {/* MAIN CARD */}
       <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 space-y-6">
 
-        {/* TOP INFO */}
         <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
           <div>
             <p className="text-xs text-gray-500">Order ID#</p>
@@ -72,7 +70,6 @@ export default function GroupOrderDetails() {
           </div>
         </div>
 
-        {/* STATUS ROW */}
         <div className="flex flex-wrap gap-4 text-xs sm:text-sm">
           <span className="px-3 py-1 bg-gray-100 rounded">
             Status: {order.status}
@@ -95,7 +92,6 @@ export default function GroupOrderDetails() {
               key={p.id}
               className="border border-[#BBBBBB] rounded-xl p-4 flex flex-col justify-between min-h-[200px]"
             >
-              {/* HEADER */}
               <div className="flex justify-between items-center mb-3">
                 <h4 className="font-semibold text-sm truncate">
                   {getUserName(p.user)}
@@ -142,7 +138,6 @@ export default function GroupOrderDetails() {
                 ))}
               </div>
 
-              {/* FOOTER */}
               <div className="mt-3 pt-2 border-t text-xs text-gray-500 flex justify-between">
                 <span>ITEM LIST ({p.items?.length || 0})</span>
                 <span>{p.status}</span>
@@ -194,7 +189,6 @@ export default function GroupOrderDetails() {
         ))}
       </div>
 
-      {/* ORDER SUMMARY */}
       <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 space-y-4">
         <h3 className="font-semibold">Order Summary</h3>
 
@@ -220,7 +214,6 @@ export default function GroupOrderDetails() {
         </div>
       </div>
 
-      {/* CUSTOMER NOTE */}
       {order.customerNote && (
         <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
           <h3 className="font-semibold mb-2">Customer Note</h3>
@@ -230,7 +223,6 @@ export default function GroupOrderDetails() {
         </div>
       )}
 
-      {/* PRINT CONFIG (UNCHANGED) */}
        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 flex flex-col lg:flex-row gap-6">
         <div className="flex-1 space-y-4">
           <div>

@@ -38,7 +38,6 @@ export default function OrderTrackingSection({ order }: Props) {
   return (
     <Card className="w-full rounded-2xl shadow-sm border-0">
       <CardContent className="p-6 pt-0 space-y-8">
-        {/* ================= TRACKING PANEL ================= */}
         <div className="relative bg-muted/40 rounded-2xl h-[280px] overflow-hidden">
 
    <svg
@@ -81,7 +80,6 @@ export default function OrderTrackingSection({ order }: Props) {
             </p>
           </div>
 
-          {/* HEADER */}
           <div className="absolute right-8 top-8 text-right z-10">
             <h3 className="text-lg font-semibold">Track Orders</h3>
             <p className="text-sm text-muted-foreground">
@@ -90,7 +88,6 @@ export default function OrderTrackingSection({ order }: Props) {
           </div>
         </div>
 
-        {/* ================= DELIVERY SECTION ================= */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
 
           {/* LEFT */}

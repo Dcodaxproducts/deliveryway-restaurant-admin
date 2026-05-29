@@ -30,7 +30,6 @@ export default function BranchCoverModal({
   const { uploadFile, uploading } = useFileUpload();
   const updateMutation = useUpdateBranchImages();
 
-  // ================= STATES =================
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
@@ -98,7 +97,6 @@ export default function BranchCoverModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-0 overflow-hidden rounded-2xl">
-        {/* HEADER */}
         <div className="px-6 pt-5 pb-4 border-b bg-white">
           <h3 className="text-[16px] font-semibold text-gray-900">
             Customize Branch
@@ -110,7 +108,6 @@ export default function BranchCoverModal({
 
         {/* BODY */}
         <div className="p-6 space-y-6">
-          {/* ================= COVER ================= */}
           <div>
             <p className="text-sm font-medium mb-2">Cover Image</p>
 
@@ -163,9 +160,7 @@ export default function BranchCoverModal({
             </label>
           </div>
 
-          {/* ================= LOGO ================= */}
           <div className="flex items-center gap-5">
-            {/* LOGO PREVIEW */}
             <div className="relative size-[90px] rounded-full overflow-hidden border bg-gray-50 flex items-center justify-center group">
               {logoPreview ? (
                 <>
@@ -187,7 +182,6 @@ export default function BranchCoverModal({
               )}
             </div>
 
-            {/* LOGO ACTION */}
             <div className="flex-1">
               <p className="text-sm font-medium">Logo</p>
               <p className="text-xs text-gray-400 mb-2">

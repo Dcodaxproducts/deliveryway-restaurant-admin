@@ -41,7 +41,6 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* MOBILE SIDEBAR */}
       {isSidebarOpen && (
         <div className="fixed inset-0 z-40 xl:hidden">
           <div

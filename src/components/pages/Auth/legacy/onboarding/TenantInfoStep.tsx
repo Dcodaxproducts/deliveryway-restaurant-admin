@@ -466,7 +466,6 @@ const generateSlug = (name: string) => {
         </div>
       </div>
 
-      {/* Footer */}
       <div className="flex justify-between mt-10">
         <Button
           onClick={back}

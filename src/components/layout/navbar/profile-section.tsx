@@ -47,7 +47,6 @@ const handleLogout = () => {
   return (
     <DropdownMenu>
       <div className="relative">
-        {/* ================= ORIGINAL ROW (UNCHANGED) ================= */}
         <Button
           variant={null}
           className="flex justify-between items-center lg:pl-[25px] gap-[24px] py-2 rounded-lg h-auto"
@@ -77,7 +76,6 @@ const handleLogout = () => {
           </DropdownMenuTrigger>
         </Button>
 
-        {/* ================= DROPDOWN ================= */}
         <DropdownMenuContent
           align="end"
           sideOffset={12}
@@ -141,7 +139,6 @@ const handleLogout = () => {
   );
 }
 
-/* ================= MENU ITEM ================= */
 
 function MenuItem({
   icon,

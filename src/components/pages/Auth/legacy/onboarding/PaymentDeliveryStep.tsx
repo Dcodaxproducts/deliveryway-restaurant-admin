@@ -29,7 +29,6 @@ export default function PaymentDeliveryStep() {
 
       {/* MAIN CONTENT (extra padding on large screens only) */}
       <div className="lg:px-12">
-        {/* ================= PAYMENT ================= */}
         {activeTab === "payment" && (
           <>
             <div className="flex justify-between items-center mb-4">
@@ -98,7 +97,6 @@ export default function PaymentDeliveryStep() {
           </>
         )}
 
-        {/* ================= DELIVERY ================= */}
         {activeTab === "delivery" && (
           <>
             <div className="flex justify-between items-center mb-4">

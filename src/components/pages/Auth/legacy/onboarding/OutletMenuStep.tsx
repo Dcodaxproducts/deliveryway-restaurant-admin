@@ -38,7 +38,6 @@ export default function OutletMenuStep() {
         )}
       </div>
 
-      {/* ================= OUTLET (UNCHANGED) ================= */}
       {activeTab === "outlet" && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -69,7 +68,6 @@ export default function OutletMenuStep() {
         </>
       )}
 
-      {/* ================= MENU ================= */}
       {activeTab === "menu" && (
         <>
           <h2 className="text-[18px] font-semibold mb-6">Add Menu Item</h2>
@@ -150,7 +148,6 @@ export default function OutletMenuStep() {
             </div>
           </div>
 
-          {/* Footer */}
           <div className="flex justify-between items-center mt-10">
             <button className="px-6 py-2 rounded-full bg-[#F5F5F5] text-sm text-gray-500">
               Back

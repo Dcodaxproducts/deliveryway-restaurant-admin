@@ -30,7 +30,6 @@ import {
   sanitizeNonNegativeNumber,
 } from "@/lib/number-input";
 
-/* ================= TYPES ================= */
 interface ModifierGroupForm {
   name: string;
   description: string;
@@ -396,7 +395,6 @@ export default function ModifierGroupModal({
   );
 }
 
-/* ================= INPUT FIELD ================= */
 interface InputFieldProps
   extends Omit<
     InputHTMLAttributes<HTMLInputElement>,
