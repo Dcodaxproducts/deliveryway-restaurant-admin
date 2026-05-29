@@ -1,6 +1,6 @@
 export type EditTab = "basicInfo" | "delivery" | "workingHours";
 
-export type DeliveryMode = "RADIUS" | "ZONE" | "POSTAL_CODE";
+export type DeliveryMode = "RADIUS" | "ZONE" | "ZONE_BANDS" | "POSTAL_CODE";
 
 export type DeliveryPolygonPoint = {
   lat: number;

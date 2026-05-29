@@ -22,7 +22,7 @@ const DAYS = [
   "SATURDAY",
 ];
 
-const DELIVERY_MODES: DeliveryMode[] = ["RADIUS", "ZONE", "POSTAL_CODE"];
+const DELIVERY_MODES: DeliveryMode[] = ["RADIUS", "ZONE", "ZONE_BANDS", "POSTAL_CODE"];
 
 export const toNumber = (value: unknown, fallback = 0) => {
   const parsed = Number(value);
@@ -179,6 +179,10 @@ export const getDeliveryConfigValidationError = (deliveryConfig: DeliveryConfig)
         return `${label} has an invalid latitude/longitude point`;
       }
     }
+  }
+
+  if (deliveryConfig.mode === "ZONE_BANDS" && !deliveryConfig.zoneBands.length) {
+    return "Please add at least one distance zone band";
   }
 
   for (const [index, band] of deliveryConfig.zoneBands.entries()) {

@@ -31,7 +31,7 @@ export const postalCodeRuleSchema = z.object({
 });
 
 export const deliveryConfigSchema = z.object({
-  mode: z.enum(["RADIUS", "ZONE", "POSTAL_CODE"]),
+  mode: z.enum(["RADIUS", "ZONE", "ZONE_BANDS", "POSTAL_CODE"]),
   radiusKm: z.coerce.number().min(0),
   minOrderAmount: z.coerce.number().min(0),
   deliveryFee: z.coerce.number().min(0),

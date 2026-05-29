@@ -26,7 +26,7 @@ const PAYMENT_METHODS = [
   "BANK_TRANSFER",
 ];
 
-type DeliveryMode = "RADIUS" | "ZONE" | "POSTAL_CODE";
+type DeliveryMode = "RADIUS" | "ZONE" | "ZONE_BANDS" | "POSTAL_CODE";
 type LatLngKey = "lat" | "lng";
 
 type LatLngPoint = {
@@ -63,6 +63,11 @@ const DELIVERY_MODES: {
     value: "ZONE",
     label: "Polygon zones",
     description: "Create multiple custom delivery areas with coordinates.",
+  },
+  {
+    value: "ZONE_BANDS",
+    label: "Zone bands",
+    description: "Use distance bands with separate fees, minimums, and free delivery thresholds.",
   },
   {
     value: "POSTAL_CODE",
@@ -212,7 +217,9 @@ export default function EditBranchStepTwo({ data, setData }: any) {
   const branchAddress = safeData.address || {};
 
   const deliveryMode: DeliveryMode =
-    delivery.mode === "ZONE" || delivery.mode === "POSTAL_CODE"
+    delivery.mode === "ZONE" ||
+    delivery.mode === "ZONE_BANDS" ||
+    delivery.mode === "POSTAL_CODE"
       ? delivery.mode
       : "RADIUS";
 
@@ -1254,7 +1261,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               Delivery area calculation mode
             </p>
 
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
               {DELIVERY_MODES.map((mode) => {
                 const active = deliveryMode === mode.value;
 
@@ -1343,7 +1350,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
             </div>
           ) : null}
 
-          {deliveryMode === "RADIUS" ? (
+          {deliveryMode === "ZONE_BANDS" ? (
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -1351,7 +1358,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                     Distance Zone Bands
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
-                    Optional distance-based bands for delivery fee, minimum order,
+                    Distance-based bands for delivery fee, minimum order,
                     and free delivery threshold.
                   </p>
                 </div>
@@ -1368,8 +1375,8 @@ export default function EditBranchStepTwo({ data, setData }: any) {
 
               {zoneBands.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-5 text-center text-sm text-gray-500">
-                  No distance bands configured yet. Base delivery values above
-                  will be used.
+                  No distance bands configured yet. Add at least one band to use
+                  zone band delivery mode.
                 </div>
               ) : (
                 <div className="space-y-3">
