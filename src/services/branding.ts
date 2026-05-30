@@ -1,30 +1,59 @@
-import type { RestaurantBrandingPayload } from "@/types/branding";
+import { DEFAULT_RESTAURANT_BRANDING_PAYLOAD } from "@/config/default-branding";
+import { httpClient } from "@/lib/axios";
 import {
-  buildBrandingApiPayload,
-  clearLocalBranding,
-  readLocalBranding,
-  writeLocalBranding,
+  buildRestaurantBrandingPatchPayload,
+  normalizeBrandingApiResponse,
+  normalizeBrandingPayload,
 } from "@/lib/branding";
+import type { RestaurantBrandingPayload, RestaurantBrandingPatchPayload } from "@/types/branding";
 
-export const getBrandingSettings = (restaurantId?: string | null): RestaurantBrandingPayload => {
-  // Backend API integration point: future GET belongs here.
-  // When endpoints are ready, replace readLocalBranding with a GET like:
-  // GET `/v1/restaurants/:restaurantId/branding` or whatever backend finalizes later,
-  // then pass the unknown response through normalizeBrandingApiResponse before returning.
-  return readLocalBranding(restaurantId);
+const getRestaurantEndpoint = (restaurantId: string) =>
+  `/restaurants/${encodeURIComponent(restaurantId)}`;
+
+const getDefaultBrandingSettings = (): RestaurantBrandingPayload =>
+  normalizeBrandingPayload(DEFAULT_RESTAURANT_BRANDING_PAYLOAD);
+
+export const getBrandingSettings = async (restaurantId?: string | null): Promise<RestaurantBrandingPayload> => {
+  const normalizedRestaurantId = restaurantId?.trim();
+
+  if (!normalizedRestaurantId) {
+    return getDefaultBrandingSettings();
+  }
+
+  const response = await httpClient.get<unknown>(getRestaurantEndpoint(normalizedRestaurantId));
+  return normalizeBrandingApiResponse(response);
 };
 
-export const saveBrandingSettings = (
+export const saveBrandingSettings = async (
   payload: RestaurantBrandingPayload,
   restaurantId?: string | null,
-): RestaurantBrandingPayload => {
-  // Backend API integration point: future PUT/PATCH belongs here.
-  // When endpoints are ready, replace writeLocalBranding with a PUT/PATCH equivalent for
-  // `/v1/restaurants/:restaurantId/branding` or whatever backend finalizes later,
-  // and send buildBrandingApiPayload(payload).
-  return writeLocalBranding(buildBrandingApiPayload(payload), restaurantId);
+): Promise<RestaurantBrandingPayload> => {
+  const normalizedRestaurantId = restaurantId?.trim();
+
+  if (!normalizedRestaurantId) {
+    return normalizeBrandingPayload(payload);
+  }
+
+  const response = await httpClient.patch<unknown, RestaurantBrandingPatchPayload>(
+    getRestaurantEndpoint(normalizedRestaurantId),
+    buildRestaurantBrandingPatchPayload(payload),
+  );
+
+  return normalizeBrandingApiResponse(response);
 };
 
-export const resetBrandingSettings = (restaurantId?: string | null): void => {
-  clearLocalBranding(restaurantId);
+export const resetBrandingSettings = async (restaurantId?: string | null): Promise<RestaurantBrandingPayload> => {
+  const defaults = getDefaultBrandingSettings();
+  const normalizedRestaurantId = restaurantId?.trim();
+
+  if (!normalizedRestaurantId) {
+    return defaults;
+  }
+
+  const response = await httpClient.patch<unknown, RestaurantBrandingPatchPayload>(
+    getRestaurantEndpoint(normalizedRestaurantId),
+    buildRestaurantBrandingPatchPayload(defaults),
+  );
+
+  return normalizeBrandingApiResponse(response);
 };

@@ -117,6 +117,10 @@ const socialMediaSchema = z.object({
 });
 
 export const restaurantBrandingProfileSchema = z.object({
+  id: z.string().optional(),
+  tenantId: z.string().optional(),
+  customDomain: z.string().optional(),
+  settings: z.record(z.unknown()).optional(),
   name: z.string().min(1, "Restaurant name is required"),
   slug: z.string().min(1, "Restaurant slug is required"),
   logoUrl: optionalUrlSchema,

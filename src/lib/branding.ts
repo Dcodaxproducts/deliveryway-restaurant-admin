@@ -5,10 +5,9 @@ import type {
   BrandingMenuCardStyle,
   BrandingThemeMode,
   RestaurantBrandingPayload,
+  RestaurantBrandingPatchPayload,
 } from "@/types/branding";
 import { restaurantBrandingPayloadSchema } from "@/validations/branding";
-
-export const BRANDING_STORAGE_KEY_BASE = "deliveryway:restaurant-branding";
 
 const themeModes: readonly BrandingThemeMode[] = ["light", "dark", "system"];
 const buttonStyles: readonly BrandingButtonStyle[] = ["rounded", "pill", "square"];
@@ -67,6 +66,11 @@ const getString = (
   return value;
 };
 
+const getOptionalString = (source: Record<string, unknown> | undefined, key: string): string | undefined => {
+  const value = source?.[key];
+  return typeof value === "string" ? value : undefined;
+};
+
 const getBoolean = (source: Record<string, unknown> | undefined, key: string, fallback: boolean): boolean => {
   const value = source?.[key];
   return typeof value === "boolean" ? value : fallback;
@@ -111,10 +115,14 @@ const deepMergeRecords = (base: unknown, override: unknown): unknown => {
 };
 
 const hasRestaurantPayloadFields = (value: Record<string, unknown>): boolean =>
+  "id" in value ||
+  "tenantId" in value ||
   "name" in value ||
   "slug" in value ||
   "logoUrl" in value ||
   "coverImage" in value ||
+  "customDomain" in value ||
+  "settings" in value ||
   "branding" in value ||
   "supportContact" in value ||
   "socialMedia" in value;
@@ -196,11 +204,6 @@ const hexToRgb = (hexColor: string): { red: number; green: number; blue: number 
   };
 };
 
-export const getBrandingStorageKey = (restaurantId?: string | null): string => {
-  const normalizedRestaurantId = restaurantId?.trim();
-  return normalizedRestaurantId ? `${BRANDING_STORAGE_KEY_BASE}:${normalizedRestaurantId}` : BRANDING_STORAGE_KEY_BASE;
-};
-
 export const isHexColor = (value: unknown): value is string =>
   typeof value === "string" && hexColorPattern.test(value);
 
@@ -234,8 +237,42 @@ export const normalizeBrandingApiResponse = (response: unknown): RestaurantBrand
   });
 };
 
-export const buildBrandingApiPayload = (payload: RestaurantBrandingPayload): RestaurantBrandingPayload =>
-  normalizeBrandingPayload(payload);
+export const buildRestaurantBrandingPatchPayload = (
+  payload: RestaurantBrandingPayload,
+): RestaurantBrandingPatchPayload => {
+  const normalizedPayload = normalizeBrandingPayload(payload);
+  const { restaurant } = normalizedPayload;
+  const { branding } = restaurant;
+  const { theme } = branding;
+
+  return {
+    name: restaurant.name,
+    slug: restaurant.slug,
+    logoUrl: restaurant.logoUrl,
+    coverImage: restaurant.coverImage,
+    ...(restaurant.customDomain ? { customDomain: restaurant.customDomain } : {}),
+    tagline: restaurant.tagline,
+    bio: restaurant.bio,
+    supportContact: restaurant.supportContact,
+    socialMedia: restaurant.socialMedia,
+    branding: {
+      primaryColor: theme.primaryColor,
+      secondaryColor: theme.secondaryColor,
+      accentColor: theme.accentColor,
+      backgroundColor: theme.backgroundColor,
+      textColor: theme.textColor,
+      fontFamily: theme.fontFamily,
+      headingFontFamily: theme.headingFontFamily,
+      borderRadius: theme.borderRadius,
+      buttonStyle: theme.buttonStyle,
+      theme: branding.theme,
+      app: branding.app,
+      checkout: branding.checkout,
+      assets: branding.assets,
+      logo: branding.logo,
+    },
+  };
+};
 
 export const normalizeBrandingPayload = (input: unknown): RestaurantBrandingPayload => {
   const defaults = cloneDefaultPayload();
@@ -257,9 +294,14 @@ export const normalizeBrandingPayload = (input: unknown): RestaurantBrandingPayl
   const admin = getRecord(branding, "admin");
   const supportContact = getRecord(restaurant, "supportContact");
   const socialMedia = getRecord(restaurant, "socialMedia");
+  const settings = getRecord(restaurant, "settings");
 
   return {
     restaurant: {
+      ...(getOptionalString(restaurant, "id") ? { id: getOptionalString(restaurant, "id") } : {}),
+      ...(getOptionalString(restaurant, "tenantId") ? { tenantId: getOptionalString(restaurant, "tenantId") } : {}),
+      ...(getOptionalString(restaurant, "customDomain") ? { customDomain: getOptionalString(restaurant, "customDomain") } : {}),
+      ...(settings ? { settings } : {}),
       name: getString(restaurant, "name", defaults.restaurant.name, (value) => value.trim().length > 0),
       slug: getString(restaurant, "slug", defaults.restaurant.slug, (value) => value.trim().length > 0),
       logoUrl: getString(restaurant, "logoUrl", defaults.restaurant.logoUrl, isOptionalUrl),
@@ -392,42 +434,4 @@ export const applyBrandingCssVariables = (payload: RestaurantBrandingPayload, ta
 
   targetElement.dataset.brandButtonStyle = normalizedPayload.restaurant.branding.theme.buttonStyle;
   targetElement.dataset.brandThemeMode = normalizedPayload.restaurant.branding.theme.mode;
-};
-
-export const readLocalBranding = (restaurantId?: string | null): RestaurantBrandingPayload => {
-  if (typeof window === "undefined") {
-    return cloneDefaultPayload();
-  }
-
-  const storedPayload = window.localStorage.getItem(getBrandingStorageKey(restaurantId));
-  if (!storedPayload) {
-    return cloneDefaultPayload();
-  }
-
-  try {
-    return normalizeBrandingPayload(JSON.parse(storedPayload) as unknown);
-  } catch {
-    return cloneDefaultPayload();
-  }
-};
-
-export const writeLocalBranding = (
-  payload: RestaurantBrandingPayload,
-  restaurantId?: string | null,
-): RestaurantBrandingPayload => {
-  const normalizedPayload = normalizeBrandingPayload(payload);
-
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(getBrandingStorageKey(restaurantId), JSON.stringify(normalizedPayload));
-  }
-
-  return normalizedPayload;
-};
-
-export const clearLocalBranding = (restaurantId?: string | null): void => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.removeItem(getBrandingStorageKey(restaurantId));
 };

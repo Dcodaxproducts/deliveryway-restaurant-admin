@@ -86,6 +86,10 @@ export type RestaurantSocialMedia = {
 };
 
 export type RestaurantBrandingProfile = {
+  id?: string;
+  tenantId?: string;
+  customDomain?: string;
+  settings?: Record<string, unknown>;
   name: string;
   slug: string;
   logoUrl: string;
@@ -99,4 +103,32 @@ export type RestaurantBrandingProfile = {
 
 export type RestaurantBrandingPayload = {
   restaurant: RestaurantBrandingProfile;
+};
+
+export type RestaurantBrandingPatchPayload = {
+  name: string;
+  slug: string;
+  logoUrl: string;
+  coverImage: string;
+  customDomain?: string;
+  tagline: string;
+  bio: string;
+  supportContact: SupportContact;
+  socialMedia: RestaurantSocialMedia;
+  branding: {
+    primaryColor: string;
+    secondaryColor: string;
+    accentColor: string;
+    backgroundColor: string;
+    textColor: string;
+    fontFamily: string;
+    headingFontFamily: string;
+    borderRadius: string;
+    buttonStyle: BrandingButtonStyle;
+    theme: BrandingThemeOptions;
+    app: BrandingAppOptions;
+    checkout: BrandingCheckoutOptions;
+    assets: BrandingAssetOptions;
+    logo: RestaurantBranding["logo"];
+  };
 };

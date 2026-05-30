@@ -16,6 +16,7 @@ import TypographySection from "@/components/pages/Settings/theme/components/them
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useBranding } from "@/hooks/useBranding";
+import { getApiErrorMessage } from "@/lib/errors";
 import {
   type BrandingFormValues,
   restaurantBrandingPayloadSchema,
@@ -156,9 +157,13 @@ export default function ThemeSettingsPage() {
     [formState, getFieldState]
   );
 
-  const onSubmit = (values: BrandingFormValues) => {
-    saveBranding(values);
-    toast.success("Branding settings saved locally.");
+  const onSubmit = async (values: BrandingFormValues) => {
+    try {
+      await saveBranding(values);
+      toast.success("Branding settings saved.");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Unable to save branding settings."));
+    }
   };
 
   const handleApplyPreview = () => {
@@ -166,14 +171,18 @@ export default function ThemeSettingsPage() {
     toast.success("Preview applied. Save to keep these branding changes.");
   };
 
-  const handleDiscardChanges = () => {
-    reloadBranding();
+  const handleDiscardChanges = async () => {
+    await reloadBranding();
     toast.success("Unsaved branding changes discarded.");
   };
 
-  const handleResetBranding = () => {
-    resetBranding();
-    toast.success("Branding settings reset to defaults.");
+  const handleResetBranding = async () => {
+    try {
+      await resetBranding();
+      toast.success("Branding settings reset to defaults.");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Unable to reset branding settings."));
+    }
   };
 
   const renderTextField = ({ id, label, name, placeholder, inputMode = "text" }: TextFieldConfig) => (

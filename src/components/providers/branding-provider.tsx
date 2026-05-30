@@ -9,9 +9,12 @@ import {
   type ReactNode,
 } from "react";
 import { useTheme } from "next-themes";
+import { toast } from "sonner";
 
 import { useAuthContext } from "@/components/providers/auth-provider";
-import { applyBrandingCssVariables } from "@/lib/branding";
+import { DEFAULT_RESTAURANT_BRANDING_PAYLOAD } from "@/config/default-branding";
+import { applyBrandingCssVariables, normalizeBrandingPayload } from "@/lib/branding";
+import { getApiErrorMessage } from "@/lib/errors";
 import {
   getBrandingSettings,
   resetBrandingSettings,
@@ -19,15 +22,13 @@ import {
 } from "@/services/branding";
 import type { RestaurantBrandingPayload, RestaurantBrandingProfile } from "@/types/branding";
 
-const DEFAULT_RESTAURANT_STORAGE_KEY = "platform/default";
-
 export type BrandingContextValue = {
   branding: RestaurantBrandingPayload;
   restaurant: RestaurantBrandingProfile;
   updateBrandingDraft: (nextPayload: RestaurantBrandingPayload) => void;
-  saveBranding: (nextPayload: RestaurantBrandingPayload) => RestaurantBrandingPayload;
-  resetBranding: () => void;
-  reloadBranding: () => void;
+  saveBranding: (nextPayload: RestaurantBrandingPayload) => Promise<RestaurantBrandingPayload>;
+  resetBranding: () => Promise<RestaurantBrandingPayload>;
+  reloadBranding: () => Promise<RestaurantBrandingPayload>;
   isBrandingReady: boolean;
 };
 
@@ -37,25 +38,33 @@ type BrandingProviderProps = {
   children: ReactNode;
 };
 
-const getRestaurantStorageId = (restaurantId?: string | null): string =>
-  restaurantId?.trim() || DEFAULT_RESTAURANT_STORAGE_KEY;
+const defaultBranding = normalizeBrandingPayload(DEFAULT_RESTAURANT_BRANDING_PAYLOAD);
 
 export function BrandingProvider({ children }: BrandingProviderProps) {
   const { user } = useAuthContext();
   const { setTheme } = useTheme();
-  const restaurantStorageId = getRestaurantStorageId(user?.restaurantId);
-  const [branding, setBranding] = useState<RestaurantBrandingPayload>(() =>
-    getBrandingSettings(restaurantStorageId)
-  );
+  const restaurantId = user?.restaurantId?.trim() || null;
+  const [branding, setBranding] = useState<RestaurantBrandingPayload>(defaultBranding);
   const [isBrandingReady, setIsBrandingReady] = useState(false);
 
-  const reloadBranding = useCallback(() => {
-    setBranding(getBrandingSettings(restaurantStorageId));
-    setIsBrandingReady(true);
-  }, [restaurantStorageId]);
+  const reloadBranding = useCallback(async () => {
+    setIsBrandingReady(false);
+
+    try {
+      const nextBranding = await getBrandingSettings(restaurantId);
+      setBranding(nextBranding);
+      return nextBranding;
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Unable to load branding settings."));
+      setBranding(defaultBranding);
+      return defaultBranding;
+    } finally {
+      setIsBrandingReady(true);
+    }
+  }, [restaurantId]);
 
   useEffect(() => {
-    reloadBranding();
+    void reloadBranding();
   }, [reloadBranding]);
 
   useEffect(() => {
@@ -68,18 +77,19 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
   }, []);
 
   const saveBranding = useCallback(
-    (nextPayload: RestaurantBrandingPayload) => {
-      const savedPayload = saveBrandingSettings(nextPayload, restaurantStorageId);
+    async (nextPayload: RestaurantBrandingPayload) => {
+      const savedPayload = await saveBrandingSettings(nextPayload, restaurantId);
       setBranding(savedPayload);
       return savedPayload;
     },
-    [restaurantStorageId]
+    [restaurantId]
   );
 
-  const resetBranding = useCallback(() => {
-    resetBrandingSettings(restaurantStorageId);
-    reloadBranding();
-  }, [reloadBranding, restaurantStorageId]);
+  const resetBranding = useCallback(async () => {
+    const resetPayload = await resetBrandingSettings(restaurantId);
+    setBranding(resetPayload);
+    return resetPayload;
+  }, [restaurantId]);
 
   const contextValue = useMemo<BrandingContextValue>(
     () => ({
