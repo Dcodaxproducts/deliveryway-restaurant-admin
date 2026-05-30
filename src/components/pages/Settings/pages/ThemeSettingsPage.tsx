@@ -130,6 +130,9 @@ export default function ThemeSettingsPage() {
     resetBranding,
     reloadBranding,
     isBrandingReady,
+    isBrandingLoading,
+    isBrandingSaving,
+    brandingError,
   } = useBranding();
 
   const {
@@ -156,6 +159,7 @@ export default function ThemeSettingsPage() {
     (name: FieldPath<BrandingFormValues>) => getFieldState(name, formState).error?.message,
     [formState, getFieldState]
   );
+  const isBrandingBusy = isBrandingLoading || isBrandingSaving;
 
   const onSubmit = async (values: BrandingFormValues) => {
     try {
@@ -225,12 +229,17 @@ export default function ThemeSettingsPage() {
         description="Customize local restaurant branding. Save when you are ready to keep changes."
       />
       <RestaurantPicker />
+      {brandingError ? (
+        <p className="rounded-[12px] border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {brandingError}
+        </p>
+      ) : null}
       <form className="space-y-8" noValidate onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-wrap items-center justify-end gap-3">
           <button
             type="button"
             className={`${buttonClassName} border border-gray-200 bg-white text-dark`}
-            disabled={!isBrandingReady}
+            disabled={!isBrandingReady || isBrandingBusy}
             onClick={handleApplyPreview}
           >
             Apply preview
@@ -238,7 +247,7 @@ export default function ThemeSettingsPage() {
           <button
             type="button"
             className={`${buttonClassName} border border-gray-200 bg-white text-dark`}
-            disabled={!isBrandingReady}
+            disabled={!isBrandingReady || isBrandingBusy}
             onClick={handleDiscardChanges}
           >
             Discard changes
@@ -246,13 +255,13 @@ export default function ThemeSettingsPage() {
           <button
             type="button"
             className={`${buttonClassName} border border-destructive/30 bg-white text-destructive`}
-            disabled={!isBrandingReady}
+            disabled={!isBrandingReady || isBrandingBusy}
             onClick={handleResetBranding}
           >
             Reset
           </button>
-          <button type="submit" className={`${buttonClassName} bg-primary text-white`} disabled={!isBrandingReady}>
-            Save branding
+          <button type="submit" className={`${buttonClassName} bg-primary text-white`} disabled={!isBrandingReady || isBrandingBusy}>
+            {isBrandingSaving ? "Saving..." : "Save branding"}
           </button>
         </div>
 

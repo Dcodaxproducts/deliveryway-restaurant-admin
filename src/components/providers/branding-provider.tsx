@@ -5,11 +5,11 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { useTheme } from "next-themes";
-import { toast } from "sonner";
 
 import { useAuthContext } from "@/components/providers/auth-provider";
 import { DEFAULT_RESTAURANT_BRANDING_PAYLOAD } from "@/config/default-branding";
@@ -30,6 +30,9 @@ export type BrandingContextValue = {
   resetBranding: () => Promise<RestaurantBrandingPayload>;
   reloadBranding: () => Promise<RestaurantBrandingPayload>;
   isBrandingReady: boolean;
+  isBrandingLoading: boolean;
+  isBrandingSaving: boolean;
+  brandingError?: string | null;
 };
 
 export const BrandingContext = createContext<BrandingContextValue | null>(null);
@@ -44,22 +47,51 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
   const { user } = useAuthContext();
   const { setTheme } = useTheme();
   const restaurantId = user?.restaurantId?.trim() || null;
+  const requestIdRef = useRef(0);
   const [branding, setBranding] = useState<RestaurantBrandingPayload>(defaultBranding);
   const [isBrandingReady, setIsBrandingReady] = useState(false);
+  const [isBrandingLoading, setIsBrandingLoading] = useState(false);
+  const [isBrandingSaving, setIsBrandingSaving] = useState(false);
+  const [brandingError, setBrandingError] = useState<string | null>(null);
 
   const reloadBranding = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    setBrandingError(null);
+
+    if (!restaurantId) {
+      setIsBrandingLoading(false);
+      setIsBrandingReady(true);
+      setBranding(defaultBranding);
+      return defaultBranding;
+    }
+
+    setIsBrandingLoading(true);
     setIsBrandingReady(false);
 
     try {
       const nextBranding = await getBrandingSettings(restaurantId);
-      setBranding(nextBranding);
+
+      if (requestIdRef.current === requestId) {
+        setBranding(nextBranding);
+        setBrandingError(null);
+      }
+
       return nextBranding;
     } catch (error) {
-      toast.error(getApiErrorMessage(error, "Unable to load branding settings."));
-      setBranding(defaultBranding);
+      const errorMessage = getApiErrorMessage(error, "Unable to load branding settings.");
+
+      if (requestIdRef.current === requestId) {
+        setBranding(defaultBranding);
+        setBrandingError(errorMessage);
+      }
+
       return defaultBranding;
     } finally {
-      setIsBrandingReady(true);
+      if (requestIdRef.current === requestId) {
+        setIsBrandingLoading(false);
+        setIsBrandingReady(true);
+      }
     }
   }, [restaurantId]);
 
@@ -78,17 +110,39 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
 
   const saveBranding = useCallback(
     async (nextPayload: RestaurantBrandingPayload) => {
-      const savedPayload = await saveBrandingSettings(nextPayload, restaurantId);
-      setBranding(savedPayload);
-      return savedPayload;
+      requestIdRef.current += 1;
+      setIsBrandingSaving(true);
+      setBrandingError(null);
+
+      try {
+        const savedPayload = await saveBrandingSettings(nextPayload, restaurantId);
+        setBranding(savedPayload);
+        return savedPayload;
+      } catch (error) {
+        setBrandingError(getApiErrorMessage(error, "Unable to save branding settings."));
+        throw error;
+      } finally {
+        setIsBrandingSaving(false);
+      }
     },
     [restaurantId]
   );
 
   const resetBranding = useCallback(async () => {
-    const resetPayload = await resetBrandingSettings(restaurantId);
-    setBranding(resetPayload);
-    return resetPayload;
+    requestIdRef.current += 1;
+    setIsBrandingSaving(true);
+    setBrandingError(null);
+
+    try {
+      const resetPayload = await resetBrandingSettings(restaurantId);
+      setBranding(resetPayload);
+      return resetPayload;
+    } catch (error) {
+      setBrandingError(getApiErrorMessage(error, "Unable to reset branding settings."));
+      throw error;
+    } finally {
+      setIsBrandingSaving(false);
+    }
   }, [restaurantId]);
 
   const contextValue = useMemo<BrandingContextValue>(
@@ -100,6 +154,9 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
       resetBranding,
       reloadBranding,
       isBrandingReady,
+      isBrandingLoading,
+      isBrandingSaving,
+      brandingError,
     }),
     [
       branding,
@@ -108,6 +165,9 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
       resetBranding,
       reloadBranding,
       isBrandingReady,
+      isBrandingLoading,
+      isBrandingSaving,
+      brandingError,
     ]
   );
 
