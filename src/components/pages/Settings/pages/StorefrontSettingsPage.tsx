@@ -285,7 +285,7 @@ export default function StorefrontSettingsPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <BrandAssetsSection register={register} values={watchedValues} getError={getError} />
+          <BrandAssetsSection register={register} setValue={setValue} values={watchedValues} getError={getError} />
           <ColorSchemeSection register={register} setValue={setValue} values={watchedValues} getError={getError} />
         </div>
         <TypographySection register={register} values={watchedValues} getError={getError} />

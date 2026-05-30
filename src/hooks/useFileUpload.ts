@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
+
+import { getApiErrorMessage } from "@/lib/errors";
 import { createPresignedUpload } from "@/services/storage";
 
 interface UploadResult {
@@ -12,8 +14,8 @@ interface UploadResult {
 export const useFileUpload = () => {
   const [uploading, setUploading] = useState(false);
 
-  const uploadFile = async (e: React.ChangeEvent<HTMLInputElement>): Promise<UploadResult | null> => {
-    const file = e.target.files?.[0];
+  const uploadFile = async (event: ChangeEvent<HTMLInputElement>): Promise<UploadResult | null> => {
+    const file = event.target.files?.[0];
     if (!file) return null;
 
     try {
@@ -31,16 +33,16 @@ export const useFileUpload = () => {
       }
 
       const uploadResponse = await fetch(uploadData.uploadUrl, {
-  method: uploadData.method || "PUT",
-  headers: {
-    ...(uploadData.headers || {}),
-  },
-  body: file,
-});
+        method: uploadData.method || "PUT",
+        headers: {
+          ...(uploadData.headers || {}),
+        },
+        body: file,
+      });
 
-if (!uploadResponse.ok) {
-  throw new Error("Failed to upload file to storage");
-}
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload file to storage");
+      }
 
       toast.success("File uploaded");
 
@@ -48,9 +50,8 @@ if (!uploadResponse.ok) {
         key: uploadData.key,
         fileUrl: uploadData.fileUrl,
       };
-    } catch (err: any) {
-      void err;
-      toast.error(err?.message || "Upload failed");
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, "Upload failed"));
       return null;
     } finally {
       setUploading(false);

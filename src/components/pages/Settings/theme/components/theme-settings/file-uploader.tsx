@@ -1,7 +1,9 @@
-import type { FieldPath, UseFormRegister } from "react-hook-form";
-import { Link2 } from "lucide-react";
+import { useRef, type ChangeEvent } from "react";
+import type { FieldPath, UseFormRegister, UseFormSetValue } from "react-hook-form";
+import { Link2, Upload, X } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { useFileUpload } from "@/hooks/useFileUpload";
 import type { BrandingFormValues } from "@/validations/branding";
 
 type AssetFieldName = FieldPath<BrandingFormValues>;
@@ -11,14 +13,17 @@ type FileUploaderProps = {
   title: string;
   recommendation: string;
   name: AssetFieldName;
+  linkedNames?: AssetFieldName[];
   value?: string;
   register: UseFormRegister<BrandingFormValues>;
+  setValue: UseFormSetValue<BrandingFormValues>;
   error?: string;
 };
 
 const labelClassName = "block text-base font-semibold text-dark";
 const helperClassName = "text-sm text-gray max-w-[368px]";
 const inputClassName = "h-[52px] rounded-[12px] border-gray-200 focus:ring-primary";
+const actionButtonClassName = "inline-flex h-10 items-center justify-center gap-2 rounded-[10px] border border-gray-200 bg-white px-3 text-sm font-semibold text-dark transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60";
 
 const isPreviewablePath = (value?: string) => Boolean(value?.trim());
 
@@ -27,11 +32,46 @@ export default function FileUploader({
   title,
   recommendation,
   name,
+  linkedNames = [],
   value,
   register,
+  setValue,
   error,
 }: FileUploaderProps) {
+  const { uploadFile, uploading } = useFileUpload();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const trimmedValue = value?.trim() ?? "";
+  const fileInputId = `${id}-file`;
+  const allTargetNames = [name, ...linkedNames];
+
+  const updateAssetFields = (nextValue: string) => {
+    for (const targetName of allTargetNames) {
+      setValue(targetName, nextValue, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+    }
+  };
+
+  const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const result = await uploadFile(event);
+    event.target.value = "";
+
+    if (!result?.fileUrl) {
+      return;
+    }
+
+    updateAssetFields(result.fileUrl);
+  };
+
+  const handleClear = () => {
+    updateAssetFields("");
+  };
+
+  const handleUploadButtonClick = () => {
+    fileInputRef.current?.click();
+  };
 
   return (
     <div className="space-y-3">
@@ -63,6 +103,36 @@ export default function FileUploader({
             className={inputClassName}
             {...register(name)}
           />
+          <input
+            ref={fileInputRef}
+            id={fileInputId}
+            type="file"
+            accept="image/*,.ico"
+            className="sr-only"
+            onChange={handleUpload}
+          />
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              aria-label={`Upload ${title}`}
+              className={actionButtonClassName}
+              disabled={uploading}
+              onClick={handleUploadButtonClick}
+            >
+              <Upload size={16} aria-hidden="true" />
+              {uploading ? "Uploading..." : `Upload ${title}`}
+            </button>
+            <button
+              type="button"
+              aria-label={`Clear ${title}`}
+              className={actionButtonClassName}
+              disabled={uploading || !trimmedValue}
+              onClick={handleClear}
+            >
+              <X size={16} aria-hidden="true" />
+              Clear
+            </button>
+          </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
         </div>
       </div>
