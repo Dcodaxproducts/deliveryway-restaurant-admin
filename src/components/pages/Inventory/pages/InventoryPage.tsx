@@ -16,6 +16,15 @@ import {
 
 type InventoryTab = "items" | "movements" | "recipes" | "categories";
 
+const inventoryTabs: { key: InventoryTab; label: string }[] = [
+  { key: "items", label: "Items" },
+  { key: "movements", label: "Movements" },
+  { key: "recipes", label: "Recipes" },
+  { key: "categories", label: "Categories" },
+];
+
+const loadingRows = Array.from({ length: 5 }, (_, index) => `loading-row-${index}`);
+
 const normalizeRows = (response: any) => {
   const candidates = [
     response?.data,
@@ -117,17 +126,12 @@ export default function InventoryPage() {
       <div className="mt-6 rounded-[20px] bg-white p-5 shadow-sm">
         <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-2">
-            {[
-              ["items", "Items"],
-              ["movements", "Movements"],
-              ["recipes", "Recipes"],
-              ["categories", "Categories"],
-            ].map(([key, label]) => (
+            {inventoryTabs.map(({ key, label }) => (
               <Button
                 key={key}
                 type="button"
                 variant={activeTab === key ? "default" : "outline"}
-                onClick={() => setActiveTab(key as InventoryTab)}
+                onClick={() => setActiveTab(key)}
                 className="rounded-[12px]"
               >
                 {label}
@@ -205,30 +209,52 @@ export default function InventoryPage() {
             </thead>
             <tbody>
               {isLoading ? (
-                Array.from({ length: 5 }).map((_, index) => (
-                  <tr key={index}>
+                loadingRows.map((key) => (
+                  <tr key={key}>
                     <td colSpan={4} className="py-4">
                       <div className="h-8 animate-pulse rounded bg-gray-100" />
                     </td>
                   </tr>
                 ))
               ) : rows.length ? (
-                rows.map((row: any) => (
-                  <tr key={row.id || row._id || row.name} className="border-b last:border-0">
+                rows.map((row: any) => {
+                  const {
+                    id,
+                    _id,
+                    name,
+                    item,
+                    reference,
+                    category,
+                    type,
+                    movementType,
+                    quantity,
+                    currentStock,
+                    stock,
+                    status,
+                    updatedAt,
+                    createdAt,
+                  } = row;
+                  const displayName = name?.trim() || item?.name?.trim() || reference?.trim() || id || "-";
+                  const displayCategory = category?.name?.trim() || type || movementType || "-";
+                  const displayStatus = status || updatedAt || createdAt || "-";
+
+                  return (
+                  <tr key={id ?? _id ?? name} className="border-b last:border-0">
                     <td className="py-3 pr-3 font-medium text-gray-900">
-                      {row.name || row.item?.name || row.reference || row.id || "-"}
+                      {displayName}
                     </td>
                     <td className="py-3 pr-3 text-gray-600">
-                      {row.category?.name || row.type || row.movementType || "-"}
+                      {displayCategory}
                     </td>
                     <td className="py-3 pr-3 text-gray-600">
-                      {row.quantity ?? row.currentStock ?? row.stock ?? "-"}
+                      {quantity ?? currentStock ?? stock ?? "-"}
                     </td>
                     <td className="py-3 pr-3 text-gray-600">
-                      {row.status || row.updatedAt || row.createdAt || "-"}
+                      {displayStatus}
                     </td>
                   </tr>
-                ))
+                );
+                })
               ) : (
                 <tr>
                   <td colSpan={4} className="py-10 text-center text-gray-400">

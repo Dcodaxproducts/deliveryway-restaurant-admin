@@ -20,8 +20,8 @@ export default function BranchInfoCard({ title, info }: { title: string; info: {
     <Card className="p-4 bg-[#F5F5F5] rounded-lg border-none">
       <h3 className="text-sm font-semibold text-center text-black">{title}</h3>
       <div className="bg-white px-4 py-3 rounded-lg">
-        {info.map((item, index) => (
-          <InfoRow key={index} label={item.label} value={item.value} />
+        {info.map(({ label, value }) => (
+          <InfoRow key={`${label}-${value}`} label={label} value={value} />
         ))}
       </div>
     </Card>

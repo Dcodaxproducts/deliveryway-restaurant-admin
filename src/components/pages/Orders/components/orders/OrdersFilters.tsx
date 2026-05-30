@@ -72,22 +72,22 @@ export default function OrdersFilters({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button className="h-[48px] px-6 rounded-[14px] text-red-600 border-red-200 bg-red-50 flex items-center gap-2 hover:text-white">
-              {statuses.find((s) => s.value === status)?.label}
+            {statuses.find(({ value }) => value === status)?.label}
               <ChevronDown size={18} />
             </Button>
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end">
-            {statuses.map((item) => (
+            {statuses.map(({ label, value }) => (
               <DropdownMenuItem
               
-                key={item.value}
+                key={value}
                 onClick={() => {
-                  setStatus(item.value);
-                  onStatusChange(item.value);
+                  setStatus(value);
+                  onStatusChange(value);
                 }}
               >
-                {item.label}
+                {label}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

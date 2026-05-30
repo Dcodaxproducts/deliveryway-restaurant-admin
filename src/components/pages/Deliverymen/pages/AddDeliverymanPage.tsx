@@ -83,10 +83,11 @@ const AddDeliveryMan = () => {
   useEffect(() => {
     if (!deliveryman) return;
 
-    const branch = deliveryman.branch
+    const { branch: deliverymanBranch } = deliveryman;
+    const branch = deliverymanBranch
       ? {
-          id: deliveryman.branch.id,
-          name: deliveryman.branch.name,
+          id: deliverymanBranch.id,
+          name: deliverymanBranch.name,
         }
       : null;
 

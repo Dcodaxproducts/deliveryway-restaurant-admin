@@ -15,8 +15,8 @@ export default function BranchesList({ branches = [], loading }: Props) {
  const [selectedBranch, setSelectedBranch] = useState<any | null>(null);
 
 const openDialog = (branchId: string) => {
-  const branch = branches.find((b) => b.id === branchId);
-  setSelectedBranch(branch || null);
+  const branch = branches.find(({ id }) => id === branchId);
+  setSelectedBranch(branch ?? null);
   setIsModalOpen(true);
 };
 
@@ -55,19 +55,19 @@ const openDialog = (branchId: string) => {
 
   return (
     <div className="space-y-3 min-h-[40vh]">
-      {branches.map((branch) => (
+      {branches.map(({ id, name, isActive, availability, isMain, coverImage, logoUrl }) => (
       <BranchCard
-  key={branch.id}
-  id={branch.id}
-  name={branch.name}
-  isActive={branch.isActive}
-  availability={branch.availability}
+  key={id}
+  id={id}
+  name={name}
+  isActive={isActive}
+  availability={availability}
   loading={loading}
-  isDefault={branch.isMain}
+  isDefault={isMain}
   itemsCount={0}
   openDialog={openDialog}
-  coverImage={branch.coverImage}
-  logoUrl={branch.logoUrl}
+  coverImage={coverImage}
+  logoUrl={logoUrl}
 />
       ))}
 

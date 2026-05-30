@@ -68,10 +68,10 @@ const OrdersTable = ({
     );
   }
 
-  const getOrderRoute = (order: Order) =>
-    order.isGroupOrder
-      ? `/orders/group/${order.id}`
-      : `/orders/details/${order.id}`;
+  const getOrderRoute = ({ id, isGroupOrder }: Order) =>
+    isGroupOrder
+      ? `/orders/group/${id}`
+      : `/orders/details/${id}`;
 
   return (
     <div className="space-y-4">
@@ -107,57 +107,69 @@ const OrdersTable = ({
 </TableHeader>
 
         <TableBody>
-  {orders.map((order) => (
-    <TableRow key={order.id} className="border-none h-[70px]">
+  {orders.map((order) => {
+    const {
+      id,
+      customerName,
+      guestCount,
+      reservationDate,
+      status,
+      createdAt,
+      orderType,
+      totalAmount,
+    } = order;
+
+    return (
+    <TableRow key={id} className="border-none h-[70px]">
       <TableCell>
         <Checkbox />
       </TableCell>
 
       {activeTab === "reservations" ? (
         <>
-          <TableCell className="px-4 text-gray-500">{order.id}</TableCell>
+          <TableCell className="px-4 text-gray-500">{id}</TableCell>
 
           <TableCell className="px-4 text-gray-600">
-            {order.customerName || "-"}
+            {customerName?.trim() || "-"}
           </TableCell>
 
           <TableCell className="px-4">
-            {order.guestCount}
+            {guestCount}
           </TableCell>
 
           <TableCell className="px-4 text-gray-500">
-            {order.reservationDate
-              ? new Date(order.reservationDate).toLocaleString()
+            {reservationDate
+              ? new Date(reservationDate).toLocaleString()
               : "-"}
           </TableCell>
 
           <TableCell className="px-4">
             <span className="text-yellow-600 font-medium">
-              {order.status}
+              {status}
             </span>
           </TableCell>
         </>
       ) : (
         <>
-          <TableCell className="px-4 text-gray-500">{order.id}</TableCell>
+          <TableCell className="px-4 text-gray-500">{id}</TableCell>
 
           <TableCell className="px-4 text-gray-500">
-            {order.createdAt
-              ? new Date(order.createdAt).toLocaleDateString()
+            {createdAt
+              ? new Date(createdAt).toLocaleDateString()
               : "-"}
           </TableCell>
 
           <TableCell className="px-4 text-gray-600">
-            {order.orderType ?? "-"}
+            {orderType ?? "-"}
           </TableCell>
 
           <TableCell className="px-4 font-medium text-green-600">
-            ${order.totalAmount ?? 0}
+            ${totalAmount ?? 0}
           </TableCell>
 
           <TableCell className="px-4">
             <span className="text-sm font-medium text-yellow-600">
-              {order.status}
+              {status}
             </span>
           </TableCell>
         </>
@@ -175,7 +187,8 @@ const OrdersTable = ({
         </div>
       </TableCell>
     </TableRow>
-  ))}
+  );
+  })}
 </TableBody>
         </Table>
       </div>

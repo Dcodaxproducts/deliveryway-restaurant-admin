@@ -18,7 +18,7 @@ export default function BranchFilters({
   onFilterChange,
 }: Props) {
   const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState(filters?.search || "");
+  const [search, setSearch] = useState(filters?.search ?? "");
 
   const handleSearch = () => {
     onFilterChange({ search, page: 1 });
@@ -38,20 +38,20 @@ export default function BranchFilters({
       "Items"
     ];
 
-    const rows = branches.map((b) => [
-      b.name || "",
-      b.city || "",
-      b.address || "",
-      b.phone || "",
-      b.isActive ? "Active" : "Inactive",
-      b.createdAt || "",
-      b._count?.items ?? "",
+    const rows = branches.map(({ name, city, address, phone, isActive, createdAt, _count }) => [
+      name ?? "",
+      city ?? "",
+      address ?? "",
+      phone ?? "",
+      isActive ? "Active" : "Inactive",
+      createdAt ?? "",
+      _count?.items ?? "",
     ]);
 
     const csvContent =
       "data:text/csv;charset=utf-8," +
       [headers, ...rows]
-        .map((row) => row.map((i) => `"${i}"`).join(","))
+        .map((cells) => cells.map((cell) => `"${cell}"`).join(","))
         .join("\n");
 
     const encodedUri = encodeURI(csvContent);
@@ -66,9 +66,9 @@ link.setAttribute("download", "data.csv");
   };
 
   const filteredBranches =
-    branches?.filter((b) =>
-      b?.name?.toLowerCase().includes(search.toLowerCase())
-    ) || [];
+    branches?.filter(({ name }) =>
+      name?.toLowerCase().includes(search.toLowerCase())
+    ) ?? [];
 
   return (
     <div className="w-full bg-white rounded-lg">

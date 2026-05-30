@@ -74,10 +74,10 @@ export default function CustomerSettingsPage() {
   const customerStats = customerStatsResponse?.data;
 
   const customers: Customer[] = useMemo(() => {
-    return data?.data || [];
+    return data?.data ?? [];
   }, [data]);
 
-  const meta = data?.meta || null;
+  const meta = data?.meta ?? null;
 
   const handleFilterChange = (updatedFilters: Partial<typeof filters>) => {
     setFilters((prev) => ({
@@ -97,16 +97,16 @@ export default function CustomerSettingsPage() {
   };
 
   const customerFilterData = useMemo(() => {
-    return customers.map((customer) => ({
-      id: customer.id,
+    return customers.map(({ id, email, isActive, createdAt, profile, _count }) => ({
+      id,
       name:
-        `${customer.profile?.firstName || ""} ${customer.profile?.lastName || ""}`.trim() ||
+        `${profile?.firstName ?? ""} ${profile?.lastName ?? ""}`.trim() ||
         "-",
-      email: customer.email || "-",
-      phone: customer.profile?.phone || "-",
-      isActive: !!customer.isActive,
-      createdAt: customer.createdAt || "",
-      orders: customer._count?.customerOrders ?? 0,
+      email: email?.trim() || "-",
+      phone: profile?.phone?.trim() || "-",
+      isActive: Boolean(isActive),
+      createdAt: createdAt ?? "",
+      orders: _count?.customerOrders ?? 0,
     }));
   }, [customers]);
 

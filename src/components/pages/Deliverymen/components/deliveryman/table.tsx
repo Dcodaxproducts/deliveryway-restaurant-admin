@@ -124,7 +124,7 @@ const handleAssignOrderClick = (dm: any) => {
     triggerRef.current = e.currentTarget;
   };
 
-  if (!loading && (!data || data.length === 0)) {
+  if (!loading && data.length === 0) {
     return (
       <EmptyState
         title="Looks like there are no Delivery Man yet!"
@@ -160,8 +160,12 @@ const handleAssignOrderClick = (dm: any) => {
           </TableHeader>
 
           <TableBody>
-            {data.map((dm, i) => (
-              <TableRow key={dm.id} className="border-none h-[70px]">
+            {data.map((dm, i) => {
+              const { id, firstName, lastName, phone, email, status, _count } = dm;
+              const fullName = `${firstName ?? ""} ${lastName ?? ""}`.trim();
+
+              return (
+              <TableRow key={id} className="border-none h-[70px]">
                 <TableCell>
                   <Checkbox />
                 </TableCell>
@@ -171,13 +175,13 @@ const handleAssignOrderClick = (dm: any) => {
                 </TableCell>
 
                 <TableCell>
-                  {dm.firstName} {dm.lastName}
+                  {fullName}
                 </TableCell>
 
                 <TableCell>
-                  <p>{dm.phone}</p>
+                  <p>{phone}</p>
                   <p className="text-gray-500 text-sm">
-                    {dm.email}
+                    {email}
                   </p>
                 </TableCell>
 
@@ -186,12 +190,12 @@ const handleAssignOrderClick = (dm: any) => {
                 </TableCell>
 
                 <TableCell>
-                  <p>Total Orders: {dm._count?.orders || 0}</p>
+                  <p>Total Orders: {_count?.orders ?? 0}</p>
                 </TableCell>
 
                 <TableCell>
                  <Switch
-  checked={dm.status === "AVAILABLE"}
+  checked={status === "AVAILABLE"}
   onCheckedChange={() => toggleStatus(dm)}
   disabled={statusMutation.isPending}
 />
@@ -209,14 +213,15 @@ const handleAssignOrderClick = (dm: any) => {
                     />
 
                     <button
-                      onClick={(e) => openDropdown(e, dm.id)}
+                      onClick={(e) => openDropdown(e, id)}
                     >
                       <MoreHorizontal size={18} />
                     </button>
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            );
+            })}
           </TableBody>
         </Table>
 
@@ -240,7 +245,7 @@ const handleAssignOrderClick = (dm: any) => {
     >
       <button
         onClick={() => {
-          const dm = data.find((item) => item.id === menu.id);
+          const dm = data.find(({ id }) => id === menu.id);
           if (dm) handleAssignOrderClick(dm);
         }}
         className="flex items-center gap-2 w-full px-4 py-2.5 text-sm hover:bg-gray-100"
@@ -279,24 +284,28 @@ const handleAssignOrderClick = (dm: any) => {
   )}
 
       <div className="flex flex-col gap-4 md:hidden">
-        {data.map((dm) => (
+        {data.map((dm) => {
+          const { id, firstName, lastName, phone, email, status } = dm;
+          const fullName = `${firstName ?? ""} ${lastName ?? ""}`.trim();
+
+          return (
           <div
-            key={dm.id}
+            key={id}
             className="bg-white p-4 rounded-lg border"
           >
             <div className="flex justify-between">
               <p>
-                {dm.firstName} {dm.lastName}
+                {fullName}
               </p>
              <Switch
-  checked={dm.status === "AVAILABLE"}
+  checked={status === "AVAILABLE"}
   onCheckedChange={() => toggleStatus(dm)}
   disabled={statusMutation.isPending}
 />
             </div>
 
-            <p>{dm.phone}</p>
-            <p>{dm.email}</p>
+            <p>{phone}</p>
+            <p>{email}</p>
 
             <div className="flex justify-end gap-2 mt-2">
               <Eye
@@ -307,13 +316,14 @@ const handleAssignOrderClick = (dm: any) => {
                 }}
               />
               <button
-                onClick={(e) => openDropdown(e, dm.id)}
+                onClick={(e) => openDropdown(e, id)}
               >
                 <MoreHorizontal size={18} />
               </button>
             </div>
           </div>
-        ))}
+        );
+        })}
 
         <PaginationSection
           meta={meta}
