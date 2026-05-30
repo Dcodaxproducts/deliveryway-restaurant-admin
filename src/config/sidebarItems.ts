@@ -229,13 +229,6 @@ export const menuItems: MenuItem[] = [
     roles: allAdminRoles,
   },
   {
-    title: "Notification Settings",
-    href: "/notification-settings",
-    icon: Bell,
-    section: "account",
-    roles: restaurantAdminRoles,
-  },
-  {
     title: "Theme Settings",
     href: "/theme-settings",
     icon: Palette,
