@@ -194,7 +194,7 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="flex h-full w-72 flex-col overflow-y-auto border-r border-border bg-white">
+    <aside className="flex h-full w-72 flex-col overflow-y-auto bg-white">
       <nav className="flex flex-col px-0 pt-5">
         {mainItems.map((item) => (
           <SidebarItem
