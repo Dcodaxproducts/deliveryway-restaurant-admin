@@ -19,6 +19,7 @@ import {
   getStoredAuth,
   saveStoredAuth,
 } from "@/lib/auth";
+import { FIELD_ERROR_CLASS, LABEL_TEXT_CLASS } from "@/components/common/common-classes";
 import { getApiErrorMessage } from "@/lib/errors";
 import { authApi, type UpdateProfilePayload } from "@/services/auth/auth.api";
 import {
@@ -258,7 +259,7 @@ export default function EditProfile() {
           </div>
 
           <div>
-            <label htmlFor="profile-bio" className="mb-2 block text-sm font-medium text-gray-700">
+            <label htmlFor="profile-bio" className={`mb-2 block ${LABEL_TEXT_CLASS}`}>
               Bio
             </label>
             <textarea
@@ -268,7 +269,7 @@ export default function EditProfile() {
               {...register("bio")}
             />
             {errors.bio?.message ? (
-              <p className="mt-1 text-xs text-primary">{errors.bio.message}</p>
+              <p className={`mt-1 ${FIELD_ERROR_CLASS}`}>{errors.bio.message}</p>
             ) : null}
           </div>
 
@@ -299,7 +300,7 @@ function FormInput({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-2 block text-sm font-medium text-gray-700">
+      <label htmlFor={id} className={`mb-2 block ${LABEL_TEXT_CLASS}`}>
         {label}
       </label>
 
@@ -317,7 +318,7 @@ function FormInput({
         }}
       />
       {errorText ? (
-        <p id={`${id}-error`} className="mt-1 text-xs text-primary">
+        <p id={`${id}-error`} className={`mt-1 ${FIELD_ERROR_CLASS}`}>
           {errorText}
         </p>
       ) : null}

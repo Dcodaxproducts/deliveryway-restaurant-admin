@@ -33,6 +33,7 @@ import {
   normalizeSelectedOptions,
 } from "@/components/pages/Promotions/utils/option-normalizers";
 import { promotionSchema, type PromotionFormValues } from "@/validations/promotions";
+import { FIELD_ERROR_CLASS, INPUT_BASE_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
 
 const defaultValues: PromotionFormValues = {
   code: "",
@@ -282,7 +283,7 @@ export default function AddNewPromotion() {
             <Label className="text-[16px]">
               Branch{isBranchAdmin ? " *" : " (optional)"}
             </Label>
-            <p className="text-sm text-gray-500">
+            <p className={MUTED_TEXT_SM_CLASS}>
               {isBranchAdmin
                 ? "Select the branch where this promotion should be available."
                 : "Leave blank to make this promotion available across all branches, or choose a branch to scope it."}
@@ -493,9 +494,9 @@ export default function AddNewPromotion() {
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
-                    className="h-[44px] border-[#BBBBBB] focus:border-primary focus:ring-1 focus:ring-primary"
+                    className={INPUT_BASE_CLASS}
                   />
-                  {fieldState.error?.message ? <p className="text-xs text-primary">{fieldState.error.message}</p> : null}
+                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{fieldState.error.message}</p> : null}
                 </div>
               )}
             />
@@ -512,9 +513,9 @@ export default function AddNewPromotion() {
                     disabled={values.assignPermanently}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
-                    className="h-[44px] border-[#BBBBBB] focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:bg-gray-100"
+                    className={`${INPUT_BASE_CLASS} disabled:cursor-not-allowed disabled:bg-gray-100`}
                   />
-                  {fieldState.error?.message ? <p className="text-xs text-primary">{fieldState.error.message}</p> : null}
+                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{fieldState.error.message}</p> : null}
                 </div>
               )}
             />
@@ -559,7 +560,7 @@ export default function AddNewPromotion() {
                   <option value="ORDER_TOTAL">Order Total - apply discount on full order</option>
                   <option value="SCOPED_ITEMS">Scoped Items - apply only on selected items/categories</option>
                 </select>
-                <p className="text-sm text-gray-500">
+                <p className={MUTED_TEXT_SM_CLASS}>
                   ORDER_TOTAL discounts the full order total. SCOPED_ITEMS discounts only matching items and/or categories.
                 </p>
               </div>
@@ -574,7 +575,7 @@ export default function AddNewPromotion() {
                 render={({ field }) => (
                   <div className="space-y-2">
                     <Label className="text-[16px]">Select Food Items</Label>
-                    <p className="text-sm text-gray-500">
+                    <p className={MUTED_TEXT_SM_CLASS}>
                       Select one or more food items. The promotion can be scoped to only items, only categories, or both.
                     </p>
                     <AsyncMultiSelect
@@ -600,7 +601,7 @@ export default function AddNewPromotion() {
                 render={({ field }) => (
                   <div className="space-y-2">
                     <Label className="text-[16px]">Select Food Categories</Label>
-                    <p className="text-sm text-gray-500">
+                    <p className={MUTED_TEXT_SM_CLASS}>
                       Select one or more categories. All matching items inside these categories can receive the discount.
                     </p>
                     <AsyncMultiSelect
@@ -621,7 +622,7 @@ export default function AddNewPromotion() {
               />
             </>
           ) : (
-            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-sm text-gray-500">
+            <div className={`rounded-xl border border-gray-100 bg-gray-50 p-4 ${MUTED_TEXT_SM_CLASS}`}>
               This promotion applies to the full eligible order total. No item or category scope is needed.
             </div>
           )}

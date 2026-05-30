@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCreateCustomer, useUpdateCustomer, useVerifyCustomerEmail } from "@/hooks/useCustomers";
+import { CARD_PANEL_CLASS, FIELD_ERROR_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
   customerModalSchema,
@@ -216,7 +217,7 @@ export default function AddCustomerModal({
             {step === "form" ? (isEditMode ? "Edit Customer" : "Add Customer") : "Verify Email"}
           </DialogTitle>
 
-          <p className="text-sm text-gray-500">
+          <p className={MUTED_TEXT_SM_CLASS}>
             {step === "form"
               ? isEditMode
                 ? "Update customer account details"
@@ -227,7 +228,7 @@ export default function AddCustomerModal({
 
         {step === "form" && (
           <form
-            className="mt-5 space-y-4 rounded-[16px] bg-white p-5"
+            className={`mt-5 space-y-4 ${CARD_PANEL_CLASS}`}
             noValidate
             onSubmit={handleSubmit(onSubmit)}
           >
@@ -295,7 +296,7 @@ export default function AddCustomerModal({
         )}
 
         {!isEditMode && step === "otp" && (
-          <div className="mt-5 space-y-4 rounded-[16px] bg-white p-5">
+          <div className={`mt-5 space-y-4 ${CARD_PANEL_CLASS}`}>
             <div className="space-y-1">
               <Label htmlFor="customer-otp" className="text-sm text-gray-600">
                 Enter OTP
@@ -370,7 +371,7 @@ function CustomerField({
           />
         )}
       />
-      {error ? <p className="text-xs text-primary">{error}</p> : null}
+      {error ? <p className={FIELD_ERROR_CLASS}>{error}</p> : null}
     </div>
   );
 }

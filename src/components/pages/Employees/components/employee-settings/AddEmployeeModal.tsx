@@ -22,6 +22,7 @@ import {
   useUpdateStaff,
 } from "@/hooks/useEmployees";
 import { useFileUpload } from "@/hooks/useFileUpload";
+import { FIELD_ERROR_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
   staffModalSchema,
@@ -166,7 +167,7 @@ export default function EmployeeInvitationModal({
           <DialogTitle className="text-xl font-semibold">
             {isEdit ? "Edit Employee" : "Employee Invitation"}
           </DialogTitle>
-          <DialogDescription className="text-left text-sm text-gray-500">
+          <DialogDescription className={`text-left ${MUTED_TEXT_SM_CLASS}`}>
             {isEdit ? "Update employee details" : "Send invitation to employee"}
           </DialogDescription>
         </DialogHeader>
@@ -240,7 +241,7 @@ export default function EmployeeInvitationModal({
               )}
             />
             {errors.staffRoleId?.message ? (
-              <p className="text-xs text-primary">{errors.staffRoleId.message}</p>
+              <p className={FIELD_ERROR_CLASS}>{errors.staffRoleId.message}</p>
             ) : null}
           </div>
 
@@ -307,7 +308,7 @@ function EmployeeField({ control, name, id, label, type = "text", error }: Emplo
           />
         )}
       />
-      {error ? <p className="text-xs text-primary">{error}</p> : null}
+      {error ? <p className={FIELD_ERROR_CLASS}>{error}</p> : null}
     </div>
   );
 }

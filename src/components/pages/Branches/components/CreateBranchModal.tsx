@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
+import { CARD_PANEL_CLASS, FIELD_ERROR_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
 import { useCreateBranch } from "@/hooks/useBranches";
 import {
   createBranchSchema,
@@ -167,11 +168,11 @@ export default function CreateBranchModal({
       <DialogContent className="max-w-[480px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
         <DialogHeader className="space-y-1">
           <DialogTitle className="text-xl font-semibold">Create Branch</DialogTitle>
-          <p className="text-sm text-gray-500">Create a new branch from here</p>
+          <p className={MUTED_TEXT_SM_CLASS}>Create a new branch from here</p>
         </DialogHeader>
 
         <form noValidate onSubmit={handleSubmit(onSubmit)}>
-          <div className="mt-4 rounded-[16px] bg-white p-5 space-y-4">
+          <div className={`mt-4 ${CARD_PANEL_CLASS} space-y-4`}>
             {branchFieldConfigs.map((config) => {
               const { label, name, placeholder, primary, required, type } = config;
               const errorMessage = getErrorMessage(errors, name);
@@ -193,7 +194,7 @@ export default function CreateBranchModal({
                     {...register(name)}
                   />
                   {errorMessage ? (
-                    <p className="text-xs text-primary">{errorMessage}</p>
+                    <p className={FIELD_ERROR_CLASS}>{errorMessage}</p>
                   ) : null}
                 </div>
               );
@@ -240,7 +241,7 @@ export default function CreateBranchModal({
                     {...register(name)}
                   />
                   {errorMessage ? (
-                    <p className="text-xs text-primary">{errorMessage}</p>
+                    <p className={FIELD_ERROR_CLASS}>{errorMessage}</p>
                   ) : null}
                 </div>
               );

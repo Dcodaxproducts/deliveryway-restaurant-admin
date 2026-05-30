@@ -33,6 +33,7 @@ import {
   normalizeSelectedOptions,
 } from "@/components/pages/Promotions/utils/option-normalizers";
 import { happyHourSchema, type HappyHourFormValues } from "@/validations/promotions";
+import { FIELD_ERROR_CLASS, INPUT_BASE_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
 
 const days = [
   { label: "Sunday", value: 0 },
@@ -320,9 +321,9 @@ export default function AddHappyHour() {
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
-                    className="h-[44px] border-[#BBBBBB] focus:border-primary focus:ring-1 focus:ring-primary"
+                    className={INPUT_BASE_CLASS}
                   />
-                  {fieldState.error?.message ? <p className="text-xs text-primary">{fieldState.error.message}</p> : null}
+                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{fieldState.error.message}</p> : null}
                 </div>
               )}
             />
@@ -338,9 +339,9 @@ export default function AddHappyHour() {
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
-                    className="h-[44px] border-[#BBBBBB] focus:border-primary focus:ring-1 focus:ring-primary"
+                    className={INPUT_BASE_CLASS}
                   />
-                  {fieldState.error?.message ? <p className="text-xs text-primary">{fieldState.error.message}</p> : null}
+                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{fieldState.error.message}</p> : null}
                 </div>
               )}
             />
@@ -372,7 +373,7 @@ export default function AddHappyHour() {
                     );
                   })}
                 </div>
-                {fieldState.error?.message ? <p className="text-xs text-primary">{fieldState.error.message}</p> : null}
+                {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{fieldState.error.message}</p> : null}
               </div>
             )}
           />
@@ -389,9 +390,9 @@ export default function AddHappyHour() {
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
-                    className="h-[44px] border-[#BBBBBB] focus:border-primary focus:ring-1 focus:ring-primary"
+                    className={INPUT_BASE_CLASS}
                   />
-                  {fieldState.error?.message ? <p className="text-xs text-primary">{fieldState.error.message}</p> : null}
+                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{fieldState.error.message}</p> : null}
                 </div>
               )}
             />
@@ -407,9 +408,9 @@ export default function AddHappyHour() {
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
-                    className="h-[44px] border-[#BBBBBB] focus:border-primary focus:ring-1 focus:ring-primary"
+                    className={INPUT_BASE_CLASS}
                   />
-                  {fieldState.error?.message ? <p className="text-xs text-primary">{fieldState.error.message}</p> : null}
+                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{fieldState.error.message}</p> : null}
                 </div>
               )}
             />
@@ -573,7 +574,7 @@ export default function AddHappyHour() {
             )}
           />
 
-          <p className="text-sm text-gray-500">Leave both fields empty if happy hour applies to all items.</p>
+          <p className={MUTED_TEXT_SM_CLASS}>Leave both fields empty if happy hour applies to all items.</p>
         </Section>
 
         <div className="flex justify-end gap-3">

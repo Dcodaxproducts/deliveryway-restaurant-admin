@@ -1,4 +1,5 @@
 "use client";
+import { MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
 import { Button } from "@/components/ui/button";
 
 interface PageWrapperProps {
@@ -24,7 +25,7 @@ export default function PageWrapper({
         <div className="flex items-center gap-4">
           <button
             onClick={onReset}
-            className="text-sm text-gray-500 hover:underline m-0"
+            className={`${MUTED_TEXT_SM_CLASS} hover:underline m-0`}
           >
             Reset
           </button>

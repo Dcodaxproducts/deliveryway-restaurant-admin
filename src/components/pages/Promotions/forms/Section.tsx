@@ -2,6 +2,8 @@
 import { Info } from "lucide-react";
 import clsx from "clsx";
 
+import { MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
+
 interface SectionProps {
   label?: string;
   children?: React.ReactNode;
@@ -36,7 +38,7 @@ export default function Section({
       {label && (
         <div
           className={clsx(
-            "space-y-14 text-sm text-gray-500 pt-1",
+            `space-y-14 ${MUTED_TEXT_SM_CLASS} pt-1`,
             labelClassName
           )}
         >

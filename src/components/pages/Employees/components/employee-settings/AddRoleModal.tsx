@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateStaffRole, useUpdateStaffRole } from "@/hooks/useEmployees";
+import { FIELD_ERROR_CLASS } from "@/components/common/common-classes";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
   staffRoleSchema,
@@ -190,7 +191,7 @@ export function AddRoleModal({
                 />
               )}
             />
-            {errors.name?.message ? <p className="text-xs text-primary">{errors.name.message}</p> : null}
+            {errors.name?.message ? <p className={FIELD_ERROR_CLASS}>{errors.name.message}</p> : null}
           </div>
 
           <div className="space-y-4 rounded-xl border p-4">
@@ -285,7 +286,7 @@ export function AddRoleModal({
               })}
             </div>
             {errors.permissions?.message ? (
-              <p className="text-xs text-primary">{errors.permissions.message}</p>
+              <p className={FIELD_ERROR_CLASS}>{errors.permissions.message}</p>
             ) : null}
           </div>
 
@@ -308,7 +309,7 @@ export function AddRoleModal({
               )}
             />
             {errors.description?.message ? (
-              <p className="text-xs text-primary">{errors.description.message}</p>
+              <p className={FIELD_ERROR_CLASS}>{errors.description.message}</p>
             ) : null}
           </div>
 
