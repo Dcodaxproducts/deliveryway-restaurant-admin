@@ -122,7 +122,7 @@ const socialFields: TextFieldConfig[] = [
   },
 ];
 
-export default function ThemeSettingsPage() {
+export default function StorefrontSettingsPage() {
   const {
     branding,
     updateBrandingDraft,
@@ -225,8 +225,8 @@ export default function ThemeSettingsPage() {
   return (
     <Container>
       <Header
-        title="Theme Settings"
-        description="Customize local restaurant branding. Save when you are ready to keep changes."
+        title="Storefront Settings"
+        description="Manage restaurant profile, branding, assets, support contact, and customer-facing appearance."
       />
       <RestaurantPicker />
       {brandingError ? (

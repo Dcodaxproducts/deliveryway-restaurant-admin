@@ -1,5 +1,5 @@
-import ThemeSettingsPage from "@/components/pages/Settings/pages/ThemeSettingsPage";
+import StorefrontSettingsPage from "@/components/pages/Settings/pages/StorefrontSettingsPage";
 
 export default function Page() {
-  return <ThemeSettingsPage />;
+  return <StorefrontSettingsPage />;
 }

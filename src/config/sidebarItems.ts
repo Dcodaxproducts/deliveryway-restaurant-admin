@@ -229,7 +229,7 @@ export const menuItems: MenuItem[] = [
     roles: allAdminRoles,
   },
   {
-    title: "Theme Settings",
+    title: "Storefront Settings",
     href: "/theme-settings",
     icon: Palette,
     section: "account",
