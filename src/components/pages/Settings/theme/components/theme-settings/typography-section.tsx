@@ -24,6 +24,17 @@ type SelectFieldConfig = {
   options: { label: string; value: string }[];
 };
 
+const defaultFontStack = "var(--font-onest), 'Onest', 'Onest Fallback', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+
+const fontFamilyOptions = [
+  { label: "Onest / System Sans (Default)", value: defaultFontStack },
+  { label: "Barlow", value: "Barlow, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" },
+  { label: "Poppins", value: "Poppins, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" },
+  { label: "Arimo", value: "Arimo, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" },
+  { label: "System UI", value: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" },
+  { label: "Serif", value: "Georgia, Cambria, 'Times New Roman', Times, serif" },
+];
+
 const panelClassName = "bg-white p-4 lg:p-6 rounded-lg shadow-sm";
 const labelClassName = "block text-base font-semibold text-dark mb-2";
 const inputClassName = "h-[52px] border-gray-200 rounded-[12px] focus:ring-primary";
@@ -34,18 +45,6 @@ export default function TypographySection({ register, values: _values, getError 
 
   const textFields: TextFieldConfig[] = [
     {
-      id: "heading-font-family",
-      label: "Heading Font Family",
-      name: "restaurant.branding.theme.headingFontFamily",
-      placeholder: "var(--font-onest), 'Onest', 'Onest Fallback', ui-sans-serif, system-ui"
-    },
-    {
-      id: "body-font-family",
-      label: "Body Font Family",
-      name: "restaurant.branding.theme.fontFamily",
-      placeholder: "var(--font-onest), 'Onest', 'Onest Fallback', ui-sans-serif, system-ui"
-    },
-    {
       id: "border-radius",
       label: "Border Radius",
       name: "restaurant.branding.theme.borderRadius",
@@ -54,6 +53,18 @@ export default function TypographySection({ register, values: _values, getError 
   ];
 
   const selectFields: SelectFieldConfig[] = [
+    {
+      id: "heading-font-family",
+      label: "Heading Font Family",
+      name: "restaurant.branding.theme.headingFontFamily",
+      options: fontFamilyOptions,
+    },
+    {
+      id: "body-font-family",
+      label: "Body Font Family",
+      name: "restaurant.branding.theme.fontFamily",
+      options: fontFamilyOptions,
+    },
     {
       id: "button-style",
       label: "Button Style",
