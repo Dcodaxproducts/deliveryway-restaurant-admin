@@ -393,6 +393,19 @@ const getButtonRadius = (buttonStyle: BrandingButtonStyle, borderRadius: string)
   return borderRadius;
 };
 
+const prefersDarkTheme = () =>
+  typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+const shouldUseDarkPalette = (mode: BrandingThemeMode) => mode === "dark" || (mode === "system" && prefersDarkTheme());
+
+const getThemeBackgroundColor = (mode: BrandingThemeMode, fallbackColor: string) =>
+  shouldUseDarkPalette(mode) ? "#030401" : fallbackColor;
+
+const getThemeTextColor = (mode: BrandingThemeMode, fallbackColor: string) =>
+  shouldUseDarkPalette(mode) ? "#F5F5F5" : fallbackColor;
+
+const getThemeSurfaceColor = (backgroundColor: string) => (backgroundColor === "#F5F5F5" ? "#FFFFFF" : backgroundColor);
+
 export const brandingPayloadToCssVariables = (payload: RestaurantBrandingPayload): Record<string, string> => {
   const normalizedPayload = normalizeBrandingPayload(payload);
   const { theme } = normalizedPayload.restaurant.branding;
@@ -403,6 +416,7 @@ export const brandingPayloadToCssVariables = (payload: RestaurantBrandingPayload
     "--brand-secondary": theme.secondaryColor,
     "--brand-accent": theme.accentColor,
     "--brand-background": theme.backgroundColor,
+    "--brand-surface": getThemeSurfaceColor(theme.backgroundColor),
     "--brand-text": theme.textColor,
     "--brand-radius": theme.borderRadius,
     "--brand-font-family": theme.fontFamily,
@@ -410,9 +424,9 @@ export const brandingPayloadToCssVariables = (payload: RestaurantBrandingPayload
     "--brand-button-radius": buttonRadius,
     "--primary": theme.primaryColor,
     "--ring": theme.primaryColor,
-    "--background": theme.backgroundColor,
-    "--foreground": theme.textColor,
-    "--dark": theme.secondaryColor,
+    "--background": getThemeBackgroundColor(theme.mode, theme.backgroundColor),
+    "--foreground": getThemeTextColor(theme.mode, theme.textColor),
+    "--dark": getThemeTextColor(theme.mode, theme.textColor),
     "--radius": theme.borderRadius,
     "--sidebar-primary": theme.primaryColor,
     "--sidebar-ring": theme.primaryColor,

@@ -102,7 +102,30 @@ describe("branding helpers", () => {
     expect(variables["--brand-button-radius"]).toBe("9999px");
     expect(variables["--primary"]).toBe("#112233");
     expect(variables["--ring"]).toBe("#112233");
+    expect(variables["--dark"]).toBe("#030401");
     expect(variables["--sidebar-ring"]).toBe("#112233");
+  });
+
+  it("maps dark mode payload to automatic dark background and readable text variables", () => {
+    const payload = normalizeBrandingPayload({
+      restaurant: {
+        branding: {
+          theme: {
+            mode: "dark",
+            primaryColor: "#c1000a",
+            secondaryColor: "#FFFFFF",
+            backgroundColor: "#F5F5F5",
+            textColor: "#030401",
+          },
+        },
+      },
+    });
+    const variables = brandingPayloadToCssVariables(payload);
+
+    expect(variables["--primary"]).toBe("#c1000a");
+    expect(variables["--background"]).toBe("#030401");
+    expect(variables["--foreground"]).toBe("#F5F5F5");
+    expect(variables["--dark"]).toBe("#F5F5F5");
   });
 
   it("normalizes provided backend GET envelope shape", () => {
