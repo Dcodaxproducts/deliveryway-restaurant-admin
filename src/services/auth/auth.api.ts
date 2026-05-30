@@ -14,6 +14,14 @@ import type {
   ResetPasswordPayload,
 } from "@/types/auth";
 
+export type UpdateProfilePayload = {
+  firstName: string;
+  lastName: string;
+  avatarUrl: string;
+  phone: string;
+  bio: string;
+};
+
 const unwrapEnvelope = (response: unknown) => {
   if (!isRecord(response)) return response;
   return getRecordValue(response, "data") ?? response;
@@ -37,6 +45,8 @@ export const authApi = {
 
     return normalizeUser(unwrapEnvelope(response), fallback?.user ?? null);
   },
+  updateProfile: (payload: UpdateProfilePayload) =>
+    httpClient.patch("/auth/me/profile", payload),
   verifyEmail: (payload: Record<string, unknown>) =>
     httpClient.post("/auth/verify-email", payload),
   registerTenant: (payload: unknown) =>

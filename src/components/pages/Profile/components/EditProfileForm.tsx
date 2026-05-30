@@ -1,156 +1,258 @@
+"use client";
+
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Trash2, ChevronDown } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import {
+  getAvatarUrl,
+  getDisplayName,
+  getInitials,
+  getStoredAuth,
+  saveStoredAuth,
+} from "@/lib/auth";
+import { getApiErrorMessage } from "@/lib/errors";
+import { authApi, type UpdateProfilePayload } from "@/services/auth/auth.api";
+
+const PROFILE_FORM_ID = "profile-edit-form";
+
+type ProfileFormState = UpdateProfilePayload;
+
+const getInitialFormState = (): ProfileFormState => ({
+  firstName: "",
+  lastName: "",
+  avatarUrl: "",
+  phone: "",
+  bio: "",
+});
 
 export default function EditProfile() {
-  return (
-      <Card className="w-full  p-10 rounded-2xl shadow-sm bg-white shadow-none border-none ">
-        <div className="flex flex-col items-center">
-          {/* Avatar */}
-          <div className="relative">
-            <img
-              src="/user-2.jpg"
-              alt="avatar"
-              className="w-44 h-44 rounded-2xl object-cover shadow-md"
-            />
+  const { user, token, setUser } = useAuth();
+  const { uploadFile, uploading } = useFileUpload();
+  const [values, setValues] = useState<ProfileFormState>(getInitialFormState);
+  const [saving, setSaving] = useState(false);
 
-            {/* delete icon */}
-            <button className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow border hover:bg-gray-50">
-              <Trash2 size={16} className="text-red-500" />
-            </button>
+  useEffect(() => {
+    const profile = user?.profile;
+
+    setValues({
+      firstName: profile?.firstName ?? "",
+      lastName: profile?.lastName ?? "",
+      avatarUrl: profile?.avatarUrl ?? "",
+      phone: profile?.phone ?? "",
+      bio: profile?.bio ?? "",
+    });
+  }, [user]);
+
+  const displayName = useMemo(() => {
+    const fullName = `${values.firstName} ${values.lastName}`.trim();
+    return fullName || getDisplayName(user);
+  }, [user, values.firstName, values.lastName]);
+
+  const avatarUrl = values.avatarUrl.trim() || getAvatarUrl(user);
+  const initials = getInitials({
+    ...(user ?? { id: "", email: "", role: "", profile: {} }),
+    profile: {
+      ...(user?.profile ?? {}),
+      firstName: values.firstName,
+      lastName: values.lastName,
+    },
+  });
+
+  const updateValue = (field: keyof ProfileFormState, value: string) => {
+    setValues((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const result = await uploadFile(event);
+    if (result?.fileUrl) {
+      updateValue("avatarUrl", result.fileUrl);
+    }
+  };
+
+  const clearAvatar = () => {
+    updateValue("avatarUrl", "");
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!values.firstName.trim() || !values.lastName.trim()) {
+      toast.error("First name and last name are required");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const payload: UpdateProfilePayload = {
+        firstName: values.firstName.trim(),
+        lastName: values.lastName.trim(),
+        avatarUrl: values.avatarUrl.trim(),
+        phone: values.phone.trim(),
+        bio: values.bio.trim(),
+      };
+
+      await authApi.updateProfile(payload);
+
+      const stored = getStoredAuth();
+      const nextUser = token ? await authApi.me(token, stored) : null;
+      const mergedUser = nextUser ?? (user ? { ...user, profile: { ...user.profile, ...payload } } : null);
+
+      if (mergedUser) {
+        setUser(mergedUser);
+        if (stored) {
+          saveStoredAuth({ ...stored, user: mergedUser });
+        }
+      }
+
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Unable to update profile"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="w-full rounded-2xl border-none bg-white p-10 shadow-none">
+      <form id={PROFILE_FORM_ID} className="space-y-10" noValidate onSubmit={handleSubmit}>
+        <div className="flex flex-col items-center">
+          <div className="relative">
+            <Avatar className="h-44 w-44 rounded-2xl shadow-md">
+              {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
+              <AvatarFallback className="rounded-2xl text-4xl font-semibold">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+
+            {avatarUrl ? (
+              <button
+                type="button"
+                aria-label="Remove profile photo"
+                onClick={clearAvatar}
+                className="absolute bottom-2 right-2 rounded-full border bg-white p-2 shadow hover:bg-gray-50"
+              >
+                <Trash2 size={16} className="text-red-500" />
+              </button>
+            ) : null}
           </div>
 
           <h2 className="mt-6 text-2xl font-semibold text-[#030401]">
-            Samantha Doe
+            {displayName}
           </h2>
 
-          <p className="text-sm text-[#909090]">
-            samantha123@example.com
-          </p>
+          <p className="text-sm text-[#909090]">{user?.email || "—"}</p>
 
-          <p className="text-sm text-[#909090] text-center max-w-lg mt-3 leading-relaxed">
-            Authentic and fusion flavors made fresh every day using
-            high-quality ingredients.
+          <p className="mt-3 max-w-lg text-center text-sm leading-relaxed text-[#909090]">
+            {values.bio || "No description provided."}
           </p>
         </div>
 
-<div className="mt-10 space-y-6 min-w-[70%] max-w-[80%] mx-auto ">
-  {/* Row 1 */}
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-    <FormInput label="First Name *" placeholder="eg. jhon doe" />
-    <FormInput label="Last Name *" placeholder="eg. jhon doe" />
-  </div>
+        <div className="mx-auto max-w-[80%] space-y-6 min-w-[70%]">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <FormInput
+              label="First Name *"
+              value={values.firstName}
+              onChange={(value) => updateValue("firstName", value)}
+              placeholder="Enter first name"
+            />
+            <FormInput
+              label="Last Name *"
+              value={values.lastName}
+              onChange={(value) => updateValue("lastName", value)}
+              placeholder="Enter last name"
+            />
+          </div>
 
-  {/* Row 2 */}
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-    <FormInput label="Phone Number *" placeholder="eg. jhon doe" />
-    <FormInput label="Email *" placeholder="eg. jhon doe" />
-  </div>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <FormInput
+              label="Phone Number"
+              value={values.phone}
+              onChange={(value) => updateValue("phone", value)}
+              placeholder="Enter phone number"
+            />
+            <FormInput label="Email" value={user?.email ?? ""} readOnly />
+          </div>
 
-  {/* Description */}
-  <FormInput label="Description *" placeholder="eg. jhon doe" full />
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Avatar URL
+            </label>
+            <Input
+              value={values.avatarUrl}
+              onChange={(event) => updateValue("avatarUrl", event.target.value)}
+              placeholder="https://..."
+              className="h-11 w-full rounded-[9px] border-[#BBBBBB] focus:border-2 focus:border-primary focus-visible:ring-0 focus:outline-none"
+            />
+            <div className="mt-2 flex items-center gap-3">
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleFile}
+                className="h-10 rounded-lg border border-gray-300 pt-1"
+              />
+              {uploading ? <span className="text-xs text-gray-400">Uploading...</span> : null}
+            </div>
+          </div>
 
-  {/* Address */}
-  <FormInput
-    label="Address"
-    placeholder="742 Mission Street, Suite 300"
-    full
-  />
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Bio
+            </label>
+            <textarea
+              value={values.bio}
+              onChange={(event) => updateValue("bio", event.target.value)}
+              placeholder="Tell customers a little about you"
+              className="min-h-28 w-full rounded-[9px] border border-[#BBBBBB] px-3 py-2 text-sm outline-none focus:border-2 focus:border-primary"
+            />
+          </div>
 
-  {/* Row 3 */}
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-    <FormInput label="City" placeholder="eg. jhon doe" />
-    <FormInput label="Country" placeholder="eg. jhon doe" />
-  </div>
-
-  {/* Typography select */}
-  <SelectInput label="Typography" value="Onest" />
-
-  <div className="pt-4">
-    <h3 className="text-lg font-semibold mb-4">Select Colors</h3>
-
-    <div className="space-y-4">
-      <ColorSelect label="Primary Color" color="bg-red-600" text="Red" />
-      <ColorSelect label="Secondary Color" color="bg-black" text="Black" />
-    </div>
-  </div>
-</div>
-
-      </Card>
-    
+          <Button
+            type="submit"
+            disabled={saving || uploading}
+            className="h-[46px] w-full rounded-xl bg-primary text-white hover:bg-red-600"
+          >
+            {saving ? "Saving..." : "Save Profile"}
+          </Button>
+        </div>
+      </form>
+    </Card>
   );
 }
 
 function FormInput({
   label,
   placeholder,
-  full,
+  value,
+  onChange,
+  readOnly,
 }: {
   label: string;
-  placeholder: string;
-  full?: boolean;
+  placeholder?: string;
+  value: string;
+  onChange?: (value: string) => void;
+  readOnly?: boolean;
 }) {
   return (
-    <div className={full ? "w-full" : ""}>
-      <label className="text-sm font-medium text-gray-700 block mb-2">
+    <div>
+      <label className="mb-2 block text-sm font-medium text-gray-700">
         {label}
       </label>
 
       <Input
+        value={value}
+        readOnly={readOnly}
         placeholder={placeholder}
-        className="h-11 w-full rounded-[9px] border-[#BBBBBB] focus-visible:ring-0 focus-visible:border-primary focus:border-2 focus:outline-none"
+        onChange={(event) => onChange?.(event.target.value)}
+        className="h-11 w-full rounded-[9px] border-[#BBBBBB] focus:border-2 focus:border-primary focus-visible:ring-0 focus:outline-none read-only:bg-gray-50"
       />
-    </div>
-  );
-}
-
-function SelectInput({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <label className="text-sm font-medium text-gray-700 block mb-2">
-        {label}
-      </label>
-
-      <div className="relative">
-        <Input
-          readOnly
-          value={value}
-          className="h-11 rounded-xl border-gray-200 pr-10 cursor-pointer"
-        />
-        <ChevronDown
-          size={18}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-        />
-      </div>
-    </div>
-  );
-}
-
-function ColorSelect({
-  label,
-  color,
-  text,
-}: {
-  label: string;
-  color: string;
-  text: string;
-}) {
-  return (
-    <div>
-      <label className="text-sm font-medium text-gray-700 block mb-2">
-        {label}
-      </label>
-
-      <div className="relative flex items-center h-11 border border-gray-200 rounded-xl px-4">
-        <span className={`w-4 h-4 rounded-full ${color} mr-3`} />
-        <span className="text-sm text-gray-600">{text}</span>
-
-        <ChevronDown
-          size={18}
-          className="absolute right-3 text-gray-400"
-        />
-      </div>
     </div>
   );
 }

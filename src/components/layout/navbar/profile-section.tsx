@@ -1,8 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -13,37 +12,33 @@ import {
 import { useRouter } from "next/navigation";
 import {
   User,
-  Settings,
   HelpCircle,
   LogOut,
   ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-
-const USER_DATA = {
-  name: "Arnold Smith",
-  email: "arnoldsmith@gmail.com",
-  initials: "AS",
-  avatar: "/profile.jpg",
-};
+import { getAvatarUrl, getDisplayName, getInitials } from "@/lib/auth";
 
 export default function ProfileSection() {
   const router = useRouter();
-const { user, loading } = useAuth();
+  const { user, logout } = useAuth();
+  const displayName = getDisplayName(user);
+  const initials = getInitials(user);
+  const avatarUrl = getAvatarUrl(user);
 
   const navigate = (path: string) => {
     router.push(path);
   };
-const handleLogout = () => {
-  localStorage.removeItem("auth");
+  const handleLogout = () => {
+    logout();
 
-  toast.success("Logged out successfully");
+    toast.success("Logged out successfully");
 
-  setTimeout(() => {
-    router.push("/login");
-  }, 500);
-};
+    setTimeout(() => {
+      router.push("/login");
+    }, 500);
+  };
   return (
     <DropdownMenu>
       <div className="relative">
@@ -55,23 +50,15 @@ const handleLogout = () => {
             {/* Hide 'Hello' and 'User Name' on mobile */}
             <span className="lg:text-base text-muted-foreground hidden lg:block">Hello,</span>
             <span className="lg:text-base font-semibold text-foreground hidden lg:block">
-              {user?.profile.firstName} {user?.profile.lastName}
+              {displayName}
             </span>
           </div>
 
           {/* Avatar = Trigger */}
           <DropdownMenuTrigger asChild>
             <Avatar className="w-10 h-10 lg:w-13 lg:h-13 cursor-pointer">
-              <Image
-                src={USER_DATA.avatar}
-                alt={USER_DATA.name}
-                width={56}
-                height={56}
-                quality={90}
-                priority
-                className="aspect-square object-cover w-full h-full"
-              />
-              <AvatarFallback>{USER_DATA.initials}</AvatarFallback>
+              {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
+              <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
         </Button>
@@ -84,19 +71,13 @@ const handleLogout = () => {
           {/* User Info Header */}
           <div className="flex items-center gap-3 py-4 px-5 bg-[#F9FAFB] rounded-t-2xl">
             <Avatar className="w-12 h-12">
-              <Image
-                src={USER_DATA.avatar}
-                alt={USER_DATA.name}
-                width={48}
-                height={48}
-                className="object-cover"
-              />
-              <AvatarFallback>{USER_DATA.initials}</AvatarFallback>
+              {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
+              <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
 
             <div className="flex flex-col">
               <span className="font-semibold text-sm">
-                {user?.profile.firstName} {user?.profile.lastName}
+                {displayName}
               </span>
               <span className="text-xs text-gray-500">
                 {user?.email}
@@ -110,11 +91,6 @@ const handleLogout = () => {
               icon={<User size={18} />}
               label="My Profile"
               onClick={() => navigate("/profile")}
-            />
-            <MenuItem
-              icon={<Settings size={18} />}
-              label="Account Settings"
-              onClick={() => navigate("/live-chat")}
             />
             <MenuItem
               icon={<HelpCircle size={18} />}

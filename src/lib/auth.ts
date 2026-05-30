@@ -13,6 +13,7 @@ export type AuthProfile = {
   phone?: string | null;
   bio?: string | null;
   createdAt?: string;
+  updatedAt?: string;
 };
 
 export type AuthUser = {
@@ -81,6 +82,7 @@ const getProfile = (
     phone: getStringValue(profile, "phone") ?? fallback?.profile?.phone ?? null,
     bio: getStringValue(profile, "bio") ?? fallback?.profile?.bio ?? null,
     createdAt: getStringValue(profile, "createdAt") ?? fallback?.profile?.createdAt,
+    updatedAt: getStringValue(profile, "updatedAt") ?? fallback?.profile?.updatedAt,
   };
 };
 
@@ -219,6 +221,11 @@ export const getInitials = (user?: AuthUser | null) => {
   }
 
   return displayName.slice(0, 2).toUpperCase() || "AD";
+};
+
+export const getAvatarUrl = (user?: AuthUser | null) => {
+  const avatarUrl = user?.profile?.avatarUrl?.trim();
+  return avatarUrl || null;
 };
 
 export const getRoleLabel = (role?: string | null) => {

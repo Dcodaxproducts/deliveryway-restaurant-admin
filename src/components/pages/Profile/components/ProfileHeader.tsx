@@ -21,8 +21,10 @@ export default function ProfileHeader({ title, description }: ProfileHeaderProps
 
       <Button
         variant="default"
+        type={isEditPage ? "submit" : "button"}
+        form={isEditPage ? "profile-edit-form" : undefined}
         className="w-full whitespace-nowrap sm:w-auto"
-        onClick={() => router.push(isEditPage ? "/profile" : "/profile/edit")}
+        onClick={isEditPage ? undefined : () => router.push("/profile/edit")}
       >
         {isEditPage ? "Save" : "Edit Profile"}
       </Button>

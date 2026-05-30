@@ -1,36 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  getAvatarUrl,
+  getDisplayName,
+  getInitials,
+  getStoredAuth,
+  saveStoredAuth,
+} from "@/lib/auth";
 import { authApi } from "@/services/auth/auth.api";
 
-interface Profile {
-  id?: string;
-  userId?: string;
-  firstName?: string;
-  lastName?: string;
-  avatarUrl?: string | null;
-  phone?: string | null;
-  bio?: string | null;
-  metadata?: any;
-  isActive?: boolean | string | null;
-  deletedAt?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-interface User {
-  id?: string;
-  email?: string;
-  role?: string;
-  tenantId?: string | null;
-  restaurantId?: string | null;
-  branchId?: string | null;
-  profile?: Profile;
-}
-
 export default function UserProfile() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, token, setUser } = useAuth();
+  const [refreshing, setRefreshing] = useState(false);
 
   const formatDate = (date?: string | null) => {
     if (!date) return "—";
@@ -40,34 +25,32 @@ export default function UserProfile() {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const auth = localStorage.getItem("auth");
-
-        if (!auth) return;
-
-        const parsed = JSON.parse(auth);
-        const token = parsed?.accessToken;
-
-        if (parsed?.user) {
-          setUser(parsed.user);
-        }
-
         if (!token) return;
 
-        const nextUser = await authApi.me(token, parsed);
+        setRefreshing(true);
+        const stored = getStoredAuth();
+        const nextUser = await authApi.me(token, stored);
 
         if (nextUser) {
           setUser(nextUser);
+          if (stored) {
+            saveStoredAuth({ ...stored, user: nextUser });
+          }
         }
       } catch {
         // Keep the locally hydrated user when the profile refresh fails.
+      } finally {
+        setRefreshing(false);
       }
     };
 
     loadUser();
-  }, []);
+  }, [setUser, token]);
 
   const profile = user?.profile;
-  const fullName = `${profile?.firstName ?? ""} ${profile?.lastName ?? ""}`;
+  const fullName = getDisplayName(user);
+  const avatarUrl = getAvatarUrl(user);
+  const initials = getInitials(user);
 
   const rows = [
     ["User ID", user?.id],
@@ -79,7 +62,7 @@ export default function UserProfile() {
     ["Phone", profile?.phone],
     // ["Profile ID", profile?.id],
     // ["Profile User ID", profile?.userId],
-    ["Status", profile?.isActive ? "Active" : "Inactive"],
+    ["Status", user?.isActive === false ? "Inactive" : "Active"],
     ["Created At", formatDate(profile?.createdAt)],
     ["Updated At", formatDate(profile?.updatedAt)],
     // ["Deleted At", formatDate(profile?.deletedAt)],
@@ -90,18 +73,19 @@ export default function UserProfile() {
       
       {/* Avatar */}
       <div className="flex flex-col items-center">
-        <img
-          // src={profile?.avatarUrl || "/user-2.jpg"}
-          src={"/user-2.jpg"}
-          alt="User Avatar"
-          className="w-46 h-46 object-cover rounded-2xl shadow-md"
-        />
+        <Avatar className="h-44 w-44 rounded-2xl shadow-md">
+          {avatarUrl ? <AvatarImage src={avatarUrl} alt={fullName} /> : null}
+          <AvatarFallback className="rounded-2xl text-4xl font-semibold">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
 
         <h2 className="mt-6 text-2xl font-semibold text-gray-900">
           {fullName || "—"}
         </h2>
 
         <p className="text-[#909090] text-sm">{user?.email || "—"}</p>
+        {refreshing ? <p className="mt-2 text-xs text-gray-400">Refreshing profile...</p> : null}
       </div>
 
       {/* Description */}
