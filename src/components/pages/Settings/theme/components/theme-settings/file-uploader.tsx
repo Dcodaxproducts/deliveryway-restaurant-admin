@@ -1,4 +1,4 @@
-import { useRef, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import type { FieldPath, UseFormRegister, UseFormSetValue } from "react-hook-form";
 import { Link2, Upload, X } from "lucide-react";
 
@@ -40,9 +40,35 @@ export default function FileUploader({
 }: FileUploaderProps) {
   const { uploadFile, uploading } = useFileUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewObjectUrlRef = useRef<string | null>(null);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const trimmedValue = value?.trim() ?? "";
+  const previewValue = localPreviewUrl ?? trimmedValue;
   const fileInputId = `${id}-file`;
   const allTargetNames = [name, ...linkedNames];
+
+  useEffect(() => {
+    return () => {
+      if (previewObjectUrlRef.current) {
+        URL.revokeObjectURL(previewObjectUrlRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!trimmedValue && localPreviewUrl) {
+      setLocalPreviewUrl(null);
+    }
+  }, [localPreviewUrl, trimmedValue]);
+
+  const revokeLocalPreview = () => {
+    if (previewObjectUrlRef.current) {
+      URL.revokeObjectURL(previewObjectUrlRef.current);
+      previewObjectUrlRef.current = null;
+    }
+
+    setLocalPreviewUrl(null);
+  };
 
   const updateAssetFields = (nextValue: string) => {
     for (const targetName of allTargetNames) {
@@ -55,6 +81,16 @@ export default function FileUploader({
   };
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    revokeLocalPreview();
+
+    if (file) {
+      const objectUrl = URL.createObjectURL(file);
+      previewObjectUrlRef.current = objectUrl;
+      setLocalPreviewUrl(objectUrl);
+    }
+
     const result = await uploadFile(event);
     event.target.value = "";
 
@@ -63,10 +99,16 @@ export default function FileUploader({
     }
 
     updateAssetFields(result.fileUrl);
+    revokeLocalPreview();
   };
 
   const handleClear = () => {
+    revokeLocalPreview();
     updateAssetFields("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleUploadButtonClick = () => {
@@ -83,12 +125,12 @@ export default function FileUploader({
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-[96px_1fr] sm:items-center">
         <div className="flex h-20 w-24 items-center justify-center overflow-hidden rounded-[12px] border border-gray-200 bg-gray-50">
-          {isPreviewablePath(trimmedValue) ? (
+          {isPreviewablePath(previewValue) ? (
             <div
               aria-label={`${title} preview`}
               role="img"
               className="h-full w-full bg-cover bg-center"
-              style={{ backgroundImage: `url(${trimmedValue})` }}
+              style={{ backgroundImage: `url(${previewValue})` }}
             />
           ) : (
             <Link2 className="text-gray" />
@@ -126,7 +168,7 @@ export default function FileUploader({
               type="button"
               aria-label={`Clear ${title}`}
               className={actionButtonClassName}
-              disabled={uploading || !trimmedValue}
+              disabled={uploading || !previewValue}
               onClick={handleClear}
             >
               <X size={16} aria-hidden="true" />
