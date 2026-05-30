@@ -13,9 +13,9 @@ type BrandLogoProps = {
   textClassName?: string;
   showName?: boolean;
   priority?: boolean;
+  logoUrl?: string | null;
+  name?: string | null;
 };
-
-const FALLBACK_LOGO = "/logo.png";
 
 const getInitials = (name: string) =>
   name
@@ -25,12 +25,16 @@ const getInitials = (name: string) =>
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("") || "DW";
 
+const normalizeLogoUrl = (value?: string | null) => value?.trim() || "";
+
 export default function BrandLogo({
   className,
   imageClassName,
   textClassName,
   showName = true,
   priority = false,
+  logoUrl,
+  name,
 }: BrandLogoProps) {
   const { restaurant } = useBranding();
   const { resolvedTheme, theme } = useTheme();
@@ -38,16 +42,21 @@ export default function BrandLogo({
   const currentTheme = resolvedTheme ?? theme;
 
   const logoSrc = useMemo(() => {
+    const explicitLogo = normalizeLogoUrl(logoUrl);
+    if (explicitLogo) {
+      return explicitLogo;
+    }
+
     const themedLogo = currentTheme === "dark" ? restaurant.branding.logo.dark : restaurant.branding.logo.light;
-    return themedLogo || restaurant.logoUrl || FALLBACK_LOGO;
-  }, [currentTheme, restaurant.branding.logo.dark, restaurant.branding.logo.light, restaurant.logoUrl]);
+    return normalizeLogoUrl(themedLogo) || normalizeLogoUrl(restaurant.logoUrl) || normalizeLogoUrl(restaurant.branding.assets.logoUrl);
+  }, [currentTheme, logoUrl, restaurant.branding.assets.logoUrl, restaurant.branding.logo.dark, restaurant.branding.logo.light, restaurant.logoUrl]);
 
   useEffect(() => {
     setFailedSrc(null);
   }, [logoSrc]);
 
-  const showFallback = failedSrc === logoSrc;
-  const restaurantName = restaurant.name || "Deliveryway";
+  const showFallback = !logoSrc || failedSrc === logoSrc;
+  const restaurantName = name?.trim() || restaurant.name || "Deliveryway";
 
   return (
     <div className={cn("flex min-w-0 items-center gap-3", className)}>

@@ -30,7 +30,7 @@ describe("branding helpers", () => {
     expect(payload.restaurant.slug).toBe("pizza-house");
     expect(payload.restaurant.branding.theme.primaryColor).toBe("#123456");
     expect(payload.restaurant.branding.theme.secondaryColor).toBe(defaultTheme.secondaryColor);
-    expect(payload.restaurant.branding.assets.logoUrl).toBe("/logo.png");
+    expect(payload.restaurant.branding.assets.logoUrl).toBe(defaultRestaurant.branding.assets.logoUrl);
   });
 
   it("rejects invalid color by falling back", () => {
@@ -300,7 +300,7 @@ describe("branding helpers", () => {
             successColor: "#00AA44",
           },
           assets: {
-            logoUrl: "https://example.com/logo.png",
+            logoUrl: "https://example.com/restaurant-brand.png",
           },
           logo: {
             light: "https://example.com/light.png",
@@ -313,7 +313,7 @@ describe("branding helpers", () => {
     expect(payload.restaurant.branding.theme.secondaryColor).toBe("#223344");
     expect(payload.restaurant.branding.app.splashColor).toBe("#334455");
     expect(payload.restaurant.branding.checkout.successColor).toBe("#00AA44");
-    expect(payload.restaurant.branding.assets.logoUrl).toBe("https://example.com/logo.png");
+    expect(payload.restaurant.branding.assets.logoUrl).toBe("https://example.com/restaurant-brand.png");
     expect(payload.restaurant.branding.logo.light).toBe("https://example.com/light.png");
   });
 

@@ -21,6 +21,7 @@ type RestaurantOption = {
   id: string;
   name?: string;
   tenantId?: string | null;
+  logoUrl?: string | null;
 };
 
 export default function RestaurantPicker() {
@@ -59,10 +60,20 @@ export default function RestaurantPicker() {
 
       if (userTenantId && tenantId && tenantId !== userTenantId) return acc;
 
+      const branding = getRecordValue(row, "branding");
+      const assets = getRecordValue(branding, "assets");
+      const logo = getRecordValue(branding, "logo");
+      const logoUrl =
+        getStringValue(row, "logoUrl") ??
+        getStringValue(assets, "logoUrl") ??
+        getStringValue(logo, "light") ??
+        null;
+
       acc.push({
         id,
         name: getStringValue(row, "name") ?? id,
         tenantId,
+        logoUrl,
       });
 
       return acc;
@@ -139,7 +150,12 @@ export default function RestaurantPicker() {
         title={branchId ? `Branch ID: ${branchId}` : branchLabel}
         className="hidden h-[56px] max-w-[340px] items-center gap-3 rounded-xl bg-primary/10 px-4 text-left text-sm text-primary ring-1 ring-primary/20 transition hover:bg-primary/15 md:flex"
       >
-        <BrandLogo className="shrink-0 gap-0" imageClassName="size-9 rounded-full bg-white shadow-sm" showName={false} />
+        <BrandLogo
+          className="shrink-0 gap-0"
+          imageClassName="size-9 rounded-full bg-white shadow-sm"
+          showName={false}
+          name={branchLabel}
+        />
         <span className="min-w-0">
           <span className="block text-xs font-semibold uppercase tracking-wide text-primary/80">
             Branch scope
@@ -159,7 +175,13 @@ export default function RestaurantPicker() {
         className="flex h-[56px] w-full items-center justify-between gap-2 rounded-xl bg-muted px-4 text-sm transition-all hover:bg-primary/10"
       >
         <span className="flex min-w-0 items-center gap-3">
-          <BrandLogo className="shrink-0 gap-0" imageClassName="size-9 rounded-full bg-white shadow-sm" showName={false} />
+          <BrandLogo
+            className="shrink-0 gap-0"
+            imageClassName="size-9 rounded-full bg-white shadow-sm"
+            showName={false}
+            logoUrl={selectedRestaurant?.logoUrl}
+            name={selectedRestaurant?.name}
+          />
           <span className="truncate font-medium text-gray-800">
             {renderLabel()}
           </span>
@@ -198,7 +220,16 @@ export default function RestaurantPicker() {
                       : "hover:bg-gray-100 text-gray-700"
                   }`}
                 >
-                  <span className="truncate">{restaurant.name}</span>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <BrandLogo
+                      className="shrink-0 gap-0"
+                      imageClassName="size-7 rounded-full bg-white shadow-sm"
+                      showName={false}
+                      logoUrl={restaurant.logoUrl}
+                      name={restaurant.name}
+                    />
+                    <span className="truncate">{restaurant.name}</span>
+                  </span>
 
                   {selectedRestaurant?.id === restaurant.id && (
                     <Check size={14} className="text-primary" />

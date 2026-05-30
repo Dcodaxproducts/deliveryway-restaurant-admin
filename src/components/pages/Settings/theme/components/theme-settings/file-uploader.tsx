@@ -140,7 +140,7 @@ export default function FileUploader({
           <Input
             id={id}
             type="url"
-            placeholder="/logo.png or https://example.com/logo.png"
+            placeholder="https://example.com/brand-image.png"
             aria-invalid={Boolean(error)}
             className={inputClassName}
             {...register(name)}
