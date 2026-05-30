@@ -1,4 +1,4 @@
-import type { FieldPath, UseFormRegister } from "react-hook-form";
+import type { FieldPath, UseFormRegister, UseFormSetValue } from "react-hook-form";
 
 import { Input } from "@/components/ui/input";
 import type { BrandingFormValues } from "@/validations/branding";
@@ -12,6 +12,7 @@ type ColorPickerProps = {
   name: ColorFieldName;
   value?: string;
   register: UseFormRegister<BrandingFormValues>;
+  setValue: UseFormSetValue<BrandingFormValues>;
   error?: string;
 };
 
@@ -27,6 +28,7 @@ export default function ColorPicker({
   name,
   value,
   register,
+  setValue,
   error,
 }: ColorPickerProps) {
   const colorValue = value && /^#[0-9a-fA-F]{6}$/.test(value) ? value : "#000000";
@@ -47,7 +49,13 @@ export default function ColorPicker({
             value={colorValue}
             aria-label={`${label} color picker`}
             className={colorInputClassName}
-            {...register(name)}
+            onChange={(event) =>
+              setValue(name, event.target.value.toUpperCase(), {
+                shouldDirty: true,
+                shouldTouch: true,
+                shouldValidate: true,
+              })
+            }
           />
           <Input
             id={`${id}-text`}

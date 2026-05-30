@@ -135,6 +135,7 @@ export default function ThemeSettingsPage() {
     register,
     handleSubmit,
     reset,
+    setValue,
     watch,
     getFieldState,
     formState,
@@ -267,7 +268,7 @@ export default function ThemeSettingsPage() {
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <BrandAssetsSection register={register} values={watchedValues} getError={getError} />
-          <ColorSchemeSection register={register} values={watchedValues} getError={getError} />
+          <ColorSchemeSection register={register} setValue={setValue} values={watchedValues} getError={getError} />
         </div>
         <TypographySection register={register} values={watchedValues} getError={getError} />
         <PreviewSection values={watchedValues} />

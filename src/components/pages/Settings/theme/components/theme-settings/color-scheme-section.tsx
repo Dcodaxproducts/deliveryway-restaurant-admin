@@ -1,4 +1,4 @@
-import type { FieldPath, UseFormRegister } from "react-hook-form";
+import type { FieldPath, UseFormRegister, UseFormSetValue } from "react-hook-form";
 import { Palette } from "lucide-react";
 
 import type { BrandingFormValues } from "@/validations/branding";
@@ -7,6 +7,7 @@ import ColorPicker from "./color-picker";
 
 type ColorSchemeSectionProps = {
   register: UseFormRegister<BrandingFormValues>;
+  setValue: UseFormSetValue<BrandingFormValues>;
   values: BrandingFormValues;
   getError: (name: FieldPath<BrandingFormValues>) => string | undefined;
 };
@@ -22,7 +23,7 @@ type ColorFieldConfig = {
 const panelClassName = "bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6";
 const sectionTitleClassName = "text-[20px] font-semibold text-dark";
 
-export default function ColorSchemeSection({ register, values, getError }: ColorSchemeSectionProps) {
+export default function ColorSchemeSection({ register, setValue, values, getError }: ColorSchemeSectionProps) {
   const { theme } = values.restaurant.branding;
   const { app, checkout } = values.restaurant.branding;
 
@@ -128,6 +129,7 @@ export default function ColorSchemeSection({ register, values, getError }: Color
           name={name}
           value={value}
           register={register}
+          setValue={setValue}
           error={getError(name)}
         />
       ))}
