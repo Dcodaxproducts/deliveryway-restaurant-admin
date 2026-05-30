@@ -37,7 +37,9 @@ export default function EditProfile() {
   const { user, token, setUser } = useAuth();
   const { uploadFile, uploading } = useFileUpload();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const previewObjectUrlRef = useRef<string | null>(null);
   const [values, setValues] = useState<ProfileFormState>(getInitialFormState);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -52,12 +54,20 @@ export default function EditProfile() {
     });
   }, [user]);
 
+  useEffect(() => {
+    return () => {
+      if (previewObjectUrlRef.current) {
+        URL.revokeObjectURL(previewObjectUrlRef.current);
+      }
+    };
+  }, []);
+
   const displayName = useMemo(() => {
     const fullName = `${values.firstName} ${values.lastName}`.trim();
     return fullName || getDisplayName(user);
   }, [user, values.firstName, values.lastName]);
 
-  const avatarUrl = values.avatarUrl.trim();
+  const avatarUrl = avatarPreviewUrl ?? values.avatarUrl.trim();
   const initials = getInitials({
     ...(user ?? { id: "", email: "", role: "", profile: {} }),
     profile: {
@@ -72,6 +82,19 @@ export default function EditProfile() {
   };
 
   const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (previewObjectUrlRef.current) {
+      URL.revokeObjectURL(previewObjectUrlRef.current);
+      previewObjectUrlRef.current = null;
+    }
+
+    if (file) {
+      const objectUrl = URL.createObjectURL(file);
+      previewObjectUrlRef.current = objectUrl;
+      setAvatarPreviewUrl(objectUrl);
+    }
+
     const result = await uploadFile(event);
     if (result?.fileUrl) {
       updateValue("avatarUrl", result.fileUrl);
@@ -79,7 +102,17 @@ export default function EditProfile() {
   };
 
   const clearAvatar = () => {
+    if (previewObjectUrlRef.current) {
+      URL.revokeObjectURL(previewObjectUrlRef.current);
+      previewObjectUrlRef.current = null;
+    }
+
+    setAvatarPreviewUrl(null);
     updateValue("avatarUrl", "");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const openFilePicker = () => {
@@ -119,6 +152,10 @@ export default function EditProfile() {
       }
 
       toast.success("Profile updated successfully");
+      if (previewObjectUrlRef.current) {
+        URL.revokeObjectURL(previewObjectUrlRef.current);
+        previewObjectUrlRef.current = null;
+      }
       router.push("/profile");
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Unable to update profile"));
