@@ -98,6 +98,26 @@ export const BranchSchema = z.object({
   settings: BranchSettingsSchema.optional(),
 });
 
+export const createBranchSchema = z.object({
+  restaurantId: z.string().optional(),
+  name: z.string().trim().min(1, "Branch name is required"),
+  street: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  country: z.string().optional(),
+  area: z.string().optional(),
+  lat: z.string().optional(),
+  lng: z.string().optional(),
+  isMain: z.boolean(),
+  branchAdmin: z.object({
+    email: z.string().optional(),
+    password: z.string().optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    phone: z.string().optional(),
+  }),
+});
+
 /**
  * ==============================
  * BULK SCHEMA
@@ -135,5 +155,6 @@ export const UpdateOpeningHoursSchema = z.object({
  */
 
 export type BranchValues = z.infer<typeof BranchSchema>;
+export type CreateBranchFormValues = z.infer<typeof createBranchSchema>;
 export type BulkBranchValues = z.infer<typeof BulkBranchSchema>;
 export type OpeningHoursValues = z.infer<typeof UpdateOpeningHoursSchema>;

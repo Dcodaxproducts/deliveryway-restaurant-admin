@@ -1,15 +1,20 @@
 "use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
+import { Controller, useForm, type FieldErrors, type Path } from "react-hook-form";
+
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
-import { toast } from "sonner";
-import RestaurantPicker from "@/components/common/RestaurantPicker";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateBranch } from "@/hooks/useBranches";
+import {
+  createBranchSchema,
+  type CreateBranchFormValues,
+} from "@/validations/branches";
 
 interface CreateBranchModalProps {
   open: boolean;
@@ -17,196 +22,198 @@ interface CreateBranchModalProps {
   onSuccess?: () => void;
 }
 
+const INPUT_CLASS =
+  "h-[44px] rounded-[10px] px-3 text-sm placeholder:text-gray-400 border-gray-300 focus-visible:ring-1 focus-visible:ring-primary";
+const PRIMARY_INPUT_CLASS = `${INPUT_CLASS} border-primary bg-primary/5`;
+
+const defaultValues: CreateBranchFormValues = {
+  restaurantId: "",
+  name: "",
+  street: "",
+  city: "",
+  state: "",
+  country: "",
+  area: "",
+  lat: "",
+  lng: "",
+  isMain: false,
+  branchAdmin: {
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
+  },
+};
+
+type FieldConfig = {
+  name: Path<CreateBranchFormValues>;
+  label?: string;
+  placeholder: string;
+  type?: string;
+  required?: boolean;
+  primary?: boolean;
+};
+
+const branchFieldConfigs: FieldConfig[] = [
+  {
+    name: "name",
+    label: "Branch Name",
+    placeholder: "eg. Main Branch",
+    required: true,
+    primary: true,
+  },
+  { name: "street", label: "Street", placeholder: "Street 12" },
+  { name: "city", label: "City", placeholder: "eg. Lahore" },
+  { name: "state", label: "State", placeholder: "eg. Punjab" },
+  { name: "country", label: "Country", placeholder: "eg. Pakistan" },
+  { name: "area", label: "Area", placeholder: "eg. DHA Phase 5" },
+  { name: "lat", label: "Latitude", placeholder: "eg. 31.5204" },
+  { name: "lng", label: "Longitude", placeholder: "eg. 74.3587" },
+];
+
+const adminFieldConfigs: FieldConfig[] = [
+  { name: "branchAdmin.firstName", placeholder: "First Name" },
+  { name: "branchAdmin.lastName", placeholder: "Last Name" },
+  { name: "branchAdmin.email", placeholder: "Email" },
+  { name: "branchAdmin.password", placeholder: "Password", type: "password" },
+  { name: "branchAdmin.phone", placeholder: "Phone" },
+];
+
+const getErrorMessage = (
+  errors: FieldErrors<CreateBranchFormValues>,
+  name: Path<CreateBranchFormValues>
+) => {
+  if (name.startsWith("branchAdmin.")) {
+    const adminKey = name.split(".")[1] as keyof CreateBranchFormValues["branchAdmin"];
+    return errors.branchAdmin?.[adminKey]?.message;
+  }
+
+  const fieldName = name as keyof Omit<CreateBranchFormValues, "branchAdmin">;
+  return errors[fieldName]?.message;
+};
+
 export default function CreateBranchModal({
   open,
   onOpenChange,
   onSuccess,
 }: CreateBranchModalProps) {
-  const [branchName, setBranchName] = useState("");
-  const [street, setStreet] = useState("");
-  const [city, setCity] = useState("");
-  const [stateVal, setStateVal] = useState("");
-  const [country, setCountry] = useState("");
-  const [area, setArea] = useState("");
-  const [isMain, setIsMain] = useState(false);
-  const [lat, setLat] = useState("");
-  const [lng, setLng] = useState("");
-  const [adminEmail, setAdminEmail] = useState("");
-  const [adminPassword, setAdminPassword] = useState("");
-  const [adminFirstName, setAdminFirstName] = useState("");
-  const [adminLastName, setAdminLastName] = useState("");
-  const [adminPhone, setAdminPhone] = useState("");
-  const [availability, setAvailability] = useState(true);
-
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const createBranchMutation = useCreateBranch();
 
-  const inputBase =
-    "h-[44px] rounded-[10px] px-3 text-sm placeholder:text-gray-400 border-gray-300 focus-visible:ring-1 focus-visible:ring-primary";
+  const {
+    control,
+    formState: { errors },
+    handleSubmit,
+    register,
+    reset,
+  } = useForm<CreateBranchFormValues>({
+    resolver: zodResolver(createBranchSchema),
+    defaultValues,
+  });
 
-  /**
-   * ==============================
-   * ==============================
-   */
-  const handleCreateBranch = async () => {
+  useEffect(() => {
+    if (!open) {
+      reset(defaultValues);
+    }
+  }, [open, reset]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      reset(defaultValues);
+    }
+
+    onOpenChange(nextOpen);
+  };
+
+  const onSubmit = async (values: CreateBranchFormValues) => {
+    const restaurantId = user?.restaurantId;
+
+    if (!restaurantId) {
+      return;
+    }
+
     try {
-      const restaurantId = user?.restaurantId;
-
-      if (!restaurantId) {
-        toast.error("User not authenticated");
-        return;
-      }
-
       await createBranchMutation.mutateAsync({
         restaurantId,
-        name: branchName,
-        street,
-        city,
-        state: stateVal,
-        country,
-        area,
-        lat,
-        lng,
-        isMain,
+        name: values.name,
+        street: values.street ?? "",
+        city: values.city ?? "",
+        state: values.state ?? "",
+        country: values.country ?? "",
+        area: values.area ?? "",
+        lat: values.lat ?? "",
+        lng: values.lng ?? "",
+        isMain: values.isMain,
         branchAdmin: {
-          email: adminEmail,
-          password: adminPassword,
-          firstName: adminFirstName,
-          lastName: adminLastName,
-          phone: adminPhone,
+          email: values.branchAdmin.email ?? "",
+          password: values.branchAdmin.password ?? "",
+          firstName: values.branchAdmin.firstName ?? "",
+          lastName: values.branchAdmin.lastName ?? "",
+          phone: values.branchAdmin.phone ?? "",
         },
       });
 
-      //  Success handled in hook, but keeping UX flow
+      reset(defaultValues);
       onOpenChange(false);
       onSuccess?.();
-
-      /**
-       */
-      setBranchName("");
-      setStreet("");
-      setCity("");
-      setStateVal("");
-      setCountry("");
-      setArea("");
-      setIsMain(false);
-      setAdminEmail("");
-      setAdminPassword("");
-      setAdminFirstName("");
-      setAdminLastName("");
-      setAdminPhone("");
-      setLat("");
-      setLng("");
-      setAvailability(true);
-    } catch (error: any) {
-      //  No duplicate toast (already handled in hook)
+    } catch (error: unknown) {
       void error;
     }
   };
 
   return (
-    <>
-      {/* {!loading && (!user?.restaurantId || !user?.branchId) && (
-        <RestaurantPicker />
-      )} */}
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-[480px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
+        <DialogHeader className="space-y-1">
+          <DialogTitle className="text-xl font-semibold">Create Branch</DialogTitle>
+          <p className="text-sm text-gray-500">Create a new branch from here</p>
+        </DialogHeader>
 
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[480px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
-          <DialogHeader className="space-y-1">
-            <DialogTitle className="text-xl font-semibold">Create Branch</DialogTitle>
-            <p className="text-sm text-gray-500">Create a new branch from here</p>
-          </DialogHeader>
-
-          {/* Card */}
+        <form noValidate onSubmit={handleSubmit(onSubmit)}>
           <div className="mt-4 rounded-[16px] bg-white p-5 space-y-4">
-            <div className="space-y-1">
-              <Label className="text-sm">
-                Branch Name <span className="text-primary">*</span>
-              </Label>
-              <Input
-                placeholder="eg. Main Branch"
-                className={`${inputBase} border-primary bg-primary/5`}
-                value={branchName}
-                onChange={(e) => setBranchName(e.target.value)}
-              />
-            </div>
+            {branchFieldConfigs.map((config) => {
+              const { label, name, placeholder, primary, required, type } = config;
+              const errorMessage = getErrorMessage(errors, name);
+              const fieldId = `create-branch-${name.replace(/\./g, "-")}`;
 
-            <div className="space-y-1">
-              <Label className="text-sm">Street</Label>
-              <Input
-                placeholder="Street 12"
-                className={inputBase}
-                value={street}
-                onChange={(e) => setStreet(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-sm">City</Label>
-              <Input
-                placeholder="eg. Lahore"
-                className={inputBase}
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-sm">State</Label>
-              <Input
-                placeholder="eg. Punjab"
-                className={inputBase}
-                value={stateVal}
-                onChange={(e) => setStateVal(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-sm">Country</Label>
-              <Input
-                placeholder="eg. Pakistan"
-                className={inputBase}
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-sm">Area</Label>
-              <Input
-                placeholder="eg. DHA Phase 5"
-                className={inputBase}
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-sm">Latitude</Label>
-              <Input
-                placeholder="eg. 31.5204"
-                className={inputBase}
-                value={lat}
-                onChange={(e) => setLat(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-sm">Longitude</Label>
-              <Input
-                placeholder="eg. 74.3587"
-                className={inputBase}
-                value={lng}
-                onChange={(e) => setLng(e.target.value)}
-              />
-            </div>
+              return (
+                <div key={name} className="space-y-1">
+                  {label ? (
+                    <Label htmlFor={fieldId} className="text-sm">
+                      {label} {required ? <span className="text-primary">*</span> : null}
+                    </Label>
+                  ) : null}
+                  <Input
+                    id={fieldId}
+                    type={type}
+                    placeholder={placeholder}
+                    className={primary ? PRIMARY_INPUT_CLASS : INPUT_CLASS}
+                    aria-invalid={Boolean(errorMessage)}
+                    {...register(name)}
+                  />
+                  {errorMessage ? (
+                    <p className="text-xs text-primary">{errorMessage}</p>
+                  ) : null}
+                </div>
+              );
+            })}
 
             <div className="flex items-center justify-between">
-              <Label className="text-sm">Main Branch</Label>
-              <Switch
-                checked={isMain}
-                onCheckedChange={setIsMain}
-                className="data-[state=checked]:bg-primary"
+              <Label htmlFor="create-branch-is-main" className="text-sm">
+                Main Branch
+              </Label>
+              <Controller
+                control={control}
+                name="isMain"
+                render={({ field }) => (
+                  <Switch
+                    id="create-branch-is-main"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    className="data-[state=checked]:bg-primary"
+                  />
+                )}
               />
             </div>
 
@@ -214,41 +221,52 @@ export default function CreateBranchModal({
 
             <h4 className="text-sm font-medium text-gray-900">Branch Admin Info</h4>
 
-            <Input placeholder="First Name" className={inputBase} value={adminFirstName} onChange={(e) => setAdminFirstName(e.target.value)} />
-            <Input placeholder="Last Name" className={inputBase} value={adminLastName} onChange={(e) => setAdminLastName(e.target.value)} />
-            <Input placeholder="Email" className={inputBase} value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} />
-            <Input placeholder="Password" type="password" className={inputBase} value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} />
-            <Input placeholder="Phone" className={inputBase} value={adminPhone} onChange={(e) => setAdminPhone(e.target.value)} />
+            {adminFieldConfigs.map((config) => {
+              const { name, placeholder, type } = config;
+              const errorMessage = getErrorMessage(errors, name);
+              const fieldId = `create-branch-${name.replace(/\./g, "-")}`;
 
-            <div className="flex items-center justify-between pt-2">
-              <Label className="text-sm">Availability</Label>
-              <Switch
-                checked={availability}
-                onCheckedChange={setAvailability}
-                className="data-[state=checked]:bg-primary"
-              />
-            </div>
+              return (
+                <div key={name} className="space-y-1">
+                  <Label htmlFor={fieldId} className="sr-only">
+                    {placeholder}
+                  </Label>
+                  <Input
+                    id={fieldId}
+                    type={type}
+                    placeholder={placeholder}
+                    className={INPUT_CLASS}
+                    aria-invalid={Boolean(errorMessage)}
+                    {...register(name)}
+                  />
+                  {errorMessage ? (
+                    <p className="text-xs text-primary">{errorMessage}</p>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
 
           <div className="mt-6 flex items-center justify-center gap-3">
             <Button
+              type="button"
               variant="ghost"
               className="text-gray-700 text-[17px]"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
             >
               Cancel
             </Button>
 
             <Button
+              type="submit"
               className="px-8 py-2 rounded-[10px] bg-primary hover:bg-primary/90 text-[17px]"
-              onClick={handleCreateBranch}
               disabled={createBranchMutation.isPending}
             >
               {createBranchMutation.isPending ? "Creating..." : "Create"}
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
