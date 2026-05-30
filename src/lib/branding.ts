@@ -14,6 +14,22 @@ const themeModes: readonly BrandingThemeMode[] = ["light", "dark", "system"];
 const buttonStyles: readonly BrandingButtonStyle[] = ["rounded", "pill", "square"];
 const homeLayouts: readonly BrandingHomeLayout[] = ["hero", "grid", "minimal"];
 const menuCardStyles: readonly BrandingMenuCardStyle[] = ["image-top", "compact", "image-left"];
+const apiThemeKeys = [
+  "mode",
+  "primaryColor",
+  "secondaryColor",
+  "accentColor",
+  "backgroundColor",
+  "textColor",
+  "fontFamily",
+  "headingFontFamily",
+  "borderRadius",
+  "buttonStyle",
+  "homeLayout",
+  "menuCardStyle",
+  "showPopularItems",
+  "showCategories",
+] as const;
 
 const hexColorPattern = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const radiusPattern = /^(?:0|\d+(?:\.\d+)?)(?:px|rem)$/;
@@ -94,6 +110,70 @@ const deepMergeRecords = (base: unknown, override: unknown): unknown => {
   return merged;
 };
 
+const hasRestaurantPayloadFields = (value: Record<string, unknown>): boolean =>
+  "name" in value ||
+  "slug" in value ||
+  "logoUrl" in value ||
+  "coverImage" in value ||
+  "branding" in value ||
+  "supportContact" in value ||
+  "socialMedia" in value;
+
+const normalizeApiRestaurantRecord = (restaurant: Record<string, unknown>): Record<string, unknown> => {
+  const branding = getRecord(restaurant, "branding");
+
+  if (!branding) {
+    return restaurant;
+  }
+
+  const flattenedThemeValues = apiThemeKeys.reduce<Record<string, unknown>>((acc, key) => {
+    if (key in branding) {
+      acc[key] = branding[key];
+    }
+
+    return acc;
+  }, {});
+
+  if (Object.keys(flattenedThemeValues).length === 0) {
+    return restaurant;
+  }
+
+  return {
+    ...restaurant,
+    branding: {
+      ...branding,
+      theme: deepMergeRecords(flattenedThemeValues, getRecord(branding, "theme") ?? {}),
+    },
+  };
+};
+
+const getApiRestaurantCandidate = (response: unknown): Record<string, unknown> | undefined => {
+  if (!isRecord(response)) {
+    return undefined;
+  }
+
+  const directRestaurant = getRecord(response, "restaurant");
+  if (directRestaurant) {
+    return directRestaurant;
+  }
+
+  const data = getRecord(response, "data");
+  const dataRestaurant = getRecord(data, "restaurant");
+  if (dataRestaurant) {
+    return dataRestaurant;
+  }
+
+  if (data && hasRestaurantPayloadFields(data)) {
+    return data;
+  }
+
+  if (hasRestaurantPayloadFields(response)) {
+    return response;
+  }
+
+  return undefined;
+};
+
 const expandHexColor = (hexColor: string): string => {
   if (hexColor.length === 4) {
     const [, red, green, blue] = hexColor;
@@ -141,6 +221,21 @@ export const deepMergeBrandingPayload = (
   base: RestaurantBrandingPayload,
   override: unknown,
 ): RestaurantBrandingPayload => normalizeBrandingPayload(deepMergeRecords(base, override));
+
+export const normalizeBrandingApiResponse = (response: unknown): RestaurantBrandingPayload => {
+  const restaurantCandidate = getApiRestaurantCandidate(response);
+
+  if (!restaurantCandidate) {
+    return cloneDefaultPayload();
+  }
+
+  return normalizeBrandingPayload({
+    restaurant: normalizeApiRestaurantRecord(restaurantCandidate),
+  });
+};
+
+export const buildBrandingApiPayload = (payload: RestaurantBrandingPayload): RestaurantBrandingPayload =>
+  normalizeBrandingPayload(payload);
 
 export const normalizeBrandingPayload = (input: unknown): RestaurantBrandingPayload => {
   const defaults = cloneDefaultPayload();
