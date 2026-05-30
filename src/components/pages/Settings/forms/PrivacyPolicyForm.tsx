@@ -1,65 +1,104 @@
 "use client";
 
-import { useState } from "react";
 import {
-  Bold,
-  Italic,
-  Underline,
-  AlignLeft,
   AlignCenter,
+  AlignLeft,
   AlignRight,
-  List,
-  Link as LinkIcon,
-  Image as ImageIcon,
-  RotateCcw,
   ArrowRight,
+  Bold,
+  Image as ImageIcon,
+  Italic,
+  Link as LinkIcon,
+  List,
+  RotateCcw,
+  Underline,
 } from "lucide-react";
+
 import Header from "@/components/common/PageHeader";
 
-export default function PrivacyPolicyPage() {
-  const [title] = useState("Privacy Policy");
-  const [status] = useState("Draft Mode");
-  const [heading] = useState("Heading 1");
+const toolbarActions = [
+  { label: "Bold", Icon: Bold },
+  { label: "Italic", Icon: Italic },
+  { label: "Underline", Icon: Underline },
+  { label: "Align left", Icon: AlignLeft },
+  { label: "Align center", Icon: AlignCenter },
+  { label: "Align right", Icon: AlignRight },
+  { label: "List", Icon: List },
+  { label: "Link", Icon: LinkIcon },
+  { label: "Image", Icon: ImageIcon },
+];
 
+const policySections = [
+  {
+    title: "1. Information We Collect",
+    body: "We collect information that you provide directly to us, such as when you create an account, update your restaurant profile, or contact customer support. This may include:",
+    items: [
+      "Business name and contact details",
+      "Account credentials (username and password)",
+      "Financial information for billing and payments",
+      "Content you upload to the portal",
+    ],
+  },
+  {
+    title: "2. How We Use Information",
+    body: "We use the information we collect to provide, maintain, and improve our services, to process your transactions, and to communicate with you about updates and promotions.",
+  },
+  {
+    title: "3. Data Security",
+    body: "We implement appropriate technical and organizational measures to protect your personal data against unauthorized or unlawful processing and against accidental loss, destruction, or damage.",
+  },
+];
+
+const versionHistoryItems = [
+  {
+    author: "Sarah Chen",
+    avatar: "S",
+    avatarClassName: "bg-[#1F2937] text-sm text-white",
+    time: "Today, 2:45 PM",
+    summary: "Updated data security section to comply with new GDPR mandates.",
+    current: true,
+  },
+  {
+    author: "System Bot",
+    avatar: "🤖",
+    avatarClassName: "bg-[#F2F4F7] text-xs text-[#667085]",
+    time: "Aug 01, 12:00 AM",
+    summary: "Automated archival of previous year&apos;s policy.",
+    current: false,
+  },
+];
+
+const iconButtonClassName =
+  "inline-flex size-8 items-center justify-center rounded-lg text-[#667085] transition hover:bg-[#F9FAFB] hover:text-[#344054]";
+const editorCardClassName =
+  "overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]";
+const historyCardClassName = "rounded-3xl border border-[#EAECF0] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]";
+const actionButtonClassName =
+  "inline-flex h-10 items-center justify-center rounded-full px-5 text-sm font-semibold transition";
+
+export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-[#F8F9FB] px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1440px]">
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.9fr_0.8fr]">
-          {/* Left Section */}
           <div className="space-y-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <Header
-                title={title}
+                title="Privacy Policy"
                 description="Last modified by Sarah Chen, 2 days ago"
                 titleClassName="text-[24px] sm:text-[28px] font-semibold text-[#101828] leading-tight"
                 descriptionClassName="mt-1 text-sm text-[#667085] leading-6"
               />
 
               <div className="inline-flex h-8 items-center rounded-full bg-[#E6F4FA] px-3 text-xs font-semibold text-[#1D7FA8]">
-                {status}
+                Draft Mode
               </div>
             </div>
 
-            {/* Editor */}
-            <div className="overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-              {/* Toolbar */}
+            <div className={editorCardClassName}>
               <div className="flex flex-wrap items-center gap-1 border-b border-[#EAECF0] px-4 py-3">
-                {[
-                  Bold,
-                  Italic,
-                  Underline,
-                  AlignLeft,
-                  AlignCenter,
-                  AlignRight,
-                  List,
-                  LinkIcon,
-                  ImageIcon,
-                ].map((Icon, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    className="inline-flex size-8 items-center justify-center rounded-lg text-[#667085] transition hover:bg-[#F9FAFB] hover:text-[#344054]"
-                  >
+                {toolbarActions.map(({ label, Icon }) => (
+                  <button key={label} type="button" aria-label={label} className={iconButtonClassName}>
                     <Icon size={15} />
                   </button>
                 ))}
@@ -70,12 +109,11 @@ export default function PrivacyPolicyPage() {
                   type="button"
                   className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm text-[#667085] transition hover:bg-[#F9FAFB] hover:text-[#344054]"
                 >
-                  <span>{heading}</span>
+                  <span>Heading 1</span>
                   <span className="text-xs">▼</span>
                 </button>
               </div>
 
-              {/* Editor Content */}
               <div className="px-6 py-7 sm:px-8">
                 <div className="max-w-[760px] space-y-6 text-[#344054]">
                   <div>
@@ -88,65 +126,38 @@ export default function PrivacyPolicyPage() {
                   </div>
 
                   <p className="text-[15px] leading-7">
-                    At Culinary Curator, we value the trust you place in us when
-                    sharing your personal data. This Privacy Policy describes how we
-                    collect, use, and share your information when you use our
-                    restaurant portal and related services.
+                    At Culinary Curator, we value the trust you place in us when sharing your
+                    personal data. This Privacy Policy describes how we collect, use, and share
+                    your information when you use our restaurant portal and related services.
                   </p>
 
-                  <div>
-                    <h3 className="text-[16px] font-semibold text-[#101828]">
-                      1. Information We Collect
-                    </h3>
-                    <p className="mt-3 text-[15px] leading-7">
-                      We collect information that you provide directly to us, such
-                      as when you create an account, update your restaurant profile,
-                      or contact customer support. This may include:
-                    </p>
+                  {policySections.map(({ title, body, items }) => (
+                    <div key={title}>
+                      <h3 className="text-[16px] font-semibold text-[#101828]">{title}</h3>
+                      <p className="mt-3 text-[15px] leading-7">{body}</p>
 
-                    <ul className="mt-4 space-y-2 pl-6 text-[15px] leading-7 text-[#344054]">
-                      <li>Business name and contact details</li>
-                      <li>Account credentials (username and password)</li>
-                      <li>Financial information for billing and payments</li>
-                      <li>Content you upload to the portal</li>
-                    </ul>
-                  </div>
+                      {items ? (
+                        <ul className="mt-4 space-y-2 pl-6 text-[15px] leading-7 text-[#344054]">
+                          {items.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      ) : null}
 
-                  <div>
-                    <h3 className="text-[16px] font-semibold text-[#101828]">
-                      2. How We Use Information
-                    </h3>
-                    <p className="mt-3 text-[15px] leading-7">
-                      We use the information we collect to provide, maintain, and
-                      improve our services, to process your transactions, and to
-                      communicate with you about updates and promotions.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border-l-4 border-[#F0A7A1] bg-[#FFF7F7] px-5 py-4">
-                    <p className="text-[15px] italic leading-7 text-[#475467]">
-                      “Our commitment to privacy means we never sell your
-                      restaurant&apos;s proprietary data to third-party marketing
-                      firms.”
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-[16px] font-semibold text-[#101828]">
-                      3. Data Security
-                    </h3>
-                    <p className="mt-3 text-[15px] leading-7">
-                      We implement appropriate technical and organizational measures
-                      to protect your personal data against unauthorized or unlawful
-                      processing and against accidental loss, destruction, or
-                      damage.
-                    </p>
-                  </div>
+                      {title === "2. How We Use Information" ? (
+                        <div className="mt-6 rounded-2xl border-l-4 border-[#F0A7A1] bg-[#FFF7F7] px-5 py-4">
+                          <p className="text-[15px] italic leading-7 text-[#475467]">
+                            “Our commitment to privacy means we never sell your restaurant&apos;s
+                            proprietary data to third-party marketing firms.”
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Bottom Action Bar */}
             <div className="flex flex-col gap-3 rounded-2xl border border-[#EAECF0] bg-white px-4 py-3 shadow-[0_1px_2px_rgba(16,24,40,0.04)] sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-2">
@@ -159,8 +170,7 @@ export default function PrivacyPolicyPage() {
                 </div>
 
                 <p className="text-sm text-[#667085]">
-                  Currently viewing:{" "}
-                  <span className="font-semibold text-[#344054]">Sarah Chen</span>{" "}
+                  Currently viewing: <span className="font-semibold text-[#344054]">Sarah Chen</span>{" "}
                   and 2 others
                 </p>
               </div>
@@ -168,14 +178,14 @@ export default function PrivacyPolicyPage() {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
-                  className="inline-flex h-10 items-center justify-center rounded-full bg-[#F2F4F7] px-5 text-sm font-semibold text-[#344054] transition hover:bg-[#E4E7EC]"
+                  className={`${actionButtonClassName} bg-[#F2F4F7] text-[#344054] hover:bg-[#E4E7EC]`}
                 >
                   Save as Draft
                 </button>
 
                 <button
                   type="button"
-                  className="inline-flex h-10 items-center justify-center rounded-full bg-[#D92D20] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#b42318]"
+                  className={`${actionButtonClassName} bg-[#D92D20] text-white shadow-sm hover:bg-[#b42318]`}
                 >
                   Publish Changes
                 </button>
@@ -183,63 +193,44 @@ export default function PrivacyPolicyPage() {
             </div>
           </div>
 
-          {/* Right Sidebar */}
-          <div className="rounded-3xl border border-[#EAECF0] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+          <div className={historyCardClassName}>
             <div className="flex items-center gap-2">
               <RotateCcw size={16} className="text-[#98A2B3]" />
-              <h3 className="text-sm font-semibold text-[#101828]">
-                Version History
-              </h3>
+              <h3 className="text-sm font-semibold text-[#101828]">Version History</h3>
             </div>
 
             <div className="mt-5 space-y-4">
-              {/* Current */}
-              <div className="rounded-2xl border border-[#F3D6D8] bg-[#FFF7F7] p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex size-9 items-center justify-center rounded-full bg-[#1F2937] text-sm font-semibold text-white">
-                    S
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-semibold text-[#101828]">
-                          Sarah Chen
-                        </p>
-                        <p className="text-xs text-[#98A2B3]">Today, 2:45 PM</p>
-                      </div>
-
-                      <span className="inline-flex rounded-full bg-[#D92D20] px-2 py-0.5 text-[9px] font-bold uppercase text-white">
-                        Current
-                      </span>
+              {versionHistoryItems.map(({ author, avatar, avatarClassName, time, summary, current }) => (
+                <div
+                  key={`${author}-${time}`}
+                  className={current ? "rounded-2xl border border-[#F3D6D8] bg-[#FFF7F7] p-4" : "rounded-2xl p-2"}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`flex size-9 items-center justify-center rounded-full font-semibold ${avatarClassName}`}
+                    >
+                      {avatar}
                     </div>
 
-                    <p className="mt-2 text-sm leading-6 text-[#667085]">
-                      Updated data security section to comply with new GDPR
-                      mandates.
-                    </p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-[#101828]">{author}</p>
+                          <p className="text-xs text-[#98A2B3]">{time}</p>
+                        </div>
+
+                        {current ? (
+                          <span className="inline-flex rounded-full bg-[#D92D20] px-2 py-0.5 text-[9px] font-bold uppercase text-white">
+                            Current
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <p className="mt-2 text-sm leading-6 text-[#667085]">{summary}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Older */}
-              <div className="rounded-2xl p-2">
-                <div className="flex items-start gap-3">
-                  <div className="flex size-9 items-center justify-center rounded-full bg-[#F2F4F7] text-xs font-semibold text-[#667085]">
-                    🤖
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[#101828]">
-                      System Bot
-                    </p>
-                    <p className="text-xs text-[#98A2B3]">Aug 01, 12:00 AM</p>
-                    <p className="mt-2 text-sm leading-6 text-[#667085]">
-                      Automated archival of previous year&apos;s policy.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
 
             <div className="mt-8 flex min-h-[420px] items-end justify-center">
