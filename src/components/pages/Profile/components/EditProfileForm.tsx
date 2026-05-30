@@ -1,8 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Camera, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,18 +21,20 @@ import {
 } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/errors";
 import { authApi, type UpdateProfilePayload } from "@/services/auth/auth.api";
+import {
+  profileSchema,
+  type ProfileFormValues,
+} from "@/validations/profile";
 
 const PROFILE_FORM_ID = "profile-edit-form";
 
-type ProfileFormState = UpdateProfilePayload;
-
-const getInitialFormState = (): ProfileFormState => ({
+const defaultValues: ProfileFormValues = {
   firstName: "",
   lastName: "",
   avatarUrl: "",
   phone: "",
   bio: "",
-});
+};
 
 export default function EditProfile() {
   const router = useRouter();
@@ -38,21 +42,37 @@ export default function EditProfile() {
   const { uploadFile, uploading } = useFileUpload();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const previewObjectUrlRef = useRef<string | null>(null);
-  const [values, setValues] = useState<ProfileFormState>(getInitialFormState);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const {
+    formState: { errors },
+    handleSubmit,
+    register,
+    reset,
+    setValue,
+    watch,
+  } = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues,
+  });
+
+  const firstName = watch("firstName");
+  const lastName = watch("lastName");
+  const avatarUrlValue = watch("avatarUrl");
+  const bio = watch("bio");
 
   useEffect(() => {
     const profile = user?.profile;
 
-    setValues({
+    reset({
       firstName: profile?.firstName ?? "",
       lastName: profile?.lastName ?? "",
       avatarUrl: profile?.avatarUrl ?? "",
       phone: profile?.phone ?? "",
       bio: profile?.bio ?? "",
     });
-  }, [user]);
+  }, [reset, user?.profile]);
 
   useEffect(() => {
     return () => {
@@ -63,26 +83,23 @@ export default function EditProfile() {
   }, []);
 
   const displayName = useMemo(() => {
-    const fullName = `${values.firstName} ${values.lastName}`.trim();
+    const fullName = `${firstName ?? ""} ${lastName ?? ""}`.trim();
     return fullName || getDisplayName(user);
-  }, [user, values.firstName, values.lastName]);
+  }, [firstName, lastName, user]);
 
-  const avatarUrl = avatarPreviewUrl ?? values.avatarUrl.trim();
+  const avatarUrl = avatarPreviewUrl ?? avatarUrlValue?.trim() ?? "";
   const initials = getInitials({
     ...(user ?? { id: "", email: "", role: "", profile: {} }),
     profile: {
       ...(user?.profile ?? {}),
-      firstName: values.firstName,
-      lastName: values.lastName,
+      firstName,
+      lastName,
     },
   });
 
-  const updateValue = (field: keyof ProfileFormState, value: string) => {
-    setValues((current) => ({ ...current, [field]: value }));
-  };
-
   const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const { files } = event.target;
+    const file = files?.[0];
 
     if (previewObjectUrlRef.current) {
       URL.revokeObjectURL(previewObjectUrlRef.current);
@@ -97,7 +114,7 @@ export default function EditProfile() {
 
     const result = await uploadFile(event);
     if (result?.fileUrl) {
-      updateValue("avatarUrl", result.fileUrl);
+      setValue("avatarUrl", result.fileUrl, { shouldDirty: true });
     }
   };
 
@@ -108,7 +125,7 @@ export default function EditProfile() {
     }
 
     setAvatarPreviewUrl(null);
-    updateValue("avatarUrl", "");
+    setValue("avatarUrl", "", { shouldDirty: true });
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -119,23 +136,16 @@ export default function EditProfile() {
     fileInputRef.current?.click();
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!values.firstName.trim() || !values.lastName.trim()) {
-      toast.error("First name and last name are required");
-      return;
-    }
-
+  const onSubmit = async (values: ProfileFormValues) => {
     try {
       setSaving(true);
 
       const payload: UpdateProfilePayload = {
         firstName: values.firstName.trim(),
         lastName: values.lastName.trim(),
-        avatarUrl: values.avatarUrl.trim(),
-        phone: values.phone.trim(),
-        bio: values.bio.trim(),
+        avatarUrl: values.avatarUrl?.trim() ?? "",
+        phone: values.phone?.trim() ?? "",
+        bio: values.bio?.trim() ?? "",
       };
 
       await authApi.updateProfile(payload);
@@ -166,7 +176,7 @@ export default function EditProfile() {
 
   return (
     <Card className="w-full rounded-2xl border-none bg-white p-10 shadow-none">
-      <form id={PROFILE_FORM_ID} className="space-y-10" noValidate onSubmit={handleSubmit}>
+      <form id={PROFILE_FORM_ID} className="space-y-10" noValidate onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col items-center">
           <div className="relative">
             <Avatar className="h-44 w-44 rounded-2xl shadow-md">
@@ -211,49 +221,55 @@ export default function EditProfile() {
             {displayName}
           </h2>
 
-          <p className="text-sm text-[#909090]">{user?.email || "—"}</p>
+          <p className="text-sm text-[#909090]">{user?.email ?? "—"}</p>
 
           <p className="mt-3 max-w-lg text-center text-sm leading-relaxed text-[#909090]">
-            {values.bio || "No description provided."}
+            {bio ?? "No description provided."}
           </p>
         </div>
 
         <div className="mx-auto max-w-[80%] space-y-6 min-w-[70%]">
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <FormInput
+              id="profile-first-name"
               label="First Name *"
-              value={values.firstName}
-              onChange={(value) => updateValue("firstName", value)}
               placeholder="Enter first name"
+              errorText={errors.firstName?.message}
+              {...register("firstName")}
             />
             <FormInput
+              id="profile-last-name"
               label="Last Name *"
-              value={values.lastName}
-              onChange={(value) => updateValue("lastName", value)}
               placeholder="Enter last name"
+              errorText={errors.lastName?.message}
+              {...register("lastName")}
             />
           </div>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <FormInput
+              id="profile-phone"
               label="Phone Number"
-              value={values.phone}
-              onChange={(value) => updateValue("phone", value)}
               placeholder="Enter phone number"
+              errorText={errors.phone?.message}
+              {...register("phone")}
             />
             <div className="hidden md:block" />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label htmlFor="profile-bio" className="mb-2 block text-sm font-medium text-gray-700">
               Bio
             </label>
             <textarea
-              value={values.bio}
-              onChange={(event) => updateValue("bio", event.target.value)}
+              id="profile-bio"
               placeholder="Tell customers a little about you"
               className="min-h-28 w-full rounded-[9px] border border-[#BBBBBB] px-3 py-2 text-sm outline-none focus:border-2 focus:border-primary"
+              {...register("bio")}
             />
+            {errors.bio?.message ? (
+              <p className="mt-1 text-xs text-primary">{errors.bio.message}</p>
+            ) : null}
           </div>
 
           <Button
@@ -270,31 +286,41 @@ export default function EditProfile() {
 }
 
 function FormInput({
+  id,
   label,
   placeholder,
-  value,
+  errorText,
   onChange,
-  readOnly,
-}: {
+  ...props
+}: ComponentProps<typeof Input> & {
+  id: string;
   label: string;
-  placeholder?: string;
-  value: string;
-  onChange?: (value: string) => void;
-  readOnly?: boolean;
+  errorText?: string;
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-gray-700">
+      <label htmlFor={id} className="mb-2 block text-sm font-medium text-gray-700">
         {label}
       </label>
 
       <Input
-        value={value}
-        readOnly={readOnly}
+        id={id}
         placeholder={placeholder}
-        onChange={(event) => onChange?.(event.target.value)}
+        aria-invalid={Boolean(errorText)}
+        aria-describedby={errorText ? `${id}-error` : undefined}
         className="h-11 w-full rounded-[9px] border-[#BBBBBB] focus:border-2 focus:border-primary focus-visible:ring-0 focus:outline-none read-only:bg-gray-50"
+        {...props}
+        onChange={(event) => {
+          const { target } = event;
+          onChange?.(event);
+          void target;
+        }}
       />
+      {errorText ? (
+        <p id={`${id}-error`} className="mt-1 text-xs text-primary">
+          {errorText}
+        </p>
+      ) : null}
     </div>
   );
 }
