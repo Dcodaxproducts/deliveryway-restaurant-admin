@@ -1,0 +1,322 @@
+import { DEFAULT_RESTAURANT_BRANDING_PAYLOAD } from "@/config/default-branding";
+import type {
+  BrandingButtonStyle,
+  BrandingHomeLayout,
+  BrandingMenuCardStyle,
+  BrandingThemeMode,
+  RestaurantBrandingPayload,
+} from "@/types/branding";
+import { restaurantBrandingPayloadSchema } from "@/validations/branding";
+
+export const BRANDING_STORAGE_KEY_BASE = "deliveryway:restaurant-branding";
+
+const themeModes: readonly BrandingThemeMode[] = ["light", "dark", "system"];
+const buttonStyles: readonly BrandingButtonStyle[] = ["rounded", "pill", "square"];
+const homeLayouts: readonly BrandingHomeLayout[] = ["hero", "grid", "minimal"];
+const menuCardStyles: readonly BrandingMenuCardStyle[] = ["image-top", "compact", "image-left"];
+
+const hexColorPattern = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+const radiusPattern = /^(?:0|\d+(?:\.\d+)?)(?:px|rem)$/;
+
+const cloneDefaultPayload = (): RestaurantBrandingPayload =>
+  structuredClone(DEFAULT_RESTAURANT_BRANDING_PAYLOAD);
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const getRecord = (source: Record<string, unknown> | undefined, key: string): Record<string, unknown> | undefined => {
+  if (!source) {
+    return undefined;
+  }
+
+  const value = source[key];
+  return isRecord(value) ? value : undefined;
+};
+
+const getString = (
+  source: Record<string, unknown> | undefined,
+  key: string,
+  fallback: string,
+  validator?: (value: string) => boolean,
+): string => {
+  const value = source?.[key];
+  if (typeof value !== "string") {
+    return fallback;
+  }
+
+  if (validator && !validator(value)) {
+    return fallback;
+  }
+
+  return value;
+};
+
+const getBoolean = (source: Record<string, unknown> | undefined, key: string, fallback: boolean): boolean => {
+  const value = source?.[key];
+  return typeof value === "boolean" ? value : fallback;
+};
+
+const getEnum = <T extends string>(
+  source: Record<string, unknown> | undefined,
+  key: string,
+  allowedValues: readonly T[],
+  fallback: T,
+): T => {
+  const value = source?.[key];
+  return typeof value === "string" && allowedValues.includes(value as T) ? (value as T) : fallback;
+};
+
+const isOptionalUrl = (value: string): boolean => {
+  if (value === "" || value.startsWith("/")) {
+    return true;
+  }
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
+const deepMergeRecords = (base: unknown, override: unknown): unknown => {
+  if (!isRecord(base) || !isRecord(override)) {
+    return override === undefined ? base : override;
+  }
+
+  const merged: Record<string, unknown> = { ...base };
+
+  for (const [key, value] of Object.entries(override)) {
+    const currentValue = merged[key];
+    merged[key] = isRecord(currentValue) && isRecord(value) ? deepMergeRecords(currentValue, value) : value;
+  }
+
+  return merged;
+};
+
+const expandHexColor = (hexColor: string): string => {
+  if (hexColor.length === 4) {
+    const [, red, green, blue] = hexColor;
+    return `#${red}${red}${green}${green}${blue}${blue}`.toUpperCase();
+  }
+
+  return hexColor.toUpperCase();
+};
+
+const hexToRgb = (hexColor: string): { red: number; green: number; blue: number } | null => {
+  if (!isHexColor(hexColor)) {
+    return null;
+  }
+
+  const normalized = expandHexColor(hexColor).slice(1);
+  return {
+    red: Number.parseInt(normalized.slice(0, 2), 16),
+    green: Number.parseInt(normalized.slice(2, 4), 16),
+    blue: Number.parseInt(normalized.slice(4, 6), 16),
+  };
+};
+
+export const getBrandingStorageKey = (restaurantId?: string | null): string => {
+  const normalizedRestaurantId = restaurantId?.trim();
+  return normalizedRestaurantId ? `${BRANDING_STORAGE_KEY_BASE}:${normalizedRestaurantId}` : BRANDING_STORAGE_KEY_BASE;
+};
+
+export const isHexColor = (value: unknown): value is string =>
+  typeof value === "string" && hexColorPattern.test(value);
+
+export const normalizeHexColor = (value: unknown, fallback: string): string =>
+  isHexColor(value) ? value : fallback;
+
+export const getReadableTextColor = (hexColor: string): string => {
+  const rgb = hexToRgb(hexColor);
+  if (!rgb) {
+    return "#030401";
+  }
+
+  const luminance = (0.299 * rgb.red + 0.587 * rgb.green + 0.114 * rgb.blue) / 255;
+  return luminance > 0.58 ? "#030401" : "#FFFFFF";
+};
+
+export const deepMergeBrandingPayload = (
+  base: RestaurantBrandingPayload,
+  override: unknown,
+): RestaurantBrandingPayload => normalizeBrandingPayload(deepMergeRecords(base, override));
+
+export const normalizeBrandingPayload = (input: unknown): RestaurantBrandingPayload => {
+  const defaults = cloneDefaultPayload();
+  const merged = deepMergeRecords(defaults, input);
+
+  if (restaurantBrandingPayloadSchema.safeParse(merged).success) {
+    return merged as RestaurantBrandingPayload;
+  }
+
+  const root = isRecord(merged) ? merged : undefined;
+  const restaurant = getRecord(root, "restaurant");
+  const branding = getRecord(restaurant, "branding");
+  const theme = getRecord(branding, "theme");
+  const app = getRecord(branding, "app");
+  const checkout = getRecord(branding, "checkout");
+  const assets = getRecord(branding, "assets");
+  const logos = getRecord(assets, "logos");
+  const admin = getRecord(branding, "admin");
+  const supportContact = getRecord(restaurant, "supportContact");
+  const socialMedia = getRecord(restaurant, "socialMedia");
+
+  return {
+    restaurant: {
+      name: getString(restaurant, "name", defaults.restaurant.name, (value) => value.trim().length > 0),
+      slug: getString(restaurant, "slug", defaults.restaurant.slug, (value) => value.trim().length > 0),
+      logoUrl: getString(restaurant, "logoUrl", defaults.restaurant.logoUrl, isOptionalUrl),
+      coverImage: getString(restaurant, "coverImage", defaults.restaurant.coverImage, isOptionalUrl),
+      tagline: getString(restaurant, "tagline", defaults.restaurant.tagline),
+      bio: getString(restaurant, "bio", defaults.restaurant.bio),
+      supportContact: {
+        email: getString(supportContact, "email", defaults.restaurant.supportContact.email ?? ""),
+        phone: getString(supportContact, "phone", defaults.restaurant.supportContact.phone ?? ""),
+        whatsapp: getString(supportContact, "whatsapp", defaults.restaurant.supportContact.whatsapp ?? ""),
+        address: getString(supportContact, "address", defaults.restaurant.supportContact.address ?? ""),
+      },
+      branding: {
+        theme: {
+          mode: getEnum(theme, "mode", themeModes, defaults.restaurant.branding.theme.mode),
+          primaryColor: getString(theme, "primaryColor", defaults.restaurant.branding.theme.primaryColor, isHexColor),
+          secondaryColor: getString(theme, "secondaryColor", defaults.restaurant.branding.theme.secondaryColor, isHexColor),
+          accentColor: getString(theme, "accentColor", defaults.restaurant.branding.theme.accentColor, isHexColor),
+          backgroundColor: getString(theme, "backgroundColor", defaults.restaurant.branding.theme.backgroundColor, isHexColor),
+          textColor: getString(theme, "textColor", defaults.restaurant.branding.theme.textColor, isHexColor),
+          fontFamily: getString(theme, "fontFamily", defaults.restaurant.branding.theme.fontFamily, (value) => value.trim().length > 0),
+          headingFontFamily: getString(theme, "headingFontFamily", defaults.restaurant.branding.theme.headingFontFamily, (value) => value.trim().length > 0),
+          borderRadius: getString(theme, "borderRadius", defaults.restaurant.branding.theme.borderRadius, (value) => radiusPattern.test(value)),
+          buttonStyle: getEnum(theme, "buttonStyle", buttonStyles, defaults.restaurant.branding.theme.buttonStyle),
+        },
+        app: {
+          homeLayout: getEnum(app, "homeLayout", homeLayouts, defaults.restaurant.branding.app.homeLayout),
+          menuCardStyle: getEnum(app, "menuCardStyle", menuCardStyles, defaults.restaurant.branding.app.menuCardStyle),
+          showTagline: getBoolean(app, "showTagline", defaults.restaurant.branding.app.showTagline),
+          showHeroBanner: getBoolean(app, "showHeroBanner", defaults.restaurant.branding.app.showHeroBanner),
+        },
+        checkout: {
+          showLogo: getBoolean(checkout, "showLogo", defaults.restaurant.branding.checkout.showLogo),
+          showSupportContact: getBoolean(checkout, "showSupportContact", defaults.restaurant.branding.checkout.showSupportContact),
+          successMessage: getString(checkout, "successMessage", defaults.restaurant.branding.checkout.successMessage),
+        },
+        assets: {
+          logoUrl: getString(assets, "logoUrl", defaults.restaurant.branding.assets.logoUrl, isOptionalUrl),
+          coverImage: getString(assets, "coverImage", defaults.restaurant.branding.assets.coverImage, isOptionalUrl),
+          heroBannerUrl: getString(assets, "heroBannerUrl", defaults.restaurant.branding.assets.heroBannerUrl, isOptionalUrl),
+          placeholderImage: getString(assets, "placeholderImage", defaults.restaurant.branding.assets.placeholderImage, isOptionalUrl),
+          faviconUrl: getString(assets, "faviconUrl", defaults.restaurant.branding.assets.faviconUrl, isOptionalUrl),
+          logos: {
+            primaryLogoUrl: getString(logos, "primaryLogoUrl", defaults.restaurant.branding.assets.logos.primaryLogoUrl, isOptionalUrl),
+            compactLogoUrl: getString(logos, "compactLogoUrl", defaults.restaurant.branding.assets.logos.compactLogoUrl ?? "", isOptionalUrl),
+            faviconUrl: getString(logos, "faviconUrl", defaults.restaurant.branding.assets.logos.faviconUrl ?? "", isOptionalUrl),
+          },
+        },
+        admin: {
+          previewEnabled: getBoolean(admin, "previewEnabled", defaults.restaurant.branding.admin?.previewEnabled ?? true),
+          lastUpdatedBy: getString(admin, "lastUpdatedBy", defaults.restaurant.branding.admin?.lastUpdatedBy ?? ""),
+        },
+      },
+      socialMedia: {
+        website: getString(socialMedia, "website", defaults.restaurant.socialMedia.website ?? "", isOptionalUrl),
+        facebook: getString(socialMedia, "facebook", defaults.restaurant.socialMedia.facebook ?? "", isOptionalUrl),
+        instagram: getString(socialMedia, "instagram", defaults.restaurant.socialMedia.instagram ?? "", isOptionalUrl),
+        x: getString(socialMedia, "x", defaults.restaurant.socialMedia.x ?? "", isOptionalUrl),
+        tiktok: getString(socialMedia, "tiktok", defaults.restaurant.socialMedia.tiktok ?? "", isOptionalUrl),
+      },
+    },
+  };
+};
+
+const getButtonRadius = (buttonStyle: BrandingButtonStyle, borderRadius: string): string => {
+  if (buttonStyle === "pill") {
+    return "9999px";
+  }
+
+  if (buttonStyle === "square") {
+    return "0px";
+  }
+
+  return borderRadius;
+};
+
+export const brandingPayloadToCssVariables = (payload: RestaurantBrandingPayload): Record<string, string> => {
+  const normalizedPayload = normalizeBrandingPayload(payload);
+  const { theme } = normalizedPayload.restaurant.branding;
+  const buttonRadius = getButtonRadius(theme.buttonStyle, theme.borderRadius);
+
+  return {
+    "--brand-primary": theme.primaryColor,
+    "--brand-secondary": theme.secondaryColor,
+    "--brand-accent": theme.accentColor,
+    "--brand-background": theme.backgroundColor,
+    "--brand-text": theme.textColor,
+    "--brand-radius": theme.borderRadius,
+    "--brand-font-family": theme.fontFamily,
+    "--brand-heading-font-family": theme.headingFontFamily,
+    "--brand-button-radius": buttonRadius,
+    "--primary": theme.primaryColor,
+    "--ring": theme.primaryColor,
+    "--background": theme.backgroundColor,
+    "--foreground": theme.textColor,
+    "--dark": theme.secondaryColor,
+    "--radius": theme.borderRadius,
+    "--sidebar-primary": theme.primaryColor,
+    "--sidebar-ring": theme.primaryColor,
+  };
+};
+
+export const applyBrandingCssVariables = (payload: RestaurantBrandingPayload, target?: HTMLElement): void => {
+  if (typeof document === "undefined" && !target) {
+    return;
+  }
+
+  const normalizedPayload = normalizeBrandingPayload(payload);
+  const targetElement = target ?? document.documentElement;
+  const variables = brandingPayloadToCssVariables(normalizedPayload);
+
+  for (const [key, value] of Object.entries(variables)) {
+    targetElement.style.setProperty(key, value);
+  }
+
+  targetElement.dataset.brandButtonStyle = normalizedPayload.restaurant.branding.theme.buttonStyle;
+  targetElement.dataset.brandThemeMode = normalizedPayload.restaurant.branding.theme.mode;
+};
+
+export const readLocalBranding = (restaurantId?: string | null): RestaurantBrandingPayload => {
+  if (typeof window === "undefined") {
+    return cloneDefaultPayload();
+  }
+
+  const storedPayload = window.localStorage.getItem(getBrandingStorageKey(restaurantId));
+  if (!storedPayload) {
+    return cloneDefaultPayload();
+  }
+
+  try {
+    return normalizeBrandingPayload(JSON.parse(storedPayload) as unknown);
+  } catch {
+    return cloneDefaultPayload();
+  }
+};
+
+export const writeLocalBranding = (
+  payload: RestaurantBrandingPayload,
+  restaurantId?: string | null,
+): RestaurantBrandingPayload => {
+  const normalizedPayload = normalizeBrandingPayload(payload);
+
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(getBrandingStorageKey(restaurantId), JSON.stringify(normalizedPayload));
+  }
+
+  return normalizedPayload;
+};
+
+export const clearLocalBranding = (restaurantId?: string | null): void => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(getBrandingStorageKey(restaurantId));
+};
