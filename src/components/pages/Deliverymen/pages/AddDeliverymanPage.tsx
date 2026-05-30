@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import Container from "@/components/common/Container";
-import DeliveryManForm, { type BranchOption } from "@/components/forms/deliveryman-form";
+import DeliveryManForm, { type BranchOption } from "@/components/pages/Deliverymen/forms/DeliverymanForm";
 import AddDeliveryManHeader from "@/components/pages/Deliverymen/components/deliveryman/add/AddDeliveryManHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetBranches } from "@/hooks/useBranches";

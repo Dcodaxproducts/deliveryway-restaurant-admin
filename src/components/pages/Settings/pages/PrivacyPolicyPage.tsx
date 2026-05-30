@@ -1,4 +1,4 @@
-import PrivacyPolicyPage from '@/components/forms/PrivacyPolicyForm'
+import PrivacyPolicyPage from '@/components/pages/Settings/forms/PrivacyPolicyForm'
 
 const page = () => {
   return (
