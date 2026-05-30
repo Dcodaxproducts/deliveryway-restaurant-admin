@@ -8,7 +8,7 @@ import {
   useImperativeHandle,
 } from "react";
 import { z } from "zod";
-import { validateSchema } from "@/lib/zod-errors";
+import { parseSchema } from "@/lib/zod-errors";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -91,7 +91,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
   };
 
   const validateStep = () => {
-    const result = validateSchema(schema, {
+    const result = parseSchema(schema, {
       name: form?.name || "",
       categoryId: form?.categoryId || "",
       basePrice: form?.basePrice ?? "",

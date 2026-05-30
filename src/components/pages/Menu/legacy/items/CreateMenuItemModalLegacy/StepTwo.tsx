@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 import { z } from "zod";
-import { validateSchema } from "@/lib/zod-errors";
+import { parseSchema } from "@/lib/zod-errors";
 import {
   AlertCircle,
   Info,
@@ -543,7 +543,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
       return false;
     }
 
-    const result = validateSchema(schema, form);
+    const result = parseSchema(schema, form);
 
     if (!result.success) {
       setErrors(result.errors);

@@ -29,5 +29,3 @@ export const parseSchema = <TSchema extends z.ZodTypeAny>(
 
   return { success: false, errors: mapZodIssues(result.error.issues, prefix) };
 };
-
-export const validateSchema = parseSchema;
