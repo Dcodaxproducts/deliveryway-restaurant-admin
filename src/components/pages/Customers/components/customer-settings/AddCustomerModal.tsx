@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { useCreateCustomer, useUpdateCustomer, useVerifyCustomerEmail } from "@/hooks/useCustomers";
 import { CARD_PANEL_CLASS, FIELD_ERROR_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
 import { getApiErrorMessage } from "@/lib/errors";
+import { getClientStorageItem, removeClientStorageItem, setClientStorageItem } from "@/services/storage";
 import {
   customerModalSchema,
   type CustomerModalValues,
@@ -163,7 +164,7 @@ export default function AddCustomerModal({
       }
 
       setAccessToken(tokenFromRes);
-      localStorage.setItem("signupAccessToken", tokenFromRes);
+      setClientStorageItem("signupAccessToken", tokenFromRes);
 
       toast.success("OTP sent to email");
       setStep("otp");
@@ -173,7 +174,7 @@ export default function AddCustomerModal({
   };
 
   const handleVerifyOtp = async () => {
-    const tokenToUse = accessToken || localStorage.getItem("signupAccessToken");
+    const tokenToUse = accessToken || getClientStorageItem("signupAccessToken");
 
     if (!otp) {
       toast.error("Please enter OTP");
@@ -192,7 +193,7 @@ export default function AddCustomerModal({
 
       toast.success("Customer verified successfully!");
 
-      localStorage.removeItem("signupAccessToken");
+      removeClientStorageItem("signupAccessToken");
       onSuccess?.();
       resetModalState();
       onOpenChange(false);

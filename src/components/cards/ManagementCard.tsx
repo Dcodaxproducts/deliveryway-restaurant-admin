@@ -21,7 +21,7 @@ const ManagementCard = ({ data }: ManagementCardProps) => {
 
       <Link
         href={data.actionHref}
-        className="mt-6 inline-flex items-center justify-center rounded-[10px] bg-primary px-6 py-2.5 text-sm font-medium text-white hover:bg-red-600 transition w-[195px]"
+        className="mt-6 inline-flex w-[195px] items-center justify-center rounded-[var(--brand-button-radius)] bg-primary px-6 py-2.5 text-sm font-medium text-white transition hover:bg-primary/90"
       >
         {data.actionLabel}
       </Link>

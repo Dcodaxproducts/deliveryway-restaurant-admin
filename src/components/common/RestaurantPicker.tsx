@@ -23,7 +23,7 @@ type RestaurantOption = {
 };
 
 export default function RestaurantPicker() {
-  const { token, user, setUser, isBranchAdmin, branchId } = useAuth();
+  const { token, user, setUser, isBranchAdmin, branchId, logout } = useAuth();
   const { data: assignedBranch } = useGetBranch(isBranchAdmin && branchId ? branchId : "");
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -35,7 +35,7 @@ export default function RestaurantPicker() {
   const { data: restaurantsResponse, isFetching } = useGetRestaurants(Boolean(token && user?.id && canSwitchRestaurant(user)));
 
   const handleLogout = (): void => {
-    localStorage.removeItem("auth");
+    logout();
     toast.success("Logged out successfully");
 
     setTimeout(() => {
@@ -136,13 +136,13 @@ export default function RestaurantPicker() {
         type="button"
         onClick={() => router.push("/branch-workspace")}
         title={branchId ? `Branch ID: ${branchId}` : branchLabel}
-        className="hidden h-[56px] max-w-[340px] items-center gap-3 rounded-xl bg-green-50 px-4 text-left text-sm text-green-700 ring-1 ring-green-200 transition hover:bg-green-100 md:flex"
+        className="hidden h-[56px] max-w-[340px] items-center gap-3 rounded-xl bg-primary/10 px-4 text-left text-sm text-primary ring-1 ring-primary/20 transition hover:bg-primary/15 md:flex"
       >
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-green-700 shadow-sm">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-primary shadow-sm">
           <Store size={18} />
         </span>
         <span className="min-w-0">
-          <span className="block text-xs font-semibold uppercase tracking-wide text-green-600/80">
+          <span className="block text-xs font-semibold uppercase tracking-wide text-primary/80">
             Branch scope
           </span>
           <span className="block truncate font-semibold">
@@ -157,7 +157,7 @@ export default function RestaurantPicker() {
     <div ref={containerRef} className="relative w-[280px]">
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center justify-between gap-2 px-4 h-[56px] rounded-xl bg-[#F5F5F5] hover:bg-[#EEEEEE] transition-all text-sm w-full"
+        className="flex h-[56px] w-full items-center justify-between gap-2 rounded-xl bg-muted px-4 text-sm transition-all hover:bg-primary/10"
       >
         <span className="font-medium truncate text-gray-800">
           {renderLabel()}
@@ -215,7 +215,7 @@ export default function RestaurantPicker() {
 
                 <button
                   onClick={handleLogout}
-                  className="mt-2 px-3 py-1.5 text-xs rounded-md bg-red-500 text-white hover:bg-red-600"
+                  className="mt-2 rounded-md bg-primary px-3 py-1.5 text-xs text-white hover:bg-primary/90"
                 >
                   Go to Login
                 </button>

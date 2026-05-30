@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { getClientStorageItem, removeClientStorageItem } from "@/services/storage";
 import {
   useCheckoutCart,
   useClearCart,
@@ -37,7 +38,7 @@ export default function PosCart() {
 const [customerId, setCustomerId] = useState<string | null>(null);
 
 useEffect(() => {
-  const id = localStorage.getItem("activeCustomerId");
+  const id = getClientStorageItem("activeCustomerId");
   setCustomerId(id);
 }, []);
   const cartQuery = useGetCart(customerId);
@@ -110,7 +111,7 @@ useEffect(() => {
     try {
       await clearCartMutation.mutateAsync(customerId);
       setCartItems([]);
-         localStorage.removeItem("activeCustomerId");
+      removeClientStorageItem("activeCustomerId");
       setAddresses([]);
 setSelectedAddress(null);
     } catch {
@@ -181,7 +182,7 @@ setSelectedAddress(null);
 
       toast.success("Order placed");
       await clearCart();
-      localStorage.removeItem("activeCustomerId");
+      removeClientStorageItem("activeCustomerId");
       setAddresses([]);
 setSelectedAddress(null);
     } catch (err) {

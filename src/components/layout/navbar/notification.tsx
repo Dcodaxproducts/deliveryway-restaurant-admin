@@ -1,24 +1,19 @@
 import { VscBell } from "react-icons/vsc"
-import { barlow } from "@/lib/fonts"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
-
-const NOTIFICATION_DATA = {
-  count: 4,
-}
 
 export default function NotificationBell() {
   return (
     <Link
       href="/notifications"
       className={cn(
-        "relative flex items-center justify-center bg-[#2D9CDB26] hover:bg-[#2D9CDB40] transition-colors duration-200 rounded-xl shrink-0",
+        "relative flex items-center justify-center bg-primary/10 hover:bg-primary/20 transition-colors duration-200 rounded-xl shrink-0",
         "mx-2 w-[38px] h-[40px] p-0",
         "lg:mx-[39px] lg:w-[45.78px] lg:h-[48px]"
       )}
     >
       <VscBell
-        className="w-[18px] h-[18px] lg:w-[22px] lg:h-[22px] text-[#2D9CDB]"
+        className="w-[18px] h-[18px] lg:w-[22px] lg:h-[22px] text-primary"
         strokeWidth={0.4}
       />
       

@@ -19,7 +19,7 @@ export default function PageHeader({
     <div className={cn("lg:space-y-[6px]", className)}>
       <h1
         className={cn(
-          "text-xl font-semibold text-dark lg:text-[32px] lg:leading-[42px]",
+          "text-xl font-semibold text-foreground lg:text-[32px] lg:leading-[42px]",
           titleClassName
         )}
       >

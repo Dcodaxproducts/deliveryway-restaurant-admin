@@ -12,7 +12,7 @@ const data = [
   {
     label: "Total Order",
     value: 81,
-    color: "#CE181B",
+    color: "var(--brand-primary)",
     bg: "#FDECEC",
   },
   {
@@ -42,7 +42,7 @@ const PieStatsGraph = () => {
             Chart
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked readOnly className="accent-red-500" />
+            <input type="checkbox" checked readOnly className="accent-primary" />
             Show Value
           </label>
         </div>

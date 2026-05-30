@@ -43,7 +43,7 @@ const StatsCard = ({
     <Card
       className={`
         rounded-[18px] bg-white p-[16px] shadow-none
-        ${isOrdersPage ? "border border-[#EDEFF2]" : "border-none"}
+        ${isOrdersPage ? "border border-border" : "border-none"}
         sm:p-[20px] md:p-[24px]
       `}
     >
@@ -69,7 +69,7 @@ const StatsCard = ({
             </>
           ) : (
             <>
-              <div className="text-[16px] font-semibold leading-none text-black sm:text-[22px]">
+              <div className="text-[16px] font-semibold leading-none text-foreground sm:text-[22px]">
                 {data.value}
               </div>
 

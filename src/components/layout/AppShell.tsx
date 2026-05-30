@@ -21,7 +21,7 @@ export default function AppShell({ children }: AppShellProps) {
   if (loading && !hideLayout) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-black" />
+        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-primary" />
       </div>
     );
   }

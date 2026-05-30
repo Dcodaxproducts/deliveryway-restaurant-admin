@@ -17,10 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
+import { getStoredAuth } from "@/lib/auth";
 import {
   cleanPayload,
   getString,
-  isRecord,
   normalizeApiArray,
   normalizeApiRecords,
 } from "@/components/pages/Promotions/utils/option-normalizers";
@@ -83,14 +83,8 @@ export default function AddNewCoupon() {
   });
 
   const getStoredRestaurantId = () => {
-    if (typeof window === "undefined") return "";
-    try {
-      const stored = localStorage.getItem("auth");
-      const parsed: unknown = stored ? JSON.parse(stored) : null;
-      return isRecord(parsed) && isRecord(parsed.user) ? getString(parsed.user, "restaurantId") ?? "" : "";
-    } catch {
-      return "";
-    }
+    const stored = getStoredAuth();
+    return stored?.user?.restaurantId ?? "";
   };
 
   const restaurantId = useMemo(() => {
