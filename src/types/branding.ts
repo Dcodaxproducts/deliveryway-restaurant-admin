@@ -16,6 +16,14 @@ export type BrandingLogoSet = {
   faviconUrl?: string;
 };
 
+export type BrandingDarkThemeOptions = {
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  backgroundColor: string;
+  textColor: string;
+};
+
 export type BrandingThemeOptions = {
   mode: BrandingThemeMode;
   primaryColor: string;
@@ -23,6 +31,7 @@ export type BrandingThemeOptions = {
   accentColor: string;
   backgroundColor: string;
   textColor: string;
+  dark: BrandingDarkThemeOptions;
   fontFamily: string;
   headingFontFamily: string;
   borderRadius: string;
@@ -121,6 +130,7 @@ export type RestaurantBrandingPatchPayload = {
     accentColor: string;
     backgroundColor: string;
     textColor: string;
+    dark: BrandingDarkThemeOptions;
     fontFamily: string;
     headingFontFamily: string;
     borderRadius: string;

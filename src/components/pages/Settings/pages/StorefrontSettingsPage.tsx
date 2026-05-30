@@ -42,7 +42,10 @@ const sectionTitleClassName = "text-[20px] font-semibold text-dark";
 const labelClassName = "mb-2 block text-base font-semibold text-dark";
 const inputClassName = "h-[52px] rounded-[12px] border-gray-200 focus:ring-primary";
 const textareaClassName = "min-h-[112px] rounded-[12px] border-gray-200 focus:ring-primary";
-const buttonClassName = "h-11 rounded-[12px] px-5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
+const buttonClassName = "h-11 rounded-[12px] px-5 text-sm font-semibold transition hover:-translate-y-0.5 hover:shadow-md disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none";
+const secondaryButtonClassName = `${buttonClassName} border border-gray-200 bg-white text-dark hover:border-primary/30 hover:bg-primary/5 hover:text-primary`;
+const destructiveButtonClassName = `${buttonClassName} border border-destructive/30 bg-white text-destructive hover:bg-destructive/5 hover:border-destructive/50`;
+const primaryButtonClassName = `${buttonClassName} bg-primary text-white hover:bg-primary/90 hover:shadow-primary/20`;
 
 const profileFields: TextFieldConfig[] = [
   {
@@ -156,6 +159,7 @@ export default function StorefrontSettingsPage() {
   });
 
   const watchedValues = watch();
+  const hasUnsavedChanges = formState.isDirty;
 
   useEffect(() => {
     reset(branding);
@@ -244,29 +248,31 @@ export default function StorefrontSettingsPage() {
         <div className="flex flex-wrap items-center justify-end gap-3">
           <button
             type="button"
-            className={`${buttonClassName} border border-gray-200 bg-white text-dark`}
+            className={secondaryButtonClassName}
             disabled={!isBrandingReady || isBrandingBusy}
             onClick={handleApplyPreview}
           >
             Apply preview
           </button>
+          {hasUnsavedChanges ? (
+            <button
+              type="button"
+              className={secondaryButtonClassName}
+              disabled={!isBrandingReady || isBrandingBusy}
+              onClick={handleDiscardChanges}
+            >
+              Discard changes
+            </button>
+          ) : null}
           <button
             type="button"
-            className={`${buttonClassName} border border-gray-200 bg-white text-dark`}
-            disabled={!isBrandingReady || isBrandingBusy}
-            onClick={handleDiscardChanges}
-          >
-            Discard changes
-          </button>
-          <button
-            type="button"
-            className={`${buttonClassName} border border-destructive/30 bg-white text-destructive`}
+            className={destructiveButtonClassName}
             disabled={!isBrandingReady || isBrandingBusy}
             onClick={handleResetBranding}
           >
             Reset
           </button>
-          <button type="submit" className={`${buttonClassName} bg-primary text-white`} disabled={!isBrandingReady || isBrandingBusy}>
+          <button type="submit" className={primaryButtonClassName} disabled={!isBrandingReady || isBrandingBusy}>
             {isBrandingSaving ? "Saving..." : "Save branding"}
           </button>
         </div>

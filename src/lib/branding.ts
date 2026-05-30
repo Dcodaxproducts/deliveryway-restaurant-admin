@@ -20,6 +20,7 @@ const apiThemeKeys = [
   "accentColor",
   "backgroundColor",
   "textColor",
+  "dark",
   "fontFamily",
   "headingFontFamily",
   "borderRadius",
@@ -261,6 +262,7 @@ export const buildRestaurantBrandingPatchPayload = (
       accentColor: theme.accentColor,
       backgroundColor: theme.backgroundColor,
       textColor: theme.textColor,
+      dark: theme.dark,
       fontFamily: theme.fontFamily,
       headingFontFamily: theme.headingFontFamily,
       borderRadius: theme.borderRadius,
@@ -322,6 +324,13 @@ export const normalizeBrandingPayload = (input: unknown): RestaurantBrandingPayl
           accentColor: getString(theme, "accentColor", defaults.restaurant.branding.theme.accentColor, isHexColor),
           backgroundColor: getString(theme, "backgroundColor", defaults.restaurant.branding.theme.backgroundColor, isHexColor),
           textColor: getString(theme, "textColor", defaults.restaurant.branding.theme.textColor, isHexColor),
+          dark: {
+            primaryColor: getString(getRecord(theme, "dark"), "primaryColor", defaults.restaurant.branding.theme.dark.primaryColor, isHexColor),
+            secondaryColor: getString(getRecord(theme, "dark"), "secondaryColor", defaults.restaurant.branding.theme.dark.secondaryColor, isHexColor),
+            accentColor: getString(getRecord(theme, "dark"), "accentColor", defaults.restaurant.branding.theme.dark.accentColor, isHexColor),
+            backgroundColor: getString(getRecord(theme, "dark"), "backgroundColor", defaults.restaurant.branding.theme.dark.backgroundColor, isHexColor),
+            textColor: getString(getRecord(theme, "dark"), "textColor", defaults.restaurant.branding.theme.dark.textColor, isHexColor),
+          },
           fontFamily: getString(theme, "fontFamily", defaults.restaurant.branding.theme.fontFamily, (value) => value.trim().length > 0),
           headingFontFamily: getString(theme, "headingFontFamily", defaults.restaurant.branding.theme.headingFontFamily, (value) => value.trim().length > 0),
           borderRadius: getString(theme, "borderRadius", defaults.restaurant.branding.theme.borderRadius, (value) => radiusPattern.test(value)),
@@ -398,35 +407,33 @@ const prefersDarkTheme = () =>
 
 const shouldUseDarkPalette = (mode: BrandingThemeMode) => mode === "dark" || (mode === "system" && prefersDarkTheme());
 
-const getThemeBackgroundColor = (mode: BrandingThemeMode, fallbackColor: string) =>
-  shouldUseDarkPalette(mode) ? "#030401" : fallbackColor;
-
-const getThemeTextColor = (mode: BrandingThemeMode, fallbackColor: string) =>
-  shouldUseDarkPalette(mode) ? "#F5F5F5" : fallbackColor;
+const getActiveThemePalette = (theme: RestaurantBrandingPayload["restaurant"]["branding"]["theme"]) =>
+  shouldUseDarkPalette(theme.mode) ? theme.dark : theme;
 
 const getThemeSurfaceColor = (backgroundColor: string) => (backgroundColor === "#F5F5F5" ? "#FFFFFF" : backgroundColor);
 
 export const brandingPayloadToCssVariables = (payload: RestaurantBrandingPayload): Record<string, string> => {
   const normalizedPayload = normalizeBrandingPayload(payload);
   const { theme } = normalizedPayload.restaurant.branding;
+  const activeTheme = getActiveThemePalette(theme);
   const buttonRadius = getButtonRadius(theme.buttonStyle, theme.borderRadius);
 
   return {
-    "--brand-primary": theme.primaryColor,
-    "--brand-secondary": theme.secondaryColor,
-    "--brand-accent": theme.accentColor,
-    "--brand-background": theme.backgroundColor,
-    "--brand-surface": getThemeSurfaceColor(theme.backgroundColor),
-    "--brand-text": theme.textColor,
+    "--brand-primary": activeTheme.primaryColor,
+    "--brand-secondary": activeTheme.secondaryColor,
+    "--brand-accent": activeTheme.accentColor,
+    "--brand-background": activeTheme.backgroundColor,
+    "--brand-surface": getThemeSurfaceColor(activeTheme.backgroundColor),
+    "--brand-text": activeTheme.textColor,
     "--brand-radius": theme.borderRadius,
     "--brand-font-family": theme.fontFamily,
     "--brand-heading-font-family": theme.headingFontFamily,
     "--brand-button-radius": buttonRadius,
-    "--primary": theme.primaryColor,
-    "--ring": theme.primaryColor,
-    "--background": getThemeBackgroundColor(theme.mode, theme.backgroundColor),
-    "--foreground": getThemeTextColor(theme.mode, theme.textColor),
-    "--dark": getThemeTextColor(theme.mode, theme.textColor),
+    "--primary": activeTheme.primaryColor,
+    "--ring": activeTheme.primaryColor,
+    "--background": activeTheme.backgroundColor,
+    "--foreground": activeTheme.textColor,
+    "--dark": activeTheme.textColor,
     "--radius": theme.borderRadius,
     "--sidebar-primary": theme.primaryColor,
     "--sidebar-ring": theme.primaryColor,

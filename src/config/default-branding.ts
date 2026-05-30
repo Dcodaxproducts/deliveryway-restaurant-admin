@@ -23,6 +23,13 @@ export const DEFAULT_RESTAURANT_BRANDING_PAYLOAD: RestaurantBrandingPayload = {
         accentColor: "#F59E0B",
         backgroundColor: "#F5F5F5",
         textColor: "#030401",
+        dark: {
+          primaryColor: "#FF4D57",
+          secondaryColor: "#F5F5F5",
+          accentColor: "#FBBF24",
+          backgroundColor: "#030401",
+          textColor: "#F5F5F5",
+        },
         fontFamily: "var(--font-onest), 'Onest', 'Onest Fallback', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         headingFontFamily: "var(--font-onest), 'Onest', 'Onest Fallback', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         borderRadius: "12px",

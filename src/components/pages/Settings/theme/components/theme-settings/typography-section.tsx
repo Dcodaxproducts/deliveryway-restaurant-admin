@@ -86,16 +86,6 @@ export default function TypographySection({ register, values: _values, getError 
       ],
     },
     {
-      id: "home-layout",
-      label: "Home Layout",
-      name: "restaurant.branding.theme.homeLayout",
-      options: [
-        { label: "Hero", value: "hero" },
-        { label: "Grid", value: "grid" },
-        { label: "Minimal", value: "minimal" },
-      ],
-    },
-    {
       id: "menu-card-style",
       label: "Menu Card Style",
       name: "restaurant.branding.theme.menuCardStyle",
@@ -144,14 +134,6 @@ export default function TypographySection({ register, values: _values, getError 
             {getError(name) ? <p className="mt-2 text-sm text-destructive">{getError(name)}</p> : null}
           </div>
         ))}
-        <label className="flex items-center gap-3 rounded-[12px] border border-gray-200 p-4 text-base font-semibold text-dark">
-          <input type="checkbox" className="h-4 w-4 accent-primary" {...register("restaurant.branding.theme.showPopularItems")} />
-          Show popular items
-        </label>
-        <label className="flex items-center gap-3 rounded-[12px] border border-gray-200 p-4 text-base font-semibold text-dark">
-          <input type="checkbox" className="h-4 w-4 accent-primary" {...register("restaurant.branding.theme.showCategories")} />
-          Show categories
-        </label>
       </div>
     </div>
   );

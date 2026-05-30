@@ -22,47 +22,91 @@ type ColorFieldConfig = {
 
 const panelClassName = "bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6";
 const sectionTitleClassName = "text-[20px] font-semibold text-dark";
+const colorGroupClassName = "rounded-[16px] border border-gray-100 p-4 space-y-5";
+const colorGroupTitleClassName = "text-base font-semibold text-dark";
+const colorGroupDescriptionClassName = "text-sm text-gray";
 
 export default function ColorSchemeSection({ register, setValue, values, getError }: ColorSchemeSectionProps) {
   const { theme } = values.restaurant.branding;
   const { app, checkout } = values.restaurant.branding;
 
-  const colorFields: ColorFieldConfig[] = [
+  const lightColorFields: ColorFieldConfig[] = [
     {
       id: "primary-color",
       label: "Primary Brand Color",
-      description: "Main brand color used for buttons and active states.",
+      description: "Main light-theme brand color used for buttons and active states.",
       name: "restaurant.branding.theme.primaryColor",
       value: theme.primaryColor,
     },
     {
       id: "secondary-color",
       label: "Secondary Color",
-      description: "Used for dark surfaces and supporting accents.",
+      description: "Light-theme supporting text and dark accents.",
       name: "restaurant.branding.theme.secondaryColor",
       value: theme.secondaryColor,
     },
     {
       id: "accent-color",
       label: "Accent Color",
-      description: "Highlights, badges, and promotional moments.",
+      description: "Light-theme highlights, badges, and promotional moments.",
       name: "restaurant.branding.theme.accentColor",
       value: theme.accentColor,
     },
     {
       id: "background-color",
       label: "Background Color",
-      description: "Default storefront and app background.",
+      description: "Default light storefront and app background.",
       name: "restaurant.branding.theme.backgroundColor",
       value: theme.backgroundColor,
     },
     {
       id: "text-color",
       label: "Text Color",
-      description: "Primary readable text color.",
+      description: "Primary readable text color for light theme.",
       name: "restaurant.branding.theme.textColor",
       value: theme.textColor,
     },
+  ];
+
+  const darkColorFields: ColorFieldConfig[] = [
+    {
+      id: "dark-primary-color",
+      label: "Dark Primary Brand Color",
+      description: "Main brand color when dark or system-dark mode is active.",
+      name: "restaurant.branding.theme.dark.primaryColor",
+      value: theme.dark.primaryColor,
+    },
+    {
+      id: "dark-secondary-color",
+      label: "Dark Secondary Color",
+      description: "Supporting text and contrast accents for dark theme.",
+      name: "restaurant.branding.theme.dark.secondaryColor",
+      value: theme.dark.secondaryColor,
+    },
+    {
+      id: "dark-accent-color",
+      label: "Dark Accent Color",
+      description: "Highlights and badges for dark theme.",
+      name: "restaurant.branding.theme.dark.accentColor",
+      value: theme.dark.accentColor,
+    },
+    {
+      id: "dark-background-color",
+      label: "Dark Background Color",
+      description: "Default dark storefront and app background.",
+      name: "restaurant.branding.theme.dark.backgroundColor",
+      value: theme.dark.backgroundColor,
+    },
+    {
+      id: "dark-text-color",
+      label: "Dark Text Color",
+      description: "Primary readable text color for dark theme.",
+      name: "restaurant.branding.theme.dark.textColor",
+      value: theme.dark.textColor,
+    },
+  ];
+
+  const appColorFields: ColorFieldConfig[] = [
     {
       id: "splash-color",
       label: "App Splash Color",
@@ -114,25 +158,47 @@ export default function ColorSchemeSection({ register, setValue, values, getErro
     },
   ];
 
+  const renderColorField = ({ id, label, description, name, value }: ColorFieldConfig) => (
+    <ColorPicker
+      key={name}
+      id={id}
+      label={label}
+      description={description}
+      name={name}
+      value={value}
+      register={register}
+      setValue={setValue}
+      error={getError(name)}
+    />
+  );
+
   return (
     <div className={panelClassName}>
       <div className="flex items-center gap-3">
         <Palette className="text-gray-500" />
         <h3 className={sectionTitleClassName}>Color Scheme</h3>
       </div>
-      {colorFields.map(({ id, label, description, name, value }) => (
-        <ColorPicker
-          key={name}
-          id={id}
-          label={label}
-          description={description}
-          name={name}
-          value={value}
-          register={register}
-          setValue={setValue}
-          error={getError(name)}
-        />
-      ))}
+      <div className={colorGroupClassName}>
+        <div>
+          <h4 className={colorGroupTitleClassName}>Light Theme Colors</h4>
+          <p className={colorGroupDescriptionClassName}>Used when storefront theme mode is Light.</p>
+        </div>
+        {lightColorFields.map(renderColorField)}
+      </div>
+      <div className={colorGroupClassName}>
+        <div>
+          <h4 className={colorGroupTitleClassName}>Dark Theme Colors</h4>
+          <p className={colorGroupDescriptionClassName}>Used when storefront theme mode is Dark, or System while the customer prefers dark mode.</p>
+        </div>
+        {darkColorFields.map(renderColorField)}
+      </div>
+      <div className={colorGroupClassName}>
+        <div>
+          <h4 className={colorGroupTitleClassName}>App & Checkout Colors</h4>
+          <p className={colorGroupDescriptionClassName}>Shared mobile app and checkout state colors.</p>
+        </div>
+        {appColorFields.map(renderColorField)}
+      </div>
     </div>
   );
 }

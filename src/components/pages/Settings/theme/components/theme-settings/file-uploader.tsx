@@ -23,7 +23,7 @@ type FileUploaderProps = {
 const labelClassName = "block text-base font-semibold text-dark";
 const helperClassName = "text-sm text-gray max-w-[368px]";
 const inputClassName = "h-[52px] rounded-[12px] border-gray-200 focus:ring-primary";
-const actionButtonClassName = "inline-flex h-10 items-center justify-center gap-2 rounded-[10px] border border-gray-200 bg-white px-3 text-sm font-semibold text-dark transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60";
+const actionButtonClassName = "inline-flex h-10 items-center justify-center gap-2 rounded-[10px] border border-gray-200 bg-white px-3 text-sm font-semibold text-dark transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:text-primary hover:shadow-sm disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none";
 
 const isPreviewablePath = (value?: string) => Boolean(value?.trim());
 

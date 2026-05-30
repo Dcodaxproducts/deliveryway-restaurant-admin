@@ -45,6 +45,14 @@ const logoSetSchema = z.object({
   faviconUrl: optionalUrlSchema.optional(),
 });
 
+const darkThemeOptionsSchema = z.object({
+  primaryColor: hexColorSchema,
+  secondaryColor: hexColorSchema,
+  accentColor: hexColorSchema,
+  backgroundColor: hexColorSchema,
+  textColor: hexColorSchema,
+});
+
 const themeOptionsSchema = z.object({
   mode: z.enum(themeModes),
   primaryColor: hexColorSchema,
@@ -52,6 +60,7 @@ const themeOptionsSchema = z.object({
   accentColor: hexColorSchema,
   backgroundColor: hexColorSchema,
   textColor: hexColorSchema,
+  dark: darkThemeOptionsSchema,
   fontFamily: z.string().min(1),
   headingFontFamily: z.string().min(1),
   borderRadius: borderRadiusSchema,

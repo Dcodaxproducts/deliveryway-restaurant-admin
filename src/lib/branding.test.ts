@@ -122,10 +122,11 @@ describe("branding helpers", () => {
     });
     const variables = brandingPayloadToCssVariables(payload);
 
-    expect(variables["--primary"]).toBe("#c1000a");
+    expect(variables["--primary"]).toBe(defaultTheme.dark.primaryColor);
     expect(variables["--background"]).toBe("#030401");
     expect(variables["--foreground"]).toBe("#F5F5F5");
     expect(variables["--dark"]).toBe("#F5F5F5");
+    expect(variables["--sidebar-primary"]).toBe("#c1000a");
   });
 
   it("normalizes provided backend GET envelope shape", () => {
