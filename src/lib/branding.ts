@@ -157,6 +157,7 @@ export const normalizeBrandingPayload = (input: unknown): RestaurantBrandingPayl
   const app = getRecord(branding, "app");
   const checkout = getRecord(branding, "checkout");
   const assets = getRecord(branding, "assets");
+  const logo = getRecord(branding, "logo");
   const logos = getRecord(assets, "logos");
   const admin = getRecord(branding, "admin");
   const supportContact = getRecord(restaurant, "supportContact");
@@ -188,17 +189,28 @@ export const normalizeBrandingPayload = (input: unknown): RestaurantBrandingPayl
           headingFontFamily: getString(theme, "headingFontFamily", defaults.restaurant.branding.theme.headingFontFamily, (value) => value.trim().length > 0),
           borderRadius: getString(theme, "borderRadius", defaults.restaurant.branding.theme.borderRadius, (value) => radiusPattern.test(value)),
           buttonStyle: getEnum(theme, "buttonStyle", buttonStyles, defaults.restaurant.branding.theme.buttonStyle),
+          homeLayout: getEnum(theme, "homeLayout", homeLayouts, defaults.restaurant.branding.theme.homeLayout),
+          menuCardStyle: getEnum(theme, "menuCardStyle", menuCardStyles, defaults.restaurant.branding.theme.menuCardStyle),
+          showPopularItems: getBoolean(theme, "showPopularItems", defaults.restaurant.branding.theme.showPopularItems),
+          showCategories: getBoolean(theme, "showCategories", defaults.restaurant.branding.theme.showCategories),
         },
         app: {
           homeLayout: getEnum(app, "homeLayout", homeLayouts, defaults.restaurant.branding.app.homeLayout),
           menuCardStyle: getEnum(app, "menuCardStyle", menuCardStyles, defaults.restaurant.branding.app.menuCardStyle),
           showTagline: getBoolean(app, "showTagline", defaults.restaurant.branding.app.showTagline),
           showHeroBanner: getBoolean(app, "showHeroBanner", defaults.restaurant.branding.app.showHeroBanner),
+          splashColor: getString(app, "splashColor", defaults.restaurant.branding.app.splashColor, isHexColor),
+          statusBarColor: getString(app, "statusBarColor", defaults.restaurant.branding.app.statusBarColor, isHexColor),
+          bottomNavColor: getString(app, "bottomNavColor", defaults.restaurant.branding.app.bottomNavColor, isHexColor),
         },
         checkout: {
           showLogo: getBoolean(checkout, "showLogo", defaults.restaurant.branding.checkout.showLogo),
           showSupportContact: getBoolean(checkout, "showSupportContact", defaults.restaurant.branding.checkout.showSupportContact),
           successMessage: getString(checkout, "successMessage", defaults.restaurant.branding.checkout.successMessage),
+          highlightColor: getString(checkout, "highlightColor", defaults.restaurant.branding.checkout.highlightColor, isHexColor),
+          successColor: getString(checkout, "successColor", defaults.restaurant.branding.checkout.successColor, isHexColor),
+          warningColor: getString(checkout, "warningColor", defaults.restaurant.branding.checkout.warningColor, isHexColor),
+          errorColor: getString(checkout, "errorColor", defaults.restaurant.branding.checkout.errorColor, isHexColor),
         },
         assets: {
           logoUrl: getString(assets, "logoUrl", defaults.restaurant.branding.assets.logoUrl, isOptionalUrl),
@@ -211,6 +223,10 @@ export const normalizeBrandingPayload = (input: unknown): RestaurantBrandingPayl
             compactLogoUrl: getString(logos, "compactLogoUrl", defaults.restaurant.branding.assets.logos.compactLogoUrl ?? "", isOptionalUrl),
             faviconUrl: getString(logos, "faviconUrl", defaults.restaurant.branding.assets.logos.faviconUrl ?? "", isOptionalUrl),
           },
+        },
+        logo: {
+          light: getString(logo, "light", defaults.restaurant.branding.logo.light, isOptionalUrl),
+          dark: getString(logo, "dark", defaults.restaurant.branding.logo.dark, isOptionalUrl),
         },
         admin: {
           previewEnabled: getBoolean(admin, "previewEnabled", defaults.restaurant.branding.admin?.previewEnabled ?? true),

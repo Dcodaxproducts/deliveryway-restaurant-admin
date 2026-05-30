@@ -1,40 +1,102 @@
-import { arimo } from "@/lib/fonts";
+import type { BrandingFormValues } from "@/validations/branding";
 
-const PreviewSection = () => {
-    return (
-        <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm">
-            <h3 className="text-base text-dark mb-[24px]">Preview</h3>
-            <div className="space-y-4">
-                <div className="w-[113px] h-[46px] bg-[#E5E5E5] flex items-center justify-center rounded">
-                    <span className="text-gray-500 text-base font-semibold">Your Logo</span>
-                </div>
-                <h1 className={`text-2xl md:text-[37px] ${arimo.className}`} style={{ color: '#00FF7B' }}>Welcome to Our Restaurant</h1>
-                <p className="text-base" style={{ color: '#030401' }}>
-                    Experience the finest dining with our carefully curated menu. Order online for delivery or pickup.
-                </p>
-                <div className="flex items-center gap-4 font-bold">
-                    <span
-                        className="px-5 h-[41px] flex items-center justify-center text-sm rounded-[10px]"
-                        style={{ backgroundColor: "#00FF7B", color: "white" }}
-                    >
-                        Featured
-                    </span>
-
-                    <span
-                        className="px-5 h-[41px] flex items-center justify-center text-sm rounded-[10px]"
-                        style={{ backgroundColor: "#F59E0B", color: "white" }}
-                    >
-                        New
-                    </span>
-
-                    <span className="px-5 h-[41px] flex items-center justify-center text-sm rounded-[10px] border border-dark">
-                        Popular
-                    </span>
-                </div>
-
-            </div>
-        </div>
-    );
+type PreviewSectionProps = {
+  values: BrandingFormValues;
 };
 
-export default PreviewSection;
+const getInitials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "DW";
+
+const getButtonRadius = (buttonStyle: string, borderRadius: string) => {
+  if (buttonStyle === "pill") {
+    return "9999px";
+  }
+
+  if (buttonStyle === "square") {
+    return "0px";
+  }
+
+  return borderRadius;
+};
+
+export default function PreviewSection({ values }: PreviewSectionProps) {
+  const { restaurant } = values;
+  const { branding } = restaurant;
+  const { theme } = branding;
+  const logoUrl = restaurant.logoUrl || branding.logo.light || branding.assets.logoUrl;
+  const buttonRadius = getButtonRadius(theme.buttonStyle, theme.borderRadius);
+
+  return (
+    <div className="rounded-lg bg-white p-4 shadow-sm md:p-6">
+      <h3 className="mb-[24px] text-base text-dark">Preview</h3>
+      <div
+        className="space-y-5 rounded-[18px] border border-gray-200 p-5"
+        style={{
+          backgroundColor: theme.backgroundColor,
+          color: theme.textColor,
+          borderRadius: theme.borderRadius,
+          fontFamily: theme.fontFamily,
+        }}
+      >
+        <div className="flex flex-wrap items-center gap-4">
+          <div
+            className="flex h-[58px] min-w-[122px] items-center justify-center overflow-hidden border border-gray-200 bg-white px-3 text-base font-semibold"
+            style={{ borderRadius: buttonRadius }}
+          >
+            {logoUrl ? (
+              <div
+                aria-label={`${restaurant.name} logo preview`}
+                role="img"
+                className="h-10 w-[142px] bg-contain bg-center bg-no-repeat"
+                style={{ backgroundImage: `url(${logoUrl})` }}
+              />
+            ) : (
+              <span style={{ color: theme.secondaryColor }}>{getInitials(restaurant.name)}</span>
+            )}
+          </div>
+          <div>
+            <h1
+              className="text-2xl font-bold md:text-[37px]"
+              style={{ color: theme.primaryColor, fontFamily: theme.headingFontFamily }}
+            >
+              {restaurant.name || "Restaurant Name"}
+            </h1>
+            <p className="text-sm" style={{ color: theme.secondaryColor }}>
+              {restaurant.tagline || "Fresh orders, fast delivery, memorable hospitality."}
+            </p>
+          </div>
+        </div>
+
+        <p className="max-w-3xl text-base leading-7">
+          {restaurant.bio || "Experience the finest dining with a carefully curated menu. Order online for delivery or pickup."}
+        </p>
+
+        <div className="flex flex-wrap items-center gap-3 font-bold">
+          <span
+            className="flex h-[41px] items-center justify-center px-5 text-sm text-white"
+            style={{ backgroundColor: theme.primaryColor, borderRadius: buttonRadius }}
+          >
+            Featured
+          </span>
+          <span
+            className="flex h-[41px] items-center justify-center px-5 text-sm text-white"
+            style={{ backgroundColor: theme.accentColor, borderRadius: buttonRadius }}
+          >
+            New
+          </span>
+          <span
+            className="flex h-[41px] items-center justify-center border px-5 text-sm"
+            style={{ borderColor: theme.secondaryColor, borderRadius: buttonRadius, color: theme.secondaryColor }}
+          >
+            Popular
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}

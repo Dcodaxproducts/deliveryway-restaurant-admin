@@ -56,6 +56,10 @@ const themeOptionsSchema = z.object({
   headingFontFamily: z.string().min(1),
   borderRadius: borderRadiusSchema,
   buttonStyle: z.enum(buttonStyles),
+  homeLayout: z.enum(homeLayouts),
+  menuCardStyle: z.enum(menuCardStyles),
+  showPopularItems: z.boolean(),
+  showCategories: z.boolean(),
 });
 
 const appOptionsSchema = z.object({
@@ -63,12 +67,19 @@ const appOptionsSchema = z.object({
   menuCardStyle: z.enum(menuCardStyles),
   showTagline: z.boolean(),
   showHeroBanner: z.boolean(),
+  splashColor: hexColorSchema,
+  statusBarColor: hexColorSchema,
+  bottomNavColor: hexColorSchema,
 });
 
 const checkoutOptionsSchema = z.object({
   showLogo: z.boolean(),
   showSupportContact: z.boolean(),
   successMessage: z.string(),
+  highlightColor: hexColorSchema,
+  successColor: hexColorSchema,
+  warningColor: hexColorSchema,
+  errorColor: hexColorSchema,
 });
 
 const assetOptionsSchema = z.object({
@@ -85,6 +96,10 @@ export const brandingSchema = z.object({
   app: appOptionsSchema,
   checkout: checkoutOptionsSchema,
   assets: assetOptionsSchema,
+  logo: z.object({
+    light: optionalUrlSchema,
+    dark: optionalUrlSchema,
+  }),
   admin: z
     .object({
       previewEnabled: z.boolean(),

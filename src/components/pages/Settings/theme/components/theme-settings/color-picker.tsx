@@ -1,20 +1,64 @@
-interface ColorPickerProps {
-    label: string;
-    description?: string;
-    color: string;
-}
+import type { FieldPath, UseFormRegister } from "react-hook-form";
 
-export default function ColorPicker({ label, description, color }: ColorPickerProps) {
-    return (
-        <div className="flex items-center justify-between">
-            <div>
-                <h4 className="text-base text-dark">{label}</h4>
-                {description && <p className="text-sm text-gray">{description}</p>}
-            </div>
-            <div className="flex items-center gap-2">
-                <input type="text" value={color} readOnly className="w-20 text-sm text-gray outline-none p-2 border rounded-md" />
-                <div className="w-8 h-8 rounded border border-gray-300" style={{ backgroundColor: color }}></div>
-            </div>
+import { Input } from "@/components/ui/input";
+import type { BrandingFormValues } from "@/validations/branding";
+
+type ColorFieldName = FieldPath<BrandingFormValues>;
+
+type ColorPickerProps = {
+  id: string;
+  label: string;
+  description?: string;
+  name: ColorFieldName;
+  value?: string;
+  register: UseFormRegister<BrandingFormValues>;
+  error?: string;
+};
+
+const labelClassName = "text-base font-semibold text-dark";
+const descriptionClassName = "text-sm text-gray";
+const textInputClassName = "h-11 rounded-[12px] border-gray-200 font-mono text-sm uppercase";
+const colorInputClassName = "h-11 w-14 cursor-pointer rounded-[12px] border border-gray-200 bg-white p-1";
+
+export default function ColorPicker({
+  id,
+  label,
+  description,
+  name,
+  value,
+  register,
+  error,
+}: ColorPickerProps) {
+  const colorValue = value && /^#[0-9a-fA-F]{6}$/.test(value) ? value : "#000000";
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <label htmlFor={`${id}-text`} className={labelClassName}>
+            {label}
+          </label>
+          {description ? <p className={descriptionClassName}>{description}</p> : null}
         </div>
-    );
+        <div className="flex items-center gap-2">
+          <input
+            id={`${id}-color`}
+            type="color"
+            value={colorValue}
+            aria-label={`${label} color picker`}
+            className={colorInputClassName}
+            {...register(name)}
+          />
+          <Input
+            id={`${id}-text`}
+            type="text"
+            aria-invalid={Boolean(error)}
+            className={textInputClassName}
+            {...register(name)}
+          />
+        </div>
+      </div>
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+    </div>
+  );
 }

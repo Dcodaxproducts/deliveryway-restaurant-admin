@@ -27,6 +27,10 @@ export type BrandingThemeOptions = {
   headingFontFamily: string;
   borderRadius: string;
   buttonStyle: BrandingButtonStyle;
+  homeLayout: BrandingHomeLayout;
+  menuCardStyle: BrandingMenuCardStyle;
+  showPopularItems: boolean;
+  showCategories: boolean;
 };
 
 export type BrandingAppOptions = {
@@ -34,12 +38,19 @@ export type BrandingAppOptions = {
   menuCardStyle: BrandingMenuCardStyle;
   showTagline: boolean;
   showHeroBanner: boolean;
+  splashColor: string;
+  statusBarColor: string;
+  bottomNavColor: string;
 };
 
 export type BrandingCheckoutOptions = {
   showLogo: boolean;
   showSupportContact: boolean;
   successMessage: string;
+  highlightColor: string;
+  successColor: string;
+  warningColor: string;
+  errorColor: string;
 };
 
 export type BrandingAssetOptions = {
@@ -56,6 +67,10 @@ export type RestaurantBranding = {
   app: BrandingAppOptions;
   checkout: BrandingCheckoutOptions;
   assets: BrandingAssetOptions;
+  logo: {
+    light: string;
+    dark: string;
+  };
   admin?: {
     previewEnabled: boolean;
     lastUpdatedBy?: string;
