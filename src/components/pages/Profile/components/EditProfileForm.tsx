@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { Camera, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import {
-  getAvatarUrl,
   getDisplayName,
   getInitials,
   getStoredAuth,
@@ -33,8 +33,10 @@ const getInitialFormState = (): ProfileFormState => ({
 });
 
 export default function EditProfile() {
+  const router = useRouter();
   const { user, token, setUser } = useAuth();
   const { uploadFile, uploading } = useFileUpload();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [values, setValues] = useState<ProfileFormState>(getInitialFormState);
   const [saving, setSaving] = useState(false);
 
@@ -55,7 +57,7 @@ export default function EditProfile() {
     return fullName || getDisplayName(user);
   }, [user, values.firstName, values.lastName]);
 
-  const avatarUrl = values.avatarUrl.trim() || getAvatarUrl(user);
+  const avatarUrl = values.avatarUrl.trim();
   const initials = getInitials({
     ...(user ?? { id: "", email: "", role: "", profile: {} }),
     profile: {
@@ -78,6 +80,10 @@ export default function EditProfile() {
 
   const clearAvatar = () => {
     updateValue("avatarUrl", "");
+  };
+
+  const openFilePicker = () => {
+    fileInputRef.current?.click();
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -113,6 +119,7 @@ export default function EditProfile() {
       }
 
       toast.success("Profile updated successfully");
+      router.push("/profile");
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Unable to update profile"));
     } finally {
@@ -132,17 +139,36 @@ export default function EditProfile() {
               </AvatarFallback>
             </Avatar>
 
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFile}
+              className="sr-only"
+            />
+
+            <button
+              type="button"
+              aria-label={avatarUrl ? "Change profile photo" : "Upload profile photo"}
+              onClick={openFilePicker}
+              disabled={uploading}
+              className="absolute bottom-2 right-2 rounded-full border bg-white p-2 shadow hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Camera size={16} className="text-gray-700" />
+            </button>
+
             {avatarUrl ? (
               <button
                 type="button"
                 aria-label="Remove profile photo"
                 onClick={clearAvatar}
-                className="absolute bottom-2 right-2 rounded-full border bg-white p-2 shadow hover:bg-gray-50"
+                className="absolute bottom-2 left-2 rounded-full border bg-white p-2 shadow hover:bg-gray-50"
               >
                 <Trash2 size={16} className="text-red-500" />
               </button>
             ) : null}
           </div>
+          {uploading ? <p className="mt-2 text-xs text-gray-400">Uploading profile image...</p> : null}
 
           <h2 className="mt-6 text-2xl font-semibold text-[#030401]">
             {displayName}
@@ -178,28 +204,7 @@ export default function EditProfile() {
               onChange={(value) => updateValue("phone", value)}
               placeholder="Enter phone number"
             />
-            <FormInput label="Email" value={user?.email ?? ""} readOnly />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Avatar URL
-            </label>
-            <Input
-              value={values.avatarUrl}
-              onChange={(event) => updateValue("avatarUrl", event.target.value)}
-              placeholder="https://..."
-              className="h-11 w-full rounded-[9px] border-[#BBBBBB] focus:border-2 focus:border-primary focus-visible:ring-0 focus:outline-none"
-            />
-            <div className="mt-2 flex items-center gap-3">
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={handleFile}
-                className="h-10 rounded-lg border border-gray-300 pt-1"
-              />
-              {uploading ? <span className="text-xs text-gray-400">Uploading...</span> : null}
-            </div>
+            <div className="hidden md:block" />
           </div>
 
           <div>
