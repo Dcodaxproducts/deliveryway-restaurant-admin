@@ -1,126 +1,115 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useMemo } from "react";
+import { useForm, type Path, type UseFormRegisterReturn } from "react-hook-form";
 
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   useGetNotificationSettings,
   useUpdateNotificationSettings,
 } from "@/hooks/useNotifications";
+import type { NotificationSettingsValues } from "@/services/notifications/notification-settings.api";
+import {
+  notificationSettingsSchema,
+  type NotificationSettingsFormValues,
+} from "@/validations/notifications";
 
-/**
- * Types
- */
 type Channel = "email" | "sms" | "whatsapp";
-
 type NotificationType = Record<Channel, boolean>;
 type NotificationTypes = Record<string, NotificationType>;
 
-type NotificationFormState = {
-  emailAddress: string;
-  phoneNumber: string;
-  whatsappNumber: string;
-  notificationTypes: NotificationTypes;
-};
+const channels: Channel[] = ["email", "sms", "whatsapp"];
 
-type ChannelEnabledState = Record<Channel, boolean>;
-
-/**
- * Default state
- */
-const defaultState: NotificationFormState = {
+const defaultValues: NotificationSettingsFormValues = {
   emailAddress: "",
   phoneNumber: "",
   whatsappNumber: "",
   notificationTypes: {},
+  enabledChannels: {
+    email: true,
+    sms: true,
+    whatsapp: true,
+  },
 };
 
-const defaultEnabledState: ChannelEnabledState = {
-  email: true,
-  sms: true,
-  whatsapp: true,
+const channelInputConfig: Record<Channel, Path<NotificationSettingsFormValues>> = {
+  email: "emailAddress",
+  sms: "phoneNumber",
+  whatsapp: "whatsappNumber",
 };
 
-export default function NotificationForm() {
-  const [form, setForm] = useState<NotificationFormState>(defaultState);
-  const [enabledChannels, setEnabledChannels] =
-    useState<ChannelEnabledState>(defaultEnabledState);
+export const buildNotificationFormValues = (
+  data?: NotificationSettingsValues | null
+): NotificationSettingsFormValues => {
+  if (!data) return defaultValues;
 
-  const { data, isLoading } = useGetNotificationSettings();
-  const mutation = useUpdateNotificationSettings();
+  const notificationTypes = data.notificationTypes ?? {};
+  const hasEmail =
+    Boolean(data.emailAddress?.trim()) ||
+    Object.values(notificationTypes).some((item) => item?.email === true);
+  const hasSms =
+    Boolean(data.phoneNumber?.trim()) ||
+    Object.values(notificationTypes).some((item) => item?.sms === true);
+  const hasWhatsapp =
+    Boolean(data.whatsappNumber?.trim()) ||
+    Object.values(notificationTypes).some((item) => item?.whatsapp === true);
 
-  /**
-   * Sync API → form
-   */
-  useEffect(() => {
-    if (!data) {
-      setForm(defaultState);
-      setEnabledChannels(defaultEnabledState);
-      return;
-    }
-
-    const safeForm: NotificationFormState = {
-      emailAddress: data.emailAddress ?? "",
-      phoneNumber: data.phoneNumber ?? "",
-      whatsappNumber: data.whatsappNumber ?? "",
-      notificationTypes: data.notificationTypes ?? {},
-    };
-
-    setForm(safeForm);
-
-    const hasEmail =
-      !!safeForm.emailAddress?.trim() ||
-      Object.values(safeForm.notificationTypes || {}).some(
-        (item) => item?.email === true
-      );
-
-    const hasSms =
-      !!safeForm.phoneNumber?.trim() ||
-      Object.values(safeForm.notificationTypes || {}).some(
-        (item) => item?.sms === true
-      );
-
-    const hasWhatsapp =
-      !!safeForm.whatsappNumber?.trim() ||
-      Object.values(safeForm.notificationTypes || {}).some(
-        (item) => item?.whatsapp === true
-      );
-
-    setEnabledChannels({
+  return {
+    emailAddress: data.emailAddress ?? "",
+    phoneNumber: data.phoneNumber ?? "",
+    whatsappNumber: data.whatsappNumber ?? "",
+    notificationTypes,
+    enabledChannels: {
       email: hasEmail,
       sms: hasSms,
       whatsapp: hasWhatsapp,
-    });
-  }, [data]);
+    },
+  };
+};
 
-  /**
-   * Derived values
-   */
-  const notificationKeys = Object.keys(form.notificationTypes || {});
+export default function NotificationForm() {
+  const { data, isLoading } = useGetNotificationSettings();
+  const mutation = useUpdateNotificationSettings();
+
+  const {
+    handleSubmit,
+    register,
+    reset,
+    setValue,
+    watch,
+  } = useForm<NotificationSettingsFormValues>({
+    resolver: zodResolver(notificationSettingsSchema),
+    defaultValues,
+  });
+
+  const emailAddress = watch("emailAddress");
+  const phoneNumber = watch("phoneNumber");
+  const whatsappNumber = watch("whatsappNumber");
+  const notificationTypes = watch("notificationTypes");
+  const enabledChannels = watch("enabledChannels");
+
+  useEffect(() => {
+    reset(buildNotificationFormValues(data));
+  }, [data, reset]);
+
+  const notificationKeys = Object.keys(notificationTypes ?? {});
 
   const visibleChannels = useMemo(() => {
-    return (["email", "sms", "whatsapp"] as Channel[]).filter(
-      (channel) => enabledChannels[channel]
-    );
+    return channels.filter((channel) => enabledChannels[channel]);
   }, [enabledChannels]);
 
   const hasVisibleSettings = visibleChannels.length > 0;
 
-  /**
-   * Handlers
-   */
   const handleChannelToggle = (channel: Channel, enabled: boolean) => {
-    setEnabledChannels((prev) => ({
-      ...prev,
-      [channel]: enabled,
-    }));
+    setValue(`enabledChannels.${channel}`, enabled, { shouldDirty: true });
 
     if (!enabled) {
-      const updated: NotificationTypes = { ...form.notificationTypes };
+      const updated: NotificationTypes = { ...(notificationTypes ?? {}) };
 
       Object.keys(updated).forEach((key) => {
         updated[key] = {
@@ -129,14 +118,8 @@ export default function NotificationForm() {
         };
       });
 
-      setForm((prev) => ({
-        ...prev,
-        emailAddress: channel === "email" ? "" : prev.emailAddress,
-        phoneNumber: channel === "sms" ? "" : prev.phoneNumber,
-        whatsappNumber:
-          channel === "whatsapp" ? "" : prev.whatsappNumber,
-        notificationTypes: updated,
-      }));
+      setValue(channelInputConfig[channel], "", { shouldDirty: true });
+      setValue("notificationTypes", updated, { shouldDirty: true });
     }
   };
 
@@ -145,34 +128,34 @@ export default function NotificationForm() {
     channel: Channel,
     value: boolean
   ) => {
-    setForm((prev) => ({
-      ...prev,
-      notificationTypes: {
-        ...prev.notificationTypes,
-        [type]: {
-          email: prev.notificationTypes[type]?.email ?? false,
-          sms: prev.notificationTypes[type]?.sms ?? false,
-          whatsapp: prev.notificationTypes[type]?.whatsapp ?? false,
-          [channel]: value,
-        },
+    const currentType = notificationTypes?.[type];
+
+    setValue(
+      `notificationTypes.${type}`,
+      {
+        email: currentType?.email ?? false,
+        sms: currentType?.sms ?? false,
+        whatsapp: currentType?.whatsapp ?? false,
+        [channel]: value,
       },
-    }));
+      { shouldDirty: true }
+    );
   };
 
-  const handleSave = () => {
+  const onSubmit = (values: NotificationSettingsFormValues) => {
     const payload = {
-      emailAddress: enabledChannels.email ? form.emailAddress : "",
-      phoneNumber: enabledChannels.sms ? form.phoneNumber : "",
-      whatsappNumber: enabledChannels.whatsapp
-        ? form.whatsappNumber
+      emailAddress: values.enabledChannels.email ? values.emailAddress : "",
+      phoneNumber: values.enabledChannels.sms ? values.phoneNumber : "",
+      whatsappNumber: values.enabledChannels.whatsapp
+        ? values.whatsappNumber
         : "",
       notificationTypes: Object.fromEntries(
-        Object.entries(form.notificationTypes || {}).map(([key, value]) => [
+        Object.entries(values.notificationTypes ?? {}).map(([key, value]) => [
           key,
           {
-            email: enabledChannels.email ? value?.email ?? false : false,
-            sms: enabledChannels.sms ? value?.sms ?? false : false,
-            whatsapp: enabledChannels.whatsapp
+            email: values.enabledChannels.email ? value?.email ?? false : false,
+            sms: values.enabledChannels.sms ? value?.sms ?? false : false,
+            whatsapp: values.enabledChannels.whatsapp
               ? value?.whatsapp ?? false
               : false,
           },
@@ -184,83 +167,40 @@ export default function NotificationForm() {
   };
 
   const handleCancel = () => {
-    if (!data) {
-      setForm(defaultState);
-      setEnabledChannels(defaultEnabledState);
-      return;
-    }
-
-    const safeForm: NotificationFormState = {
-      emailAddress: data.emailAddress ?? "",
-      phoneNumber: data.phoneNumber ?? "",
-      whatsappNumber: data.whatsappNumber ?? "",
-      notificationTypes: data.notificationTypes ?? {},
-    };
-
-    setForm(safeForm);
-
-    const hasEmail =
-      !!safeForm.emailAddress?.trim() ||
-      Object.values(safeForm.notificationTypes || {}).some(
-        (item) => item?.email === true
-      );
-
-    const hasSms =
-      !!safeForm.phoneNumber?.trim() ||
-      Object.values(safeForm.notificationTypes || {}).some(
-        (item) => item?.sms === true
-      );
-
-    const hasWhatsapp =
-      !!safeForm.whatsappNumber?.trim() ||
-      Object.values(safeForm.notificationTypes || {}).some(
-        (item) => item?.whatsapp === true
-      );
-
-    setEnabledChannels({
-      email: hasEmail,
-      sms: hasSms,
-      whatsapp: hasWhatsapp,
-    });
+    reset(buildNotificationFormValues(data));
   };
 
   return (
-    <div className="space-y-8">
+    <form className="space-y-8" noValidate onSubmit={handleSubmit(onSubmit)}>
       {isLoading ? (
         <LoadingCard />
       ) : (
         <>
-          {/* EMAIL */}
           <ChannelSection
             title="Email"
-            value={form.emailAddress}
+            inputId="notification-email-address"
+            value={emailAddress}
             enabled={enabledChannels.email}
-            onChange={(val: string) =>
-              setForm((prev) => ({ ...prev, emailAddress: val }))
-            }
-            onToggle={(val: boolean) => handleChannelToggle("email", val)}
+            registration={register("emailAddress")}
+            onToggle={(checked) => handleChannelToggle("email", checked)}
           />
 
-          {/* SMS */}
           <ChannelSection
             title="SMS"
-            value={form.phoneNumber}
+            inputId="notification-sms-number"
+            value={phoneNumber}
             enabled={enabledChannels.sms}
-            onChange={(val: string) =>
-              setForm((prev) => ({ ...prev, phoneNumber: val }))
-            }
-            onToggle={(val: boolean) => handleChannelToggle("sms", val)}
+            registration={register("phoneNumber")}
+            onToggle={(checked) => handleChannelToggle("sms", checked)}
           />
 
-          {/* WHATSAPP */}
           <ChannelSection
             title="Whatsapp"
-            value={form.whatsappNumber}
+            inputId="notification-whatsapp-number"
+            value={whatsappNumber}
             enabled={enabledChannels.whatsapp}
-            onChange={(val: string) =>
-              setForm((prev) => ({ ...prev, whatsappNumber: val }))
-            }
-            onToggle={(val: boolean) => handleChannelToggle("whatsapp", val)}
+            registration={register("whatsappNumber")}
+            onToggle={(checked) => handleChannelToggle("whatsapp", checked)}
           />
 
           {hasVisibleSettings ? (
@@ -294,7 +234,7 @@ export default function NotificationForm() {
                     <NotificationRow
                       key={key}
                       label={formatLabel(key)}
-                      data={form.notificationTypes[key]}
+                      data={notificationTypes[key]}
                       visibleChannels={visibleChannels}
                       onChange={(channel, value) =>
                         handleCheckboxChange(key, channel, value)
@@ -315,7 +255,7 @@ export default function NotificationForm() {
             />
           )}
 
-          {hasVisibleSettings && (
+          {hasVisibleSettings ? (
             <div className="flex justify-end gap-4">
               <Button
                 type="button"
@@ -328,37 +268,35 @@ export default function NotificationForm() {
               </Button>
 
               <Button
-                type="button"
-                onClick={handleSave}
+                type="submit"
                 disabled={mutation.isPending}
                 className="px-8 py-2.5"
               >
                 {mutation.isPending ? "Saving..." : "Save & Activate"}
               </Button>
             </div>
-          )}
+          ) : null}
         </>
       )}
-    </div>
+    </form>
   );
 }
 
-/**
- * Channel Section
- */
 type ChannelSectionProps = {
   title: string;
+  inputId: string;
   value: string;
   enabled: boolean;
-  onChange: (val: string) => void;
-  onToggle: (val: boolean) => void;
+  registration: UseFormRegisterReturn;
+  onToggle: (checked: boolean) => void;
 };
 
 function ChannelSection({
   title,
+  inputId,
   value,
   enabled,
-  onChange,
+  registration,
   onToggle,
 }: ChannelSectionProps) {
   return (
@@ -368,44 +306,40 @@ function ChannelSection({
           <h3 className="text-xl font-semibold text-foreground">{title}</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             {enabled
-              ? `This channel is active for notifications.`
-              : `This channel is currently disabled.`}
+              ? "This channel is active for notifications."
+              : "This channel is currently disabled."}
           </p>
         </div>
 
         <Switch
           checked={enabled}
-          onCheckedChange={(val: boolean) => onToggle(val)}
+          onCheckedChange={(checked) => onToggle(checked === true)}
           className="data-[state=checked]:bg-primary"
         />
       </div>
 
-      {enabled && (
+      {enabled ? (
         <div className="mt-6 space-y-2">
-          <Label className="text-sm font-medium text-foreground">
+          <Label htmlFor={inputId} className="text-sm font-medium text-foreground">
             {title} {title === "Email" ? "Address" : "Number"}
           </Label>
           <Input
+            id={inputId}
             value={value ?? ""}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              onChange(e.target.value)
-            }
             className="h-[52px]"
             placeholder={
               title === "Email"
                 ? "Enter email address"
                 : `Enter ${title.toLowerCase()} number`
             }
+            {...registration}
           />
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
 
-/**
- * Notification Row
- */
 type NotificationRowProps = {
   label: string;
   data: NotificationType;
@@ -431,8 +365,8 @@ function NotificationRow({
       {visibleChannels.map((channel) => (
         <div key={channel} className="flex justify-center">
           <Checkbox
-            checked={data?.[channel] || false}
-            onCheckedChange={(val) => onChange(channel, Boolean(val))}
+            checked={data?.[channel] ?? false}
+            onCheckedChange={(checked) => onChange(channel, checked === true)}
             className="h-5 w-5 border-2 border-slate-400 data-[state=checked]:border-primary"
           />
         </div>
@@ -441,9 +375,6 @@ function NotificationRow({
   );
 }
 
-/**
- * Empty State Card
- */
 function EmptyStateCard({
   title,
   description,
@@ -461,9 +392,6 @@ function EmptyStateCard({
   );
 }
 
-/**
- * Loading Card
- */
 function LoadingCard() {
   return (
     <div className="rounded-2xl border border-border bg-white px-6 py-10 shadow-sm">
@@ -477,9 +405,6 @@ function LoadingCard() {
   );
 }
 
-/**
- * Helper
- */
 function formatLabel(key: string) {
   return key
     .replace(/([A-Z])/g, " $1")
