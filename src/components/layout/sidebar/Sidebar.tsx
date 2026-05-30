@@ -8,7 +8,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { LogOut, ChevronDown, ChevronRight } from "lucide-react";
 import { menuItems, MenuItem, type SidebarRole } from "@/config/sidebarItems";
 import { useAuth } from "@/hooks/useAuth";
-import BrandLogo from "@/components/common/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -196,10 +195,7 @@ export default function Sidebar({
 
   return (
     <aside className="flex h-full w-72 flex-col overflow-y-auto border-r border-border bg-white">
-      <div className="border-b border-border px-6 py-5">
-        <BrandLogo priority />
-      </div>
-      <nav className="flex flex-col px-0">
+      <nav className="flex flex-col px-0 pt-5">
         {mainItems.map((item) => (
           <SidebarItem
             key={item.title}

@@ -6,7 +6,6 @@ import Sidebar from "@/components/layout/sidebar/Sidebar";
 import SearchBar from "./search-bar";
 import NotificationBell from "./notification";
 import ProfileSection from "./profile-section";
-import BrandLogo from "@/components/common/BrandLogo";
 import RestaurantPicker from "@/components/common/RestaurantPicker";
 
 export default function Navbar() {
@@ -26,7 +25,7 @@ export default function Navbar() {
             >
               <Menu size={20} />
             </button>
-            <BrandLogo className="hidden xl:flex" />
+
           </div>
 
           {/* CENTER */}

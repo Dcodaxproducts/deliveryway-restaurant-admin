@@ -37,13 +37,13 @@ export default function TypographySection({ register, values: _values, getError 
       id: "heading-font-family",
       label: "Heading Font Family",
       name: "restaurant.branding.theme.headingFontFamily",
-      placeholder: "Arimo",
+      placeholder: "var(--font-onest), 'Onest', 'Onest Fallback', ui-sans-serif, system-ui"
     },
     {
       id: "body-font-family",
       label: "Body Font Family",
       name: "restaurant.branding.theme.fontFamily",
-      placeholder: "Onest",
+      placeholder: "var(--font-onest), 'Onest', 'Onest Fallback', ui-sans-serif, system-ui"
     },
     {
       id: "border-radius",

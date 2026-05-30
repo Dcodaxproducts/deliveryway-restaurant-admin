@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Check, Store } from "lucide-react";
+import BrandLogo from "@/components/common/BrandLogo";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useGetRestaurants } from "@/hooks/useRestaurants";
@@ -138,9 +139,7 @@ export default function RestaurantPicker() {
         title={branchId ? `Branch ID: ${branchId}` : branchLabel}
         className="hidden h-[56px] max-w-[340px] items-center gap-3 rounded-xl bg-primary/10 px-4 text-left text-sm text-primary ring-1 ring-primary/20 transition hover:bg-primary/15 md:flex"
       >
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-primary shadow-sm">
-          <Store size={18} />
-        </span>
+        <BrandLogo className="shrink-0 gap-0" imageClassName="size-9 rounded-full bg-white shadow-sm" showName={false} />
         <span className="min-w-0">
           <span className="block text-xs font-semibold uppercase tracking-wide text-primary/80">
             Branch scope
@@ -159,8 +158,11 @@ export default function RestaurantPicker() {
         onClick={() => setOpen((prev) => !prev)}
         className="flex h-[56px] w-full items-center justify-between gap-2 rounded-xl bg-muted px-4 text-sm transition-all hover:bg-primary/10"
       >
-        <span className="font-medium truncate text-gray-800">
-          {renderLabel()}
+        <span className="flex min-w-0 items-center gap-3">
+          <BrandLogo className="shrink-0 gap-0" imageClassName="size-9 rounded-full bg-white shadow-sm" showName={false} />
+          <span className="truncate font-medium text-gray-800">
+            {renderLabel()}
+          </span>
         </span>
         <ChevronDown
           size={18}
