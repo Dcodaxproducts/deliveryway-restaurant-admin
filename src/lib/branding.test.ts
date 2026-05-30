@@ -131,6 +131,44 @@ describe("branding helpers", () => {
     expect(payload.restaurant.branding.theme.primaryColor).toBe("#E4002B");
   });
 
+
+  it("backend customDomain is preserved in normalized payload", () => {
+    const payload = normalizeBrandingApiResponse({
+      success: true,
+      data: {
+        name: "Custom Domain Restaurant",
+        slug: "custom-domain-restaurant",
+        customDomain: "restaurant.example.com",
+      },
+      message: "ok",
+    });
+
+    expect(payload.restaurant.customDomain).toBe("restaurant.example.com");
+  });
+
+  it("missing customDomain falls back to empty string", () => {
+    const missingCustomDomainPayload = normalizeBrandingApiResponse({
+      success: true,
+      data: {
+        name: "Missing Domain Restaurant",
+        slug: "missing-domain-restaurant",
+      },
+      message: "ok",
+    });
+    const nullCustomDomainPayload = normalizeBrandingApiResponse({
+      success: true,
+      data: {
+        name: "Null Domain Restaurant",
+        slug: "null-domain-restaurant",
+        customDomain: null,
+      },
+      message: "ok",
+    });
+
+    expect(missingCustomDomainPayload.restaurant.customDomain).toBe("");
+    expect(nullCustomDomainPayload.restaurant.customDomain).toBe("");
+  });
+
   it("normalizes API response with data restaurant wrapper", () => {
     const payload = normalizeBrandingApiResponse({
       data: {
@@ -254,6 +292,44 @@ describe("branding helpers", () => {
     expect(payload.restaurant.branding.checkout.successColor).toBe("#00AA44");
     expect(payload.restaurant.branding.assets.logoUrl).toBe("https://example.com/logo.png");
     expect(payload.restaurant.branding.logo.light).toBe("https://example.com/light.png");
+  });
+
+
+  it("partial backend branding falls back for missing accent background and text colors", () => {
+    const payload = normalizeBrandingApiResponse({
+      success: true,
+      data: {
+        name: "Partial Brand",
+        slug: "partial-brand",
+        branding: {
+          primaryColor: "#E4002B",
+          secondaryColor: "#FFFFFF",
+          fontFamily: "Poppins",
+        },
+      },
+      message: "ok",
+    });
+
+    expect(payload.restaurant.branding.theme.primaryColor).toBe("#E4002B");
+    expect(payload.restaurant.branding.theme.secondaryColor).toBe("#FFFFFF");
+    expect(payload.restaurant.branding.theme.fontFamily).toBe("Poppins");
+    expect(payload.restaurant.branding.theme.accentColor).toBe(defaultTheme.accentColor);
+    expect(payload.restaurant.branding.theme.backgroundColor).toBe(defaultTheme.backgroundColor);
+    expect(payload.restaurant.branding.theme.textColor).toBe(defaultTheme.textColor);
+  });
+
+  it("backend empty socialMedia becomes safe defaults", () => {
+    const payload = normalizeBrandingApiResponse({
+      success: true,
+      data: {
+        name: "Empty Social Restaurant",
+        slug: "empty-social-restaurant",
+        socialMedia: {},
+      },
+      message: "ok",
+    });
+
+    expect(payload.restaurant.socialMedia).toEqual(defaultRestaurant.socialMedia);
   });
 
   it("missing backend fields fall back to defaults", () => {

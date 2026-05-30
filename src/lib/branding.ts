@@ -250,7 +250,7 @@ export const buildRestaurantBrandingPatchPayload = (
     slug: restaurant.slug,
     logoUrl: restaurant.logoUrl,
     coverImage: restaurant.coverImage,
-    ...(restaurant.customDomain ? { customDomain: restaurant.customDomain } : {}),
+    customDomain: restaurant.customDomain ?? "",
     tagline: restaurant.tagline,
     bio: restaurant.bio,
     supportContact: restaurant.supportContact,
@@ -300,7 +300,7 @@ export const normalizeBrandingPayload = (input: unknown): RestaurantBrandingPayl
     restaurant: {
       ...(getOptionalString(restaurant, "id") ? { id: getOptionalString(restaurant, "id") } : {}),
       ...(getOptionalString(restaurant, "tenantId") ? { tenantId: getOptionalString(restaurant, "tenantId") } : {}),
-      ...(getOptionalString(restaurant, "customDomain") ? { customDomain: getOptionalString(restaurant, "customDomain") } : {}),
+      customDomain: getString(restaurant, "customDomain", defaults.restaurant.customDomain ?? ""),
       ...(settings ? { settings } : {}),
       name: getString(restaurant, "name", defaults.restaurant.name, (value) => value.trim().length > 0),
       slug: getString(restaurant, "slug", defaults.restaurant.slug, (value) => value.trim().length > 0),

@@ -63,6 +63,12 @@ const profileFields: TextFieldConfig[] = [
     name: "restaurant.tagline",
     placeholder: "Fast, reliable restaurant delivery",
   },
+  {
+    id: "restaurant-custom-domain",
+    label: "Custom Domain",
+    name: "restaurant.customDomain",
+    placeholder: "restaurant.example.com",
+  },
 ];
 
 const profileTextAreas: TextAreaFieldConfig[] = [

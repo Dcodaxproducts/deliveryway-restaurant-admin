@@ -4,6 +4,7 @@ export const DEFAULT_RESTAURANT_BRANDING_PAYLOAD: RestaurantBrandingPayload = {
   restaurant: {
     name: "Deliveryway Restaurant",
     slug: "deliveryway-restaurant",
+    customDomain: "",
     logoUrl: "/logo.png",
     coverImage: "/profile.jpg",
     tagline: "Fast, reliable restaurant delivery",
