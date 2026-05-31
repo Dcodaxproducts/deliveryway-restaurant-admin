@@ -112,8 +112,11 @@ export const normalizeUser = (
   const restaurant = getRecordValue(source, "restaurant");
   const branch = getRecordValue(source, "branch");
 
+  const branchRestaurant = getRecordValue(branch, "restaurant");
+
   const tenantId =
     getStringValue(source, "tenantId") ??
+    getStringValue(source, "tenant_id") ??
     getStringValue(source, "tid") ??
     getStringValue(tenant, "id") ??
     fallback?.tenantId ??
@@ -121,13 +124,18 @@ export const normalizeUser = (
 
   const restaurantId =
     getStringValue(source, "restaurantId") ??
+    getStringValue(source, "restaurant_id") ??
     getStringValue(source, "rid") ??
     getStringValue(restaurant, "id") ??
+    getStringValue(branch, "restaurantId") ??
+    getStringValue(branch, "restaurant_id") ??
+    getStringValue(branchRestaurant, "id") ??
     fallback?.restaurantId ??
     null;
 
   const branchId =
     getStringValue(source, "branchId") ??
+    getStringValue(source, "branch_id") ??
     getStringValue(source, "bid") ??
     getStringValue(branch, "id") ??
     fallback?.branchId ??
