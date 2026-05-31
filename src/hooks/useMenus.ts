@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { cleanParams } from "@/lib/params";
 import { toast } from "sonner";
 import {
   addItemToMenu,
@@ -195,14 +196,10 @@ export const useCreateMenuVariation = () => {
 export const useGetMenuVariations = (
   params?: GetMenuVariationsParams
 ) => {
-  const cleanParams = Object.fromEntries(
-    Object.entries(params || {}).filter(([, value]) => {
-      return value !== undefined && value !== null && value !== "";
-    })
-  );
+  const queryParams = cleanParams(params);
 
   return useQuery({
-    queryKey: ["menu-variations", cleanParams],
+    queryKey: ["menu-variations", queryParams],
     queryFn: () => getMenuVariations(params),
     enabled: Boolean(params?.restaurantId),
   });

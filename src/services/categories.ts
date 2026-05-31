@@ -1,17 +1,10 @@
 import api from "@/lib/axios";
+import { cleanParams } from "@/lib/params";
 import {
   BulkMenuCategoriesValues,
   MenuCategoryValues,
   UpdateMenuCategoryValues,
 } from "@/validations/categories";
-
-const compactParams = (params?: Record<string, any>) => {
-  return Object.fromEntries(
-    Object.entries(params || {}).filter(([, value]) => {
-      return value !== undefined && value !== null && value !== "";
-    })
-  );
-};
 
 /**
  * ==============================
@@ -40,9 +33,11 @@ export const getMenuCategories = async (params?: {
 }) => {
   // Do not send branchId to the category list endpoint. Branch admins are scoped by JWT,
   // and branch category changes go through /menu/branch-overrides/categories.
-  const { branchId: _branchId, ...allowedParams } = params || {};
+  const allowedParams = { ...params };
+  delete allowedParams.branchId;
+
   const { data } = await api.get("/menu/categories", {
-    params: compactParams(allowedParams),
+    params: cleanParams(allowedParams),
   });
   return data;
 };

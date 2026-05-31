@@ -1,4 +1,5 @@
 import api from "@/lib/axios";
+import { cleanParams } from "@/lib/params";
 import {
   BulkMenuItemsValues,
   GetMenuVariationsParams,
@@ -15,14 +16,6 @@ import {
   UpdateModifierValues,
   UpdateRestaurantMenuValues,
 } from "@/validations/menus";
-
-const compactParams = (params?: Record<string, any>) => {
-  return Object.fromEntries(
-    Object.entries(params || {}).filter(([, value]) => {
-      return value !== undefined && value !== null && value !== "";
-    })
-  );
-};
 
 /**
  * ==============================
@@ -49,9 +42,11 @@ export const getMenuItems = async (params?: {
   // The menu catalog list endpoints are restaurant/catalog reads.
   // Backend validation rejects branchId here; branch-specific behavior is handled by JWT scope
   // and the /menu/branch-overrides/* endpoints.
-  const { branchId: _branchId, ...allowedParams } = params || {};
+  const allowedParams = { ...params };
+  delete allowedParams.branchId;
+
   const { data } = await api.get("/menu/items", {
-    params: compactParams(allowedParams),
+    params: cleanParams(allowedParams),
   });
   return data;
 };
@@ -88,14 +83,8 @@ export const createMenuVariation = async (payload: MenuVariationValues) => {
 export const getMenuVariations = async (
   params?: GetMenuVariationsParams
 ) => {
-  const cleanParams = Object.fromEntries(
-    Object.entries(params || {}).filter(([, value]) => {
-      return value !== undefined && value !== null && value !== "";
-    })
-  );
-
   const response = await api.get("/menu/variations", {
-    params: cleanParams,
+    params: cleanParams(params),
   });
 
   return response.data;
@@ -222,9 +211,11 @@ export const getRestaurantMenus = async (params?: {
   isActive?: boolean;
   isDefault?: boolean;
 }) => {
-  const { branchId: _branchId, ...allowedParams } = (params || {}) as Record<string, any>;
+  const allowedParams = { ...(params as Record<string, any> | undefined) };
+  delete allowedParams.branchId;
+
   const { data } = await api.get("/menus", {
-    params: compactParams(allowedParams),
+    params: cleanParams(allowedParams),
   });
   return data;
 };

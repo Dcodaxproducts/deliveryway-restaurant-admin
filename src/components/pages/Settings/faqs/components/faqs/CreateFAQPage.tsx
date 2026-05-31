@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import {
   Bold,
   Italic,
@@ -16,6 +17,33 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCreateFaq, useGetFaq, useUpdateFaq } from "@/hooks/useFaqs";
 
 type VisibilityUI = "all" | "logged-in";
+
+type FAQFormValues = {
+  question: string;
+  category: string;
+  answer: string;
+  status: boolean;
+  visibility: VisibilityUI;
+};
+
+const defaultFaqFormValues: FAQFormValues = {
+  question: "",
+  category: "",
+  answer: "",
+  status: false,
+  visibility: "all",
+};
+
+const editorTools = [
+  { icon: Bold, label: "Bold" },
+  { icon: Italic, label: "Italic" },
+  { icon: List, label: "List" },
+  { icon: LinkIcon, label: "Link" },
+  { icon: ImageIcon, label: "Image" },
+] as const;
+
+const activeVisibilityClass = "border-[#F1D6D8] bg-white";
+const inactiveVisibilityClass = "border-transparent bg-white hover:border-[#EAECF0]";
 
 export default function CreateFAQPage() {
   const router = useRouter();
@@ -40,12 +68,19 @@ export default function CreateFAQPage() {
   const createFaqMutation = useCreateFaq();
   const updateFaqMutation = useUpdateFaq();
 
-  const [question, setQuestion] = useState("");
-  const [category, setCategory] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [status, setStatus] = useState(false);
-  const [visibility, setVisibility] = useState<VisibilityUI>("all");
+  const { control, register, reset, setValue } = useForm<FAQFormValues>({
+    defaultValues: defaultFaqFormValues,
+    mode: "onChange",
+  });
   const [initialized, setInitialized] = useState(false);
+
+  const {
+    question = "",
+    category = "",
+    answer = "",
+    status = false,
+    visibility = "all",
+  } = useWatch({ control });
 
   useEffect(() => {
     if (!isEditMode) {
@@ -55,13 +90,15 @@ export default function CreateFAQPage() {
 
     if (!faqData || initialized) return;
 
-    setQuestion(faqData?.question || "");
-    setCategory(faqData?.category || "");
-    setAnswer(faqData?.answer || "");
-    setStatus(faqData?.status === "PUBLISHED");
-    setVisibility(faqData?.visibility === "PRIVATE" ? "logged-in" : "all");
+    reset({
+      question: faqData?.question || "",
+      category: faqData?.category || "",
+      answer: faqData?.answer || "",
+      status: faqData?.status === "PUBLISHED",
+      visibility: faqData?.visibility === "PRIVATE" ? "logged-in" : "all",
+    });
     setInitialized(true);
-  }, [faqData, initialized, isEditMode]);
+  }, [faqData, initialized, isEditMode, reset]);
 
   const isSubmitting =
     createFaqMutation.isPending || updateFaqMutation.isPending;
@@ -110,6 +147,10 @@ export default function CreateFAQPage() {
 
   const handlePrimaryAction = () => {
     handleSubmit(true);
+  };
+
+  const selectVisibility = (nextVisibility: VisibilityUI) => {
+    setValue("visibility", nextVisibility, { shouldDirty: true, shouldValidate: true });
   };
 
   if (isEditMode && isFaqLoading && !initialized) {
@@ -167,8 +208,7 @@ export default function CreateFAQPage() {
                 <input
                   type="text"
                   placeholder="e.g. How do I track my order in real-time?"
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
+                  {...register("question")}
                   className="h-12 w-full rounded-xl border border-[#E4E7EC] bg-[#F9FAFB] px-4 text-sm text-[#101828] outline-none placeholder:text-[#98A2B3] focus:border-[#D0D5DD] focus:bg-white"
                 />
               </div>
@@ -180,8 +220,7 @@ export default function CreateFAQPage() {
                 </label>
                 <div className="relative">
                   <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    {...register("category")}
                     className="h-12 w-full appearance-none rounded-xl border border-[#E4E7EC] bg-[#F9FAFB] px-4 pr-10 text-sm text-[#101828] outline-none focus:border-[#D0D5DD] focus:bg-white"
                   >
                     <option value="">Select a category</option>
@@ -206,19 +245,12 @@ export default function CreateFAQPage() {
                 <div className="overflow-hidden rounded-xl border border-[#E4E7EC] bg-[#F9FAFB]">
                   {/* Toolbar */}
                   <div className="flex items-center gap-1 border-b border-[#E4E7EC] px-3 py-2">
-                    {[
-                      { icon: Bold, label: "Bold" },
-                      { icon: Italic, label: "Italic" },
-                      { icon: List, label: "List" },
-                      { icon: LinkIcon, label: "Link" },
-                      { icon: ImageIcon, label: "Image" },
-                    ].map((item, index) => {
-                      const Icon = item.icon;
+                    {editorTools.map(({ icon: Icon, label }) => {
                       return (
                         <button
-                          key={index}
+                          key={label}
                           type="button"
-                          title={item.label}
+                          title={label}
                           className="inline-flex size-8 items-center justify-center rounded-lg text-[#667085] transition hover:bg-white hover:text-[#344054]"
                         >
                           <Icon size={15} />
@@ -229,8 +261,7 @@ export default function CreateFAQPage() {
 
                   <textarea
                     placeholder="Provide a detailed answer here..."
-                    value={answer}
-                    onChange={(e) => setAnswer(e.target.value)}
+                    {...register("answer")}
                     className="min-h-[220px] w-full resize-none bg-[#F9FAFB] px-4 py-3 text-sm leading-6 text-[#101828] outline-none placeholder:text-[#98A2B3]"
                   />
                 </div>
@@ -268,7 +299,7 @@ export default function CreateFAQPage() {
 
                     <button
                       type="button"
-                      onClick={() => setStatus((prev) => !prev)}
+                      onClick={() => setValue("status", !status, { shouldDirty: true })}
                       className={`relative h-6 w-11 rounded-full transition ${
                         status ? "bg-[#C1121F]" : "bg-[#D0D5DD]"
                       }`}
@@ -292,11 +323,9 @@ export default function CreateFAQPage() {
                 <div className="mt-3 space-y-3">
                   <button
                     type="button"
-                    onClick={() => setVisibility("all")}
+                    onClick={() => selectVisibility("all")}
                     className={`w-full rounded-xl border px-4 py-3 text-left transition ${
-                      visibility === "all"
-                        ? "border-[#F1D6D8] bg-white"
-                        : "border-transparent bg-white hover:border-[#EAECF0]"
+                      visibility === "all" ? activeVisibilityClass : inactiveVisibilityClass
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -325,11 +354,9 @@ export default function CreateFAQPage() {
 
                   <button
                     type="button"
-                    onClick={() => setVisibility("logged-in")}
+                    onClick={() => selectVisibility("logged-in")}
                     className={`w-full rounded-xl border px-4 py-3 text-left transition ${
-                      visibility === "logged-in"
-                        ? "border-[#F1D6D8] bg-white"
-                        : "border-transparent bg-white hover:border-[#EAECF0]"
+                      visibility === "logged-in" ? activeVisibilityClass : inactiveVisibilityClass
                     }`}
                   >
                     <div className="flex items-start gap-3">
