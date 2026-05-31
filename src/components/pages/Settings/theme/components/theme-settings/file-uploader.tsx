@@ -46,6 +46,9 @@ export default function FileUploader({
   const previewValue = localPreviewUrl ?? trimmedValue;
   const fileInputId = `${id}-file`;
   const allTargetNames = [name, ...linkedNames];
+  const registeredField = register(name, {
+    onBlur: ({ target }) => updateAssetFields(target.value),
+  });
 
   useEffect(() => {
     return () => {
@@ -143,7 +146,7 @@ export default function FileUploader({
             placeholder="https://example.com/brand-image.png"
             aria-invalid={Boolean(error)}
             className={inputClassName}
-            {...register(name)}
+            {...registeredField}
           />
           <input
             ref={fileInputRef}

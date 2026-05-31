@@ -133,11 +133,10 @@ const socialFields: TextFieldConfig[] = [
 
 export default function StorefrontSettingsPage() {
   const {
-    branding,
+    savedBranding,
     updateBrandingDraft,
     saveBranding,
     resetBranding,
-    reloadBranding,
     isBrandingReady,
     isBrandingLoading,
     isBrandingSaving,
@@ -154,7 +153,7 @@ export default function StorefrontSettingsPage() {
     formState,
   } = useForm<BrandingFormValues>({
     resolver: zodResolver(restaurantBrandingPayloadSchema),
-    defaultValues: branding,
+    defaultValues: savedBranding,
     mode: "onBlur",
   });
 
@@ -162,8 +161,8 @@ export default function StorefrontSettingsPage() {
   const hasUnsavedChanges = formState.isDirty;
 
   useEffect(() => {
-    reset(branding);
-  }, [branding, reset]);
+    reset(savedBranding);
+  }, [reset, savedBranding]);
 
   const getError = useCallback(
     (name: FieldPath<BrandingFormValues>) => getFieldState(name, formState).error?.message,
@@ -185,8 +184,9 @@ export default function StorefrontSettingsPage() {
     toast.success("Preview applied. Save to keep these branding changes.");
   };
 
-  const handleDiscardChanges = async () => {
-    await reloadBranding();
+  const handleDiscardChanges = () => {
+    reset(savedBranding);
+    updateBrandingDraft(savedBranding);
     toast.success("Unsaved branding changes discarded.");
   };
 
