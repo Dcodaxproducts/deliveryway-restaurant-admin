@@ -3,6 +3,11 @@ import type { FieldPath, UseFormRegister, UseFormSetValue } from "react-hook-for
 import { Input } from "@/components/ui/input";
 import type { BrandingFormValues } from "@/validations/branding";
 
+import {
+  BRANDING_ERROR_COMPACT_CLASS,
+  BRANDING_LABEL_COMPACT_CLASS,
+} from "./branding-form-classes";
+
 type ColorFieldName = FieldPath<BrandingFormValues>;
 
 type ColorPickerProps = {
@@ -16,7 +21,6 @@ type ColorPickerProps = {
   error?: string;
 };
 
-const labelClassName = "text-base font-semibold text-dark";
 const descriptionClassName = "text-sm text-gray";
 const textInputClassName = "h-11 rounded-[12px] border-gray-200 font-mono text-sm uppercase";
 const colorInputClassName = "h-11 w-14 cursor-pointer rounded-[12px] border border-gray-200 bg-white p-1";
@@ -37,7 +41,7 @@ export default function ColorPicker({
     <div className="space-y-2">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <label htmlFor={`${id}-text`} className={labelClassName}>
+          <label htmlFor={`${id}-text`} className={BRANDING_LABEL_COMPACT_CLASS}>
             {label}
           </label>
           {description ? <p className={descriptionClassName}>{description}</p> : null}
@@ -66,7 +70,7 @@ export default function ColorPicker({
           />
         </div>
       </div>
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p className={BRANDING_ERROR_COMPACT_CLASS}>{error}</p> : null}
     </div>
   );
 }

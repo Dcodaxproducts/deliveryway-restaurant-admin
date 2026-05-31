@@ -1,0 +1,13 @@
+export const BRANDING_PANEL_CLASS = "rounded-lg bg-white p-4 shadow-sm lg:p-6";
+export const BRANDING_PANEL_SPACED_CLASS = `${BRANDING_PANEL_CLASS} space-y-6`;
+export const BRANDING_SECTION_TITLE_CLASS = "text-[20px] font-semibold text-dark";
+export const BRANDING_LABEL_CLASS = "mb-2 block text-base font-semibold text-dark";
+export const BRANDING_LABEL_COMPACT_CLASS = "block text-base font-semibold text-dark";
+export const BRANDING_INPUT_CLASS = "h-[52px] rounded-[12px] border-gray-200 focus:ring-primary";
+export const BRANDING_ERROR_CLASS = "mt-2 text-sm text-destructive";
+export const BRANDING_ERROR_COMPACT_CLASS = "text-sm text-destructive";
+export const BRANDING_ACTION_BUTTON_CLASS = "h-11 rounded-[12px] px-5 text-sm font-semibold transition hover:-translate-y-0.5 hover:shadow-md disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none";
+export const BRANDING_SMALL_ACTION_BUTTON_CLASS = "inline-flex h-10 items-center justify-center gap-2 rounded-[10px] border border-gray-200 bg-white px-3 text-sm font-semibold text-dark transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:text-primary hover:shadow-sm disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none";
+export const BRANDING_SECONDARY_BUTTON_CLASS = `${BRANDING_ACTION_BUTTON_CLASS} border border-gray-200 bg-white text-dark hover:border-primary/30 hover:bg-primary/5 hover:text-primary`;
+export const BRANDING_DESTRUCTIVE_BUTTON_CLASS = `${BRANDING_ACTION_BUTTON_CLASS} border border-destructive/30 bg-white text-destructive hover:border-destructive/50 hover:bg-destructive/5`;
+export const BRANDING_PRIMARY_BUTTON_CLASS = `${BRANDING_ACTION_BUTTON_CLASS} bg-primary text-white hover:bg-primary/90 hover:shadow-primary/20`;

@@ -3,6 +3,7 @@ import { Palette } from "lucide-react";
 
 import type { BrandingFormValues } from "@/validations/branding";
 
+import { BRANDING_PANEL_SPACED_CLASS, BRANDING_SECTION_TITLE_CLASS } from "./branding-form-classes";
 import ColorPicker from "./color-picker";
 
 type ColorSchemeSectionProps = {
@@ -20,9 +21,7 @@ type ColorFieldConfig = {
   value: string;
 };
 
-const panelClassName = "bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6";
-const sectionTitleClassName = "text-[20px] font-semibold text-dark";
-const colorGroupClassName = "rounded-[16px] border border-gray-100 p-4 space-y-5";
+const colorGroupClassName = "space-y-5 rounded-[16px] border border-gray-100 p-4";
 const colorGroupTitleClassName = "text-base font-semibold text-dark";
 const colorGroupDescriptionClassName = "text-sm text-gray";
 
@@ -173,10 +172,10 @@ export default function ColorSchemeSection({ register, setValue, values, getErro
   );
 
   return (
-    <div className={panelClassName}>
+    <div className={BRANDING_PANEL_SPACED_CLASS}>
       <div className="flex items-center gap-3">
         <Palette className="text-gray-500" />
-        <h3 className={sectionTitleClassName}>Color Scheme</h3>
+        <h3 className={BRANDING_SECTION_TITLE_CLASS}>Color Scheme</h3>
       </div>
       <div className={colorGroupClassName}>
         <div>

@@ -4,6 +4,7 @@ import { Image as ImageIcon } from "lucide-react";
 import { DEFAULT_RESTAURANT_BRANDING_PAYLOAD } from "@/config/default-branding";
 import type { BrandingFormValues } from "@/validations/branding";
 
+import { BRANDING_PANEL_SPACED_CLASS, BRANDING_SECTION_TITLE_CLASS } from "./branding-form-classes";
 import FileUploader from "./file-uploader";
 
 type BrandAssetsSectionProps = {
@@ -22,8 +23,6 @@ type AssetFieldConfig = {
   value: string;
 };
 
-const panelClassName = "bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6";
-const sectionTitleClassName = "text-[20px] font-semibold text-dark";
 const defaultBranding = DEFAULT_RESTAURANT_BRANDING_PAYLOAD.restaurant.branding;
 
 const getLinkedNames = (
@@ -107,10 +106,10 @@ export default function BrandAssetsSection({ register, setValue, values, getErro
   ];
 
   return (
-    <div className={panelClassName}>
+    <div className={BRANDING_PANEL_SPACED_CLASS}>
       <div className="flex items-center gap-3">
         <ImageIcon className="text-gray-500" />
-        <h3 className={sectionTitleClassName}>Brand Assets</h3>
+        <h3 className={BRANDING_SECTION_TITLE_CLASS}>Brand Assets</h3>
       </div>
       {assetFields.map(({ id, title, recommendation, name, linkedNames, value }) => (
         <FileUploader

@@ -1,6 +1,8 @@
 import type { BrandingThemeMode } from "@/types/branding";
 import type { BrandingFormValues } from "@/validations/branding";
 
+import { BRANDING_PANEL_CLASS } from "./branding-form-classes";
+
 type PreviewSectionProps = {
   values: BrandingFormValues;
 };
@@ -42,7 +44,7 @@ export default function PreviewSection({ values }: PreviewSectionProps) {
   const buttonRadius = getButtonRadius(theme.buttonStyle, theme.borderRadius);
 
   return (
-    <div className="rounded-lg bg-white p-4 shadow-sm md:p-6">
+    <div className={BRANDING_PANEL_CLASS}>
       <div className="mb-[24px] flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-base text-dark">Preview</h3>
         <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">

@@ -4,6 +4,14 @@ import { Type } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { BrandingFormValues } from "@/validations/branding";
 
+import {
+  BRANDING_ERROR_CLASS,
+  BRANDING_INPUT_CLASS,
+  BRANDING_LABEL_CLASS,
+  BRANDING_PANEL_CLASS,
+  BRANDING_SECTION_TITLE_CLASS,
+} from "./branding-form-classes";
+
 type TypographySectionProps = {
   register: UseFormRegister<BrandingFormValues>;
   values: BrandingFormValues;
@@ -35,14 +43,9 @@ const fontFamilyOptions = [
   { label: "Serif", value: "Georgia, Cambria, 'Times New Roman', Times, serif" },
 ];
 
-const panelClassName = "bg-white p-4 lg:p-6 rounded-lg shadow-sm";
-const labelClassName = "block text-base font-semibold text-dark mb-2";
-const inputClassName = "h-[52px] border-gray-200 rounded-[12px] focus:ring-primary";
 const selectClassName = "h-[52px] w-full rounded-[12px] border border-gray-200 bg-white px-3 text-base outline-none focus:ring-2 focus:ring-primary/20";
 
-export default function TypographySection({ register, values: _values, getError }: TypographySectionProps) {
-  void _values;
-
+export default function TypographySection({ register, getError }: TypographySectionProps) {
   const textFields: TextFieldConfig[] = [
     {
       id: "border-radius",
@@ -98,30 +101,30 @@ export default function TypographySection({ register, values: _values, getError 
   ];
 
   return (
-    <div className={panelClassName}>
+    <div className={BRANDING_PANEL_CLASS}>
       <div className="mb-6 flex items-center gap-3">
         <Type className="text-gray-500" />
-        <h3 className="text-[20px] font-semibold text-dark">Typography & Layout</h3>
+        <h3 className={BRANDING_SECTION_TITLE_CLASS}>Typography & Layout</h3>
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {textFields.map(({ id, label, name, placeholder }) => (
           <div key={name}>
-            <label htmlFor={id} className={labelClassName}>
+            <label htmlFor={id} className={BRANDING_LABEL_CLASS}>
               {label}
             </label>
             <Input
               id={id}
               placeholder={placeholder}
               aria-invalid={Boolean(getError(name))}
-              className={inputClassName}
+              className={BRANDING_INPUT_CLASS}
               {...register(name)}
             />
-            {getError(name) ? <p className="mt-2 text-sm text-destructive">{getError(name)}</p> : null}
+            {getError(name) ? <p className={BRANDING_ERROR_CLASS}>{getError(name)}</p> : null}
           </div>
         ))}
         {selectFields.map(({ id, label, name, options }) => (
           <div key={name}>
-            <label htmlFor={id} className={labelClassName}>
+            <label htmlFor={id} className={BRANDING_LABEL_CLASS}>
               {label}
             </label>
             <select id={id} className={selectClassName} {...register(name)}>
@@ -131,7 +134,7 @@ export default function TypographySection({ register, values: _values, getError 
                 </option>
               ))}
             </select>
-            {getError(name) ? <p className="mt-2 text-sm text-destructive">{getError(name)}</p> : null}
+            {getError(name) ? <p className={BRANDING_ERROR_CLASS}>{getError(name)}</p> : null}
           </div>
         ))}
       </div>

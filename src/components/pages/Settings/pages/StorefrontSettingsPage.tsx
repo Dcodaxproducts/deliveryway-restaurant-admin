@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 import type { FieldPath } from "react-hook-form";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
@@ -10,6 +10,16 @@ import Container from "@/components/common/Container";
 import Header from "@/components/common/PageHeader";
 import RestaurantPicker from "@/components/common/RestaurantPicker";
 import BrandAssetsSection from "@/components/pages/Settings/theme/components/theme-settings/brand-assets-section";
+import {
+  BRANDING_DESTRUCTIVE_BUTTON_CLASS,
+  BRANDING_ERROR_CLASS,
+  BRANDING_INPUT_CLASS,
+  BRANDING_LABEL_CLASS,
+  BRANDING_PANEL_CLASS,
+  BRANDING_PRIMARY_BUTTON_CLASS,
+  BRANDING_SECONDARY_BUTTON_CLASS,
+  BRANDING_SECTION_TITLE_CLASS,
+} from "@/components/pages/Settings/theme/components/theme-settings/branding-form-classes";
 import ColorSchemeSection from "@/components/pages/Settings/theme/components/theme-settings/color-scheme-section";
 import PreviewSection from "@/components/pages/Settings/theme/components/theme-settings/preview-section";
 import TypographySection from "@/components/pages/Settings/theme/components/theme-settings/typography-section";
@@ -37,15 +47,7 @@ type TextAreaFieldConfig = {
   placeholder: string;
 };
 
-const panelClassName = "rounded-lg bg-white p-4 shadow-sm lg:p-6";
-const sectionTitleClassName = "text-[20px] font-semibold text-dark";
-const labelClassName = "mb-2 block text-base font-semibold text-dark";
-const inputClassName = "h-[52px] rounded-[12px] border-gray-200 focus:ring-primary";
 const textareaClassName = "min-h-[112px] rounded-[12px] border-gray-200 focus:ring-primary";
-const buttonClassName = "h-11 rounded-[12px] px-5 text-sm font-semibold transition hover:-translate-y-0.5 hover:shadow-md disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none";
-const secondaryButtonClassName = `${buttonClassName} border border-gray-200 bg-white text-dark hover:border-primary/30 hover:bg-primary/5 hover:text-primary`;
-const destructiveButtonClassName = `${buttonClassName} border border-destructive/30 bg-white text-destructive hover:bg-destructive/5 hover:border-destructive/50`;
-const primaryButtonClassName = `${buttonClassName} bg-primary text-white hover:bg-primary/90 hover:shadow-primary/20`;
 
 const profileFields: TextFieldConfig[] = [
   {
@@ -148,7 +150,7 @@ export default function StorefrontSettingsPage() {
     handleSubmit,
     reset,
     setValue,
-    watch,
+    control,
     getFieldState,
     formState,
   } = useForm<BrandingFormValues>({
@@ -157,7 +159,7 @@ export default function StorefrontSettingsPage() {
     mode: "onBlur",
   });
 
-  const watchedValues = watch();
+  const watchedValues = useWatch({ control }) as BrandingFormValues;
   const hasUnsavedChanges = formState.isDirty;
 
   useEffect(() => {
@@ -201,7 +203,7 @@ export default function StorefrontSettingsPage() {
 
   const renderTextField = ({ id, label, name, placeholder, inputMode = "text" }: TextFieldConfig) => (
     <div key={name}>
-      <label htmlFor={id} className={labelClassName}>
+      <label htmlFor={id} className={BRANDING_LABEL_CLASS}>
         {label}
       </label>
       <Input
@@ -209,16 +211,16 @@ export default function StorefrontSettingsPage() {
         type={inputMode === "email" ? "email" : inputMode === "url" ? "url" : inputMode === "tel" ? "tel" : "text"}
         placeholder={placeholder}
         aria-invalid={Boolean(getError(name))}
-        className={inputClassName}
+        className={BRANDING_INPUT_CLASS}
         {...register(name)}
       />
-      {getError(name) ? <p className="mt-2 text-sm text-destructive">{getError(name)}</p> : null}
+      {getError(name) ? <p className={BRANDING_ERROR_CLASS}>{getError(name)}</p> : null}
     </div>
   );
 
   const renderTextAreaField = ({ id, label, name, placeholder }: TextAreaFieldConfig) => (
     <div key={name} className="md:col-span-2">
-      <label htmlFor={id} className={labelClassName}>
+      <label htmlFor={id} className={BRANDING_LABEL_CLASS}>
         {label}
       </label>
       <Textarea
@@ -228,7 +230,7 @@ export default function StorefrontSettingsPage() {
         className={textareaClassName}
         {...register(name)}
       />
-      {getError(name) ? <p className="mt-2 text-sm text-destructive">{getError(name)}</p> : null}
+      {getError(name) ? <p className={BRANDING_ERROR_CLASS}>{getError(name)}</p> : null}
     </div>
   );
 
@@ -248,7 +250,7 @@ export default function StorefrontSettingsPage() {
         <div className="flex flex-wrap items-center justify-end gap-3">
           <button
             type="button"
-            className={secondaryButtonClassName}
+            className={BRANDING_SECONDARY_BUTTON_CLASS}
             disabled={!isBrandingReady || isBrandingBusy}
             onClick={handleApplyPreview}
           >
@@ -257,7 +259,7 @@ export default function StorefrontSettingsPage() {
           {hasUnsavedChanges ? (
             <button
               type="button"
-              className={secondaryButtonClassName}
+              className={BRANDING_SECONDARY_BUTTON_CLASS}
               disabled={!isBrandingReady || isBrandingBusy}
               onClick={handleDiscardChanges}
             >
@@ -266,19 +268,19 @@ export default function StorefrontSettingsPage() {
           ) : null}
           <button
             type="button"
-            className={destructiveButtonClassName}
+            className={BRANDING_DESTRUCTIVE_BUTTON_CLASS}
             disabled={!isBrandingReady || isBrandingBusy}
             onClick={handleResetBranding}
           >
             Reset
           </button>
-          <button type="submit" className={primaryButtonClassName} disabled={!isBrandingReady || isBrandingBusy}>
+          <button type="submit" className={BRANDING_PRIMARY_BUTTON_CLASS} disabled={!isBrandingReady || isBrandingBusy}>
             {isBrandingSaving ? "Saving..." : "Save branding"}
           </button>
         </div>
 
-        <div className={panelClassName}>
-          <h3 className={sectionTitleClassName}>Restaurant Profile</h3>
+        <div className={BRANDING_PANEL_CLASS}>
+          <h3 className={BRANDING_SECTION_TITLE_CLASS}>Restaurant Profile</h3>
           <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
             {profileFields.map(renderTextField)}
             {profileTextAreas.map(renderTextAreaField)}
@@ -286,12 +288,12 @@ export default function StorefrontSettingsPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <div className={panelClassName}>
-            <h3 className={sectionTitleClassName}>Support Contact</h3>
+          <div className={BRANDING_PANEL_CLASS}>
+            <h3 className={BRANDING_SECTION_TITLE_CLASS}>Support Contact</h3>
             <div className="mt-6 space-y-6">{supportFields.map(renderTextField)}</div>
           </div>
-          <div className={panelClassName}>
-            <h3 className={sectionTitleClassName}>Social Media</h3>
+          <div className={BRANDING_PANEL_CLASS}>
+            <h3 className={BRANDING_SECTION_TITLE_CLASS}>Social Media</h3>
             <div className="mt-6 space-y-6">{socialFields.map(renderTextField)}</div>
           </div>
         </div>
