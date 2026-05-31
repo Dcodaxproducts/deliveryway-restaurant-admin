@@ -50,9 +50,21 @@ export const resetBrandingSettings = async (restaurantId?: string | null): Promi
     return defaults;
   }
 
+  const currentBrandingSettings = await getBrandingSettings(normalizedRestaurantId);
+  const resetPayload = normalizeBrandingPayload({
+    restaurant: {
+      ...currentBrandingSettings.restaurant,
+      branding: {
+        ...defaults.restaurant.branding,
+        ...(currentBrandingSettings.restaurant.branding.extra
+          ? { extra: currentBrandingSettings.restaurant.branding.extra }
+          : {}),
+      },
+    },
+  });
   const response = await httpClient.patch<unknown, RestaurantBrandingPatchPayload>(
     getRestaurantEndpoint(normalizedRestaurantId),
-    buildRestaurantBrandingPatchPayload(defaults),
+    buildRestaurantBrandingPatchPayload(resetPayload),
   );
 
   return normalizeBrandingApiResponse(response);

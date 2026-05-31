@@ -31,6 +31,17 @@ const apiThemeKeys = [
   "showCategories",
 ] as const;
 
+const knownBackendBrandingKeys = new Set<string>([
+  ...apiThemeKeys,
+  "theme",
+  "app",
+  "checkout",
+  "assets",
+  "logo",
+  "admin",
+  "extra",
+]);
+
 const hexColorPattern = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const radiusPattern = /^(?:0|\d+(?:\.\d+)?)(?:px|rem)$/;
 
@@ -142,17 +153,25 @@ const normalizeApiRestaurantRecord = (restaurant: Record<string, unknown>): Reco
 
     return acc;
   }, {});
+  const extra = Object.entries(branding).reduce<Record<string, unknown>>((acc, [key, value]) => {
+    if (!knownBackendBrandingKeys.has(key)) {
+      acc[key] = value;
+    }
 
-  if (Object.keys(flattenedThemeValues).length === 0) {
-    return restaurant;
+    return acc;
+  }, {});
+  const normalizedBranding: Record<string, unknown> = {
+    ...branding,
+    theme: deepMergeRecords(flattenedThemeValues, getRecord(branding, "theme") ?? {}),
+  };
+
+  if (Object.keys(extra).length > 0) {
+    normalizedBranding.extra = extra;
   }
 
   return {
     ...restaurant,
-    branding: {
-      ...branding,
-      theme: deepMergeRecords(flattenedThemeValues, getRecord(branding, "theme") ?? {}),
-    },
+    branding: normalizedBranding,
   };
 };
 
@@ -254,9 +273,14 @@ export const buildRestaurantBrandingPatchPayload = (
     customDomain: restaurant.customDomain ?? "",
     tagline: restaurant.tagline,
     bio: restaurant.bio,
-    supportContact: restaurant.supportContact,
+    supportContact: {
+      email: restaurant.supportContact.email,
+      phone: restaurant.supportContact.phone,
+      whatsapp: restaurant.supportContact.whatsapp,
+    },
     socialMedia: restaurant.socialMedia,
     branding: {
+      ...(branding.extra ?? {}),
       primaryColor: theme.primaryColor,
       secondaryColor: theme.secondaryColor,
       accentColor: theme.accentColor,
@@ -294,6 +318,7 @@ export const normalizeBrandingPayload = (input: unknown): RestaurantBrandingPayl
   const logo = getRecord(branding, "logo");
   const logos = getRecord(assets, "logos");
   const admin = getRecord(branding, "admin");
+  const brandingExtra = getRecord(branding, "extra");
   const supportContact = getRecord(restaurant, "supportContact");
   const socialMedia = getRecord(restaurant, "socialMedia");
   const settings = getRecord(restaurant, "settings");
@@ -378,6 +403,7 @@ export const normalizeBrandingPayload = (input: unknown): RestaurantBrandingPayl
           previewEnabled: getBoolean(admin, "previewEnabled", defaults.restaurant.branding.admin?.previewEnabled ?? true),
           lastUpdatedBy: getString(admin, "lastUpdatedBy", defaults.restaurant.branding.admin?.lastUpdatedBy ?? ""),
         },
+        ...(brandingExtra ? { extra: brandingExtra } : {}),
       },
       socialMedia: {
         website: getString(socialMedia, "website", defaults.restaurant.socialMedia.website ?? "", isOptionalUrl),

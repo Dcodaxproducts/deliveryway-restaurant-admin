@@ -467,4 +467,103 @@ describe("branding helpers", () => {
     expect("tenant" in patchPayload).toBe(false);
     expect("settings" in patchPayload).toBe(false);
   });
+
+  it("preserves unknown backend branding keys internally", () => {
+    const payload = normalizeBrandingApiResponse({
+      data: {
+        name: "Flexible Brand",
+        slug: "flexible-brand",
+        branding: {
+          primaryColor: "#E4002B",
+          brandVersion: "v2",
+          customTokens: { badgeRadius: "20px" },
+        },
+      },
+    });
+
+    expect(payload.restaurant.branding.theme.primaryColor).toBe("#E4002B");
+    expect(payload.restaurant.branding.extra).toEqual({
+      brandVersion: "v2",
+      customTokens: { badgeRadius: "20px" },
+    });
+  });
+
+  it("patch payload spreads unknown branding keys back into branding", () => {
+    const payload = normalizeBrandingApiResponse({
+      data: {
+        name: "Flexible Patch",
+        slug: "flexible-patch",
+        branding: {
+          primaryColor: "#E4002B",
+          brandVersion: "v2",
+          customTokens: { badgeRadius: "20px" },
+        },
+      },
+    });
+    const patchPayload = buildRestaurantBrandingPatchPayload(payload);
+
+    expect(patchPayload.branding.brandVersion).toBe("v2");
+    expect(patchPayload.branding.customTokens).toEqual({ badgeRadius: "20px" });
+  });
+
+  it("patch payload does not include branding.extra", () => {
+    const payload = normalizeBrandingApiResponse({
+      data: {
+        name: "No Extra Wrapper",
+        slug: "no-extra-wrapper",
+        branding: {
+          brandVersion: "v2",
+        },
+      },
+    });
+    const patchPayload = buildRestaurantBrandingPatchPayload(payload);
+
+    expect("extra" in patchPayload.branding).toBe(false);
+  });
+
+  it("known frontend branding values override conflicting extra keys in patch payload", () => {
+    const patchPayload = buildRestaurantBrandingPatchPayload(
+      normalizeBrandingPayload({
+        restaurant: {
+          branding: {
+            extra: {
+              primaryColor: "#000000",
+              fontFamily: "Legacy",
+              brandVersion: "v2",
+            },
+            theme: {
+              primaryColor: "#123456",
+              fontFamily: "Poppins",
+            },
+          },
+        },
+      }),
+    );
+
+    expect(patchPayload.branding.primaryColor).toBe("#123456");
+    expect(patchPayload.branding.fontFamily).toBe("Poppins");
+    expect(patchPayload.branding.brandVersion).toBe("v2");
+  });
+
+  it("patch payload supportContact only includes email phone and whatsapp", () => {
+    const patchPayload = buildRestaurantBrandingPatchPayload(
+      normalizeBrandingPayload({
+        restaurant: {
+          supportContact: {
+            email: "support@example.com",
+            phone: "+10000000000",
+            whatsapp: "+19999999999",
+            address: "123 Hidden Street",
+          },
+        },
+      }),
+    );
+
+    expect(patchPayload.supportContact).toEqual({
+      email: "support@example.com",
+      phone: "+10000000000",
+      whatsapp: "+19999999999",
+    });
+    expect("address" in patchPayload.supportContact).toBe(false);
+  });
 });

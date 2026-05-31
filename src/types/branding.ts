@@ -84,6 +84,7 @@ export type RestaurantBranding = {
     previewEnabled: boolean;
     lastUpdatedBy?: string;
   };
+  extra?: Record<string, unknown>;
 };
 
 export type RestaurantSocialMedia = {
@@ -122,7 +123,7 @@ export type RestaurantBrandingPatchPayload = {
   customDomain?: string;
   tagline: string;
   bio: string;
-  supportContact: SupportContact;
+  supportContact: Pick<SupportContact, "email" | "phone" | "whatsapp">;
   socialMedia: RestaurantSocialMedia;
   branding: {
     primaryColor: string;
@@ -140,5 +141,5 @@ export type RestaurantBrandingPatchPayload = {
     checkout: BrandingCheckoutOptions;
     assets: BrandingAssetOptions;
     logo: RestaurantBranding["logo"];
-  };
+  } & Record<string, unknown>;
 };
