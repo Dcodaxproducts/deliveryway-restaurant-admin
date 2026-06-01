@@ -22,7 +22,7 @@ import {
   normalizeOpeningHoursForApi,
   type BranchFormData,
   type EditTab,
-} from "@/components/pages/Branches/forms/EditBranchForm";
+} from "@/components/pages/branches/forms/EditBranchForm";
 
 type StepConfig = {
   key: EditTab;
