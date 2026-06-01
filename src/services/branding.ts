@@ -10,17 +10,33 @@ import type { RestaurantBrandingPayload, RestaurantBrandingPatchPayload } from "
 const getRestaurantEndpoint = (restaurantId: string) =>
   `/restaurants/${encodeURIComponent(restaurantId)}`;
 
+const getCustomerHomeEndpoint = () => "/customer-app/home";
+
+export type BrandingReadSource = "restaurant" | "customer-home";
+
+type BrandingReadOptions = {
+  source?: BrandingReadSource;
+};
+
 const getDefaultBrandingSettings = (): RestaurantBrandingPayload =>
   normalizeBrandingPayload(DEFAULT_RESTAURANT_BRANDING_PAYLOAD);
 
-export const getBrandingSettings = async (restaurantId?: string | null): Promise<RestaurantBrandingPayload> => {
+export const getBrandingSettings = async (
+  restaurantId?: string | null,
+  options?: BrandingReadOptions,
+): Promise<RestaurantBrandingPayload> => {
   const normalizedRestaurantId = restaurantId?.trim();
 
   if (!normalizedRestaurantId) {
     return getDefaultBrandingSettings();
   }
 
-  const response = await httpClient.get<unknown>(getRestaurantEndpoint(normalizedRestaurantId));
+  const response = options?.source === "customer-home"
+    ? await httpClient.get<unknown>(getCustomerHomeEndpoint(), {
+      params: { restaurantId: normalizedRestaurantId },
+    })
+    : await httpClient.get<unknown>(getRestaurantEndpoint(normalizedRestaurantId));
+
   return normalizeBrandingApiResponse(response);
 };
 

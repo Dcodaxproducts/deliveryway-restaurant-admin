@@ -57,6 +57,34 @@ describe("branding service", () => {
       expect(mockedHttpClient.get).toHaveBeenCalledWith("/restaurants/restaurant-1");
     });
 
+    it("branch admin source calls GET /customer-app/home with restaurantId params", async () => {
+      mockedHttpClient.get.mockResolvedValueOnce({
+        success: true,
+        data: {
+          restaurant: {
+            id: "restaurant-1",
+            name: "Branch Visible Restaurant",
+            slug: "branch-visible-restaurant",
+          },
+          config: {
+            branding: {
+              theme: {
+                primaryColor: "#2000C2",
+              },
+            },
+          },
+        },
+      });
+
+      const result = await getBrandingSettings(" restaurant-1 ", { source: "customer-home" });
+
+      expect(mockedHttpClient.get).toHaveBeenCalledWith("/customer-app/home", {
+        params: { restaurantId: "restaurant-1" },
+      });
+      expect(result.restaurant.name).toBe("Branch Visible Restaurant");
+      expect(result.restaurant.branding.theme.primaryColor).toBe("#2000C2");
+    });
+
     it("GET normalizes backend envelope", async () => {
       mockedHttpClient.get.mockResolvedValueOnce({
         success: true,
@@ -308,5 +336,13 @@ describe("branding service", () => {
     expect(mockedHttpClient.patch.mock.calls[0][0]).toBe("/restaurants/restaurant-2");
     expect(mockedHttpClient.get.mock.calls[0][0]).not.toContain(forbiddenPrefix);
     expect(mockedHttpClient.patch.mock.calls[0][0]).not.toContain(forbiddenPrefix);
+
+    vi.clearAllMocks();
+    mockedHttpClient.get.mockResolvedValueOnce({ data: { restaurant: { name: "Home" } } });
+
+    await getBrandingSettings("restaurant-1", { source: "customer-home" });
+
+    expect(mockedHttpClient.get.mock.calls[0][0]).toBe("/customer-app/home");
+    expect(mockedHttpClient.get.mock.calls[0][0]).not.toContain(forbiddenPrefix);
   });
 });

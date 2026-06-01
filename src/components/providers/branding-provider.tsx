@@ -13,6 +13,7 @@ import { useTheme } from "next-themes";
 
 import { useAuthContext } from "@/components/providers/auth-provider";
 import { DEFAULT_RESTAURANT_BRANDING_PAYLOAD } from "@/config/default-branding";
+import { isBranchAdminRole } from "@/lib/auth";
 import { applyBrandingCssVariables, normalizeBrandingPayload } from "@/lib/branding";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
@@ -48,6 +49,7 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
   const { user } = useAuthContext();
   const { setTheme } = useTheme();
   const restaurantId = user?.restaurantId?.trim() || null;
+  const brandingReadSource = isBranchAdminRole(user?.role) ? "customer-home" : "restaurant";
   const requestIdRef = useRef(0);
   const [branding, setBranding] = useState<RestaurantBrandingPayload>(defaultBranding);
   const [savedBranding, setSavedBranding] = useState<RestaurantBrandingPayload>(defaultBranding);
@@ -73,7 +75,7 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
     setIsBrandingReady(false);
 
     try {
-      const nextBranding = await getBrandingSettings(restaurantId);
+      const nextBranding = await getBrandingSettings(restaurantId, { source: brandingReadSource });
 
       if (requestIdRef.current === requestId) {
         setBranding(nextBranding);
@@ -98,7 +100,7 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
         setIsBrandingReady(true);
       }
     }
-  }, [restaurantId]);
+  }, [brandingReadSource, restaurantId]);
 
   useEffect(() => {
     void reloadBranding();

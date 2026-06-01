@@ -175,6 +175,20 @@ const normalizeApiRestaurantRecord = (restaurant: Record<string, unknown>): Reco
   };
 };
 
+const mergeCustomerHomeBranding = (restaurant: Record<string, unknown>, source?: Record<string, unknown>) => {
+  const config = getRecord(source, "config");
+  const configBranding = getRecord(config, "branding");
+
+  if (!configBranding) {
+    return restaurant;
+  }
+
+  return {
+    ...restaurant,
+    branding: deepMergeRecords(getRecord(restaurant, "branding") ?? {}, configBranding),
+  };
+};
+
 const getApiRestaurantCandidate = (response: unknown): Record<string, unknown> | undefined => {
   if (!isRecord(response)) {
     return undefined;
@@ -182,17 +196,19 @@ const getApiRestaurantCandidate = (response: unknown): Record<string, unknown> |
 
   const directRestaurant = getRecord(response, "restaurant");
   if (directRestaurant) {
-    return directRestaurant;
+    return mergeCustomerHomeBranding(directRestaurant, response);
   }
 
   const data = getRecord(response, "data");
-  const dataRestaurant = getRecord(data, "restaurant");
+  const nestedData = getRecord(data, "data");
+  const responseData = nestedData ?? data;
+  const dataRestaurant = getRecord(responseData, "restaurant");
   if (dataRestaurant) {
-    return dataRestaurant;
+    return mergeCustomerHomeBranding(dataRestaurant, responseData);
   }
 
-  if (data && hasRestaurantPayloadFields(data)) {
-    return data;
+  if (responseData && hasRestaurantPayloadFields(responseData)) {
+    return responseData;
   }
 
   if (hasRestaurantPayloadFields(response)) {
