@@ -24,7 +24,7 @@ import {
   getReportCurrency,
   getReportHeaderContent,
   type ReportTab,
-} from "@/components/pages/reports/utils/reports-page.helpers";
+} from "@/components/pages/Reports/utils/reports-page.helpers";
 
 export default function Orders() {
   const { restaurantId, branchId, isBranchAdmin, loading: authLoading } = useAuth();

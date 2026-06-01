@@ -19,7 +19,7 @@ import {
   mapReservationToOrder,
   type Order,
   type OrderTab,
-} from "@/components/pages/orders/utils/orders-page.helpers";
+} from "@/components/pages/Orders/utils/orders-page.helpers";
 
 export default function Orders() {
   const [activeTab, setActiveTab] = useState<OrderTab>("delivery");

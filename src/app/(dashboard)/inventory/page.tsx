@@ -1,4 +1,4 @@
-import InventoryPage from "@/components/pages/inventory/pages/InventoryPage";
+import InventoryPage from "@/components/pages/Inventory/pages/InventoryPage";
 
 export default function Page() {
   return <InventoryPage />;

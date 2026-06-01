@@ -5,7 +5,7 @@ import { Pencil, Plus, Star, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import AddToCartModal from "@/components/pages/pos/cart/AddToCartModal";
+import AddToCartModal from "@/components/pages/Pos/cart/AddToCartModal";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import { useDeleteMenuItem } from "@/hooks/useMenus";
 
