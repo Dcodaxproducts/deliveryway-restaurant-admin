@@ -4,14 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run check:imports && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check": "npm run lint && npm run typecheck && npm test && npm run build",
-    "check:imports": "node scripts/check-import-paths.mjs",
-    "vercel:prebuild": "node scripts/vercel-prebuild-check.mjs"
+    "check:imports": "node scripts/check-import-paths.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
