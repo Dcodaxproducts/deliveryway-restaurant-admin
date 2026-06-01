@@ -1,4 +1,4 @@
-import AddPromotionPage from "@/components/pages/Promotions/pages/AddPromotionPage";
+import AddPromotionPage from "@/components/pages/promotions/pages/AddPromotionPage";
 
 export default function Page() {
   return <AddPromotionPage />;

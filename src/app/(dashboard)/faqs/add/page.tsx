@@ -1,4 +1,4 @@
-import AddFaqPage from "@/components/pages/Settings/faqs/pages/AddFaqPage";
+import AddFaqPage from "@/components/pages/settings/faqs/pages/AddFaqPage";
 
 export default function Page() {
   return <AddFaqPage />;

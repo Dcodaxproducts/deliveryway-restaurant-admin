@@ -1,4 +1,4 @@
-import DeliverymanTrashPage from "@/components/pages/Deliverymen/pages/DeliverymanTrashPage";
+import DeliverymanTrashPage from "@/components/pages/deliverymen/pages/DeliverymanTrashPage";
 
 export default function Page() {
   return <DeliverymanTrashPage />;
