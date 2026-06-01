@@ -104,9 +104,9 @@ export default function ProfileSection() {
           {/* Logout */}
           <DropdownMenuItem
             onClick={handleLogout}
-            className="mx-2 my-2 flex items-center gap-3 px-3 py-3 text-sm text-red-600 rounded-xl cursor-pointer hover:bg-red-50 hover:text-red-700 focus:bg-red-50 focus:text-red-700 [&_svg]:text-red-600"
+            className="mx-2 my-2 flex items-center gap-3 px-3 py-3 text-sm text-red-600 rounded-xl focus:bg-red-50 cursor-pointer"
           >
-            <LogOut size={18} />
+            <LogOut size={18} color="rgba(255, 0, 0, 0.8)" />
             Logout
           </DropdownMenuItem>
         </DropdownMenuContent>
