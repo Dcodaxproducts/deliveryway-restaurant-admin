@@ -33,6 +33,24 @@ describe("auth route helpers", () => {
     expect(getSafeRedirectPath("javascript:alert(1)")).toBe("/");
   });
 
+  it("falls back when redirect points back to login", () => {
+    expect(getSafeRedirectPath("/login")).toBe("/");
+  });
+
+  it("unwraps nested login redirects to the first safe app route", () => {
+    expect(
+      getSafeRedirectPath("/login?redirect=%2Flogin%3Fredirect%3D%252Forders")
+    ).toBe("/orders");
+  });
+
+  it("falls back when nested login redirects never leave login", () => {
+    expect(
+      getSafeRedirectPath(
+        "/login?redirect=%2Flogin%3Fredirect%3D%252Flogin%253Fredirect%253D%25252Flogin"
+      )
+    ).toBe("/");
+  });
+
   it("encodes redirect query values", () => {
     expect(buildLoginRoute("/orders?page=2#active")).toBe(
       "/login?redirect=%2Forders%3Fpage%3D2%23active"

@@ -1,6 +1,7 @@
 const FALLBACK_APP_ORIGIN = "https://deliveryways.local";
 const LOGIN_PATH = "/login";
 const DEFAULT_REDIRECT_PATH = "/";
+const MAX_REDIRECT_UNWRAP_DEPTH = 5;
 
 const getAppOrigin = () => {
   if (typeof window !== "undefined" && window.location.origin) {
@@ -15,6 +16,25 @@ const toInternalPath = (url: URL) => {
   return internalPath || DEFAULT_REDIRECT_PATH;
 };
 
+const normalizeRedirectPath = (redirectPath: string, depth = 0): string => {
+  if (redirectPath === LOGIN_PATH || redirectPath.startsWith(`${LOGIN_PATH}?`)) {
+    if (depth >= MAX_REDIRECT_UNWRAP_DEPTH) {
+      return DEFAULT_REDIRECT_PATH;
+    }
+
+    const loginUrl = new URL(redirectPath, getAppOrigin());
+    const nestedRedirect = loginUrl.searchParams.get("redirect");
+
+    if (!nestedRedirect) {
+      return DEFAULT_REDIRECT_PATH;
+    }
+
+    return normalizeRedirectPath(getSafeRedirectPath(nestedRedirect), depth + 1);
+  }
+
+  return redirectPath;
+};
+
 export const getSafeRedirectPath = (redirectTo?: string | null) => {
   const rawRedirect = redirectTo?.trim();
 
@@ -23,7 +43,7 @@ export const getSafeRedirectPath = (redirectTo?: string | null) => {
   }
 
   if (rawRedirect.startsWith("/")) {
-    return rawRedirect;
+    return normalizeRedirectPath(rawRedirect);
   }
 
   try {
@@ -34,7 +54,7 @@ export const getSafeRedirectPath = (redirectTo?: string | null) => {
       return DEFAULT_REDIRECT_PATH;
     }
 
-    return toInternalPath(url);
+    return normalizeRedirectPath(toInternalPath(url));
   } catch {
     return DEFAULT_REDIRECT_PATH;
   }
