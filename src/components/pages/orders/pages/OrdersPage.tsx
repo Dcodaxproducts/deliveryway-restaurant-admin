@@ -12,11 +12,9 @@ import PaginationSection from "@/components/common/pagination";
 import { sortData } from "@/lib/sort-data";
 import { useGetOrdersStats } from "@/hooks/useDashboard";
 import useOrders from "@/hooks/useOrders";
-import { useGetAdminTableReservations } from "@/hooks/useReservations";
 import {
   buildOrderStats,
   getOrdersHeaderContent,
-  mapReservationToOrder,
   type Order,
   type OrderTab,
 } from "@/components/pages/orders/utils/orders-page.helpers";
@@ -41,7 +39,6 @@ export default function Orders() {
     data: orderStatsResponse,
     isLoading: isOrderStatsLoading,
     isFetching: isOrderStatsFetching,
-    refetch: refetchOrderStats,
   } = useGetOrdersStats(
     restaurantId
       ? {
@@ -68,24 +65,12 @@ export default function Orders() {
     limit,
     orderType,
     kind: orderKind,
-    enabled: activeTab !== "reservations",
+    enabled: true,
   });
 
-  const reservationsQuery = useGetAdminTableReservations(
-    restaurantId
-      ? {
-          restaurantId,
-          ...(scopedBranchId ? { branchId: scopedBranchId } : {}),
-          page,
-          limit,
-        }
-      : undefined
-  );
-
-  const reservationOrders: Order[] = (reservationsQuery.data?.data || []).map(mapReservationToOrder);
-  const orders: Order[] = activeTab === "reservations" ? reservationOrders : ordersQuery.orders;
-  const paginationMeta = activeTab === "reservations" ? reservationsQuery.data?.meta : ordersQuery.meta;
-  const loading = activeTab === "reservations" ? reservationsQuery.isLoading : ordersQuery.loading;
+  const orders: Order[] = ordersQuery.orders;
+  const paginationMeta = ordersQuery.meta;
+  const loading = ordersQuery.loading;
   const totalPages = paginationMeta?.totalPages || 1;
   const total = paginationMeta?.total || 0;
   const hasNext = paginationMeta?.hasNext || false;
@@ -107,15 +92,6 @@ export default function Orders() {
   const sortedOrders = sortKey ? sortData(orders, sortKey as keyof Order, sortDir) : orders;
 
   const { title, description } = getOrdersHeaderContent(activeTab, isBranchAdmin);
-
-  const handleRefresh = () => {
-    refetchOrderStats();
-    if (activeTab === "reservations") {
-      reservationsQuery.refetch();
-    } else {
-      ordersQuery.refetch();
-    }
-  };
 
   return (
     <Container>
@@ -141,13 +117,6 @@ export default function Orders() {
             onClick={() => setActiveTab("pickup")}
           >
             Pick up Orders
-          </TabButton>
-
-          <TabButton
-            active={activeTab === "reservations"}
-            onClick={() => setActiveTab("reservations")}
-          >
-            Reservations
           </TabButton>
 
           <TabButton

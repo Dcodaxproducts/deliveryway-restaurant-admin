@@ -19,8 +19,8 @@ export default function TableReservationCustomerCell({
   const fullName = getCustomerFullName(customer);
 
   return (
-    <div className="flex min-w-[240px] items-center gap-3">
-      <Avatar className="size-10">
+    <div className="flex min-w-0 items-center gap-3">
+      <Avatar className="size-9">
         {customer?.avatarUrl ? (
           <AvatarImage src={customer.avatarUrl} alt={fullName} />
         ) : null}
@@ -30,7 +30,7 @@ export default function TableReservationCustomerCell({
       </Avatar>
 
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-dark">{fullName}</p>
+        <p className="truncate text-sm font-semibold text-gray-900">{fullName}</p>
         <p className="truncate text-xs text-gray-500">
           {customer?.email || "No email"}
         </p>
@@ -41,4 +41,3 @@ export default function TableReservationCustomerCell({
     </div>
   );
 }
-
