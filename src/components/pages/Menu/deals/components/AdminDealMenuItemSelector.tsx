@@ -36,34 +36,7 @@ const getResponseItems = (response: unknown): AdminDealMenuItemSummary[] => {
     .filter((item): item is AdminDealMenuItemSummary => item !== null);
 };
 
-const getResponseMeta = (response: unknown) => {
-  const source = response && typeof response === "object" ? response : {};
-  const record = source as Record<string, unknown>;
-  const data = record.data;
-  const dataRecord =
-    data && typeof data === "object" && !Array.isArray(data)
-      ? (data as Record<string, unknown>)
-      : {};
-  const meta = record.meta ?? dataRecord.meta ?? dataRecord.pagination;
-
-  return meta && typeof meta === "object"
-    ? (meta as Record<string, unknown>)
-    : {};
-};
-
-const getHasNext = (response: unknown, itemCount: number) => {
-  const meta = getResponseMeta(response);
-  if (typeof meta.hasNext === "boolean") return meta.hasNext;
-  if (typeof meta.hasMore === "boolean") return meta.hasMore;
-
-  const page = typeof meta.page === "number" ? meta.page : undefined;
-  const totalPages =
-    typeof meta.totalPages === "number" ? meta.totalPages : undefined;
-
-  if (page && totalPages) return page < totalPages;
-
-  return itemCount >= MENU_ITEMS_PAGE_SIZE;
-};
+const getHasNext = (itemCount: number) => itemCount > 0;
 
 const mergeItems = (
   current: AdminDealMenuItemSummary[],
@@ -111,7 +84,7 @@ export default function AdminDealMenuItemSelector({
             if (page === 1) return mergeItems(initialItems, items);
             return mergeItems(current, items);
           });
-          setHasNext(getHasNext(response, items.length));
+          setHasNext(getHasNext(items.length));
         }
       } finally {
         if (mounted) setLoading(false);
