@@ -44,6 +44,7 @@ export type ForceDeleteCustomerValues = z.infer<typeof forceDeleteCustomerSchema
 
 export const customerListParamsSchema = z.object({
   page: z.number().int().positive().optional(),
+  limit: z.number().int().positive().optional(),
   search: z.string().trim().optional(),
   sortOrder: z.enum(["ASC", "DESC"]).optional(),
   withDeleted: z.boolean().optional(),

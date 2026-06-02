@@ -19,6 +19,8 @@ export const createBranch = async (payload: BranchValues) => {
 };
 
 export const getBranches = async (params?: {
+  page?: number;
+  limit?: number;
   search?: string;
   sortOrder?: "ASC" | "DESC";
   withDeleted?: boolean;

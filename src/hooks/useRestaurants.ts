@@ -9,7 +9,7 @@ export const restaurantQueryKeys = {
 export const useGetRestaurants = (enabled = true) => {
   return useQuery({
     queryKey: restaurantQueryKeys.all,
-    queryFn: getRestaurants,
+    queryFn: () => getRestaurants(),
     enabled,
   });
 };

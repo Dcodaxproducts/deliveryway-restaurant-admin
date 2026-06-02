@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { arimo, barlow, onest, poppins } from "@/lib/fonts";
 
 import "./globals.css";
-import Providers from "./providers";
+import { Providers } from "./providers";
 
 type RootLayoutProps = {
   children: ReactNode;

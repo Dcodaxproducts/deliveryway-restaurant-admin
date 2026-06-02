@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 import ContextGate from "@/components/layout/ContextGate";
-import Navbar from "@/components/layout/navbar/navbar";
+import { Navbar } from "@/components/layout/navbar/navbar";
 import Sidebar from "@/components/layout/sidebar/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { isPublicRoute } from "@/lib/access";
@@ -13,7 +13,7 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-export default function AppShell({ children }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const hideLayout = isPublicRoute(pathname);
   const { loading } = useAuth();

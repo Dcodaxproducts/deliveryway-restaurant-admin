@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Toaster } from "sonner";
 
-import AppShell from "@/components/layout/AppShell";
+import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { BrandingProvider } from "@/components/providers/branding-provider";
 import QueryProvider from "@/components/providers/query-provider";
@@ -13,7 +13,7 @@ type ProvidersProps = {
   children: ReactNode;
 };
 
-export default function Providers({ children }: ProvidersProps) {
+export function Providers({ children }: ProvidersProps) {
   return (
     <QueryProvider>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>

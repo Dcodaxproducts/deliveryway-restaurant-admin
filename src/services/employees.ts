@@ -15,6 +15,7 @@ export const createStaff = async (payload: StaffValues) => {
 
 export const getStaffList = async (params?: {
   page?: number;
+  limit?: number;
   search?: string;
   staffRoleId?: string;
   isActive?: boolean;

@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import Sidebar from "@/components/layout/sidebar/Sidebar";
-import SearchBar from "./search-bar";
+import { SearchBar } from "./search-bar";
 import NotificationBell from "./notification";
 import ProfileSection from "./profile-section";
 import RestaurantPicker from "@/components/common/RestaurantPicker";
 
-export default function Navbar() {
+export function Navbar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
