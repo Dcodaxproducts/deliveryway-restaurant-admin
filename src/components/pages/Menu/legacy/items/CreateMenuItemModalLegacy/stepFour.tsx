@@ -13,6 +13,7 @@ import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetModifiers } from "@/hooks/useMenus";
 import {
@@ -39,6 +40,7 @@ type SelectableEntity = {
 type ModifierPriceOverride = {
   modifierId: string;
   priceDelta: string;
+  isRequired?: boolean;
 };
 
 type VariationPriceOverride = {
@@ -326,6 +328,7 @@ const normalizeTopLevelModifierOverrides = (
     .filter((entry) => entry?.modifierId && !entry?.variationId)
     .map((entry) => ({
       modifierId: String(entry.modifierId),
+      isRequired: entry?.isRequired === true,
       priceDelta: sanitizeNonNegativeNumber(String(entry.priceDelta ?? "")),
     }));
 };
@@ -700,6 +703,7 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
 
           return {
             modifierId: String(modifierId),
+            isRequired: existing?.isRequired === true,
             priceDelta:
               existing?.priceDelta !== undefined &&
               existing?.priceDelta !== null &&
@@ -862,6 +866,7 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
 
       return {
         modifierId: String(modifierId),
+        isRequired: existing?.isRequired === true,
         priceDelta: existing?.priceDelta || getModifierBasePrice(modifier),
       };
     });
@@ -921,6 +926,14 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
     if (existing) return existing.priceDelta;
 
     return getModifierBasePrice(modifier);
+  };
+
+  const getTopLevelModifierRequiredValue = (modifier: SelectableEntity) => {
+    const existing = topLevelModifierOverrides.find(
+      (entry) => String(entry.modifierId) === String(modifier.id)
+    );
+
+    return existing?.isRequired === true;
   };
 
   const getNestedModifierValue = (
@@ -1017,6 +1030,7 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
             ...current,
             {
               modifierId,
+              isRequired: false,
               priceDelta: sanitized,
             },
           ];
@@ -1053,6 +1067,47 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
                 ],
           };
         }),
+      };
+    });
+  };
+
+  const handleTopLevelRequiredChange = ({
+    modifierId,
+    isRequired,
+  }: {
+    modifierId: string;
+    isRequired: boolean;
+  }) => {
+    setForm((prev: any) => {
+      const current = normalizeTopLevelModifierOverrides(
+        prev?.modifierPriceOverrides
+      );
+
+      const exists = current.some(
+        (entry) => String(entry.modifierId) === String(modifierId)
+      );
+
+      const next = exists
+        ? current.map((entry) =>
+            String(entry.modifierId) === String(modifierId)
+              ? {
+                  ...entry,
+                  isRequired,
+                }
+              : entry
+          )
+        : [
+            ...current,
+            {
+              modifierId,
+              isRequired,
+              priceDelta: "0",
+            },
+          ];
+
+      return {
+        ...prev,
+        modifierPriceOverrides: next,
       };
     });
   };
@@ -1189,8 +1244,10 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
         selectedModifiers={selectedModifiers}
         selectedVariations={selectedVariations}
         getTopLevelPriceValue={getTopLevelModifierValue}
+        getTopLevelRequiredValue={getTopLevelModifierRequiredValue}
         getNestedPriceValue={getNestedModifierValue}
         onTopLevelPriceChange={handleTopLevelModifierChange}
+        onTopLevelRequiredChange={handleTopLevelRequiredChange}
         onNestedPriceChange={handleNestedModifierChange}
       />
     </div>
@@ -1449,6 +1506,7 @@ type ModifierPricingByVariationSectionProps = {
   selectedModifiers: SelectableEntity[];
   selectedVariations: SelectableEntity[];
   getTopLevelPriceValue: (modifier: SelectableEntity) => string;
+  getTopLevelRequiredValue: (modifier: SelectableEntity) => boolean;
   getNestedPriceValue: (
     variationId: string,
     modifier: SelectableEntity
@@ -1456,6 +1514,10 @@ type ModifierPricingByVariationSectionProps = {
   onTopLevelPriceChange: (payload: {
     modifierId: string;
     priceDelta: string;
+  }) => void;
+  onTopLevelRequiredChange: (payload: {
+    modifierId: string;
+    isRequired: boolean;
   }) => void;
   onNestedPriceChange: (payload: {
     variationId: string;
@@ -1468,8 +1530,10 @@ function ModifierPricingByVariationSection({
   selectedModifiers,
   selectedVariations,
   getTopLevelPriceValue,
+  getTopLevelRequiredValue,
   getNestedPriceValue,
   onTopLevelPriceChange,
+  onTopLevelRequiredChange,
   onNestedPriceChange,
 }: ModifierPricingByVariationSectionProps) {
   if (!selectedModifiers.length) {
@@ -1510,7 +1574,7 @@ function ModifierPricingByVariationSection({
           {selectedModifiers.map((modifier) => (
             <div
               key={modifier.id}
-              className="grid w-full min-w-0 gap-3 rounded-[14px] border border-gray-100 bg-[#FAFAFA] p-3 sm:grid-cols-[minmax(0,1fr)_160px]"
+              className="grid w-full min-w-0 gap-3 rounded-[14px] border border-gray-100 bg-[#FAFAFA] p-3 sm:grid-cols-[minmax(0,1fr)_160px_132px]"
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-gray-900">
@@ -1532,6 +1596,16 @@ function ModifierPricingByVariationSection({
                 }
                 placeholder="0"
                 className="h-[40px] min-w-0 rounded-[12px] border-gray-200 bg-white text-sm focus:border-primary focus:ring-primary/15"
+              />
+
+              <RequiredSwitch
+                checked={getTopLevelRequiredValue(modifier)}
+                onCheckedChange={(checked) =>
+                  onTopLevelRequiredChange({
+                    modifierId: String(modifier.id),
+                    isRequired: checked,
+                  })
+                }
               />
             </div>
           ))}
@@ -1561,6 +1635,34 @@ function ModifierPricingByVariationSection({
           Each selected variation shows all selected modifiers below it. Update
           the modifier price for that specific variation.
         </p>
+      </div>
+
+      <div className="mb-5 grid gap-3 rounded-[16px] border border-gray-100 bg-[#FAFAFA] p-3">
+        {selectedModifiers.map((modifier) => (
+          <div
+            key={`required-${modifier.id}`}
+            className="grid min-w-0 gap-3 rounded-[12px] border border-gray-100 bg-white p-3 sm:grid-cols-[minmax(0,1fr)_132px]"
+          >
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-gray-900">
+                {modifier.name}
+              </p>
+              <p className="mt-0.5 text-xs text-gray-500">
+                Customer must select this modifier
+              </p>
+            </div>
+
+            <RequiredSwitch
+              checked={getTopLevelRequiredValue(modifier)}
+              onCheckedChange={(checked) =>
+                onTopLevelRequiredChange({
+                  modifierId: String(modifier.id),
+                  isRequired: checked,
+                })
+              }
+            />
+          </div>
+        ))}
       </div>
 
       <div className="max-h-[620px] space-y-4 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:thin]">
@@ -1617,5 +1719,24 @@ function ModifierPricingByVariationSection({
         ))}
       </div>
     </section>
+  );
+}
+
+function RequiredSwitch({
+  checked,
+  onCheckedChange,
+}: {
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className="flex min-w-0 items-center justify-between gap-3 rounded-[12px] border border-gray-100 bg-white px-3 py-2 text-sm font-medium text-gray-700 sm:justify-center">
+      <span>Required</span>
+      <Switch
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        aria-label="Required"
+      />
+    </div>
   );
 }

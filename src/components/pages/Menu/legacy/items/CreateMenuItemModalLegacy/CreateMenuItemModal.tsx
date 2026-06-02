@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import StepOne from "./StepOne";
@@ -30,6 +30,7 @@ type EntityType = "variation" | "modifier";
 type ModifierPriceOverride = {
   modifierId: string;
   priceDelta: string;
+  isRequired?: boolean;
 };
 
 type VariationPriceOverride = {
@@ -277,6 +278,7 @@ const normalizeModifierPriceOverrides = (
       modifierId: String(
         entry?.modifierId || entry?.modifier?.id || entry?.menuModifier?.id
       ),
+      isRequired: entry?.isRequired === true,
       priceDelta:
         entry?.priceDelta !== undefined && entry?.priceDelta !== null
           ? String(entry.priceDelta)
@@ -539,7 +541,7 @@ const getNestedModifierOverridesFromVariations = (variationOverrides: any[]) => 
   );
 };
 
-const getInitialForm = (restaurantId?: string, initialData?: any) => {
+export const getInitialForm = (restaurantId?: string, initialData?: any) => {
   const rawVariationOverrides = getRawVariationOverrideSource(initialData);
   const rawFlatModifierOverrides = normalizeArray(
     initialData?.modifierPriceOverrides
@@ -713,6 +715,195 @@ const getInitialForm = (restaurantId?: string, initialData?: any) => {
   };
 };
 
+type BuildMenuItemPayloadParams = {
+  form: Record<string, unknown>;
+  restaurantId?: string;
+  initialDataId?: string;
+};
+
+export const buildMenuItemPayload = ({
+  form,
+  restaurantId,
+  initialDataId,
+}: BuildMenuItemPayloadParams) => {
+  const generatedSlug =
+    typeof form.slug === "string" && form.slug.trim()
+      ? form.slug.trim()
+      : buildSlug(String(form.name || ""));
+  const basePrice = toNumberOrZero(form.basePrice);
+
+  const minSelect = Math.max(0, toNumberOrZero(form.minSelect));
+  const maxSelect = toOptionalNumber(form.maxSelect);
+
+  const minQuantity = Math.max(1, toNumberOrZero(form.minQuantity || 1));
+  const maxQuantity = Math.max(
+    minQuantity,
+    toNumberOrZero(form.maxQuantity || minQuantity)
+  );
+
+  const selectedVariationIds = normalizeIds(
+    [
+      form.variationIds,
+      form.variations,
+      form.itemVariations,
+      form.variationLinks,
+      form.variationPriceOverrides,
+    ],
+    "variation"
+  );
+
+  const nestedModifierOverrides = getNestedModifierOverridesFromVariations(
+    normalizeArray(form.variationPriceOverrides)
+  );
+  const selectedModifierIds = normalizeIds(
+    [
+      form.modifierIds,
+      form.modifiers,
+      form.itemModifiers,
+      form.modifierLinks,
+      form.modifierPriceOverrides,
+      nestedModifierOverrides,
+    ],
+    "modifier"
+  );
+
+  const selectedModifierPriceOverrides = normalizeModifierPriceOverrides(
+    normalizeArray(form.modifierPriceOverrides)
+  );
+  const selectedVariationPriceOverrides = normalizeVariationPriceOverrides({
+    rawVariationOverrides: normalizeArray(form.variationPriceOverrides),
+    rawFlatModifierOverrides: [],
+    menuItemId: initialDataId,
+  });
+
+  const modifierPriceOverrideMap = new Map<string, ModifierPriceOverride>();
+
+  selectedModifierPriceOverrides.forEach((item) => {
+    modifierPriceOverrideMap.set(String(item.modifierId), item);
+  });
+
+  const finalModifierPriceOverrides = selectedModifierIds.map((modifierId) => {
+    const existing = modifierPriceOverrideMap.get(String(modifierId));
+
+    return {
+      modifierId: String(modifierId),
+      priceDelta: toNumberOrZero(existing?.priceDelta),
+      isRequired: existing?.isRequired === true,
+    };
+  });
+
+  const finalModifiers = finalModifierPriceOverrides.map((item) => ({
+    modifierId: item.modifierId,
+    priceDelta: item.priceDelta,
+    isRequired: item.isRequired === true,
+  }));
+
+  const topLevelModifierMap = new Map<string, number>();
+
+  finalModifierPriceOverrides.forEach((item) => {
+    topLevelModifierMap.set(String(item.modifierId), item.priceDelta);
+  });
+
+  const variationOverrideMap = new Map<string, VariationPriceOverride>();
+
+  selectedVariationPriceOverrides.forEach((item) => {
+    variationOverrideMap.set(String(item.variationId), item);
+  });
+
+  const finalVariationPriceOverrides = selectedVariationIds.map(
+    (variationId) => {
+      const existing = variationOverrideMap.get(String(variationId));
+
+      return {
+        variationId: String(variationId),
+
+        price:
+          existing?.price !== undefined &&
+          existing?.price !== null &&
+          existing.price !== ""
+            ? toNumberOrZero(existing.price)
+            : basePrice,
+
+        pickupPrice:
+          existing?.pickupPrice !== undefined &&
+          existing?.pickupPrice !== null &&
+          existing.pickupPrice !== ""
+            ? toNumberOrZero(existing.pickupPrice)
+            : 0,
+
+        displayText: existing?.displayText || "",
+
+        modifierPriceOverrides: selectedModifierIds.map((modifierId) => {
+          const nestedExisting = existing?.modifierPriceOverrides?.find(
+            (entry) => String(entry.modifierId) === String(modifierId)
+          );
+
+          return {
+            modifierId: String(modifierId),
+            priceDelta:
+              nestedExisting?.priceDelta !== undefined &&
+              nestedExisting?.priceDelta !== null &&
+              nestedExisting.priceDelta !== ""
+                ? toNumberOrZero(nestedExisting.priceDelta)
+                : topLevelModifierMap.get(String(modifierId)) ?? 0,
+          };
+        }),
+      };
+    }
+  );
+
+  return {
+    restaurantId: restaurantId || form.restaurantId || undefined,
+    categoryId: form.categoryId || undefined,
+
+    name: typeof form.name === "string" ? form.name.trim() : "",
+    slug: generatedSlug,
+    description: form.description || "",
+
+    ingredients: form.ingredients || "",
+    nutritionalInformation: form.nutritionalInformation || "",
+    allergenPdfUrl: form.allergenPdfUrl || "",
+
+    imageUrl: form.imageUrl || "",
+    sku: form.sku || "",
+    sortOrder: toNumberOrZero(form.sortOrder),
+
+    pricingMode: form.pricingMode || "SINGLE",
+
+    basePrice,
+    deliveryPriceAdjustment: toNumberOrZero(form.deliveryPriceAdjustment),
+    takeawayPriceAdjustment: toNumberOrZero(form.takeawayPriceAdjustment),
+    prepTimeMinutes: toNumberOrZero(form.prepTimeMinutes),
+
+    dietaryFlags: normalizeTextArray(form.dietaryFlags),
+    labels: normalizeTextArray(form.labels),
+    allergenFlags: normalizeTextArray(form.allergenFlags),
+    allergenCodes: normalizeTextArray(form.allergenCodes),
+
+    depositAmount: toNumberOrZero(form.depositAmount),
+
+    isActive: typeof form.isActive === "boolean" ? form.isActive : true,
+
+    isRequired:
+      typeof form.isRequired === "boolean" ? form.isRequired : false,
+
+    minSelect,
+    maxSelect,
+
+    minQuantity,
+    maxQuantity,
+
+    supportsSplitPizza:
+      typeof form.supportsSplitPizza === "boolean"
+        ? form.supportsSplitPizza
+        : false,
+
+    modifiers: finalModifiers,
+    modifierPriceOverrides: finalModifierPriceOverrides,
+    variationPriceOverrides: finalVariationPriceOverrides,
+  };
+};
+
 export default function CreateMenuItemModal({
   open,
   onOpenChange,
@@ -745,225 +936,12 @@ export default function CreateMenuItemModal({
     setForm(getInitialForm(restaurantId, initialData));
   }, [open, restaurantId, initialData]);
 
-  const parsedDietaryFlags = useMemo(
-    () => normalizeTextArray(form.dietaryFlags),
-    [form.dietaryFlags]
-  );
-
-  const parsedLabels = useMemo(
-    () => normalizeTextArray(form.labels),
-    [form.labels]
-  );
-
-  const parsedAllergenFlags = useMemo(
-    () => normalizeTextArray(form.allergenFlags),
-    [form.allergenFlags]
-  );
-
-  const parsedAllergenCodes = useMemo(
-    () => normalizeTextArray(form.allergenCodes),
-    [form.allergenCodes]
-  );
-
-  const selectedVariationIds = useMemo(
-    () =>
-      normalizeIds(
-        [
-          form?.variationIds,
-          form?.variations,
-          form?.itemVariations,
-          form?.variationLinks,
-          form?.variationPriceOverrides,
-        ],
-        "variation"
-      ),
-    [
-      form?.variationIds,
-      form?.variations,
-      form?.itemVariations,
-      form?.variationLinks,
-      form?.variationPriceOverrides,
-    ]
-  );
-
-  const selectedModifierIds = useMemo(() => {
-    const nestedModifierOverrides = getNestedModifierOverridesFromVariations(
-      form?.variationPriceOverrides
-    );
-
-    return normalizeIds(
-      [
-        form?.modifierIds,
-        form?.modifiers,
-        form?.itemModifiers,
-        form?.modifierLinks,
-        form?.modifierPriceOverrides,
-        nestedModifierOverrides,
-      ],
-      "modifier"
-    );
-  }, [
-    form?.modifierIds,
-    form?.modifiers,
-    form?.itemModifiers,
-    form?.modifierLinks,
-    form?.modifierPriceOverrides,
-    form?.variationPriceOverrides,
-  ]);
-
-  const selectedModifierPriceOverrides = useMemo(
-    () => normalizeModifierPriceOverrides(form?.modifierPriceOverrides),
-    [form?.modifierPriceOverrides]
-  );
-
-  const selectedVariationPriceOverrides = useMemo(
-    () =>
-      normalizeVariationPriceOverrides({
-        rawVariationOverrides: form?.variationPriceOverrides,
-        rawFlatModifierOverrides: [],
-        menuItemId: initialData?.id,
-      }),
-    [form?.variationPriceOverrides, initialData?.id]
-  );
-
-  const buildPayload = () => {
-    const generatedSlug = form.slug?.trim() || buildSlug(form.name);
-    const basePrice = toNumberOrZero(form.basePrice);
-
-    const minSelect = Math.max(0, toNumberOrZero(form.minSelect));
-    const maxSelect = toOptionalNumber(form.maxSelect);
-
-    const minQuantity = Math.max(1, toNumberOrZero(form.minQuantity || 1));
-    const maxQuantity = Math.max(
-      minQuantity,
-      toNumberOrZero(form.maxQuantity || minQuantity)
-    );
-
-    const modifierPriceOverrideMap = new Map<string, ModifierPriceOverride>();
-
-    selectedModifierPriceOverrides.forEach((item) => {
-      modifierPriceOverrideMap.set(String(item.modifierId), item);
+  const buildPayload = () =>
+    buildMenuItemPayload({
+      form,
+      restaurantId,
+      initialDataId: initialData?.id,
     });
-
-    const finalModifierPriceOverrides = selectedModifierIds.map((modifierId) => {
-      const existing = modifierPriceOverrideMap.get(String(modifierId));
-
-      return {
-        modifierId: String(modifierId),
-        priceDelta: toNumberOrZero(existing?.priceDelta),
-      };
-    });
-
-    const finalModifiers = finalModifierPriceOverrides.map((item) => ({
-      modifierId: item.modifierId,
-      priceDelta: item.priceDelta,
-    }));
-
-    const topLevelModifierMap = new Map<string, number>();
-
-    finalModifierPriceOverrides.forEach((item) => {
-      topLevelModifierMap.set(String(item.modifierId), item.priceDelta);
-    });
-
-    const variationOverrideMap = new Map<string, VariationPriceOverride>();
-
-    selectedVariationPriceOverrides.forEach((item) => {
-      variationOverrideMap.set(String(item.variationId), item);
-    });
-
-    const finalVariationPriceOverrides = selectedVariationIds.map(
-      (variationId) => {
-        const existing = variationOverrideMap.get(String(variationId));
-
-        return {
-          variationId: String(variationId),
-
-          price:
-            existing?.price !== undefined &&
-            existing?.price !== null &&
-            existing.price !== ""
-              ? toNumberOrZero(existing.price)
-              : basePrice,
-
-          pickupPrice:
-            existing?.pickupPrice !== undefined &&
-            existing?.pickupPrice !== null &&
-            existing.pickupPrice !== ""
-              ? toNumberOrZero(existing.pickupPrice)
-              : 0,
-
-          displayText: existing?.displayText || "",
-
-          modifierPriceOverrides: selectedModifierIds.map((modifierId) => {
-            const nestedExisting = existing?.modifierPriceOverrides?.find(
-              (entry) => String(entry.modifierId) === String(modifierId)
-            );
-
-            return {
-              modifierId: String(modifierId),
-              priceDelta:
-                nestedExisting?.priceDelta !== undefined &&
-                nestedExisting?.priceDelta !== null &&
-                nestedExisting.priceDelta !== ""
-                  ? toNumberOrZero(nestedExisting.priceDelta)
-                  : topLevelModifierMap.get(String(modifierId)) ?? 0,
-            };
-          }),
-        };
-      }
-    );
-
-    return {
-      restaurantId: restaurantId || form.restaurantId || undefined,
-      categoryId: form.categoryId || undefined,
-
-      name: form.name?.trim(),
-      slug: generatedSlug,
-      description: form.description || "",
-
-      ingredients: form.ingredients || "",
-      nutritionalInformation: form.nutritionalInformation || "",
-      allergenPdfUrl: form.allergenPdfUrl || "",
-
-      imageUrl: form.imageUrl || "",
-      sku: form.sku || "",
-      sortOrder: toNumberOrZero(form.sortOrder),
-
-      pricingMode: form.pricingMode || "SINGLE",
-
-      basePrice,
-      deliveryPriceAdjustment: toNumberOrZero(form.deliveryPriceAdjustment),
-      takeawayPriceAdjustment: toNumberOrZero(form.takeawayPriceAdjustment),
-      prepTimeMinutes: toNumberOrZero(form.prepTimeMinutes),
-
-      dietaryFlags: parsedDietaryFlags,
-      labels: parsedLabels,
-      allergenFlags: parsedAllergenFlags,
-      allergenCodes: parsedAllergenCodes,
-
-      depositAmount: toNumberOrZero(form.depositAmount),
-
-      isActive: typeof form.isActive === "boolean" ? form.isActive : true,
-
-      isRequired:
-        typeof form.isRequired === "boolean" ? form.isRequired : false,
-
-      minSelect,
-      maxSelect,
-
-      minQuantity,
-      maxQuantity,
-
-      supportsSplitPizza:
-        typeof form.supportsSplitPizza === "boolean"
-          ? form.supportsSplitPizza
-          : false,
-
-      modifiers: finalModifiers,
-      modifierPriceOverrides: finalModifierPriceOverrides,
-      variationPriceOverrides: finalVariationPriceOverrides,
-    };
-  };
 
   const nextStep = () => {
     if (stepRef.current?.validateStep) {

@@ -149,6 +149,39 @@ const optionalStringArray = () =>
 
 const idSchema = z.string().trim().min(1, "Id is required");
 
+const menuItemModifierSchema = z.object({
+  modifierId: idSchema,
+  priceDelta: optionalNumberFromInput({ min: 0 }).default(0),
+  isRequired: z.boolean().optional().default(false),
+});
+
+const menuItemModifierPriceOverrideSchema = z.object({
+  modifierId: idSchema,
+  priceDelta: optionalNumberFromInput({ min: 0 }).default(0),
+  isRequired: z.boolean().optional().default(false),
+});
+
+const variationModifierPriceOverrideSchema = z.object({
+  modifierId: idSchema,
+  priceDelta: optionalNumberFromInput({ min: 0 }).default(0),
+});
+
+const menuItemVariationPriceOverrideSchema = z.object({
+  variationId: idSchema,
+  price: optionalNumberFromInput({ min: 0 }).default(0),
+  pickupPrice: optionalNumberFromInput({ min: 0 }).default(0),
+  displayText: optionalString(),
+  modifierPriceOverrides: z
+    .array(variationModifierPriceOverrideSchema)
+    .optional()
+    .default([]),
+});
+
+export type MenuItemModifierInput = z.infer<typeof menuItemModifierSchema>;
+export type MenuItemModifierPriceOverrideInput = z.infer<
+  typeof menuItemModifierPriceOverrideSchema
+>;
+
 /**
  * Converts a base shape into:
  * - create schema (strict required/optional as defined)
@@ -203,13 +236,15 @@ const menuItemShape = {
   variationIds: z.array(idSchema).optional().default([]),
   modifierGroupIds: z.array(idSchema).optional().default([]),
 
+  modifiers: z.array(menuItemModifierSchema).optional().default([]),
+
   modifierPriceOverrides: z
-    .array(
-      z.object({
-        modifierId: idSchema,
-        priceDelta: optionalNumberFromInput({ min: 0 }).default(0),
-      })
-    )
+    .array(menuItemModifierPriceOverrideSchema)
+    .optional()
+    .default([]),
+
+  variationPriceOverrides: z
+    .array(menuItemVariationPriceOverrideSchema)
     .optional()
     .default([]),
 };
