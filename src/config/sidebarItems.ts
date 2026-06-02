@@ -20,6 +20,7 @@ import {
   ClipboardList,
   AlertTriangle,
   BadgeCheck,
+  BadgePercent,
   Coins,
 } from "lucide-react";
 import { PiUsersThree } from "react-icons/pi";
@@ -96,6 +97,13 @@ export const menuItems: MenuItem[] = [
         icon: ClipboardList,
         section: "main",
         roles: restaurantAdminRoles,
+      },
+      {
+        title: "Deals",
+        href: "/menu/deals",
+        icon: BadgePercent,
+        section: "main",
+        roles: allAdminRoles,
       },
       {
         title: "Items",
