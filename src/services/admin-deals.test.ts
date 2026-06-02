@@ -40,6 +40,7 @@ const dealResponse = {
   data: {
     id: "deal-1",
     title: "Lunch Deal",
+    thumbnailUrl: "https://cdn.example.com/deal.png",
     discountValue: 12,
     startsAt: "2026-06-02T06:17:00.000Z",
     expiresAt: "2026-06-03T06:17:00.000Z",
@@ -120,6 +121,14 @@ describe("admin deals service", () => {
     expect(mockedPost).toHaveBeenCalledWith(ADMIN_DEALS_ENDPOINT, dealPayload);
     expect(mockedPost.mock.calls[0]?.[1]).not.toHaveProperty("applyMode");
     expect(mockedPost.mock.calls[0]?.[1]).not.toHaveProperty("discountType");
+  });
+
+  it("normalizes deal thumbnailUrl from detail responses", async () => {
+    mockedGet.mockResolvedValue(dealResponse);
+
+    const result = await getAdminDeal("deal-1");
+
+    expect(result.thumbnailUrl).toBe("https://cdn.example.com/deal.png");
   });
 
   it("detail calls /admin/deals/:id", async () => {

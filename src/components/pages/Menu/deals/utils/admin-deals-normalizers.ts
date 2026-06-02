@@ -109,6 +109,7 @@ export const normalizeAdminDeal = (value: unknown): AdminDeal | null => {
     code: getNullableString(value, "code"),
     title: getString(value, "title", "Untitled deal"),
     description: getNullableString(value, "description"),
+    thumbnailUrl: getNullableString(value, "thumbnailUrl"),
     restaurantId: getNullableString(value, "restaurantId"),
     branchId: getNullableString(value, "branchId"),
     discountValue: getNumber(value, "discountValue"),

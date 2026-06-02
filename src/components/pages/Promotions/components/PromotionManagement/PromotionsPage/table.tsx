@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -28,6 +29,7 @@ type Promotion = {
   code?: string;
   title?: string;
   description?: string;
+  thumbnailUrl?: string | null;
   kind?: string;
   status?: string;
   discountType?: string;
@@ -127,6 +129,10 @@ const getStatusClass = (status?: string) => {
     default:
       return "bg-gray-50 text-gray-600";
   }
+};
+
+const getTitleInitial = (title?: string) => {
+  return (title || "P").slice(0, 1).toUpperCase();
 };
 
 const clamp = (value: number, min: number, max: number) => {
@@ -380,14 +386,32 @@ const PromotionsTable = ({
                   </TableCell>
 
                   <TableCell className="px-4">
-                    <p className="text-sm font-medium">{promo.title}</p>
-                    <p className="text-sm text-gray-500">
-                      Code: {promo.code || "Auto apply"}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {formatDate(promo.startsAt)} -{" "}
-                      {formatDate(promo.expiresAt)}
-                    </p>
+                    <div className="flex items-start gap-3">
+                      {promo.thumbnailUrl ? (
+                        <Image
+                          src={promo.thumbnailUrl}
+                          alt={`${promo.title ?? "Promotion"} thumbnail`}
+                          width={40}
+                          height={40}
+                          unoptimized
+                          className="h-10 w-10 shrink-0 rounded-md object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100 text-xs font-semibold text-gray-400">
+                          {getTitleInitial(promo.title)}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{promo.title}</p>
+                        <p className="text-sm text-gray-500">
+                          Code: {promo.code || "Auto apply"}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {formatDate(promo.startsAt)} -{" "}
+                          {formatDate(promo.expiresAt)}
+                        </p>
+                      </div>
+                    </div>
                   </TableCell>
 
                   <TableCell className="px-4">
@@ -464,8 +488,24 @@ const PromotionsTable = ({
                 key={promo.id}
                 className="flex flex-col gap-3 rounded-[14px] border border-[#EDEFF2] bg-white p-4 shadow-sm"
               >
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-gray-900">{promo.title}</p>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    {promo.thumbnailUrl ? (
+                      <Image
+                        src={promo.thumbnailUrl}
+                        alt={`${promo.title ?? "Promotion"} thumbnail`}
+                        width={40}
+                        height={40}
+                        unoptimized
+                        className="h-10 w-10 shrink-0 rounded-md object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100 text-xs font-semibold text-gray-400">
+                        {getTitleInitial(promo.title)}
+                      </div>
+                    )}
+                    <p className="truncate font-semibold text-gray-900">{promo.title}</p>
+                  </div>
                   <Checkbox />
                 </div>
 

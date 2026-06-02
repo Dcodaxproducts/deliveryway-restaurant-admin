@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import FormInput from "@/components/forms/common/FormInput";
+import { ImageUploadField } from "@/components/forms/common/ImageUploadField";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -33,12 +34,14 @@ import {
   normalizeSelectedOptions,
 } from "@/components/pages/Promotions/utils/option-normalizers";
 import { promotionSchema, type PromotionFormValues } from "@/validations/promotions";
+import { getOptionalThumbnailUrl } from "@/validations/thumbnail-url";
 import { FIELD_ERROR_CLASS, INPUT_BASE_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
 
 const defaultValues: PromotionFormValues = {
   code: "",
   title: "",
   description: "",
+  thumbnailUrl: "",
   discountType: "FLAT",
   discountValue: "",
   maxDiscountAmount: "",
@@ -135,6 +138,7 @@ export default function AddNewPromotion() {
       code: getString(detail, "code") ?? "",
       title: getString(detail, "title") ?? "",
       description: getString(detail, "description") ?? "",
+      thumbnailUrl: getString(detail, "thumbnailUrl") ?? "",
       discountType: detail.discountType === "PERCENTAGE" ? "PERCENTAGE" : "FLAT",
       discountValue: String(detail.discountValue ?? ""),
       maxDiscountAmount: String(detail.maxDiscountAmount ?? ""),
@@ -209,11 +213,13 @@ export default function AddNewPromotion() {
     const scopeMenuItemIds = values.applyMode === "SCOPED_ITEMS" ? getIds(values.selectedMenuItems) : [];
     const scopeCategoryIds = values.applyMode === "SCOPED_ITEMS" ? getIds(values.selectedCategories) : [];
     const trimmedCode = values.code.trim();
+    const thumbnailUrl = getOptionalThumbnailUrl(values.thumbnailUrl);
 
     return {
       ...(values.autoApply || !trimmedCode ? {} : { code: trimmedCode }),
       title: values.title.trim(),
       description: values.description.trim(),
+      ...(thumbnailUrl ? { thumbnailUrl } : {}),
       restaurantId,
       branchId: selectedBranchId || undefined,
       discountType: values.discountType,
@@ -342,6 +348,22 @@ export default function AddNewPromotion() {
                   className="min-h-[110px] w-full rounded-md border border-[#BBBBBB] px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="thumbnailUrl"
+            render={({ field, fieldState }) => (
+              <ImageUploadField<PromotionFormValues>
+                name="thumbnailUrl"
+                label="Promotion Thumbnail"
+                value={field.value}
+                error={fieldState.error?.message}
+                setValue={setValue}
+                previewAlt="Promotion thumbnail preview"
+                disabled={submitting}
+              />
             )}
           />
 

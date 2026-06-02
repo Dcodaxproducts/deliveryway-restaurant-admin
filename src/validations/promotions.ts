@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { SelectOption } from "@/components/pages/Promotions/utils/option-normalizers";
+import { thumbnailUrlSchema } from "@/validations/thumbnail-url";
 
 const discountTypeSchema = z.enum(["FLAT", "PERCENTAGE"]);
 const applyModeSchema = z.enum(["ORDER_TOTAL", "SCOPED_ITEMS"]);
@@ -16,6 +17,7 @@ export const promotionSchema = z
     code: optionalStringSchema,
     title: z.string().trim().min(1, "Offer title is required."),
     description: optionalStringSchema,
+    thumbnailUrl: thumbnailUrlSchema.optional().default(""),
     discountType: discountTypeSchema,
     discountValue: positiveNumberStringSchema("Discount value is required."),
     maxDiscountAmount: optionalStringSchema,
@@ -71,6 +73,7 @@ export const happyHourSchema = z
     code: z.string().trim().min(1, "Happy hour code is required."),
     title: z.string().trim().min(1, "Happy hour title is required."),
     description: optionalStringSchema,
+    thumbnailUrl: thumbnailUrlSchema.optional().default(""),
     discountType: discountTypeSchema,
     discountValue: positiveNumberStringSchema("Discount value is required."),
     maxDiscountAmount: optionalStringSchema,
@@ -126,6 +129,7 @@ export const couponSchema = z.object({
   startsAt: optionalStringSchema,
   expiresAt: optionalStringSchema,
   description: optionalStringSchema,
+  thumbnailUrl: thumbnailUrlSchema.optional().default(""),
   branchId: optionalStringSchema,
   maxDiscountAmount: optionalStringSchema,
   minOrderAmount: optionalStringSchema,

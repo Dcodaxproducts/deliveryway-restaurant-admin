@@ -1,6 +1,7 @@
 "use client";
 
 import { BarChart3, Edit, Loader2, Trash2 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import AdminDealLifecycleBadge from "@/components/pages/Menu/deals/components/AdminDealLifecycleBadge";
@@ -71,16 +72,32 @@ export default function AdminDealsTable({
             {deals.map((deal) => (
               <tr key={deal.id} className="hover:bg-gray-50/70">
                 <td className="px-4 py-4 align-top">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-gray-900">
-                      {deal.title}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500">
-                      {deal.code || formatShortDealId(deal.id)}
-                    </p>
-                    <p className="mt-1 line-clamp-2 text-xs text-gray-500">
-                      {deal.description || "No description"}
-                    </p>
+                  <div className="flex min-w-0 items-start gap-3">
+                    {deal.thumbnailUrl ? (
+                      <Image
+                        src={deal.thumbnailUrl}
+                        alt={`${deal.title} thumbnail`}
+                        width={40}
+                        height={40}
+                        unoptimized
+                        className="h-10 w-10 shrink-0 rounded-md object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100 text-xs font-semibold text-gray-400">
+                        {deal.title.slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-gray-900">
+                        {deal.title}
+                      </p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {deal.code || formatShortDealId(deal.id)}
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-xs text-gray-500">
+                        {deal.description || "No description"}
+                      </p>
+                    </div>
                   </div>
                 </td>
                 <td className="px-4 py-4 align-top text-sm font-semibold text-gray-900">
@@ -134,13 +151,29 @@ export default function AdminDealsTable({
         {deals.map((deal) => (
           <div key={deal.id} className="space-y-4 p-4">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-gray-900">
-                  {deal.title}
-                </p>
-                <p className="mt-1 text-xs text-gray-500">
-                  {deal.code || formatShortDealId(deal.id)}
-                </p>
+              <div className="flex min-w-0 items-start gap-3">
+                {deal.thumbnailUrl ? (
+                  <Image
+                    src={deal.thumbnailUrl}
+                    alt={`${deal.title} thumbnail`}
+                    width={40}
+                    height={40}
+                    unoptimized
+                    className="h-10 w-10 shrink-0 rounded-md object-cover"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100 text-xs font-semibold text-gray-400">
+                    {deal.title.slice(0, 1).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-gray-900">
+                    {deal.title}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {deal.code || formatShortDealId(deal.id)}
+                  </p>
+                </div>
               </div>
               <AdminDealLifecycleBadge lifecycle={deal.lifecycle} />
             </div>

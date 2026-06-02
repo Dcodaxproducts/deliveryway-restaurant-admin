@@ -6,6 +6,10 @@ import type {
   AdminDealFormValues,
   AdminDealUpdatePayload,
 } from "@/types/admin-deals";
+import {
+  getOptionalThumbnailUrl,
+  thumbnailUrlSchema,
+} from "@/validations/thumbnail-url";
 
 const optionalText = z
   .string()
@@ -34,6 +38,7 @@ export const adminDealFormSchema = z
     code: optionalText,
     title: z.string().trim().min(1, "Title is required."),
     description: optionalText,
+    thumbnailUrl: thumbnailUrlSchema.optional().default(""),
     restaurantId: optionalText,
     branchId: optionalText,
     discountValue: z.preprocess(
@@ -96,6 +101,8 @@ const buildBasePayload = (values: AdminDealFormValues) => {
 
   if (values.code?.trim()) payload.code = values.code.trim();
   if (values.description?.trim()) payload.description = values.description.trim();
+  const thumbnailUrl = getOptionalThumbnailUrl(values.thumbnailUrl);
+  if (thumbnailUrl) payload.thumbnailUrl = thumbnailUrl;
   if (values.restaurantId?.trim()) payload.restaurantId = values.restaurantId.trim();
   if (values.branchId?.trim()) payload.branchId = values.branchId.trim();
 

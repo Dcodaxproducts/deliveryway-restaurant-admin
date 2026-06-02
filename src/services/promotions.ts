@@ -18,6 +18,7 @@ export type PromotionCampaignPayload = {
   code?: string;
   title: string;
   description?: string;
+  thumbnailUrl?: string;
   restaurantId?: string | null;
   branchId?: string | null;
 
@@ -45,6 +46,7 @@ export type HappyHourPayload = {
   code: string;
   title: string;
   description?: string;
+  thumbnailUrl?: string;
   restaurantId?: string | null;
   branchId?: string | null;
 
@@ -212,6 +214,7 @@ export type CouponPayload = {
   startsAt?: string;
   expiresAt?: string;
   description?: string;
+  thumbnailUrl?: string;
   branchId?: string;
   maxDiscountAmount?: number;
   minOrderAmount?: number;

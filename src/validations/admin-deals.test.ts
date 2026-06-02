@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   adminDealFormSchema,
   buildAdminDealCreatePayload,
+  buildAdminDealUpdatePayload,
 } from "@/validations/admin-deals";
 import type { AdminDealFormValues } from "@/types/admin-deals";
 
@@ -10,6 +11,7 @@ const validValues: AdminDealFormValues = {
   code: "DEAL",
   title: "Lunch Deal",
   description: "Fixed lunch price",
+  thumbnailUrl: "",
   restaurantId: "restaurant-1",
   branchId: "branch-1",
   discountValue: 12,
@@ -78,11 +80,53 @@ describe("admin deal validation", () => {
     expect(result.success).toBe(true);
   });
 
+  it("allows empty, relative, and http thumbnail URLs", () => {
+    expect(adminDealFormSchema.safeParse({ ...validValues, thumbnailUrl: "" }).success).toBe(true);
+    expect(adminDealFormSchema.safeParse({ ...validValues, thumbnailUrl: "/uploads/deal.png" }).success).toBe(true);
+    expect(adminDealFormSchema.safeParse({ ...validValues, thumbnailUrl: "https://cdn.example.com/deal.png" }).success).toBe(true);
+  });
+
+  it("rejects invalid thumbnail URLs", () => {
+    const result = adminDealFormSchema.safeParse({
+      ...validValues,
+      thumbnailUrl: "not-a-url",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it("create payload includes autoApply true and excludes backend-handled fields", () => {
     const payload = buildAdminDealCreatePayload(validValues);
 
     expect(payload.autoApply).toBe(true);
     expect(payload).not.toHaveProperty("applyMode");
     expect(payload).not.toHaveProperty("discountType");
+  });
+
+  it("create payload includes thumbnailUrl when non-empty", () => {
+    const payload = buildAdminDealCreatePayload({
+      ...validValues,
+      thumbnailUrl: " https://cdn.example.com/deal.png ",
+    });
+
+    expect(payload.thumbnailUrl).toBe("https://cdn.example.com/deal.png");
+  });
+
+  it("create payload omits thumbnailUrl when empty", () => {
+    const payload = buildAdminDealCreatePayload({
+      ...validValues,
+      thumbnailUrl: " ",
+    });
+
+    expect(payload).not.toHaveProperty("thumbnailUrl");
+  });
+
+  it("update payload includes thumbnailUrl when changed", () => {
+    const payload = buildAdminDealUpdatePayload({
+      ...validValues,
+      thumbnailUrl: "/uploads/deal.png",
+    });
+
+    expect(payload.thumbnailUrl).toBe("/uploads/deal.png");
   });
 });

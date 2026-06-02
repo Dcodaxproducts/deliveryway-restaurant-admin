@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import FormInput from "@/components/forms/common/FormInput";
+import { ImageUploadField } from "@/components/forms/common/ImageUploadField";
 import PageWrapper from "@/components/pages/Promotions/forms/PageWrapper";
 import Section from "@/components/pages/Promotions/forms/Section";
 import {
@@ -25,6 +26,7 @@ import {
   normalizeApiRecords,
 } from "@/components/pages/Promotions/utils/option-normalizers";
 import { couponSchema, type CouponFormValues } from "@/validations/promotions";
+import { getOptionalThumbnailUrl } from "@/validations/thumbnail-url";
 import { useGetBranches } from "@/hooks/useBranches";
 import { useGetMenuItems } from "@/hooks/useMenus";
 import { useCreateCoupon, useGetCoupons, useUpdateCoupon } from "@/hooks/usePromotions";
@@ -37,6 +39,7 @@ const defaultValues: CouponFormValues = {
   startsAt: "",
   expiresAt: "",
   description: "",
+  thumbnailUrl: "",
   branchId: "",
   maxDiscountAmount: "",
   minOrderAmount: "",
@@ -123,6 +126,7 @@ export default function AddNewCoupon() {
       startsAt: formatDate(getString(coupon, "startsAt") ?? ""),
       expiresAt: formatDate(getString(coupon, "expiresAt") ?? ""),
       description: getString(coupon, "description") ?? "",
+      thumbnailUrl: getString(coupon, "thumbnailUrl") ?? "",
       branchId: getString(coupon, "branchId") ?? "",
       maxDiscountAmount: String(coupon.maxDiscountAmount ?? ""),
       minOrderAmount: String(coupon.minOrderAmount ?? ""),
@@ -160,6 +164,7 @@ export default function AddNewCoupon() {
       code: values.code.trim(),
       title: values.title.trim(),
       description: values.description?.trim() || undefined,
+      thumbnailUrl: getOptionalThumbnailUrl(values.thumbnailUrl),
       discountValue: toOptionalNumber(values.discountValue) ?? 0,
       maxDiscountAmount: toOptionalNumber(values.maxDiscountAmount),
       minOrderAmount: toOptionalNumber(values.minOrderAmount),
@@ -211,6 +216,22 @@ export default function AddNewCoupon() {
                 onBlur={field.onBlur}
                 error={Boolean(fieldState.error)}
                 errorText={fieldState.error?.message}
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="thumbnailUrl"
+            render={({ field, fieldState }) => (
+              <ImageUploadField<CouponFormValues>
+                name="thumbnailUrl"
+                label="Promotion Thumbnail"
+                value={field.value}
+                error={fieldState.error?.message}
+                setValue={setValue}
+                previewAlt="Promotion thumbnail preview"
+                disabled={saving}
               />
             )}
           />

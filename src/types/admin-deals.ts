@@ -30,6 +30,7 @@ export type AdminDeal = {
   code?: string | null;
   title: string;
   description?: string | null;
+  thumbnailUrl?: string | null;
   restaurantId?: string | null;
   branchId?: string | null;
   discountValue: number;
@@ -85,6 +86,7 @@ export type AdminDealFormValues = {
   code?: string;
   title: string;
   description?: string;
+  thumbnailUrl?: string | null;
   restaurantId?: string;
   branchId?: string;
   discountValue: number;
@@ -102,6 +104,7 @@ export type AdminDealCreatePayload = {
   code?: string;
   title: string;
   description?: string;
+  thumbnailUrl?: string;
   restaurantId?: string;
   branchId?: string;
   discountValue: number;

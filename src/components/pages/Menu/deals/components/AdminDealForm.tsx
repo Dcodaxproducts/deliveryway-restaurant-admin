@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import { FIELD_ERROR_CLASS, INPUT_BASE_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
 import FormInput from "@/components/forms/common/FormInput";
+import { ImageUploadField } from "@/components/forms/common/ImageUploadField";
 import AdminDealMenuItemSelector from "@/components/pages/Menu/deals/components/AdminDealMenuItemSelector";
 import { toDateTimeLocalValue } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
 import PageWrapper from "@/components/pages/Promotions/forms/PageWrapper";
@@ -51,6 +52,7 @@ const getDefaultValues = ({
   code: initialDeal?.code ?? "",
   title: initialDeal?.title ?? "",
   description: initialDeal?.description ?? "",
+  thumbnailUrl: initialDeal?.thumbnailUrl ?? "",
   restaurantId: initialDeal?.restaurantId ?? restaurantId ?? "",
   branchId: initialDeal?.branchId ?? (isBranchAdmin ? branchId ?? "" : ""),
   discountValue: initialDeal?.discountValue ?? 0,
@@ -86,7 +88,7 @@ export default function AdminDealForm({
     [initialDeal?.scopeMenuItems]
   );
 
-  const { control, handleSubmit } = useForm<AdminDealFormValues>({
+  const { control, handleSubmit, setValue } = useForm<AdminDealFormValues>({
     resolver: zodResolver(adminDealFormSchema),
     defaultValues: getDefaultValues({
       initialDeal,
@@ -153,6 +155,22 @@ export default function AdminDealForm({
                   className="min-h-[110px] w-full rounded-md border border-[#BBBBBB] px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="thumbnailUrl"
+            render={({ field, fieldState }) => (
+              <ImageUploadField<AdminDealFormValues>
+                name="thumbnailUrl"
+                label="Deal Thumbnail"
+                value={field.value}
+                error={fieldState.error?.message}
+                setValue={setValue}
+                previewAlt="Deal thumbnail preview"
+                disabled={submitting}
+              />
             )}
           />
 
