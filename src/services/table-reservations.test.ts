@@ -3,20 +3,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getTableReservations,
   TABLE_RESERVATIONS_ENDPOINT,
+  updateTableReservationStatus,
 } from "@/services/table-reservations";
 import { httpClient } from "@/lib/axios";
 
 vi.mock("@/lib/axios", () => ({
   httpClient: {
     get: vi.fn(),
+    patch: vi.fn(),
   },
 }));
 
 const mockedGet = vi.mocked(httpClient.get);
+const mockedPatch = vi.mocked(httpClient.patch);
 
 describe("table reservations service", () => {
   beforeEach(() => {
     mockedGet.mockReset();
+    mockedPatch.mockReset();
   });
 
   it("calls the table reservations endpoint without duplicating /api/v1", async () => {
@@ -122,5 +126,62 @@ describe("table reservations service", () => {
       hasPrevious: false,
     });
   });
-});
 
+  it("updates reservation status without duplicating /api/v1", async () => {
+    mockedPatch.mockResolvedValue({
+      data: {
+        id: "reservation-1",
+        branchId: "branch-1",
+        reservationDate: "2026-06-02T10:00:00.000Z",
+        guestCount: 4,
+        status: "CONFIRMED",
+        createdAt: "2026-06-01T10:00:00.000Z",
+      },
+    });
+
+    await updateTableReservationStatus("reservation-1", {
+      status: "CONFIRMED",
+      restaurantId: "restaurant-1",
+      branchId: "branch-1",
+      customerId: "customer-1",
+    });
+
+    expect(mockedPatch).toHaveBeenCalledWith(
+      `${TABLE_RESERVATIONS_ENDPOINT}/reservation-1/status`,
+      {
+        status: "CONFIRMED",
+        restaurantId: "restaurant-1",
+        branchId: "branch-1",
+        customerId: "customer-1",
+      }
+    );
+    expect(mockedPatch.mock.calls[0]?.[0]).not.toContain("/api/v1");
+  });
+
+  it("omits empty optional reservation status ids", async () => {
+    mockedPatch.mockResolvedValue({
+      data: {
+        id: "reservation-1",
+        branchId: null,
+        reservationDate: "2026-06-02T10:00:00.000Z",
+        guestCount: 4,
+        status: "CANCELLED",
+        createdAt: "2026-06-01T10:00:00.000Z",
+      },
+    });
+
+    await updateTableReservationStatus("reservation-1", {
+      status: "CANCELLED",
+      restaurantId: "",
+      branchId: "",
+      customerId: "",
+    });
+
+    expect(mockedPatch).toHaveBeenCalledWith(
+      `${TABLE_RESERVATIONS_ENDPOINT}/reservation-1/status`,
+      {
+        status: "CANCELLED",
+      }
+    );
+  });
+});

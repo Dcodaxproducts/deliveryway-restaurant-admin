@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, MoreHorizontal } from "lucide-react";
+import { Eye, MoreHorizontal, RefreshCw } from "lucide-react";
 import EmptyState from "@/components/common/EmptyState";
 import { useRouter } from "next/navigation";
 import {
@@ -12,35 +13,47 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import TableSkeleton from "@/components/common/TableSkeleton";
 import SortHeader from "@/components/common/sort-header";
+import { OrderStatusUpdateDialog } from "@/components/pages/Orders/components/orders/OrderStatusUpdateDialog";
 
-interface Order {
+export type OrdersTableRow = {
   id: string;
   orderType?: string;
   status?: string;
   totalAmount?: number;
   createdAt?: string;
   isGroupOrder?: boolean;
-}
+  customerName?: string;
+  guestCount?: number;
+  reservationDate?: string;
+};
+
 interface OrdersTableProps {
-  orders: any[];
+  orders: OrdersTableRow[];
   loading: boolean;
-  sortKey: any;
+  sortKey: keyof OrdersTableRow | null;
   sortDir: "asc" | "desc";
-  onSort: (key: any) => void;
-  activeTab: string; //  NEW
+  onSort: (key: keyof OrdersTableRow) => void;
+  activeTab: string;
 }
 
-const OrdersTable = ({
+export function OrdersTable({
   orders,
   loading,
   sortKey,
   sortDir,
   onSort,
   activeTab
-}: OrdersTableProps) => {
+}: OrdersTableProps) {
   const router = useRouter();
+  const [statusOrder, setStatusOrder] = useState<OrdersTableRow | null>(null);
 
   if (loading) {
     return (
@@ -68,7 +81,7 @@ const OrdersTable = ({
     );
   }
 
-  const getOrderRoute = ({ id, isGroupOrder }: Order) =>
+  const getOrderRoute = ({ id, isGroupOrder }: OrdersTableRow) =>
     isGroupOrder
       ? `/orders/group/${id}`
       : `/orders/details/${id}`;
@@ -177,13 +190,31 @@ const OrdersTable = ({
 
       <TableCell className="px-4">
         <div className="flex items-center justify-center gap-2 text-gray-500">
-          <button className="p-2 hover:text-primary" onClick={() => router.push(getOrderRoute(order))}>
+          <button
+            type="button"
+            className="p-2 hover:text-primary"
+            onClick={() => router.push(getOrderRoute(order))}
+          >
             <Eye size={18} />
           </button>
 
-          <button className="p-2 hover:text-primary">
-            <MoreHorizontal size={18} />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className="p-2 hover:text-primary">
+                <MoreHorizontal size={18} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={() => router.push(getOrderRoute(order))}>
+                <Eye size={16} />
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusOrder(order)}>
+                <RefreshCw size={16} />
+                Update Status
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </TableCell>
     </TableRow>
@@ -192,8 +223,14 @@ const OrdersTable = ({
 </TableBody>
         </Table>
       </div>
+
+      <OrderStatusUpdateDialog
+        open={Boolean(statusOrder)}
+        order={statusOrder}
+        onOpenChange={(open) => {
+          if (!open) setStatusOrder(null);
+        }}
+      />
     </div>
   );
-};
-
-export default OrdersTable;
+}

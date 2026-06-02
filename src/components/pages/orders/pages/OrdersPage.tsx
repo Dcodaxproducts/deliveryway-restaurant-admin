@@ -4,14 +4,17 @@ import { useEffect, useState } from "react";
 import StatsSection from "@/components/common/stats-section";
 import Header from "@/components/pages/Orders/components/orders/header";
 import Container from "@/components/common/Container";
-import Table from "@/components/pages/Orders/components/orders/table";
+import {
+  OrdersTable,
+  type OrdersTableRow,
+} from "@/components/pages/Orders/components/orders/table";
 import { Button } from "@/components/ui/button";
 import OrdersFilters from "@/components/pages/Orders/components/orders/OrdersFilters";
 import { useAuth } from "@/hooks/useAuth";
 import PaginationSection from "@/components/common/pagination";
 import { sortData } from "@/lib/sort-data";
 import { useGetOrdersStats } from "@/hooks/useDashboard";
-import useOrders from "@/hooks/useOrders";
+import { useOrders } from "@/hooks/useOrders";
 import {
   buildOrderStats,
   getOrdersHeaderContent,
@@ -19,13 +22,13 @@ import {
   type OrderTab,
 } from "@/components/pages/orders/utils/orders-page.helpers";
 
-export default function Orders() {
+export function OrdersPage() {
   const [activeTab, setActiveTab] = useState<OrderTab>("delivery");
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
   const [status, setStatus] = useState("ALL");
 
-  const [sortKey, setSortKey] = useState<any>(null);
+  const [sortKey, setSortKey] = useState<keyof OrdersTableRow | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const [page, setPage] = useState(1);
@@ -80,7 +83,7 @@ export default function Orders() {
     setPage(1);
   }, [search, sortOrder, status, activeTab]);
 
-  const handleSort = (key: any) => {
+  const handleSort = (key: keyof OrdersTableRow) => {
     if (sortKey === key) {
       setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
@@ -133,7 +136,7 @@ export default function Orders() {
           onStatusChange={setStatus}
         />
 
-        <Table
+        <OrdersTable
           orders={sortedOrders}
           loading={loading}
           sortKey={sortKey}
@@ -156,7 +159,15 @@ export default function Orders() {
   );
 }
 
-function TabButton({ active, children, onClick }: any) {
+function TabButton({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
   return (
     <Button
       onClick={onClick}

@@ -1,8 +1,11 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { getOrderById, getOrders } from "@/services/orders/orders.api";
+import { getApiErrorMessage } from "@/lib/errors";
+import { getOrderById, getOrders, updateOrderStatus } from "@/services/orders/orders.api";
+import type { OrderStatusUpdatePayload } from "@/types/orders";
 
 interface UseOrdersParams {
   page?: number;
@@ -17,18 +20,6 @@ interface UseOrdersParams {
   enabled?: boolean;
 }
 
-export interface Order {
-  id: string;
-  orderNumber?: string;
-  orderType: string;
-  status: string;
-  totalAmount?: number;
-  createdAt: string;
-  branchId?: string | null;
-  branch?: { id?: string; name?: string } | null;
-  customer?: { fullName?: string; name?: string } | null;
-}
-
 interface OrdersMeta {
   page: number;
   limit: number;
@@ -38,7 +29,7 @@ interface OrdersMeta {
   hasPrevious: boolean;
 }
 
-export default function useOrders(params?: UseOrdersParams) {
+export function useOrders(params?: UseOrdersParams) {
   const { user, isBranchAdmin } = useAuth();
 
   const restaurantId = params?.restaurantId ?? user?.restaurantId;
@@ -86,5 +77,27 @@ export const useGetOrderById = (id?: string) => {
     queryKey: ["orders", "detail", id],
     queryFn: () => getOrderById(id as string),
     enabled: Boolean(id),
+  });
+};
+
+export const useUpdateOrderStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      orderId,
+      payload,
+    }: {
+      orderId: string;
+      payload: OrderStatusUpdatePayload;
+    }) => updateOrderStatus(orderId, payload),
+    onSuccess: (order) => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["orders", "detail", order.id] });
+      toast.success("Order status updated");
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Unable to update order status"));
+    },
   });
 };

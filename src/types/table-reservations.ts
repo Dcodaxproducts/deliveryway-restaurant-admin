@@ -7,6 +7,31 @@ export type TableReservationStatus =
   | "SEATED"
   | string;
 
+export type TableReservationStatusUpdateValue =
+  | "REQUESTED"
+  | "CONFIRMED"
+  | "SEATED"
+  | "COMPLETED"
+  | "CANCELLED";
+
+export type TableReservationStatusUpdatePayload = {
+  status: TableReservationStatusUpdateValue;
+  restaurantId?: string;
+  branchId?: string;
+  customerId?: string;
+};
+
+export const TABLE_RESERVATION_STATUS_OPTIONS: Array<{
+  value: TableReservationStatusUpdateValue;
+  label: string;
+}> = [
+  { value: "REQUESTED", label: "Requested" },
+  { value: "CONFIRMED", label: "Confirmed" },
+  { value: "SEATED", label: "Seated" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "CANCELLED", label: "Cancelled" },
+];
+
 export type TableReservationCustomer = {
   id: string;
   email: string;

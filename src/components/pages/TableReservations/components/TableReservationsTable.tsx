@@ -1,12 +1,21 @@
 "use client";
 
+import { useState } from "react";
+import { MoreHorizontal, RefreshCw } from "lucide-react";
 import EmptyState from "@/components/common/EmptyState";
+import { TableReservationStatusUpdateDialog } from "@/components/pages/TableReservations/components/TableReservationStatusUpdateDialog";
 import {
   formatDateTime,
   formatReservationDate,
   formatShortId,
   getBranchName,
 } from "@/components/pages/TableReservations/utils/table-reservations-formatters";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { TableReservation } from "@/types/table-reservations";
 import TableReservationCustomerCell from "./TableReservationCustomerCell";
 import TableReservationStatusBadge from "./TableReservationStatusBadge";
@@ -16,15 +25,22 @@ type TableReservationsTableProps = {
   reservations: TableReservation[];
   loading: boolean;
   error?: Error | null;
+  restaurantId?: string;
+  branchId?: string;
 };
 
-const desktopColumnCount = 6;
+const desktopColumnCount = 7;
 
-export default function TableReservationsTable({
+export function TableReservationsTable({
   reservations,
   loading,
   error,
+  restaurantId,
+  branchId,
 }: TableReservationsTableProps) {
+  const [statusReservation, setStatusReservation] =
+    useState<TableReservation | null>(null);
+
   if (loading) {
     return (
       <>
@@ -37,7 +53,8 @@ export default function TableReservationsTable({
               {Array.from({ length: 6 }).map((_, index) => (
                 <tr key={index}>
                   <td colSpan={desktopColumnCount} className="px-5 py-5">
-                    <div className="grid animate-pulse grid-cols-[18%_25%_17%_10%_18%_12%] gap-3">
+                    <div className="grid animate-pulse grid-cols-[16%_23%_16%_9%_17%_11%_8%] gap-3">
+                      <div className="h-4 rounded bg-gray-200" />
                       <div className="h-4 rounded bg-gray-200" />
                       <div className="h-4 rounded bg-gray-200" />
                       <div className="h-4 rounded bg-gray-200" />
@@ -74,12 +91,13 @@ export default function TableReservationsTable({
         <table className="w-full table-fixed text-sm">
           <thead>
             <tr className="border-b bg-[#FAFAFA] text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <th className="w-[18%] px-5 py-4">Reservation</th>
-              <th className="w-[25%] px-3 py-4">Customer</th>
-              <th className="w-[17%] px-3 py-4">Date & Time</th>
-              <th className="w-[10%] px-3 py-4 text-center">Guests</th>
-              <th className="w-[18%] px-3 py-4">Branch / Note</th>
-              <th className="w-[12%] px-5 py-4 text-center">Status</th>
+              <th className="w-[16%] px-5 py-4">Reservation</th>
+              <th className="w-[23%] px-3 py-4">Customer</th>
+              <th className="w-[16%] px-3 py-4">Date & Time</th>
+              <th className="w-[9%] px-3 py-4 text-center">Guests</th>
+              <th className="w-[17%] px-3 py-4">Branch / Note</th>
+              <th className="w-[11%] px-3 py-4 text-center">Status</th>
+              <th className="w-[8%] px-5 py-4 text-center">Actions</th>
             </tr>
           </thead>
 
@@ -136,8 +154,29 @@ export default function TableReservationsTable({
                   </div>
                 </td>
 
-                <td className="px-5 py-4 text-center">
+                <td className="px-3 py-4 text-center">
                   <TableReservationStatusBadge status={reservation.status} />
+                </td>
+
+                <td className="px-5 py-4 text-center">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex size-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-50 hover:text-primary"
+                      >
+                        <MoreHorizontal size={18} />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuItem
+                        onClick={() => setStatusReservation(reservation)}
+                      >
+                        <RefreshCw size={16} />
+                        Update Status
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             ))}
@@ -203,9 +242,28 @@ export default function TableReservationsTable({
             <p className="mt-3 line-clamp-2 break-words text-sm text-gray-500">
               {reservation.note || "No note"}
             </p>
+
+            <button
+              type="button"
+              className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-[var(--brand-button-radius)] bg-primary px-4 text-sm font-medium text-white"
+              onClick={() => setStatusReservation(reservation)}
+            >
+              <RefreshCw size={16} />
+              Update Status
+            </button>
           </div>
         ))}
       </div>
+
+      <TableReservationStatusUpdateDialog
+        open={Boolean(statusReservation)}
+        reservation={statusReservation}
+        restaurantId={restaurantId}
+        branchId={branchId}
+        onOpenChange={(open) => {
+          if (!open) setStatusReservation(null);
+        }}
+      />
     </div>
   );
 }

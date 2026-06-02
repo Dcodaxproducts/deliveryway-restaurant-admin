@@ -10,7 +10,7 @@ import TableReservationsFilters, {
 import TableReservationsHeader from "@/components/pages/TableReservations/components/TableReservationsHeader";
 import TableReservationsPagination from "@/components/pages/TableReservations/components/TableReservationsPagination";
 import TableReservationsStats from "@/components/pages/TableReservations/components/TableReservationsStats";
-import TableReservationsTable from "@/components/pages/TableReservations/components/TableReservationsTable";
+import { TableReservationsTable } from "@/components/pages/TableReservations/components/TableReservationsTable";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetBranches } from "@/hooks/useBranches";
 import { useTableReservations } from "@/hooks/useTableReservations";
@@ -44,7 +44,7 @@ const getBranchOptions = (payload: unknown): TableReservationBranchOption[] => {
   }, []);
 };
 
-export default function TableReservationsPage() {
+export function TableReservationsPage() {
   const { user, restaurantId, branchId, isBranchAdmin } = useAuth();
   const [filters, setFilters] = useState(defaultFilters);
   const [page, setPage] = useState(1);
@@ -147,6 +147,8 @@ export default function TableReservationsPage() {
           reservations={reservations}
           loading={reservationsQuery.isLoading}
           error={reservationsQuery.error}
+          restaurantId={restaurantId || undefined}
+          branchId={branchId || undefined}
         />
 
         <TableReservationsPagination

@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import useOrders from "@/hooks/useOrders";
+import { useOrders } from "@/hooks/useOrders";
 import { useAssignOrderToDeliveryman } from "@/hooks/useDeliverymen";
 import {
   Search,

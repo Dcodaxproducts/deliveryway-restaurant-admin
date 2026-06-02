@@ -1,9 +1,17 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { getTableReservations } from "@/services/table-reservations";
-import type { TableReservationsParams } from "@/types/table-reservations";
+import { getApiErrorMessage } from "@/lib/errors";
+import {
+  getTableReservations,
+  updateTableReservationStatus,
+} from "@/services/table-reservations";
+import type {
+  TableReservationsParams,
+  TableReservationStatusUpdatePayload,
+} from "@/types/table-reservations";
 
 export const tableReservationsQueryKeys = {
   list: (params: TableReservationsParams) =>
@@ -30,3 +38,26 @@ export function useTableReservations(params: TableReservationsParams) {
   });
 }
 
+export const useUpdateTableReservationStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      reservationId,
+      payload,
+    }: {
+      reservationId: string;
+      payload: TableReservationStatusUpdatePayload;
+    }) => updateTableReservationStatus(reservationId, payload),
+    onSuccess: (reservation) => {
+      queryClient.invalidateQueries({ queryKey: ["table-reservations"] });
+      queryClient.invalidateQueries({
+        queryKey: ["table-reservations", "detail", reservation.id],
+      });
+      toast.success("Reservation status updated");
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Unable to update reservation status"));
+    },
+  });
+};
