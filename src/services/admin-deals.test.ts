@@ -131,6 +131,52 @@ describe("admin deals service", () => {
     expect(result.thumbnailUrl).toBe("https://cdn.example.com/deal.png");
   });
 
+  it("normalizes edit detail fields from scoped menu item response data", async () => {
+    mockedGet.mockResolvedValue({
+      success: true,
+      data: [
+        {
+          id: "deal-1",
+          code: "PIZZA100",
+          title: "Pizza Combo Deal",
+          description: "shorter desc",
+          discountValue: 100,
+          minOrderAmount: 100,
+          maxUses: 100,
+          maxUsesPerCustomer: 2,
+          startsAt: "2026-06-02T09:05:00.000Z",
+          expiresAt: "2026-06-13T09:05:00.000Z",
+          isActive: true,
+          restaurant: {
+            id: "restaurant-1",
+            name: "kfcs",
+          },
+          branch: {
+            id: "branch-1",
+            name: "Main Branch",
+          },
+          scopeMenuItems: [
+            {
+              id: "item-1",
+              name: "1. Basic Pizza Copy",
+            },
+            {
+              id: "item-2",
+              name: "Pizza",
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await getAdminDeal("deal-1");
+
+    expect(result.code).toBe("PIZZA100");
+    expect(result.restaurantId).toBe("restaurant-1");
+    expect(result.branchId).toBe("branch-1");
+    expect(result.scopeMenuItemIds).toEqual(["item-1", "item-2"]);
+  });
+
   it("detail calls /admin/deals/:id", async () => {
     mockedGet.mockResolvedValue(dealResponse);
 

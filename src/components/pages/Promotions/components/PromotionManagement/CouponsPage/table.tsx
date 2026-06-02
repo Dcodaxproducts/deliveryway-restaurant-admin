@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
@@ -25,7 +24,6 @@ type Coupon = {
   id: string;
   code: string;
   title?: string;
-  thumbnailUrl?: string | null;
   branchId?: string;
   discountType?: string;
   discountValue?: number;
@@ -66,7 +64,6 @@ const toCoupon = (record: Record<string, unknown>): Coupon | null => {
     id,
     code,
     title: getString(record, "title"),
-    thumbnailUrl: getString(record, "thumbnailUrl") ?? null,
     branchId: getString(record, "branchId"),
     discountType: getString(record, "discountType"),
     discountValue: typeof record.discountValue === "number" ? record.discountValue : undefined,
@@ -152,26 +149,8 @@ const CouponsTable = () => {
                 <TableCell>{getSerial(i)}</TableCell>
 
                 <TableCell>
-                  <div className="flex items-start gap-3">
-                    {c.thumbnailUrl ? (
-                      <Image
-                        src={c.thumbnailUrl}
-                        alt={`${c.title ?? "Coupon"} thumbnail`}
-                        width={40}
-                        height={40}
-                        unoptimized
-                        className="h-10 w-10 shrink-0 rounded-md object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100 text-xs font-semibold text-gray-400">
-                        {(c.title || "C").slice(0, 1).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{c.title}</p>
-                      <p className="text-gray-500 text-sm">code: {c.code}</p>
-                    </div>
-                  </div>
+                  <p className="font-medium">{c.title}</p>
+                  <p className="text-gray-500 text-sm">code: {c.code}</p>
                 </TableCell>
 
                 <TableCell>

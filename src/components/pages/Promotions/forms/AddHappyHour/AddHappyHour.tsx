@@ -8,7 +8,6 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import FormInput from "@/components/forms/common/FormInput";
-import { ImageUploadField } from "@/components/forms/common/ImageUploadField";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -34,7 +33,6 @@ import {
   normalizeSelectedOptions,
 } from "@/components/pages/Promotions/utils/option-normalizers";
 import { happyHourSchema, type HappyHourFormValues } from "@/validations/promotions";
-import { getOptionalThumbnailUrl } from "@/validations/thumbnail-url";
 import { FIELD_ERROR_CLASS, INPUT_BASE_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
 
 const days = [
@@ -51,7 +49,6 @@ const defaultValues: HappyHourFormValues = {
   code: "",
   title: "",
   description: "",
-  thumbnailUrl: "",
   discountType: "FLAT",
   discountValue: "",
   maxDiscountAmount: "",
@@ -133,7 +130,6 @@ export default function AddHappyHour() {
       code: getString(detail, "code") ?? "",
       title: getString(detail, "title") ?? "",
       description: getString(detail, "description") ?? "",
-      thumbnailUrl: getString(detail, "thumbnailUrl") ?? "",
       discountType: detail.discountType === "PERCENTAGE" ? "PERCENTAGE" : "FLAT",
       discountValue: String(detail.discountValue ?? ""),
       maxDiscountAmount: String(detail.maxDiscountAmount ?? ""),
@@ -195,13 +191,10 @@ export default function AddHappyHour() {
   };
 
   const payload = useMemo(() => {
-    const thumbnailUrl = getOptionalThumbnailUrl(values.thumbnailUrl);
-
     return {
       code: values.code.trim(),
       title: values.title.trim(),
       description: values.description.trim(),
-      ...(thumbnailUrl ? { thumbnailUrl } : {}),
       restaurantId,
       branchId: branchId || null,
       discountType: values.discountType,
@@ -313,22 +306,6 @@ export default function AddHappyHour() {
                   className="min-h-[110px] w-full rounded-md border border-[#BBBBBB] px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="thumbnailUrl"
-            render={({ field, fieldState }) => (
-              <ImageUploadField<HappyHourFormValues>
-                name="thumbnailUrl"
-                label="Promotion Thumbnail"
-                value={field.value}
-                error={fieldState.error?.message}
-                setValue={setValue}
-                previewAlt="Promotion thumbnail preview"
-                disabled={submitting}
-              />
             )}
           />
 

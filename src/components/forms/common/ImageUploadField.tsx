@@ -2,7 +2,7 @@
 
 import { ImagePlus, Loader2, Trash2, UploadCloud } from "lucide-react";
 import Image from "next/image";
-import { useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type {
   FieldPath,
   FieldValues,
@@ -47,11 +47,28 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
 }: ImageUploadFieldProps<TFieldValues>) {
   const inputId = useId();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const previewObjectUrlRef = useRef<string | null>(null);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const { uploadFile, uploading } = useFileUpload();
   const currentValue = value?.trim() ?? "";
   const isDisabled = disabled || uploading;
+  const previewSrc = localPreviewUrl || currentValue;
+
+  useEffect(() => {
+    return () => {
+      if (previewObjectUrlRef.current) {
+        URL.revokeObjectURL(previewObjectUrlRef.current);
+      }
+    };
+  }, []);
 
   const updateValue = (nextValue: string) => {
+    if (previewObjectUrlRef.current) {
+      URL.revokeObjectURL(previewObjectUrlRef.current);
+      previewObjectUrlRef.current = null;
+      setLocalPreviewUrl(null);
+    }
+
     setValue(name, toFieldValue<TFieldValues>(nextValue), {
       shouldDirty: true,
       shouldTouch: true,
@@ -65,9 +82,28 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (previewObjectUrlRef.current) {
+        URL.revokeObjectURL(previewObjectUrlRef.current);
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      previewObjectUrlRef.current = objectUrl;
+      setLocalPreviewUrl(objectUrl);
+    }
+
     const result = await uploadFile(event);
     if (result?.fileUrl) {
-      updateValue(result.fileUrl);
+      setValue(name, toFieldValue<TFieldValues>(result.fileUrl), {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+    } else if (previewObjectUrlRef.current) {
+      URL.revokeObjectURL(previewObjectUrlRef.current);
+      previewObjectUrlRef.current = null;
+      setLocalPreviewUrl(null);
     }
 
     if (fileInputRef.current) {
@@ -79,10 +115,10 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
     <div className="space-y-3">
       <Label htmlFor={inputId}>{label}</Label>
 
-      {currentValue ? (
+      {previewSrc ? (
         <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
           <Image
-            src={currentValue}
+            src={previewSrc}
             alt={previewAlt}
             width={640}
             height={160}

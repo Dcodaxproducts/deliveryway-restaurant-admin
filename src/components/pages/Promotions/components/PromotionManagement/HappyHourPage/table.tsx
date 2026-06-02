@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -28,7 +27,6 @@ type HappyHour = {
   code?: string;
   title?: string;
   description?: string;
-  thumbnailUrl?: string | null;
   kind?: string;
   status?: string;
   discountType?: string;
@@ -136,10 +134,6 @@ const getStatusClass = (status?: string) => {
   }
 };
 
-const getTitleInitial = (title?: string) => {
-  return (title || "H").slice(0, 1).toUpperCase();
-};
-
 const TableSkeleton = () => {
   return (
     <>
@@ -237,29 +231,11 @@ const [menuPosition, setMenuPosition] = useState<{
                   </TableCell>
 
                   <TableCell className="px-4">
-                    <div className="flex items-start gap-3">
-                      {item.thumbnailUrl ? (
-                        <Image
-                          src={item.thumbnailUrl}
-                          alt={`${item.title ?? "Happy hour"} thumbnail`}
-                          width={40}
-                          height={40}
-                          unoptimized
-                          className="h-10 w-10 shrink-0 rounded-md object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100 text-xs font-semibold text-gray-400">
-                          {getTitleInitial(item.title)}
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{item.title}</p>
-                        <p className="text-gray-500 text-sm">Code: {item.code}</p>
-                        <p className="text-gray-400 text-xs">
-                          {formatDate(item.startsAt)} - {formatDate(item.expiresAt)}
-                        </p>
-                      </div>
-                    </div>
+                    <p className="font-medium text-sm">{item.title}</p>
+                    <p className="text-gray-500 text-sm">Code: {item.code}</p>
+                    <p className="text-gray-400 text-xs">
+                      {formatDate(item.startsAt)} - {formatDate(item.expiresAt)}
+                    </p>
                   </TableCell>
 
                   <TableCell className="px-4">
@@ -386,24 +362,8 @@ const [menuPosition, setMenuPosition] = useState<{
                 key={item.id}
                 className="bg-white rounded-[14px] shadow-sm p-4 border border-[#EDEFF2] flex flex-col gap-3"
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    {item.thumbnailUrl ? (
-                      <Image
-                        src={item.thumbnailUrl}
-                        alt={`${item.title ?? "Happy hour"} thumbnail`}
-                        width={40}
-                        height={40}
-                        unoptimized
-                        className="h-10 w-10 shrink-0 rounded-md object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100 text-xs font-semibold text-gray-400">
-                        {getTitleInitial(item.title)}
-                      </div>
-                    )}
-                    <p className="truncate font-semibold text-gray-900">{item.title}</p>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-gray-900">{item.title}</p>
                   <Checkbox />
                 </div>
 

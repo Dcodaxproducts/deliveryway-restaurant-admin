@@ -1,15 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  createAdminHappyHour,
   createAdminPromotionCampaign,
-  createCoupon,
-  getAdminHappyHourDetail,
   getAdminPromotionCampaignDetail,
   getAdminPromotionCampaigns,
-  updateAdminHappyHour,
   updateAdminPromotionCampaign,
-  updateCoupon,
 } from "@/services/promotions";
 import api from "@/lib/axios";
 
@@ -82,50 +77,4 @@ describe("promotions service", () => {
     expect(mockedPatch.mock.calls[0]?.[0]).not.toContain("/api/v1");
   });
 
-  it("happy hour list/detail and mutations preserve thumbnailUrl", async () => {
-    mockedGet.mockResolvedValueOnce({
-      data: {
-        data: { id: "happy-1", title: "Happy", thumbnailUrl: "https://cdn.example.com/happy.png" },
-      },
-    });
-    mockedPost.mockResolvedValue({ data: { id: "happy-1" } });
-    mockedPatch.mockResolvedValue({ data: { id: "happy-1" } });
-
-    const detail = await getAdminHappyHourDetail("happy-1");
-    await createAdminHappyHour({
-      code: "HAPPY",
-      title: "Happy",
-      thumbnailUrl: "https://cdn.example.com/happy.png",
-      discountType: "FLAT",
-      discountValue: 10,
-      startsAt: "2026-06-02T00:00:00.000Z",
-      isActive: true,
-    });
-    await updateAdminHappyHour("happy-1", {
-      thumbnailUrl: "https://cdn.example.com/happy.png",
-    });
-
-    expect(detail.data.thumbnailUrl).toBe("https://cdn.example.com/happy.png");
-    expect(mockedPost).toHaveBeenCalledWith("/admin/promotions/happy-hours", expect.objectContaining({
-      thumbnailUrl: "https://cdn.example.com/happy.png",
-    }));
-    expect(mockedPatch).toHaveBeenCalledWith("/admin/promotions/happy-hours/happy-1", expect.objectContaining({
-      thumbnailUrl: "https://cdn.example.com/happy.png",
-    }));
-  });
-
-  it("coupon create/update sends thumbnailUrl", async () => {
-    mockedPost.mockResolvedValue({ data: { id: "coupon-1" } });
-    mockedPatch.mockResolvedValue({ data: { id: "coupon-1" } });
-
-    await createCoupon({ title: "Coupon", thumbnailUrl: "/uploads/coupon.png" });
-    await updateCoupon("coupon-1", { thumbnailUrl: "/uploads/coupon.png" });
-
-    expect(mockedPost).toHaveBeenCalledWith("/coupons", expect.objectContaining({
-      thumbnailUrl: "/uploads/coupon.png",
-    }));
-    expect(mockedPatch).toHaveBeenCalledWith("/coupons/coupon-1", expect.objectContaining({
-      thumbnailUrl: "/uploads/coupon.png",
-    }));
-  });
 });

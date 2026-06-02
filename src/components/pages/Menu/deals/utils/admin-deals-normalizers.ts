@@ -26,6 +26,17 @@ const getNullableString = (source: Record<string, unknown>, key: string) => {
   return typeof value === "string" ? value : null;
 };
 
+const getNestedNullableString = (
+  source: Record<string, unknown>,
+  key: string,
+  nestedKey: string
+) => {
+  const nestedValue = source[key];
+  if (!isRecord(nestedValue)) return null;
+
+  return getNullableString(nestedValue, nestedKey);
+};
+
 const getNumber = (source: Record<string, unknown>, key: string, fallback = 0) => {
   const value = source[key];
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -57,6 +68,16 @@ const normalizeStringArray = (value: unknown) => {
   if (!Array.isArray(value)) return [];
 
   return value.filter((item): item is string => typeof item === "string");
+};
+
+const normalizeScopeMenuItemIds = (
+  value: unknown,
+  scopeMenuItems?: AdminDealMenuItemSummary[]
+) => {
+  const explicitIds = normalizeStringArray(value);
+  if (explicitIds.length > 0) return explicitIds;
+
+  return scopeMenuItems?.map((item) => item.id).filter(Boolean) ?? [];
 };
 
 export const getDefaultAdminDealsMeta = (
@@ -110,8 +131,8 @@ export const normalizeAdminDeal = (value: unknown): AdminDeal | null => {
     title: getString(value, "title", "Untitled deal"),
     description: getNullableString(value, "description"),
     thumbnailUrl: getNullableString(value, "thumbnailUrl"),
-    restaurantId: getNullableString(value, "restaurantId"),
-    branchId: getNullableString(value, "branchId"),
+    restaurantId: getNullableString(value, "restaurantId") ?? getNestedNullableString(value, "restaurant", "id"),
+    branchId: getNullableString(value, "branchId") ?? getNestedNullableString(value, "branch", "id"),
     discountValue: getNumber(value, "discountValue"),
     maxDiscountAmount: getNullableNumber(value, "maxDiscountAmount"),
     minOrderAmount: getNullableNumber(value, "minOrderAmount"),
@@ -119,7 +140,7 @@ export const normalizeAdminDeal = (value: unknown): AdminDeal | null => {
     maxUsesPerCustomer: getNullableNumber(value, "maxUsesPerCustomer"),
     startsAt: getString(value, "startsAt"),
     expiresAt: getString(value, "expiresAt"),
-    scopeMenuItemIds: normalizeStringArray(value.scopeMenuItemIds),
+    scopeMenuItemIds: normalizeScopeMenuItemIds(value.scopeMenuItemIds, scopeMenuItems),
     ...(scopeMenuItems ? { scopeMenuItems } : {}),
     autoApply: getBoolean(value, "autoApply", true),
     isActive: getBoolean(value, "isActive"),
@@ -167,7 +188,8 @@ export const normalizeAdminDealsResponse = (
 };
 
 export const unwrapAdminDeal = (payload: unknown): AdminDeal => {
-  const source = isRecord(payload) && "data" in payload ? payload.data : payload;
+  const data = isRecord(payload) && "data" in payload ? payload.data : payload;
+  const source = Array.isArray(data) ? data[0] : data;
   const deal = normalizeAdminDeal(source);
 
   if (!deal) {
