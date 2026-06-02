@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Loader2, Search, X } from "lucide-react";
+import type { UIEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 
 import { formatDealPrice } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
@@ -43,7 +44,7 @@ const getResponseMeta = (response: unknown) => {
     data && typeof data === "object" && !Array.isArray(data)
       ? (data as Record<string, unknown>)
       : {};
-  const meta = record.meta ?? dataRecord.meta;
+  const meta = record.meta ?? dataRecord.meta ?? dataRecord.pagination;
 
   return meta && typeof meta === "object"
     ? (meta as Record<string, unknown>)
@@ -53,6 +54,7 @@ const getResponseMeta = (response: unknown) => {
 const getHasNext = (response: unknown, itemCount: number) => {
   const meta = getResponseMeta(response);
   if (typeof meta.hasNext === "boolean") return meta.hasNext;
+  if (typeof meta.hasMore === "boolean") return meta.hasMore;
 
   const page = typeof meta.page === "number" ? meta.page : undefined;
   const totalPages =
@@ -143,6 +145,16 @@ export default function AdminDealMenuItemSelector({
     onChange([...value, item.id]);
   };
 
+  const handleOptionsScroll = (event: UIEvent<HTMLDivElement>) => {
+    const element = event.currentTarget;
+    const isNearBottom =
+      element.scrollHeight - element.scrollTop <= element.clientHeight + 40;
+
+    if (isNearBottom && hasNext && !loading) {
+      setPage((currentPage) => currentPage + 1);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <div className="rounded-[14px] border border-gray-200 bg-white">
@@ -164,7 +176,10 @@ export default function AdminDealMenuItemSelector({
           </div>
         </div>
 
-        <div className="max-h-[360px] overflow-y-auto p-2">
+        <div
+          className="max-h-[360px] overflow-y-auto p-2"
+          onScroll={handleOptionsScroll}
+        >
           {options.map((item) => {
             const selected = value.includes(item.id);
 
@@ -227,23 +242,11 @@ export default function AdminDealMenuItemSelector({
             </div>
           ) : null}
 
-          {options.length > 0 ? (
-            <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-2 py-3">
-              <span className="text-xs text-gray-500">
-                Showing {options.length.toLocaleString()} menu items
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={!hasNext || loading}
-                onClick={() => setPage((currentPage) => currentPage + 1)}
-                className="h-8 rounded-full px-3 text-xs"
-              >
-                {loading ? (
-                  <Loader2 size={13} className="mr-1 animate-spin" />
-                ) : null}
-                Load more
-              </Button>
+          {!loading && options.length > 0 ? (
+            <div className="border-t border-gray-100 px-2 py-3 text-center text-xs text-gray-400">
+              {hasNext
+                ? "Scroll down to load more menu items"
+                : `Showing ${options.length.toLocaleString()} menu items`}
             </div>
           ) : null}
         </div>
