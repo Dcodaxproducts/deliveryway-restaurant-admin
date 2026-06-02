@@ -9,6 +9,7 @@ import TableReservationsFilters, {
 } from "@/components/pages/TableReservations/components/TableReservationsFilters";
 import TableReservationsHeader from "@/components/pages/TableReservations/components/TableReservationsHeader";
 import TableReservationsPagination from "@/components/pages/TableReservations/components/TableReservationsPagination";
+import TableReservationsStats from "@/components/pages/TableReservations/components/TableReservationsStats";
 import TableReservationsTable from "@/components/pages/TableReservations/components/TableReservationsTable";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetBranches } from "@/hooks/useBranches";
@@ -125,6 +126,12 @@ export default function TableReservationsPage() {
       />
 
       <div className="space-y-6 rounded-lg bg-white p-4 shadow-sm lg:p-6">
+        <TableReservationsStats
+          reservations={reservations}
+          total={meta.total}
+          loading={reservationsQuery.isLoading || reservationsQuery.isFetching}
+        />
+
         <TableReservationsFilters
           filters={filters}
           branchOptions={branchOptions}
