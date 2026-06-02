@@ -17,6 +17,8 @@ type AdminDealMenuItemSelectorProps = {
   error?: string;
 };
 
+const MENU_ITEMS_PAGE_SIZE = 10;
+
 const getResponseItems = (response: unknown): AdminDealMenuItemSummary[] => {
   const source = response && typeof response === "object" ? response : {};
   const record = source as Record<string, unknown>;
@@ -31,6 +33,34 @@ const getResponseItems = (response: unknown): AdminDealMenuItemSummary[] => {
   return items
     .map((item) => normalizeAdminDealMenuItem(item))
     .filter((item): item is AdminDealMenuItemSummary => item !== null);
+};
+
+const getResponseMeta = (response: unknown) => {
+  const source = response && typeof response === "object" ? response : {};
+  const record = source as Record<string, unknown>;
+  const data = record.data;
+  const dataRecord =
+    data && typeof data === "object" && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : {};
+  const meta = record.meta ?? dataRecord.meta;
+
+  return meta && typeof meta === "object"
+    ? (meta as Record<string, unknown>)
+    : {};
+};
+
+const getHasNext = (response: unknown, itemCount: number) => {
+  const meta = getResponseMeta(response);
+  if (typeof meta.hasNext === "boolean") return meta.hasNext;
+
+  const page = typeof meta.page === "number" ? meta.page : undefined;
+  const totalPages =
+    typeof meta.totalPages === "number" ? meta.totalPages : undefined;
+
+  if (page && totalPages) return page < totalPages;
+
+  return itemCount >= MENU_ITEMS_PAGE_SIZE;
 };
 
 const mergeItems = (
@@ -52,6 +82,8 @@ export default function AdminDealMenuItemSelector({
 }: AdminDealMenuItemSelectorProps) {
   const [search, setSearch] = useState("");
   const [options, setOptions] = useState<AdminDealMenuItemSummary[]>(initialItems);
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -65,28 +97,36 @@ export default function AdminDealMenuItemSelector({
       setLoading(true);
       try {
         const response: unknown = await getMenuItems({
-          page: 1,
-          limit: 20,
+          page,
+          limit: MENU_ITEMS_PAGE_SIZE,
           search,
           restaurantId,
         });
         const items = getResponseItems(response);
 
         if (mounted) {
-          setOptions((current) => mergeItems(initialItems.length ? initialItems : current, items));
+          setOptions((current) => {
+            if (page === 1) return mergeItems(initialItems, items);
+            return mergeItems(current, items);
+          });
+          setHasNext(getHasNext(response, items.length));
         }
       } finally {
         if (mounted) setLoading(false);
       }
     };
 
-    const timeoutId = window.setTimeout(loadItems, 300);
+    const timeoutId = window.setTimeout(loadItems, page === 1 ? 300 : 0);
 
     return () => {
       mounted = false;
       window.clearTimeout(timeoutId);
     };
-  }, [initialItems, restaurantId, search]);
+  }, [initialItems, page, restaurantId, search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [restaurantId]);
 
   const selectedItems = useMemo(() => {
     return value
@@ -114,7 +154,10 @@ export default function AdminDealMenuItemSelector({
             />
             <input
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                setPage(1);
+                setSearch(event.target.value);
+              }}
               placeholder="Search menu items"
               className="h-[42px] w-full rounded-[12px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
             />
@@ -181,6 +224,26 @@ export default function AdminDealMenuItemSelector({
           {!loading && options.length === 0 ? (
             <div className="p-6 text-center text-sm text-gray-400">
               No menu items found.
+            </div>
+          ) : null}
+
+          {options.length > 0 ? (
+            <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-2 py-3">
+              <span className="text-xs text-gray-500">
+                Showing {options.length.toLocaleString()} menu items
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!hasNext || loading}
+                onClick={() => setPage((currentPage) => currentPage + 1)}
+                className="h-8 rounded-full px-3 text-xs"
+              >
+                {loading ? (
+                  <Loader2 size={13} className="mr-1 animate-spin" />
+                ) : null}
+                Load more
+              </Button>
             </div>
           ) : null}
         </div>

@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import { useMemo } from "react";
 import { Controller, useForm, type FieldErrors } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -80,7 +81,10 @@ export default function AdminDealForm({
   onCancel,
   onSubmit,
 }: AdminDealFormProps) {
-  const initialMenuItems: AdminDealMenuItemSummary[] = initialDeal?.scopeMenuItems ?? [];
+  const initialMenuItems: AdminDealMenuItemSummary[] = useMemo(
+    () => initialDeal?.scopeMenuItems ?? [],
+    [initialDeal?.scopeMenuItems]
+  );
 
   const { control, handleSubmit } = useForm<AdminDealFormValues>({
     resolver: zodResolver(adminDealFormSchema),
