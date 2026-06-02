@@ -130,6 +130,9 @@ export default function TableReservationsPage() {
           branchOptions={branchOptions}
           isBranchAdmin={isBranchAdmin}
           branchName={user?.branchName ?? undefined}
+          visibleCount={reservations.length}
+          totalCount={meta.total}
+          isFetching={reservationsQuery.isFetching}
           onFiltersChange={handleFiltersChange}
         />
 
