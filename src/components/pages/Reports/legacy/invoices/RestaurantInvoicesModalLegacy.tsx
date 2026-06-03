@@ -55,10 +55,11 @@ const formatCurrency = (value: number, currency = "EUR") => {
   const numericValue = Number(value || 0);
 
   try {
-    return new Intl.NumberFormat("de-DE", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency,
       maximumFractionDigits: 2,
+      minimumFractionDigits: 2,
     }).format(numericValue);
   } catch {
     return `${currency} ${numericValue.toFixed(2)}`;

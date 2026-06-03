@@ -45,6 +45,21 @@ const formatCurrency = (value: number, currency = "EUR") => {
   }
 };
 
+const formatInvoiceCurrency = (value: number, currency = "EUR") => {
+  const numericValue = Number(value || 0);
+
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 2,
+    }).format(numericValue);
+  } catch {
+    return `${currency} ${numericValue.toFixed(2)}`;
+  }
+};
+
 const formatDateTime = (value?: string | null) => {
   if (!value) return "-";
 
@@ -553,9 +568,9 @@ export const downloadRestaurantInvoicePdf = (invoice: AdminInvoice) => {
       invoice.items?.map((item) => [
         item.menuItemName || "-",
         item.variationName || "-",
-        formatCurrency(item.unitPrice || 0, currency),
+        formatInvoiceCurrency(item.unitPrice || 0, currency),
         String(item.quantity || 0),
-        formatCurrency(item.lineTotal || 0, currency),
+        formatInvoiceCurrency(item.lineTotal || 0, currency),
       ]) || [],
     margin: {
       left: 40,
@@ -591,19 +606,19 @@ export const downloadRestaurantInvoicePdf = (invoice: AdminInvoice) => {
   autoTable(doc, {
     startY: y + 14,
     body: [
-      ["Subtotal", formatCurrency(invoice.subtotal || 0, currency)],
-      ["Tax", formatCurrency(invoice.taxAmount || 0, currency)],
-      ["Delivery Fee", formatCurrency(invoice.deliveryFee || 0, currency)],
-      ["Discount", `-${formatCurrency(invoice.discountAmount || 0, currency)}`],
+      ["Subtotal", formatInvoiceCurrency(invoice.subtotal || 0, currency)],
+      ["Tax", formatInvoiceCurrency(invoice.taxAmount || 0, currency)],
+      ["Delivery Fee", formatInvoiceCurrency(invoice.deliveryFee || 0, currency)],
+      ["Discount", `-${formatInvoiceCurrency(invoice.discountAmount || 0, currency)}`],
       [
         "Wallet Applied",
-        `-${formatCurrency(invoice.walletAppliedAmount || 0, currency)}`,
+        `-${formatInvoiceCurrency(invoice.walletAppliedAmount || 0, currency)}`,
       ],
       [
         "Loyalty Discount",
-        `-${formatCurrency(invoice.loyaltyDiscountAmount || 0, currency)}`,
+        `-${formatInvoiceCurrency(invoice.loyaltyDiscountAmount || 0, currency)}`,
       ],
-      ["Total", formatCurrency(invoice.totalAmount || 0, currency)],
+      ["Total", formatInvoiceCurrency(invoice.totalAmount || 0, currency)],
     ],
     margin: {
       left: 300,
