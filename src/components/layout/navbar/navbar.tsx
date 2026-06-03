@@ -7,6 +7,7 @@ import { SearchBar } from "./search-bar";
 import NotificationBell from "./notification";
 import ProfileSection from "./profile-section";
 import RestaurantPicker from "@/components/common/RestaurantPicker";
+import LanguageSelector from "@/components/layout/navbar/LanguageSelector";
 
 export function Navbar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -33,6 +34,7 @@ export function Navbar() {
           <RestaurantPicker />
           {/* RIGHT */}
           <div className="flex items-center gap-0 lg:gap-2">
+            <LanguageSelector />
             <NotificationBell />
             <div className="hidden h-12 w-px bg-primary lg:block" />
             <ProfileSection />

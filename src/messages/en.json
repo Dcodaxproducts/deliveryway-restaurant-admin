@@ -1,0 +1,39 @@
+{
+  "common": {
+    "language": "Language",
+    "english": "English",
+    "german": "German",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "reset": "Reset",
+    "clear": "Clear",
+    "actions": "Actions",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "navigation": {
+    "changeLanguage": "Change language"
+  },
+  "auth": {},
+  "dashboard": {},
+  "orders": {},
+  "tableReservations": {},
+  "menu": {},
+  "deals": {},
+  "customers": {},
+  "branches": {},
+  "deliverymen": {},
+  "employees": {},
+  "promotions": {},
+  "settings": {},
+  "profile": {},
+  "globalSearch": {},
+  "validation": {}
+}
