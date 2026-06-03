@@ -8,6 +8,7 @@ import AsyncSelect from "@/components/ui/AsyncSelect";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { DeliverymanFormValues } from "@/validations/deliverymen";
+import { useTranslations } from "next-intl";
 
 export type BranchOption = {
   id: string;
@@ -24,8 +25,12 @@ type DeliveryManFormProps = {
   errors: FieldErrors<DeliverymanFormValues>;
   selectedBranch: BranchOption | null;
   setSelectedBranch: (val: BranchOption | null) => void;
-  fetchBranches: (params: { search: string; page: number }) => Promise<FetchBranchesResult>;
+  fetchBranches: (params: {
+    search: string;
+    page: number;
+  }) => Promise<FetchBranchesResult>;
   branchLocked?: boolean;
+  assignedBranchLabel?: string;
 };
 
 const FIELD_IDS = {
@@ -45,12 +50,30 @@ const DeliveryManForm = ({
   setSelectedBranch,
   fetchBranches,
   branchLocked = false,
+  assignedBranchLabel,
 }: DeliveryManFormProps) => {
+  const t = useTranslations("deliverymen");
+
+  const translateValidationError = (message?: string) => {
+    if (!message) return undefined;
+
+    const validationMessages: Record<string, string> = {
+      "First name is required": t("validation.firstNameRequired"),
+      "Last name is required": t("validation.lastNameRequired"),
+      "Invalid email": t("validation.invalidEmail"),
+      "Invalid phone number": t("validation.invalidPhone"),
+      "Restaurant is required": t("validation.restaurantRequired"),
+      "Branch is required": t("validation.branchRequired"),
+    };
+
+    return validationMessages[message] || message;
+  };
+
   return (
     <div className="h-fit overflow-visible rounded-[14px] bg-white p-[30px]">
       <div className="grid grid-cols-12 gap-[48px] overflow-visible">
         <div className="col-span-4 space-y-[64px]">
-          <SectionTitle title="Setup Basic Info" />
+          <SectionTitle title={t("form.setupBasicInfo")} />
         </div>
 
         <div className="col-span-8 space-y-[40px] overflow-visible">
@@ -60,16 +83,16 @@ const DeliveryManForm = ({
                 control={control}
                 name="firstName"
                 id={FIELD_IDS.firstName}
-                label="First Name *"
-                error={errors.firstName?.message}
+                label={t("form.firstName")}
+                error={translateValidationError(errors.firstName?.message)}
               />
 
               <ControlledField
                 control={control}
                 name="lastName"
                 id={FIELD_IDS.lastName}
-                label="Last Name *"
-                error={errors.lastName?.message}
+                label={t("form.lastName")}
+                error={translateValidationError(errors.lastName?.message)}
               />
             </div>
 
@@ -78,16 +101,16 @@ const DeliveryManForm = ({
                 control={control}
                 name="phone"
                 id={FIELD_IDS.phone}
-                label="Phone Number *"
-                error={errors.phone?.message}
+                label={t("form.phone")}
+                error={translateValidationError(errors.phone?.message)}
               />
 
               <ControlledField
                 control={control}
                 name="email"
                 id={FIELD_IDS.email}
-                label="Email"
-                error={errors.email?.message}
+                label={t("form.email")}
+                error={translateValidationError(errors.email?.message)}
               />
             </div>
 
@@ -96,21 +119,21 @@ const DeliveryManForm = ({
                 control={control}
                 name="vehicleType"
                 id={FIELD_IDS.vehicleType}
-                label="Vehicle Type"
-                error={errors.vehicleType?.message}
+                label={t("form.vehicleType")}
+                error={translateValidationError(errors.vehicleType?.message)}
               />
 
               <ControlledField
                 control={control}
                 name="vehicleNumber"
                 id={FIELD_IDS.vehicleNumber}
-                label="Vehicle Number"
-                error={errors.vehicleNumber?.message}
+                label={t("form.vehicleNumber")}
+                error={translateValidationError(errors.vehicleNumber?.message)}
               />
             </div>
 
             <div className="h-[55vh] space-y-[6px] overflow-visible">
-              <Label htmlFor={FIELD_IDS.branchId}>Branch *</Label>
+              <Label htmlFor={FIELD_IDS.branchId}>{t("form.branch")}</Label>
 
               <Controller
                 control={control}
@@ -119,7 +142,12 @@ const DeliveryManForm = ({
                   branchLocked ? (
                     <Input
                       id={FIELD_IDS.branchId}
-                      value={selectedBranch?.name || selectedBranch?.id || "Assigned branch"}
+                      value={
+                        selectedBranch?.name ||
+                        selectedBranch?.id ||
+                        assignedBranchLabel ||
+                        t("assignedBranch")
+                      }
                       readOnly
                       className="h-[44px] border-[#BBBBBB] bg-gray-50 text-gray-600"
                     />
@@ -130,14 +158,16 @@ const DeliveryManForm = ({
                         setSelectedBranch(branch);
                         field.onChange(branch?.id ?? "");
                       }}
-                      placeholder="Select Branch"
+                      placeholder={t("form.selectBranch")}
                       fetchOptions={fetchBranches}
                     />
                   )
                 }
               />
               {errors.branchId?.message ? (
-                <p className="text-xs text-primary">{errors.branchId.message}</p>
+                <p className="text-xs text-primary">
+                  {translateValidationError(errors.branchId.message)}
+                </p>
               ) : null}
             </div>
           </section>
@@ -162,14 +192,25 @@ type ControlledFieldProps = {
   control: Control<DeliverymanFormValues>;
   name: keyof Pick<
     DeliverymanFormValues,
-    "firstName" | "lastName" | "phone" | "email" | "vehicleType" | "vehicleNumber"
+    | "firstName"
+    | "lastName"
+    | "phone"
+    | "email"
+    | "vehicleType"
+    | "vehicleNumber"
   >;
   id: string;
   label: string;
   error?: string;
 };
 
-function ControlledField({ control, name, id, label, error }: ControlledFieldProps) {
+function ControlledField({
+  control,
+  name,
+  id,
+  label,
+  error,
+}: ControlledFieldProps) {
   return (
     <div className="space-y-[6px]">
       <Label htmlFor={id}>{label}</Label>

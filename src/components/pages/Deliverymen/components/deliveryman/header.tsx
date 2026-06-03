@@ -1,46 +1,41 @@
-"use client"
+"use client";
 
-import { HelpCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import Header from '@/components/common/PageHeader'
-import { useRouter } from 'next/navigation'
-import type { HeaderProps } from '@/types/page-header'
-import { useTranslations } from 'next-intl'
+import { HelpCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Header from "@/components/common/PageHeader";
+import { useRouter } from "next/navigation";
+import type { HeaderProps } from "@/types/page-header";
+import { useTranslations } from "next-intl";
 
 export default function DeliveryManHeader({ title, description }: HeaderProps) {
-    const router = useRouter()
-    const t = useTranslations("deliverymen")
- 
-    return (
-        <>
-        <div className="flex flex-col gap-4 md:gap-6 lg:flex-row lg:items-center lg:justify-between w-full">
-            <Header
-                title={title}
-                description={description}
-            />
+  const router = useRouter();
+  const t = useTranslations("deliverymen");
 
-            {/* 2. Buttons stack on tiny mobile, become row on sm (640px) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4">
-                <Button
-                    variant="outline"
-                className="h-[44px] rounded-[12px] px-4 flex items-center gap-2 border-[#E6E7EC] text-[15px] font-[500] text-[#767676]"
-              onClick={()=>router.push("/deliveryman/trash")}
-                >
-                    <p>{t("viewTrash")}</p>
-                    <HelpCircle size={18} className="text-[#767676]" />
-                </Button>
+  return (
+    <>
+      <div className="flex flex-col gap-4 md:gap-6 lg:flex-row lg:items-center lg:justify-between w-full">
+        <Header title={title} description={description} />
 
-                <Button
-                    variant="default"
-                    onClick={() => router.push("/deliveryman/add")}
-                 className="h-[44px] rounded-[12px] px-5 flex items-center gap-2 bg-primary hover:bg-red-700 text-white text-[15px] font-[500]"
-         >
-                    {t("addNew")}
-                </Button>
-            </div>
+        {/* 2. Buttons stack on tiny mobile, become row on sm (640px) */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4">
+          <Button
+            variant="outline"
+            className="h-[44px] rounded-[12px] px-4 flex items-center gap-2 border-[#E6E7EC] text-[15px] font-[500] text-[#767676]"
+            onClick={() => router.push("/deliveryman/trash")}
+          >
+            <p>{t("viewTrash")}</p>
+            <HelpCircle size={18} className="text-[#767676]" />
+          </Button>
+
+          <Button
+            variant="default"
+            onClick={() => router.push("/deliveryman/add")}
+            className="h-[44px] rounded-[12px] px-5 flex items-center gap-2 bg-primary hover:bg-red-700 text-white text-[15px] font-[500]"
+          >
+            {t("addNew")}
+          </Button>
         </div>
-
-        
-      </>
-    )
+      </div>
+    </>
+  );
 }

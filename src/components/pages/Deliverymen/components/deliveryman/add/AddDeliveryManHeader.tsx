@@ -1,16 +1,17 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import Header from "@/components/common/PageHeader"
-import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import Header from "@/components/common/PageHeader";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface HeaderProps {
-  title: string
-  description: string
-  onConfirm?: () => void
-  loading?: boolean
-  formId?: string
+  title: string;
+  description: string;
+  onConfirm?: () => void;
+  loading?: boolean;
+  formId?: string;
 }
 
 export default function AddDeliveryManHeader({
@@ -20,7 +21,8 @@ export default function AddDeliveryManHeader({
   loading,
   formId,
 }: HeaderProps) {
-  const router = useRouter()
+  const router = useRouter();
+  const t = useTranslations("deliverymen");
 
   return (
     <div className="flex flex-col gap-4 md:gap-6 lg:flex-row lg:items-center lg:justify-between w-full">
@@ -34,7 +36,7 @@ export default function AddDeliveryManHeader({
           bg-transparent border-none shadow-none
           text-black hover:bg-transparent hover:text-black text-sm mr-2 text-[15px]"
         >
-          Cancel
+          {t("actions.cancel")}
         </Button>
 
         <Button
@@ -47,13 +49,13 @@ export default function AddDeliveryManHeader({
           {loading ? (
             <span className="flex items-center gap-2">
               <Loader2 className="animate-spin" size={16} />
-              Saving...
+              {t("actions.saving")}
             </span>
           ) : (
-            "Confirm"
+            t("actions.confirm")
           )}
         </Button>
       </div>
     </div>
-  )
+  );
 }

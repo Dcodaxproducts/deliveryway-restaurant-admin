@@ -11,6 +11,15 @@ import {
 } from "@/services/deliverymen/deliverymen.api";
 import { useRouter } from "next/navigation";
 
+type DeliverymanMutationMessages = {
+  success?: string;
+  error?: string;
+};
+
+type DeliverymanMutationOptions = {
+  messages?: DeliverymanMutationMessages;
+};
+
 /**
  * ==============================
  * GET DELIVERYMEN LIST
@@ -22,7 +31,7 @@ export const useDeliverymen = (params?: {
   search?: string;
   restaurantId?: string;
   branchId?: string;
- status?: "AVAILABLE" | "OFFLINE" | "BUSY" | "INACTIVE";
+  status?: "AVAILABLE" | "OFFLINE" | "BUSY" | "INACTIVE";
 }) => {
   return useQuery({
     queryKey: ["deliverymen", params],
@@ -47,7 +56,7 @@ export const useDeliveryman = (id?: string) => {
  * ==============================
  * ==============================
  */
-export const useCreateDeliveryman = () => {
+export const useCreateDeliveryman = (options?: DeliverymanMutationOptions) => {
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -56,16 +65,22 @@ export const useCreateDeliveryman = () => {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["deliverymen"] }),
-        queryClient.invalidateQueries({ queryKey: ["dashboard", "deliverymen-stats"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["dashboard", "deliverymen-stats"],
+        }),
         queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
       ]);
-      toast.success("Deliveryman created successfully!");
+      toast.success(
+        options?.messages?.success || "Deliveryman created successfully!",
+      );
       router.push("/deliveryman");
       router.refresh();
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to create deliveryman"
+        err?.response?.data?.message ||
+          options?.messages?.error ||
+          "Failed to create deliveryman",
       );
     },
   });
@@ -75,7 +90,7 @@ export const useCreateDeliveryman = () => {
  * ==============================
  * ==============================
  */
-export const useUpdateDeliveryman = () => {
+export const useUpdateDeliveryman = (options?: DeliverymanMutationOptions) => {
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -84,17 +99,23 @@ export const useUpdateDeliveryman = () => {
       updateDeliveryman(id, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["deliverymen"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard", "deliverymen-stats"] });
+      queryClient.invalidateQueries({
+        queryKey: ["dashboard", "deliverymen-stats"],
+      });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({
         queryKey: ["deliveryman", variables.id],
       });
-      toast.success("Deliveryman updated successfully!");
+      toast.success(
+        options?.messages?.success || "Deliveryman updated successfully!",
+      );
       router.push("/deliveryman");
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to update deliveryman"
+        err?.response?.data?.message ||
+          options?.messages?.error ||
+          "Failed to update deliveryman",
       );
     },
   });
@@ -105,20 +126,26 @@ export const useUpdateDeliveryman = () => {
  * DELETE DELIVERYMAN
  * ==============================
  */
-export const useDeleteDeliveryman = () => {
+export const useDeleteDeliveryman = (options?: DeliverymanMutationOptions) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: deleteDeliveryman,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deliverymen"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard", "deliverymen-stats"] });
+      queryClient.invalidateQueries({
+        queryKey: ["dashboard", "deliverymen-stats"],
+      });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Deliveryman deleted successfully!");
+      toast.success(
+        options?.messages?.success || "Deliveryman deleted successfully!",
+      );
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to delete deliveryman"
+        err?.response?.data?.message ||
+          options?.messages?.error ||
+          "Failed to delete deliveryman",
       );
     },
   });
@@ -128,7 +155,9 @@ export const useDeleteDeliveryman = () => {
  * ==============================
  * ==============================
  */
-export const useUpdateDeliverymanStatus = () => {
+export const useUpdateDeliverymanStatus = (
+  options?: DeliverymanMutationOptions,
+) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -142,14 +171,20 @@ export const useUpdateDeliverymanStatus = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deliverymen"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard", "deliverymen-stats"] });
+      queryClient.invalidateQueries({
+        queryKey: ["dashboard", "deliverymen-stats"],
+      });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Status updated successfully!");
+      toast.success(
+        options?.messages?.success || "Status updated successfully!",
+      );
     },
 
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to update status"
+        err?.response?.data?.message ||
+          options?.messages?.error ||
+          "Failed to update status",
       );
     },
   });
@@ -160,27 +195,27 @@ export const useUpdateDeliverymanStatus = () => {
  * ASSIGN ORDER
  * ==============================
  */
-export const useAssignOrderToDeliveryman = () => {
+export const useAssignOrderToDeliveryman = (
+  options?: DeliverymanMutationOptions,
+) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      orderId,
-    }: {
-      id: string;
-      orderId: string;
-    }) =>
+    mutationFn: ({ id, orderId }: { id: string; orderId: string }) =>
       assignOrderToDeliveryman(id, { orderId }),
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deliverymen"] });
-      toast.success("Order assigned successfully!");
+      toast.success(
+        options?.messages?.success || "Order assigned successfully!",
+      );
     },
 
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to assign order"
+        err?.response?.data?.message ||
+          options?.messages?.error ||
+          "Failed to assign order",
       );
     },
   });

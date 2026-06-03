@@ -13,8 +13,12 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { useDeleteDeliveryman, useUpdateDeliveryman } from "@/hooks/useDeliverymen";
+import {
+  useDeleteDeliveryman,
+  useUpdateDeliveryman,
+} from "@/hooks/useDeliverymen";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 type DeliveryManDetailsProps = {
   open: boolean;
@@ -28,9 +32,21 @@ export default function DeliveryManDetails({
   data,
 }: DeliveryManDetailsProps) {
   const router = useRouter();
-  const updateDeliverymanMutation = useUpdateDeliveryman();
-  const deleteDeliverymanMutation = useDeleteDeliveryman();
-  const loading = updateDeliverymanMutation.isPending || deleteDeliverymanMutation.isPending;
+  const t = useTranslations("deliverymen");
+  const updateDeliverymanMutation = useUpdateDeliveryman({
+    messages: {
+      success: t("messages.statusUpdated"),
+      error: t("messages.failedStatusUpdate"),
+    },
+  });
+  const deleteDeliverymanMutation = useDeleteDeliveryman({
+    messages: {
+      success: t("messages.deleted"),
+      error: t("messages.failedDelete"),
+    },
+  });
+  const loading =
+    updateDeliverymanMutation.isPending || deleteDeliverymanMutation.isPending;
 
   const [isBlocked, setIsBlocked] = useState(data?.isBlocked || false);
   const [showExtra, setShowExtra] = useState(false);
@@ -42,21 +58,21 @@ export default function DeliveryManDetails({
 
     try {
       await updateDeliverymanMutation.mutateAsync({ id: data.id, payload: {} });
-      toast.success(`Deliveryman ${checked ? "blocked" : "unblocked"}`);
+      toast.success(checked ? t("messages.blocked") : t("messages.unblocked"));
     } catch {
-      toast.error("Failed to update status");
+      toast.error(t("messages.failedStatusUpdate"));
       setIsBlocked(!checked);
     }
   };
 
   const handleDelete = async () => {
-    const confirm = window.confirm("Are you sure you want to delete?");
+    const confirm = window.confirm(t("details.deleteConfirm"));
     if (!confirm) return;
 
     await deleteDeliverymanMutation.mutateAsync(data.id);
 
     if (true) {
-      toast.success("Deleted successfully");
+      toast.success(t("messages.deletedShort"));
       onOpenChange(false);
     }
   };
@@ -70,10 +86,10 @@ export default function DeliveryManDetails({
       <DialogContent className="max-w-[420px] max-h-[85vh] overflow-y-auto rounded-[18px] px-6 py-8">
         <DialogHeader className="text-center">
           <DialogTitle className="text-xl font-semibold text-center">
-            Delivery Man #{data?.id || "N/A"}
+            {t("details.title", { id: data?.id || t("notAvailable") })}
           </DialogTitle>
           <DialogDescription className="text-sm text-gray-500 text-center">
-            View delivery man information and activity
+            {t("details.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -82,7 +98,7 @@ export default function DeliveryManDetails({
           <div className="relative">
             <Image
               src={data?.image || "/deliveryboy.png"}
-              alt="Deliveryman"
+              alt={t("details.avatarAlt")}
               width={180}
               height={180}
               className="rounded-[16px] object-cover"
@@ -99,7 +115,7 @@ export default function DeliveryManDetails({
 
         {/* Block / Unblock */}
         <div className="flex items-center justify-center gap-3 mt-4">
-          <span className="text-sm text-gray-500">Block / Unblock</span>
+          <span className="text-sm text-gray-500">{t("blockUnblock")}</span>
           <Switch
             checked={isBlocked}
             onCheckedChange={handleToggle}
@@ -110,26 +126,34 @@ export default function DeliveryManDetails({
         {/* Info */}
         <div className="mt-6 space-y-3 text-sm">
           <InfoRow
-            label="Name"
+            label={t("details.name")}
             value={`${data?.firstName || ""} ${data?.lastName || ""}`}
             showDots
           />
-          <InfoRow label="Phone" value={data?.phone || "N/A"} showDots />
-          <InfoRow label="Email" value={data?.email || "N/A"} showDots />
           <InfoRow
-            label="Joining Date"
+            label={t("details.phone")}
+            value={data?.phone || t("notAvailable")}
+            showDots
+          />
+          <InfoRow
+            label={t("details.email")}
+            value={data?.email || t("notAvailable")}
+            showDots
+          />
+          <InfoRow
+            label={t("details.joiningDate")}
             value={
               data?.createdAt
                 ? new Date(data.createdAt).toLocaleString()
-                : "N/A"
+                : t("notAvailable")
             }
             showDots
           />
 
           {/* Toggle Extra */}
           <InfoRow
-            label="Address"
-            value="View all Address"
+            label={t("details.address")}
+            value={t("viewAllAddress")}
             link
             showDots
             onClick={() => setShowExtra(!showExtra)}
@@ -139,19 +163,19 @@ export default function DeliveryManDetails({
           {showExtra && (
             <div className="space-y-2 mt-2 border-t pt-3">
               <InfoRow
-                label="Vehicle Type"
-                value={data?.vehicleType || "N/A"}
+                label={t("details.vehicleType")}
+                value={data?.vehicleType || t("notAvailable")}
               />
               <InfoRow
-                label="Vehicle Number"
-                value={data?.vehicleNumber || "N/A"}
+                label={t("details.vehicleNumber")}
+                value={data?.vehicleNumber || t("notAvailable")}
               />
               <InfoRow
-                label="Branch"
-                value={data?.branch?.name || "N/A"}
+                label={t("details.branch")}
+                value={data?.branch?.name || t("notAvailable")}
               />
               <InfoRow
-                label="Assigned Orders"
+                label={t("details.assignedOrders")}
                 value={String(data?._count?.orders || 0)}
               />
             </div>
@@ -162,7 +186,7 @@ export default function DeliveryManDetails({
         <div className="grid grid-cols-1 gap-3 mt-6">
           <StatCard
             value={String(data?._count?.orders || 0)}
-            label="Assigned Orders"
+            label={t("details.assignedOrders")}
           />
           {/* <StatCard value="N/A" label="Order Limit" /> */}
         </div>
@@ -171,7 +195,7 @@ export default function DeliveryManDetails({
           onClick={handleEdit}
           className="mt-6 w-full h-[44px] rounded-[12px] bg-primary text-white hover:bg-primary/90"
         >
-          Edit
+          {t("actions.edit")}
         </Button>
       </DialogContent>
     </Dialog>
@@ -226,13 +250,7 @@ const TwoDotsVertical = ({ size = 16, color = "#6A7282" }) => (
   </svg>
 );
 
-function StatCard({
-  value,
-  label,
-}: {
-  value: string;
-  label: string;
-}) {
+function StatCard({ value, label }: { value: string; label: string }) {
   return (
     <div className="border border-gray-400 rounded-[12px] p-4 text-center">
       <p className="text-lg font-semibold text-dark mb-1">{value}</p>

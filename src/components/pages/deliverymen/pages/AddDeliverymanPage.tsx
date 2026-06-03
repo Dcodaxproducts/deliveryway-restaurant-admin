@@ -6,7 +6,9 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import Container from "@/components/common/Container";
-import DeliveryManForm, { type BranchOption } from "@/components/pages/Deliverymen/forms/DeliverymanForm";
+import DeliveryManForm, {
+  type BranchOption,
+} from "@/components/pages/Deliverymen/forms/DeliverymanForm";
 import AddDeliveryManHeader from "@/components/pages/Deliverymen/components/deliveryman/add/AddDeliveryManHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetBranches } from "@/hooks/useBranches";
@@ -16,6 +18,7 @@ import {
   useUpdateDeliveryman,
 } from "@/hooks/useDeliverymen";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   deliverymanSchema,
   type DeliverymanFormValues,
@@ -40,18 +43,33 @@ type BranchListResponse = {
 
 const AddDeliveryMan = () => {
   const { restaurantId, branchId: authBranchId, isBranchAdmin } = useAuth();
+  const t = useTranslations("deliverymen");
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId");
 
-  const { data: deliveryman, isLoading: isFetching } = useDeliveryman(editId || undefined);
-  const createMutation = useCreateDeliveryman();
-  const updateMutation = useUpdateDeliveryman();
+  const { data: deliveryman, isLoading: isFetching } = useDeliveryman(
+    editId || undefined,
+  );
+  const createMutation = useCreateDeliveryman({
+    messages: {
+      success: t("messages.created"),
+      error: t("messages.failedCreate"),
+    },
+  });
+  const updateMutation = useUpdateDeliveryman({
+    messages: {
+      success: t("messages.updated"),
+      error: t("messages.failedUpdate"),
+    },
+  });
 
   const [branchQuery, setBranchQuery] = useState({
     search: "",
     page: 1,
   });
-  const [selectedBranch, setSelectedBranch] = useState<BranchOption | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<BranchOption | null>(
+    null,
+  );
 
   const { data: branchesData } = useGetBranches({
     search: branchQuery.search,
@@ -68,17 +86,17 @@ const AddDeliveryMan = () => {
     resolver: zodResolver(
       deliverymanSchema.omit({ restaurantId: true }).extend({
         branchId: deliverymanSchema.shape.branchId,
-      })
+      }),
     ),
     defaultValues,
   });
 
   useEffect(() => {
     if (isBranchAdmin && authBranchId && !selectedBranch) {
-      setSelectedBranch({ id: authBranchId, name: "Assigned branch" });
+      setSelectedBranch({ id: authBranchId, name: t("assignedBranch") });
       setValue("branchId", authBranchId);
     }
-  }, [isBranchAdmin, authBranchId, selectedBranch, setValue]);
+  }, [authBranchId, isBranchAdmin, selectedBranch, setValue, t]);
 
   useEffect(() => {
     if (!deliveryman) return;
@@ -99,13 +117,19 @@ const AddDeliveryMan = () => {
       vehicleType: deliveryman.vehicleType ?? "",
       vehicleNumber: deliveryman.vehicleNumber ?? "",
       status: deliveryman.status ?? "OFFLINE",
-      branchId: isBranchAdmin ? authBranchId ?? "" : branch?.id ?? "",
+      branchId: isBranchAdmin ? (authBranchId ?? "") : (branch?.id ?? ""),
     });
 
     if (branch) setSelectedBranch(branch);
   }, [authBranchId, deliveryman, isBranchAdmin, reset]);
 
-  const fetchBranches = async ({ search, page }: { search: string; page: number }) => {
+  const fetchBranches = async ({
+    search,
+    page,
+  }: {
+    search: string;
+    page: number;
+  }) => {
     setBranchQuery({
       search: search || "",
       page: page || 1,
@@ -129,7 +153,7 @@ const AddDeliveryMan = () => {
 
       if (!editId) {
         if (!restaurantId || !branchId) {
-          toast.error("Restaurant or branch not found");
+          toast.error(t("messages.restaurantOrBranchNotFound"));
           return;
         }
 
@@ -137,13 +161,26 @@ const AddDeliveryMan = () => {
         return;
       }
 
-      const { restaurantId: _restaurantId, status: _status, ...updatePayload } = payload;
+      const updatePayload = {
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        phone: payload.phone,
+        email: payload.email,
+        vehicleType: payload.vehicleType,
+        vehicleNumber: payload.vehicleNumber,
+        branchId: payload.branchId,
+      };
+
       await updateMutation.mutateAsync({
         id: editId,
         payload: updatePayload,
       });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("messages.somethingWentWrong"),
+      );
     }
   };
 
@@ -152,8 +189,8 @@ const AddDeliveryMan = () => {
   return (
     <Container>
       <AddDeliveryManHeader
-        title={editId ? "Edit Delivery Man" : "Create New Delivery Man"}
-        description="Manage delivery man details"
+        title={editId ? t("editTitle") : t("createTitle")}
+        description={t("manageDetails")}
         loading={isSaving || isFetching}
         formId="deliveryman-form"
       />
@@ -166,6 +203,7 @@ const AddDeliveryMan = () => {
           setSelectedBranch={setSelectedBranch}
           fetchBranches={fetchBranches}
           branchLocked={isBranchAdmin}
+          assignedBranchLabel={t("assignedBranch")}
         />
       </form>
     </Container>

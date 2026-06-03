@@ -9,9 +9,11 @@ import BranchFilters from "@/components/pages/Branches/components/BranchFilters"
 import { useAuth } from "@/hooks/useAuth";
 import { useDeliverymen } from "@/hooks/useDeliverymen";
 import { useGetDeliverymenStats } from "@/hooks/useDashboard";
+import { useTranslations } from "next-intl";
 
 const Deliveryman = () => {
   const { restaurantId, branchId, isBranchAdmin, loading } = useAuth();
+  const t = useTranslations("deliverymen");
   const scopedBranchId = isBranchAdmin ? branchId : undefined;
 
   const [filters, setFilters] = useState({
@@ -20,12 +22,7 @@ const Deliveryman = () => {
     limit: 10,
   });
 
-  const {
-    data,
-    isLoading,
-    isFetching,
-    refetch,
-  } = useDeliverymen({
+  const { data, isLoading, isFetching, refetch } = useDeliverymen({
     search: filters.search,
     page: filters.page,
     limit: filters.limit,
@@ -45,7 +42,7 @@ const Deliveryman = () => {
           restaurantId,
           ...(scopedBranchId ? { branchId: scopedBranchId } : {}),
         }
-      : undefined
+      : undefined,
   );
 
   const deliverymanStats = deliverymanStatsResponse?.data;
@@ -72,19 +69,12 @@ const Deliveryman = () => {
   return (
     <Container>
       <Header
-        title={isBranchAdmin ? "Branch Delivery Team" : "Delivery Man List"}
-        description={
-          isBranchAdmin
-            ? "View and manage delivery staff for your assigned branch"
-            : "View and manage all Delivery Man from here"
-        }
+        title={isBranchAdmin ? t("branchTitle") : t("listTitle")}
+        description={isBranchAdmin ? t("branchDescription") : t("description")}
       />
 
       <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6">
-        <StatsSection
-          stats={deliverymanStats}
-          loading={isCardLoading}
-        />
+        <StatsSection stats={deliverymanStats} loading={isCardLoading} />
 
         {!isBranchAdmin ? (
           <BranchFilters

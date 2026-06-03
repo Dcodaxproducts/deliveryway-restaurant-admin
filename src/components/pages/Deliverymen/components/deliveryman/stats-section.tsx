@@ -1,12 +1,8 @@
 "use client";
 
-import {
-  Bike,
-  UserCheck,
-  UserX,
-  Wifi,
-} from "lucide-react";
+import { Bike, UserCheck, UserX, Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 type DeliverymanStatusBreakdown = {
   status: string;
@@ -26,33 +22,34 @@ interface StatsSectionProps {
 }
 
 const StatsSection = ({ stats, loading }: StatsSectionProps) => {
+  const t = useTranslations("deliverymen");
   const totalDeliverymen = stats?.totalDeliverymen ?? 0;
   const activeDeliverymen = stats?.activeDeliverymen ?? 0;
   const inactiveDeliverymen = stats?.inactiveDeliverymen ?? 0;
 
   const availableDeliverymen =
     stats?.statusBreakdown?.find(
-      (item) => item.status?.toUpperCase() === "AVAILABLE"
+      (item) => item.status?.toUpperCase() === "AVAILABLE",
     )?.count ?? 0;
 
   const cards = [
     {
-      title: "Total Deliverymen",
+      title: t("stats.totalDeliverymen"),
       value: totalDeliverymen,
       icon: Bike,
     },
     {
-      title: "Active Deliverymen",
+      title: t("stats.activeDeliverymen"),
       value: activeDeliverymen,
       icon: UserCheck,
     },
     {
-      title: "Inactive Deliverymen",
+      title: t("stats.inactiveDeliverymen"),
       value: inactiveDeliverymen,
       icon: UserX,
     },
     {
-      title: "Available Now",
+      title: t("stats.availableNow"),
       value: availableDeliverymen,
       icon: Wifi,
     },
@@ -70,7 +67,7 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
           >
             <div
               className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center bg-gray/10 text-primary shrink-0"
+                "w-12 h-12 rounded-full flex items-center justify-center bg-gray/10 text-primary shrink-0",
               )}
             >
               {loading ? (
@@ -92,9 +89,7 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
                     {stat.value}
                   </p>
 
-                  <p className="text-base text-gray">
-                    {stat.title}
-                  </p>
+                  <p className="text-base text-gray">{stat.title}</p>
                 </>
               )}
             </div>
