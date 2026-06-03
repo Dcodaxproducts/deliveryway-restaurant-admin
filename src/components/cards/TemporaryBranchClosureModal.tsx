@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUpdateBranchTemporaryClosure } from "@/hooks/useBranches";
+import { useTranslations } from "next-intl";
 
 type Props = {
   open: boolean;
@@ -30,29 +31,29 @@ type Props = {
 
 type DurationOption = {
   key: "20min" | "60min" | "tomorrow" | "custom";
-  label: string;
+  labelKey: string;
   minutes?: number;
 };
 
 type ReasonOption = {
   key: "busy" | "couriers" | "other";
-  label: string;
+  labelKey: string;
   reason: string;
   message: string;
   icon: React.ReactNode;
 };
 
 const durationOptions: DurationOption[] = [
-  { key: "20min", label: "20 min", minutes: 20 },
-  { key: "60min", label: "60 min", minutes: 60 },
-  { key: "tomorrow", label: "Until Tomorrow" },
-  { key: "custom", label: "Custom" },
+  { key: "20min", labelKey: "duration20Min", minutes: 20 },
+  { key: "60min", labelKey: "duration60Min", minutes: 60 },
+  { key: "tomorrow", labelKey: "durationUntilTomorrow" },
+  { key: "custom", labelKey: "durationCustom" },
 ];
 
 const reasonOptions: ReasonOption[] = [
   {
     key: "busy",
-    label: "Busy kitchen",
+    labelKey: "busyKitchen",
     reason: "Busy kitchen",
     message:
       "Branch is temporarily closed due to a busy kitchen. Please try again later.",
@@ -60,7 +61,7 @@ const reasonOptions: ReasonOption[] = [
   },
   {
     key: "couriers",
-    label: "No couriers",
+    labelKey: "noCouriers",
     reason: "No couriers",
     message:
       "Branch is temporarily closed because no couriers are currently available.",
@@ -68,7 +69,7 @@ const reasonOptions: ReasonOption[] = [
   },
   {
     key: "other",
-    label: "Other",
+    labelKey: "other",
     reason: "Temporary closure",
     message: "Branch is temporarily closed. Please try again later.",
     icon: <MoreHorizontal size={16} />,
@@ -81,6 +82,7 @@ export default function TemporaryBranchClosureModal({
   branchId,
   branchName,
 }: Props) {
+  const t = useTranslations("branches");
   const [durationKey, setDurationKey] =
     useState<DurationOption["key"]>("20min");
   const [reasonKey, setReasonKey] = useState<ReasonOption["key"]>("busy");
@@ -131,22 +133,22 @@ export default function TemporaryBranchClosureModal({
   };
 
   const durationText = useMemo(() => {
-    if (durationKey === "20min") return "20 minutes";
-    if (durationKey === "60min") return "60 minutes";
-    if (durationKey === "tomorrow") return "until tomorrow";
+    if (durationKey === "20min") return t("duration20Minutes");
+    if (durationKey === "60min") return t("duration60Minutes");
+    if (durationKey === "tomorrow") return t("durationUntilTomorrowLower");
 
     const hours = Number(customHours || 0);
     const minutes = Number(customMinutes || 0);
 
     const parts: string[] = [];
 
-    if (hours > 0) parts.push(`${hours} hour${hours > 1 ? "s" : ""}`);
+    if (hours > 0) parts.push(t("durationHours", { count: hours }));
     if (minutes > 0) {
-      parts.push(`${minutes} minute${minutes > 1 ? "s" : ""}`);
+      parts.push(t("durationMinutes", { count: minutes }));
     }
 
-    return parts.length ? parts.join(" and ") : "1 minute";
-  }, [durationKey, customHours, customMinutes]);
+    return parts.length ? parts.join(` ${t("and")} `) : t("durationOneMinute");
+  }, [durationKey, customHours, customMinutes, t]);
 
   const handlePause = async () => {
     await mutation.mutateAsync({
@@ -185,15 +187,15 @@ export default function TemporaryBranchClosureModal({
           <div className="p-5 sm:p-7">
             <DialogHeader>
               <DialogTitle className="text-[24px] font-bold text-gray-950">
-                Pause Operations
+                {t("pauseOperations")}
               </DialogTitle>
 
               <p className="mt-2 text-sm leading-6 text-gray-500">
-                Temporarily stop receiving new orders for{" "}
+                {t("pauseOperationsDescriptionPrefix")}{" "}
                 <span className="font-semibold text-gray-800">
-                  {branchName || "this branch"}
+                  {branchName || t("thisBranch")}
                 </span>
-                . Existing orders will still need to be fulfilled.
+                . {t("pauseOperationsDescriptionSuffix")}
               </p>
             </DialogHeader>
 
@@ -201,10 +203,10 @@ export default function TemporaryBranchClosureModal({
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-950">
-                    Pause duration
+                    {t("pauseDuration")}
                   </h3>
                   <p className="mt-1 text-xs text-gray-500">
-                    Choose how long this branch should stay unavailable.
+                    {t("pauseDurationDescription")}
                   </p>
                 </div>
               </div>
@@ -233,7 +235,7 @@ export default function TemporaryBranchClosureModal({
                       />
 
                       <span className="text-sm font-semibold text-gray-950">
-                        {item.label}
+                        {t(item.labelKey)}
                       </span>
                     </button>
                   );
@@ -244,10 +246,10 @@ export default function TemporaryBranchClosureModal({
             <div className="mt-4 rounded-[20px] bg-gray-50 p-4">
               <div className="mb-4">
                 <h3 className="text-sm font-semibold text-gray-950">
-                  Closure reason
+                  {t("closureReason")}
                 </h3>
                 <p className="mt-1 text-xs text-gray-500">
-                  This reason helps explain why new orders are paused.
+                  {t("closureReasonDescription")}
                 </p>
               </div>
 
@@ -281,7 +283,7 @@ export default function TemporaryBranchClosureModal({
                         </span>
 
                         <span className="text-sm font-semibold text-gray-900">
-                          {item.label}
+                          {t(item.labelKey)}
                         </span>
                       </div>
 
@@ -304,7 +306,7 @@ export default function TemporaryBranchClosureModal({
                 onClick={() => onOpenChange(false)}
                 className="h-[48px] flex-1 rounded-full border-primary text-primary hover:bg-primary/5"
               >
-                Cancel & Keep Live
+                {t("cancelKeepLive")}
               </Button>
 
               <Button
@@ -318,7 +320,7 @@ export default function TemporaryBranchClosureModal({
                 ) : (
                   <>
                     <PauseCircle size={17} />
-                    Confirm & Pause Branch
+                    {t("confirmPauseBranch")}
                   </>
                 )}
               </Button>
@@ -330,18 +332,18 @@ export default function TemporaryBranchClosureModal({
           <div className="p-5 sm:p-7">
             <DialogHeader>
               <DialogTitle className="text-[24px] font-bold text-gray-950">
-                Set Custom Pause Time
+                {t("setCustomPauseTime")}
               </DialogTitle>
 
               <p className="mt-2 text-sm leading-6 text-gray-500">
-                Specify exactly how long you need to pause branch operations.
+                {t("customPauseTimeDescription")}
               </p>
             </DialogHeader>
 
             <div className="mt-6 grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-semibold text-gray-950">
-                  Hours
+                  {t("hours")}
                 </label>
 
                 <select
@@ -360,7 +362,7 @@ export default function TemporaryBranchClosureModal({
 
               <div>
                 <label className="text-sm font-semibold text-gray-950">
-                  Minutes
+                  {t("minutes")}
                 </label>
 
                 <select
@@ -385,11 +387,11 @@ export default function TemporaryBranchClosureModal({
 
               <div>
                 <p className="text-sm font-semibold text-gray-900">
-                  Your branch will be closed for{" "}
+                  {t("branchClosedFor")}{" "}
                   <span className="text-primary">{durationText}</span>
                 </p>
                 <p className="mt-1 text-xs text-gray-500">
-                  Orders will resume automatically after the selected time.
+                  {t("ordersResumeAutomatically")}
                 </p>
               </div>
             </div>
@@ -406,7 +408,7 @@ export default function TemporaryBranchClosureModal({
                 className="h-[48px] flex-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200"
               >
                 <ArrowLeft size={17} />
-                Back
+                {t("back")}
               </Button>
 
               <Button
@@ -419,7 +421,7 @@ export default function TemporaryBranchClosureModal({
                   <Loader2 size={18} className="animate-spin" />
                 ) : (
                   <>
-                    Confirm & Set Time
+                    {t("confirmSetTime")}
                     <CheckCircle2 size={17} />
                   </>
                 )}

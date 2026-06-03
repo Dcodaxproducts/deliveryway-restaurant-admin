@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import FilterModal from "@/components/common/FilterModal";
 import { Input } from "@/components/ui/input";
+import { useTranslations } from "next-intl";
 
 interface Props {
   branches?: any[];
@@ -17,6 +18,8 @@ export default function BranchFilters({
   filters,
   onFilterChange,
 }: Props) {
+  const t = useTranslations("branches");
+  const commonT = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState(filters?.search ?? "");
 
@@ -29,13 +32,13 @@ export default function BranchFilters({
     if (!branches || branches.length === 0) return;
 
     const headers = [
-      "Name",
-      "City",
-      "Address",
-      "Phone",
-      "Status",
-      "CreatedAt",
-      "Items"
+      commonT("name"),
+      t("city"),
+      commonT("address"),
+      commonT("phone"),
+      commonT("status"),
+      commonT("createdAt"),
+      t("items")
     ];
 
     const rows = branches.map(({ name, city, address, phone, isActive, createdAt, _count }) => [
@@ -43,7 +46,7 @@ export default function BranchFilters({
       city ?? "",
       address ?? "",
       phone ?? "",
-      isActive ? "Active" : "Inactive",
+      isActive ? commonT("active") : commonT("inactive"),
       createdAt ?? "",
       _count?.items ?? "",
     ]);
@@ -82,7 +85,7 @@ link.setAttribute("download", "data.csv");
 
           <Input
             type="text"
-            placeholder="Search by name"
+            placeholder={commonT("searchByName")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="
@@ -113,7 +116,7 @@ link.setAttribute("download", "data.csv");
               hover:bg-primary/90
             "
           >
-            Search
+            {commonT("search")}
           </Button>
         </div>
 
@@ -124,7 +127,7 @@ link.setAttribute("download", "data.csv");
           className="h-[44px] px-5 rounded-[14px] border-[#E5E7EB] flex items-center gap-2 shrink-0 text-[#767676] text-[15px] font-[600]"
         >
           <Download size={18} color="#767676" />
-          Export
+          {commonT("export")}
         </Button>
 
         {/* FILTER MODAL */}
@@ -134,7 +137,7 @@ link.setAttribute("download", "data.csv");
           className="h-[44px] px-5 rounded-[14px] border-[#E5E7EB] text-[#767676] flex items-center gap-2 text-[15px] font-[600]"
         >
           <SlidersHorizontal size={18} color="#767676" />
-          Filter
+          {commonT("filter")}
         </Button>
       </div>
 
@@ -147,7 +150,7 @@ link.setAttribute("download", "data.csv");
 
       {branches && (
         <p className="text-sm text-gray-400 mt-3">
-          Showing {filteredBranches.length} of {branches.length} results
+          {t("filtersShowing", { visible: filteredBranches.length, total: branches.length })}
         </p>
       )}
     </div>

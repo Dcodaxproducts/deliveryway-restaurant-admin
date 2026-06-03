@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslations } from "next-intl";
 
 interface Props {
   meta?: {
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export default function BranchesPagination({ meta, onLimitChange }: Props) {
+  const commonT = useTranslations("common");
   const page = meta?.page || 1;
   const limit = meta?.limit || 10;
   const total = meta?.total || 0;
@@ -47,7 +49,7 @@ export default function BranchesPagination({ meta, onLimitChange }: Props) {
 
       {/* Info */}
       <span>
-        Showing {start} To {end} Of {total}
+        {commonT("paginationSummary", { from: start, to: end, total })}
       </span>
     </div>
   );

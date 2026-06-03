@@ -16,6 +16,7 @@ import {
   createBranchSchema,
   type CreateBranchFormValues,
 } from "@/validations/branches";
+import { useTranslations } from "next-intl";
 
 interface CreateBranchModalProps {
   open: boolean;
@@ -49,8 +50,8 @@ const defaultValues: CreateBranchFormValues = {
 
 type FieldConfig = {
   name: Path<CreateBranchFormValues>;
-  label?: string;
-  placeholder: string;
+  labelKey?: string;
+  placeholderKey: string;
   type?: string;
   required?: boolean;
   primary?: boolean;
@@ -59,26 +60,26 @@ type FieldConfig = {
 const branchFieldConfigs: FieldConfig[] = [
   {
     name: "name",
-    label: "Branch Name",
-    placeholder: "eg. Main Branch",
+    labelKey: "branchName",
+    placeholderKey: "branchNamePlaceholder",
     required: true,
     primary: true,
   },
-  { name: "street", label: "Street", placeholder: "Street 12" },
-  { name: "city", label: "City", placeholder: "eg. Lahore" },
-  { name: "state", label: "State", placeholder: "eg. Punjab" },
-  { name: "country", label: "Country", placeholder: "eg. Pakistan" },
-  { name: "area", label: "Area", placeholder: "eg. DHA Phase 5" },
-  { name: "lat", label: "Latitude", placeholder: "eg. 31.5204" },
-  { name: "lng", label: "Longitude", placeholder: "eg. 74.3587" },
+  { name: "street", labelKey: "street", placeholderKey: "streetPlaceholder" },
+  { name: "city", labelKey: "city", placeholderKey: "cityPlaceholder" },
+  { name: "state", labelKey: "state", placeholderKey: "statePlaceholder" },
+  { name: "country", labelKey: "country", placeholderKey: "countryPlaceholder" },
+  { name: "area", labelKey: "area", placeholderKey: "areaPlaceholder" },
+  { name: "lat", labelKey: "latitude", placeholderKey: "latitudePlaceholder" },
+  { name: "lng", labelKey: "longitude", placeholderKey: "longitudePlaceholder" },
 ];
 
 const adminFieldConfigs: FieldConfig[] = [
-  { name: "branchAdmin.firstName", placeholder: "First Name" },
-  { name: "branchAdmin.lastName", placeholder: "Last Name" },
-  { name: "branchAdmin.email", placeholder: "Email" },
-  { name: "branchAdmin.password", placeholder: "Password", type: "password" },
-  { name: "branchAdmin.phone", placeholder: "Phone" },
+  { name: "branchAdmin.firstName", placeholderKey: "firstName" },
+  { name: "branchAdmin.lastName", placeholderKey: "lastName" },
+  { name: "branchAdmin.email", placeholderKey: "email" },
+  { name: "branchAdmin.password", placeholderKey: "password", type: "password" },
+  { name: "branchAdmin.phone", placeholderKey: "phone" },
 ];
 
 const getErrorMessage = (
@@ -99,6 +100,8 @@ export default function CreateBranchModal({
   onOpenChange,
   onSuccess,
 }: CreateBranchModalProps) {
+  const t = useTranslations("branches");
+  const commonT = useTranslations("common");
   const { user } = useAuth();
   const createBranchMutation = useCreateBranch();
 
@@ -167,28 +170,28 @@ export default function CreateBranchModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-[480px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
         <DialogHeader className="space-y-1">
-          <DialogTitle className="text-xl font-semibold">Create Branch</DialogTitle>
-          <p className={MUTED_TEXT_SM_CLASS}>Create a new branch from here</p>
+          <DialogTitle className="text-xl font-semibold">{t("createBranch")}</DialogTitle>
+          <p className={MUTED_TEXT_SM_CLASS}>{t("createDescription")}</p>
         </DialogHeader>
 
         <form noValidate onSubmit={handleSubmit(onSubmit)}>
           <div className={`mt-4 ${CARD_PANEL_CLASS} space-y-4`}>
             {branchFieldConfigs.map((config) => {
-              const { label, name, placeholder, primary, required, type } = config;
+              const { labelKey, name, placeholderKey, primary, required, type } = config;
               const errorMessage = getErrorMessage(errors, name);
               const fieldId = `create-branch-${name.replace(/\./g, "-")}`;
 
               return (
                 <div key={name} className="space-y-1">
-                  {label ? (
+                  {labelKey ? (
                     <Label htmlFor={fieldId} className="text-sm">
-                      {label} {required ? <span className="text-primary">*</span> : null}
+                      {t(labelKey)} {required ? <span className="text-primary">*</span> : null}
                     </Label>
                   ) : null}
                   <Input
                     id={fieldId}
                     type={type}
-                    placeholder={placeholder}
+                    placeholder={t(placeholderKey)}
                     className={primary ? PRIMARY_INPUT_CLASS : INPUT_CLASS}
                     aria-invalid={Boolean(errorMessage)}
                     {...register(name)}
@@ -202,7 +205,7 @@ export default function CreateBranchModal({
 
             <div className="flex items-center justify-between">
               <Label htmlFor="create-branch-is-main" className="text-sm">
-                Main Branch
+                {t("mainBranch")}
               </Label>
               <Controller
                 control={control}
@@ -220,22 +223,22 @@ export default function CreateBranchModal({
 
             <hr className="border-gray-200 my-2" />
 
-            <h4 className="text-sm font-medium text-gray-900">Branch Admin Info</h4>
+            <h4 className="text-sm font-medium text-gray-900">{t("branchAdminInfo")}</h4>
 
             {adminFieldConfigs.map((config) => {
-              const { name, placeholder, type } = config;
+              const { name, placeholderKey, type } = config;
               const errorMessage = getErrorMessage(errors, name);
               const fieldId = `create-branch-${name.replace(/\./g, "-")}`;
 
               return (
                 <div key={name} className="space-y-1">
                   <Label htmlFor={fieldId} className="sr-only">
-                    {placeholder}
+                    {t(placeholderKey)}
                   </Label>
                   <Input
                     id={fieldId}
                     type={type}
-                    placeholder={placeholder}
+                    placeholder={t(placeholderKey)}
                     className={INPUT_CLASS}
                     aria-invalid={Boolean(errorMessage)}
                     {...register(name)}
@@ -255,7 +258,7 @@ export default function CreateBranchModal({
               className="text-gray-700 text-[17px]"
               onClick={() => handleOpenChange(false)}
             >
-              Cancel
+              {commonT("cancel")}
             </Button>
 
             <Button
@@ -263,7 +266,7 @@ export default function CreateBranchModal({
               className="px-8 py-2 rounded-[10px] bg-primary hover:bg-primary/90 text-[17px]"
               disabled={createBranchMutation.isPending}
             >
-              {createBranchMutation.isPending ? "Creating..." : "Create"}
+              {createBranchMutation.isPending ? t("creating") : commonT("create")}
             </Button>
           </div>
         </form>

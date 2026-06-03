@@ -1,5 +1,6 @@
 import { DialogHeader } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { useTranslations } from "next-intl";
 
 export default function DialogHeaderComponent({
   title,
@@ -14,6 +15,8 @@ export default function DialogHeaderComponent({
   createdAt?: string;
   updatedAt?: string;
 }) {
+  const t = useTranslations("branches");
+
   return (
     <DialogHeader className="space-y-2 text-center">
       <h2 className="text-xl font-semibold text-center">{title}</h2>
@@ -25,18 +28,18 @@ export default function DialogHeaderComponent({
       </div>
 
       <p className="text-xs text-muted-foreground  text-center">
-        ID: #{branchId}
+        {t("id")}: #{branchId}
       </p>
 
       {createdAt && (
         <p className="text-xs text-muted-foreground  text-center">
-          Created: {new Date(createdAt).toLocaleString()}
+          {t("created")}: {new Date(createdAt).toLocaleString()}
         </p>
       )}
 
       {updatedAt && (
         <p className="text-xs text-muted-foreground">
-          Updated: {new Date(updatedAt).toLocaleString()}
+          {t("updated")}: {new Date(updatedAt).toLocaleString()}
         </p>
       )}
     </DialogHeader>

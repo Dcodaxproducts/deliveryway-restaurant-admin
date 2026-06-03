@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTranslations } from "next-intl";
 
 import {
   useGetBranchHolidayOpeningHours,
@@ -84,6 +85,8 @@ export default function AddHolidayHoursInfo({
   branchId,
   branchName,
 }: AddHolidayHoursInfoProps) {
+  const t = useTranslations("branches");
+  const commonT = useTranslations("common");
   const [rows, setRows] = useState<HolidayHourRow[]>([]);
 
   const {
@@ -147,7 +150,7 @@ export default function AddHolidayHoursInfo({
 
   const validateRows = () => {
     if (rows.length === 0) {
-      toast.error("Please add at least one holiday entry");
+      toast.error(t("holidayAddOneEntry"));
       return false;
     }
 
@@ -155,19 +158,19 @@ export default function AddHolidayHoursInfo({
 
     for (const row of rows) {
       if (!row.date) {
-        toast.error("Holiday date is required");
+        toast.error(t("holidayDateRequired"));
         return false;
       }
 
       if (usedDates.has(row.date)) {
-        toast.error("Duplicate holiday dates are not allowed");
+        toast.error(t("duplicateHolidayDates"));
         return false;
       }
 
       usedDates.add(row.date);
 
       if (!row.isClosed && (!row.openTime || !row.closeTime)) {
-        toast.error("Open time and close time are required for open holidays");
+        toast.error(t("holidayTimesRequired"));
         return false;
       }
     }
@@ -226,28 +229,27 @@ export default function AddHolidayHoursInfo({
               <div className="min-w-0 flex-1">
                 <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-primary shadow-sm ring-1 ring-primary/10">
                   <Sparkles size={13} />
-                  Special schedule
+                  {t("specialSchedule")}
                 </div>
 
                 <DialogTitle className="text-[22px] font-semibold leading-tight tracking-tight text-gray-950 sm:text-[26px]">
-                  Holiday Opening Hours
+                  {t("holidayOpeningHours")}
                 </DialogTitle>
 
                 <p className="mt-2 max-w-[560px] text-sm leading-6 text-gray-600">
-                  Configure branch-specific holiday dates, closures, or custom
-                  operating hours.
+                  {t("holidayOpeningHoursDescription")}
                 </p>
 
                 <div className="mt-3 inline-flex max-w-full rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-gray-700 ring-1 ring-gray-100">
-                  <span className="truncate">{branchName || "Selected branch"}</span>
+                  <span className="truncate">{branchName || t("selectedBranch")}</span>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-2">
-              <SummaryCard label="Entries" value={rows.length} />
-              <SummaryCard label="Open" value={openCount} />
-              <SummaryCard label="Closed" value={closedCount} />
+              <SummaryCard label={t("entries")} value={rows.length} />
+              <SummaryCard label={t("open")} value={openCount} />
+              <SummaryCard label={t("closed")} value={closedCount} />
             </div>
           </div>
         </DialogHeader>
@@ -261,13 +263,11 @@ export default function AddHolidayHoursInfo({
 
               <div className="min-w-0">
                 <p className="text-sm font-semibold leading-5 text-gray-900">
-                  These hours override normal branch opening hours for selected
-                  dates.
+                  {t("holidayOverrideTitle")}
                 </p>
 
                 <p className="mt-1 text-sm leading-6 text-gray-600">
-                  Add one row per holiday date. Mark it closed for full-day
-                  closure, or keep it open and provide custom operating times.
+                  {t("holidayOverrideDescription")}
                 </p>
               </div>
             </div>
@@ -286,12 +286,11 @@ export default function AddHolidayHoursInfo({
               </div>
 
               <h3 className="text-base font-semibold text-gray-900">
-                No holiday hours added yet
+                {t("noHolidayHours")}
               </h3>
 
               <p className="mt-2 max-w-[420px] text-sm leading-6 text-gray-500">
-                Create a holiday schedule for Eid, Christmas, New Year, public
-                holidays, or custom branch closure dates.
+                {t("noHolidayHoursDescription")}
               </p>
 
               <Button
@@ -300,7 +299,7 @@ export default function AddHolidayHoursInfo({
                 className="mt-5 h-[44px] rounded-[14px] bg-primary px-5 text-white hover:bg-primary/90"
               >
                 <Plus size={16} className="mr-2" />
-                Add Holiday Hours
+                {t("addHolidayHours")}
               </Button>
             </div>
           ) : (
@@ -313,6 +312,19 @@ export default function AddHolidayHoursInfo({
                   isSaving={isSaving}
                   onChange={handleChange}
                   onRemove={handleRemoveRow}
+                  labels={{
+                    holidaySchedule: t("holidaySchedule"),
+                    selectHolidayDate: t("selectHolidayDate"),
+                    closed: t("closed"),
+                    removeHolidayRow: t("removeHolidayRow"),
+                    holidayDate: t("holidayDate"),
+                    closedForHoliday: t("closedForHoliday"),
+                    closedForHolidayDescription: t("closedForHolidayDescription"),
+                    openTime: t("openTime"),
+                    closeTime: t("closeTime"),
+                    note: commonT("note"),
+                    notePlaceholder: t("holidayNotePlaceholder"),
+                  }}
                 />
               ))}
 
@@ -324,7 +336,7 @@ export default function AddHolidayHoursInfo({
                 className="h-[46px] w-full rounded-[16px] border-dashed border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
               >
                 <Plus size={16} className="mr-2" />
-                Add Another Holiday
+                {t("addAnotherHoliday")}
               </Button>
             </div>
           )}
@@ -333,7 +345,7 @@ export default function AddHolidayHoursInfo({
         <div className="shrink-0 border-t border-gray-100 bg-white px-5 py-4 sm:px-6">
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-400">
-              Branch ID:{" "}
+              {t("branchId")}:{" "}
               <span className="font-medium text-gray-600">{branchId}</span>
             </p>
 
@@ -345,7 +357,7 @@ export default function AddHolidayHoursInfo({
                 onClick={() => onOpenChange(false)}
                 className="h-[44px] rounded-[14px] border-gray-200 px-5 text-gray-700"
               >
-                Cancel
+                {commonT("cancel")}
               </Button>
 
               <Button
@@ -357,12 +369,12 @@ export default function AddHolidayHoursInfo({
                 {isSaving ? (
                   <>
                     <Loader2 size={17} className="mr-2 animate-spin" />
-                    Saving...
+                    {commonT("saving")}
                   </>
                 ) : (
                   <>
                     <Save size={17} className="mr-2" />
-                    Save Holiday Hours
+                    {t("saveHolidayHours")}
                   </>
                 )}
               </Button>
@@ -380,6 +392,7 @@ function HolidayHourItem({
   isSaving,
   onChange,
   onRemove,
+  labels,
 }: {
   row: HolidayHourRow;
   index: number;
@@ -390,6 +403,19 @@ function HolidayHourItem({
     value: string | boolean
   ) => void;
   onRemove: (rowId: string) => void;
+  labels: {
+    holidaySchedule: string;
+    selectHolidayDate: string;
+    closed: string;
+    removeHolidayRow: string;
+    holidayDate: string;
+    closedForHoliday: string;
+    closedForHolidayDescription: string;
+    openTime: string;
+    closeTime: string;
+    note: string;
+    notePlaceholder: string;
+  };
 }) {
   return (
     <div className="overflow-hidden rounded-[22px] border border-gray-100 bg-white shadow-sm">
@@ -401,11 +427,11 @@ function HolidayHourItem({
 
           <div className="min-w-0">
             <h4 className="text-sm font-semibold text-gray-900">
-              Holiday Schedule
+              {labels.holidaySchedule}
             </h4>
 
             <p className="truncate text-xs text-gray-500">
-              {row.date || "Select a holiday date"}
+              {row.date || labels.selectHolidayDate}
             </p>
           </div>
         </div>
@@ -420,7 +446,7 @@ function HolidayHourItem({
               }
               className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             />
-            Closed
+            {labels.closed}
           </label>
 
           <button
@@ -428,7 +454,7 @@ function HolidayHourItem({
             disabled={isSaving}
             onClick={() => onRemove(row.id)}
             className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-60"
-            aria-label="Remove holiday row"
+            aria-label={labels.removeHolidayRow}
           >
             <Trash2 size={17} />
           </button>
@@ -436,7 +462,7 @@ function HolidayHourItem({
       </div>
 
       <div className="grid gap-4 p-4 md:grid-cols-[180px_1fr]">
-        <FieldGroup label="Holiday Date" required>
+        <FieldGroup label={labels.holidayDate} required>
           <div className="relative">
             <CalendarDays
               size={17}
@@ -464,17 +490,17 @@ function HolidayHourItem({
             <div className="flex min-h-[76px] items-center rounded-[16px] border border-red-100 bg-red-50 px-4">
               <div>
                 <p className="text-sm font-semibold text-red-700">
-                  Closed for this holiday
+                  {labels.closedForHoliday}
                 </p>
 
                 <p className="mt-1 text-xs leading-5 text-red-500">
-                  Customers will see this branch as unavailable on this date.
+                  {labels.closedForHolidayDescription}
                 </p>
               </div>
             </div>
           ) : (
             <>
-              <FieldGroup label="Open Time" required>
+              <FieldGroup label={labels.openTime} required>
                 <div className="relative">
                   <Clock3
                     size={17}
@@ -493,7 +519,7 @@ function HolidayHourItem({
                 </div>
               </FieldGroup>
 
-              <FieldGroup label="Close Time" required>
+              <FieldGroup label={labels.closeTime} required>
                 <div className="relative">
                   <Clock3
                     size={17}
@@ -516,12 +542,12 @@ function HolidayHourItem({
         </div>
 
         <div className="md:col-span-2">
-          <FieldGroup label="Note">
+          <FieldGroup label={labels.note}>
             <input
               type="text"
               value={row.note}
               disabled={isSaving}
-              placeholder="Example: Eid holiday, Christmas closure, New Year schedule..."
+              placeholder={labels.notePlaceholder}
               onChange={(event) =>
                 onChange(row.id, "note", event.target.value)
               }

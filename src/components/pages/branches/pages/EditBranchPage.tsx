@@ -23,6 +23,7 @@ import {
   type BranchFormData,
   type EditTab,
 } from "@/components/pages/branches/forms/EditBranchForm";
+import { useTranslations } from "next-intl";
 
 type StepConfig = {
   key: EditTab;
@@ -33,6 +34,7 @@ type StepConfig = {
 };
 
 export default function BranchesEditPage() {
+  const t = useTranslations("branches");
   const [activeTab, setActiveTab] = useState<EditTab>("basicInfo");
   const [branchData, setBranchData] = useState<BranchFormData | null>(null);
 
@@ -48,7 +50,7 @@ export default function BranchesEditPage() {
 
   useEffect(() => {
     if (isBranchAdmin && requestedBranchId && authBranchId && requestedBranchId !== authBranchId) {
-      toast.error("Not allowed for this branch/account");
+      toast.error(t("notAllowedForBranch"));
       router.replace(`/branches/edit?branchId=${authBranchId}`);
       return;
     }
@@ -62,7 +64,7 @@ export default function BranchesEditPage() {
       data: buildBranchPatchPayload(branchData as BranchFormData, fullSettings),
     });
 
-    toast.success("Basic info updated");
+    toast.success(t("basicInfoUpdated"));
     return true;
   };
 
@@ -72,7 +74,7 @@ export default function BranchesEditPage() {
       data: { settings: fullSettings },
     });
 
-    toast.success("Delivery config updated");
+    toast.success(t("deliveryConfigUpdated"));
     return true;
   };
 
@@ -94,7 +96,7 @@ export default function BranchesEditPage() {
       data: buildBranchPatchPayload(branchData as BranchFormData, fullSettings),
     });
 
-    toast.success("Working hours updated");
+    toast.success(t("workingHoursUpdated"));
     return true;
   };
 
@@ -130,7 +132,7 @@ export default function BranchesEditPage() {
         setActiveTab("workingHours");
       }
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      toast.error(error instanceof Error ? error.message : t("somethingWentWrong"));
     }
   };
 
@@ -138,27 +140,27 @@ export default function BranchesEditPage() {
     () => [
       {
         key: "basicInfo",
-        tabLabel: "Basic Information",
-        title: "Setup Basic Information",
-        description: "Manage your branch's basic information from here",
+        tabLabel: t("basicInformation"),
+        title: t("setupBasicInformation"),
+        description: t("basicInformationDescription"),
         component: <EditBranchBasicInfoStep data={branchData} setData={setBranchData} />,
       },
       {
         key: "delivery",
-        tabLabel: "Delivery Area & Charges",
-        title: "Zone & Delivery Area & Charges Setup",
-        description: "Configure delivery by radius, delivery zones, or postal code rules",
+        tabLabel: t("deliveryAreaCharges"),
+        title: t("deliveryAreaChargesSetup"),
+        description: t("deliveryAreaChargesDescription"),
         component: <EditBranchDeliveryStep data={branchData} setData={setBranchData} />,
       },
       {
         key: "workingHours",
-        tabLabel: "Working Hours",
-        title: "Setup Working Hour",
-        description: "Configure business hours, break times, and holiday date ranges from here",
+        tabLabel: t("workingHours"),
+        title: t("setupWorkingHour"),
+        description: t("workingHoursDescription"),
         component: <EditBranchWorkingHoursStep data={branchData} setData={setBranchData} />,
       },
     ],
-    [branchData]
+    [branchData, t]
   );
 
   const currentStep = steps.find((step) => step.key === activeTab) ?? steps[0];
@@ -166,8 +168,8 @@ export default function BranchesEditPage() {
   return (
     <Container>
       <Header
-        title={isBranchAdmin ? "My Branch" : "Default Branch"}
-        description={isBranchAdmin ? "Manage assigned branch settings only" : "Branch Setup / Default Branch"}
+        title={isBranchAdmin ? t("myBranch") : t("defaultBranch")}
+        description={isBranchAdmin ? t("myBranchDescription") : t("defaultBranchDescription")}
       />
 
       <div className="space-y-8 rounded-[14px] bg-white shadow-sm lg:p-8">

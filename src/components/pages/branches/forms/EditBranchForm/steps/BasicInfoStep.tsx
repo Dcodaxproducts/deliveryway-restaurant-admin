@@ -4,8 +4,12 @@ import { Label } from "@/components/ui/label";
 import Section from "@/components/pages/Promotions/forms/Section";
 import FormInput from "@/components/forms/common/FormInput";
 import { Switch } from "@/components/ui/switch";
+import { useTranslations } from "next-intl";
 
 export default function EditBranchStepOne({ data, setData }: any) {
+  const t = useTranslations("branches");
+  const commonT = useTranslations("common");
+
   if (!data) return null;
 
   const update = (path: string[], value: any) => {
@@ -24,17 +28,17 @@ export default function EditBranchStepOne({ data, setData }: any) {
   return (
     <div className="rounded-[14px] space-y-8">
 
-      <Section label="Add branch Info">
+      <Section label={t("addBranchInfo")}>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
-            label="Branch Name *"
+            label={t("branchNameRequired")}
             value={data.name || ""}
             onChange={(val) => update(["name"], val)}
           />
 
           <FormInput
-            label="Description"
+            label={commonT("description")}
             value={data.description || ""}
             onChange={(val) => update(["description"], val)}
           />
@@ -42,13 +46,13 @@ export default function EditBranchStepOne({ data, setData }: any) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
-            label="Street"
+            label={t("street")}
             value={data.address?.street || ""}
             onChange={(val) => update(["address", "street"], val)}
           />
 
           <FormInput
-            label="Area"
+            label={t("area")}
             value={data.address?.area || ""}
             onChange={(val) => update(["address", "area"], val)}
           />
@@ -56,13 +60,13 @@ export default function EditBranchStepOne({ data, setData }: any) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
-            label="City"
+            label={t("city")}
             value={data.address?.city || ""}
             onChange={(val) => update(["address", "city"], val)}
           />
 
           <FormInput
-            label="State"
+            label={t("state")}
             value={data.address?.state || ""}
             onChange={(val) => update(["address", "state"], val)}
           />
@@ -70,13 +74,13 @@ export default function EditBranchStepOne({ data, setData }: any) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
-            label="Country"
+            label={t("country")}
             value={data.address?.country || ""}
             onChange={(val) => update(["address", "country"], val)}
           />
 
           <FormInput
-            label="Postal Code"
+            label={t("postalCode")}
             value={data.address?.postalCode || data.postalCode || ""}
             onChange={(val) => update(["address", "postalCode"], val)}
           />
@@ -84,13 +88,13 @@ export default function EditBranchStepOne({ data, setData }: any) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
-            label="Latitude"
+            label={t("latitude")}
             value={data.address?.lat || ""}
             onChange={(val) => update(["address", "lat"], val)}
           />
 
           <FormInput
-            label="Longitude"
+            label={t("longitude")}
             value={data.address?.lng || ""}
             onChange={(val) => update(["address", "lng"], val)}
           />
@@ -168,10 +172,10 @@ export default function EditBranchStepOne({ data, setData }: any) {
         </div>
       </Section> */}
 
-      <Section label="Contact Info">
+      <Section label={t("contactInfo")}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
-            label="Phone"
+            label={commonT("phone")}
             value={data.settings?.contact?.phone || ""}
             onChange={(val) =>
               update(["settings", "contact", "phone"], val)
@@ -188,10 +192,10 @@ export default function EditBranchStepOne({ data, setData }: any) {
         </div>
       </Section>
 
-      <Section label="Settings">
+      <Section label={t("settings")}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
-            label="Estimated Prep Time"
+            label={t("estimatedPrepTime")}
             value={data.settings?.automation?.estimatedPrepTime || ""}
             onChange={(val) =>
               update(
@@ -206,10 +210,10 @@ export default function EditBranchStepOne({ data, setData }: any) {
       <div className="flex items-center justify-between rounded-[12px] border p-4">
   <div>
     <p className="text-sm font-medium text-gray-900">
-      Enable Table Reservations
+      {t("enableTableReservations")}
     </p>
     <p className="text-xs text-gray-500">
-      Allow customers to reserve tables for this branch
+      {t("allowTableReservations")}
     </p>
   </div>
 

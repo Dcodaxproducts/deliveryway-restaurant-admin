@@ -3,6 +3,7 @@
 import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export default function DialogFooterComponent({
   closeDialog,
@@ -11,6 +12,8 @@ export default function DialogFooterComponent({
   closeDialog: () => void;
   branchId?: string;
 }) {
+  const t = useTranslations("branches");
+  const commonT = useTranslations("common");
   const router = useRouter();
 
   const handleEdit = () => {
@@ -25,7 +28,7 @@ export default function DialogFooterComponent({
         className="flex-1 h-[42px] rounded-lg"
         onClick={closeDialog}
       >
-        Close
+        {commonT("close")}
       </Button>
 
       <Button
@@ -33,7 +36,7 @@ export default function DialogFooterComponent({
         onClick={handleEdit}
         disabled={!branchId}
       >
-        Edit Details
+        {t("editDetails")}
       </Button>
     </DialogFooter>
   );

@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import BranchCoverModal from "@/components/pages/Branches/components/BranchCoverModal";
 import TemporaryBranchClosureModal from "./TemporaryBranchClosureModal";
+import { useTranslations } from "next-intl";
 
 export default function BranchCard({
   id,
@@ -51,6 +52,8 @@ export default function BranchCard({
   branchAdminMode = false,
   showMediaActions = true,
 }: BranchProps & { loading?: boolean }) {
+  const t = useTranslations("branches");
+  const commonT = useTranslations("common");
   const [openingHoursOpen, setOpeningHoursOpen] = useState(false);
   const [holidayHoursOpen, setHolidayHoursOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -99,7 +102,7 @@ export default function BranchCard({
       setDeleteDialogOpen(false);
     } catch (err: any) {
       void err;
-      toast.error(err.message || "Failed to delete");
+      toast.error(err.message || t("failedToDelete"));
     } finally {
       setIsDeleting(false);
     }
@@ -145,19 +148,19 @@ export default function BranchCard({
   const dropdownItems = [
     isBranchEntity
       ? {
-          label: "Edit Branch",
+          label: t("editBranch"),
           href: `/branches/edit?branchId=${id}`,
           icon: <Store size={16} />,
         }
       : !isBranchAdmin && editMenu
       ? {
-          label: "Edit Menu",
+          label: t("editMenu"),
           onClick: () => editMenu?.(id),
           icon: <List size={16} />,
         }
       : openMenuDetails
       ? {
-          label: "View Menu Items",
+          label: t("viewMenuItems"),
           onClick: () => openMenuDetails?.(id),
           icon: <List size={16} />,
         }
@@ -166,19 +169,19 @@ export default function BranchCard({
     ...(isBranchEntity
       ? [
           {
-            label: "Opening Hours",
+            label: t("openingHours"),
             onClick: () => setOpeningHoursOpen(true),
             icon: <Store size={16} />,
           },
           {
-            label: "Holiday Hours",
+            label: t("holidayHours"),
             onClick: () => setHolidayHoursOpen(true),
             icon: <CalendarDays size={16} />,
           },
           {
             label: isTemporarilyClosed
-              ? "Already Temporarily Closed"
-              : "Temporary Closure",
+              ? t("alreadyTemporarilyClosed")
+              : t("temporaryClosure"),
             onClick: !isTemporarilyClosed
               ? () => setTemporaryClosureOpen(true)
               : undefined,
@@ -188,7 +191,7 @@ export default function BranchCard({
             icon: <PauseCircle size={16} />,
           },
           {
-            label: "Reopen Branch",
+            label: t("reopenBranch"),
             onClick: isTemporarilyClosed
               ? handleReopenTemporaryClosure
               : undefined,
@@ -204,13 +207,13 @@ export default function BranchCard({
           ...(canUseLifecycleActions
             ? [
                 {
-                  label: "Activate",
+                  label: t("activate"),
                   onClick: !isActive ? handleActivate : undefined,
                   className: isActive ? "opacity-50 pointer-events-none" : "",
                   icon: <Power size={16} />,
                 },
                 {
-                  label: "Suspend",
+                  label: t("suspend"),
                   onClick: isActive ? handleSuspend : undefined,
                   className: !isActive ? "opacity-50 pointer-events-none" : "",
                   icon: <PauseCircle size={16} />,
@@ -223,7 +226,7 @@ export default function BranchCard({
     ...(canDelete
       ? [
           {
-            label: "Delete",
+            label: commonT("delete"),
             onClick: () => setDeleteDialogOpen(true),
             icon: <Trash size={16} className="text-red-500" />,
           },
@@ -277,19 +280,19 @@ export default function BranchCard({
 
               {isDefault && (
                 <span className="text-[11px] font-medium text-green-600 bg-green-50 px-2 py-[2px] rounded-full">
-                  main
+                  {t("main")}
                 </span>
               )}
 
               {isTemporarilyClosed && (
                 <span className="text-[11px] font-medium text-primary bg-primary/10 px-2 py-[2px] rounded-full">
-                  temporarily closed
+                  {t("temporarilyClosed")}
                 </span>
               )}
             </div>
 
             <p className="text-xs text-gray-400 mt-1">
-              ID: #{id} • {itemsCount} Items
+              {t("id")}: #{id} • {t("itemsCount", { count: itemsCount ?? 0 })}
             </p>
           </div>
         </div>
@@ -336,20 +339,20 @@ export default function BranchCard({
                 <div className="flex items-center">
                   <span className="size-2 rounded-full bg-green-500" />
                   <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-[2px] rounded-full whitespace-nowrap">
-                    main
+                    {t("main")}
                   </span>
                 </div>
               )}
 
               {isTemporarilyClosed && (
                 <span className="text-[11px] font-medium text-primary bg-primary/10 px-2 py-[2px] rounded-full">
-                  temporarily closed
+                  {t("temporarilyClosed")}
                 </span>
               )}
             </div>
 
             <p className="text-sm text-gray-400">
-              ID: #{id} | {itemsCount} Items
+              {t("id")}: #{id} | {t("itemsCount", { count: itemsCount ?? 0 })}
             </p>
           </div>
         </div>
@@ -412,8 +415,8 @@ export default function BranchCard({
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDelete}
         isLoading={isDeleting || deleteMutation.isPending}
-        title={openDialog ? "Delete Branch" : "Delete Menu"}
-        description={`Are you sure you want to delete "${name}"? This action cannot be undone.`}
+        title={openDialog ? t("deleteBranch") : t("deleteMenu")}
+        description={t("deleteDescription", { name })}
       />
 
       <BranchCoverModal

@@ -7,6 +7,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import BranchInfoCard from "./BranchInfoCard";
 import DialogFooterComponent from "./DialogFooterComponent";
 import DialogHeaderComponent from "./DialogHeaderComponent";
+import { useTranslations } from "next-intl";
 
 type BranchDetails = {
   id?: string;
@@ -56,9 +57,9 @@ type InfoItem = {
   value?: string | number | boolean | null;
 };
 
-const formatBoolean = (value?: boolean | null) => {
+const formatBoolean = (value: boolean | null | undefined, yes: string, no: string) => {
   if (typeof value !== "boolean") return undefined;
-  return value ? "Yes" : "No";
+  return value ? yes : no;
 };
 
 const formatDate = (value?: string | null) => {
@@ -66,13 +67,13 @@ const formatDate = (value?: string | null) => {
   return new Date(value).toLocaleString();
 };
 
-const compactInfo = (items: InfoItem[]) =>
+const compactInfo = (items: InfoItem[], yes: string, no: string) =>
   items
     .map(({ label, value }) => ({
       label,
       value:
         typeof value === "boolean"
-          ? formatBoolean(value)
+          ? formatBoolean(value, yes, no)
           : value === null || value === undefined || value === ""
             ? undefined
             : String(value),
@@ -94,6 +95,9 @@ export default function BranchDetailsModal({
   closeDialog: () => void;
   branch: BranchDetails | null;
 }) {
+  const t = useTranslations("branches");
+  const commonT = useTranslations("common");
+
   if (!branch) return null;
 
   const { address, availability, deletionState, restaurant, manager, _count } = branch;
@@ -102,41 +106,41 @@ export default function BranchDetailsModal({
   const hasLocation = latitude !== undefined && latitude !== null && longitude !== undefined && longitude !== null;
 
   const branchInfo = compactInfo([
-    { label: "Branch Name", value: branch.name },
-    { label: "Restaurant", value: restaurant?.name },
-    { label: "Restaurant Slug", value: restaurant?.slug },
-  ]);
+    { label: t("branchName"), value: branch.name },
+    { label: t("restaurant"), value: restaurant?.name },
+    { label: t("restaurantSlug"), value: restaurant?.slug },
+  ], commonT("yes"), commonT("no"));
 
   const managerInfo = compactInfo([
-    { label: "Manager Email", value: manager?.email },
-    { label: "Manager Name", value: getManagerName(branch) },
-    { label: "Manager Phone", value: manager?.profile?.phone },
-  ]);
+    { label: t("managerEmail"), value: manager?.email },
+    { label: t("managerName"), value: getManagerName(branch) },
+    { label: t("managerPhone"), value: manager?.profile?.phone },
+  ], commonT("yes"), commonT("no"));
 
   const addressInfo = compactInfo([
-    { label: "Street", value: address?.street },
-    { label: "Area", value: address?.area },
-    { label: "City", value: address?.city },
-    { label: "State", value: address?.state },
-    { label: "Country", value: address?.country },
-  ]);
+    { label: t("street"), value: address?.street },
+    { label: t("area"), value: address?.area },
+    { label: t("city"), value: address?.city },
+    { label: t("state"), value: address?.state },
+    { label: t("country"), value: address?.country },
+  ], commonT("yes"), commonT("no"));
 
   const availabilityInfo = compactInfo([
-    { label: "Available", value: availability?.isAvailable },
-    { label: "Temporarily Closed", value: availability?.isTemporarilyClosed },
-    { label: "Deleted", value: deletionState?.isDeleted },
-  ]);
+    { label: t("available"), value: availability?.isAvailable },
+    { label: t("temporarilyClosed"), value: availability?.isTemporarilyClosed },
+    { label: t("deleted"), value: deletionState?.isDeleted },
+  ], commonT("yes"), commonT("no"));
 
   const statsInfo = compactInfo([
-    { label: "Users", value: _count?.users },
-    { label: "Orders", value: _count?.orders },
-    { label: "Deliverymen", value: _count?.deliverymen },
-  ]);
+    { label: t("users"), value: _count?.users },
+    { label: t("orders"), value: _count?.orders },
+    { label: t("deliverymen"), value: _count?.deliverymen },
+  ], commonT("yes"), commonT("no"));
 
   const auditInfo = compactInfo([
-    { label: "Created At", value: formatDate(branch.createdAt) },
-    { label: "Updated At", value: formatDate(branch.updatedAt) },
-  ]);
+    { label: commonT("createdAt"), value: formatDate(branch.createdAt) },
+    { label: commonT("updatedAt"), value: formatDate(branch.updatedAt) },
+  ], commonT("yes"), commonT("no"));
 
   return (
     <Dialog open={isOpen} onOpenChange={closeDialog}>
@@ -154,7 +158,7 @@ export default function BranchDetailsModal({
                 <Image src={branch.logoUrl} alt="Branch logo" fill className="object-contain" />
               ) : (
                 <div className="flex h-full items-center justify-center text-xs text-gray-400">
-                  No Logo
+                  {t("noLogo")}
                 </div>
               )}
             </div>
@@ -163,29 +167,29 @@ export default function BranchDetailsModal({
 
         <div className="space-y-5 px-6 pb-6 pt-14">
           <DialogHeaderComponent
-            title={branch.name || "Branch"}
-            badgeText={branch.isMain ? "Main Branch" : "Branch"}
+            title={branch.name || commonT("branch")}
+            badgeText={branch.isMain ? t("mainBranch") : commonT("branch")}
             branchId={branch.id || ""}
             createdAt={branch.createdAt}
             updatedAt={branch.updatedAt}
           />
 
-          {branchInfo.length ? <BranchInfoCard title="Branch" info={branchInfo} /> : null}
-          {managerInfo.length ? <BranchInfoCard title="Manager" info={managerInfo} /> : null}
-          {addressInfo.length ? <BranchInfoCard title="Address" info={addressInfo} /> : null}
-          {availabilityInfo.length ? <BranchInfoCard title="Availability" info={availabilityInfo} /> : null}
-          {statsInfo.length ? <BranchInfoCard title="Stats" info={statsInfo} /> : null}
-          {auditInfo.length ? <BranchInfoCard title="Audit" info={auditInfo} /> : null}
+          {branchInfo.length ? <BranchInfoCard title={commonT("branch")} info={branchInfo} /> : null}
+          {managerInfo.length ? <BranchInfoCard title={t("manager")} info={managerInfo} /> : null}
+          {addressInfo.length ? <BranchInfoCard title={commonT("address")} info={addressInfo} /> : null}
+          {availabilityInfo.length ? <BranchInfoCard title={t("availability")} info={availabilityInfo} /> : null}
+          {statsInfo.length ? <BranchInfoCard title={t("stats")} info={statsInfo} /> : null}
+          {auditInfo.length ? <BranchInfoCard title={t("audit")} info={auditInfo} /> : null}
 
           {hasLocation ? (
             <Card className="rounded-lg border-none bg-[#F5F5F5] p-4">
-              <h3 className="text-center text-sm font-semibold text-black">Location</h3>
+              <h3 className="text-center text-sm font-semibold text-black">{t("location")}</h3>
               <div className="mt-2 overflow-hidden rounded-lg">
                 <iframe
                   width="100%"
                   height="150"
                   loading="lazy"
-                  title="Branch location"
+                  title={t("branchLocation")}
                   src={`https://maps.google.com/maps?q=${latitude},${longitude}&z=15&output=embed`}
                 />
               </div>

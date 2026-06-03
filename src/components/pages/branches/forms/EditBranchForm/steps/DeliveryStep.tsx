@@ -16,6 +16,7 @@ import {
   Trash2,
   Undo2,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const ORDER_TYPES = ["DELIVERY", "TAKEAWAY", "DINE_IN"];
 const PAYMENT_METHODS = [
@@ -51,28 +52,28 @@ const DEFAULT_MAP_CENTER = {
 
 const DELIVERY_MODES: {
   value: DeliveryMode;
-  label: string;
-  description: string;
+  labelKey: string;
+  descriptionKey: string;
 }[] = [
   {
     value: "RADIUS",
-    label: "Radius",
-    description: "Use straight-line distance from the branch location.",
+    labelKey: "deliveryModeRadius",
+    descriptionKey: "deliveryModeRadiusDescription",
   },
   {
     value: "ZONE",
-    label: "Polygon zones",
-    description: "Create multiple custom delivery areas with coordinates.",
+    labelKey: "deliveryModePolygonZones",
+    descriptionKey: "deliveryModePolygonZonesDescription",
   },
   {
     value: "ZONE_BANDS",
-    label: "Zone bands",
-    description: "Use distance bands with separate fees, minimums, and free delivery thresholds.",
+    labelKey: "deliveryModeZoneBands",
+    descriptionKey: "deliveryModeZoneBandsDescription",
   },
   {
     value: "POSTAL_CODE",
-    label: "Postal codes",
-    description: "Charge delivery by one or more postal code rules.",
+    labelKey: "deliveryModePostalCodes",
+    descriptionKey: "deliveryModePostalCodesDescription",
   },
 ];
 
@@ -191,6 +192,8 @@ const getZoneValidPoints = (zone: any) => {
 };
 
 export default function EditBranchStepTwo({ data, setData }: any) {
+  const t = useTranslations("branches");
+
   const [mapsReady, setMapsReady] = useState(false);
   const [mapsLoading, setMapsLoading] = useState(false);
   const [mapsError, setMapsError] = useState("");
@@ -547,7 +550,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
     const query = mapSearchQuery.trim();
 
     if (!query) {
-      setMapSearchError("Search an area or address first.");
+      setMapSearchError(t("searchAreaFirst"));
       return;
     }
 
@@ -1006,12 +1009,12 @@ export default function EditBranchStepTwo({ data, setData }: any) {
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 py-3">
           <div>
             <p className="text-sm font-semibold text-gray-900">
-              {deliveryMode === "RADIUS" ? "Radius map preview" : "Polygon zone builder"}
+              {deliveryMode === "RADIUS" ? t("radiusMapPreview") : t("polygonZoneBuilder")}
             </p>
             <p className="mt-1 text-xs text-gray-500">
               {deliveryMode === "RADIUS"
-                ? "Search an area to inspect coverage, then use the radius preview from branch latitude/longitude."
-                : "Search an area, generate a starter polygon, then fine-tune by clicking the map or dragging numbered markers."}
+                ? t("radiusMapDescription")
+                : t("polygonMapDescription")}
             </p>
           </div>
 
@@ -1023,8 +1026,8 @@ export default function EditBranchStepTwo({ data, setData }: any) {
             >
               {zones.map((zone: any, index: number) => (
                 <option key={`zone-select-${index}`} value={index}>
-                  {zone?.name || `Zone ${index + 1}`} ·{" "}
-                  {Array.isArray(zone?.polygon) ? zone.polygon.length : 0} points
+                  {zone?.name || t("zoneIndex", { index: index + 1 })} ·{" "}
+                  {t("pointsCount", { count: Array.isArray(zone?.polygon) ? zone.polygon.length : 0 })}
                 </option>
               ))}
             </select>
@@ -1037,7 +1040,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_auto_auto]">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-gray-500">
-                    Search area/address
+                    {t("searchAreaAddress")}
                   </label>
 
                   <div className="relative">
@@ -1055,7 +1058,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                         setMapSearchError("");
                       }}
                       onKeyDown={handleMapSearchKeyDown}
-                      placeholder="Search city, area, street, or landmark"
+                      placeholder={t("searchAreaPlaceholder")}
                       className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50 pl-10 pr-10 text-sm outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10"
                     />
 
@@ -1080,7 +1083,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                     ) : (
                       <Search size={15} />
                     )}
-                    Search map
+                    {t("searchMap")}
                   </button>
                 </div>
 
@@ -1092,7 +1095,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                       className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-white transition hover:bg-primary/90 xl:w-auto"
                     >
                       <Crosshair size={15} />
-                      Generate starter zone
+                      {t("generateStarterZone")}
                     </button>
                   </div>
                 ) : null}
@@ -1113,7 +1116,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 text-xs font-medium text-gray-700 transition hover:bg-white"
                   >
                     <Plus size={14} />
-                    Add center point
+                    {t("addCenterPoint")}
                   </button>
 
                   <button
@@ -1123,7 +1126,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 text-xs font-medium text-gray-700 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Undo2 size={14} />
-                    Undo last point
+                    {t("undoLastPoint")}
                   </button>
 
                   <button
@@ -1132,7 +1135,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 text-xs font-medium text-gray-700 transition hover:bg-white"
                   >
                     <LocateFixed size={14} />
-                    Fit active zone
+                    {t("fitActiveZone")}
                   </button>
 
                   <button
@@ -1142,15 +1145,15 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-100 bg-red-50 px-3 text-xs font-medium text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Trash2 size={14} />
-                    Clear active zone
+                    {t("clearActiveZone")}
                   </button>
                 </div>
               ) : null}
 
               <p className="mt-3 text-xs leading-relaxed text-gray-500">
                 {deliveryMode === "ZONE"
-                  ? "Recommended flow: search the area → click “Generate starter zone” → drag numbered points → click map edges/nearby area to add more points."
-                  : "The circle uses the branch coordinates from Basic Information and the Radius value above."}
+                  ? t("polygonRecommendedFlow")
+                  : t("radiusCircleDescription")}
               </p>
             </div>
 
@@ -1158,13 +1161,11 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               {deliveryMode === "ZONE" ? (
                 <div className="absolute left-4 top-4 z-10 max-w-[280px] rounded-2xl bg-white/95 px-4 py-3 text-xs text-gray-600 shadow-sm ring-1 ring-gray-200">
                   <p className="font-semibold text-gray-900">
-                    Active zone:{" "}
-                    {activeZone?.name || `Zone ${safeActiveZoneIndex + 1}`}
+                    {t("activeZone")}:{" "}
+                    {activeZone?.name || t("zoneIndex", { index: safeActiveZoneIndex + 1 })}
                   </p>
                   <p className="mt-1">
-                    {activeZonePoints.length} point
-                    {activeZonePoints.length === 1 ? "" : "s"} selected. Minimum
-                    3 points required.
+                    {t("activeZonePoints", { count: activeZonePoints.length })}
                   </p>
                 </div>
               ) : null}
@@ -1175,14 +1176,14 @@ export default function EditBranchStepTwo({ data, setData }: any) {
             <div className="flex flex-col gap-2 border-t border-gray-200 bg-white px-4 py-3 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
               <span>
                 {deliveryMode === "RADIUS"
-                  ? "Branch location comes from the Basic Information tab latitude/longitude."
-                  : "Map clicks add points to the active zone; markers are draggable and synced with the coordinate fields below."}
+                  ? t("branchLocationFromBasicInfo")
+                  : t("mapClicksAddPoints")}
               </span>
 
               <span className="shrink-0 font-medium text-gray-700">
                 {branchCoordinates
                   ? `${branchCoordinates.lat}, ${branchCoordinates.lng}`
-                  : "Branch coordinates not selected"}
+                  : t("branchCoordinatesNotSelected")}
               </span>
             </div>
           </>
@@ -1192,17 +1193,17 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               <>
                 <Loader2 className="mb-3 animate-spin text-primary" size={28} />
                 <p className="text-sm font-medium text-gray-700">
-                  Loading Google Map
+                  {t("loadingGoogleMap")}
                 </p>
               </>
             ) : (
               <>
                 <MapPin className="mb-3 text-gray-400" size={30} />
                 <p className="text-sm font-medium text-gray-700">
-                  Google Map preview unavailable
+                  {t("googleMapPreviewUnavailable")}
                 </p>
                 <p className="mt-1 text-xs text-gray-400">
-                  Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in env to enable map selection.
+                  {t("googleMapsApiKeyMissing")}
                 </p>
               </>
             )}
@@ -1224,7 +1225,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
 
   return (
     <div className="mt-10 space-y-8 rounded-[14px]">
-      <Section label="Allowed Order Types">
+      <Section label={t("allowedOrderTypes")}>
         <div className="flex flex-wrap gap-4">
           {ORDER_TYPES.map((type) => (
             <label key={type} className="flex items-center gap-2">
@@ -1238,7 +1239,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
         </div>
       </Section>
 
-      <Section label="Allowed Payment Methods">
+      <Section label={t("allowedPaymentMethods")}>
         <div className="flex flex-wrap gap-4">
           {PAYMENT_METHODS.map((method) => (
             <label key={method} className="flex items-center gap-2">
@@ -1254,11 +1255,11 @@ export default function EditBranchStepTwo({ data, setData }: any) {
         </div>
       </Section>
 
-      <Section label="Delivery Configuration">
+      <Section label={t("deliveryConfiguration")}>
         <div className="space-y-6">
           <div>
             <p className="mb-3 text-sm font-medium text-gray-900">
-              Delivery area calculation mode
+              {t("deliveryAreaCalculationMode")}
             </p>
 
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
@@ -1277,10 +1278,10 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                     }`}
                   >
                     <span className="block text-sm font-semibold">
-                      {mode.label}
+                      {t(mode.labelKey)}
                     </span>
                     <span className="mt-1 block text-xs leading-relaxed text-gray-500">
-                      {mode.description}
+                      {t(mode.descriptionKey)}
                     </span>
                   </button>
                 );
@@ -1290,7 +1291,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <FormInput
-              label="Base Delivery Fee"
+              label={t("baseDeliveryFee")}
               value={toInputNumber(delivery.deliveryFee)}
               onChange={(val) =>
                 updateDeliveryConfig("deliveryFee", val ? Number(val) : 0)
@@ -1298,7 +1299,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
             />
 
             <FormInput
-              label="Radius (km)"
+              label={t("radiusKm")}
               value={toInputNumber(delivery.radiusKm)}
               onChange={(val) =>
                 updateDeliveryConfig("radiusKm", val ? Number(val) : 0)
@@ -1306,7 +1307,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
             />
 
             <FormInput
-              label="Minimum Order Amount"
+              label={t("minimumOrderAmount")}
               value={toInputNumber(delivery.minOrderAmount)}
               onChange={(val) =>
                 updateDeliveryConfig("minOrderAmount", val ? Number(val) : 0)
@@ -1314,7 +1315,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
             />
 
             <FormInput
-              label="Free Delivery Threshold"
+              label={t("freeDeliveryThreshold")}
               value={toInputNumber(delivery.freeDeliveryThreshold)}
               onChange={(val) =>
                 updateDeliveryConfig(
@@ -1332,7 +1333,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                 updateDeliveryConfig("isFreeDelivery", val === true)
               }
             />
-            <span className="text-sm">Enable Free Delivery</span>
+            <span className="text-sm">{t("enableFreeDelivery")}</span>
           </label>
 
           {renderDeliveryMap()}
@@ -1340,12 +1341,10 @@ export default function EditBranchStepTwo({ data, setData }: any) {
           {deliveryMode === "RADIUS" ? (
             <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
               <p className="text-sm font-semibold text-gray-900">
-                Radius delivery area
+                {t("radiusDeliveryArea")}
               </p>
               <p className="mt-1 text-sm text-gray-500">
-                Customers within the configured radius from the branch latitude
-                and longitude will be eligible for delivery. Distance is
-                calculated as straight-line/as-the-crow-flies distance.
+                {t("radiusDeliveryAreaDescription")}
               </p>
             </div>
           ) : null}
@@ -1355,11 +1354,10 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">
-                    Distance Zone Bands
+                    {t("distanceZoneBands")}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
-                    Distance-based bands for delivery fee, minimum order,
-                    and free delivery threshold.
+                    {t("distanceZoneBandsDescription")}
                   </p>
                 </div>
 
@@ -1369,14 +1367,13 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90"
                 >
                   <Plus size={15} />
-                  Add Zone Band
+                  {t("addZoneBand")}
                 </button>
               </div>
 
               {zoneBands.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-5 text-center text-sm text-gray-500">
-                  No distance bands configured yet. Add at least one band to use
-                  zone band delivery mode.
+                  {t("noDistanceBands")}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -1386,7 +1383,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                       className="grid grid-cols-1 gap-3 rounded-2xl border border-gray-200 bg-white p-4 lg:grid-cols-3"
                     >
                       <FormInput
-                        label="From KM"
+                        label={t("fromKm")}
                         value={toInputNumber(band?.fromKm)}
                         onChange={(val) =>
                           updateZoneBand(index, "fromKm", val ? Number(val) : 0)
@@ -1394,7 +1391,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                       />
 
                       <FormInput
-                        label="To KM"
+                        label={t("toKm")}
                         value={toInputNumber(band?.toKm)}
                         onChange={(val) =>
                           updateZoneBand(index, "toKm", val ? Number(val) : 0)
@@ -1402,7 +1399,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                       />
 
                       <FormInput
-                        label="Delivery Fee"
+                        label={t("deliveryFee")}
                         value={toInputNumber(band?.deliveryFee)}
                         onChange={(val) =>
                           updateZoneBand(
@@ -1414,7 +1411,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                       />
 
                       <FormInput
-                        label="Minimum Order Amount"
+                        label={t("minimumOrderAmount")}
                         value={toInputNumber(band?.minOrderAmount)}
                         onChange={(val) =>
                           updateZoneBand(
@@ -1426,7 +1423,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                       />
 
                       <FormInput
-                        label="Free Delivery Threshold"
+                        label={t("freeDeliveryThreshold")}
                         value={toInputNumber(band?.freeDeliveryThreshold)}
                         onChange={(val) =>
                           updateZoneBand(
@@ -1444,7 +1441,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           className="inline-flex h-11 items-center gap-2 rounded-full border border-gray-200 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50"
                         >
                           <Copy size={14} />
-                          Duplicate
+                          {t("duplicate")}
                         </button>
 
                         <button
@@ -1467,11 +1464,10 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">
-                    Polygon Delivery Zones
+                    {t("polygonDeliveryZones")}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
-                    Add multiple zones. Each zone needs at least 3 coordinate
-                    points. You can enter coordinates manually or click the map.
+                    {t("polygonDeliveryZonesDescription")}
                   </p>
                 </div>
 
@@ -1481,14 +1477,13 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90"
                 >
                   <Plus size={15} />
-                  Add Zone
+                  {t("addZone")}
                 </button>
               </div>
 
               {zones.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-5 text-center text-sm text-gray-500">
-                  No delivery zone configured yet. Add a zone or click on the map
-                  to start drawing one.
+                  {t("noDeliveryZone")}
                 </div>
               ) : (
                 zones.map((zone: any, zoneIndex: number) => {
@@ -1512,12 +1507,12 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           className="text-left"
                         >
                           <p className="text-sm font-semibold text-gray-900">
-                            Zone {zoneIndex + 1}
+                            {t("zoneIndex", { index: zoneIndex + 1 })}
                           </p>
                           <p className="mt-0.5 text-xs text-gray-500">
                             {zoneIndex === activeZoneIndex
-                              ? "Active on map"
-                              : "Click to edit on map"}
+                              ? t("activeOnMap")
+                              : t("clickToEditOnMap")}
                           </p>
                         </button>
 
@@ -1527,7 +1522,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                             onClick={() => clearZonePoints(zoneIndex)}
                             className="inline-flex h-9 items-center gap-2 rounded-full border border-gray-200 px-3 text-xs font-medium text-gray-700 hover:bg-gray-50"
                           >
-                            Clear Points
+                            {t("clearPoints")}
                           </button>
 
                           <button
@@ -1536,7 +1531,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                             className="inline-flex h-9 items-center gap-2 rounded-full border border-gray-200 px-3 text-xs font-medium text-gray-700 hover:bg-gray-50"
                           >
                             <Copy size={13} />
-                            Duplicate
+                            {t("duplicate")}
                           </button>
 
                           <button
@@ -1545,20 +1540,20 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                             className="inline-flex h-9 items-center gap-2 rounded-full border border-red-100 bg-red-50 px-3 text-xs font-medium text-red-600 hover:bg-red-100"
                           >
                             <Trash2 size={13} />
-                            Remove
+                            {t("remove")}
                           </button>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                         <FormInput
-                          label="Zone Name"
+                          label={t("zoneName")}
                           value={zone?.name || ""}
                           onChange={(val) => updateZone(zoneIndex, "name", val)}
                         />
 
                         <FormInput
-                          label="Zone Delivery Fee"
+                          label={t("zoneDeliveryFee")}
                           value={toInputNumber(zone?.deliveryFee)}
                           onChange={(val) =>
                             updateZone(
@@ -1570,7 +1565,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                         />
 
                         <FormInput
-                          label="Zone Minimum Order Amount"
+                          label={t("zoneMinimumOrderAmount")}
                           value={toInputNumber(zone?.minOrderAmount)}
                           onChange={(val) =>
                             updateZone(
@@ -1582,7 +1577,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                         />
 
                         <FormInput
-                          label="Zone Free Delivery Threshold"
+                          label={t("zoneFreeDeliveryThreshold")}
                           value={toInputNumber(zone?.freeDeliveryThreshold)}
                           onChange={(val) =>
                             updateZone(
@@ -1597,7 +1592,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                       <div className="mt-4">
                         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                            Polygon points
+                            {t("polygonPoints")}
                           </p>
 
                           <button
@@ -1606,15 +1601,14 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                             className="inline-flex items-center gap-1 rounded-full border border-primary/20 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/5"
                           >
                             <Plus size={13} />
-                            Add Empty Point
+                            {t("addEmptyPoint")}
                           </button>
                         </div>
 
                         <div className="space-y-2">
                           {polygon.length === 0 ? (
                             <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
-                              No points yet. Select this zone and click on the map
-                              to add polygon points.
+                              {t("noPolygonPoints")}
                             </div>
                           ) : (
                             polygon.map((point: any, pointIndex: number) => (
@@ -1623,7 +1617,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                                 className="grid grid-cols-1 gap-2 rounded-xl bg-gray-50 p-3 sm:grid-cols-[80px_1fr_1fr_auto]"
                               >
                                 <div className="flex items-center text-xs font-medium text-gray-500">
-                                  Point {pointIndex + 1}
+                                  {t("pointIndex", { index: pointIndex + 1 })}
                                 </div>
 
                                 <input
@@ -1638,7 +1632,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                                       event.target.value
                                     )
                                   }
-                                  placeholder="Latitude"
+                                  placeholder={t("latitude")}
                                   className="h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:border-primary"
                                 />
 
@@ -1654,7 +1648,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                                       event.target.value
                                     )
                                   }
-                                  placeholder="Longitude"
+                                  placeholder={t("longitude")}
                                   className="h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:border-primary"
                                 />
 
@@ -1685,10 +1679,10 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">
-                    Postal Code Rules
+                    {t("postalCodeRules")}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
-                    Add one or more postal codes with separate delivery fees.
+                    {t("postalCodeRulesDescription")}
                   </p>
                 </div>
 
@@ -1698,13 +1692,13 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90"
                 >
                   <Plus size={15} />
-                  Add Postal Code
+                  {t("addPostalCode")}
                 </button>
               </div>
 
               {postalCodeRules.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-5 text-center text-sm text-gray-500">
-                  No postal code rule configured yet.
+                  {t("noPostalCodeRule")}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -1714,7 +1708,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                       className="grid grid-cols-1 gap-3 rounded-2xl border border-gray-200 bg-white p-4 lg:grid-cols-[1fr_1fr_auto]"
                     >
                       <FormInput
-                        label="Postal Code"
+                        label={t("postalCode")}
                         value={rule?.postalCode || ""}
                         onChange={(val) =>
                           updatePostalRule(index, "postalCode", val)
@@ -1722,7 +1716,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                       />
 
                       <FormInput
-                        label="Delivery Fee"
+                        label={t("deliveryFee")}
                         value={toInputNumber(rule?.deliveryFee)}
                         onChange={(val) =>
                           updatePostalRule(
@@ -1740,7 +1734,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           className="inline-flex h-11 items-center gap-2 rounded-full border border-gray-200 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50"
                         >
                           <Copy size={14} />
-                          Duplicate
+                          {t("duplicate")}
                         </button>
 
                         <button
@@ -1760,15 +1754,15 @@ export default function EditBranchStepTwo({ data, setData }: any) {
         </div>
       </Section>
 
-      <Section label="Automation">
+      <Section label={t("automation")}>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <label className="flex min-h-[88px] cursor-pointer items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white px-5 py-4 transition hover:border-primary/30 hover:bg-primary/5">
             <span className="min-w-0">
               <span className="block text-sm font-semibold text-gray-900">
-                Auto Accept Orders
+                {t("autoAcceptOrders")}
               </span>
               <span className="mt-1 block text-xs leading-relaxed text-gray-500">
-                Automatically accept incoming delivery orders for this branch.
+                {t("autoAcceptOrdersDescription")}
               </span>
             </span>
             <Checkbox
@@ -1781,7 +1775,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
 
           <div className="rounded-2xl border border-gray-200 bg-white px-5 py-4">
             <FormInput
-              label="Estimated Prep Time (minutes)"
+              label={t("estimatedPrepTimeMinutes")}
               value={toInputNumber(settings.automation?.estimatedPrepTime)}
               onChange={(val) =>
                 update(
@@ -1791,8 +1785,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               }
             />
             <p className="mt-2 text-xs leading-relaxed text-gray-500">
-              Used as the default preparation time shown to customers and order
-              operators.
+              {t("estimatedPrepTimeDescription")}
             </p>
           </div>
         </div>

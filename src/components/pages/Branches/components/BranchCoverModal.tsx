@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { useUpdateBranchImages } from "@/hooks/useBranches";
+import { useTranslations } from "next-intl";
 
 interface Props {
   open: boolean;
@@ -27,6 +28,8 @@ export default function BranchCoverModal({
   coverImage,
   logoUrl,
 }: Props) {
+  const t = useTranslations("branches");
+  const commonT = useTranslations("common");
   const { uploadFile, uploading } = useFileUpload();
   const updateMutation = useUpdateBranchImages();
 
@@ -76,7 +79,7 @@ export default function BranchCoverModal({
   // ================= SAVE =================
   const handleSave = async () => {
     if (!coverUrl && !logoUploadedUrl) {
-      toast.error("Upload at least one image");
+      toast.error(t("uploadAtLeastOneImage"));
       return;
     }
 
@@ -99,7 +102,7 @@ export default function BranchCoverModal({
       <DialogContent className="max-w-lg p-0 overflow-hidden rounded-2xl">
         <div className="px-6 pt-5 pb-4 border-b bg-white">
           <h3 className="text-[16px] font-semibold text-gray-900">
-            Customize Branch
+            {t("customizeBranch")}
           </h3>
           <p className="text-xs text-gray-500 mt-1 truncate">
             {branchName}
@@ -109,28 +112,28 @@ export default function BranchCoverModal({
         {/* BODY */}
         <div className="p-6 space-y-6">
           <div>
-            <p className="text-sm font-medium mb-2">Cover Image</p>
+            <p className="text-sm font-medium mb-2">{t("coverImage")}</p>
 
             <div className="relative group w-full h-[180px] rounded-xl overflow-hidden border bg-gray-50">
               {coverPreview ? (
                 <>
                   <Image
                     src={coverPreview}
-                    alt="Cover"
                     fill
+                    alt={t("coverImage")}
                     className="object-cover"
                   />
 
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
                     <span className="opacity-0 group-hover:opacity-100 text-white text-xs font-medium transition">
-                      Change Cover
+                      {t("changeCover")}
                     </span>
                   </div>
                 </>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
                   <ImageIcon size={28} className="mb-2 opacity-70" />
-                  <span className="text-xs">No cover image</span>
+                  <span className="text-xs">{t("noCoverImage")}</span>
                 </div>
               )}
             </div>
@@ -154,7 +157,7 @@ export default function BranchCoverModal({
                   ) : (
                     <Upload size={15} />
                   )}
-                  {coverPreview ? "Replace Cover" : "Upload Cover"}
+                  {coverPreview ? t("replaceCover") : t("uploadCover")}
                 </span>
               </Button>
             </label>
@@ -166,14 +169,14 @@ export default function BranchCoverModal({
                 <>
                   <Image
                     src={logoPreview}
-                    alt="Logo"
                     fill
+                    alt={t("logo")}
                     className="object-contain"
                   />
 
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition">
                     <span className="opacity-0 group-hover:opacity-100 text-white text-[10px]">
-                      Change
+                      {commonT("edit")}
                     </span>
                   </div>
                 </>
@@ -183,9 +186,9 @@ export default function BranchCoverModal({
             </div>
 
             <div className="flex-1">
-              <p className="text-sm font-medium">Logo</p>
+              <p className="text-sm font-medium">{t("logo")}</p>
               <p className="text-xs text-gray-400 mb-2">
-                Square image recommended
+                {t("squareImageRecommended")}
               </p>
 
               <label>
@@ -207,7 +210,7 @@ export default function BranchCoverModal({
                     ) : (
                       <Upload size={14} />
                     )}
-                    {logoPreview ? "Replace Logo" : "Upload Logo"}
+                    {logoPreview ? t("replaceLogo") : t("uploadLogo")}
                   </span>
                 </Button>
               </label>
@@ -223,7 +226,7 @@ export default function BranchCoverModal({
             {updateMutation.isPending && (
               <Loader2 size={16} className="animate-spin mr-2" />
             )}
-            Save Changes
+            {t("saveChanges")}
           </Button>
         </div>
       </DialogContent>

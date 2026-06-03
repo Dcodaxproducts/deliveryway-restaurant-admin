@@ -7,6 +7,7 @@ import BranchesClient from "@/components/pages/Branches/components/BranchesClien
 import { useGetBranches } from "@/hooks/useBranches";
 import { useAuth } from "@/hooks/useAuth";
 import BranchWorkspace from "@/components/pages/BranchWorkspace/components/branch-admin/BranchWorkspace";
+import { useTranslations } from "next-intl";
 
 export default function BranchesPage() {
   const { isBranchAdmin } = useAuth();
@@ -19,6 +20,7 @@ export default function BranchesPage() {
 }
 
 function RestaurantBranchesPage() {
+  const t = useTranslations("branches");
   const [filters, setFilters] = useState({
     search: "",
     sortOrder: "ASC" as "ASC" | "DESC",
@@ -48,8 +50,8 @@ function RestaurantBranchesPage() {
   return (
     <Container>
       <Header
-        title="Branch List"
-        description="View and manage all branches from here"
+        title={t("branchList")}
+        description={t("description")}
         onBranchCreated={refetch}
       />
 

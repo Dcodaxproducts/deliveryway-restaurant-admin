@@ -1,12 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 export default function EditBranchSectionHeader({
   title,
   description,
   onPrimaryAction,
 }: any) {
+  const commonT = useTranslations("common");
+
   return (
     <div className="flex justify-between">
       <div>
@@ -15,7 +18,7 @@ export default function EditBranchSectionHeader({
       </div>
 
       <Button onClick={onPrimaryAction}>
-        Save
+        {commonT("save")}
       </Button>
     </div>
   );

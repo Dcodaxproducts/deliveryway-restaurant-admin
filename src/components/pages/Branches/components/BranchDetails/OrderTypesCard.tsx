@@ -1,17 +1,21 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useTranslations } from "next-intl";
 
 export default function OrderTypesCard({
   types,
-  title = "Available Order Types",
+  title,
 }: {
   types: string[];
   title?: string;
 }) {
+  const t = useTranslations("branches");
+  const commonT = useTranslations("common");
+
   return (
     <Card className="p-4 bg-[#F5F5F5] rounded-lg border-none">
       <h3 className="text-sm font-semibold text-center text-black">
-        {title}
+        {title || t("availableOrderTypes")}
       </h3>
 
       <div className="flex flex-wrap gap-2 justify-center mt-2">
@@ -22,7 +26,7 @@ export default function OrderTypesCard({
             </Badge>
           ))
         ) : (
-          <span className="text-xs text-gray-400">No data</span>
+          <span className="text-xs text-gray-400">{commonT("noData")}</span>
         )}
       </div>
     </Card>

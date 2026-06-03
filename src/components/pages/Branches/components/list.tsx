@@ -4,6 +4,7 @@ import { useState } from "react";
 import BranchCard from "@/components/cards/BranchCard";
 import EmptyState from "@/components/common/EmptyState";
 import BranchDetailsModal from "./BranchDetails/BranchDetailsModal";
+import { useTranslations } from "next-intl";
 
 interface Props {
   branches?: any[];
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function BranchesList({ branches = [], loading }: Props) {
+  const commonT = useTranslations("common");
   const [isModalOpen, setIsModalOpen] = useState(false);
  const [selectedBranch, setSelectedBranch] = useState<any | null>(null);
 
@@ -47,8 +49,8 @@ const openDialog = (branchId: string) => {
   if (!branches || branches.length === 0  && !loading) {
     return (
       <EmptyState
-        title="Looks like there are no branches yet!"
-        description="You haven’t added any branches yet. Start by creating a new one."
+        title={commonT("emptyBranchesTitle")}
+        description={commonT("emptyBranchesDescription")}
       />
     );
   }

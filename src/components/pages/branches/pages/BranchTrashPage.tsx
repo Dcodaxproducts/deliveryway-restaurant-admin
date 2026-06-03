@@ -1,14 +1,20 @@
+"use client";
+
  import Container from "@/components/common/Container";
 import Table from "@/components/pages/Branches/components/list";
 
  import Header from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 const CustomerTrashPage = () => {
+    const t = useTranslations("branches");
+    const commonT = useTranslations("common");
+
     return (
         <Container>
             <Header
-                title="Branch Trash List"
-                description="Beach Trash List"
+                title={t("trashTitle")}
+                description={t("trashDescription")}
             />
             <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6">
                 <Table />
@@ -18,7 +24,7 @@ const CustomerTrashPage = () => {
     variant="ghost"
     className="text-sm text-gray-500 hover:text-gray-700 w-auto h-auto"
   >
-    Cancel
+    {commonT("cancel")}
   </Button>
 
   {/* Confirm */}
@@ -26,7 +32,7 @@ const CustomerTrashPage = () => {
     variant="default"
     className="h-[40px] px-6 rounded-[10px] font-100"
   >
-    Confirm
+    {commonT("confirm")}
   </Button>
 </div>
 

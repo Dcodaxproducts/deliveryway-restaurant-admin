@@ -11,6 +11,7 @@ import { CalendarDays, Clock, Loader2, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { httpClient } from "@/lib/axios";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface Props {
   open: boolean;
@@ -176,6 +177,8 @@ export default function OpeningHoursModal({
   branchId,
   branchName,
 }: Props) {
+  const t = useTranslations("branches");
+  const commonT = useTranslations("common");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [hours, setHours] = useState<OpeningHour[]>(
@@ -215,7 +218,7 @@ export default function OpeningHoursModal({
         setSettings(nextSettings);
         setHolidayRanges(nextHolidayRanges);
       } catch (err: any) {
-        toast.error(err.message || "Failed to fetch opening hours");
+        toast.error(err.message || t("failedFetchOpeningHours"));
       } finally {
         setFetching(false);
       }
@@ -389,12 +392,12 @@ export default function OpeningHoursModal({
       if (!hasAnyHolidayValue) continue;
 
       if (!holiday.fromDate || !holiday.toDate) {
-        toast.error("Holiday range requires both from and to dates");
+        toast.error(t("holidayRangeRequiresDates"));
         return false;
       }
 
       if (holiday.fromDate > holiday.toDate) {
-        toast.error("Holiday to date must be the same as or after from date");
+        toast.error(t("holidayToDateInvalid"));
         return false;
       }
 
@@ -402,7 +405,7 @@ export default function OpeningHoursModal({
         !holiday.isClosed &&
         isTimeRangeInvalid(holiday.openTime, holiday.closeTime)
       ) {
-        toast.error("Holiday close time must be after open time");
+        toast.error(t("holidayCloseTimeInvalid"));
         return false;
       }
     }
@@ -465,10 +468,10 @@ export default function OpeningHoursModal({
 
       await httpClient.put(`/branches/${branchId}/opening-hours`, payload);
 
-      toast.success("Opening hours saved");
+      toast.success(t("openingHoursSaved"));
       onOpenChange(false);
     } catch (err: any) {
-      toast.error(err.message || "Save failed");
+      toast.error(err.message || t("saveFailed"));
     } finally {
       setLoading(false);
     }
@@ -489,7 +492,7 @@ export default function OpeningHoursModal({
     >
       <DialogHeader className="min-w-0">
         <DialogTitle className="text-2xl font-semibold">
-          Opening Hours
+          {t("openingHours")}
         </DialogTitle>
         <p className="text-sm text-gray-500">{branchName}</p>
       </DialogHeader>
@@ -499,10 +502,10 @@ export default function OpeningHoursModal({
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h3 className="text-base font-semibold text-gray-900">
-                Weekly business hours
+                {t("weeklyBusinessHours")}
               </h3>
               <p className="mt-1 text-xs text-gray-500">
-                Configure regular opening hours and daily break times.
+                {t("weeklyBusinessHoursDescription")}
               </p>
             </div>
           </div>
@@ -510,7 +513,7 @@ export default function OpeningHoursModal({
           {fetching ? (
             <div className="flex items-center gap-2 rounded-[12px] border border-gray-100 bg-gray-50 p-4 text-sm text-gray-500">
               <Loader2 size={16} className="animate-spin" />
-              Loading opening hours...
+              {t("loadingOpeningHours")}
             </div>
           ) : (
             <div className="space-y-4">
@@ -522,11 +525,11 @@ export default function OpeningHoursModal({
                   <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
                     <div className="min-w-0">
                       <h4 className="text-sm font-semibold text-gray-900">
-                        {formatDayLabel(day.dayOfWeek)}
+                        {t(`days.${day.dayOfWeek}`)}
                       </h4>
                       <p className="mt-0.5 text-xs text-gray-400">
                         {day.isClosed
-                          ? "Closed for the full day"
+                          ? t("closedFullDay")
                           : `${day.openTime || "--:--"} - ${
                               day.closeTime || "--:--"
                             }`}
@@ -546,7 +549,7 @@ export default function OpeningHoursModal({
                         }
                         className="accent-[var(--primary)]"
                       />
-                      Closed
+                      {t("closed")}
                     </label>
                   </div>
 
@@ -555,7 +558,7 @@ export default function OpeningHoursModal({
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <label className="min-w-0 space-y-1.5">
                           <span className="text-xs font-medium text-gray-500">
-                            Open time
+                            {t("openTime")}
                           </span>
 
                           <input
@@ -574,7 +577,7 @@ export default function OpeningHoursModal({
 
                         <label className="min-w-0 space-y-1.5">
                           <span className="text-xs font-medium text-gray-500">
-                            Close time
+                            {t("closeTime")}
                           </span>
 
                           <input
@@ -597,7 +600,7 @@ export default function OpeningHoursModal({
                           <div className="flex items-center gap-2">
                             <Clock size={15} className="text-primary" />
                             <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">
-                              Break times
+                              {t("breakTimes")}
                             </p>
                           </div>
 
@@ -608,13 +611,13 @@ export default function OpeningHoursModal({
                             className="h-9 shrink-0 rounded-full border-primary/20 bg-white px-3 text-xs font-medium text-primary hover:bg-primary/5"
                           >
                             <Plus size={13} />
-                            Add break
+                            {t("addBreak")}
                           </Button>
                         </div>
 
                         {day.breakTimes.length === 0 ? (
                           <p className="text-xs text-gray-400">
-                            No regular break configured for this day.
+                            {t("noRegularBreak")}
                           </p>
                         ) : (
                           <div className="space-y-3">
@@ -626,7 +629,7 @@ export default function OpeningHoursModal({
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                   <div className="space-y-1.5">
                                     <label className="text-xs font-medium text-gray-500">
-                                      Break start
+                                      {t("breakStart")}
                                     </label>
 
                                     <input
@@ -646,7 +649,7 @@ export default function OpeningHoursModal({
 
                                   <div className="space-y-1.5">
                                     <label className="text-xs font-medium text-gray-500">
-                                      Break end
+                                      {t("breakEnd")}
                                     </label>
 
                                     <input
@@ -668,12 +671,12 @@ export default function OpeningHoursModal({
                                 <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
                                   <div className="space-y-1.5">
                                     <label className="text-xs font-medium text-gray-500">
-                                      Note
+                                      {commonT("note")}
                                     </label>
 
                                     <input
                                       type="text"
-                                      placeholder="Break note e.g. Lunch break"
+                                      placeholder={t("breakNotePlaceholder")}
                                       value={breakTime.note || ""}
                                       onChange={(e) =>
                                         updateBreakTime(
@@ -696,7 +699,7 @@ export default function OpeningHoursModal({
                                         removeBreakTime(index, breakIndex)
                                       }
                                       className="h-11 w-full rounded-[10px] text-red-500 hover:bg-red-50 hover:text-red-600 sm:w-11"
-                                      aria-label="Remove break time"
+                                      aria-label={t("removeBreakTime")}
                                     >
                                       <Trash2 size={16} />
                                     </Button>
@@ -712,7 +715,7 @@ export default function OpeningHoursModal({
 
                   <input
                     type="text"
-                    placeholder="Note (optional)"
+                    placeholder={t("noteOptional")}
                     value={day.note || ""}
                     onChange={(e) =>
                       handleHourChange(index, "note", e.target.value)
@@ -731,11 +734,11 @@ export default function OpeningHoursModal({
               <div className="flex items-center gap-2">
                 <CalendarDays size={17} className="text-primary" />
                 <h3 className="text-base font-semibold text-gray-900">
-                  Holiday date ranges
+                  {t("holidayDateRanges")}
                 </h3>
               </div>
               <p className="mt-1 text-xs text-gray-500">
-                Add holidays using a from-to date range instead of a single date.
+                {t("holidayDateRangesDescription")}
               </p>
             </div>
 
@@ -746,14 +749,13 @@ export default function OpeningHoursModal({
               className="h-10 shrink-0 rounded-full border-primary/20 bg-primary/5 px-4 text-sm font-medium text-primary hover:bg-primary/10"
             >
               <Plus size={15} />
-              Add holiday range
+              {t("addHolidayRange")}
             </Button>
           </div>
 
           {!hasHolidayRanges ? (
             <div className="rounded-[12px] border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
-              No holiday range configured yet. Click “Add holiday range” to add
-              one.
+              {t("noHolidayRange")}
             </div>
           ) : (
             <div className="space-y-3">
@@ -764,7 +766,7 @@ export default function OpeningHoursModal({
                 >
                   <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-3">
                     <p className="text-sm font-semibold text-gray-900">
-                      Holiday range {index + 1}
+                      {t("holidayRange", { index: index + 1 })}
                     </p>
 
                     <Button
@@ -781,7 +783,7 @@ export default function OpeningHoursModal({
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <label className="min-w-0 space-y-1.5">
                       <span className="text-xs font-medium text-gray-500">
-                        From date
+                        {t("fromDate")}
                       </span>
 
                       <input
@@ -800,7 +802,7 @@ export default function OpeningHoursModal({
 
                     <label className="min-w-0 space-y-1.5">
                       <span className="text-xs font-medium text-gray-500">
-                        To date
+                        {t("toDate")}
                       </span>
 
                       <input
@@ -823,14 +825,14 @@ export default function OpeningHoursModal({
                       }
                       className="accent-[var(--primary)]"
                     />
-                    Closed during this holiday range
+                    {t("closedDuringHolidayRange")}
                   </label>
 
                   {!holiday.isClosed ? (
                     <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <label className="min-w-0 space-y-1.5">
                         <span className="text-xs font-medium text-gray-500">
-                          Holiday open time
+                          {t("holidayOpenTime")}
                         </span>
 
                         <input
@@ -849,7 +851,7 @@ export default function OpeningHoursModal({
 
                       <label className="min-w-0 space-y-1.5">
                         <span className="text-xs font-medium text-gray-500">
-                          Holiday close time
+                          {t("holidayCloseTime")}
                         </span>
 
                         <input
@@ -870,7 +872,7 @@ export default function OpeningHoursModal({
 
                   <input
                     type="text"
-                    placeholder="Holiday note (optional)"
+                    placeholder={t("holidayNoteOptional")}
                     value={holiday.note || ""}
                     onChange={(e) =>
                       updateHolidayRange(index, "note", e.target.value)
@@ -888,7 +890,7 @@ export default function OpeningHoursModal({
           disabled={loading || fetching}
           className="w-full rounded-[10px] bg-primary py-4 hover:bg-primary/90 disabled:opacity-50"
         >
-          {loading ? "Saving..." : "Save Opening Hours"}
+          {loading ? commonT("saving") : t("saveOpeningHours")}
         </Button>
       </div>
     </DialogContent>
