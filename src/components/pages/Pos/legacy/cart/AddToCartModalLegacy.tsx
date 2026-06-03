@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useGetBranches } from "@/hooks/useBranches";
 import AsyncSelect from "@/components/ui/AsyncSelect";
+import { useTranslations } from "next-intl";
 
 interface AddToCartModalProps {
   open: boolean;
@@ -804,6 +805,7 @@ export default function AddToCartModal({
   onOpenChange,
   item,
 }: AddToCartModalProps) {
+  const t = useTranslations("pos.addToCart");
   const { token, user } = useAuth();
   const restaurantId = user?.restaurantId ?? undefined;
   const { post, get, del } = useHttpClient(token);
@@ -825,7 +827,7 @@ export default function AddToCartModal({
   const options = useMemo<VariationOption[]>(() => {
     const baseOption: VariationOption = {
       id: "base",
-      label: "Base",
+      label: t("base"),
       price: toNumber(item?.basePrice ?? item?.unitPrice ?? item?.price, 0),
       variation: null,
       description: item?.description || null,
@@ -840,7 +842,7 @@ export default function AddToCartModal({
     }));
 
     return [baseOption, ...variationOptions];
-  }, [item, variations]);
+  }, [item, t, variations]);
 
   const selectedOption = useMemo(() => {
     return (
@@ -945,7 +947,7 @@ export default function AddToCartModal({
         fullName:
           `${customer?.profile?.firstName || ""} ${customer?.profile?.lastName || ""}`.trim() ||
           customer?.email ||
-          "Customer",
+          t("customer"),
       })),
       meta: res?.data?.meta || res?.meta,
     };
@@ -977,7 +979,10 @@ export default function AddToCartModal({
       if (alreadySelected) {
         if (minSelect > 0 && current.length <= minSelect) {
           toast.error(
-            `${group?.name || "This group"} requires at least ${minSelect} selection(s)`,
+            t("toast.requiresAtLeast", {
+              group: group?.name || t("thisGroup"),
+              count: minSelect,
+            }),
           );
           return prev;
         }
@@ -998,9 +1003,10 @@ export default function AddToCartModal({
 
       if (maxSelect && current.length >= maxSelect) {
         toast.error(
-          `You can select up to ${maxSelect} option(s) for ${
-            group?.name || "this group"
-          }`,
+          t("toast.selectUpTo", {
+            count: maxSelect,
+            group: group?.name || t("thisGroup"),
+          }),
         );
         return prev;
       }
@@ -1021,14 +1027,20 @@ export default function AddToCartModal({
 
       if (minSelect > 0 && selected.length < minSelect) {
         toast.error(
-          `${group?.name || "This group"} requires at least ${minSelect} selection(s)`,
+          t("toast.requiresAtLeast", {
+            group: group?.name || t("thisGroup"),
+            count: minSelect,
+          }),
         );
         return false;
       }
 
       if (maxSelect && selected.length > maxSelect) {
         toast.error(
-          `${group?.name || "This group"} allows at most ${maxSelect} selection(s)`,
+          t("toast.allowsAtMost", {
+            group: group?.name || t("thisGroup"),
+            count: maxSelect,
+          }),
         );
         return false;
       }
@@ -1071,12 +1083,12 @@ export default function AddToCartModal({
 
   const handleAddToCart = async () => {
     if (!selectedCustomer?.id) {
-      toast.error("Please select customer");
+      toast.error(t("toast.selectCustomer"));
       return;
     }
 
     if (!selectedBranch?.id) {
-      toast.error("Please select a branch");
+      toast.error(t("toast.selectBranch"));
       return;
     }
 
@@ -1099,7 +1111,7 @@ export default function AddToCartModal({
             toast.error(
               getApiErrorMessage(
                 clearRes,
-                "Failed to clear cart before adding item",
+                t("toast.failedClearBeforeAdd"),
               ),
             );
             return;
@@ -1110,11 +1122,11 @@ export default function AddToCartModal({
       }
 
       if (!res || res?.error) {
-        toast.error(getApiErrorMessage(res));
+        toast.error(getApiErrorMessage(res, t("toast.failedAddToCart")));
         return;
       }
 
-      toast.success("Added to cart");
+      toast.success(t("toast.addedToCart"));
 
       localStorage.setItem("activeCustomerId", selectedCustomer.id);
 
@@ -1125,7 +1137,7 @@ export default function AddToCartModal({
       window.location.reload();
     } catch (err: any) {
       void err;
-      toast.error(err?.message || "Failed to add to cart");
+      toast.error(err?.message || t("toast.failedAddToCart"));
     } finally {
       setIsSubmitting(false);
     }
@@ -1137,9 +1149,11 @@ export default function AddToCartModal({
     return (
       <div className="mt-6 space-y-4">
         <div>
-          <p className="text-sm font-semibold text-gray-900">Add-ons</p>
+          <p className="text-sm font-semibold text-gray-900">
+            {t("addOns")}
+          </p>
           <p className="mt-0.5 text-xs text-gray-500">
-            Choose available extras for this item.
+            {t("addOnsDescription")}
           </p>
         </div>
 
@@ -1163,20 +1177,27 @@ export default function AddToCartModal({
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">
-                    {group?.name || "Options"}
+                    {String(group?.id || "").startsWith(
+                      "standalone-modifiers-",
+                    )
+                      ? t("addOns")
+                      : group?.name || t("options")}
                   </p>
                   <p className="mt-0.5 text-xs text-gray-500">
                     {maxSelect === 1
                       ? isRequired || minSelect > 0
-                        ? "Select 1 required option"
-                        : "Optional · select 1 option"
+                        ? t("selectOneRequired")
+                        : t("optionalSelectOne")
                       : maxSelect
                         ? minSelect > 0
-                          ? `Select ${minSelect}-${maxSelect}`
-                          : `Select up to ${maxSelect}`
+                          ? t("selectRange", {
+                              min: minSelect,
+                              max: maxSelect,
+                            })
+                          : t("selectUpTo", { count: maxSelect })
                         : minSelect > 0
-                          ? `Select at least ${minSelect}`
-                          : "Optional"}
+                          ? t("selectAtLeast", { count: minSelect })
+                          : t("optional")}
                   </p>
                 </div>
 
@@ -1272,7 +1293,7 @@ export default function AddToCartModal({
         <div className="relative h-[190px] overflow-hidden bg-gray-100">
           <Image
             src={image}
-            alt={item?.name || "Menu item"}
+            alt={item?.name || t("menuItem")}
             fill
             className="object-cover"
             unoptimized
@@ -1298,7 +1319,7 @@ export default function AddToCartModal({
         <div className="p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="mb-2 text-sm font-medium">Select Branch</p>
+              <p className="mb-2 text-sm font-medium">{t("selectBranch")}</p>
 
               <AsyncSelect
                 value={selectedBranch}
@@ -1306,12 +1327,14 @@ export default function AddToCartModal({
                 fetchOptions={fetchBranches}
                 labelKey="name"
                 valueKey="id"
-                placeholder="Select branch"
+                placeholder={t("selectBranchPlaceholder")}
+                searchPlaceholder={t("searchPlaceholder")}
+                noResultsText={t("noResultsFound")}
               />
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-medium">Select Customer</p>
+              <p className="mb-2 text-sm font-medium">{t("selectCustomer")}</p>
 
               <AsyncSelect
                 value={selectedCustomer}
@@ -1319,7 +1342,9 @@ export default function AddToCartModal({
                 fetchOptions={fetchCustomers}
                 labelKey="fullName"
                 valueKey="id"
-                placeholder="Select customer"
+                placeholder={t("selectCustomerPlaceholder")}
+                searchPlaceholder={t("searchPlaceholder")}
+                noResultsText={t("noResultsFound")}
               />
             </div>
           </div>
@@ -1328,10 +1353,10 @@ export default function AddToCartModal({
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-gray-900">
-                  Variation
+                  {t("variation")}
                 </p>
                 <p className="mt-0.5 text-xs text-gray-500">
-                  Select the size or base option.
+                  {t("variationDescription")}
                 </p>
               </div>
 
@@ -1397,7 +1422,7 @@ export default function AddToCartModal({
 
           <div className="mt-6 flex items-center justify-between rounded-2xl bg-gray-50 p-4">
             <span className="text-sm font-semibold text-gray-900">
-              Quantity
+              {t("quantity")}
             </span>
 
             <div className="flex items-center rounded-full bg-white shadow-sm ring-1 ring-gray-100">
@@ -1429,14 +1454,16 @@ export default function AddToCartModal({
 
           <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-5">
             <div>
-              <p className="text-sm font-medium text-gray-500">Total</p>
+              <p className="text-sm font-medium text-gray-500">{t("total")}</p>
               <p className="mt-1 text-2xl font-bold text-gray-900">
                 {formatMoney(total)}
               </p>
 
               {modifiersTotal > 0 ? (
                 <p className="mt-1 text-xs text-gray-500">
-                  Includes {formatMoney(modifiersTotal)} add-ons per item
+                  {t("includesAddOns", {
+                    amount: formatMoney(modifiersTotal),
+                  })}
                 </p>
               ) : null}
             </div>
@@ -1449,12 +1476,12 @@ export default function AddToCartModal({
               {isSubmitting ? (
                 <>
                   <Loader2 size={16} className="mr-2 animate-spin" />
-                  Adding...
+                  {t("adding")}
                 </>
               ) : (
                 <>
                   <ShoppingCart size={16} className="mr-2" />
-                  Add to Cart
+                  {t("addToCart")}
                 </>
               )}
             </Button>

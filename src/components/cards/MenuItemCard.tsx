@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import AddToCartModal from "@/components/pages/pos/cart/AddToCartModal";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import { useDeleteMenuItem } from "@/hooks/useMenus";
+import { useTranslations } from "next-intl";
 
 type Props = {
   item: any;
@@ -59,6 +60,7 @@ const formatCurrency = (value: unknown) => {
 };
 
 export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props) {
+  const t = useTranslations("pos.menuCard");
   const [open, setOpen] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
 
@@ -67,8 +69,9 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
   const image = useMemo(() => getImageUrl(item?.imageUrl), [item?.imageUrl]);
   const price = useMemo(() => getDisplayPrice(item), [item]);
 
-  const categoryName = item?.category?.name || "Uncategorized";
-  const description = String(item?.description || "Freshly prepared menu item.").trim();
+  const itemName = item?.name || t("fallbackName");
+  const categoryName = item?.category?.name || t("uncategorized");
+  const description = String(item?.description || t("fallbackDescription")).trim();
 
   const handleDelete = () => {
     if (!item?.id) return;
@@ -89,7 +92,7 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
             type="button"
             onClick={() => onEdit?.()}
             className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background/95 text-muted-foreground shadow-sm backdrop-blur transition hover:border-primary/30 hover:bg-primary hover:text-primary-foreground"
-            aria-label={`Edit ${item?.name || "menu item"}`}
+            aria-label={t("editAria", { name: itemName })}
           >
             <Pencil size={14} />
           </button>
@@ -98,7 +101,7 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
             type="button"
             onClick={() => setOpenDelete(true)}
             className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background/95 text-muted-foreground shadow-sm backdrop-blur transition hover:border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
-            aria-label={`Delete ${item?.name || "menu item"}`}
+            aria-label={t("deleteAria", { name: itemName })}
           >
             <X size={14} />
           </button>
@@ -108,7 +111,7 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
       <div className="relative h-[180px] w-full overflow-hidden bg-muted">
         <Image
           src={image}
-          alt={item?.name || "Menu item"}
+          alt={itemName}
           fill
           sizes="(max-width: 768px) 100vw, 360px"
           className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
@@ -132,7 +135,7 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
 
         <div className="min-h-[92px]">
           <h3 className="line-clamp-2 text-lg font-bold leading-snug tracking-[-0.02em] text-foreground">
-            {item?.name || "Menu Item"}
+            {itemName}
           </h3>
 
           <p className="mt-1.5 line-clamp-2 text-[13px] leading-5 text-muted-foreground">
@@ -143,7 +146,7 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
         <div className="mt-auto flex items-end justify-between gap-3 pt-4">
           <div className="min-w-0">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Price
+              {t("price")}
             </p>
             <p className="mt-1 truncate text-2xl font-extrabold tracking-[-0.04em] text-foreground">
               <span className="text-primary">{formatCurrency(price).charAt(0)}</span>
@@ -156,7 +159,7 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
             size="icon"
             onClick={() => setOpen(true)}
             className="h-11 w-11 shrink-0 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:bg-primary/90"
-            aria-label={`Add ${item?.name || "menu item"} to cart`}
+            aria-label={t("addToCartAria", { name: itemName })}
           >
             <Plus size={18} />
           </Button>
@@ -170,10 +173,10 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
         onOpenChange={setOpenDelete}
         onConfirm={handleDelete}
         isLoading={isDeleting}
-        title="Delete Menu Item"
-        description={`Are you sure you want to delete \"${
-          item?.name || "this item"
-        }\"? This action cannot be undone.`}
+        title={t("deleteTitle")}
+        description={t("deleteDescription", {
+          name: item?.name || t("thisItem"),
+        })}
       />
     </article>
   );

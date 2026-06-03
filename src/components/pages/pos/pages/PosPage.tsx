@@ -10,8 +10,10 @@ import PosCart from "@/components/pages/Pos/components/pos/PosCart";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetMenuItems } from "@/hooks/useMenus";
+import { useTranslations } from "next-intl";
 
 export default function Orders() {
+  const t = useTranslations("pos");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { user, isBranchAdmin } = useAuth();
   const restaurantId = user?.restaurantId;
@@ -26,11 +28,11 @@ export default function Orders() {
   return (
     <Container>
       <Header
-        title={isBranchAdmin ? "Branch POS" : "Create New Order"}
+        title={isBranchAdmin ? t("branchTitle") : t("title")}
         description={
           isBranchAdmin
-            ? "Create walk-in or takeaway orders for your assigned branch."
-            : "Create new order and manage from here."
+            ? t("branchDescription")
+            : t("description")
         }
       />
 
@@ -48,8 +50,8 @@ export default function Orders() {
           />
 
           <ItemList
-            headerText="Food List"
-            addNewText="Manage Food"
+            headerText={t("foodList")}
+            addNewText={t("manageFood")}
             items={items}
             loading={loading}
             editing={false}

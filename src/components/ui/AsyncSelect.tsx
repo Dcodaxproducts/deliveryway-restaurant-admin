@@ -13,6 +13,8 @@ interface Props {
   }) => Promise<{ data: any[]; meta?: any }>;
   labelKey?: string;
   valueKey?: string;
+  searchPlaceholder?: string;
+  noResultsText?: string;
 }
 
 export default function AsyncSelect({
@@ -22,6 +24,8 @@ export default function AsyncSelect({
   fetchOptions,
   labelKey = "name",
   valueKey = "id",
+  searchPlaceholder = "Search...",
+  noResultsText = "No results found",
 }: Props) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
@@ -122,7 +126,7 @@ export default function AsyncSelect({
               <Search size={14} />
               <input
                 className="w-full outline-none text-sm"
-                placeholder="Search..."
+                placeholder={searchPlaceholder}
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -167,7 +171,7 @@ export default function AsyncSelect({
 
             {!loading && options.length === 0 && (
               <div className="p-3 text-center text-gray-400 text-sm">
-                No results found
+                {noResultsText}
               </div>
             )}
           </div>
