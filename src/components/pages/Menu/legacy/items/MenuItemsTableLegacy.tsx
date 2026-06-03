@@ -605,7 +605,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
               />
 
               <input
-                placeholder="Search by item name, SKU, category..."
+                placeholder="Search by item name..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(event) => {
