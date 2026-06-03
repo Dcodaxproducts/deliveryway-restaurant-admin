@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Table,
   TableBody,
@@ -74,16 +75,6 @@ type Props = {
   onPageChange: (page: number) => void;
 };
 
-const dayMap: Record<number, string> = {
-  0: "Sun",
-  1: "Mon",
-  2: "Tue",
-  3: "Wed",
-  4: "Thu",
-  5: "Fri",
-  6: "Sat",
-};
-
 const formatDiscount = (item: HappyHour) => {
   const value = Number(item.discountValue ?? 0);
 
@@ -93,11 +84,11 @@ const formatDiscount = (item: HappyHour) => {
   return value;
 };
 
-const formatDate = (value?: string) => {
-  if (!value) return "N/A";
+const formatDate = (value: string | undefined, notAvailable: string) => {
+  if (!value) return notAvailable;
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "N/A";
+  if (Number.isNaN(date.getTime())) return notAvailable;
 
   return date.toLocaleDateString("en-US", {
     year: "numeric",
@@ -106,19 +97,25 @@ const formatDate = (value?: string) => {
   });
 };
 
-const formatActiveDays = (days?: number[]) => {
-  if (!Array.isArray(days) || days.length === 0) return "N/A";
+const formatActiveDays = (
+  days: number[] | undefined,
+  labels: { notAvailable: string; everyDay: string; dayMap: Record<number, string> }
+) => {
+  if (!Array.isArray(days) || days.length === 0) return labels.notAvailable;
 
-  if (days.length === 7) return "Every Day";
+  if (days.length === 7) return labels.everyDay;
 
-  return days.map((day) => dayMap[day] ?? day).join(", ");
+  return days.map((day) => labels.dayMap[day] ?? day).join(", ");
 };
 
-const getScopeText = (item: HappyHour) => {
-  if (item.scopeMenuItem?.name) return `Item: ${item.scopeMenuItem.name}`;
-  if (item.scopeCategory?.name) return `Category: ${item.scopeCategory.name}`;
+const getScopeText = (
+  item: HappyHour,
+  labels: { item: string; category: string; allItems: string }
+) => {
+  if (item.scopeMenuItem?.name) return `${labels.item}: ${item.scopeMenuItem.name}`;
+  if (item.scopeCategory?.name) return `${labels.category}: ${item.scopeCategory.name}`;
 
-  return "All Items";
+  return labels.allItems;
 };
 
 const getStatusClass = (status?: string) => {
@@ -156,6 +153,7 @@ const HappyHoursTable = ({
   meta,
   onPageChange,
 }: Props) => {
+  const t = useTranslations("promotions");
   const router = useRouter();
   const { user, restaurantId } = useAuth();
 
@@ -168,6 +166,15 @@ const [menuPosition, setMenuPosition] = useState<{
   left: number;
 } | null>(null);
   const hasData = happyHours && happyHours.length > 0;
+  const dayMap: Record<number, string> = {
+    0: t("days.shortSunday"),
+    1: t("days.shortMonday"),
+    2: t("days.shortTuesday"),
+    3: t("days.shortWednesday"),
+    4: t("days.shortThursday"),
+    5: t("days.shortFriday"),
+    6: t("days.shortSaturday"),
+  };
 
   const handleDelete = async (id: string) => {
     try {
@@ -177,11 +184,11 @@ const [menuPosition, setMenuPosition] = useState<{
         branchId,
       });
 
-      toast.success("Happy hour deleted successfully.");
+      toast.success(t("toasts.happyHourDeleted"));
       setOpenMenuId(null);
       setMenuPosition(null);
     } catch (error: unknown) {
-      toast.error(getApiErrorMessage(error, "Failed to delete happy hour."));
+      toast.error(getApiErrorMessage(error, t("toasts.failedDeleteHappyHour")));
     }
   };
 
@@ -189,12 +196,12 @@ const [menuPosition, setMenuPosition] = useState<{
     return (
       <>
         <EmptyState
-          title="Looks like there are no Happy Hours yet!"
-          description="You haven’t added any Happy Hours yet. Start by creating a new"
+          title={t("emptyHappyHoursTitle")}
+          description={t("emptyHappyHoursDescription")}
         />
 
         <PromotionCreateLink
-          label="Create Happy Hour"
+          label={t("createHappyHour")}
           href="/promotion-management/happy-hour/add"
         />
       </>
@@ -207,16 +214,16 @@ const [menuPosition, setMenuPosition] = useState<{
         <Table className="relative">
           <TableHeader>
             <TableRow className="border-none">
-              <SortableHeader label="SL" />
-              <SortableHeader label="Name & Code" />
-              <SortableHeader label="Discount" />
-              <SortableHeader label="Time" />
-              <SortableHeader label="Days" />
-              <SortableHeader label="Scope" />
-              <SortableHeader label="Branch" />
-              <SortableHeader label="Usage" />
-              <SortableHeader label="Status" />
-              <TableHead className="text-center font-bold">Actions</TableHead>
+              <SortableHeader label={t("columns.sl")} />
+              <SortableHeader label={t("columns.nameAndCode")} />
+              <SortableHeader label={t("columns.discount")} />
+              <SortableHeader label={t("columns.time")} />
+              <SortableHeader label={t("columns.days")} />
+              <SortableHeader label={t("columns.scope")} />
+              <SortableHeader label={t("columns.branch")} />
+              <SortableHeader label={t("columns.usage")} />
+              <SortableHeader label={t("columns.status")} />
+              <TableHead className="text-center font-bold">{t("columns.actions")}</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -232,9 +239,9 @@ const [menuPosition, setMenuPosition] = useState<{
 
                   <TableCell className="px-4">
                     <p className="font-medium text-sm">{item.title}</p>
-                    <p className="text-gray-500 text-sm">Code: {item.code}</p>
+                    <p className="text-gray-500 text-sm">{t("labels.code")}: {item.code}</p>
                     <p className="text-gray-400 text-xs">
-                      {formatDate(item.startsAt)} - {formatDate(item.expiresAt)}
+                      {formatDate(item.startsAt, t("labels.notAvailable"))} - {formatDate(item.expiresAt, t("labels.notAvailable"))}
                     </p>
                   </TableCell>
 
@@ -243,29 +250,37 @@ const [menuPosition, setMenuPosition] = useState<{
                       {formatDiscount(item)}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Type: {item.discountType ?? "N/A"}
+                      {t("labels.type")}: {item.discountType ?? t("labels.notAvailable")}
                     </p>
                   </TableCell>
 
                   <TableCell className="px-4 text-sm text-gray-500">
-                    {item.dailyStartTime ?? "N/A"} -{" "}
-                    {item.dailyEndTime ?? "N/A"}
+                    {item.dailyStartTime ?? t("labels.notAvailable")} -{" "}
+                    {item.dailyEndTime ?? t("labels.notAvailable")}
                   </TableCell>
 
                   <TableCell className="px-4 text-sm text-gray-500">
-                    {formatActiveDays(item.activeDays)}
+                    {formatActiveDays(item.activeDays, {
+                      notAvailable: t("labels.notAvailable"),
+                      everyDay: t("labels.everyDay"),
+                      dayMap,
+                    })}
                   </TableCell>
 
                   <TableCell className="px-4 text-sm text-gray-500">
-                    {getScopeText(item)}
+                    {getScopeText(item, {
+                      item: t("labels.item"),
+                      category: t("labels.category"),
+                      allItems: t("labels.allItems"),
+                    })}
                   </TableCell>
 
                   <TableCell className="px-4 text-sm text-gray-500">
-                    {item.branch?.name ?? "All Branches"}
+                    {item.branch?.name ?? t("labels.allBranches")}
                   </TableCell>
 
                   <TableCell className="px-4 text-sm text-gray-500">
-                    {item.usedCount ?? 0} / {item.maxUses ?? "Unlimited"}
+                    {item.usedCount ?? 0} / {item.maxUses ?? t("labels.unlimited")}
                   </TableCell>
 
                   <TableCell className="px-4">
@@ -274,7 +289,7 @@ const [menuPosition, setMenuPosition] = useState<{
                         item.status
                       )}`}
                     >
-                      {item.status ?? "N/A"}
+                      {item.status ?? t("labels.notAvailable")}
                     </span>
                   </TableCell>
 
@@ -324,7 +339,7 @@ const [menuPosition, setMenuPosition] = useState<{
       className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-gray-100"
     >
       <Edit size={15} />
-      Edit
+      {t("actions.edit")}
     </button>
 
     <button
@@ -334,7 +349,7 @@ const [menuPosition, setMenuPosition] = useState<{
       className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-60"
     >
       <Trash2 size={15} />
-      Delete
+      {t("actions.delete")}
     </button>
   </div>
 )}
@@ -367,20 +382,28 @@ const [menuPosition, setMenuPosition] = useState<{
                   <Checkbox />
                 </div>
 
-                <p className="text-gray-500 text-sm">Code: {item.code}</p>
+                <p className="text-gray-500 text-sm">{t("labels.code")}: {item.code}</p>
 
                 <div className="text-gray-600 text-sm space-y-1">
-                  <p>Discount: {formatDiscount(item)}</p>
+                  <p>{t("labels.discount")}: {formatDiscount(item)}</p>
                   <p>
-                    Time: {item.dailyStartTime ?? "N/A"} -{" "}
-                    {item.dailyEndTime ?? "N/A"}
+                    {t("columns.time")}: {item.dailyStartTime ?? t("labels.notAvailable")} -{" "}
+                    {item.dailyEndTime ?? t("labels.notAvailable")}
                   </p>
-                  <p>Days: {formatActiveDays(item.activeDays)}</p>
-                  <p>Scope: {getScopeText(item)}</p>
-                  <p>Branch: {item.branch?.name ?? "All Branches"}</p>
+                  <p>{t("columns.days")}: {formatActiveDays(item.activeDays, {
+                    notAvailable: t("labels.notAvailable"),
+                    everyDay: t("labels.everyDay"),
+                    dayMap,
+                  })}</p>
+                  <p>{t("columns.scope")}: {getScopeText(item, {
+                    item: t("labels.item"),
+                    category: t("labels.category"),
+                    allItems: t("labels.allItems"),
+                  })}</p>
+                  <p>{t("columns.branch")}: {item.branch?.name ?? t("labels.allBranches")}</p>
                   <p>
-                    Usage: {item.usedCount ?? 0} /{" "}
-                    {item.maxUses ?? "Unlimited"}
+                    {t("columns.usage")}: {item.usedCount ?? 0} /{" "}
+                    {item.maxUses ?? t("labels.unlimited")}
                   </p>
                 </div>
 
@@ -390,7 +413,7 @@ const [menuPosition, setMenuPosition] = useState<{
                       item.status
                     )}`}
                   >
-                    {item.status ?? "N/A"}
+                    {item.status ?? t("labels.notAvailable")}
                   </span>
 
                   <div className="flex items-center gap-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import { Tag, Percent, ShoppingCart } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import PromotionSectionHeader from "./PromotionSectionHeader";
 import PromotionCreateLink from "./PromotionCreateLink";
@@ -61,6 +62,7 @@ const getListFromResponse = (response: any) => {
 };
 
 export default function PromotionsOverview({ onViewAll }: PromotionsOverviewProps) {
+  const t = useTranslations("promotions");
   const { user } = useAuth();
 
   const restaurantId = user?.restaurantId ?? user?.tenantId ?? null;
@@ -101,7 +103,7 @@ export default function PromotionsOverview({ onViewAll }: PromotionsOverviewProp
   return (
     <div className="mt-1 space-y-14">
       <PromotionSectionHeader
-        title="Coupons"
+        title={t("coupons")}
         viewAllTab="coupons"
         onViewAll={onViewAll}
       />
@@ -110,32 +112,32 @@ export default function PromotionsOverview({ onViewAll }: PromotionsOverviewProp
         <PromotionStatCard
           icon={<Tag size={18} />}
           value={overview.totalCoupons ?? 0}
-          label="Total Coupons"
+          label={t("totalCoupons")}
           loading={overviewCardLoading}
         />
 
         <PromotionStatCard
           icon={<Tag size={18} />}
           value={overview.activeCoupons ?? 0}
-          label="Active Coupons"
+          label={t("activeCoupons")}
           loading={overviewCardLoading}
         />
 
         <PromotionStatCard
           icon={<Tag size={18} />}
           value={overview.scheduledCoupons ?? 0}
-          label="Upcoming Coupons"
+          label={t("upcomingCoupons")}
           loading={overviewCardLoading}
         />
       </div>
 
       <PromotionCreateLink
-        label="Create New Coupon"
+        label={t("createNewCoupon")}
         href="/promotion-management/coupons/add"
       />
 
       <PromotionSectionHeader
-        title="Promotions"
+        title={t("title")}
         viewAllTab="promotions"
         onViewAll={onViewAll}
       />
@@ -144,32 +146,32 @@ export default function PromotionsOverview({ onViewAll }: PromotionsOverviewProp
         <PromotionStatCard
           icon={<Percent size={18} />}
           value={totalPromotions}
-          label="Total Promotions"
+          label={t("totalPromotions")}
           loading={overviewCardLoading}
         />
 
         <PromotionStatCard
           icon={<Percent size={18} />}
           value={overview.activePromotions ?? 0}
-          label="Ongoing Promotions"
+          label={t("ongoingPromotions")}
           loading={overviewCardLoading}
         />
 
         <PromotionStatCard
           icon={<Percent size={18} />}
           value={overview.scheduledPromotions ?? 0}
-          label="Upcoming Promotions"
+          label={t("upcomingPromotions")}
           loading={overviewCardLoading}
         />
       </div>
 
       <PromotionCreateLink
-        label="Create New Promotion"
+        label={t("createNewPromotion")}
         href="/promotion-management/promotions/add"
       />
 
       <PromotionSectionHeader
-        title="Happy Hours"
+        title={t("happyHours")}
         viewAllTab="happy-hours"
         onViewAll={onViewAll}
       />
@@ -183,7 +185,7 @@ export default function PromotionsOverview({ onViewAll }: PromotionsOverviewProp
         <PromotionStatCard
           icon={<ShoppingCart size={18} />}
           value={formatCurrency(overview.promoDrivenRevenue)}
-          label="Promo Driven Revenue"
+          label={t("promoDrivenRevenue")}
           loading={overviewCardLoading}
         />
       </div>
@@ -192,27 +194,27 @@ export default function PromotionsOverview({ onViewAll }: PromotionsOverviewProp
         <PromotionStatCard
           icon={<ShoppingCart size={18} />}
           value={overview.activeHappyHours ?? 0}
-          label="Active Happy Hours"
+          label={t("activeHappyHours")}
           loading={overviewCardLoading}
         />
 
         <PromotionStatCard
           icon={<ShoppingCart size={18} />}
           value={overview.promoDrivenOrders ?? 0}
-          label="Promo Driven Orders"
+          label={t("promoDrivenOrders")}
           loading={overviewCardLoading}
         />
 
         <PromotionStatCard
           icon={<ShoppingCart size={18} />}
           value={overview.couponRedemptions ?? 0}
-          label="Coupon Redemptions"
+          label={t("couponRedemptions")}
           loading={overviewCardLoading}
         />
       </div>
 
       <PromotionCreateLink
-        label="Create Happy Hour"
+        label={t("createHappyHour")}
         href="/promotion-management/happy-hour/add"
       />
     </div>

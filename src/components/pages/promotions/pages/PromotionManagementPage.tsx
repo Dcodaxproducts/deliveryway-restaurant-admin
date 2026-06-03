@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import Container from "@/components/common/Container";
 import Header from "@/components/common/PageHeader";
@@ -14,11 +15,11 @@ import { useAuth } from "@/hooks/useAuth";
 
 type PromotionTabValue = "overview" | "coupons" | "promotions" | "happy-hours";
 
-const PROMOTION_TABS: { label: string; value: PromotionTabValue }[] = [
-  { label: "Overview", value: "overview" },
-  { label: "Coupons", value: "coupons" },
-  { label: "Promotions", value: "promotions" },
-  { label: "Happy Hours", value: "happy-hours" },
+const PROMOTION_TABS: { labelKey: string; value: PromotionTabValue }[] = [
+  { labelKey: "overview", value: "overview" },
+  { labelKey: "coupons", value: "coupons" },
+  { labelKey: "title", value: "promotions" },
+  { labelKey: "happyHours", value: "happy-hours" },
 ];
 
 const isPromotionTab = (value: string | null): value is PromotionTabValue => {
@@ -42,6 +43,7 @@ const scrollToPageTop = () => {
 };
 
 const PromotionManagementPage = () => {
+  const t = useTranslations("promotions");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -99,13 +101,16 @@ const PromotionManagementPage = () => {
   return (
     <Container>
       <Header
-        title="Promotional Management"
-        description="View performance insights and manage active promotions"
+        title={t("managementTitle")}
+        description={t("managementDescription")}
       />
 
       <div className="flex w-full flex-col gap-[32px] rounded-[14px] bg-white p-[30px]">
         <PromotionTabs
-          tabs={PROMOTION_TABS}
+          tabs={PROMOTION_TABS.map((tab) => ({
+            label: t(tab.labelKey),
+            value: tab.value,
+          }))}
           active={activeTab}
           onChange={(value: string) => {
             if (isPromotionTab(value)) {

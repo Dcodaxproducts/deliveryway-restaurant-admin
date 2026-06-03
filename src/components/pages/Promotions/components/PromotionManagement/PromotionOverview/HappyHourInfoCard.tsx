@@ -1,6 +1,7 @@
 "use client";
 
 import { Percent } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type HappyHourInfo = {
   id?: string;
@@ -23,12 +24,15 @@ type Props = {
   loading?: boolean;
 };
 
-const formatDiscount = (happyHour?: HappyHourInfo | null) => {
-  if (!happyHour) return "No Happy Hour";
+const formatDiscount = (
+  happyHour: HappyHourInfo | null | undefined,
+  fallback: string
+) => {
+  if (!happyHour) return fallback;
 
   const value = Number(happyHour.discountValue ?? 0);
 
-  if (!value) return happyHour.name ?? happyHour.title ?? "Happy Hour";
+  if (!value) return happyHour.name ?? happyHour.title ?? fallback;
 
   return `${value}% Off`;
 };
@@ -49,8 +53,8 @@ const formatTime = (time?: string) => {
   });
 };
 
-const formatDiscountType = (type?: string) => {
-  if (!type) return "N/A";
+const formatDiscountType = (type: string | undefined, notAvailable: string) => {
+  if (!type) return notAvailable;
 
   return type
     .replace(/_/g, " ")
@@ -62,9 +66,10 @@ export default function HappyHourInfoCard({
   happyHour,
   loading = false,
 }: Props) {
-  const title = happyHour?.name ?? happyHour?.title ?? "Happy Hour";
+  const t = useTranslations("promotions");
+  const title = happyHour?.name ?? happyHour?.title ?? t("happyHours");
   const category =
-    happyHour?.category?.name ?? happyHour?.foodCategory ?? "All";
+    happyHour?.category?.name ?? happyHour?.foodCategory ?? t("labels.all");
 
   return (
     <div className="bg-white border border-[#EDEFF2] rounded-xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
@@ -93,7 +98,7 @@ export default function HappyHourInfoCard({
           <>
             <div className="flex-1 min-w-[120px]">
               <p className="text-2xl font-semibold">
-                {formatDiscount(happyHour)}{" "}
+                {formatDiscount(happyHour, t("happyHours"))}{" "}
                 <span className="text-xs font-normal text-gray-400 block sm:inline">
                   ({title})
                 </span>
@@ -107,17 +112,17 @@ export default function HappyHourInfoCard({
 
             <div className="flex-1 min-w-[100px] mt-2 sm:mt-0 text-sm text-gray-500">
               <p>
-                Discount Type:{" "}
-                {formatDiscountType(happyHour.discountType)}
+                {t("labels.discountType")}:{" "}
+                {formatDiscountType(happyHour.discountType, t("labels.notAvailable"))}
               </p>
-              <p>Food Category: {category}</p>
+              <p>{t("labels.foodCategory")}: {category}</p>
             </div>
           </>
         ) : (
           <div className="flex-1">
-            <p className="text-2xl font-semibold">No Active Happy Hour</p>
+            <p className="text-2xl font-semibold">{t("noActiveHappyHour")}</p>
             <p className="text-sm text-gray-500 mt-1">
-              Create a happy hour to show discount details here.
+              {t("noActiveHappyHourDescription")}
             </p>
           </div>
         )}

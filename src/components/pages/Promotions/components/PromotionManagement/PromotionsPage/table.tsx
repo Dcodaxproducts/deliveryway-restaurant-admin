@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Table,
   TableBody,
@@ -82,6 +83,8 @@ type ActionMenuProps = {
   onEdit: () => void;
   onDelete: () => void;
   deleting?: boolean;
+  editLabel: string;
+  deleteLabel: string;
 };
 
 const ACTION_MENU_WIDTH = 160;
@@ -98,11 +101,11 @@ const formatDiscount = (promo: Promotion) => {
   return value;
 };
 
-const formatDate = (value?: string) => {
-  if (!value) return "N/A";
+const formatDate = (value: string | undefined, notAvailable: string) => {
+  if (!value) return notAvailable;
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "N/A";
+  if (Number.isNaN(date.getTime())) return notAvailable;
 
   return date.toLocaleDateString("en-US", {
     year: "numeric",
@@ -111,11 +114,14 @@ const formatDate = (value?: string) => {
   });
 };
 
-const getScopeText = (promo: Promotion) => {
-  if (promo.scopeMenuItem?.name) return `Item: ${promo.scopeMenuItem.name}`;
-  if (promo.scopeCategory?.name) return `Category: ${promo.scopeCategory.name}`;
+const getScopeText = (
+  promo: Promotion,
+  labels: { item: string; category: string; allItems: string }
+) => {
+  if (promo.scopeMenuItem?.name) return `${labels.item}: ${promo.scopeMenuItem.name}`;
+  if (promo.scopeCategory?.name) return `${labels.category}: ${promo.scopeCategory.name}`;
 
-  return "All Items";
+  return labels.allItems;
 };
 
 const getStatusClass = (status?: string) => {
@@ -147,6 +153,8 @@ const ActionMenu = ({
   onEdit,
   onDelete,
   deleting,
+  editLabel,
+  deleteLabel,
 }: ActionMenuProps) => {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -275,7 +283,7 @@ const ActionMenu = ({
                 className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-100"
               >
                 <Edit size={15} />
-                Edit
+                {editLabel}
               </button>
 
               <button
@@ -286,7 +294,7 @@ const ActionMenu = ({
                 className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Trash2 size={15} />
-                Delete
+                {deleteLabel}
               </button>
             </div>,
             document.body
@@ -318,6 +326,7 @@ const PromotionsTable = ({
   meta,
   onPageChange,
 }: Props) => {
+  const t = useTranslations("promotions");
   const router = useRouter();
   const { user, restaurantId } = useAuth();
 
@@ -336,10 +345,10 @@ const PromotionsTable = ({
         branchId,
       });
 
-      toast.success("Promotion deleted successfully.");
+      toast.success(t("toasts.promotionDeleted"));
       setOpenMenuId(null);
     } catch (error: unknown) {
-      toast.error(getApiErrorMessage(error, "Failed to delete promotion."));
+      toast.error(getApiErrorMessage(error, t("toasts.failedDeletePromotion")));
     }
   };
 
@@ -347,11 +356,11 @@ const PromotionsTable = ({
     return (
       <>
         <EmptyState
-          title="Looks like there are no Promotions yet!"
-          description="You haven’t added any Promotions yet. Start by creating a new"
+          title={t("emptyPromotionsTitle")}
+          description={t("emptyPromotionsDescription")}
         />
         <PromotionCreateLink
-          label="Create New Promotion"
+          label={t("createNewPromotion")}
           href="/promotion-management/promotions/add"
         />
       </>
@@ -364,14 +373,14 @@ const PromotionsTable = ({
         <Table>
           <TableHeader>
             <TableRow className="border-none">
-              <SortableHeader label="SL" />
-              <SortableHeader label="Name & Code" />
-              <SortableHeader label="Discount" />
-              <SortableHeader label="Scope" />
-              <SortableHeader label="Branch" />
-              <SortableHeader label="Usage" />
-              <SortableHeader label="Status" />
-              <TableHead className="text-center font-bold">Actions</TableHead>
+              <SortableHeader label={t("columns.sl")} />
+              <SortableHeader label={t("columns.nameAndCode")} />
+              <SortableHeader label={t("columns.discount")} />
+              <SortableHeader label={t("columns.scope")} />
+              <SortableHeader label={t("columns.branch")} />
+              <SortableHeader label={t("columns.usage")} />
+              <SortableHeader label={t("columns.status")} />
+              <TableHead className="text-center font-bold">{t("columns.actions")}</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -390,7 +399,7 @@ const PromotionsTable = ({
                       {promo.thumbnailUrl ? (
                         <Image
                           src={promo.thumbnailUrl}
-                          alt={`${promo.title ?? "Promotion"} thumbnail`}
+                          alt={`${promo.title ?? t("title")} thumbnail`}
                           width={40}
                           height={40}
                           unoptimized
@@ -404,11 +413,11 @@ const PromotionsTable = ({
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{promo.title}</p>
                         <p className="text-sm text-gray-500">
-                          Code: {promo.code || "Auto apply"}
+                          {t("labels.code")}: {promo.code || t("labels.autoApply")}
                         </p>
                         <p className="text-xs text-gray-400">
-                          {formatDate(promo.startsAt)} -{" "}
-                          {formatDate(promo.expiresAt)}
+                          {formatDate(promo.startsAt, t("labels.notAvailable"))} -{" "}
+                          {formatDate(promo.expiresAt, t("labels.notAvailable"))}
                         </p>
                       </div>
                     </div>
@@ -419,20 +428,24 @@ const PromotionsTable = ({
                       {formatDiscount(promo)}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Type: {promo.discountType ?? "N/A"}
+                      {t("labels.type")}: {promo.discountType ?? t("labels.notAvailable")}
                     </p>
                   </TableCell>
 
                   <TableCell className="px-4 text-sm text-gray-500">
-                    {getScopeText(promo)}
+                    {getScopeText(promo, {
+                      item: t("labels.item"),
+                      category: t("labels.category"),
+                      allItems: t("labels.allItems"),
+                    })}
                   </TableCell>
 
                   <TableCell className="px-4 text-sm text-gray-500">
-                    {promo.branch?.name ?? "All Branches"}
+                    {promo.branch?.name ?? t("labels.allBranches")}
                   </TableCell>
 
                   <TableCell className="px-4 text-sm text-gray-500">
-                    {promo.usedCount ?? 0} / {promo.maxUses ?? "Unlimited"}
+                    {promo.usedCount ?? 0} / {promo.maxUses ?? t("labels.unlimited")}
                   </TableCell>
 
                   <TableCell className="px-4">
@@ -441,7 +454,7 @@ const PromotionsTable = ({
                         promo.status
                       )}`}
                     >
-                      {promo.status ?? "N/A"}
+                      {promo.status ?? t("labels.notAvailable")}
                     </span>
                   </TableCell>
 
@@ -462,6 +475,8 @@ const PromotionsTable = ({
                       }
                       onDelete={() => handleDelete(promo.id)}
                       deleting={deleteMutation.isPending}
+                      editLabel={t("actions.edit")}
+                      deleteLabel={t("actions.delete")}
                     />
                   </TableCell>
                 </TableRow>
@@ -493,7 +508,7 @@ const PromotionsTable = ({
                     {promo.thumbnailUrl ? (
                       <Image
                         src={promo.thumbnailUrl}
-                        alt={`${promo.title ?? "Promotion"} thumbnail`}
+                        alt={`${promo.title ?? t("title")} thumbnail`}
                         width={40}
                         height={40}
                         unoptimized
@@ -510,16 +525,20 @@ const PromotionsTable = ({
                 </div>
 
                 <p className="text-sm text-gray-500">
-                  Code: {promo.code || "Auto apply"}
+                  {t("labels.code")}: {promo.code || t("labels.autoApply")}
                 </p>
 
                 <div className="space-y-1 text-sm text-gray-600">
-                  <p>Discount: {formatDiscount(promo)}</p>
-                  <p>Scope: {getScopeText(promo)}</p>
-                  <p>Branch: {promo.branch?.name ?? "All Branches"}</p>
+                  <p>{t("labels.discount")}: {formatDiscount(promo)}</p>
+                  <p>{t("columns.scope")}: {getScopeText(promo, {
+                    item: t("labels.item"),
+                    category: t("labels.category"),
+                    allItems: t("labels.allItems"),
+                  })}</p>
+                  <p>{t("columns.branch")}: {promo.branch?.name ?? t("labels.allBranches")}</p>
                   <p>
-                    Usage: {promo.usedCount ?? 0} /{" "}
-                    {promo.maxUses ?? "Unlimited"}
+                    {t("columns.usage")}: {promo.usedCount ?? 0} /{" "}
+                    {promo.maxUses ?? t("labels.unlimited")}
                   </p>
                 </div>
 
@@ -529,7 +548,7 @@ const PromotionsTable = ({
                       promo.status
                     )}`}
                   >
-                    {promo.status ?? "N/A"}
+                    {promo.status ?? t("labels.notAvailable")}
                   </span>
 
                   <div className="flex items-center gap-2">

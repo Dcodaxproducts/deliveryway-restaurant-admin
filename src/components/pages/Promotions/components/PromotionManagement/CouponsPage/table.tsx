@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
@@ -76,6 +77,8 @@ const toCoupon = (record: Record<string, unknown>): Coupon | null => {
 };
 
 const CouponsTable = () => {
+  const t = useTranslations("promotions");
+  const commonT = useTranslations("common");
   const { restaurantId } = useAuth();
   const toggleCouponStatusMutation = useToggleCouponStatus();
   const router = useRouter();
@@ -112,11 +115,11 @@ const CouponsTable = () => {
     return (
       <>
         <EmptyState
-          title="Looks like there are no Coupons yet!"
-          description="You haven’t added any Coupons yet. Start by creating a new"
+          title={t("emptyCouponsTitle")}
+          description={t("emptyCouponsDescription")}
         />
         <PromotionCreateLink
-          label="Create New Coupon"
+          label={t("createNewCoupon")}
           href="/promotion-management/coupons/add"
         />
       </>
@@ -130,13 +133,13 @@ const CouponsTable = () => {
           <TableHeader>
             <TableRow className="border-none">
               <TableHead className="w-[40px]"><Checkbox /></TableHead>
-              <SortableHeader label="SL" />
-              <SortableHeader label="Coupon Code" />
-              <SortableHeader label="Coupon Info" />
-              <SortableHeader label="Branch" />
-              <SortableHeader label="Total Usage" />
-              <SortableHeader label="Status" />
-              <TableHead className="text-center">Actions</TableHead>
+              <SortableHeader label={t("columns.sl")} />
+              <SortableHeader label={t("columns.couponCode")} />
+              <SortableHeader label={t("columns.couponInfo")} />
+              <SortableHeader label={t("columns.branch")} />
+              <SortableHeader label={t("columns.totalUsage")} />
+              <SortableHeader label={t("columns.status")} />
+              <TableHead className="text-center">{t("columns.actions")}</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -150,14 +153,14 @@ const CouponsTable = () => {
 
                 <TableCell>
                   <p className="font-medium">{c.title}</p>
-                  <p className="text-gray-500 text-sm">code: {c.code}</p>
+                  <p className="text-gray-500 text-sm">{t("labels.code")}: {c.code}</p>
                 </TableCell>
 
                 <TableCell>
                   <div className="text-sm text-gray-600">
-                    <p>Per User: {c.maxUsesPerCustomer}</p>
-                    <p>Amount: {c.discountValue}</p>
-                    <p>Type: {c.discountType}</p>
+                    <p>{t("labels.perUser")}: {c.maxUsesPerCustomer}</p>
+                    <p>{t("labels.amount")}: {c.discountValue}</p>
+                    <p>{t("labels.type")}: {c.discountType}</p>
                   </div>
                 </TableCell>
 
@@ -200,7 +203,7 @@ const CouponsTable = () => {
                             router.push(`/promotion-management/coupons/add?coupon=${c.code}`)
                           }
                         >
-                          <Pencil size={14} /> Edit
+                          <Pencil size={14} /> {t("actions.edit")}
                         </button>
                       </div>
                     )}
@@ -225,7 +228,7 @@ const CouponsTable = () => {
 
             <div className="flex justify-between items-center px-6 py-4 border-b">
               <div>
-                <h2 className="text-lg font-semibold">Coupon Details</h2>
+                <h2 className="text-lg font-semibold">{t("couponDetails")}</h2>
                 <p className="text-sm text-gray-500">{selectedCoupon.code}</p>
               </div>
               <button
@@ -240,14 +243,14 @@ const CouponsTable = () => {
             <div className="p-6 grid grid-cols-2 gap-5 text-sm">
 
               {[
-                ["Title", selectedCoupon.title],
-                ["Discount", selectedCoupon.discountValue],
-                ["Type", selectedCoupon.discountType],
-                ["Min Order", selectedCoupon.minOrderAmount || 0],
-                ["Max Discount", selectedCoupon.maxDiscountAmount || 0],
-                ["Usage", selectedCoupon.usedCount],
-                ["Per User Limit", selectedCoupon.maxUsesPerCustomer],
-                ["Status", selectedCoupon.isActive ? "Active" : "Inactive"],
+                [t("labels.title"), selectedCoupon.title],
+                [t("labels.discount"), selectedCoupon.discountValue],
+                [t("labels.type"), selectedCoupon.discountType],
+                [t("labels.minOrder"), selectedCoupon.minOrderAmount || 0],
+                [t("labels.maxDiscount"), selectedCoupon.maxDiscountAmount || 0],
+                [t("labels.usage"), selectedCoupon.usedCount],
+                [t("labels.perUserLimit"), selectedCoupon.maxUsesPerCustomer],
+                [t("labels.status"), selectedCoupon.isActive ? commonT("active") : commonT("inactive")],
               ].map(([label, value], idx) => (
                 <div key={idx} className="bg-gray-50 rounded-lg p-3">
                   <p className="text-gray-500 text-xs">{label}</p>
@@ -262,7 +265,7 @@ const CouponsTable = () => {
                 onClick={() => setOpenView(false)}
                 className="px-5 py-2 bg-primary text-white rounded-md"
               >
-                Close
+                {t("actions.close")}
               </button>
             </div>
 

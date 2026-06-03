@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm, type FieldErrors } from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import FormInput from "@/components/forms/common/FormInput";
@@ -59,12 +60,8 @@ const toOptionalNumber = (value: unknown) => {
   return Number.isFinite(numeric) ? numeric : undefined;
 };
 
-const showFirstValidationError = (errors: FieldErrors<CouponFormValues>) => {
-  const firstError = Object.values(errors).find((error) => error?.message);
-  if (typeof firstError?.message === "string") toast.error(firstError.message);
-};
-
 export default function AddNewCoupon() {
+  const t = useTranslations("promotions");
   const { restaurantId: authRestaurantId, user } = useAuth();
   const createCouponMutation = useCreateCoupon();
   const updateCouponMutation = useUpdateCoupon();
@@ -81,6 +78,18 @@ export default function AddNewCoupon() {
     resolver: zodResolver(couponSchema),
     defaultValues,
   });
+  const validationMessages: Record<string, string> = {
+    "Coupon code is required.": t("validation.couponCodeRequired"),
+    "Coupon title is required.": t("validation.couponTitleRequired"),
+  };
+  const translateValidation = (message?: string) =>
+    message ? validationMessages[message] ?? message : undefined;
+  const showTranslatedValidationError = (errors: FieldErrors<CouponFormValues>) => {
+    const firstError = Object.values(errors).find((error) => error?.message);
+    if (typeof firstError?.message === "string") {
+      toast.error(translateValidation(firstError.message));
+    }
+  };
 
   const getStoredRestaurantId = () => {
     const stored = getStoredAuth();
@@ -143,12 +152,12 @@ export default function AddNewCoupon() {
     if (saving) return;
 
     if (!restaurantId) {
-      toast.error("Restaurant id is missing");
+      toast.error(t("toasts.restaurantIdMissingLower"));
       return;
     }
 
     if (isEdit && !couponId) {
-      toast.error("Coupon id is missing");
+      toast.error(t("toasts.couponIdMissing"));
       return;
     }
 
@@ -174,7 +183,7 @@ export default function AddNewCoupon() {
         await createCouponMutation.mutateAsync(payload);
       }
 
-      toast.success(isEdit ? "Coupon updated successfully" : "Coupon created successfully");
+      toast.success(isEdit ? t("toasts.couponUpdated") : t("toasts.couponCreated"));
       router.push("/promotion-management");
     } finally {
       setSaving(false);
@@ -182,20 +191,20 @@ export default function AddNewCoupon() {
   };
 
   return (
-    <PageWrapper title={isEdit ? "Update Coupon" : "Add New Coupon"}>
-      <form onSubmit={handleSubmit(onSubmit, showFirstValidationError)} className="space-y-8" noValidate>
-        <Section label="Setup Basic Info">
+    <PageWrapper title={isEdit ? t("updateCoupon") : t("addNewCoupon")}>
+      <form onSubmit={handleSubmit(onSubmit, showTranslatedValidationError)} className="space-y-8" noValidate>
+        <Section label={t("forms.setupBasicInfo")}>
           <Controller
             control={control}
             name="title"
             render={({ field, fieldState }) => (
               <FormInput
-                label="Coupon Title"
+                label={t("forms.couponTitle")}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
                 error={Boolean(fieldState.error)}
-                errorText={fieldState.error?.message}
+                errorText={translateValidation(fieldState.error?.message)}
               />
             )}
           />
@@ -205,12 +214,12 @@ export default function AddNewCoupon() {
             name="code"
             render={({ field, fieldState }) => (
               <FormInput
-                label="Coupon Code"
+                label={t("forms.couponCode")}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
                 error={Boolean(fieldState.error)}
-                errorText={fieldState.error?.message}
+                errorText={translateValidation(fieldState.error?.message)}
               />
             )}
           />
@@ -219,12 +228,12 @@ export default function AddNewCoupon() {
             control={control}
             name="maxUses"
             render={({ field }) => (
-              <FormInput label="Max Uses" type="number" value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
+              <FormInput label={t("forms.maxUses")} type="number" value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
             )}
           />
         </Section>
 
-        <Section label="Discount Setup">
+        <Section label={t("forms.discountSetup")}>
           <Controller
             control={control}
             name="discountType"
@@ -234,8 +243,8 @@ export default function AddNewCoupon() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="FLAT">Flat Amount</SelectItem>
-                  <SelectItem value="PERCENTAGE">Percentage</SelectItem>
+                  <SelectItem value="FLAT">{t("forms.flatAmount")}</SelectItem>
+                  <SelectItem value="PERCENTAGE">{t("forms.percentage")}</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -246,7 +255,7 @@ export default function AddNewCoupon() {
             name="discountValue"
             render={({ field }) => (
               <FormInput
-                label="Discount Value"
+                label={t("forms.discountValue")}
                 type="number"
                 value={field.value}
                 onChange={field.onChange}
@@ -259,7 +268,7 @@ export default function AddNewCoupon() {
             control={control}
             name="startsAt"
             render={({ field }) => (
-              <FormInput label="Starts At" type="datetime-local" value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
+              <FormInput label={t("forms.startsAt")} type="datetime-local" value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
             )}
           />
 
@@ -267,19 +276,19 @@ export default function AddNewCoupon() {
             control={control}
             name="expiresAt"
             render={({ field }) => (
-              <FormInput label="Expires At" type="datetime-local" value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
+              <FormInput label={t("forms.expiresAt")} type="datetime-local" value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
             )}
           />
         </Section>
 
-        <Section label="Branch">
+        <Section label={t("forms.branch")}>
           <Controller
             control={control}
             name="branchId"
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="h-10">
-                  <SelectValue placeholder="Select branch" />
+                  <SelectValue placeholder={t("forms.selectBranch")} />
                 </SelectTrigger>
                 <SelectContent>
                   {branches.map((branch) => (
@@ -293,14 +302,14 @@ export default function AddNewCoupon() {
           />
         </Section>
 
-        <Section label="Apply To (Optional)">
+        <Section label={t("forms.applyToOptional")}>
           <Controller
             control={control}
             name="scopeMenuItemId"
             render={({ field }) => (
               <Select value={field.value} onValueChange={handleItemSelect}>
                 <SelectTrigger className="h-10">
-                  <SelectValue placeholder="Select item" />
+                  <SelectValue placeholder={t("forms.selectItem")} />
                 </SelectTrigger>
                 <SelectContent>
                   {items.map((item) => (
@@ -314,13 +323,13 @@ export default function AddNewCoupon() {
           />
         </Section>
 
-        <Section label="Advanced">
+        <Section label={t("forms.advanced")}>
           <Controller
             control={control}
             name="minOrderAmount"
             render={({ field }) => (
               <FormInput
-                label="Min Order Amount"
+                label={t("forms.minimumOrderAmountShort")}
                 type="number"
                 value={field.value}
                 onChange={field.onChange}
@@ -334,7 +343,7 @@ export default function AddNewCoupon() {
             name="maxDiscountAmount"
             render={({ field }) => (
               <FormInput
-                label="Max Discount Amount"
+                label={t("forms.maximumDiscountAmountShort")}
                 type="number"
                 value={field.value}
                 onChange={field.onChange}
@@ -348,7 +357,7 @@ export default function AddNewCoupon() {
             name="maxUsesPerCustomer"
             render={({ field }) => (
               <FormInput
-                label="Max Uses Per Customer"
+                label={t("forms.maxUsesPerCustomer")}
                 type="number"
                 value={field.value}
                 onChange={field.onChange}
@@ -365,7 +374,7 @@ export default function AddNewCoupon() {
             disabled={saving}
             className="h-[44px] rounded-lg border px-6 text-sm font-medium text-gray-600 disabled:opacity-60"
           >
-            Reset
+            {t("actions.reset")}
           </button>
 
           <button
@@ -373,7 +382,7 @@ export default function AddNewCoupon() {
             disabled={saving}
             className="inline-flex h-[44px] items-center gap-2 rounded-lg bg-primary px-6 text-sm font-medium text-white disabled:opacity-60"
           >
-            {saving ? "Saving..." : "Save"}
+            {saving ? t("actions.saving") : t("actions.save")}
           </button>
         </div>
       </form>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -19,14 +20,16 @@ export default function AdvanceSettings({
 }: {
   branches: BranchOption[];
 }) {
+  const t = useTranslations("promotions.forms");
+
   return (
     <div className="space-y-6">
       <div>
-        <Label>Specific Branch</Label>
+        <Label>{t("branch")}</Label>
 
         <Select>
           <SelectTrigger className="h-10">
-            <SelectValue placeholder="Select branch" />
+            <SelectValue placeholder={t("selectBranch")} />
           </SelectTrigger>
 <div className="mt-10">
           <SelectContent>

@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo } from "react";
 import { Controller, useForm, useWatch, type FieldErrors } from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -34,16 +35,6 @@ import {
 } from "@/components/pages/Promotions/utils/option-normalizers";
 import { happyHourSchema, type HappyHourFormValues } from "@/validations/promotions";
 import { FIELD_ERROR_CLASS, INPUT_BASE_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
-
-const days = [
-  { label: "Sunday", value: 0 },
-  { label: "Monday", value: 1 },
-  { label: "Tuesday", value: 2 },
-  { label: "Wednesday", value: 3 },
-  { label: "Thursday", value: 4 },
-  { label: "Friday", value: 5 },
-  { label: "Saturday", value: 6 },
-];
 
 const defaultValues: HappyHourFormValues = {
   code: "",
@@ -91,12 +82,8 @@ const toNumber = (value: string) => {
   return Number.isFinite(number) ? number : 0;
 };
 
-const showFirstValidationError = (errors: FieldErrors<HappyHourFormValues>) => {
-  const firstError = Object.values(errors).find((error) => error?.message);
-  if (typeof firstError?.message === "string") toast.error(firstError.message);
-};
-
 export default function AddHappyHour() {
+  const t = useTranslations("promotions");
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
@@ -118,7 +105,38 @@ export default function AddHappyHour() {
   const updateMutation = useUpdateAdminHappyHour();
 
   const submitting = createMutation.isPending || updateMutation.isPending;
-  const pageTitle = isEditMode ? "Update Happy Hour" : "Add Happy Hour";
+  const pageTitle = isEditMode ? t("updateHappyHour") : t("addHappyHour");
+  const days = [
+    { label: t("days.sunday"), value: 0 },
+    { label: t("days.monday"), value: 1 },
+    { label: t("days.tuesday"), value: 2 },
+    { label: t("days.wednesday"), value: 3 },
+    { label: t("days.thursday"), value: 4 },
+    { label: t("days.friday"), value: 5 },
+    { label: t("days.saturday"), value: 6 },
+  ];
+  const validationMessages: Record<string, string> = {
+    "Discount value must be greater than 0.": t("validation.discountValueGreaterThanZero"),
+    "Discount value is required.": t("validation.discountValueRequired"),
+    "Start date is required.": t("validation.startDateRequired"),
+    "Percentage discount cannot be greater than 100.": t("validation.percentageDiscountMax"),
+    "Expiry date is required.": t("validation.expiryDateRequired"),
+    "Expiry date must be after start date.": t("validation.expiryAfterStart"),
+    "Happy hour code is required.": t("validation.happyHourCodeRequired"),
+    "Happy hour title is required.": t("validation.happyHourTitleRequired"),
+    "Please select at least one active day.": t("validation.activeDayRequired"),
+    "Daily start time is required.": t("validation.dailyStartRequired"),
+    "Daily end time is required.": t("validation.dailyEndRequired"),
+    "Daily end time must be after daily start time.": t("validation.dailyEndAfterStart"),
+  };
+  const translateValidation = (message?: string) =>
+    message ? validationMessages[message] ?? message : undefined;
+  const showTranslatedValidationError = (errors: FieldErrors<HappyHourFormValues>) => {
+    const firstError = Object.values(errors).find((error) => error?.message);
+    if (typeof firstError?.message === "string") {
+      toast.error(translateValidation(firstError.message));
+    }
+  };
 
   useEffect(() => {
     if (!isEditMode || !detailResponse) return;
@@ -216,22 +234,22 @@ export default function AddHappyHour() {
 
   const onSubmit = async () => {
     if (!restaurantId) {
-      toast.error("Restaurant ID is missing.");
+      toast.error(t("toasts.restaurantIdMissing"));
       return;
     }
 
     try {
       if (isEditMode && id) {
         await updateMutation.mutateAsync({ id, payload });
-        toast.success("Happy hour updated successfully.");
+        toast.success(t("toasts.happyHourUpdated"));
       } else {
         await createMutation.mutateAsync(payload);
-        toast.success("Happy hour created successfully.");
+        toast.success(t("toasts.happyHourCreated"));
       }
 
       router.push("/promotion-management");
     } catch (error: unknown) {
-      toast.error(getApiErrorMessage(error, "Something went wrong."));
+      toast.error(getApiErrorMessage(error, t("toasts.somethingWentWrong")));
     }
   };
 
@@ -247,31 +265,31 @@ export default function AddHappyHour() {
 
   return (
     <PageWrapper title={pageTitle}>
-      <form onSubmit={handleSubmit(onSubmit, showFirstValidationError)} className="space-y-8" noValidate>
+      <form onSubmit={handleSubmit(onSubmit, showTranslatedValidationError)} className="space-y-8" noValidate>
         <Controller
           control={control}
           name="isActive"
           render={({ field }) => (
             <div className="mb-6 flex items-center justify-between">
-              <p className="text-sm text-gray-600">Do you want to activate the happy hour promotion?</p>
+              <p className="text-sm text-gray-600">{t("forms.happyHourActivePrompt")}</p>
               <Switch checked={field.value} onCheckedChange={(checked) => field.onChange(Boolean(checked))} />
             </div>
           )}
         />
 
-        <Section label="Setup Basic Info">
+        <Section label={t("forms.setupBasicInfo")}>
           <Controller
             control={control}
             name="code"
             render={({ field, fieldState }) => (
               <FormInput
-                label="Happy Hour Code *"
-                placeholder="eg. EVENING20"
+                label={t("forms.happyHourCode")}
+                placeholder={t("forms.happyHourCodePlaceholder")}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
                 error={Boolean(fieldState.error)}
-                errorText={fieldState.error?.message}
+                errorText={translateValidation(fieldState.error?.message)}
               />
             )}
           />
@@ -281,13 +299,13 @@ export default function AddHappyHour() {
             name="title"
             render={({ field, fieldState }) => (
               <FormInput
-                label="Happy Hour Title *"
-                placeholder="eg. Evening Happy Hour"
+                label={t("forms.happyHourTitle")}
+                placeholder={t("forms.happyHourTitlePlaceholder")}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
                 error={Boolean(fieldState.error)}
-                errorText={fieldState.error?.message}
+                errorText={translateValidation(fieldState.error?.message)}
               />
             )}
           />
@@ -297,12 +315,12 @@ export default function AddHappyHour() {
             name="description"
             render={({ field }) => (
               <div className="space-y-2">
-                <Label>Description</Label>
+                <Label>{t("forms.description")}</Label>
                 <textarea
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
-                  placeholder="Write happy hour description"
+                  placeholder={t("forms.happyHourDescriptionPlaceholder")}
                   className="min-h-[110px] w-full rounded-md border border-[#BBBBBB] px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
@@ -315,7 +333,7 @@ export default function AddHappyHour() {
               name="startsAt"
               render={({ field, fieldState }) => (
                 <div className="space-y-2">
-                  <Label>Starts At *</Label>
+                  <Label>{t("forms.startsAt")}</Label>
                   <Input
                     type="datetime-local"
                     value={field.value}
@@ -323,7 +341,7 @@ export default function AddHappyHour() {
                     onBlur={field.onBlur}
                     className={INPUT_BASE_CLASS}
                   />
-                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{fieldState.error.message}</p> : null}
+                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
                 </div>
               )}
             />
@@ -333,7 +351,7 @@ export default function AddHappyHour() {
               name="expiresAt"
               render={({ field, fieldState }) => (
                 <div className="space-y-2">
-                  <Label>Expires At *</Label>
+                  <Label>{t("forms.expiresAt")}</Label>
                   <Input
                     type="datetime-local"
                     value={field.value}
@@ -341,7 +359,7 @@ export default function AddHappyHour() {
                     onBlur={field.onBlur}
                     className={INPUT_BASE_CLASS}
                   />
-                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{fieldState.error.message}</p> : null}
+                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
                 </div>
               )}
             />
@@ -352,7 +370,7 @@ export default function AddHappyHour() {
             name="activeDays"
             render={({ field, fieldState }) => (
               <div className="space-y-3">
-                <Label className="text-[15px] font-medium">Active Days *</Label>
+                <Label className="text-[15px] font-medium">{t("forms.activeDays")}</Label>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {days.map((day) => {
                     const checked = field.value.includes(day.value);
@@ -373,7 +391,7 @@ export default function AddHappyHour() {
                     );
                   })}
                 </div>
-                {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{fieldState.error.message}</p> : null}
+                {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
               </div>
             )}
           />
@@ -384,7 +402,7 @@ export default function AddHappyHour() {
               name="dailyStartTime"
               render={({ field, fieldState }) => (
                 <div className="space-y-2">
-                  <Label>Daily Start Time *</Label>
+                  <Label>{t("forms.dailyStartTime")}</Label>
                   <Input
                     type="time"
                     value={field.value}
@@ -392,7 +410,7 @@ export default function AddHappyHour() {
                     onBlur={field.onBlur}
                     className={INPUT_BASE_CLASS}
                   />
-                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{fieldState.error.message}</p> : null}
+                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
                 </div>
               )}
             />
@@ -402,7 +420,7 @@ export default function AddHappyHour() {
               name="dailyEndTime"
               render={({ field, fieldState }) => (
                 <div className="space-y-2">
-                  <Label>Daily End Time *</Label>
+                  <Label>{t("forms.dailyEndTime")}</Label>
                   <Input
                     type="time"
                     value={field.value}
@@ -410,29 +428,29 @@ export default function AddHappyHour() {
                     onBlur={field.onBlur}
                     className={INPUT_BASE_CLASS}
                   />
-                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{fieldState.error.message}</p> : null}
+                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
                 </div>
               )}
             />
           </div>
         </Section>
 
-        <Section label="Discount Setup">
+        <Section label={t("forms.discountSetup")}>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <Controller
               control={control}
               name="discountType"
               render={({ field }) => (
                 <div className="space-y-2">
-                  <Label>Discount Type *</Label>
+                  <Label>{t("forms.discountType")}</Label>
                   <select
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
                     className="h-[52px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-base outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                   >
-                    <option value="FLAT">Flat Discount</option>
-                    <option value="PERCENTAGE">Percentage Discount</option>
+                    <option value="FLAT">{t("forms.flatDiscount")}</option>
+                    <option value="PERCENTAGE">{t("forms.percentageDiscount")}</option>
                   </select>
                 </div>
               )}
@@ -443,14 +461,14 @@ export default function AddHappyHour() {
               name="discountValue"
               render={({ field, fieldState }) => (
                 <FormInput
-                  label="Discount Value *"
+                  label={t("forms.discountValue")}
                   type="number"
-                  placeholder="eg. 20"
+                  placeholder={t("forms.discountValuePlaceholder")}
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
                   error={Boolean(fieldState.error)}
-                  errorText={fieldState.error?.message}
+                  errorText={translateValidation(fieldState.error?.message)}
                 />
               )}
             />
@@ -462,9 +480,9 @@ export default function AddHappyHour() {
               name="minOrderAmount"
               render={({ field }) => (
                 <FormInput
-                  label="Minimum Order Amount"
+                  label={t("forms.minimumOrderAmount")}
                   type="number"
-                  placeholder="eg. 100"
+                  placeholder={t("forms.minimumOrderAmountPlaceholder")}
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
@@ -477,9 +495,9 @@ export default function AddHappyHour() {
               name="maxDiscountAmount"
               render={({ field }) => (
                 <FormInput
-                  label="Maximum Discount Amount"
+                  label={t("forms.maximumDiscountAmount")}
                   type="number"
-                  placeholder="eg. 50"
+                  placeholder={t("forms.maximumDiscountAmountPlaceholder")}
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
@@ -494,9 +512,9 @@ export default function AddHappyHour() {
               name="maxUses"
               render={({ field }) => (
                 <FormInput
-                  label="Maximum Uses"
+                  label={t("forms.maximumUses")}
                   type="number"
-                  placeholder="eg. 100"
+                  placeholder={t("forms.maximumUsesPlaceholder")}
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
@@ -509,9 +527,9 @@ export default function AddHappyHour() {
               name="maxUsesPerCustomer"
               render={({ field }) => (
                 <FormInput
-                  label="Maximum Uses Per Customer"
+                  label={t("forms.maximumUsesPerCustomer")}
                   type="number"
-                  placeholder="eg. 1"
+                  placeholder={t("forms.maximumUsesPerCustomerPlaceholder")}
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
@@ -521,27 +539,27 @@ export default function AddHappyHour() {
           </div>
         </Section>
 
-        <Section label="Happy Hour Scope">
+        <Section label={t("forms.happyHourScope")}>
           <Controller
             control={control}
             name="selectedMenuItem"
             render={({ field }) => (
               <div className="space-y-2">
-                <Label className="text-[16px]">Select Food Item</Label>
+                <Label className="text-[16px]">{t("forms.selectFoodItem")}</Label>
                 <AsyncSelect
                   value={field.value}
                   onChange={(value) => {
                     field.onChange(value);
                     setValue("selectedCategory", null);
                   }}
-                  placeholder="Search food item"
+                  placeholder={t("forms.selectFoodItemPlaceholder")}
                   fetchOptions={fetchMenuItemOptions}
                   labelKey="name"
                   valueKey="id"
                 />
                 {field.value ? (
                   <button type="button" onClick={() => field.onChange(null)} className="text-sm text-primary">
-                    Clear selected food item
+                    {t("forms.clearSelectedFoodItem")}
                   </button>
                 ) : null}
               </div>
@@ -553,28 +571,28 @@ export default function AddHappyHour() {
             name="selectedCategory"
             render={({ field }) => (
               <div className="space-y-2">
-                <Label className="text-[16px]">Select Food Category</Label>
+                <Label className="text-[16px]">{t("forms.selectFoodCategory")}</Label>
                 <AsyncSelect
                   value={field.value}
                   onChange={(value) => {
                     field.onChange(value);
                     setValue("selectedMenuItem", null);
                   }}
-                  placeholder="Search category"
+                  placeholder={t("forms.selectFoodCategoryPlaceholder")}
                   fetchOptions={fetchCategoryOptions}
                   labelKey="name"
                   valueKey="id"
                 />
                 {field.value ? (
                   <button type="button" onClick={() => field.onChange(null)} className="text-sm text-primary">
-                    Clear selected category
+                    {t("forms.clearSelectedCategory")}
                   </button>
                 ) : null}
               </div>
             )}
           />
 
-          <p className={MUTED_TEXT_SM_CLASS}>Leave both fields empty if happy hour applies to all items.</p>
+          <p className={MUTED_TEXT_SM_CLASS}>{t("forms.happyHourScopeHelp")}</p>
         </Section>
 
         <div className="flex justify-end gap-3">
@@ -584,7 +602,7 @@ export default function AddHappyHour() {
             disabled={submitting}
             className="h-[44px] rounded-lg border px-6 text-sm font-medium text-gray-600 disabled:opacity-60"
           >
-            Cancel
+            {t("actions.cancel")}
           </button>
 
           <button
@@ -593,7 +611,7 @@ export default function AddHappyHour() {
             className="inline-flex h-[44px] items-center gap-2 rounded-lg bg-primary px-6 text-sm font-medium text-white disabled:opacity-60"
           >
             {submitting && <Loader2 size={16} className="animate-spin" />}
-            {isEditMode ? "Update Happy Hour" : "Create Happy Hour"}
+            {isEditMode ? t("updateHappyHour") : t("createHappyHour")}
           </button>
         </div>
       </form>
