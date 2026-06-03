@@ -23,7 +23,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import AddCustomerModal from "./AddCustomerModal";
-import { useDeleteCustomer, useUpdateCustomerStatus } from "@/hooks/useCustomers";
+import {
+  useDeleteCustomer,
+  useUpdateCustomerStatus,
+} from "@/hooks/useCustomers";
+import { useTranslations } from "next-intl";
 
 interface Customer {
   id: string;
@@ -54,9 +58,13 @@ const CustomerTable = ({
   onPageChange = () => undefined,
   onRefresh = () => undefined,
 }: Props) => {
+  const t = useTranslations("customers");
+  const commonT = useTranslations("common");
   const [openDetails, setOpenDetails] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
 
   const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
 
@@ -64,8 +72,18 @@ const CustomerTable = ({
     setLocalCustomers(customers);
   }, [customers]);
 
-  const deleteCustomerMutation = useDeleteCustomer();
-  const updateCustomerStatusMutation = useUpdateCustomerStatus();
+  const deleteCustomerMutation = useDeleteCustomer({
+    messages: {
+      success: t("messages.deleted"),
+      error: t("messages.failedDelete"),
+    },
+  });
+  const updateCustomerStatusMutation = useUpdateCustomerStatus({
+    messages: {
+      success: t("messages.statusUpdated"),
+      error: t("messages.failedStatusUpdate"),
+    },
+  });
 
   const handleDelete = async (id?: string) => {
     if (!id) return;
@@ -86,7 +104,7 @@ const CustomerTable = ({
   const handleToggleStatus = async (id: string, current: boolean) => {
     // optimistic UI update
     setLocalCustomers((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, isActive: !current } : c))
+      prev.map((c) => (c.id === id ? { ...c, isActive: !current } : c)),
     );
 
     try {
@@ -99,7 +117,7 @@ const CustomerTable = ({
     } catch {
       // rollback
       setLocalCustomers((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, isActive: current } : c))
+        prev.map((c) => (c.id === id ? { ...c, isActive: current } : c)),
       );
     }
   };
@@ -107,21 +125,19 @@ const CustomerTable = ({
   if (loading) {
     return (
       <div className="text-sm text-gray-400 py-10 text-center">
-        Loading customers...
+        {t("loading")}
       </div>
     );
   }
 
   if (!localCustomers || localCustomers.length === 0) {
     return (
-      <EmptyState
-        title="Looks like there are no customers yet!"
-        description="You haven’t added any customers yet."
-      />
+      <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
     );
   }
 
-  return (    <>
+  return (
+    <>
       {/* -------- Desktop -------- */}
       <div className="hidden md:block">
         <Table className="my-10">
@@ -131,25 +147,26 @@ const CustomerTable = ({
                 <Checkbox />
               </TableHead>
 
-              <SortableHeader label="SL" />
-              <SortableHeader label="Customer Name" />
-              <SortableHeader label="Customer Info" />
+              <SortableHeader label={t("table.serial")} />
+              <SortableHeader label={t("table.customerName")} />
+              <SortableHeader label={t("table.customerInfo")} />
 
               <TableHead className="text-center px-4 font-semibold">
-                Total Order
+                {t("table.totalOrder")}
               </TableHead>
 
-              <SortableHeader label="Joining Date" />
-              <SortableHeader label="Unblock/Block" />
+              <SortableHeader label={t("table.joiningDate")} />
+              <SortableHeader label={t("table.blockToggle")} />
 
               <TableHead className="text-center font-semibold">
-                Actions
+                {commonT("actions")}
               </TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
-            {localCustomers.map((c, i) => { //  CHANGED
+            {localCustomers.map((c, i) => {
+              //  CHANGED
               const fullName = `${c.profile?.firstName || ""} ${
                 c.profile?.lastName || ""
               }`;
@@ -164,9 +181,7 @@ const CustomerTable = ({
                     {(meta?.page - 1) * (meta?.limit || 10) + i + 1}
                   </TableCell>
 
-                  <TableCell className="px-4">
-                    {fullName || "-"}
-                  </TableCell>
+                  <TableCell className="px-4">{fullName || "-"}</TableCell>
 
                   <TableCell className="px-4">
                     <div>
@@ -200,10 +215,10 @@ const CustomerTable = ({
                     <div className="flex items-center justify-center gap-2 text-gray">
                       <button
                         className="p-2"
-                       onClick={() => {
-  setSelectedCustomer(c);
-  setOpenDetails(true);
-}}
+                        onClick={() => {
+                          setSelectedCustomer(c);
+                          setOpenDetails(true);
+                        }}
                       >
                         <Eye size={18} />
                       </button>
@@ -222,14 +237,14 @@ const CustomerTable = ({
                               setOpenEdit(true);
                             }}
                           >
-                            Edit
+                            {commonT("edit")}
                           </DropdownMenuItem>
 
                           <DropdownMenuItem
                             className="text-red-600"
-                        onClick={() => handleDelete(c.id)}
+                            onClick={() => handleDelete(c.id)}
                           >
-                            Delete
+                            {commonT("delete")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -246,7 +261,8 @@ const CustomerTable = ({
 
       {/* -------- Mobile -------- */}
       <div className="flex flex-col gap-4 md:hidden">
-        {localCustomers.map((c) => { //  CHANGED
+        {localCustomers.map((c) => {
+          //  CHANGED
           const fullName = `${c.profile?.firstName || ""} ${
             c.profile?.lastName || ""
           }`;
@@ -264,23 +280,25 @@ const CustomerTable = ({
 
                 <Switch
                   checked={!!c.isActive}
-                  onCheckedChange={() =>
-                    handleToggleStatus(c.id, !!c.isActive)
-                  }
+                  onCheckedChange={() => handleToggleStatus(c.id, !!c.isActive)}
                 />
               </div>
 
               <div className="text-sm text-gray mb-2">
-                <p>Phone: {c.profile?.phone || "-"}</p>
+                <p>
+                  {t("table.phone")}: {c.profile?.phone || "-"}
+                </p>
                 <p className="max-w-[210px] truncate">
-                  Email: {c.email}
+                  {t("table.email")}: {c.email}
                 </p>
               </div>
 
               <div className="text-sm text-gray mb-2">
-                <p>Total Orders: {c._count?.customerOrders || 0}</p>
                 <p>
-                  Joined:{" "}
+                  {t("table.totalOrders")}: {c._count?.customerOrders || 0}
+                </p>
+                <p>
+                  {t("table.joined")}:{" "}
                   {c.createdAt
                     ? new Date(c.createdAt).toLocaleDateString()
                     : "-"}
@@ -290,10 +308,10 @@ const CustomerTable = ({
               <div className="flex justify-end gap-2 text-gray">
                 <button
                   className="p-2"
-                 onClick={() => {
-  setSelectedCustomer(c);
-  setOpenDetails(true);
-}}
+                  onClick={() => {
+                    setSelectedCustomer(c);
+                    setOpenDetails(true);
+                  }}
                 >
                   <Eye size={18} />
                 </button>
@@ -312,14 +330,14 @@ const CustomerTable = ({
                         setOpenEdit(true);
                       }}
                     >
-                      Edit
+                      {commonT("edit")}
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
                       className="text-red-600"
-                   onClick={() => handleDelete(c.id)}
+                      onClick={() => handleDelete(c.id)}
                     >
-                      Delete
+                      {commonT("delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -330,17 +348,17 @@ const CustomerTable = ({
 
         <PaginationSection meta={meta} onPageChange={onPageChange} />
 
-      <CustomerDetailModal
-  open={openDetails}
-  onOpenChange={setOpenDetails}
-  customer={selectedCustomer}
-/>
- <AddCustomerModal
-        open={openEdit}
-        onOpenChange={setOpenEdit}
-        initialData={selectedCustomer} // <-- IMPORTANT (you can handle inside modal)
-         onSuccess={onRefresh}
-      />
+        <CustomerDetailModal
+          open={openDetails}
+          onOpenChange={setOpenDetails}
+          customer={selectedCustomer}
+        />
+        <AddCustomerModal
+          open={openEdit}
+          onOpenChange={setOpenEdit}
+          initialData={selectedCustomer} // <-- IMPORTANT (you can handle inside modal)
+          onSuccess={onRefresh}
+        />
       </div>
     </>
   );

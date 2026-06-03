@@ -16,15 +16,28 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useCreateCustomer, useUpdateCustomer, useVerifyCustomerEmail } from "@/hooks/useCustomers";
-import { CARD_PANEL_CLASS, FIELD_ERROR_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
+import {
+  useCreateCustomer,
+  useUpdateCustomer,
+  useVerifyCustomerEmail,
+} from "@/hooks/useCustomers";
+import {
+  CARD_PANEL_CLASS,
+  FIELD_ERROR_CLASS,
+  MUTED_TEXT_SM_CLASS,
+} from "@/components/common/common-classes";
 import { getApiErrorMessage } from "@/lib/errors";
-import { getClientStorageItem, removeClientStorageItem, setClientStorageItem } from "@/services/storage";
+import {
+  getClientStorageItem,
+  removeClientStorageItem,
+  setClientStorageItem,
+} from "@/services/storage";
 import {
   customerModalSchema,
   type CustomerModalValues,
   type UpdateCustomerValues,
 } from "@/validations/customers";
+import { useTranslations } from "next-intl";
 
 type Customer = {
   id?: string;
@@ -67,13 +80,29 @@ export default function AddCustomerModal({
   onSuccess,
 }: AddCustomerModalProps) {
   const { user } = useAuthContext();
+  const t = useTranslations("customers");
   const restaurantId = user?.restaurantId;
   const isEditMode = Boolean(initialData?.id);
 
-  const createCustomerMutation = useCreateCustomer();
-  const updateCustomerMutation = useUpdateCustomer();
-  const verifyCustomerEmailMutation = useVerifyCustomerEmail();
-  const isSubmitting = createCustomerMutation.isPending || updateCustomerMutation.isPending;
+  const createCustomerMutation = useCreateCustomer({
+    messages: {
+      success: t("messages.created"),
+      error: t("messages.failedCreate"),
+    },
+  });
+  const updateCustomerMutation = useUpdateCustomer({
+    messages: {
+      success: t("messages.updated"),
+      error: t("messages.failedUpdate"),
+    },
+  });
+  const verifyCustomerEmailMutation = useVerifyCustomerEmail({
+    messages: {
+      error: t("messages.verificationFailed"),
+    },
+  });
+  const isSubmitting =
+    createCustomerMutation.isPending || updateCustomerMutation.isPending;
 
   const [step, setStep] = useState<"form" | "otp">("form");
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -97,6 +126,24 @@ export default function AddCustomerModal({
     setAccessToken(null);
   };
 
+  const translateValidationError = (message?: string) => {
+    if (!message) return undefined;
+
+    const validationMessages: Record<string, string> = {
+      "Phone number must be at least 10 digits": t("validation.phoneMin"),
+      "Phone number is too long": t("validation.phoneMax"),
+      "Invalid email address": t("validation.invalidEmail"),
+      "First name is required": t("validation.firstNameRequired"),
+      "Last name is required": t("validation.lastNameRequired"),
+      "Password must be at least 8 characters": t("validation.passwordMin"),
+      "OTP is required": t("validation.otpRequired"),
+      "OTP is too short": t("validation.otpShort"),
+      "OTP is too long": t("validation.otpLong"),
+    };
+
+    return validationMessages[message] || message;
+  };
+
   useEffect(() => {
     if (!open) return;
 
@@ -109,7 +156,7 @@ export default function AddCustomerModal({
             lastName: initialData.profile?.lastName ?? "",
             phone: initialData.profile?.phone ?? "",
           }
-        : defaultValues
+        : defaultValues,
     );
     setStep("form");
     setOtp("");
@@ -118,7 +165,7 @@ export default function AddCustomerModal({
 
   const onSubmit = async (values: CustomerModalValues) => {
     if (!isEditMode && !values.password) {
-      toast.error("Please fill all fields");
+      toast.error(t("messages.fillAllFields"));
       return;
     }
 
@@ -140,7 +187,7 @@ export default function AddCustomerModal({
         resetModalState();
         onOpenChange(false);
       } catch (error) {
-        toast.error(getApiErrorMessage(error, "Failed to update customer"));
+        toast.error(getApiErrorMessage(error, t("messages.failedUpdate")));
       }
 
       return;
@@ -159,17 +206,17 @@ export default function AddCustomerModal({
       const tokenFromRes = res?.data?.accessToken;
 
       if (!tokenFromRes) {
-        toast.error("Missing access token");
+        toast.error(t("messages.missingAccessToken"));
         return;
       }
 
       setAccessToken(tokenFromRes);
       setClientStorageItem("signupAccessToken", tokenFromRes);
 
-      toast.success("OTP sent to email");
+      toast.success(t("messages.otpSent"));
       setStep("otp");
     } catch (error) {
-      toast.error(getApiErrorMessage(error, "Failed to create customer"));
+      toast.error(getApiErrorMessage(error, t("messages.failedCreate")));
     }
   };
 
@@ -177,12 +224,12 @@ export default function AddCustomerModal({
     const tokenToUse = accessToken || getClientStorageItem("signupAccessToken");
 
     if (!otp) {
-      toast.error("Please enter OTP");
+      toast.error(t("messages.enterOtp"));
       return;
     }
 
     if (!tokenToUse) {
-      toast.error("Missing access token");
+      toast.error(t("messages.missingAccessToken"));
       return;
     }
 
@@ -191,14 +238,14 @@ export default function AddCustomerModal({
 
       await verifyCustomerEmailMutation.mutateAsync({ token: tokenToUse, otp });
 
-      toast.success("Customer verified successfully!");
+      toast.success(t("messages.verified"));
 
       removeClientStorageItem("signupAccessToken");
       onSuccess?.();
       resetModalState();
       onOpenChange(false);
     } catch (error) {
-      toast.error(getApiErrorMessage(error, "Verification failed"));
+      toast.error(getApiErrorMessage(error, t("messages.verificationFailed")));
     } finally {
       setIsVerifying(false);
     }
@@ -215,15 +262,19 @@ export default function AddCustomerModal({
       <DialogContent className="max-w-[420px] rounded-[20px] bg-[#F5F5F5] p-6">
         <DialogHeader className="space-y-1">
           <DialogTitle className="text-2xl font-semibold">
-            {step === "form" ? (isEditMode ? "Edit Customer" : "Add Customer") : "Verify Email"}
+            {step === "form"
+              ? isEditMode
+                ? t("editCustomer")
+                : t("addCustomer")
+              : t("verifyEmail")}
           </DialogTitle>
 
           <p className={MUTED_TEXT_SM_CLASS}>
             {step === "form"
               ? isEditMode
-                ? "Update customer account details"
-                : "Create a new customer account"
-              : "Enter OTP sent to customer's email"}
+                ? t("updateDetailsDescription")
+                : t("createDetailsDescription")
+              : t("verifyEmailDescription")}
           </p>
         </DialogHeader>
 
@@ -237,43 +288,43 @@ export default function AddCustomerModal({
               control={control}
               name="firstName"
               id="customer-first-name"
-              label="First Name"
-              placeholder="Enter first name"
-              error={errors.firstName?.message}
+              label={t("form.firstName")}
+              placeholder={t("form.firstNamePlaceholder")}
+              error={translateValidationError(errors.firstName?.message)}
             />
             <CustomerField
               control={control}
               name="lastName"
               id="customer-last-name"
-              label="Last Name"
-              placeholder="Enter last name"
-              error={errors.lastName?.message}
+              label={t("form.lastName")}
+              placeholder={t("form.lastNamePlaceholder")}
+              error={translateValidationError(errors.lastName?.message)}
             />
             <CustomerField
               control={control}
               name="email"
               id="customer-email"
-              label="Email"
-              placeholder="Enter email"
-              error={errors.email?.message}
+              label={t("form.email")}
+              placeholder={t("form.emailPlaceholder")}
+              error={translateValidationError(errors.email?.message)}
             />
             <CustomerField
               control={control}
               name="phone"
               id="customer-phone"
-              label="Phone"
-              placeholder="Enter phone number"
-              error={errors.phone?.message}
+              label={t("form.phone")}
+              placeholder={t("form.phonePlaceholder")}
+              error={translateValidationError(errors.phone?.message)}
             />
             {!isEditMode ? (
               <CustomerField
                 control={control}
                 name="password"
                 id="customer-password"
-                label="Password"
-                placeholder="Enter password"
+                label={t("form.password")}
+                placeholder={t("form.passwordPlaceholder")}
                 type="password"
-                error={errors.password?.message}
+                error={translateValidationError(errors.password?.message)}
               />
             ) : null}
 
@@ -285,12 +336,12 @@ export default function AddCustomerModal({
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="animate-spin" size={18} />
-                  {isEditMode ? "Updating..." : "Creating..."}
+                  {isEditMode ? t("updating") : t("creating")}
                 </span>
               ) : isEditMode ? (
-                "Update Customer"
+                t("updateCustomer")
               ) : (
-                "Create Customer"
+                t("createCustomer")
               )}
             </Button>
           </form>
@@ -300,13 +351,13 @@ export default function AddCustomerModal({
           <div className={`mt-5 space-y-4 ${CARD_PANEL_CLASS}`}>
             <div className="space-y-1">
               <Label htmlFor="customer-otp" className="text-sm text-gray-600">
-                Enter OTP
+                {t("enterOtp")}
               </Label>
               <Input
                 id="customer-otp"
                 value={otp}
                 onChange={({ target: { value } }) => setOtp(value)}
-                placeholder="Enter OTP"
+                placeholder={t("enterOtpPlaceholder")}
                 className="h-[44px] rounded-[10px] border border-gray-300 text-center tracking-widest"
               />
             </div>
@@ -320,10 +371,10 @@ export default function AddCustomerModal({
               {isVerifying ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="animate-spin" size={18} />
-                  Verifying...
+                  {t("verifying")}
                 </span>
               ) : (
-                "Verify OTP"
+                t("verifyOtp")
               )}
             </Button>
           </div>

@@ -12,23 +12,38 @@ import {
   verifyCustomerEmail,
 } from "@/services/customers/customers.api";
 
+type CustomerMutationMessages = {
+  success?: string;
+  error?: string;
+};
+
+type CustomerMutationOptions = {
+  messages?: CustomerMutationMessages;
+};
+
 /**
  * ==============================
  * CUSTOMER HOOKS
  * ==============================
  */
 
-export const useCreateCustomer = () => {
+export const useCreateCustomer = (options?: CustomerMutationOptions) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: createCustomer,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
-      toast.success("Customer created successfully!");
+      toast.success(
+        options?.messages?.success || "Customer created successfully!",
+      );
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to create customer");
+      toast.error(
+        err?.response?.data?.message ||
+          options?.messages?.error ||
+          "Failed to create customer",
+      );
     },
   });
 };
@@ -65,7 +80,7 @@ export const useGetCustomer = (id: string) => {
   });
 };
 
-export const useUpdateCustomer = () => {
+export const useUpdateCustomer = (options?: CustomerMutationOptions) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -75,26 +90,38 @@ export const useUpdateCustomer = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       queryClient.invalidateQueries({ queryKey: ["customer", variables.id] });
-      toast.success("Customer updated successfully!");
+      toast.success(
+        options?.messages?.success || "Customer updated successfully!",
+      );
     },
 
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to update customer");
+      toast.error(
+        err?.response?.data?.message ||
+          options?.messages?.error ||
+          "Failed to update customer",
+      );
     },
   });
 };
 
-export const useDeleteCustomer = () => {
+export const useDeleteCustomer = (options?: CustomerMutationOptions) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: deleteCustomer,
     onSuccess: () => {
-      toast.success("Customer deleted successfully");
+      toast.success(
+        options?.messages?.success || "Customer deleted successfully",
+      );
       queryClient.invalidateQueries({ queryKey: ["customers"] });
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to delete customer");
+      toast.error(
+        err?.response?.data?.message ||
+          options?.messages?.error ||
+          "Failed to delete customer",
+      );
     },
   });
 };
@@ -102,26 +129,25 @@ export const useDeleteCustomer = () => {
 /**
  * Toggle customer active/inactive
  */
-export const useUpdateCustomerStatus = () => {
+export const useUpdateCustomerStatus = (options?: CustomerMutationOptions) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      isActive,
-    }: {
-      id: string;
-      isActive: boolean;
-    }) => updateCustomerStatus(id, { isActive }),
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      updateCustomerStatus(id, { isActive }),
 
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       queryClient.invalidateQueries({ queryKey: ["customer", variables.id] });
-      toast.success("Customer status updated");
+      toast.success(options?.messages?.success || "Customer status updated");
     },
 
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to update status");
+      toast.error(
+        err?.response?.data?.message ||
+          options?.messages?.error ||
+          "Failed to update status",
+      );
     },
   });
 };
@@ -140,7 +166,7 @@ export const useForceDeleteCustomers = () => {
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to force delete customer(s)"
+        err?.response?.data?.message || "Failed to force delete customer(s)",
       );
     },
   });
@@ -161,13 +187,13 @@ export const useApproveBusinessAdmin = () => {
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to approve business admin"
+        err?.response?.data?.message || "Failed to approve business admin",
       );
     },
   });
 };
 
-export const useVerifyCustomerEmail = () => {
+export const useVerifyCustomerEmail = (options?: CustomerMutationOptions) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -177,7 +203,11 @@ export const useVerifyCustomerEmail = () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Verification failed");
+      toast.error(
+        err?.response?.data?.message ||
+          options?.messages?.error ||
+          "Verification failed",
+      );
     },
   });
 };

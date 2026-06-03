@@ -9,6 +9,7 @@ import BranchFilters from "@/components/pages/Branches/components/BranchFilters"
 import { useAuth } from "@/hooks/useAuth";
 import { useGetCustomersList } from "@/hooks/useCustomers";
 import { useGetCustomersStats } from "@/hooks/useDashboard";
+import { useTranslations } from "next-intl";
 
 interface Customer {
   id: string;
@@ -28,6 +29,7 @@ interface Customer {
 
 export default function CustomerSettingsPage() {
   const { restaurantId, branchId, isBranchAdmin } = useAuth();
+  const t = useTranslations("customers");
   const scopedBranchId = isBranchAdmin ? branchId : undefined;
 
   const [filters, setFilters] = useState({
@@ -38,12 +40,7 @@ export default function CustomerSettingsPage() {
     includeInactive: true,
   });
 
-  const {
-    data,
-    isLoading,
-    isFetching,
-    refetch,
-  } = useGetCustomersList(
+  const { data, isLoading, isFetching, refetch } = useGetCustomersList(
     restaurantId
       ? {
           page: filters.page,
@@ -54,7 +51,7 @@ export default function CustomerSettingsPage() {
           restaurantId,
           ...(scopedBranchId ? { branchId: scopedBranchId } : {}),
         }
-      : undefined
+      : undefined,
   );
 
   const {
@@ -68,7 +65,7 @@ export default function CustomerSettingsPage() {
           restaurantId,
           ...(scopedBranchId ? { branchId: scopedBranchId } : {}),
         }
-      : undefined
+      : undefined,
   );
 
   const customerStats = customerStatsResponse?.data;
@@ -97,17 +94,19 @@ export default function CustomerSettingsPage() {
   };
 
   const customerFilterData = useMemo(() => {
-    return customers.map(({ id, email, isActive, createdAt, profile, _count }) => ({
-      id,
-      name:
-        `${profile?.firstName ?? ""} ${profile?.lastName ?? ""}`.trim() ||
-        "-",
-      email: email?.trim() || "-",
-      phone: profile?.phone?.trim() || "-",
-      isActive: Boolean(isActive),
-      createdAt: createdAt ?? "",
-      orders: _count?.customerOrders ?? 0,
-    }));
+    return customers.map(
+      ({ id, email, isActive, createdAt, profile, _count }) => ({
+        id,
+        name:
+          `${profile?.firstName ?? ""} ${profile?.lastName ?? ""}`.trim() ||
+          "-",
+        email: email?.trim() || "-",
+        phone: profile?.phone?.trim() || "-",
+        isActive: Boolean(isActive),
+        createdAt: createdAt ?? "",
+        orders: _count?.customerOrders ?? 0,
+      }),
+    );
   }, [customers]);
 
   const handleRefresh = () => {
@@ -118,12 +117,8 @@ export default function CustomerSettingsPage() {
   return (
     <Container>
       <Header
-        title={isBranchAdmin ? "Branch Customers" : "Customer List"}
-        description={
-          isBranchAdmin
-            ? "View customers connected to your assigned branch"
-            : "View and manage all customers from here"
-        }
+        title={isBranchAdmin ? t("branchTitle") : t("listTitle")}
+        description={isBranchAdmin ? t("branchDescription") : t("description")}
         onRefresh={handleRefresh}
       />
 

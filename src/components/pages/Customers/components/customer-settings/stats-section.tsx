@@ -9,6 +9,7 @@ import {
   ArrowDownRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 type CustomerStats = {
   totalCustomers?: number;
@@ -23,6 +24,7 @@ interface StatsSectionProps {
 }
 
 const StatsSection = ({ stats, loading }: StatsSectionProps) => {
+  const t = useTranslations("customers.stats");
   const totalCustomers = stats?.totalCustomers ?? 0;
   const activeCustomers = stats?.activeCustomers ?? 0;
   const inactiveCustomers = stats?.inactiveCustomers ?? 0;
@@ -30,7 +32,7 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
 
   const cards = [
     {
-      title: "Total Customers",
+      title: t("totalCustomers"),
       value: totalCustomers,
       icon: Users,
       variant: "default",
@@ -40,7 +42,7 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
       },
     },
     {
-      title: "Active Customers",
+      title: t("activeCustomers"),
       value: activeCustomers,
       icon: UserCheck,
       variant: "default",
@@ -50,7 +52,7 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
       },
     },
     {
-      title: "Inactive Customers",
+      title: t("inactiveCustomers"),
       value: inactiveCustomers,
       icon: UserX,
       variant: "danger",
@@ -60,7 +62,7 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
       },
     },
     {
-      title: "New Customers (30 Days)",
+      title: t("newCustomersLast30Days"),
       value: newCustomersLast30Days,
       icon: UserPlus,
       variant: "default",
@@ -74,7 +76,7 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
   return (
     <div
       className={cn(
-        "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-[16px] sm:gap-[10px] md:gap-[24px]"
+        "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-[16px] sm:gap-[10px] md:gap-[24px]",
       )}
     >
       {cards.map((stat, index) => {
@@ -92,7 +94,7 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
                 "w-12 h-12 rounded-full flex items-center justify-center shrink-0",
                 isDanger
                   ? "bg-primary/10 text-primary"
-                  : "bg-gray-100 text-primary"
+                  : "bg-gray-100 text-primary",
               )}
             >
               {loading ? (
@@ -125,7 +127,7 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
                   <div
                     className={cn(
                       "flex items-center gap-1 text-sm font-medium",
-                      isUp ? "text-green-600" : "text-red-600"
+                      isUp ? "text-green-600" : "text-red-600",
                     )}
                   >
                     {isUp ? (
