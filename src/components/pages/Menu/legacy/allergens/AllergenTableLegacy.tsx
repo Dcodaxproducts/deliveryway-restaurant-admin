@@ -31,6 +31,7 @@ import {
   useGetAllergenAdditiveTemplates,
   useUpdateSingleAllergenAdditiveTemplate,
 } from "@/hooks/useAllergen";
+import { useTranslations } from "next-intl";
 
 const PAGE_LIMIT = 10;
 
@@ -46,24 +47,16 @@ type TemplateItem = {
 };
 
 const TYPE_FILTER_OPTIONS: Array<{
-  label: string;
   value: TemplateFilter;
-  helper: string;
 }> = [
   {
-    label: "All",
     value: "all",
-    helper: "All allergens and additives",
   },
   {
-    label: "Allergens",
     value: "allergens",
-    helper: "Only allergen templates",
   },
   {
-    label: "Additives",
     value: "additives",
-    helper: "Only additive templates",
   },
 ];
 
@@ -172,6 +165,8 @@ const sortTemplates = (
 };
 
 export default function AllergenTable() {
+  const t = useTranslations("menu.allergensTable");
+  const commonT = useTranslations("common");
   const { user, restaurantId: authRestaurantId } = useAuth();
 
   const restaurantId =
@@ -231,6 +226,21 @@ export default function AllergenTable() {
       TYPE_FILTER_OPTIONS[0]
     );
   }, [typeFilter]);
+  const getFilterLabel = (value: TemplateFilter) => {
+    if (value === "all") return t("filterAll");
+    if (value === "allergens") return t("allergens");
+    return t("additives");
+  };
+  const getFilterHelper = (value: TemplateFilter) => {
+    if (value === "all") return t("helperAll");
+    if (value === "allergens") return t("helperAllergens");
+    return t("helperAdditives");
+  };
+  const getSortLabel = (value: SortBy) => {
+    if (value === "code") return t("code");
+    if (value === "label") return t("label");
+    return commonT("type");
+  };
 
   const filteredItems = useMemo(() => {
     const keyword = normalizeText(debouncedSearch);
@@ -435,13 +445,13 @@ export default function AllergenTable() {
       </div>
 
       <p className="text-base font-semibold text-gray-900">
-        No templates found
+        {t("emptyTitle")}
       </p>
 
       <p className="mt-1 text-sm leading-6 text-gray-500">
         {hasActiveFilters
-          ? "No allergens or additives match your current filters."
-          : "Add common allergen and additive templates used across your menu items."}
+          ? t("emptyFiltered")
+          : t("emptyDescription")}
       </p>
 
       {hasActiveFilters ? (
@@ -452,7 +462,7 @@ export default function AllergenTable() {
           className="mt-4 rounded-[12px]"
         >
           <RefreshCcw size={16} className="mr-2" />
-          Reset Filters
+          {t("resetFilters")}
         </Button>
       ) : (
         <div className="mt-4 flex flex-col justify-center gap-2 sm:flex-row">
@@ -463,7 +473,7 @@ export default function AllergenTable() {
             className="rounded-[12px] bg-primary text-white hover:bg-primary/90"
           >
             <PlusCircle size={18} className="mr-2" />
-            Add Allergen
+            {t("addAllergen")}
           </Button>
 
           <Button
@@ -474,7 +484,7 @@ export default function AllergenTable() {
             className="rounded-[12px]"
           >
             <PlusCircle size={18} className="mr-2" />
-            Add Additive
+            {t("addAdditive")}
           </Button>
         </div>
       )}
@@ -486,11 +496,11 @@ export default function AllergenTable() {
       <div className="mb-5 flex min-w-0 flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <h2 className="text-[20px] font-semibold text-gray-900">
-            Allergen & Additive Templates
+            {t("title")}
           </h2>
 
           <p className="mt-1 text-sm text-gray-500">
-            Maintain allergen and additive codes used across menu items.
+            {t("description")}
           </p>
         </div>
 
@@ -502,7 +512,7 @@ export default function AllergenTable() {
             className="h-[42px] shrink-0 rounded-[12px] bg-primary px-4 text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <PlusCircle size={18} className="mr-2" />
-            Add Allergen
+            {t("addAllergen")}
           </Button>
 
           <Button
@@ -513,24 +523,24 @@ export default function AllergenTable() {
             className="h-[42px] shrink-0 rounded-[12px] border-gray-200 px-4 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <PlusCircle size={18} className="mr-2" />
-            Add Additive
+            {t("addAdditive")}
           </Button>
         </div>
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
         <SummaryCard
-          label="Total Templates"
+          label={t("totalTemplates")}
           value={allItems.length}
           icon={<ShieldAlert size={18} />}
         />
         <SummaryCard
-          label="Allergens"
+          label={t("allergens")}
           value={allergenCount}
           icon={<AlertTriangle size={18} />}
         />
         <SummaryCard
-          label="Additives"
+          label={t("additives")}
           value={additiveCount}
           icon={<FlaskConical size={18} />}
         />
@@ -545,12 +555,12 @@ export default function AllergenTable() {
 
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-gray-900">
-                Template Filters
+                {t("filtersTitle")}
               </h3>
               <p className="mt-1 text-xs text-gray-500">
-                Search by code or label. Current view:{" "}
+                {t("filtersDescription")}{" "}
                 <span className="font-medium text-gray-700">
-                  {activeTypeOption.helper}
+                  {getFilterHelper(activeTypeOption.value)}
                 </span>
               </p>
             </div>
@@ -558,14 +568,13 @@ export default function AllergenTable() {
 
           <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs text-gray-500">
             <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-              Showing {paginatedItems.length}
-              {filteredItems.length > 0 ? ` of ${filteredItems.length}` : ""}
+              {t("showingCount", { shown: paginatedItems.length, total: filteredItems.length })}
             </span>
 
             {shouldShowRefreshing ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 font-medium text-primary">
                 <Loader2 size={12} className="animate-spin" />
-                Refreshing
+                {commonT("refreshing")}
               </span>
             ) : null}
           </div>
@@ -574,7 +583,7 @@ export default function AllergenTable() {
         <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
           <div className="min-w-0 xl:col-span-4">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Search
+              {commonT("search")}
             </label>
 
             <div className="relative min-w-0">
@@ -584,7 +593,7 @@ export default function AllergenTable() {
               />
 
               <input
-                placeholder="Search by code or label..."
+                placeholder={t("searchPlaceholder")}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 onKeyDown={(event) => {
@@ -599,7 +608,7 @@ export default function AllergenTable() {
 
           <div className="min-w-0 xl:col-span-3">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Type
+              {commonT("type")}
             </label>
 
             <div className="grid min-w-0 grid-cols-3 gap-2 rounded-[14px] bg-[#F7F7F7] p-1">
@@ -617,7 +626,7 @@ export default function AllergenTable() {
                         : "text-gray-500 hover:bg-white/70 hover:text-gray-800"
                     }`}
                   >
-                    <span className="block truncate">{option.label}</span>
+                    <span className="block truncate">{getFilterLabel(option.value)}</span>
                   </button>
                 );
               })}
@@ -626,7 +635,7 @@ export default function AllergenTable() {
 
           <div className="min-w-0 xl:col-span-2">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Sort By
+              {commonT("sortBy")}
             </label>
 
             <select
@@ -639,7 +648,7 @@ export default function AllergenTable() {
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.label}
+                  {getSortLabel(option.value)}
                 </option>
               ))}
             </select>
@@ -647,7 +656,7 @@ export default function AllergenTable() {
 
           <div className="min-w-0 xl:col-span-1">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Order
+              {commonT("order")}
             </label>
 
             <select
@@ -667,7 +676,7 @@ export default function AllergenTable() {
             onClick={handleManualSearch}
             className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm hover:bg-primary/90 md:w-full xl:col-span-1"
           >
-            Search
+            {commonT("search")}
           </Button>
 
           <Button
@@ -678,15 +687,14 @@ export default function AllergenTable() {
             className="h-[44px] rounded-[14px] border-gray-200 px-4 text-gray-700 md:w-full xl:col-span-1"
           >
             <RefreshCcw size={15} className="mr-2" />
-            Reset
+            {commonT("reset")}
           </Button>
         </div>
       </div>
 
       {!canMutateTemplates ? (
         <div className="mb-6 rounded-[18px] border border-amber-100 bg-amber-50 p-4 text-sm text-amber-700">
-          Restaurant context is missing. Creating, updating, or deleting
-          templates requires a restaurant ID.
+          {t("missingRestaurantContext")}
         </div>
       ) : null}
 
@@ -694,11 +702,11 @@ export default function AllergenTable() {
         <table className="w-full table-fixed text-sm">
           <thead>
             <tr className="border-b bg-[#FAFAFA] text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <th className="w-[20%] px-4 py-4">Code</th>
-              <th className="w-[42%] px-4 py-4">Label</th>
-              <th className="w-[18%] px-4 py-4 text-center">Type</th>
-              <th className="w-[10%] px-4 py-4 text-center">Usage</th>
-              <th className="w-[10%] px-4 py-4 text-center">Actions</th>
+              <th className="w-[20%] px-4 py-4">{t("code")}</th>
+              <th className="w-[42%] px-4 py-4">{t("label")}</th>
+              <th className="w-[18%] px-4 py-4 text-center">{commonT("type")}</th>
+              <th className="w-[10%] px-4 py-4 text-center">{t("usage")}</th>
+              <th className="w-[10%] px-4 py-4 text-center">{commonT("actions")}</th>
             </tr>
           </thead>
 
@@ -737,7 +745,7 @@ export default function AllergenTable() {
 
                   <td className="px-4 py-4 text-center">
                     <span className="text-xs text-gray-500">
-                      Template
+                      {t("template")}
                     </span>
                   </td>
 
@@ -745,22 +753,22 @@ export default function AllergenTable() {
                     <div className="flex items-center justify-center gap-2">
                       <button
                         type="button"
-                        title="Edit"
+                        title={commonT("edit")}
                         disabled={!canMutateTemplates}
                         onClick={() => openEditModal(item)}
                         className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-primary/20 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label="Edit template"
+                        aria-label={t("editAria")}
                       >
                         <FaPen size={13} />
                       </button>
 
                       <button
                         type="button"
-                        title="Delete"
+                        title={commonT("delete")}
                         disabled={!canMutateTemplates}
                         onClick={() => setDeleteTarget(item)}
                         className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-red-200 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label="Delete template"
+                        aria-label={t("deleteAria")}
                       >
                         <FaTrash size={13} />
                       </button>
@@ -803,7 +811,7 @@ export default function AllergenTable() {
                   </h3>
 
                   <p className="mt-1 text-xs text-gray-400">
-                    {getTypeDescription(item.type)}
+                    {item.type === "allergens" ? t("allergenDescription") : t("additiveDescription")}
                   </p>
                 </div>
 
@@ -818,7 +826,7 @@ export default function AllergenTable() {
                   className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <FaPen size={13} />
-                  Edit
+                  {commonT("edit")}
                 </button>
 
                 <button
@@ -828,7 +836,7 @@ export default function AllergenTable() {
                   className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:border-red-300 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <FaTrash size={13} />
-                  Delete
+                  {commonT("delete")}
                 </button>
               </div>
             </div>
@@ -864,18 +872,19 @@ export default function AllergenTable() {
         }}
         onConfirm={handleDelete}
         isLoading={isDeleting}
-        title={`Delete ${
-          deleteTarget ? getTypeLabel(deleteTarget.type) : "Template"
-        }`}
-        description={`Are you sure you want to delete this ${
-          deleteTarget ? getTypeLabel(deleteTarget.type).toLowerCase() : "template"
-        } template? This action cannot be undone.`}
+        title={t("deleteTitle", {
+          type: deleteTarget ? (deleteTarget.type === "allergens" ? t("allergen") : t("additive")) : t("template"),
+        })}
+        description={t("deleteDescription", {
+          type: deleteTarget ? (deleteTarget.type === "allergens" ? t("allergen").toLowerCase() : t("additive").toLowerCase()) : t("template").toLowerCase(),
+        })}
       />
     </div>
   );
 }
 
 function TemplateTypeBadge({ type }: { type: TemplateType }) {
+  const t = useTranslations("menu.allergensTable");
   const isAllergen = type === "allergens";
 
   return (
@@ -886,7 +895,7 @@ function TemplateTypeBadge({ type }: { type: TemplateType }) {
           : "bg-blue-50 text-blue-700"
       }`}
     >
-      {isAllergen ? "Allergen" : "Additive"}
+      {isAllergen ? t("allergen") : t("additive")}
     </span>
   );
 }
@@ -931,6 +940,9 @@ function TemplateModal({
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: TemplateItem) => void;
 }) {
+  const t = useTranslations("menu.allergensTable.modal");
+  const tableT = useTranslations("menu.allergensTable");
+  const commonT = useTranslations("common");
   const [form, setForm] = useState<TemplateItem>({
     code: "",
     label: "",
@@ -972,12 +984,12 @@ function TemplateModal({
             <div>
               <DialogTitle className="text-xl font-semibold text-gray-950">
                 {isEditMode
-                  ? `Edit ${getTypeLabel(form.type)}`
-                  : "Add Template"}
+                  ? t("editTitle", { type: form.type === "allergens" ? tableT("allergen") : tableT("additive") })
+                  : t("addTitle")}
               </DialogTitle>
 
               <p className="mt-1 text-sm text-gray-500">
-                Define code and label for allergen or additive templates.
+                {t("description")}
               </p>
             </div>
 
@@ -988,7 +1000,7 @@ function TemplateModal({
         <div className="space-y-4 px-5 py-5">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Template Type
+              {t("templateType")}
             </label>
 
             <select
@@ -1002,21 +1014,20 @@ function TemplateModal({
               }
               className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm text-gray-900 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
             >
-              <option value="allergens">Allergen</option>
-              <option value="additives">Additive</option>
+              <option value="allergens">{tableT("allergen")}</option>
+              <option value="additives">{tableT("additive")}</option>
             </select>
 
             {isEditMode ? (
               <p className="mt-1.5 text-xs text-gray-400">
-                Type cannot be changed while editing. Delete and recreate if
-                this template belongs to another type.
+                {t("typeLockedHelp")}
               </p>
             ) : null}
           </div>
 
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Code
+              {tableT("code")}
             </label>
 
             <input
@@ -1027,14 +1038,18 @@ function TemplateModal({
                   code: event.target.value,
                 }))
               }
-              placeholder={form.type === "allergens" ? "Example: A1" : "Example: E100"}
+              placeholder={
+                form.type === "allergens"
+                  ? tableT("codePlaceholderAllergen")
+                  : tableT("codePlaceholderAdditive")
+              }
               className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15"
             />
           </div>
 
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Label
+              {tableT("label")}
             </label>
 
             <input
@@ -1047,8 +1062,8 @@ function TemplateModal({
               }
               placeholder={
                 form.type === "allergens"
-                  ? "Example: Gluten"
-                  : "Example: Curcumin"
+                  ? tableT("labelPlaceholderAllergen")
+                  : tableT("labelPlaceholderAdditive")
               }
               className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15"
             />
@@ -1081,7 +1096,7 @@ function TemplateModal({
                     : "text-blue-800"
                 }`}
               >
-                {getTypeDescription(form.type)}
+                {form.type === "allergens" ? tableT("allergenDescription") : tableT("additiveDescription")}
               </p>
             </div>
           </div>
@@ -1095,7 +1110,7 @@ function TemplateModal({
             onClick={() => onOpenChange(false)}
             className="rounded-[12px]"
           >
-            Cancel
+            {commonT("cancel")}
           </Button>
 
           <Button
@@ -1107,12 +1122,12 @@ function TemplateModal({
             {loading ? (
               <>
                 <Loader2 size={16} className="mr-2 animate-spin" />
-                Saving...
+                {commonT("saving")}
               </>
             ) : isEditMode ? (
-              `Update ${getTypeLabel(form.type)}`
+              t("update", { type: form.type === "allergens" ? tableT("allergen") : tableT("additive") })
             ) : (
-              `Create ${getTypeLabel(form.type)}`
+              t("create", { type: form.type === "allergens" ? tableT("allergen") : tableT("additive") })
             )}
           </Button>
         </div>

@@ -23,6 +23,7 @@ import {
 import VariationModal from "@/components/pages/Menu/legacy/root-menu-components/listing/VariationModal";
 import { useAuth } from "@/hooks/useAuth";
 import { extractResponseItems, extractResponseMeta } from "@/lib/response";
+import { useTranslations } from "next-intl";
 
 const PAGE_LIMIT = 10;
 
@@ -31,24 +32,16 @@ type SortBy = "createdAt" | "name" | "price" | "sortOrder";
 type VariationStatusFilter = "active" | "inactive" | "all";
 
 const STATUS_FILTER_OPTIONS: Array<{
-  label: string;
   value: VariationStatusFilter;
-  helper: string;
 }> = [
   {
-    label: "Active",
     value: "active",
-    helper: "Only active variations",
   },
   {
-    label: "Inactive",
     value: "inactive",
-    helper: "Only inactive variations",
   },
   {
-    label: "All",
     value: "all",
-    helper: "Active and inactive variations",
   },
 ];
 
@@ -84,6 +77,8 @@ const formatCurrency = (value: any) => {
 };
 
 export default function VariationsTable() {
+  const t = useTranslations("menu.variationsTable");
+  const commonT = useTranslations("common");
   const { user, restaurantId: authRestaurantId } = useAuth();
 
   const restaurantId =
@@ -113,6 +108,22 @@ export default function VariationsTable() {
       STATUS_FILTER_OPTIONS[0]
     );
   }, [statusFilter]);
+  const getStatusLabel = (value: VariationStatusFilter) => {
+    if (value === "active") return commonT("active");
+    if (value === "inactive") return commonT("inactive");
+    return t("all");
+  };
+  const getStatusHelper = (value: VariationStatusFilter) => {
+    if (value === "active") return t("onlyActive");
+    if (value === "inactive") return t("onlyInactive");
+    return t("activeAndInactive");
+  };
+  const getSortLabel = (value: SortBy) => {
+    if (value === "createdAt") return t("latest");
+    if (value === "name") return commonT("name");
+    if (value === "price") return commonT("price");
+    return t("sort");
+  };
 
   const hasActiveFilters = useMemo(() => {
     return Boolean(
@@ -312,13 +323,13 @@ export default function VariationsTable() {
       </div>
 
       <p className="text-base font-semibold text-gray-900">
-        No variations found
+        {t("emptyTitle")}
       </p>
 
       <p className="mt-1 text-sm leading-6 text-gray-500">
         {hasActiveFilters
-          ? "No variations match the selected filters. Try changing your search, status, or sorting options."
-          : "Add your first variation like Small, Medium, Large, Regular, or Family."}
+          ? t("emptyFiltered")
+          : t("emptyDescription")}
       </p>
 
       {hasActiveFilters ? (
@@ -329,7 +340,7 @@ export default function VariationsTable() {
           className="mt-4 rounded-[12px]"
         >
           <RefreshCcw size={16} className="mr-2" />
-          Reset Filters
+          {t("resetFilters")}
         </Button>
       ) : (
         <Button
@@ -338,7 +349,7 @@ export default function VariationsTable() {
           className="mt-4 rounded-[12px] bg-primary text-white hover:bg-primary/90"
         >
           <PlusCircle size={18} className="mr-2" />
-          Add Variation
+          {t("add")}
         </Button>
       )}
     </div>
@@ -350,11 +361,11 @@ export default function VariationsTable() {
       <div className="mb-5 flex min-w-0 flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <h2 className="text-[20px] font-semibold text-gray-900">
-            Menu Variations
+            {t("title")}
           </h2>
 
           <p className="mt-1 text-sm text-gray-500">
-            Create and manage reusable variations for menu setup.
+            {t("description")}
           </p>
         </div>
 
@@ -364,7 +375,7 @@ export default function VariationsTable() {
           className="h-[42px] shrink-0 rounded-[12px] bg-primary px-4 text-white hover:bg-primary/90"
         >
           <PlusCircle size={18} className="mr-2" />
-          Add Variation
+          {t("add")}
         </Button>
       </div>
 
@@ -378,12 +389,12 @@ export default function VariationsTable() {
 
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-gray-900">
-                Variation Filters
+                {t("filtersTitle")}
               </h3>
               <p className="mt-1 text-xs text-gray-500">
-                Search by name, email, or identifier. Current view:{" "}
+                {t("filtersDescription")}{" "}
                 <span className="font-medium text-gray-700">
-                  {activeStatusOption.helper}
+                  {getStatusHelper(activeStatusOption.value)}
                 </span>
               </p>
             </div>
@@ -391,14 +402,13 @@ export default function VariationsTable() {
 
           <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs text-gray-500">
             <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-              Showing {items.length}
-              {pagination.total > 0 ? ` of ${pagination.total}` : ""}
+              {t("showingCount", { shown: items.length, total: pagination.total })}
             </span>
 
             {shouldShowRefreshing ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 font-medium text-primary">
                 <Loader2 size={12} className="animate-spin" />
-                Refreshing
+                {commonT("refreshing")}
               </span>
             ) : null}
           </div>
@@ -407,7 +417,7 @@ export default function VariationsTable() {
         <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
           <div className="min-w-0 xl:col-span-4">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Search
+              {commonT("search")}
             </label>
 
             <div className="relative min-w-0">
@@ -417,7 +427,7 @@ export default function VariationsTable() {
               />
 
               <input
-                placeholder="Search by name, email, or identifier..."
+                placeholder={t("searchPlaceholder")}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 onKeyDown={(event) => {
@@ -433,7 +443,7 @@ export default function VariationsTable() {
           {/* STATUS */}
           <div className="min-w-0 xl:col-span-3">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Status
+              {commonT("status")}
             </label>
 
             <div className="grid min-w-0 grid-cols-3 gap-2 rounded-[14px] bg-[#F7F7F7] p-1">
@@ -452,7 +462,7 @@ export default function VariationsTable() {
                         : "text-gray-500 hover:bg-white/70 hover:text-gray-800"
                     } disabled:cursor-not-allowed disabled:opacity-60`}
                   >
-                    <span className="block truncate">{option.label}</span>
+                    <span className="block truncate">{getStatusLabel(option.value)}</span>
                   </button>
                 );
               })}
@@ -462,7 +472,7 @@ export default function VariationsTable() {
           {/* SORT BY */}
           <div className="min-w-0 xl:col-span-2">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Sort By
+              {commonT("sortBy")}
             </label>
 
             <select
@@ -475,7 +485,7 @@ export default function VariationsTable() {
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.label}
+                  {getSortLabel(option.value)}
                 </option>
               ))}
             </select>
@@ -484,7 +494,7 @@ export default function VariationsTable() {
           {/* SORT ORDER */}
           <div className="min-w-0 xl:col-span-1">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Order
+              {commonT("order")}
             </label>
 
             <select
@@ -505,7 +515,7 @@ export default function VariationsTable() {
             onClick={handleManualSearch}
             className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm hover:bg-primary/90 md:w-full xl:col-span-1"
           >
-            Search
+            {commonT("search")}
           </Button>
 
           <Button
@@ -516,15 +526,14 @@ export default function VariationsTable() {
             className="h-[44px] rounded-[14px] border-gray-200 px-4 text-gray-700 md:w-full xl:col-span-1"
           >
             <RefreshCcw size={15} className="mr-2" />
-            Reset
+            {commonT("reset")}
           </Button>
         </div>
       </div>
 
       {!canFetchVariations ? (
         <div className="rounded-[18px] border border-amber-100 bg-amber-50 p-4 text-sm text-amber-700">
-          Restaurant context is missing. Please select or assign a restaurant
-          before loading variations.
+          {t("missingRestaurantContext")}
         </div>
       ) : null}
 
@@ -532,12 +541,12 @@ export default function VariationsTable() {
         <table className="w-full table-fixed text-sm">
           <thead>
             <tr className="border-b bg-[#FAFAFA] text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <th className="w-[24%] px-5 py-4">Variation</th>
-              <th className="w-[24%] px-3 py-4">Description</th>
-              <th className="w-[13%] px-3 py-4 text-center">Price</th>
-              <th className="w-[13%] px-3 py-4 text-center">Default</th>
-              <th className="w-[13%] px-3 py-4 text-center">Status</th>
-              <th className="w-[13%] px-5 py-4 text-center">Actions</th>
+              <th className="w-[24%] px-5 py-4">{t("variation")}</th>
+              <th className="w-[24%] px-3 py-4">{commonT("description")}</th>
+              <th className="w-[13%] px-3 py-4 text-center">{commonT("price")}</th>
+              <th className="w-[13%] px-3 py-4 text-center">{t("default")}</th>
+              <th className="w-[13%] px-3 py-4 text-center">{commonT("status")}</th>
+              <th className="w-[13%] px-5 py-4 text-center">{commonT("actions")}</th>
             </tr>
           </thead>
 
@@ -572,7 +581,7 @@ export default function VariationsTable() {
 
                   <td className="px-3 py-4 align-middle">
                     <p className="line-clamp-2 break-words text-gray-600">
-                      {item?.description || "No description"}
+                      {item?.description || commonT("noData")}
                     </p>
                   </td>
 
@@ -593,7 +602,7 @@ export default function VariationsTable() {
                       }`}
                     >
                       <span className="truncate">
-                        {item?.isDefault ? "Default" : "No"}
+                        {item?.isDefault ? t("default") : commonT("no")}
                       </span>
                     </span>
                   </td>
@@ -607,7 +616,7 @@ export default function VariationsTable() {
                       }`}
                     >
                       <span className="truncate">
-                        {item?.isActive ? "Active" : "Inactive"}
+                        {item?.isActive ? commonT("active") : commonT("inactive")}
                       </span>
                     </span>
                   </td>
@@ -616,20 +625,20 @@ export default function VariationsTable() {
                     <div className="flex min-w-[88px] items-center justify-center gap-2">
                       <button
                         type="button"
-                        title="Edit"
+                        title={commonT("edit")}
                         onClick={() => openEditModal(item)}
                         className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-primary/20 hover:text-primary"
-                        aria-label="Edit variation"
+                        aria-label={t("editAria")}
                       >
                         <FaPen size={13} />
                       </button>
 
                       <button
                         type="button"
-                        title="Delete"
+                        title={commonT("delete")}
                         onClick={() => setDeleteId(item.id)}
                         className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-red-200 hover:text-red-500"
-                        aria-label="Delete variation"
+                        aria-label={t("deleteAria")}
                       >
                         <FaTrash size={13} />
                       </button>
@@ -668,7 +677,7 @@ export default function VariationsTable() {
                   </h3>
 
                   <p className="mt-1 line-clamp-2 break-words text-sm text-gray-500">
-                    {item?.description || "No description"}
+                    {item?.description || commonT("noData")}
                   </p>
                 </div>
 
@@ -679,13 +688,13 @@ export default function VariationsTable() {
                       : "bg-gray-100 text-gray-600"
                   }`}
                 >
-                  {item?.isActive ? "Active" : "Inactive"}
+                  {item?.isActive ? commonT("active") : commonT("inactive")}
                 </span>
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="min-w-0 rounded-[12px] bg-[#FAFAFA] p-3">
-                  <p className="text-xs text-gray-400">Price</p>
+                  <p className="text-xs text-gray-400">{commonT("price")}</p>
                   <p className="truncate text-sm font-semibold text-gray-900">
                     {formatCurrency(item?.price)}
                   </p>
@@ -694,14 +703,14 @@ export default function VariationsTable() {
               
 
                 <div className="min-w-0 rounded-[12px] bg-[#FAFAFA] p-3">
-                  <p className="text-xs text-gray-400">Default</p>
+                  <p className="text-xs text-gray-400">{t("default")}</p>
                   <p className="truncate text-sm font-semibold text-gray-900">
-                    {item?.isDefault ? "Yes" : "No"}
+                    {item?.isDefault ? commonT("yes") : commonT("no")}
                   </p>
                 </div>
 
                 <div className="min-w-0 rounded-[12px] bg-[#FAFAFA] p-3">
-                  <p className="text-xs text-gray-400">ID</p>
+                  <p className="text-xs text-gray-400">{t("id")}</p>
                   <p className="truncate text-sm font-semibold text-gray-900">
                     {item?.id || "-"}
                   </p>
@@ -715,7 +724,7 @@ export default function VariationsTable() {
                   className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:border-primary hover:text-primary"
                 >
                   <FaPen size={13} />
-                  Edit
+                  {commonT("edit")}
                 </button>
 
                 <button
@@ -724,7 +733,7 @@ export default function VariationsTable() {
                   className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:border-red-300 hover:text-red-500"
                 >
                   <FaTrash size={13} />
-                  Delete
+                  {commonT("delete")}
                 </button>
               </div>
             </div>
@@ -761,8 +770,8 @@ export default function VariationsTable() {
         }}
         onConfirm={handleDelete}
         isLoading={isDeleting}
-        title="Delete Variation"
-        description="Are you sure you want to delete this variation? This action cannot be undone."
+        title={t("deleteTitle")}
+        description={t("deleteDescription")}
       />
     </div>
   );

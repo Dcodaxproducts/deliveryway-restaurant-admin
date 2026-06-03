@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import type { AdminDealsMeta } from "@/types/admin-deals";
+import { useTranslations } from "next-intl";
 
 type AdminDealsPaginationProps = {
   meta: AdminDealsMeta;
@@ -16,10 +17,13 @@ export default function AdminDealsPagination({
   onLimitChange,
   onPageChange,
 }: AdminDealsPaginationProps) {
+  const t = useTranslations("deals.pagination");
+  const commonT = useTranslations("common");
+
   return (
     <div className="flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2 text-sm text-gray-500">
-        <span>Rows</span>
+        <span>{commonT("rowsPerPage")}</span>
         <select
           value={limit}
           onChange={(event) => onLimitChange(Number(event.target.value))}
@@ -32,7 +36,7 @@ export default function AdminDealsPagination({
           ))}
         </select>
         <span>
-          Page {meta.page} of {meta.totalPages}
+          {t("pageOf", { page: meta.page, totalPages: meta.totalPages })}
         </span>
       </div>
 
@@ -44,7 +48,7 @@ export default function AdminDealsPagination({
           onClick={() => onPageChange(Math.max(1, meta.page - 1))}
           className="h-9 rounded-lg"
         >
-          Previous
+          {commonT("previous")}
         </Button>
         <Button
           type="button"
@@ -53,7 +57,7 @@ export default function AdminDealsPagination({
           onClick={() => onPageChange(meta.page + 1)}
           className="h-9 rounded-lg"
         >
-          Next
+          {commonT("next")}
         </Button>
       </div>
     </div>

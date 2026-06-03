@@ -27,6 +27,7 @@ import {
   blockNegativeNumberPaste,
   sanitizeNonNegativeNumber,
 } from "@/lib/number-input";
+import { useTranslations } from "next-intl";
 
 type StepThreeProps = {
   form: any;
@@ -396,6 +397,7 @@ const resolveModifierIdsFromForm = (form: any) => {
 };
 
 const StepThree = forwardRef(({ form, setForm }: StepThreeProps, ref: any) => {
+  const t = useTranslations("menu.itemModal.stepThree");
   const { restaurantId: authRestaurantId } = useAuth();
   const restaurantId = authRestaurantId ?? undefined;
   const canFetchOptions = Boolean(restaurantId);
@@ -639,12 +641,12 @@ const StepThree = forwardRef(({ form, setForm }: StepThreeProps, ref: any) => {
 
   const validateStep = () => {
     if (!restaurantId) {
-      toast.error("Restaurant id is missing");
+      toast.error(t("restaurantMissing"));
       return false;
     }
 
     if (!isValidOptionalNonNegativeNumber(form?.basePrice)) {
-      toast.error("Base price must be a valid non-negative number");
+      toast.error(t("basePriceInvalid"));
       return false;
     }
 
@@ -675,7 +677,7 @@ const StepThree = forwardRef(({ form, setForm }: StepThreeProps, ref: any) => {
           : fallbackPrice;
 
       if (!isValidNonNegativeNumber(variationPrice)) {
-        toast.error("Variation prices must be valid non-negative numbers");
+        toast.error(t("variationPriceInvalid"));
         return false;
       }
 
@@ -685,7 +687,7 @@ const StepThree = forwardRef(({ form, setForm }: StepThreeProps, ref: any) => {
         override?.pickupPrice !== null &&
         !isValidNonNegativeNumber(override.pickupPrice)
       ) {
-        toast.error("Variation pickup prices must be valid non-negative numbers");
+        toast.error(t("variationPickupPriceInvalid"));
         return false;
       }
     }
@@ -937,25 +939,23 @@ const StepThree = forwardRef(({ form, setForm }: StepThreeProps, ref: any) => {
 
           <div className="min-w-0">
             <h3 className="text-base font-semibold text-gray-900">
-              Variation Configuration
+              {t("title")}
             </h3>
 
             <p className="mt-1 text-sm text-gray-600">
-              Select reusable variations for this item. For each selected
-              variation, define customer-facing display text, standard price,
-              pickup price, and modifier-level overrides.
+              {t("description")}
             </p>
           </div>
         </div>
       </div>
 
       <VariationSelectionSection
-        title="Assign Variations"
-        description="Choose one or more size, portion, or serving options and configure pricing per variation."
+        title={t("assignTitle")}
+        description={t("assignDescription")}
         icon={<SlidersHorizontal size={18} />}
         searchValue={variationSearch}
         onSearchChange={setVariationSearch}
-        searchPlaceholder="Search variations..."
+        searchPlaceholder={t("searchPlaceholder")}
         loading={
           (loadingVariations || fetchingVariations) &&
           variationOptions.length === 0
@@ -966,8 +966,8 @@ const StepThree = forwardRef(({ form, setForm }: StepThreeProps, ref: any) => {
         items={variationOptions}
         selectedIds={selectedVariationIds}
         selectedVariations={selectedVariations}
-        emptyTitle="No variations found"
-        emptyDescription="Create master variations first, then attach them to this item."
+        emptyTitle={t("emptyTitle")}
+        emptyDescription={t("emptyDescription")}
         onToggle={toggleVariation}
         onClear={clearVariations}
         getPriceValue={getVariationPrice}
@@ -1036,6 +1036,8 @@ function VariationSelectionSection({
   onPickupPriceChange,
   onDisplayTextChange,
 }: VariationSelectionSectionProps) {
+  const t = useTranslations("menu.itemModal.stepThree");
+  const commonT = useTranslations("common");
   const selectedMap = useMemo(() => {
     const map = new Map<string, SelectableEntity>();
 
@@ -1068,7 +1070,7 @@ function VariationSelectionSection({
           ...selectedSnapshot,
           ...liveItem,
           id: key,
-          name: liveItem?.name || selectedSnapshot?.name || `Selected ${key}`,
+          name: liveItem?.name || selectedSnapshot?.name || t("selectedFallback", { id: key }),
         } as SelectableEntity;
       })
       .filter(Boolean) as SelectableEntity[];
@@ -1106,7 +1108,7 @@ function VariationSelectionSection({
               </h3>
 
               <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                {selectedIds.length} selected
+                {t("selectedCount", { count: selectedIds.length })}
               </span>
             </div>
 
@@ -1121,7 +1123,7 @@ function VariationSelectionSection({
             onClick={onClear}
             className="h-[38px] shrink-0 rounded-[12px] border-gray-200 text-sm"
           >
-            Clear
+            {commonT("clear")}
           </Button>
         ) : null}
       </div>
@@ -1140,7 +1142,7 @@ function VariationSelectionSection({
                 className="inline-flex max-w-full items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary transition hover:bg-primary/10"
               >
                 <span className="max-w-[220px] truncate">
-                  {displayText || item?.name || `Selected ${id}`}
+                  {displayText || item?.name || t("selectedFallback", { id })}
                 </span>
                 <X size={14} className="shrink-0" />
               </button>
@@ -1167,7 +1169,7 @@ function VariationSelectionSection({
         {loading ? (
           <div className="flex min-h-[170px] items-center justify-center text-gray-500">
             <Loader2 className="mr-2 animate-spin" size={20} />
-            Loading options...
+            {t("loadingOptions")}
           </div>
         ) : renderItems.length === 0 ? (
           <div className="flex min-h-[170px] flex-col items-center justify-center rounded-[14px] border border-dashed border-gray-200 bg-white p-6 text-center">
@@ -1216,22 +1218,22 @@ function VariationSelectionSection({
                         <div className="min-w-0 flex-1">
                           <div className="flex min-w-0 flex-wrap items-center gap-2">
                             <p className="max-w-full truncate text-sm font-semibold text-gray-900">
-                              {item?.name || "Unnamed"}
+                              {item?.name || t("unnamed")}
                             </p>
 
                             {!selected ? (
                               item?.isActive === false ? (
                                 <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-                                  Inactive
+                                  {commonT("inactive")}
                                 </span>
                               ) : (
                                 <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                                  Active
+                                  {commonT("active")}
                                 </span>
                               )
                             ) : (
                               <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                                Configured
+                                {t("configured")}
                               </span>
                             )}
                           </div>
@@ -1249,11 +1251,11 @@ function VariationSelectionSection({
   <div className="mt-4 rounded-[16px] border border-gray-100 bg-[#FAFAFA] p-4">
     <div className="mb-4">
       <p className="text-sm font-semibold text-gray-900">
-        Pricing & Display
+        {t("pricingDisplay")}
       </p>
 
       <p className="mt-1 text-xs leading-5 text-gray-500">
-        Customize customer-facing text and prices for delivery and pickup.
+        {t("pricingDisplayDescription")}
       </p>
     </div>
 
@@ -1261,7 +1263,7 @@ function VariationSelectionSection({
       {/* DISPLAY TEXT FULL WIDTH */}
       <div className="min-w-0 space-y-1.5">
         <label className="block text-xs font-medium text-gray-600">
-          Display Text
+          {t("displayText")}
         </label>
 
         <Input
@@ -1273,7 +1275,7 @@ function VariationSelectionSection({
             })
           }
           onClick={(event) => event.stopPropagation()}
-          placeholder="e.g. Medium size option"
+          placeholder={t("displayTextPlaceholder")}
           className="h-[42px] w-full rounded-[12px] border-gray-200 bg-white text-sm focus:border-primary focus:ring-primary/15"
         />
       </div>
@@ -1282,7 +1284,7 @@ function VariationSelectionSection({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="min-w-0 space-y-1.5">
           <label className="block text-xs font-medium text-gray-600">
-            Price
+            {commonT("price")}
           </label>
 
           <Input
@@ -1305,7 +1307,7 @@ function VariationSelectionSection({
 
         <div className="min-w-0 space-y-1.5">
           <label className="block text-xs font-medium text-gray-600">
-            Pickup Price
+            {t("pickupPrice")}
           </label>
 
           <Input
@@ -1321,7 +1323,7 @@ function VariationSelectionSection({
               })
             }
             onClick={(event) => event.stopPropagation()}
-            placeholder="Optional"
+            placeholder={commonT("optional")}
             className="h-[42px] w-full rounded-[12px] border-gray-200 bg-white text-sm focus:border-primary focus:ring-primary/15"
           />
         </div>
@@ -1337,7 +1339,7 @@ function VariationSelectionSection({
             {loadingMore ? (
               <div className="flex items-center justify-center py-3 text-sm text-gray-500">
                 <Loader2 className="mr-2 animate-spin" size={16} />
-                Loading more...
+                {t("loadingMore")}
               </div>
             ) : null}
 
@@ -1347,7 +1349,7 @@ function VariationSelectionSection({
                 onClick={onLoadMore}
                 className="rounded-[12px] border border-dashed border-gray-200 bg-white py-2 text-center text-xs font-medium text-gray-500 transition hover:border-primary/30 hover:text-primary"
               >
-                Load more
+                {t("loadMore")}
               </button>
             ) : null}
           </div>

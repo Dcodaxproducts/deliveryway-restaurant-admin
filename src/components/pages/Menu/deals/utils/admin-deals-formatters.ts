@@ -49,8 +49,11 @@ export const getDealStatusVariant = (deal: { isActive: boolean; deletedAt?: stri
   return deal.isActive ? "active" : "inactive";
 };
 
-export const formatUsageLimit = (value: number | null | undefined) => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "Unlimited";
+export const formatUsageLimit = (
+  value: number | null | undefined,
+  unlimitedLabel = "Unlimited"
+) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return unlimitedLabel;
 
   return value.toLocaleString();
 };

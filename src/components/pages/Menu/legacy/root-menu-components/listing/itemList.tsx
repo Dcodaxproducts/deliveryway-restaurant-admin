@@ -7,6 +7,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import CreateMenuItemModal from "../CreateMenuItemModal/CreateMenuItemModal";
+import { useTranslations } from "next-intl";
 
 interface ItemListProps {
   editing?: boolean;
@@ -23,10 +24,11 @@ export default function ItemList({
   items,
   loading,
   showAddNew = true,
-  headerText = "Item List",
-  addNewText = "Add New Item",
+  headerText,
+  addNewText,
   refetch
 }: ItemListProps) {
+  const t = useTranslations("menu.listingItems");
   const [createMenuItem, setCreateMenuItem] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
@@ -43,7 +45,7 @@ export default function ItemList({
     <div className="w-full py-4">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-[24px] font-semibold text-gray-900">
-          {headerText}
+          {headerText || t("title")}
         </h2>
 
         {showAddNew && (
@@ -54,7 +56,7 @@ export default function ItemList({
             onClick={() => setCreateMenuItem(true)}
           >
             <PlusCircle className="w-4 h-4" />
-            {addNewText}
+            {addNewText || t("addNewItem")}
           </Button>
         )}
       </div>
@@ -85,11 +87,11 @@ export default function ItemList({
           </div>
 
           <h3 className="text-lg font-semibold text-gray-900 mb-1">
-            No items yet
+            {t("emptyTitle")}
           </h3>
 
           <p className="text-sm text-gray-500 mb-4 text-center max-w-[300px]">
-            You haven’t added any menu items in this category.
+            {t("emptyDescription")}
           </p>
 
           {showAddNew && (
@@ -98,7 +100,7 @@ export default function ItemList({
               onClick={() => setCreateMenuItem(true)}
             >
               <PlusCircle className="w-4 h-4 mr-2" />
-              {addNewText}
+              {addNewText || t("addNewItem")}
             </Button>
           )}
         </div>

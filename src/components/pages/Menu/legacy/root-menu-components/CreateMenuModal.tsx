@@ -22,6 +22,7 @@ import {
 } from "@/hooks/useMenus";
 import { getMenuItems } from "@/services/menu/menu.api";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslations } from "next-intl";
 
 interface CreateMenuModalProps {
   open: boolean;
@@ -40,6 +41,8 @@ export default function CreateMenuModal({
   onOpenChange,
   menuId,
 }: CreateMenuModalProps) {
+  const t = useTranslations("menu.menuModal");
+  const commonT = useTranslations("common");
   const isEdit = Boolean(menuId);
 
   const { user, token } = useAuth();
@@ -90,7 +93,7 @@ export default function CreateMenuModal({
 
           return {
             id: itemId,
-            name: item?.name || "Unnamed Item",
+            name: item?.name || t("unnamedItem"),
             ...item,
           };
         })
@@ -151,7 +154,7 @@ export default function CreateMenuModal({
         meta: res?.meta,
       };
     } catch (error) {
-      toast.error("Failed to load menu items");
+      toast.error(t("loadMenuItemsError"));
       return { data: [], meta: undefined };
     }
   };
@@ -170,7 +173,7 @@ export default function CreateMenuModal({
     setSubmitted(true);
 
     if (!form.name.trim()) {
-      toast.error("Menu name required");
+      toast.error(t("nameRequired"));
       return;
     }
 
@@ -192,17 +195,17 @@ export default function CreateMenuModal({
           menuId,
           payload,
         });
-        toast.success("Menu updated");
+        toast.success(t("updated"));
       } else {
         await createMenuMutation.mutateAsync(payload);
-        toast.success("Menu created");
+        toast.success(t("created"));
       }
 
       handleReset();
       onOpenChange(false);
       window.location.reload();
     } catch (err: any) {
-      toast.error(err?.message || "Request failed");
+      toast.error(err?.message || t("requestFailed"));
     }
   };
 
@@ -236,7 +239,7 @@ export default function CreateMenuModal({
       <DialogContent className="max-w-[420px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">
-            {isEdit ? "Edit Menu" : "Create Menu"}
+            {isEdit ? t("editTitle") : t("createTitle")}
           </DialogTitle>
         </DialogHeader>
 
@@ -248,42 +251,42 @@ export default function CreateMenuModal({
           <>
             <div className="mt-5 rounded-[16px] bg-white p-5 space-y-4">
               <FormInput
-                label="Menu Name"
-                placeholder="e.g Lunch Menu"
+                label={t("name")}
+                placeholder={t("namePlaceholder")}
                 value={form.name}
                 onChange={(v) => updateForm("name", v)}
                 required
                 error={submitted && !form.name.trim()}
-                errorText="Menu name required"
+                errorText={t("nameRequired")}
               />
 
               <FormInput
-                label="Slug"
-                placeholder="auto-generated"
+                label={commonT("slug")}
+                placeholder={t("slugPlaceholder")}
                 value={form.slug}
                 onChange={(v) => updateForm("slug", v)}
               />
 
               <FormInput
-                label="Description"
-                placeholder="Menu description"
+                label={commonT("description")}
+                placeholder={t("descriptionPlaceholder")}
                 value={form.description}
                 onChange={(v) => updateForm("description", v)}
               />
 
               <FormInput
-                label="Sort Order"
-                placeholder="e.g 1"
+                label={t("sortOrder")}
+                placeholder={t("sortOrderPlaceholder")}
                 value={form.sortOrder}
                 onChange={(v) => updateForm("sortOrder", v)}
               />
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-[16px] font-medium">Menu Items</p>
+                  <p className="text-[16px] font-medium">{t("menuItems")}</p>
                   {!!selectedMenuItems.length && (
                     <span className="text-xs font-medium text-primary bg-red-50 px-2 py-1 rounded-full">
-                      {selectedMenuItems.length} selected
+                      {t("selectedCount", { count: selectedMenuItems.length })}
                     </span>
                   )}
                 </div>
@@ -291,7 +294,7 @@ export default function CreateMenuModal({
                 <AsyncMultiSelect
                   value={selectedMenuItems}
                   onChange={handleMenuItemsChange}
-                  placeholder="Search and select menu items"
+                  placeholder={t("selectMenuItemsPlaceholder")}
                   fetchOptions={fetchMenuItemOptions}
                   labelKey="name"
                   valueKey="id"
@@ -308,7 +311,7 @@ export default function CreateMenuModal({
                 className="text-gray-700 text-[17px]"
                 disabled={creating}
               >
-                Reset
+                {commonT("reset")}
               </Button>
 
               <Button
@@ -319,12 +322,12 @@ export default function CreateMenuModal({
                 {creating ? (
                   <>
                     <Loader2 className="animate-spin mr-2" size={16} />
-                    {isEdit ? "Updating..." : "Creating..."}
+                    {isEdit ? commonT("updating") : t("creating")}
                   </>
                 ) : isEdit ? (
-                  "Update"
+                  t("update")
                 ) : (
-                  "Create"
+                  commonT("create")
                 )}
               </Button>
             </div>

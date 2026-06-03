@@ -23,6 +23,7 @@ import {
   blockNegativeNumberPaste,
   sanitizeNonNegativeNumber,
 } from "@/lib/number-input";
+import { useTranslations } from "next-intl";
 
 interface ModifierForm {
   name: string;
@@ -40,6 +41,8 @@ export default function ModifierModal({
   initialData,
   refresh,
 }: any) {
+  const t = useTranslations("menu.modifierModal");
+  const commonT = useTranslations("common");
   const { restaurantId: authRestaurantId } = useAuth();
   const restaurantId = authRestaurantId ?? undefined;
 
@@ -92,19 +95,19 @@ export default function ModifierModal({
 
 const handleSubmit = async () => {
   if (!canSubmit) {
-    toast.error("Modifier name is required");
+    toast.error(t("nameRequired"));
     return;
   }
 
   const priceDelta = Number(form.priceDelta);
 
   if (form.priceDelta === "" || Number.isNaN(priceDelta)) {
-    toast.error("Base price must be a valid number");
+    toast.error(t("basePriceInvalid"));
     return;
   }
 
   if (priceDelta < 0) {
-    toast.error("Base price cannot be negative");
+    toast.error(t("basePriceNegative"));
     return;
   }
 
@@ -124,7 +127,7 @@ const handleSubmit = async () => {
       });
     } else {
       if (!restaurantId) {
-        toast.error("Restaurant id is missing");
+        toast.error(t("restaurantMissing"));
         return;
       }
 
@@ -143,7 +146,7 @@ const handleSubmit = async () => {
     toast.error(
       err?.response?.data?.message ||
         err?.message ||
-        "Failed to save modifier"
+        t("saveFailed")
     );
   }
 };
@@ -165,25 +168,25 @@ const handleSubmit = async () => {
       <DialogContent className="max-h-[95vh] max-w-[520px] overflow-auto rounded-[20px] bg-[#F5F5F5] p-6">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">
-            {isEditMode ? "Edit" : "Add"} Modifier
+            {isEditMode ? t("editTitle") : t("addTitle")}
           </DialogTitle>
 
           <p className="text-sm text-gray-500">
-            Configure a reusable modifier for menu items and variations.
+            {t("description")}
           </p>
         </DialogHeader>
 
         <div className="mt-5 space-y-4 rounded-[16px] bg-white p-5">
           <InputField
-            label="Modifier Name"
+            label={t("name")}
             value={form.name}
             onChange={(value: string) => handleChange("name", value)}
-            placeholder="e.g. Extra Cheese, Extra Patty"
+            placeholder={t("namePlaceholder")}
             disabled={isSubmitting}
           />
 
           <InputField
-            label="Base Price"
+            label={t("basePrice")}
             type="number"
             value={form.priceDelta}
             onChange={(value: string) => handleChange("priceDelta", value)}
@@ -203,12 +206,12 @@ const handleSubmit = async () => {
             {isSubmitting ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="animate-spin" size={18} />
-                Saving...
+                {commonT("saving")}
               </span>
             ) : isEditMode ? (
-              "Update Modifier"
+              t("update")
             ) : (
-              "Create Modifier"
+              t("create")
             )}
           </Button>
         </div>

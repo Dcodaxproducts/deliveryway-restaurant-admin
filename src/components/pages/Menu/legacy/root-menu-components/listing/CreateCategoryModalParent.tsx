@@ -17,6 +17,7 @@ import {
   useUpdateMenuCategory,
 } from "@/hooks/useMenuCategories";
 import ImageDropzoneUpload from "@/components/ui/ImageDropzoneUpload";
+import { useTranslations } from "next-intl";
 
 interface CreateMenuModalProps {
   open: boolean;
@@ -26,10 +27,10 @@ interface CreateMenuModalProps {
 }
 
 const SORT_ORDER_OPTIONS = [
-  { label: "Top Priority", value: 0 },
-  { label: "High Priority", value: 10 },
-  { label: "Medium Priority", value: 50 },
-  { label: "Low Priority", value: 100 },
+  { labelKey: "topPriority", value: 0 },
+  { labelKey: "highPriority", value: 10 },
+  { labelKey: "mediumPriority", value: 50 },
+  { labelKey: "lowPriority", value: 100 },
 ];
 
 const revokeBlobUrl = (url?: string | null) => {
@@ -62,12 +63,32 @@ const getInitialForm = (restaurantId?: string, initialData?: any) => ({
   restaurantId: restaurantId || initialData?.restaurantId || "",
 });
 
+const getSortOrderLabel = (
+  labelKey: string,
+  t: ReturnType<typeof useTranslations>
+) => {
+  switch (labelKey) {
+    case "topPriority":
+      return t("topPriority");
+    case "highPriority":
+      return t("highPriority");
+    case "mediumPriority":
+      return t("mediumPriority");
+    case "lowPriority":
+      return t("lowPriority");
+    default:
+      return labelKey;
+  }
+};
+
 export default function CreateCategoryModalParent({
   open,
   onOpenChange,
   initialData,
   onSuccess,
 }: CreateMenuModalProps) {
+  const t = useTranslations("menu.categoryModal");
+  const commonT = useTranslations("common");
   const { restaurantId: authRestaurantId } = useAuth();
 
 const restaurantId = authRestaurantId ?? undefined;
@@ -196,17 +217,17 @@ const restaurantId = authRestaurantId ?? undefined;
 
   const handleSubmit = () => {
     if (imageUploading) {
-      toast.error("Please wait until image upload is complete");
+      toast.error(t("waitForImageUpload"));
       return;
     }
 
     if (!payload.name) {
-      toast.error("Category name is required");
+      toast.error(t("nameRequired"));
       return;
     }
 
     if (!restaurantId && !isEditMode) {
-      toast.error("Restaurant id is missing");
+      toast.error(t("restaurantMissing"));
       return;
     }
 
@@ -226,7 +247,7 @@ const restaurantId = authRestaurantId ?? undefined;
           },
           onError: (err: any) => {
             toast.error(
-              err?.response?.data?.message || "Failed to update category"
+              err?.response?.data?.message || t("updateFailed")
             );
           },
         }
@@ -240,10 +261,10 @@ const restaurantId = authRestaurantId ?? undefined;
         onSuccess?.();
         onOpenChange(false);
         resetForm();
-        toast.success("Category created successfully");
+        toast.success(t("createdSuccessfully"));
       },
       onError: (err: any) => {
-        toast.error(err?.response?.data?.message || "Failed to create category");
+        toast.error(err?.response?.data?.message || t("createFailed"));
       },
     });
   };
@@ -265,34 +286,34 @@ const restaurantId = authRestaurantId ?? undefined;
       <DialogContent className="max-h-[95vh] max-w-[420px] overflow-auto rounded-[20px] bg-[#F5F5F5] p-6">
         <DialogHeader className="space-y-1">
           <DialogTitle className="text-2xl font-semibold">
-            {isEditMode ? "Update Category" : "Create Category"}
+            {isEditMode ? t("updateTitle") : t("createTitle")}
           </DialogTitle>
 
           <p className="text-sm text-gray-500">
             {isEditMode
-              ? "Update restaurant category details"
-              : "Create restaurant category"}
+              ? t("updateDescription")
+              : t("createDescription")}
           </p>
         </DialogHeader>
 
         <div className="mt-5 space-y-4 rounded-[16px] bg-white p-5">
           <FormInput
-            label="Category Name"
-            placeholder="e.g Burgers"
+            label={t("name")}
+            placeholder={t("namePlaceholder")}
             value={form.name}
             onChange={(v) => updateForm("name", v)}
             required
           />
 
           <FormInput
-            label="Description"
-            placeholder="Short category description"
+            label={commonT("description")}
+            placeholder={t("descriptionPlaceholder")}
             value={form.description}
             onChange={(v) => updateForm("description", v)}
           />
 
           <ImageDropzoneUpload
-            label="Image"
+            label={t("image")}
             value={form.imageUrl}
             previewUrl={form.imagePreview}
             onChange={handleImageUrlChange}
@@ -300,9 +321,9 @@ const restaurantId = authRestaurantId ?? undefined;
             onClear={handleClearImage}
             disabled={isSubmitting}
             onUploadingChange={setImageUploading}
-            previewAlt="Category preview"
+            previewAlt={t("imagePreviewAlt")}
             previewHeightClassName="h-[180px]"
-            emptyTitle="Drag & drop category image here"
+            emptyTitle={t("imageEmptyTitle")}
           />
 
           {/* <div className="space-y-2">
@@ -319,7 +340,7 @@ const restaurantId = authRestaurantId ?? undefined;
               >
                 {SORT_ORDER_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {getSortOrderLabel(option.labelKey, t)}
                   </option>
                 ))}
               </select>
@@ -337,10 +358,10 @@ const restaurantId = authRestaurantId ?? undefined;
           <label className="flex cursor-pointer items-center justify-between rounded-[12px] border border-gray-100 bg-[#FAFAFA] px-4 py-3">
             <div>
               <p className="text-sm font-medium text-gray-800">
-                Active Status
+                {t("activeStatus")}
               </p>
               <p className="text-xs text-gray-500">
-                Show this category in active menu flows.
+                {t("activeStatusDescription")}
               </p>
             </div>
 
@@ -362,7 +383,7 @@ const restaurantId = authRestaurantId ?? undefined;
             onClick={handleClose}
             disabled={isBusy}
           >
-            Close
+            {commonT("close")}
           </Button>
 
           <Button
@@ -375,20 +396,20 @@ const restaurantId = authRestaurantId ?? undefined;
               <>
                 <Loader2 className="mr-2 animate-spin" size={18} />
                 {imageUploading
-                  ? "Uploading..."
+                  ? commonT("uploading")
                   : isEditMode
-                  ? "Updating..."
-                  : "Creating..."}
+                  ? commonT("updating")
+                  : t("creating")}
               </>
             ) : isEditMode ? (
               <>
                 <PlusCircle size={18} />
-                Update
+                {t("update")}
               </>
             ) : (
               <>
                 <PlusCircle size={18} />
-                Create
+                {commonT("create")}
               </>
             )}
           </Button>

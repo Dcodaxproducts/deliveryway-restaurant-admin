@@ -17,11 +17,14 @@ import {
   Utensils,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 export default function CategoryDetailsPage() {
   const router = useRouter();
   const params = useParams();
+  const t = useTranslations("menu.categoryDetails");
+  const commonT = useTranslations("common");
   const id = String(params?.id || "");
 
   const { data: response, isLoading } = useGetMenuCategoryById(id);
@@ -52,7 +55,7 @@ export default function CategoryDetailsPage() {
     return (
       <Container>
         <div className="rounded-[20px] bg-white p-8 text-center shadow-sm">
-          <p className="text-gray-500">Category not found.</p>
+          <p className="text-gray-500">{t("notFound")}</p>
 
           <Button
             variant="outline"
@@ -60,7 +63,7 @@ export default function CategoryDetailsPage() {
             className="mt-5 rounded-[12px]"
           >
             <ArrowLeft size={18} />
-            Back
+            {commonT("back")}
           </Button>
         </div>
       </Container>
@@ -71,8 +74,8 @@ export default function CategoryDetailsPage() {
     <Container>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Header
-          title="Category Details"
-          description="View category information, items, variations, and modifier groups"
+          title={t("title")}
+          description={t("description")}
         />
 
         <Button
@@ -81,7 +84,7 @@ export default function CategoryDetailsPage() {
           className="h-[44px] rounded-[14px]"
         >
           <ArrowLeft size={18} />
-          Back
+          {commonT("back")}
         </Button>
       </div>
 
@@ -90,7 +93,7 @@ export default function CategoryDetailsPage() {
           {category.imageUrl ? (
             <img
               src={category.imageUrl}
-              alt={category.name || "Category image"}
+              alt={category.name || t("imageAlt")}
               className="h-full w-full object-cover"
             />
           ) : (
@@ -106,20 +109,20 @@ export default function CategoryDetailsPage() {
               <StatusBadge active={category.isActive} />
 
               <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur">
-                /{category.slug || "no-slug"}
+                /{category.slug || t("noSlug")}
               </span>
 
               <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur">
-                Priority: {getPriorityLabel(category.sortOrder)}
+                {t("priority")}: {getPriorityLabel(category.sortOrder, t)}
               </span>
             </div>
 
             <h1 className="text-3xl font-semibold">
-              {category.name || "Unnamed Category"}
+              {category.name || t("unnamedCategory")}
             </h1>
 
             <p className="mt-2 max-w-[760px] text-sm text-white/90">
-              {category.description || "No description available"}
+              {category.description || t("noDescriptionAvailable")}
             </p>
           </div>
         </div>
@@ -127,22 +130,22 @@ export default function CategoryDetailsPage() {
         <div className="grid gap-4 p-6 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             icon={<Package size={20} />}
-            label="Menu Items"
+            label={t("menuItems")}
             value={itemCount}
           />
           <StatCard
             icon={<SlidersHorizontal size={20} />}
-            label="Variations"
+            label={t("variations")}
             value={variations.length}
           />
           <StatCard
             icon={<Layers size={20} />}
-            label="Modifier Groups"
+            label={t("modifierGroups")}
             value={modifierGroups.length}
           />
           <StatCard
             icon={<ListTree size={20} />}
-            label="Sub Categories"
+            label={t("subCategories")}
             value={childrenCount}
           />
         </div>
@@ -150,55 +153,55 @@ export default function CategoryDetailsPage() {
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[0.9fr,1.4fr]">
         <div className="space-y-6">
-          <SectionCard title="Overview">
+          <SectionCard title={t("overview")}>
             <div className="space-y-4">
               <InfoTile
                 icon={<Tags size={18} />}
-                label="Category Slug"
-                value={category.slug || "Not configured"}
+                label={t("categorySlug")}
+                value={category.slug || t("notConfigured")}
               />
 
               <InfoTile
                 icon={<ListTree size={18} />}
-                label="Hierarchy"
+                label={t("hierarchy")}
                 value={
                   category.parent?.name
-                    ? `Child of ${category.parent.name}`
+                    ? t("childOf", { name: category.parent.name })
                     : childrenCount > 0
-                    ? `${childrenCount} child categories`
-                    : "Top-level category"
+                    ? t("childCategories", { count: childrenCount })
+                    : t("topLevelCategory")
                 }
               />
 
               <InfoTile
                 icon={<SlidersHorizontal size={18} />}
-                label="Display Priority"
-                value={getPriorityLabel(category.sortOrder)}
+                label={t("displayPriority")}
+                value={getPriorityLabel(category.sortOrder, t)}
               />
 
               <InfoTile
                 icon={<CheckCircle2 size={18} />}
-                label="Availability"
-                value={category.isActive ? "Visible to customers" : "Hidden"}
+                label={t("availability")}
+                value={category.isActive ? t("visibleToCustomers") : t("hidden")}
               />
 
               <InfoTile
                 icon={<CalendarDays size={18} />}
-                label="Created"
+                label={commonT("createdAt")}
                 value={formatDate(category.createdAt)}
               />
 
               <InfoTile
                 icon={<Clock size={18} />}
-                label="Last Updated"
+                label={commonT("updatedAt")}
                 value={formatDate(category.updatedAt)}
               />
             </div>
           </SectionCard>
 
-          <SectionCard title="Menu Items">
+          <SectionCard title={t("menuItems")}>
             {items.length === 0 ? (
-              <EmptyState message="No menu items found in this category." />
+              <EmptyState message={t("emptyMenuItems")} />
             ) : (
               <div className="space-y-3">
                 {items.map((item: any) => (
@@ -222,10 +225,10 @@ export default function CategoryDetailsPage() {
 
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-gray-900">
-                        {item.name || "Unnamed Item"}
+                        {item.name || t("unnamedItem")}
                       </p>
                       <p className="truncate text-xs text-gray-500">
-                        /{item.slug || "no-slug"}
+                        /{item.slug || t("noSlug")}
                       </p>
                     </div>
 
@@ -243,9 +246,9 @@ export default function CategoryDetailsPage() {
         </div>
 
         <div className="space-y-6">
-          <SectionCard title="Variations">
+          <SectionCard title={t("variations")}>
             {variations.length === 0 ? (
-              <EmptyState message="No variations configured for this category." />
+              <EmptyState message={t("emptyVariations")} />
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
                 {variations.map((variation: any) => (
@@ -256,10 +259,10 @@ export default function CategoryDetailsPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <h3 className="truncate text-base font-semibold text-gray-900">
-                          {variation.name || "Unnamed Variation"}
+                          {variation.name || t("unnamedVariation")}
                         </h3>
                         <p className="mt-1 line-clamp-2 text-sm text-gray-500">
-                          {variation.description || "No description"}
+                          {variation.description || commonT("noData")}
                         </p>
                       </div>
 
@@ -268,28 +271,28 @@ export default function CategoryDetailsPage() {
 
                     <div className="mt-4 grid grid-cols-2 gap-3">
                       <MiniMetric
-                        label="Base Price"
+                        label={t("basePrice")}
                         value={formatPrice(variation.price)}
                       />
                       <MiniMetric
-                        label="Priority"
-                        value={getPriorityLabel(variation.sortOrder)}
+                        label={t("priority")}
+                        value={getPriorityLabel(variation.sortOrder, t)}
                       />
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-2">
                       {variation.isDefault ? (
                         <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                          Default
+                          {t("defaultVariation")}
                         </span>
                       ) : null}
 
                       <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
-                        SKU: {variation.sku || "N/A"}
+                        {t("sku")}: {variation.sku || t("notAvailable")}
                       </span>
 
                       <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
-                        Item overrides:{" "}
+                        {t("itemOverrides")}:{" "}
                         {Array.isArray(variation.itemPriceOverrides)
                           ? variation.itemPriceOverrides.length
                           : 0}
@@ -301,9 +304,9 @@ export default function CategoryDetailsPage() {
             )}
           </SectionCard>
 
-          <SectionCard title="Modifier Groups">
+          <SectionCard title={t("modifierGroups")}>
             {modifierGroups.length === 0 ? (
-              <EmptyState message="No modifier groups linked with this category." />
+              <EmptyState message={t("emptyModifierGroups")} />
             ) : (
               <div className="space-y-4">
                 {modifierGroups.map((group: any) => (
@@ -314,10 +317,10 @@ export default function CategoryDetailsPage() {
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <h3 className="font-semibold text-gray-900">
-                          {group.name || "Unnamed Group"}
+                          {group.name || t("unnamedGroup")}
                         </h3>
                         <p className="mt-1 text-sm text-gray-500">
-                          {group.description || "No description"}
+                          {group.description || commonT("noData")}
                         </p>
                       </div>
 
@@ -328,19 +331,19 @@ export default function CategoryDetailsPage() {
                             : "bg-gray-100 text-gray-600"
                         }`}
                       >
-                        {group.isRequired ? "Required" : "Optional"}
+                        {group.isRequired ? t("required") : commonT("optional")}
                       </span>
                     </div>
 
                     <div className="mt-4 grid gap-3 sm:grid-cols-4">
-                      <MiniMetric label="Min Select" value={group.minSelect ?? 0} />
-                      <MiniMetric label="Max Select" value={group.maxSelect ?? 0} />
+                      <MiniMetric label={t("minSelect")} value={group.minSelect ?? 0} />
+                      <MiniMetric label={t("maxSelect")} value={group.maxSelect ?? 0} />
                       <MiniMetric
-                        label="Priority"
-                        value={getPriorityLabel(group.sortOrder)}
+                        label={t("priority")}
+                        value={getPriorityLabel(group.sortOrder, t)}
                       />
                       <MiniMetric
-                        label="Modifiers"
+                        label={t("modifiers")}
                         value={group.modifiers?.length ?? 0}
                       />
                     </div>
@@ -353,17 +356,17 @@ export default function CategoryDetailsPage() {
                             className="rounded-[12px] bg-[#F9FAFB] px-3 py-2"
                           >
                             <p className="text-sm font-medium text-gray-900">
-                              {modifier.name || "Unnamed Modifier"}
+                              {modifier.name || t("unnamedModifier")}
                             </p>
                             <p className="text-xs text-gray-500">
-                              Price Delta: {formatPrice(modifier.priceDelta)}
+                              {t("priceDelta")}: {formatPrice(modifier.priceDelta)}
                             </p>
                           </div>
                         ))}
                       </div>
                     ) : (
                       <div className="mt-4 rounded-[12px] border border-dashed border-gray-200 p-4 text-sm text-gray-500">
-                        No modifiers inside this group.
+                        {t("noModifiersInsideGroup")}
                       </div>
                     )}
                   </div>
@@ -519,25 +522,29 @@ function StatusBadge({
   active?: boolean;
   compact?: boolean;
 }) {
+  const commonT = useTranslations("common");
+
   return (
     <span
       className={`rounded-full px-3 py-1 text-xs font-medium ${
         active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
       } ${compact ? "shrink-0" : ""}`}
     >
-      {active ? "Active" : "Inactive"}
+      {active ? commonT("active") : commonT("inactive")}
     </span>
   );
 }
 
 function StatusDot({ active }: { active?: boolean }) {
+  const commonT = useTranslations("common");
+
   return (
     <p
       className={`mt-1 text-xs font-medium ${
         active ? "text-green-600" : "text-gray-400"
       }`}
     >
-      {active ? "Active" : "Inactive"}
+      {active ? commonT("active") : commonT("inactive")}
     </p>
   );
 }
@@ -562,11 +569,11 @@ function formatPrice(value: any) {
   });
 }
 
-function getPriorityLabel(value: any) {
+function getPriorityLabel(value: any, t: ReturnType<typeof useTranslations>) {
   const order = Number(value ?? 0);
 
-  if (order === 0) return "Top Priority";
-  if (order <= 10) return "High Priority";
-  if (order <= 50) return "Medium Priority";
-  return "Low Priority";
+  if (order === 0) return t("topPriority");
+  if (order <= 10) return t("highPriority");
+  if (order <= 50) return t("mediumPriority");
+  return t("lowPriority");
 }

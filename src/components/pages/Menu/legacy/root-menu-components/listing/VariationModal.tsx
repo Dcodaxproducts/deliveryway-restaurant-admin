@@ -24,6 +24,7 @@ import {
   sanitizeNonNegativeNumber,
 } from "@/lib/number-input";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslations } from "next-intl";
 
 type VariationModalProps = {
   open: boolean;
@@ -75,10 +76,10 @@ const PREDEFINED_VARIATIONS = [
 ];
 
 const SORT_ORDER_OPTIONS = [
-  { label: "Top Priority", value: 0 },
-  { label: "High Priority", value: 10 },
-  { label: "Medium Priority", value: 50 },
-  { label: "Low Priority", value: 100 },
+  { labelKey: "topPriority", value: 0 },
+  { labelKey: "highPriority", value: 10 },
+  { labelKey: "mediumPriority", value: 50 },
+  { labelKey: "lowPriority", value: 100 },
 ];
 
 const getEmptyForm = (): VariationForm => ({
@@ -90,12 +91,32 @@ const getEmptyForm = (): VariationForm => ({
   isActive: true,
 });
 
+const getSortOrderLabel = (
+  labelKey: string,
+  t: ReturnType<typeof useTranslations>
+) => {
+  switch (labelKey) {
+    case "topPriority":
+      return t("topPriority");
+    case "highPriority":
+      return t("highPriority");
+    case "mediumPriority":
+      return t("mediumPriority");
+    case "lowPriority":
+      return t("lowPriority");
+    default:
+      return labelKey;
+  }
+};
+
 export default function VariationModal({
   open,
   onOpenChange,
   initialData,
   onSuccess,
 }: VariationModalProps) {
+  const t = useTranslations("menu.variationModal");
+  const commonT = useTranslations("common");
   const isEditMode = Boolean(initialData?.id);
 const { restaurantId } = useAuth();
   const [form, setForm] = useState<VariationForm>(getEmptyForm());
@@ -109,14 +130,14 @@ const { restaurantId } = useAuth();
   const isSubmitting = isCreating || isUpdating;
 
   const modalTitle = useMemo(() => {
-    return isEditMode ? "Edit Variation" : "Add Variation";
-  }, [isEditMode]);
+    return isEditMode ? t("editTitle") : t("addTitle");
+  }, [isEditMode, t]);
 
   const modalDescription = useMemo(() => {
     return isEditMode
-      ? "Update this generic menu variation."
-      : "Create a generic variation that can be reused across menu setup.";
-  }, [isEditMode]);
+      ? t("editDescription")
+      : t("addDescription");
+  }, [isEditMode, t]);
 
   const resetForm = () => {
     setForm(getEmptyForm());
@@ -182,17 +203,17 @@ const { restaurantId } = useAuth();
 
   const validateForm = () => {
     if (!form.name.trim()) {
-      return "Variation name is required";
+      return t("nameRequired");
     }
 
     const price = Number(form.price);
 
     if (Number.isNaN(price)) {
-      return "Price must be a valid number";
+      return t("priceInvalid");
     }
 
     if (price < 0) {
-      return "Price cannot be negative";
+      return t("priceNegative");
     }
 
     return null;
@@ -242,9 +263,9 @@ const { restaurantId } = useAuth();
       (option) => option.value === Number(form.sortOrder)
     );
 
-    if (!selected) return "Lower number appears first.";
+    if (!selected) return t("lowerNumberFirst");
 
-    return `${selected.label} variations appear based on their display priority.`;
+    return t("priorityHelper", { label: getSortOrderLabel(selected.labelKey, t) });
   };
 
   return (
@@ -271,10 +292,10 @@ const { restaurantId } = useAuth();
           <div className="mt-5 rounded-[18px] bg-white p-5 shadow-sm">
             <div className="mb-3">
               <h3 className="text-base font-semibold text-gray-900">
-                Quick Variation Templates
+                {t("quickTemplates")}
               </h3>
               <p className="mt-1 text-sm text-gray-500">
-                Select a preset or enter a custom variation below.
+                {t("quickTemplatesDescription")}
               </p>
             </div>
 
@@ -299,23 +320,23 @@ const { restaurantId } = useAuth();
 
         <div className="mt-5 space-y-4 rounded-[18px] bg-white p-5 shadow-sm">
           <FormInput
-            label="Variation Name"
-            placeholder="e.g. Small, Medium, Large"
+            label={t("name")}
+            placeholder={t("namePlaceholder")}
             value={form.name}
             onChange={(value) => handleChange("name", value)}
             required
           />
 
           <FormInput
-            label="Description"
-            placeholder="Enter variation description"
+            label={commonT("description")}
+            placeholder={t("descriptionPlaceholder")}
             value={form.description}
             onChange={(value) => handleChange("description", value)}
           />
 
           <FormInput
-            label="Price"
-            placeholder="Enter price"
+            label={commonT("price")}
+            placeholder={t("pricePlaceholder")}
             value={form.price}
             onChange={(value) => handleChange("price", value)}
             type="number"
@@ -326,7 +347,7 @@ const { restaurantId } = useAuth();
           />
 
           <div className="space-y-2">
-            <Label>Display Priority</Label>
+            <Label>{t("displayPriority")}</Label>
 
             <div className="relative">
               <select
@@ -338,7 +359,7 @@ const { restaurantId } = useAuth();
               >
                 {SORT_ORDER_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {getSortOrderLabel(option.labelKey, t)}
                   </option>
                 ))}
               </select>
@@ -355,10 +376,10 @@ const { restaurantId } = useAuth();
             <label className="flex cursor-pointer items-center justify-between rounded-[12px] border border-gray-100 bg-[#FAFAFA] px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-gray-800">
-                  Default Variation
+                  {t("defaultVariation")}
                 </p>
                 <p className="text-xs text-gray-500">
-                  Mark this variation as default.
+                  {t("defaultVariationDescription")}
                 </p>
               </div>
 
@@ -373,10 +394,10 @@ const { restaurantId } = useAuth();
             <label className="flex cursor-pointer items-center justify-between rounded-[12px] border border-gray-100 bg-[#FAFAFA] px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-gray-800">
-                  Active Status
+                  {t("activeStatus")}
                 </p>
                 <p className="text-xs text-gray-500">
-                  Show this variation in active flows.
+                  {t("activeStatusDescription")}
                 </p>
               </div>
 
@@ -398,7 +419,7 @@ const { restaurantId } = useAuth();
             disabled={isSubmitting}
             className="h-[42px] rounded-[12px]"
           >
-            Cancel
+            {commonT("cancel")}
           </Button>
 
           <Button
@@ -410,12 +431,12 @@ const { restaurantId } = useAuth();
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
                 <Loader2 className="animate-spin" size={18} />
-                {isEditMode ? "Updating..." : "Saving..."}
+                {isEditMode ? commonT("updating") : commonT("saving")}
               </span>
             ) : isEditMode ? (
-              "Update Variation"
+              t("update")
             ) : (
-              "Save Variation"
+              t("save")
             )}
           </Button>
         </div>

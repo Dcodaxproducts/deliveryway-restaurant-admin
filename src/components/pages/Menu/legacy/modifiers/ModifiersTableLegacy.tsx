@@ -14,8 +14,11 @@ import {
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { useTranslations } from "next-intl";
 
 export default function ModifiersTable() {
+  const t = useTranslations("menu.modifiersTable");
+  const commonT = useTranslations("common");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
@@ -167,10 +170,10 @@ export default function ModifiersTable() {
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-[18px] font-semibold text-gray-900">
-            Modifiers
+            {t("title")}
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Manage reusable item add-ons and base prices.
+            {t("description")}
           </p>
         </div>
 
@@ -181,7 +184,7 @@ export default function ModifiersTable() {
           }}
           className="h-[40px] rounded-[12px] bg-primary px-4 text-white"
         >
-          + Add Modifier
+          {t("add")}
         </Button>
       </div>
 
@@ -193,7 +196,7 @@ export default function ModifiersTable() {
           />
 
           <input
-            placeholder="Search modifiers..."
+            placeholder={t("searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -205,7 +208,7 @@ export default function ModifiersTable() {
           disabled={!restaurantId}
           className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm disabled:opacity-60"
         >
-          Search
+          {commonT("search")}
         </Button>
       </div>
 
@@ -213,10 +216,10 @@ export default function ModifiersTable() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-gray-500">
-              <th className="px-2 py-3">Name</th>
-              <th className="px-2 text-center">Base Price</th>
-              <th className="px-2 text-center">Status</th>
-              <th className="px-2 text-center">Actions</th>
+              <th className="px-2 py-3">{commonT("name")}</th>
+              <th className="px-2 text-center">{t("basePrice")}</th>
+              <th className="px-2 text-center">{commonT("status")}</th>
+              <th className="px-2 text-center">{commonT("actions")}</th>
             </tr>
           </thead>
 
@@ -228,7 +231,7 @@ export default function ModifiersTable() {
             ) : items.length === 0 ? (
               <tr>
                 <td colSpan={4} className="py-10 text-center text-gray-400">
-                  No modifiers found
+                  {t("emptyTitle")}
                 </td>
               </tr>
             ) : (
@@ -254,7 +257,7 @@ export default function ModifiersTable() {
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {item.isActive ? "Active" : "Inactive"}
+                      {item.isActive ? commonT("active") : commonT("inactive")}
                     </span>
                   </td>
 
@@ -267,7 +270,7 @@ export default function ModifiersTable() {
                           setOpen(true);
                         }}
                         className="text-gray-500 hover:text-primary"
-                        aria-label="Edit modifier"
+                        aria-label={t("editAria")}
                       >
                         <FaPen size={14} />
                       </button>
@@ -276,7 +279,7 @@ export default function ModifiersTable() {
                         type="button"
                         onClick={() => setDeleteId(item.id)}
                         className="text-gray-500 hover:text-red-500"
-                        aria-label="Delete modifier"
+                        aria-label={t("deleteAria")}
                       >
                         <FaTrash size={14} />
                       </button>
@@ -313,7 +316,7 @@ export default function ModifiersTable() {
           ))
         ) : items.length === 0 ? (
           <div className="py-10 text-center text-gray-400">
-            No modifiers found
+            {t("emptyTitle")}
           </div>
         ) : (
           items.map((item: any) => (
@@ -342,7 +345,7 @@ export default function ModifiersTable() {
                         : "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {item.isActive ? "Active" : "Inactive"}
+                    {item.isActive ? commonT("active") : commonT("inactive")}
                   </span>
 
                   <div className="flex items-center gap-3">
@@ -353,7 +356,7 @@ export default function ModifiersTable() {
                         setOpen(true);
                       }}
                       className="text-gray-500 hover:text-primary"
-                      aria-label="Edit modifier"
+                      aria-label={t("editAria")}
                     >
                       <FaPen size={14} />
                     </button>
@@ -362,7 +365,7 @@ export default function ModifiersTable() {
                       type="button"
                       onClick={() => setDeleteId(item.id)}
                       className="text-gray-500 hover:text-red-500"
-                      aria-label="Delete modifier"
+                      aria-label={t("deleteAria")}
                     >
                       <FaTrash size={14} />
                     </button>
@@ -409,8 +412,8 @@ export default function ModifiersTable() {
         }}
         onConfirm={handleDelete}
         isLoading={isDeleting}
-        title="Delete Modifier"
-        description="Are you sure you want to delete this modifier? This action cannot be undone."
+        title={t("deleteTitle")}
+        description={t("deleteDescription")}
       />
     </div>
   );
@@ -431,6 +434,7 @@ function ActionDropdown({
   onClose: () => void;
   onDuplicate: (modifierId: string) => void;
 }) {
+  const t = useTranslations("menu.modifiersTable");
   const dropdownRef = useClickOutside<HTMLDivElement>(() => {
     if (isOpen) {
       onClose();
@@ -446,7 +450,7 @@ function ActionDropdown({
           onToggle();
         }}
         className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
-        aria-label="Modifier actions"
+        aria-label={t("actionsAria")}
       >
         <MoreVertical size={17} />
       </button>
@@ -467,7 +471,7 @@ function ActionDropdown({
             className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Copy size={15} />
-            {isDuplicating ? "Duplicating..." : "Duplicate"}
+            {isDuplicating ? t("duplicating") : t("duplicate")}
           </button>
         </div>
       ) : null}

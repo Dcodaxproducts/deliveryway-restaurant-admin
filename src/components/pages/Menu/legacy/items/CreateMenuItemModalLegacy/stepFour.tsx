@@ -21,6 +21,7 @@ import {
   blockNegativeNumberPaste,
   sanitizeNonNegativeNumber,
 } from "@/lib/number-input";
+import { useTranslations } from "next-intl";
 
 type StepFourProps = {
   form: any;
@@ -428,6 +429,7 @@ const resolveVariationIdsFromForm = (form: any) => {
 };
 
 const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
+  const t = useTranslations("menu.itemModal.stepFour");
   const { restaurantId: authRestaurantId } = useAuth();
   const restaurantId = authRestaurantId ?? undefined;
   const canFetchOptions = Boolean(restaurantId);
@@ -807,7 +809,7 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
 
   const validateStep = () => {
     if (!restaurantId) {
-      toast.error("Restaurant id is missing");
+      toast.error(t("restaurantMissing"));
       return false;
     }
 
@@ -827,7 +829,7 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
       const priceDelta = override?.priceDelta ?? "0";
 
       if (!isValidNonNegativeNumber(priceDelta)) {
-        toast.error("Modifier prices must be valid non-negative numbers");
+        toast.error(t("modifierPriceInvalid"));
         return false;
       }
     }
@@ -849,9 +851,7 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
         const priceDelta = nestedOverride?.priceDelta || topLevel?.priceDelta || "0";
 
         if (!isValidNonNegativeNumber(priceDelta)) {
-          toast.error(
-            "Modifier variation prices must be valid non-negative numbers"
-          );
+          toast.error(t("modifierVariationPriceInvalid"));
           return false;
         }
       }
@@ -1207,24 +1207,23 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
 
           <div className="min-w-0">
             <h3 className="text-base font-semibold text-gray-900">
-              Modifier Configuration
+              {t("title")}
             </h3>
 
             <p className="mt-1 text-sm text-gray-600">
-              Select reusable modifiers for this item, then define their prices
-              under each selected variation.
+              {t("description")}
             </p>
           </div>
         </div>
       </div>
 
       <ModifierSelectionSection
-        title="Assign Modifiers"
-        description="Choose add-ons or extras that should be available for this item."
+        title={t("assignTitle")}
+        description={t("assignDescription")}
         icon={<Tags size={18} />}
         searchValue={modifierSearch}
         onSearchChange={setModifierSearch}
-        searchPlaceholder="Search modifiers..."
+        searchPlaceholder={t("searchPlaceholder")}
         loading={
           (loadingModifiers || fetchingModifiers) && modifierOptions.length === 0
         }
@@ -1234,8 +1233,8 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
         items={modifierOptions}
         selectedIds={selectedModifierIds}
         selectedModifiers={selectedModifiers}
-        emptyTitle="No modifiers found"
-        emptyDescription="Create master modifiers first, then attach them to this item."
+        emptyTitle={t("emptyTitle")}
+        emptyDescription={t("emptyDescription")}
         onToggle={toggleModifier}
         onClear={clearModifiers}
       />
@@ -1297,6 +1296,8 @@ function ModifierSelectionSection({
   onToggle,
   onClear,
 }: ModifierSelectionSectionProps) {
+  const t = useTranslations("menu.itemModal.stepFour");
+  const commonT = useTranslations("common");
   const selectedMap = useMemo(() => {
     const map = new Map<string, SelectableEntity>();
 
@@ -1355,7 +1356,7 @@ function ModifierSelectionSection({
               </h3>
 
               <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                {selectedIds.length} selected
+                {t("selectedCount", { count: selectedIds.length })}
               </span>
             </div>
 
@@ -1370,7 +1371,7 @@ function ModifierSelectionSection({
             onClick={onClear}
             className="h-[38px] shrink-0 rounded-[12px] border-gray-200 text-sm"
           >
-            Clear
+            {commonT("clear")}
           </Button>
         ) : null}
       </div>
@@ -1388,7 +1389,7 @@ function ModifierSelectionSection({
                 className="inline-flex max-w-full items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary transition hover:bg-primary/10"
               >
                 <span className="max-w-[180px] truncate">
-                  {item?.name || `Selected ${id}`}
+                  {item?.name || t("selectedFallback", { id })}
                 </span>
                 <X size={14} className="shrink-0" />
               </button>
@@ -1415,7 +1416,7 @@ function ModifierSelectionSection({
         {loading ? (
           <div className="flex min-h-[170px] items-center justify-center text-gray-500">
             <Loader2 className="mr-2 animate-spin" size={20} />
-            Loading options...
+            {t("loadingOptions")}
           </div>
         ) : renderedItems.length === 0 ? (
           <div className="flex min-h-[170px] flex-col items-center justify-center rounded-[14px] border border-dashed border-gray-200 bg-white p-6 text-center">
@@ -1460,16 +1461,16 @@ function ModifierSelectionSection({
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <p className="max-w-full truncate text-sm font-semibold text-gray-900">
-                          {item?.name || "Unnamed"}
+                          {item?.name || t("unnamed")}
                         </p>
 
                         {item?.isActive === false ? (
                           <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-                            Inactive
+                            {commonT("inactive")}
                           </span>
                         ) : (
                           <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                            Active
+                            {commonT("active")}
                           </span>
                         )}
                       </div>
@@ -1482,7 +1483,7 @@ function ModifierSelectionSection({
             {loadingMore ? (
               <div className="flex items-center justify-center py-3 text-sm text-gray-500">
                 <Loader2 className="mr-2 animate-spin" size={16} />
-                Loading more...
+                {t("loadingMore")}
               </div>
             ) : null}
 
@@ -1492,7 +1493,7 @@ function ModifierSelectionSection({
                 onClick={onLoadMore}
                 className="rounded-[12px] border border-dashed border-gray-200 bg-white py-2 text-center text-xs font-medium text-gray-500 transition hover:border-primary/30 hover:text-primary"
               >
-                Load more
+                {t("loadMore")}
               </button>
             ) : null}
           </div>
@@ -1536,15 +1537,16 @@ function ModifierPricingByVariationSection({
   onTopLevelRequiredChange,
   onNestedPriceChange,
 }: ModifierPricingByVariationSectionProps) {
+  const t = useTranslations("menu.itemModal.stepFour");
   if (!selectedModifiers.length) {
     return (
       <section className="rounded-[20px] border border-dashed border-gray-200 bg-white p-6 text-center shadow-sm">
         <p className="text-sm font-semibold text-gray-900">
-          No modifier pricing yet
+          {t("noModifierPricingTitle")}
         </p>
 
         <p className="mt-1 text-sm text-gray-500">
-          Select modifiers above to configure their prices.
+          {t("noModifierPricingDescription")}
         </p>
       </section>
     );
@@ -1556,17 +1558,16 @@ function ModifierPricingByVariationSection({
         <div className="mb-5">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-base font-semibold text-gray-900">
-              Modifier Prices
+              {t("modifierPrices")}
             </h3>
 
             <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-              {selectedModifiers.length} modifiers
+              {t("modifierCount", { count: selectedModifiers.length })}
             </span>
           </div>
 
           <p className="mt-1 text-sm text-gray-500">
-            No variations are selected, so these prices will be saved as the
-            item-level modifier prices.
+            {t("itemLevelPricesDescription")}
           </p>
         </div>
 
@@ -1619,21 +1620,20 @@ function ModifierPricingByVariationSection({
       <div className="mb-5">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="text-base font-semibold text-gray-900">
-            Modifier Prices by Variation
+            {t("modifierPricesByVariation")}
           </h3>
 
           <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-            {selectedVariations.length} variations
+            {t("variationCount", { count: selectedVariations.length })}
           </span>
 
           <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
-            {selectedModifiers.length} modifiers
+            {t("modifierCount", { count: selectedModifiers.length })}
           </span>
         </div>
 
         <p className="mt-1 text-sm text-gray-500">
-          Each selected variation shows all selected modifiers below it. Update
-          the modifier price for that specific variation.
+          {t("modifierPricesByVariationDescription")}
         </p>
       </div>
 
@@ -1648,7 +1648,7 @@ function ModifierPricingByVariationSection({
                 {modifier.name}
               </p>
               <p className="mt-0.5 text-xs text-gray-500">
-                Customer must select this modifier
+                {t("customerMustSelectModifier")}
               </p>
             </div>
 
@@ -1678,7 +1678,7 @@ function ModifierPricingByVariationSection({
                 </h4>
 
                 <p className="mt-0.5 text-xs text-gray-500">
-                  Specify prices for all selected modifiers under this variation.
+                  {t("specifyVariationModifierPrices")}
                 </p>
               </div>
 
@@ -1729,13 +1729,15 @@ function RequiredSwitch({
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
 }) {
+  const t = useTranslations("menu.itemModal.stepFour");
+
   return (
     <div className="flex min-w-0 items-center justify-between gap-3 rounded-[12px] border border-gray-100 bg-white px-3 py-2 text-sm font-medium text-gray-700 sm:justify-center">
-      <span>Required</span>
+      <span>{t("required")}</span>
       <Switch
         checked={checked}
         onCheckedChange={onCheckedChange}
-        aria-label="Required"
+        aria-label={t("required")}
       />
     </div>
   );

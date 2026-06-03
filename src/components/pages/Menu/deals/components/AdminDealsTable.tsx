@@ -35,6 +35,7 @@ export default function AdminDealsTable({
   const router = useRouter();
   const t = useTranslations("deals");
   const commonT = useTranslations("common");
+  const unlimitedLabel = t("unlimited");
 
   if (loading) {
     return (
@@ -114,9 +115,9 @@ export default function AdminDealsTable({
                   <div className="mt-1 text-gray-400">{formatDealDate(deal.expiresAt)}</div>
                 </td>
                 <td className="px-4 py-4 align-top text-xs text-gray-600">
-                  <div>{t("uses")}: {formatUsageLimit(deal.maxUses)}</div>
+                  <div>{t("uses")}: {formatUsageLimit(deal.maxUses, unlimitedLabel)}</div>
                   <div className="mt-1 text-gray-400">
-                    {t("customer")}: {formatUsageLimit(deal.maxUsesPerCustomer)}
+                    {t("customer")}: {formatUsageLimit(deal.maxUsesPerCustomer, unlimitedLabel)}
                   </div>
                 </td>
                 <td className="px-4 py-4 align-top">
@@ -188,7 +189,7 @@ export default function AdminDealsTable({
               <Info label={t("items")} value={deal.scopeMenuItemIds.length.toLocaleString()} />
               <Info label={t("starts")} value={formatDealDate(deal.startsAt)} />
               <Info label={t("expires")} value={formatDealDate(deal.expiresAt)} />
-              <Info label={t("maxUses")} value={formatUsageLimit(deal.maxUses)} />
+              <Info label={t("maxUses")} value={formatUsageLimit(deal.maxUses, unlimitedLabel)} />
               <Info label={commonT("branch")} value={deal.branchId ? formatShortDealId(deal.branchId) : commonT("allBranches")} />
             </div>
             <div className="flex items-center justify-between gap-3">

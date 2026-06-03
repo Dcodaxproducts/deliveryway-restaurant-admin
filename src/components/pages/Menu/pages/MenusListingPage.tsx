@@ -8,8 +8,10 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetMenuItems } from "@/hooks/useMenus";
+import { useTranslations } from "next-intl";
 
 export default function MenusListingPage() {
+  const t = useTranslations("menu.listing");
   const [editing, setEditing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { user } = useAuth();
@@ -33,8 +35,8 @@ export default function MenusListingPage() {
   return (
     <Container>
       <Header
-        title="Menu Listing"
-        description="Menu List"
+        title={t("title")}
+        description={t("description")}
         editing={editing}
         onManageClick={handleManageClick}
       />

@@ -20,6 +20,7 @@ import {
   blockNegativeNumberPaste,
   sanitizeNonNegativeNumber,
 } from "@/lib/number-input";
+import { useTranslations } from "next-intl";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Item name is required"),
@@ -64,6 +65,8 @@ const getStoredRestaurantId = () => {
 };
 
 const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
+  const t = useTranslations("menu.itemModal.stepOne");
+  const commonT = useTranslations("common");
   const { token, user, restaurantId: authRestaurantId } = useAuth();
   const { get } = useHttpClient(token);
 
@@ -72,6 +75,13 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
+
+  const getFieldError = (field: string, fallback?: string) => {
+    if (field === "name") return t("itemNameRequired");
+    if (field === "categoryId") return t("categoryRequired");
+    if (field === "basePrice") return t("basePriceInvalid");
+    return fallback || t("invalidValue");
+  };
 
   const validateField = (field: Field, value: any) => {
     try {
@@ -85,7 +95,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
     } catch (err: any) {
       setErrors((prev) => ({
         ...prev,
-        [field]: err.errors?.[0]?.message || "Invalid value",
+        [field]: getFieldError(field, err.errors?.[0]?.message),
       }));
     }
   };
@@ -98,7 +108,14 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
     });
 
     if (!result.success) {
-      setErrors(result.errors);
+      setErrors(
+        Object.fromEntries(
+          Object.entries(result.errors).map(([field, message]) => [
+            field,
+            getFieldError(field, message),
+          ])
+        )
+      );
       return false;
     }
 
@@ -185,7 +202,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
           name:
             form?.category?.name ||
             form?.menuCategory?.name ||
-            "Selected Category",
+            t("selectedCategory"),
         });
       } catch (error) {
         void error;
@@ -195,7 +212,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
           name:
             form?.category?.name ||
             form?.menuCategory?.name ||
-            "Selected Category",
+            t("selectedCategory"),
         });
       }
     };
@@ -221,11 +238,11 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
   return (
     <div className="space-y-5">
       <div className="space-y-2">
-        <Label>Item Name</Label>
+        <Label>{t("itemName")}</Label>
 
         <Input
           value={form.name || ""}
-          placeholder="e.g. Greek Salad"
+          placeholder={t("itemNamePlaceholder")}
           onChange={(e) => updateForm("name", e.target.value)}
           onBlur={(e) => validateField("name", e.target.value)}
           className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
@@ -237,7 +254,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
       </div>
 
       <div className="space-y-2">
-        <Label>Select Category</Label>
+        <Label>{t("selectCategory")}</Label>
 
         <AsyncSelect
           value={selectedCategory}
@@ -253,7 +270,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
 
             validateField("categoryId", categoryId);
           }}
-          placeholder="Select category"
+          placeholder={t("selectCategoryPlaceholder")}
           fetchOptions={fetchCategories}
           labelKey="name"
           valueKey="id"
@@ -265,18 +282,18 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
       </div>
 
       <div className="space-y-2">
-        <Label>Description</Label>
+        <Label>{commonT("description")}</Label>
 
         <Textarea
           value={form.description || ""}
-          placeholder="Write a short item description"
+          placeholder={t("descriptionPlaceholder")}
           onChange={(e) => updateForm("description", e.target.value)}
           className="h-[90px] rounded-[12px] border-gray-300 focus:border-gray-400"
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Base Price</Label>
+        <Label>{t("basePrice")}</Label>
 
         <Input
           type="number"
@@ -313,7 +330,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
             className="accent-primary"
           />
 
-          <span>Supports Split Pizza</span>
+          <span>{t("supportsSplitPizza")}</span>
         </label>
     
     </div>

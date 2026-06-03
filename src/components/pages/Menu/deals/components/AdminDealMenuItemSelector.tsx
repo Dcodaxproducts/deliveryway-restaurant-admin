@@ -9,6 +9,7 @@ import { normalizeAdminDealMenuItem } from "@/components/pages/Menu/deals/utils/
 import { Button } from "@/components/ui/button";
 import { getMenuItems } from "@/services/menu/menu.api";
 import type { AdminDealMenuItemSummary } from "@/types/admin-deals";
+import { useTranslations } from "next-intl";
 
 type AdminDealMenuItemSelectorProps = {
   value: string[];
@@ -55,6 +56,7 @@ export default function AdminDealMenuItemSelector({
   initialItems = [],
   error,
 }: AdminDealMenuItemSelectorProps) {
+  const t = useTranslations("deals.menuItemSelector");
   const [search, setSearch] = useState("");
   const [options, setOptions] = useState<AdminDealMenuItemSummary[]>(initialItems);
   const [page, setPage] = useState(1);
@@ -143,7 +145,7 @@ export default function AdminDealMenuItemSelector({
                 setPage(1);
                 setSearch(event.target.value);
               }}
-              placeholder="Search menu items"
+              placeholder={t("searchPlaceholder")}
               className="h-[42px] w-full rounded-[12px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
             />
           </div>
@@ -176,7 +178,7 @@ export default function AdminDealMenuItemSelector({
                   />
                 ) : (
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[10px] bg-gray-100 text-xs font-semibold text-gray-400">
-                    Item
+                    {t("imageFallback")}
                   </div>
                 )}
 
@@ -185,7 +187,7 @@ export default function AdminDealMenuItemSelector({
                     {item.name}
                   </p>
                   <p className="mt-1 truncate text-xs text-gray-500">
-                    {item.category?.name || "No category"} •{" "}
+                    {item.category?.name || t("noCategory")} •{" "}
                     {formatDealPrice(item.basePrice)}
                   </p>
                 </div>
@@ -211,15 +213,15 @@ export default function AdminDealMenuItemSelector({
 
           {!loading && options.length === 0 ? (
             <div className="p-6 text-center text-sm text-gray-400">
-              No menu items found.
+              {t("emptyTitle")}
             </div>
           ) : null}
 
           {!loading && options.length > 0 ? (
             <div className="border-t border-gray-100 px-2 py-3 text-center text-xs text-gray-400">
               {hasNext
-                ? "Scroll down to load more menu items"
-                : `Showing ${options.length.toLocaleString()} menu items`}
+                ? t("loadMoreHint")
+                : t("showingCount", { count: options.length.toLocaleString() })}
             </div>
           ) : null}
         </div>
@@ -227,7 +229,7 @@ export default function AdminDealMenuItemSelector({
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-          {value.length} selected
+          {t("selectedCount", { count: value.length })}
         </span>
         {value.length > 0 ? (
           <Button
@@ -237,7 +239,7 @@ export default function AdminDealMenuItemSelector({
             className="h-8 rounded-full px-3 text-xs text-gray-500"
           >
             <X size={13} className="mr-1" />
-            Clear
+            {t("clear")}
           </Button>
         ) : null}
       </div>
@@ -256,7 +258,7 @@ export default function AdminDealMenuItemSelector({
       ) : null}
 
       <p className={error ? "text-xs text-primary" : "text-xs text-gray-500"}>
-        {error || "Select at least 2 menu items for this fixed-price deal."}
+        {error || t("help")}
       </p>
     </div>
   );

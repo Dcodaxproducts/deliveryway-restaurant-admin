@@ -6,6 +6,7 @@ import { PlusCircle, X } from "lucide-react";
 import CreateCategoryModalParent from "./CreateCategoryModalParent";
 import useCategories from "@/hooks/useCategories";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
+import { useTranslations } from "next-intl";
 
 interface CategoriesProps {
   editing?: boolean;
@@ -20,6 +21,7 @@ export default function Categories({
   selectedCategory,
   onSelectCategory,
 }: CategoriesProps) {
+  const t = useTranslations("menu.listingCategories");
   const { categories, loading, deleteCategory, refetch } = useCategories();
   const [createCategory, setCreateCategory] = useState(false);
 const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -57,7 +59,7 @@ useEffect(()=>{
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-[24px] font-semibold text-gray-900">
-          Categories
+          {t("title")}
         </h2>
 
         {showAddNew && (
@@ -69,7 +71,7 @@ useEffect(()=>{
               onClick={() => setCreateCategory(true)}
             >
               <PlusCircle className="w-4 h-4" />
-              Add New Category
+              {t("addNewCategory")}
             </Button>
           </div>
         )}
@@ -160,10 +162,10 @@ useEffect(()=>{
   }}
   onConfirm={handleDeleteCategory}
   isLoading={isDeleting}
-  title="Delete Category"
-  description={`Are you sure you want to delete "${
-    categories.find((c) => c.id === deletingCategoryId)?.name || "this category"
-  }"? This action cannot be undone.`}
+  title={t("deleteTitle")}
+  description={t("deleteDescription", {
+    name: categories.find((c) => c.id === deletingCategoryId)?.name || t("thisCategory"),
+  })}
 />
     </div>
   );

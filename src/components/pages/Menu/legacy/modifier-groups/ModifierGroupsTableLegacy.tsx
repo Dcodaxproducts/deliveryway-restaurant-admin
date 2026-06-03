@@ -12,8 +12,11 @@ import {
   useDeleteModifierGroup,
 } from "@/hooks/useMenus";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslations } from "next-intl";
 
 export default function ModifierGroupsTable() {
+  const t = useTranslations("menu.modifierGroupsTable");
+  const commonT = useTranslations("common");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 const { restaurantId } = useAuth();
@@ -135,7 +138,7 @@ const { restaurantId } = useAuth();
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-[18px] font-semibold text-gray-900">
-          Modifier Groups
+          {t("title")}
         </h2>
 
         <Button
@@ -145,7 +148,7 @@ const { restaurantId } = useAuth();
           }}
           className="bg-primary text-white rounded-[12px] h-[40px] px-4"
         >
-          + Add Modifier Group
+          {t("add")}
         </Button>
       </div>
 
@@ -156,7 +159,7 @@ const { restaurantId } = useAuth();
             size={18}
           />
           <input
-            placeholder="Search modifier groups..."
+            placeholder={t("searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -167,7 +170,7 @@ const { restaurantId } = useAuth();
           onClick={() => refetch()}
           className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm"
         >
-          Search
+          {commonT("search")}
         </Button>
       </div>
 
@@ -175,13 +178,13 @@ const { restaurantId } = useAuth();
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-gray-500">
-              <th className="py-3 px-2">Name</th>
-              <th className="px-2">Description</th>
-              <th className="px-2 text-center">Min</th>
-              <th className="px-2 text-center">Max</th>
-              <th className="px-2 text-center">Required</th>
-              <th className="px-2 text-center">Sort</th>
-              <th className="px-2 text-center">Actions</th>
+              <th className="py-3 px-2">{commonT("name")}</th>
+              <th className="px-2">{commonT("description")}</th>
+              <th className="px-2 text-center">{t("min")}</th>
+              <th className="px-2 text-center">{t("max")}</th>
+              <th className="px-2 text-center">{t("required")}</th>
+              <th className="px-2 text-center">{t("sort")}</th>
+              <th className="px-2 text-center">{commonT("actions")}</th>
             </tr>
           </thead>
 
@@ -191,7 +194,7 @@ const { restaurantId } = useAuth();
             ) : items.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-10 text-center text-gray-400">
-                  No modifier groups found
+                  {t("emptyTitle")}
                 </td>
               </tr>
             ) : (
@@ -221,7 +224,7 @@ const { restaurantId } = useAuth();
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {item.isRequired ? "Yes" : "No"}
+                      {item.isRequired ? commonT("yes") : commonT("no")}
                     </span>
                   </td>
 
@@ -265,7 +268,7 @@ const { restaurantId } = useAuth();
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
         ) : items.length === 0 ? (
           <div className="py-10 text-center text-gray-400">
-            No modifier groups found
+            {t("emptyTitle")}
           </div>
         ) : (
           items.map((item: any) => (
@@ -284,15 +287,15 @@ const { restaurantId } = useAuth();
                       ? item.description.length > 60
                         ? item.description.slice(0, 60) + "..."
                         : item.description
-                      : "No description"}
+                      : commonT("noData")}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                  <p>Min: {item.minSelect ?? 0}</p>
-                  <p>Max: {item.maxSelect ?? 0}</p>
-                  <p>Sort: {item.sortOrder ?? "-"}</p>
-                  <p>Required: {item.isRequired ? "Yes" : "No"}</p>
+                  <p>{t("min")}: {item.minSelect ?? 0}</p>
+                  <p>{t("max")}: {item.maxSelect ?? 0}</p>
+                  <p>{t("sort")}: {item.sortOrder ?? "-"}</p>
+                  <p>{t("required")}: {item.isRequired ? commonT("yes") : commonT("no")}</p>
                 </div>
 
                 <div className="mt-2 flex justify-between items-center">
@@ -303,7 +306,7 @@ const { restaurantId } = useAuth();
                         : "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {item.isRequired ? "Required" : "Optional"}
+                    {item.isRequired ? t("required") : commonT("optional")}
                   </span>
 
                   <div className="flex gap-3">
@@ -355,8 +358,8 @@ const { restaurantId } = useAuth();
         }}
         onConfirm={handleDelete}
         isLoading={isDeleting}
-        title="Delete Modifier Group"
-        description="Are you sure you want to delete this modifier group? This action cannot be undone."
+        title={t("deleteTitle")}
+        description={t("deleteDescription")}
       />
     </div>
   );

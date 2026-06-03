@@ -17,6 +17,7 @@ import StepFour from "./stepFour";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateMenuItem, useUpdateMenuItem } from "@/hooks/useMenus";
+import { useTranslations } from "next-intl";
 
 interface CreateMenuItemModalProps {
   open: boolean;
@@ -910,6 +911,8 @@ export default function CreateMenuItemModal({
   initialData,
   onSuccess,
 }: CreateMenuItemModalProps) {
+  const t = useTranslations("menu.itemModal");
+  const commonT = useTranslations("common");
   const { token, restaurantId: authRestaurantId } = useAuth();
   const restaurantId = authRestaurantId ?? undefined;
 
@@ -980,12 +983,12 @@ export default function CreateMenuItemModal({
     }
 
     if (!form.name?.trim() || !form.categoryId) {
-      toast.error("Name and Category are required");
+      toast.error(t("nameAndCategoryRequired"));
       return false;
     }
 
     if (!restaurantId && !isEditMode) {
-      toast.error("Restaurant id is missing");
+      toast.error(t("restaurantMissing"));
       return false;
     }
 
@@ -993,12 +996,12 @@ export default function CreateMenuItemModal({
     const maxSelect = toOptionalNumber(form.maxSelect);
 
     if (maxSelect !== null && maxSelect < minSelect) {
-      toast.error("Maximum selection cannot be less than minimum selection");
+      toast.error(t("maxSelectionError"));
       return false;
     }
 
     if (form.isRequired && minSelect < 1) {
-      toast.error("Required items must have minimum selection of at least 1");
+      toast.error(t("requiredItemsNeedMin"));
       return false;
     }
 
@@ -1006,12 +1009,12 @@ export default function CreateMenuItemModal({
     const maxQuantity = Math.max(0, toNumberOrZero(form.maxQuantity || 0));
 
     if (minQuantity < 1) {
-      toast.error("Minimum quantity must be at least 1");
+      toast.error(t("minQuantityError"));
       return false;
     }
 
     if (maxQuantity < minQuantity) {
-      toast.error("Maximum quantity cannot be less than minimum quantity");
+      toast.error(t("maxQuantityError"));
       return false;
     }
 
@@ -1038,7 +1041,7 @@ export default function CreateMenuItemModal({
           },
           onError: (err: any) => {
             toast.error(
-              err?.response?.data?.message || "Failed to update menu item"
+              err?.response?.data?.message || t("updateFailed")
             );
           },
         }
@@ -1054,7 +1057,7 @@ export default function CreateMenuItemModal({
       },
       onError: (err: any) => {
         toast.error(
-          err?.response?.data?.message || "Failed to create menu item"
+          err?.response?.data?.message || t("createFailed")
         );
       },
     });
@@ -1073,12 +1076,11 @@ export default function CreateMenuItemModal({
         <div className="max-h-[95vh] overflow-y-auto overflow-x-hidden p-5 sm:p-8 [scrollbar-width:thin]">
           <DialogHeader>
             <DialogTitle className="text-[24px] font-semibold sm:text-[26px]">
-              {isEditMode ? "Edit Item" : "Create Item"}
+              {isEditMode ? t("editTitle") : t("createTitle")}
             </DialogTitle>
 
             <p className="text-sm text-gray-500">
-              Add item details, upload media, configure variations, then assign
-              modifier pricing.
+              {t("description")}
             </p>
 
             <StepProgress currentStep={currentStep} />
@@ -1114,7 +1116,7 @@ export default function CreateMenuItemModal({
               onClick={resetAndClose}
               disabled={isSubmitting}
             >
-              Reset
+              {commonT("reset")}
             </Button>
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row">
@@ -1125,7 +1127,7 @@ export default function CreateMenuItemModal({
                   disabled={isSubmitting}
                   className="h-[44px] rounded-[12px]"
                 >
-                  Previous
+                  {commonT("previous")}
                 </Button>
               )}
 
@@ -1135,14 +1137,14 @@ export default function CreateMenuItemModal({
                 disabled={isSubmitting}
               >
                 {currentStep < 4
-                  ? "Next"
+                  ? commonT("next")
                   : isSubmitting
                   ? isEditMode
-                    ? "Updating..."
-                    : "Creating..."
+                    ? commonT("updating")
+                    : t("creating")
                   : isEditMode
-                  ? "Update"
-                  : "Create"}
+                  ? t("update")
+                  : commonT("create")}
               </Button>
             </div>
           </div>
@@ -1153,11 +1155,12 @@ export default function CreateMenuItemModal({
 }
 
 function StepProgress({ currentStep }: { currentStep: number }) {
+  const t = useTranslations("menu.itemModal.steps");
   const steps = [
-    "Basic Details",
-    "Media & Extra Info",
-    "Variations",
-    "Modifiers",
+    t("basicDetails"),
+    t("mediaExtraInfo"),
+    t("variations"),
+    t("modifiers"),
   ];
   const totalSteps = steps.length;
 

@@ -30,6 +30,7 @@ import {
   useGetMenuItemLabels,
   useUpdateMenuItemLabel,
 } from "@/hooks/useProductLabel";
+import { useTranslations } from "next-intl";
 
 const PAGE_LIMIT = 10;
 
@@ -111,6 +112,8 @@ const createValueFromLabel = (label: string) => {
 };
 
 export default function LabelsTable() {
+  const t = useTranslations("menu.labelsTable");
+  const commonT = useTranslations("common");
   const { user, restaurantId: authRestaurantId } = useAuth();
 
   const restaurantId =
@@ -189,6 +192,8 @@ export default function LabelsTable() {
   const hasActiveFilters = Boolean(
     search.trim() || debouncedSearch || sortBy !== "label" || sortOrder !== "ASC"
   );
+  const getSortLabel = (value: SortBy) =>
+    value === "value" ? t("value") : t("label");
 
   const shouldShowInitialLoader = isLoading && allItems.length === 0;
   const shouldShowRefreshing = isFetching && !shouldShowInitialLoader;
@@ -336,13 +341,13 @@ export default function LabelsTable() {
       </div>
 
       <p className="text-base font-semibold text-gray-900">
-        No labels found
+        {t("emptyTitle")}
       </p>
 
       <p className="mt-1 text-sm leading-6 text-gray-500">
         {hasActiveFilters
-          ? "No labels match your current search or sorting options."
-          : "Add menu labels like Vegan, Spicy, Popular, New, Recommended, or Gluten Free."}
+          ? t("emptyFiltered")
+          : t("emptyDescription")}
       </p>
 
       {hasActiveFilters ? (
@@ -353,7 +358,7 @@ export default function LabelsTable() {
           className="mt-4 rounded-[12px]"
         >
           <RefreshCcw size={16} className="mr-2" />
-          Reset Filters
+          {t("resetFilters")}
         </Button>
       ) : (
         <Button
@@ -363,7 +368,7 @@ export default function LabelsTable() {
           className="mt-4 rounded-[12px] bg-primary text-white hover:bg-primary/90"
         >
           <PlusCircle size={18} className="mr-2" />
-          Add Label
+          {t("add")}
         </Button>
       )}
     </div>
@@ -374,11 +379,11 @@ export default function LabelsTable() {
       <div className="mb-5 flex min-w-0 flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <h2 className="text-[20px] font-semibold text-gray-900">
-            Menu Item Labels
+            {t("title")}
           </h2>
 
           <p className="mt-1 text-sm text-gray-500">
-            Maintain reusable labels shown on menu items.
+            {t("description")}
           </p>
         </div>
 
@@ -389,25 +394,25 @@ export default function LabelsTable() {
           className="h-[42px] shrink-0 rounded-[12px] bg-primary px-4 text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <PlusCircle size={18} className="mr-2" />
-          Add Label
+          {t("add")}
         </Button>
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
         <SummaryCard
-          label="Total Labels"
+          label={t("totalLabels")}
           value={allItems.length}
           icon={<BadgeCheck size={18} />}
         />
 
         <SummaryCard
-          label="Visible Templates"
+          label={t("visibleTemplates")}
           value={filteredItems.length}
           icon={<Tag size={18} />}
         />
 
         <SummaryCard
-          label="Current Page"
+          label={t("currentPage")}
           value={paginatedItems.length}
           icon={<Filter size={18} />}
         />
@@ -422,25 +427,23 @@ export default function LabelsTable() {
 
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-gray-900">
-                Label Filters
+                {t("filtersTitle")}
               </h3>
               <p className="mt-1 text-xs text-gray-500">
-                Search by value or label. Sorting is handled locally for quick
-                label management.
+                {t("filtersDescription")}
               </p>
             </div>
           </div>
 
           <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs text-gray-500">
             <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-              Showing {paginatedItems.length}
-              {filteredItems.length > 0 ? ` of ${filteredItems.length}` : ""}
+              {t("showingCount", { shown: paginatedItems.length, total: filteredItems.length })}
             </span>
 
             {shouldShowRefreshing ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 font-medium text-primary">
                 <Loader2 size={12} className="animate-spin" />
-                Refreshing
+                {commonT("refreshing")}
               </span>
             ) : null}
           </div>
@@ -449,7 +452,7 @@ export default function LabelsTable() {
         <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
           <div className="min-w-0 xl:col-span-5">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Search
+              {commonT("search")}
             </label>
 
             <div className="relative min-w-0">
@@ -459,7 +462,7 @@ export default function LabelsTable() {
               />
 
               <input
-                placeholder="Search by value or label..."
+                placeholder={t("searchPlaceholder")}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 onKeyDown={(event) => {
@@ -474,7 +477,7 @@ export default function LabelsTable() {
 
           <div className="min-w-0 xl:col-span-3">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Sort By
+              {commonT("sortBy")}
             </label>
 
             <select
@@ -487,7 +490,7 @@ export default function LabelsTable() {
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.label}
+                  {getSortLabel(option.value)}
                 </option>
               ))}
             </select>
@@ -495,7 +498,7 @@ export default function LabelsTable() {
 
           <div className="min-w-0 xl:col-span-2">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Order
+              {commonT("order")}
             </label>
 
             <select
@@ -515,7 +518,7 @@ export default function LabelsTable() {
             onClick={handleManualSearch}
             className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm hover:bg-primary/90 md:w-full xl:col-span-1"
           >
-            Search
+            {commonT("search")}
           </Button>
 
           <Button
@@ -526,15 +529,14 @@ export default function LabelsTable() {
             className="h-[44px] rounded-[14px] border-gray-200 px-4 text-gray-700 md:w-full xl:col-span-1"
           >
             <RefreshCcw size={15} className="mr-2" />
-            Reset
+            {commonT("reset")}
           </Button>
         </div>
       </div>
 
       {!canMutateLabels ? (
         <div className="mb-6 rounded-[18px] border border-amber-100 bg-amber-50 p-4 text-sm text-amber-700">
-          Restaurant context is missing. Creating, updating, or deleting labels
-          requires a restaurant ID.
+          {t("missingRestaurantContext")}
         </div>
       ) : null}
 
@@ -542,10 +544,10 @@ export default function LabelsTable() {
         <table className="w-full table-fixed text-sm">
           <thead>
             <tr className="border-b bg-[#FAFAFA] text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <th className="w-[28%] px-4 py-4">Value</th>
-              <th className="w-[42%] px-4 py-4">Label</th>
-              <th className="w-[20%] px-4 py-4 text-center">Usage</th>
-              <th className="w-[10%] px-4 py-4 text-center">Actions</th>
+              <th className="w-[28%] px-4 py-4">{t("value")}</th>
+              <th className="w-[42%] px-4 py-4">{t("label")}</th>
+              <th className="w-[20%] px-4 py-4 text-center">{t("usage")}</th>
+              <th className="w-[10%] px-4 py-4 text-center">{commonT("actions")}</th>
             </tr>
           </thead>
 
@@ -580,7 +582,7 @@ export default function LabelsTable() {
 
                   <td className="px-4 py-4 text-center">
                     <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                      Menu Label
+                      {t("menuLabel")}
                     </span>
                   </td>
 
@@ -588,22 +590,22 @@ export default function LabelsTable() {
                     <div className="flex items-center justify-center gap-2">
                       <button
                         type="button"
-                        title="Edit"
+                        title={commonT("edit")}
                         disabled={!canMutateLabels}
                         onClick={() => openEditModal(item)}
                         className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-primary/20 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label="Edit label"
+                        aria-label={t("editAria")}
                       >
                         <FaPen size={13} />
                       </button>
 
                       <button
                         type="button"
-                        title="Delete"
+                        title={commonT("delete")}
                         disabled={!canMutateLabels}
                         onClick={() => setDeleteTarget(item)}
                         className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-red-200 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label="Delete label"
+                        aria-label={t("deleteAria")}
                       >
                         <FaTrash size={13} />
                       </button>
@@ -646,12 +648,12 @@ export default function LabelsTable() {
                   </h3>
 
                   <p className="mt-1 text-xs text-gray-400">
-                    Menu item display label
+                    {t("displayLabel")}
                   </p>
                 </div>
 
                 <span className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-                  Label
+                  {t("label")}
                 </span>
               </div>
 
@@ -663,7 +665,7 @@ export default function LabelsTable() {
                   className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <FaPen size={13} />
-                  Edit
+                  {commonT("edit")}
                 </button>
 
                 <button
@@ -673,7 +675,7 @@ export default function LabelsTable() {
                   className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:border-red-300 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <FaTrash size={13} />
-                  Delete
+                  {commonT("delete")}
                 </button>
               </div>
             </div>
@@ -708,8 +710,8 @@ export default function LabelsTable() {
         }}
         onConfirm={handleDelete}
         isLoading={isDeleting}
-        title="Delete Label"
-        description="Are you sure you want to delete this label? This action cannot be undone."
+        title={t("deleteTitle")}
+        description={t("deleteDescription")}
       />
     </div>
   );
@@ -753,6 +755,8 @@ function LabelModal({
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: LabelItem) => void;
 }) {
+  const t = useTranslations("menu.labelsTable.modal");
+  const commonT = useTranslations("common");
   const [form, setForm] = useState<LabelItem>({
     value: "",
     label: "",
@@ -798,11 +802,11 @@ function LabelModal({
           <div className="flex items-start justify-between gap-4">
             <div>
               <DialogTitle className="text-xl font-semibold text-gray-950">
-                {isEditMode ? "Edit Label" : "Add Label"}
+                {isEditMode ? t("editTitle") : t("addTitle")}
               </DialogTitle>
 
               <p className="mt-1 text-sm text-gray-500">
-                Define label value and display label for menu items.
+                {t("description")}
               </p>
             </div>
 
@@ -810,7 +814,7 @@ function LabelModal({
               type="button"
               onClick={() => onOpenChange(false)}
               className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
-              aria-label="Close modal"
+              aria-label={commonT("close")}
             >
               <X size={18} />
             </button>
@@ -820,20 +824,20 @@ function LabelModal({
         <div className="space-y-4 px-5 py-5">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Label
+              {t("label")}
             </label>
 
             <input
               value={form.label}
               onChange={(event) => handleLabelChange(event.target.value)}
-              placeholder="Example: Vegan"
+              placeholder={t("labelPlaceholder")}
               className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15"
             />
           </div>
 
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Value
+              {t("value")}
             </label>
 
             <input
@@ -844,13 +848,12 @@ function LabelModal({
                   value: event.target.value,
                 }))
               }
-              placeholder="Example: vegan"
+              placeholder={t("valuePlaceholder")}
               className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15"
             />
 
             <p className="mt-1.5 text-xs text-gray-400">
-              Use a stable lowercase value because menu items reference labels
-              by this value.
+              {t("valueHelp")}
             </p>
           </div>
 
@@ -862,8 +865,7 @@ function LabelModal({
               />
 
               <p className="text-sm leading-6 text-blue-800">
-                Labels help customers quickly identify menu properties like
-                Vegan, Spicy, Popular, Recommended, New, or Gluten Free.
+                {t("help")}
               </p>
             </div>
           </div>
@@ -877,7 +879,7 @@ function LabelModal({
             onClick={() => onOpenChange(false)}
             className="rounded-[12px]"
           >
-            Cancel
+            {commonT("cancel")}
           </Button>
 
           <Button
@@ -889,12 +891,12 @@ function LabelModal({
             {loading ? (
               <>
                 <Loader2 size={16} className="mr-2 animate-spin" />
-                Saving...
+                {commonT("saving")}
               </>
             ) : isEditMode ? (
-              "Update Label"
+              t("update")
             ) : (
-              "Create Label"
+              t("create")
             )}
           </Button>
         </div>

@@ -16,6 +16,7 @@ import CreateMenuModal from "./CreateMenuModal";
 import CreateCategoryModalParent from "./listing/CreateCategoryModalParent";
 import CreateMenuItemModal from "./CreateMenuItemModal/CreateMenuItemModal";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslations } from "next-intl";
 
 interface HeaderProps {
   title: string;
@@ -23,6 +24,7 @@ interface HeaderProps {
 }
 
 export default function BranchesHeader({ title, description }: HeaderProps) {
+  const t = useTranslations("menu.header");
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isBranchAdmin } = useAuth();
@@ -64,7 +66,7 @@ export default function BranchesHeader({ title, description }: HeaderProps) {
            onClick={()=>router.push("/menu/modifier")}
         >
           <PlusCircle size={18} className="text-[#767676]" />
-  Modifiers
+  {t("modifiers")}
         </Button>
         ) : null}
 
@@ -84,7 +86,7 @@ export default function BranchesHeader({ title, description }: HeaderProps) {
               onClick={() => router.push('/menu/categories')}
         >
           <PlusCircle size={18} className="text-[#767676]"  />
-          Categories
+          {t("categories")}
         </Button>
      
      
@@ -94,7 +96,7 @@ export default function BranchesHeader({ title, description }: HeaderProps) {
                onClick={() => router.push('/menu/items')}
         >
           <PlusCircle size={18} className="text-[#767676]"  />
-          Items
+          {t("items")}
         </Button>
 
 
@@ -104,14 +106,14 @@ export default function BranchesHeader({ title, description }: HeaderProps) {
             onClick={() => setCreateMenu(true)}
         >
           <PlusCircle size={18} color="#fff"  />
-          Add Menu
+          {t("addMenu")}
         </Button>
         ) : null}
 
       </div>
 
-      <ImportModal open={open} onOpenChange={setOpen}  title="Import Menu List"
-  subtitle="Upload menu items for this restaurant" />
+      <ImportModal open={open} onOpenChange={setOpen}  title={t("importTitle")}
+  subtitle={t("importSubtitle")} />
       <CreateMenuModal open={createMenu} onOpenChange={setCreateMenu} />
       <CreateMenuItemModal open={createMenuItem} onOpenChange={setCreateMenuItem} />
               <CreateCategoryModalParent open={createCategory} onOpenChange={setCreateCategory} />

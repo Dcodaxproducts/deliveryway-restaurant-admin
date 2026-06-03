@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { formatDealPrice } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
 import { useAdminDealStats } from "@/hooks/useAdminDeals";
 import type { AdminDeal } from "@/types/admin-deals";
+import { useTranslations } from "next-intl";
 
 type AdminDealStatsModalProps = {
   deal: AdminDeal | null;
@@ -20,6 +21,7 @@ export default function AdminDealStatsModal({
   branchId,
   onClose,
 }: AdminDealStatsModalProps) {
+  const t = useTranslations("deals.stats");
   const statsQuery = useAdminDealStats(
     deal?.id ?? null,
     deal ? { restaurantId, branchId } : undefined
@@ -33,13 +35,13 @@ export default function AdminDealStatsModal({
       <div className="w-full max-w-2xl rounded-[18px] bg-white p-6 shadow-xl">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Deal stats</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t("title")}</h3>
             <p className="mt-1 text-sm text-gray-500">{deal.title}</p>
           </div>
           <Button
             type="button"
             variant="ghost"
-            aria-label="Close stats"
+            aria-label={t("closeAria")}
             onClick={onClose}
             className="h-9 w-9 rounded-full p-0"
           >
@@ -53,14 +55,14 @@ export default function AdminDealStatsModal({
           </div>
         ) : (
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Stat label="Total Uses" value={formatStatNumber(stats.totalUses)} />
-            <Stat label="Orders" value={formatStatNumber(stats.orderCount)} />
-            <Stat label="Customers" value={formatStatNumber(stats.customerCount)} />
+            <Stat label={t("totalUses")} value={formatStatNumber(stats.totalUses)} />
+            <Stat label={t("orders")} value={formatStatNumber(stats.orderCount)} />
+            <Stat label={t("customers")} value={formatStatNumber(stats.customerCount)} />
             <Stat
-              label="Discount Amount"
+              label={t("discountAmount")}
               value={formatDealPrice(stats.totalDiscountAmount)}
             />
-            <Stat label="Revenue" value={formatDealPrice(stats.totalRevenue)} />
+            <Stat label={t("revenue")} value={formatDealPrice(stats.totalRevenue)} />
           </div>
         )}
       </div>

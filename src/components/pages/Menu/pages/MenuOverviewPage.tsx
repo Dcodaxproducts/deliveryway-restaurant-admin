@@ -9,6 +9,7 @@ import PaginationSection from "@/components/common/pagination";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetRestaurantMenus } from "@/hooks/useMenus";
+import { useTranslations } from "next-intl";
 
 interface Menu {
   id: string;
@@ -54,6 +55,7 @@ const extractMeta = (response: any) => {
 };
 
 export default function MenusPage() {
+  const t = useTranslations("menu.overview");
   const { user, restaurantId: authRestaurantId, branchId, isBranchAdmin, loading: authLoading } =
     useAuth();
 
@@ -133,7 +135,7 @@ export default function MenusPage() {
     const message =
       (error as any)?.response?.data?.message ||
       (error as any)?.message ||
-      "Failed to load menus";
+      t("loadError");
 
     toast.error(message);
   }, [isError, error]);
@@ -149,11 +151,11 @@ export default function MenusPage() {
   return (
     <Container>
       <Header
-        title={isBranchAdmin ? "Branch Menu Catalog" : "Menu List"}
+        title={isBranchAdmin ? t("branchCatalogTitle") : t("title")}
         description={
           isBranchAdmin
-            ? "View menus and manage branch-specific category/item overrides."
-            : "View and manage all menus from here"
+            ? t("branchCatalogDescription")
+            : t("description")
         }
       />
 
@@ -168,8 +170,7 @@ export default function MenusPage() {
 
         {!restaurantId && !authLoading ? (
           <div className="mx-2 rounded-[14px] border border-amber-100 bg-amber-50 p-4 text-sm text-amber-700 lg:mx-0">
-            Restaurant context is missing. Please select or assign a restaurant
-            before loading menus.
+            {t("missingRestaurantContext")}
           </div>
         ) : null}
 

@@ -28,36 +28,31 @@ import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import InfiniteScrollFooter from "@/components/common/infinite-scroll-footer";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { extractResponseItems, extractResponseMeta } from "@/lib/response";
+import { useTranslations } from "next-intl";
 
 const PAGE_LIMIT = 10;
 
 type MenuItemStatusFilter = "active" | "inactive";
 
 const STATUS_FILTER_OPTIONS: Array<{
-  label: string;
   value: MenuItemStatusFilter;
-  helper: string;
 }> = [
   {
-    label: "Active",
     value: "active",
-    helper: "Only active items",
   },
   {
-    label: "Inactive",
     value: "inactive",
-    helper: "Only inactive items",
   },
 ];
 
-const getItemDisplayPrice = (item: any) => {
+const getItemDisplayPrice = (item: any, variationBasedLabel: string) => {
   const override = item?.branchOverride || item?.branchOverrides?.[0] || item?.overrides?.[0];
   const rawPrice = override?.price ?? override?.overridePrice ?? item?.price ?? item?.basePrice;
 
   if (rawPrice === null || rawPrice === undefined || rawPrice === "") {
     return {
       hasPrice: false,
-      label: "Variation based",
+      label: variationBasedLabel,
     };
   }
 
@@ -66,7 +61,7 @@ const getItemDisplayPrice = (item: any) => {
   if (Number.isNaN(numericPrice)) {
     return {
       hasPrice: false,
-      label: "Variation based",
+      label: variationBasedLabel,
     };
   }
 
@@ -90,6 +85,8 @@ const mergeUniqueById = (prev: any[], next: any[]) => {
 };
 
 export default function MenuItemsTable({ refetchKey }: any) {
+  const t = useTranslations("menu.itemsTable");
+  const commonT = useTranslations("common");
   const { user, restaurantId: authRestaurantId, branchId, isBranchAdmin } = useAuth();
 
   const restaurantId =
@@ -131,6 +128,11 @@ export default function MenuItemsTable({ refetchKey }: any) {
       STATUS_FILTER_OPTIONS[0],
     [statusFilter]
   );
+
+  const getStatusLabel = (value: MenuItemStatusFilter) =>
+    value === "active" ? commonT("active") : commonT("inactive");
+  const getStatusHelper = (value: MenuItemStatusFilter) =>
+    value === "active" ? t("onlyActiveItems") : t("onlyInactiveItems");
 
   const hasActiveFilters = useMemo(() => {
     return Boolean(
@@ -550,8 +552,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
 
   const EmptyTableState = () => (
     <div className="py-10 text-center text-gray-400">
-      No menu items found
-      {hasActiveFilters ? " for the selected filters" : ""}
+      {hasActiveFilters ? t("emptyFiltered") : t("emptyTitle")}
     </div>
   );
 
@@ -566,12 +567,12 @@ export default function MenuItemsTable({ refetchKey }: any) {
 
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-gray-900">
-                Menu Item Filters
+                {t("filtersTitle")}
               </h3>
               <p className="mt-1 text-xs text-gray-500">
-                Filter menu items by keyword and active status. Current view:{" "}
+                {t("filtersDescription")}{" "}
                 <span className="font-medium text-gray-700">
-                  {activeStatusOption.helper}
+                  {getStatusHelper(activeStatusOption.value)}
                 </span>
               </p>
             </div>
@@ -579,14 +580,13 @@ export default function MenuItemsTable({ refetchKey }: any) {
 
           <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
             <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-              Showing {allItems.length}
-              {pagination.total > 0 ? ` of ${pagination.total}` : ""}
+              {t("showingCount", { shown: allItems.length, total: pagination.total })}
             </span>
 
             {isFetching && !shouldShowInitialLoader ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 font-medium text-primary">
                 <Loader2 size={12} className="animate-spin" />
-                Refreshing
+                {commonT("refreshing")}
               </span>
             ) : null}
           </div>
@@ -595,7 +595,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px_260px_auto_auto] lg:items-end">
           <div className="min-w-0">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Search
+              {commonT("search")}
             </label>
 
             <div className="relative">
@@ -605,7 +605,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
               />
 
               <input
-                placeholder="Search by item name..."
+                placeholder={t("searchPlaceholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(event) => {
@@ -620,7 +620,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
 
           <div className="min-w-0">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Status
+              {commonT("status")}
             </label>
 
             <div className="grid grid-cols-2 gap-2 rounded-[14px] bg-[#F7F7F7] p-1">
@@ -639,7 +639,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
                         : "text-gray-500 hover:bg-white/70 hover:text-gray-800"
                     } disabled:cursor-not-allowed disabled:opacity-60`}
                   >
-                    {option.label}
+                    {getStatusLabel(option.value)}
                   </button>
                 );
               })}
@@ -648,7 +648,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
 
           <div className="min-w-0">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Category
+              {commonT("category")}
             </label>
 
             <CategoryInfiniteSelect
@@ -666,7 +666,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
             onClick={handleManualSearch}
             className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm hover:bg-primary/90"
           >
-            Search
+            {commonT("search")}
           </Button>
 
           <Button
@@ -677,7 +677,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
             className="h-[44px] rounded-[14px] border-gray-200 px-4 text-gray-700"
           >
             <RefreshCcw size={15} className="mr-2" />
-            Reset
+            {commonT("reset")}
           </Button>
         </div>
       </div>
@@ -685,7 +685,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
       {isReordering && !isBranchAdmin ? (
         <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
           <Loader2 size={14} className="animate-spin" />
-          Saving item order...
+          {t("savingOrder")}
         </div>
       ) : null}
 
@@ -694,12 +694,12 @@ export default function MenuItemsTable({ refetchKey }: any) {
           <thead>
             <tr className="border-b text-left text-gray-500">
               <th className="w-[48px] px-2 py-3"></th>
-              <th className="px-2 py-3">Item</th>
-              <th className="px-2">Category</th>
-              <th className="px-2 text-center">Price</th>
-              <th className="px-2 text-center">Prep</th>
-              <th className="px-2 text-center">Status</th>
-              <th className="px-2 text-center">Actions</th>
+              <th className="px-2 py-3">{t("item")}</th>
+              <th className="px-2">{commonT("category")}</th>
+              <th className="px-2 text-center">{commonT("price")}</th>
+              <th className="px-2 text-center">{t("prep")}</th>
+              <th className="px-2 text-center">{commonT("status")}</th>
+              <th className="px-2 text-center">{commonT("actions")}</th>
             </tr>
           </thead>
 
@@ -729,7 +729,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
                 >
                   <td className="px-2 py-4">
                     {isBranchAdmin ? (
-                      <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">Scoped</span>
+                      <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">{t("scoped")}</span>
                     ) : (
                       <div className="flex cursor-grab justify-center text-gray-400 active:cursor-grabbing">
                         <GripVertical size={18} />
@@ -741,7 +741,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
                     <div className="flex items-center gap-3">
                       <img
                         src={item.imageUrl || "https://via.placeholder.com/40"}
-                        alt={item.name || "Menu item"}
+                        alt={item.name || t("imageAlt")}
                         className="h-10 w-10 rounded-[10px] border object-cover"
                         loading="lazy"
                       />
@@ -766,7 +766,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
 
                   <td className="px-2 text-center font-medium">
                     {(() => {
-                      const price = getItemDisplayPrice(item);
+                      const price = getItemDisplayPrice(item, t("variationBased"));
 
                       return (
                         <span
@@ -783,7 +783,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
                   </td>
 
                   <td className="px-2 text-center">
-                    {item.prepTimeMinutes ?? "-"} min
+                    {t("prepMinutes", { minutes: item.prepTimeMinutes ?? "-" })}
                   </td>
 
                   <td className="px-2 text-center">
@@ -794,7 +794,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {(item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive) ? "Active" : "Inactive"}
+                      {(item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive) ? commonT("active") : commonT("inactive")}
                     </span>
                   </td>
 
@@ -841,8 +841,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
           ))
         ) : shouldShowEmpty ? (
           <div className="py-10 text-center text-gray-400">
-            No menu items found
-            {hasActiveFilters ? " for the selected filters" : ""}
+            {hasActiveFilters ? t("emptyFiltered") : t("emptyTitle")}
           </div>
         ) : (
           allItems.map((item: any) => (
@@ -859,11 +858,11 @@ export default function MenuItemsTable({ refetchKey }: any) {
             >
               <div className="mb-3 flex items-center justify-between">
                 {isBranchAdmin ? (
-                  <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">Scoped branch</span>
+                  <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">{t("scopedBranch")}</span>
                 ) : (
                   <div className="flex cursor-grab items-center gap-1 text-xs text-gray-400 active:cursor-grabbing">
                     <GripVertical size={16} />
-                    Drag
+                    {t("drag")}
                   </div>
                 )}
 
@@ -888,7 +887,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
               <div className="flex gap-4">
                 <img
                   src={item.imageUrl || "https://via.placeholder.com/80"}
-                  alt={item.name || "Menu item"}
+                  alt={item.name || t("imageAlt")}
                   className="h-20 w-20 rounded-[14px] object-cover"
                   loading="lazy"
                 />
@@ -912,7 +911,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
 
                   <div className="mt-2 flex justify-between">
                     {(() => {
-                      const price = getItemDisplayPrice(item);
+                      const price = getItemDisplayPrice(item, t("variationBased"));
 
                       return (
                         <span
@@ -928,7 +927,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
                     })()}
 
                     <span className="text-xs text-gray-400">
-                      {item.prepTimeMinutes ?? "-"} min
+                      {t("prepMinutes", { minutes: item.prepTimeMinutes ?? "-" })}
                     </span>
                   </div>
 
@@ -940,7 +939,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {(item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive) ? "Active" : "Inactive"}
+                      {(item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive) ? commonT("active") : commonT("inactive")}
                     </span>
                   </div>
                 </div>
@@ -965,15 +964,15 @@ export default function MenuItemsTable({ refetchKey }: any) {
         <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-[460px] rounded-[20px] bg-white p-6 shadow-xl">
             <div className="mb-5">
-              <h3 className="text-lg font-semibold text-gray-900">Branch item override</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t("overrideTitle")}</h3>
               <p className="mt-1 text-sm text-gray-500">
-                Override availability and price for {overrideItem?.name || "this item"} in your assigned branch.
+                {t("overrideDescription", { name: overrideItem?.name || t("thisItem") })}
               </p>
             </div>
 
             <div className="space-y-4">
               <label className="flex items-center justify-between rounded-[14px] border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700">
-                Available in branch
+                {t("availableInBranch")}
                 <input
                   type="checkbox"
                   checked={overrideForm.isAvailable}
@@ -988,7 +987,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
               </label>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-600">Branch price</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-600">{t("branchPrice")}</label>
                 <input
                   type="number"
                   min="0"
@@ -997,19 +996,19 @@ export default function MenuItemsTable({ refetchKey }: any) {
                   onChange={(event) =>
                     setOverrideForm((prev) => ({ ...prev, price: event.target.value }))
                   }
-                  placeholder="Leave empty to use restaurant price"
+                  placeholder={t("branchPricePlaceholder")}
                   className="h-[44px] w-full rounded-[14px] border border-gray-200 px-4 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
                 />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-600">Reason / note</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-600">{t("reasonNote")}</label>
                 <textarea
                   value={overrideForm.reason}
                   onChange={(event) =>
                     setOverrideForm((prev) => ({ ...prev, reason: event.target.value }))
                   }
-                  placeholder="Optional branch note"
+                  placeholder={t("optionalBranchNote")}
                   className="min-h-[92px] w-full rounded-[14px] border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
                 />
               </div>
@@ -1017,10 +1016,10 @@ export default function MenuItemsTable({ refetchKey }: any) {
 
             <div className="mt-6 flex justify-end gap-3">
               <Button type="button" variant="outline" onClick={() => setOverrideItem(null)}>
-                Cancel
+                {commonT("cancel")}
               </Button>
               <Button type="button" onClick={handleSaveOverride} disabled={isSavingOverride || !branchId}>
-                {isSavingOverride ? "Saving..." : "Save override"}
+                {isSavingOverride ? commonT("saving") : t("saveOverride")}
               </Button>
             </div>
           </div>
@@ -1049,8 +1048,8 @@ export default function MenuItemsTable({ refetchKey }: any) {
         }}
         onConfirm={handleDelete}
         isLoading={isDeleting}
-        title="Delete Menu Item"
-        description="Are you sure you want to delete this menu item? This action cannot be undone."
+        title={t("deleteTitle")}
+        description={t("deleteDescription")}
       />
     </div>
   );
@@ -1079,6 +1078,8 @@ function ActionDropdown({
   isBranchAdmin?: boolean;
   onOverride?: (item: any) => void;
 }) {
+  const t = useTranslations("menu.itemsTable");
+  const commonT = useTranslations("common");
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
   const [dropdownPosition, setDropdownPosition] = useState<{
@@ -1146,7 +1147,7 @@ function ActionDropdown({
         ref={buttonRef}
         type="button"
         aria-expanded={isOpen}
-        aria-label="Menu item actions"
+        aria-label={t("actionsAriaLabel")}
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -1181,7 +1182,7 @@ function ActionDropdown({
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50"
             >
               <SlidersHorizontal size={15} />
-              Branch Override
+              {t("branchOverride")}
             </button>
           ) : (
             <>
@@ -1199,7 +1200,7 @@ function ActionDropdown({
             className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Copy size={15} />
-            {isDuplicating ? "Duplicating..." : "Duplicate"}
+            {isDuplicating ? t("duplicating") : t("duplicate")}
           </button>
 
           <button
@@ -1212,7 +1213,7 @@ function ActionDropdown({
             className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50"
           >
             <FaPen size={13} />
-            Edit
+            {commonT("edit")}
           </button>
 
           <button
@@ -1225,7 +1226,7 @@ function ActionDropdown({
             className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 transition hover:bg-red-50"
           >
             <FaTrash size={13} />
-            Delete
+            {commonT("delete")}
           </button>
             </>
           )}

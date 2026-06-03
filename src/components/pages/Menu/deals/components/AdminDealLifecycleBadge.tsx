@@ -1,4 +1,4 @@
-import { getDealLifecycleLabel } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
+import { useTranslations } from "next-intl";
 
 type AdminDealLifecycleBadgeProps = {
   lifecycle?: string;
@@ -22,16 +22,49 @@ const getLifecycleClassName = (lifecycle?: string) => {
   }
 };
 
+type LifecycleMessageKey =
+  | "active"
+  | "upcoming"
+  | "expired"
+  | "ended"
+  | "deleted"
+  | "inactive"
+  | "unknown";
+
+const getLocalizedLifecycleLabel = (
+  lifecycle: string | undefined,
+  t: (key: LifecycleMessageKey) => string
+) => {
+  switch (lifecycle) {
+    case "ACTIVE":
+      return t("active");
+    case "UPCOMING":
+      return t("upcoming");
+    case "EXPIRED":
+      return t("expired");
+    case "ENDED":
+      return t("ended");
+    case "DELETED":
+      return t("deleted");
+    case "INACTIVE":
+      return t("inactive");
+    default:
+      return t("unknown");
+  }
+};
+
 export default function AdminDealLifecycleBadge({
   lifecycle,
 }: AdminDealLifecycleBadgeProps) {
+  const t = useTranslations("deals.lifecycle");
+
   return (
     <span
       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getLifecycleClassName(
         lifecycle
       )}`}
     >
-      {getDealLifecycleLabel(lifecycle)}
+      {getLocalizedLifecycleLabel(lifecycle, t)}
     </span>
   );
 }

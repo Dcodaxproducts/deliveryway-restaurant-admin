@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { PlusCircle, X } from "lucide-react";
 import FormSelect from "@/components/forms/common/FormSelect";
+import { useTranslations } from "next-intl";
 
 
 interface CreateMenuModalProps {
@@ -23,6 +24,8 @@ export default function CreateCategoryModal({
   open,
   onOpenChange,
 }: CreateMenuModalProps) {
+  const t = useTranslations("menu.categoryPickerModal");
+  const commonT = useTranslations("common");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [categories, setCategories] = useState<string[]>(["Food"]);
   const [submitted, setSubmitted] = useState(false);
@@ -66,10 +69,10 @@ export default function CreateCategoryModal({
       <DialogContent className="max-w-[420px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
         <DialogHeader className="space-y-1">
           <DialogTitle className="text-2xl font-semibold">
-            Add Categories
+            {t("title")}
           </DialogTitle>
           <p className="text-sm text-gray-500">
-            Manage menu categories from here
+            {t("description")}
           </p>
         </DialogHeader>
 
@@ -77,8 +80,8 @@ export default function CreateCategoryModal({
           
           {/* Category */}
           <FormSelect
-            label="Category"
-            placeholder="Select category"
+            label={commonT("category")}
+            placeholder={t("selectCategory")}
             options={CATEGORY_OPTIONS}
             value={selectedCategory}
             open={selectOpen}
@@ -146,7 +149,7 @@ export default function CreateCategoryModal({
       className="flex items-center gap-2 text-primary text-sm mt-2"
     >
       <PlusCircle size={18} />
-      Add More Categories
+      {t("addMoreCategories")}
     </button>
   </div>
 )}
@@ -154,7 +157,7 @@ export default function CreateCategoryModal({
 
           {submitted && categories.length === 0 && (
             <p className="text-xs text-red-500 text-center">
-              At least one category is required
+              {t("required")}
             </p>
           )}
         </div>
@@ -165,14 +168,14 @@ export default function CreateCategoryModal({
             className="text-gray-700 text-[17px]"
             onClick={handleReset}
           >
-            Reset
+            {commonT("reset")}
           </Button>
 
           <Button
             onClick={handleCreate}
             className="px-8 py-2 rounded-[10px] bg-primary hover:bg-primary/90 text-[17px]"
           >
-            Create
+            {commonT("create")}
           </Button>
         </div>
       </DialogContent>

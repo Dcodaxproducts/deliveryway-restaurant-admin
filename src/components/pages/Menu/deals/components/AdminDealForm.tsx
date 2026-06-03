@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { AdminDeal, AdminDealFormValues, AdminDealMenuItemSummary } from "@/types/admin-deals";
 import { adminDealFormSchema } from "@/validations/admin-deals";
+import { useTranslations } from "next-intl";
 
 export type AdminDealFormBranchOption = {
   id: string;
@@ -83,6 +84,8 @@ export default function AdminDealForm({
   onCancel,
   onSubmit,
 }: AdminDealFormProps) {
+  const t = useTranslations("deals.form");
+  const commonT = useTranslations("common");
   const initialMenuItems: AdminDealMenuItemSummary[] = useMemo(
     () => initialDeal?.scopeMenuItems ?? [],
     [initialDeal?.scopeMenuItems]
@@ -105,10 +108,10 @@ export default function AdminDealForm({
         className="space-y-8"
         noValidate
       >
-        <Section label="Setup Basic Info">
+        <Section label={t("setupBasicInfo")}>
           <div className="rounded-xl border border-primary/10 bg-primary/5 p-4 text-sm text-gray-600">
-            <span className="font-medium text-gray-900">Fixed-price item deal.</span>{" "}
-            Customers will pay this fixed price for selected menu items.
+            <span className="font-medium text-gray-900">{t("fixedPriceItemDeal")}</span>{" "}
+            {t("fixedPriceItemDealDescription")}
           </div>
 
           <Controller
@@ -116,8 +119,8 @@ export default function AdminDealForm({
             name="title"
             render={({ field, fieldState }) => (
               <FormInput
-                label="Deal Title *"
-                placeholder="eg. Pizza Combo Deal"
+                label={t("dealTitle")}
+                placeholder={t("dealTitlePlaceholder")}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -132,8 +135,8 @@ export default function AdminDealForm({
             name="code"
             render={({ field }) => (
               <FormInput
-                label="Deal Code (optional)"
-                placeholder="eg. PIZZADEAL"
+                label={t("dealCode")}
+                placeholder={t("dealCodePlaceholder")}
                 value={field.value ?? ""}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -146,12 +149,12 @@ export default function AdminDealForm({
             name="description"
             render={({ field }) => (
               <div className="space-y-2">
-                <Label>Description</Label>
+                <Label>{commonT("description")}</Label>
                 <textarea
                   value={field.value ?? ""}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
-                  placeholder="Write deal description"
+                  placeholder={t("descriptionPlaceholder")}
                   className="min-h-[110px] w-full rounded-md border border-[#BBBBBB] px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
@@ -164,11 +167,11 @@ export default function AdminDealForm({
             render={({ field, fieldState }) => (
               <ImageUploadField<AdminDealFormValues>
                 name="thumbnailUrl"
-                label="Deal Thumbnail"
+                label={t("thumbnail")}
                 value={field.value}
                 error={fieldState.error?.message}
                 setValue={setValue}
-                previewAlt="Deal thumbnail preview"
+                previewAlt={t("thumbnailPreviewAlt")}
                 disabled={submitting}
               />
             )}
@@ -180,10 +183,10 @@ export default function AdminDealForm({
               name="discountValue"
               render={({ field, fieldState }) => (
                 <NumberField
-                  label="Fixed Deal Price *"
+                  label={t("fixedDealPrice")}
                   value={field.value}
                   min={0}
-                  placeholder="eg. 9.99"
+                  placeholder={t("fixedDealPricePlaceholder")}
                   error={fieldState.error?.message}
                   onChange={field.onChange}
                 />
@@ -195,10 +198,10 @@ export default function AdminDealForm({
               name="branchId"
               render={({ field }) => (
                 <div className="space-y-2">
-                  <Label>Branch</Label>
+                  <Label>{commonT("branch")}</Label>
                   {isBranchAdmin ? (
                     <div className="flex h-[44px] items-center rounded-md border border-[#BBBBBB] bg-gray-50 px-4 text-sm text-gray-500">
-                      Current branch
+                      {commonT("currentBranch")}
                     </div>
                   ) : (
                     <select
@@ -207,7 +210,7 @@ export default function AdminDealForm({
                       onBlur={field.onBlur}
                       className="h-[44px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                     >
-                      <option value="">All branches</option>
+                      <option value="">{commonT("allBranches")}</option>
                       {branchOptions.map((branch) => (
                         <option key={branch.id} value={branch.id}>
                           {branch.name}
@@ -226,10 +229,10 @@ export default function AdminDealForm({
               name="minOrderAmount"
               render={({ field, fieldState }) => (
                 <NumberField
-                  label="Minimum Order Amount"
+                  label={t("minimumOrderAmount")}
                   value={field.value}
                   min={0}
-                  placeholder="eg. 100"
+                  placeholder={t("minimumOrderAmountPlaceholder")}
                   error={fieldState.error?.message}
                   onChange={field.onChange}
                 />
@@ -241,10 +244,10 @@ export default function AdminDealForm({
               name="maxDiscountAmount"
               render={({ field, fieldState }) => (
                 <NumberField
-                  label="Maximum Discount Amount"
+                  label={t("maximumDiscountAmount")}
                   value={field.value}
                   min={0}
-                  placeholder="eg. 50"
+                  placeholder={t("maximumDiscountAmountPlaceholder")}
                   error={fieldState.error?.message}
                   onChange={field.onChange}
                 />
@@ -258,11 +261,11 @@ export default function AdminDealForm({
               name="maxUses"
               render={({ field, fieldState }) => (
                 <NumberField
-                  label="Maximum Uses"
+                  label={t("maximumUses")}
                   value={field.value}
                   min={1}
                   step={1}
-                  placeholder="eg. 100"
+                  placeholder={t("maximumUsesPlaceholder")}
                   error={fieldState.error?.message}
                   onChange={field.onChange}
                 />
@@ -274,11 +277,11 @@ export default function AdminDealForm({
               name="maxUsesPerCustomer"
               render={({ field, fieldState }) => (
                 <NumberField
-                  label="Maximum Uses Per Customer"
+                  label={t("maximumUsesPerCustomer")}
                   value={field.value}
                   min={1}
                   step={1}
-                  placeholder="eg. 1"
+                  placeholder={t("maximumUsesPerCustomerPlaceholder")}
                   error={fieldState.error?.message}
                   onChange={field.onChange}
                 />
@@ -292,7 +295,7 @@ export default function AdminDealForm({
               name="startsAt"
               render={({ field, fieldState }) => (
                 <DateField
-                  label="Starts At *"
+                  label={t("startsAt")}
                   value={field.value}
                   error={fieldState.error?.message}
                   onChange={field.onChange}
@@ -306,7 +309,7 @@ export default function AdminDealForm({
               name="expiresAt"
               render={({ field, fieldState }) => (
                 <DateField
-                  label="Expires At *"
+                  label={t("expiresAt")}
                   value={field.value}
                   error={fieldState.error?.message}
                   onChange={field.onChange}
@@ -325,22 +328,21 @@ export default function AdminDealForm({
                   checked={field.value}
                   onCheckedChange={(checked) => field.onChange(Boolean(checked))}
                 />
-                Active deal
+                {t("activeDeal")}
               </label>
             )}
           />
         </Section>
 
-        <Section label="Selected Menu Items">
+        <Section label={t("selectedMenuItems")}>
           <Controller
             control={control}
             name="scopeMenuItemIds"
             render={({ field, fieldState }) => (
               <div className="space-y-2">
-                <Label className="text-[16px]">Select Menu Items *</Label>
+                <Label className="text-[16px]">{t("selectMenuItems")}</Label>
                 <p className={MUTED_TEXT_SM_CLASS}>
-                  Choose at least 2 menu items. The backend will treat this as a
-                  scoped fixed-price deal.
+                  {t("selectMenuItemsHelp")}
                 </p>
                 <AdminDealMenuItemSelector
                   value={field.value}
@@ -362,7 +364,7 @@ export default function AdminDealForm({
             disabled={submitting}
             className="h-[44px] rounded-lg px-6"
           >
-            Cancel
+            {commonT("cancel")}
           </Button>
           <Button
             type="submit"

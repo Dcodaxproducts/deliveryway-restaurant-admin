@@ -33,6 +33,7 @@ import {
   blockNegativeNumberPaste,
   sanitizeNonNegativeNumber,
 } from "@/lib/number-input";
+import { useTranslations } from "next-intl";
 
 type Field = keyof z.infer<typeof schema>;
 
@@ -200,47 +201,53 @@ const getSelectionSummary = ({
   isRequired,
   minSelect,
   maxSelect,
+  t,
 }: {
   isRequired: boolean;
   minSelect: string;
   maxSelect: string;
+  t: ReturnType<typeof useTranslations>;
 }) => {
   const min = Number(minSelect || 0);
   const max = parseOptionalNumber(maxSelect);
 
   if (!isRequired && min === 0 && max === null) {
-    return "Add-ons are optional with no maximum selection limit.";
+    return t("selectionOptionalNoMax");
   }
 
   if (!isRequired && min === 0 && max !== null) {
-    return `Add-ons are optional. Customer can select up to ${max}.`;
+    return t("selectionOptionalWithMax", { max });
   }
 
   if (isRequired && max !== null) {
-    return `Add-ons are required. Customer must select at least ${min} and up to ${max}.`;
+    return t("selectionRequiredWithMax", { min, max });
   }
 
   if (isRequired && max === null) {
-    return `Add-ons are required. Customer must select at least ${min}. No maximum limit.`;
+    return t("selectionRequiredNoMax", { min });
   }
 
-  return `Customer must select at least ${min} add-on option(s).`;
+  return t("selectionMin", { min });
 };
 
 const getQuantitySummary = ({
   minQuantity,
   maxQuantity,
+  t,
 }: {
   minQuantity: string;
   maxQuantity: string;
+  t: ReturnType<typeof useTranslations>;
 }) => {
   const min = Math.max(1, parseNumber(minQuantity, 1));
   const max = Math.max(min, parseNumber(maxQuantity, min));
 
-  return `Customer can order minimum ${min} and maximum ${max} quantity for this item.`;
+  return t("quantitySummary", { min, max });
 };
 
 const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
+  const t = useTranslations("menu.itemModal.stepTwo");
+  const commonT = useTranslations("common");
   const { restaurantId: authRestaurantId, user } = useAuth();
 
   const restaurantId =
@@ -437,7 +444,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
     } catch (err: any) {
       setErrors((prev: any) => ({
         ...prev,
-        [field]: err.errors?.[0]?.message || "Invalid value",
+        [field]: err.errors?.[0]?.message || t("invalidValue"),
       }));
     }
   };
@@ -449,39 +456,36 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
     if (Number.isNaN(minSelect) || minSelect < 0) {
       setErrors((prev: any) => ({
         ...prev,
-        minSelect: "Minimum add-on selection cannot be negative",
+        minSelect: t("minAddonSelectNegative"),
       }));
-      toast.error("Minimum add-on selection cannot be negative");
+      toast.error(t("minAddonSelectNegative"));
       return false;
     }
 
     if (maxSelect !== null && maxSelect < 0) {
       setErrors((prev: any) => ({
         ...prev,
-        maxSelect: "Maximum add-on selection cannot be negative",
+        maxSelect: t("maxAddonSelectNegative"),
       }));
-      toast.error("Maximum add-on selection cannot be negative");
+      toast.error(t("maxAddonSelectNegative"));
       return false;
     }
 
     if (maxSelect !== null && maxSelect < minSelect) {
       setErrors((prev: any) => ({
         ...prev,
-        maxSelect:
-          "Maximum add-on selection cannot be less than minimum selection",
+        maxSelect: t("maxAddonSelectLessThanMin"),
       }));
-      toast.error(
-        "Maximum add-on selection cannot be less than minimum selection"
-      );
+      toast.error(t("maxAddonSelectLessThanMin"));
       return false;
     }
 
     if (form.isRequired && minSelect < 1) {
       setErrors((prev: any) => ({
         ...prev,
-        minSelect: "Required add-ons must have minimum value of at least 1",
+        minSelect: t("requiredAddonsMin"),
       }));
-      toast.error("Required add-ons must have minimum value of at least 1");
+      toast.error(t("requiredAddonsMin"));
       return false;
     }
 
@@ -502,28 +506,27 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
     if (Number.isNaN(minQuantity) || minQuantity < 1) {
       setErrors((prev: any) => ({
         ...prev,
-        minQuantity: "Minimum item quantity must be at least 1",
+        minQuantity: t("minItemQuantityInvalid"),
       }));
-      toast.error("Minimum item quantity must be at least 1");
+      toast.error(t("minItemQuantityInvalid"));
       return false;
     }
 
     if (Number.isNaN(maxQuantity) || maxQuantity < 1) {
       setErrors((prev: any) => ({
         ...prev,
-        maxQuantity: "Maximum item quantity must be at least 1",
+        maxQuantity: t("maxItemQuantityInvalid"),
       }));
-      toast.error("Maximum item quantity must be at least 1");
+      toast.error(t("maxItemQuantityInvalid"));
       return false;
     }
 
     if (maxQuantity < minQuantity) {
       setErrors((prev: any) => ({
         ...prev,
-        maxQuantity:
-          "Maximum item quantity cannot be less than minimum quantity",
+        maxQuantity: t("maxItemQuantityLessThanMin"),
       }));
-      toast.error("Maximum item quantity cannot be less than minimum quantity");
+      toast.error(t("maxItemQuantityLessThanMin"));
       return false;
     }
 
@@ -539,7 +542,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
 
   const validateStep = () => {
     if (imageUploading) {
-      toast.error("Please wait until image upload is complete");
+      toast.error(t("waitForImageUpload"));
       return false;
     }
 
@@ -572,24 +575,26 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
     isRequired: Boolean(form.isRequired),
     minSelect: form.minSelect || "0",
     maxSelect: form.maxSelect || "",
+    t,
   });
 
   const quantitySummary = getQuantitySummary({
     minQuantity: form.minQuantity || "1",
     maxQuantity: form.maxQuantity || "5",
+    t,
   });
 
   return (
     <div className="space-y-6">
       <ImageDropzoneUpload
-        label="Image"
+        label={t("image")}
         value={form.imageUrl}
         previewUrl={form.imagePreview}
         onChange={handleImageUrlChange}
         onPreviewChange={handleImagePreviewChange}
         onClear={handleClearImage}
         onUploadingChange={setImageUploading}
-        previewAlt="Item image preview"
+        previewAlt={t("imagePreviewAlt")}
       />
 
       <section className="rounded-[18px] border border-primary/10 bg-white p-4 shadow-sm">
@@ -600,11 +605,10 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
 
           <div>
             <h3 className="text-sm font-semibold text-gray-950">
-              Add-on Selection Rules
+              {t("addonSelectionRules")}
             </h3>
             <p className="mt-1 text-sm leading-6 text-gray-500">
-              Configure whether add-ons are required and how many add-on options
-              a customer can select.
+              {t("addonSelectionDescription")}
             </p>
           </div>
         </div>
@@ -618,8 +622,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
                 {selectionSummary}
               </p>
               <p className="mt-1 text-xs leading-5 text-gray-600">
-                These limits are for add-on selections only. Leave maximum empty
-                when there is no maximum add-on limit.
+                {t("addonLimitsHelp")}
               </p>
             </div>
           </div>
@@ -629,10 +632,10 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
           <label className="flex cursor-pointer flex-col gap-3 rounded-[14px] border border-gray-200 bg-[#FAFAFA] p-4 transition hover:border-primary/30 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-gray-900">
-                Required Add-ons
+                {t("requiredAddons")}
               </p>
               <p className="mt-1 text-xs leading-5 text-gray-500">
-                Enable this when the customer must select at least one add-on.
+                {t("requiredAddonsDescription")}
               </p>
             </div>
 
@@ -654,7 +657,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
 
           <div className="space-y-2">
             <Label className="text-sm font-semibold text-gray-900">
-              Min Add-on Select
+              {t("minAddonSelect")}
             </Label>
 
             <Input
@@ -680,7 +683,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
             />
 
             <p className="text-xs leading-5 text-gray-400">
-              Minimum number of add-on options the customer must select.
+              {t("minAddonSelectHelp")}
             </p>
 
             {errors.minSelect && (
@@ -691,7 +694,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
           <div className="space-y-2">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <Label className="text-sm font-semibold text-gray-900">
-                Max Add-on Select
+                {t("maxAddonSelect")}
               </Label>
 
               <label className="flex w-fit cursor-pointer items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700">
@@ -708,7 +711,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
                   }}
                   className="accent-primary"
                 />
-                No maximum limit
+                {t("noMaximumLimit")}
               </label>
             </div>
 
@@ -731,12 +734,12 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
                   sanitizeNonNegativeNumber(event.target.value)
                 )
               }
-              placeholder="No maximum"
+              placeholder={t("noMaximum")}
               className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
             />
 
             <p className="text-xs leading-5 text-gray-400">
-              Maximum number of add-on options the customer can select.
+              {t("maxAddonSelectHelp")}
             </p>
 
             {errors.maxSelect && (
@@ -754,10 +757,10 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
 
           <div>
             <h3 className="text-sm font-semibold text-gray-950">
-              Item Quantity Limits
+              {t("itemQuantityLimits")}
             </h3>
             <p className="mt-1 text-sm leading-6 text-gray-500">
-              Configure how many units of this item can be ordered.
+              {t("itemQuantityDescription")}
             </p>
           </div>
         </div>
@@ -771,7 +774,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
                 {quantitySummary}
               </p>
               <p className="mt-1 text-xs leading-5 text-gray-600">
-                These limits control item quantity, not add-on selection.
+                {t("quantityLimitsHelp")}
               </p>
             </div>
           </div>
@@ -780,7 +783,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
         <div className="mt-4 space-y-4">
           <div className="space-y-2">
             <Label className="text-sm font-semibold text-gray-900">
-              Min Item Quantity
+              {t("minItemQuantity")}
             </Label>
 
             <Input
@@ -806,7 +809,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
             />
 
             <p className="text-xs leading-5 text-gray-400">
-              Minimum quantity allowed per order for this item.
+              {t("minItemQuantityHelp")}
             </p>
 
             {errors.minQuantity && (
@@ -816,7 +819,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
 
           <div className="space-y-2">
             <Label className="text-sm font-semibold text-gray-900">
-              Max Item Quantity
+              {t("maxItemQuantity")}
             </Label>
 
             <Input
@@ -842,7 +845,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
             />
 
             <p className="text-xs leading-5 text-gray-400">
-              Maximum quantity allowed per order for this item.
+              {t("maxItemQuantityHelp")}
             </p>
 
             {errors.maxQuantity && (
@@ -860,11 +863,10 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
 
           <div>
             <h3 className="text-sm font-semibold text-gray-950">
-              Labels, Allergens & Additives
+              {t("labelsAllergensAdditives")}
             </h3>
             <p className="mt-1 text-sm leading-6 text-gray-500">
-              Attach reusable menu labels, allergen codes, and additive codes
-              from configured templates.
+              {t("labelsAllergensDescription")}
             </p>
           </div>
         </div>
@@ -872,12 +874,12 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
         <div className="space-y-5">
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <Label>Labels</Label>
+              <Label>{t("labels")}</Label>
 
               {labelsLoading ? (
                 <span className="inline-flex items-center gap-1 text-xs text-gray-400">
                   <Loader2 size={12} className="animate-spin" />
-                  Loading
+                  {commonT("loadingPlain")}
                 </span>
               ) : null}
             </div>
@@ -892,7 +894,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
                     .filter(Boolean)
                 )
               }
-              placeholder="Select item labels"
+              placeholder={t("selectItemLabels")}
               fetchOptions={fetchLabelOptions}
               labelKey="label"
               valueKey="value"
@@ -900,18 +902,18 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
             />
 
             <p className="text-xs leading-5 text-gray-400">
-              Example: Vegan, Spicy, Popular, Recommended, New.
+              {t("labelsHelp")}
             </p>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <Label>Allergen Codes</Label>
+              <Label>{t("allergenCodes")}</Label>
 
               {allergensLoading ? (
                 <span className="inline-flex items-center gap-1 text-xs text-gray-400">
                   <Loader2 size={12} className="animate-spin" />
-                  Loading
+                  {commonT("loadingPlain")}
                 </span>
               ) : null}
             </div>
@@ -926,7 +928,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
                   preserveCodes: selectedAdditiveCodeValues,
                 })
               }
-              placeholder="Select allergen codes"
+              placeholder={t("selectAllergenCodes")}
               fetchOptions={fetchAllergenOptions}
               labelKey="label"
               valueKey="code"
@@ -934,19 +936,19 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
             />
 
             <p className="text-xs leading-5 text-gray-400">
-              Allergen codes are sent to backend in{" "}
+              {t("allergenCodesHelp")}{" "}
               <span className="font-medium">allergenCodes</span>.
             </p>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <Label>Additive Codes</Label>
+              <Label>{t("additiveCodes")}</Label>
 
               {allergensLoading ? (
                 <span className="inline-flex items-center gap-1 text-xs text-gray-400">
                   <Loader2 size={12} className="animate-spin" />
-                  Loading
+                  {commonT("loadingPlain")}
                 </span>
               ) : null}
             </div>
@@ -961,7 +963,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
                   preserveCodes: selectedVisibleAllergenCodeValues,
                 })
               }
-              placeholder="Select additive codes"
+              placeholder={t("selectAdditiveCodes")}
               fetchOptions={fetchAdditiveOptions}
               labelKey="label"
               valueKey="code"
@@ -969,9 +971,9 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
             />
 
             <p className="text-xs leading-5 text-gray-400">
-              Additive codes share the backend{" "}
+              {t("additiveCodesHelpPrefix")}{" "}
               <span className="font-medium">allergenCodes</span> payload with
-              allergen codes.
+              {t("additiveCodesHelpSuffix")}
             </p>
           </div>
         </div>
@@ -979,7 +981,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
 
       <section className="space-y-5">
         <div className="space-y-2">
-          <Label>Preparation Time (minutes)</Label>
+          <Label>{t("preparationTime")}</Label>
 
           <Input
             type="number"
@@ -999,7 +1001,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
                 sanitizeNonNegativeNumber(e.target.value)
               )
             }
-            placeholder="Enter preparation time if applicable"
+            placeholder={t("preparationTimePlaceholder")}
             className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
           />
 
@@ -1009,7 +1011,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
         </div>
 
         <div className="space-y-2">
-          <Label>Sort Order</Label>
+          <Label>{t("sortOrder")}</Label>
 
           <Input
             type="number"
@@ -1036,7 +1038,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
         </div>
 
         <div className="space-y-2">
-          <Label>Delivery Price Adjustment</Label>
+          <Label>{t("deliveryPriceAdjustment")}</Label>
 
           <Input
             type="number"
@@ -1068,7 +1070,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
         </div>
 
         <div className="space-y-2">
-          <Label>Takeaway Price Adjustment</Label>
+          <Label>{t("takeawayPriceAdjustment")}</Label>
 
           <Input
             type="number"
@@ -1100,7 +1102,8 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
         </div>
 
         <div className="space-y-2">
-          <Label>Deposit Amount (Pfand)</Label>
+          <Label>{t("depositAmount")}
+          </Label>
 
           <Input
             type="number"
@@ -1147,11 +1150,11 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
 
       <section className="space-y-5">
         <div className="space-y-2">
-          <Label>Ingredients</Label>
+          <Label>{t("ingredients")}</Label>
 
           <Textarea
             value={form.ingredients || ""}
-            placeholder="e.g. Chicken patty, lettuce, cheese, mayo"
+            placeholder={t("ingredientsPlaceholder")}
             onChange={(e) =>
               setForm((prev: any) => ({
                 ...prev,
@@ -1168,11 +1171,11 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
         </div>
 
         <div className="space-y-2">
-          <Label>Nutritional Information</Label>
+          <Label>{t("nutritionalInformation")}</Label>
 
           <Textarea
             value={form.nutritionalInformation || ""}
-            placeholder="e.g. 450 kcal, 20g protein, 15g fat"
+            placeholder={t("nutritionalInformationPlaceholder")}
             onChange={(e) =>
               setForm((prev: any) => ({
                 ...prev,
@@ -1195,18 +1198,17 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
 
       <section className="space-y-5">
         <div className="space-y-2">
-          <Label>Dietary Flags</Label>
+          <Label>{t("dietaryFlags")}</Label>
 
           <Input
             value={form.dietaryFlags || ""}
             onChange={(e) => update("dietaryFlags", e.target.value)}
-            placeholder="e.g. halal, vegan, gluten-free"
+            placeholder={t("dietaryFlagsPlaceholder")}
             className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
           />
 
           <p className="text-xs text-gray-400">
-            Comma-separated fallback flags. Labels above are preferred where
-            possible.
+            {t("dietaryFlagsHelp")}
           </p>
         </div>
 
@@ -1231,9 +1233,9 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
       <section className="rounded-[18px] border border-gray-100 bg-[#FAFAFA] p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-gray-900">Item Status</p>
+            <p className="text-sm font-semibold text-gray-900">{t("itemStatus")}</p>
             <p className="mt-1 text-sm text-gray-500">
-              Control whether this item is visible and available.
+              {t("itemStatusDescription")}
             </p>
           </div>
 
@@ -1244,7 +1246,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
               onChange={(e) => update("isActive", e.target.checked)}
               className="accent-primary"
             />
-            Active
+            {commonT("active")}
           </label>
         </div>
       </section>
@@ -1253,9 +1255,11 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
         <div className="flex items-start gap-3">
           <AlertCircle size={18} className="mt-0.5 shrink-0 text-primary" />
           <p className="text-sm leading-6 text-gray-700">
-            For add-on style selection, use <strong>Required Selection</strong>,{" "}
-            <strong>Min Select</strong>, and <strong>Max Select</strong>. Leave
-            Max Select empty for unlimited selection.
+            {t.rich("addonStyleHelp", {
+              required: (chunks) => <strong>{chunks}</strong>,
+              min: (chunks) => <strong>{chunks}</strong>,
+              max: (chunks) => <strong>{chunks}</strong>,
+            })}
           </p>
         </div>
       </div>

@@ -29,6 +29,7 @@ import {
   blockNegativeNumberPaste,
   sanitizeNonNegativeNumber,
 } from "@/lib/number-input";
+import { useTranslations } from "next-intl";
 
 interface ModifierGroupForm {
   name: string;
@@ -61,6 +62,8 @@ export default function ModifierGroupModal({
   initialData,
   refresh,
 }: Props) {
+  const t = useTranslations("menu.modifierGroupModal");
+  const commonT = useTranslations("common");
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -195,47 +198,47 @@ export default function ModifierGroupModal({
     const sortOrder = Number(form.sortOrder);
 
     if (!form.name.trim()) {
-      toast.error("Name required");
+      toast.error(t("nameRequired"));
       return;
     }
 
     if (form.minSelect === "" || Number.isNaN(minSelect)) {
-      toast.error("Min select must be a valid number");
+      toast.error(t("minInvalid"));
       return;
     }
 
     if (form.maxSelect === "" || Number.isNaN(maxSelect)) {
-      toast.error("Max select must be a valid number");
+      toast.error(t("maxInvalid"));
       return;
     }
 
     if (form.sortOrder === "" || Number.isNaN(sortOrder)) {
-      toast.error("Sort order must be a valid number");
+      toast.error(t("sortInvalid"));
       return;
     }
 
     if (minSelect < 0) {
-      toast.error("Min select cannot be negative");
+      toast.error(t("minNegative"));
       return;
     }
 
     if (maxSelect < 0) {
-      toast.error("Max select cannot be negative");
+      toast.error(t("maxNegative"));
       return;
     }
 
     if (sortOrder < 0) {
-      toast.error("Sort order cannot be negative");
+      toast.error(t("sortNegative"));
       return;
     }
 
     if (maxSelect < minSelect) {
-      toast.error("Max select cannot be less than min select");
+      toast.error(t("maxLessThanMin"));
       return;
     }
 
     if (!selectedCategory?.id) {
-      toast.error("Category is required");
+      toast.error(t("categoryRequired"));
       return;
     }
 
@@ -288,7 +291,7 @@ export default function ModifierGroupModal({
       toast.error(
         err?.response?.data?.message ||
           err?.message ||
-          `Failed to ${initialData?.id ? "update" : "create"} modifier group`
+          initialData?.id ? t("updateFailed") : t("createFailed")
       );
     }
   };
@@ -298,21 +301,21 @@ export default function ModifierGroupModal({
       <DialogContent className="max-h-[90vh] max-w-[420px] overflow-auto rounded-[20px] bg-[#F5F5F5] p-6">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">
-            {initialData ? "Edit" : "Add"} Modifier Group
+            {initialData ? t("editTitle") : t("addTitle")}
           </DialogTitle>
 
           <p className="text-sm text-gray-500">
-            Configure selection rules for this group
+            {t("description")}
           </p>
         </DialogHeader>
 
         <div className="mt-5 space-y-4 rounded-[16px] bg-white p-5">
           <div className="space-y-1">
-            <p className="text-sm text-gray-600">Category</p>
+            <p className="text-sm text-gray-600">{commonT("category")}</p>
             <AsyncSelect
               value={selectedCategory}
               onChange={setSelectedCategory}
-              placeholder="Select category"
+              placeholder={t("selectCategory")}
               fetchOptions={fetchCategoryOptions}
               labelKey="name"
               valueKey="id"
@@ -320,19 +323,19 @@ export default function ModifierGroupModal({
           </div>
 
           <InputField
-            label="Group Name"
+            label={t("groupName")}
             value={form.name}
             onChange={(v) => handleChange("name", v)}
           />
 
           <InputField
-            label="Description"
+            label={commonT("description")}
             value={form.description}
             onChange={(v) => handleChange("description", v)}
           />
 
           <InputField
-            label="Min Select"
+            label={t("minSelect")}
             type="number"
             value={form.minSelect}
             onChange={(v) => handleNumberChange("minSelect", v)}
@@ -342,7 +345,7 @@ export default function ModifierGroupModal({
           />
 
           <InputField
-            label="Max Select"
+            label={t("maxSelect")}
             type="number"
             value={form.maxSelect}
             onChange={(v) => handleNumberChange("maxSelect", v)}
@@ -352,7 +355,7 @@ export default function ModifierGroupModal({
           />
 
           <InputField
-            label="Sort Order"
+            label={t("sortOrder")}
             type="number"
             value={form.sortOrder}
             onChange={(v) => handleNumberChange("sortOrder", v)}
@@ -370,7 +373,7 @@ export default function ModifierGroupModal({
               }
               className="accent-primary"
             />
-            Required
+            {t("required")}
           </label>
 
           <Button
@@ -381,12 +384,12 @@ export default function ModifierGroupModal({
             {isLoading ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="animate-spin" size={18} />
-                Saving...
+                {commonT("saving")}
               </span>
             ) : initialData ? (
-              "Update Modifier Group"
+              t("update")
             ) : (
-              "Create Modifier Group"
+              t("create")
             )}
           </Button>
         </div>

@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import InfiniteScrollFooter from "@/components/common/infinite-scroll-footer";
 import { extractResponseItems, extractResponseMeta } from "@/lib/response";
+import { useTranslations } from "next-intl";
 
 const PAGE_LIMIT = 10;
 
@@ -41,6 +42,8 @@ const mergeUniqueById = (prev: any[], next: any[]) => {
 };
 
 export default function CategoriesTable({ refetchKey }: any) {
+  const t = useTranslations("menu.categories");
+  const commonT = useTranslations("common");
   const { user, restaurantId: authRestaurantId, branchId, isBranchAdmin } = useAuth();
 const [statusFilter, setStatusFilter] = useState("all");
 const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
@@ -412,7 +415,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
   );
 
   const EmptyState = () => (
-    <div className="py-10 text-center text-gray-400">No categories found</div>
+    <div className="py-10 text-center text-gray-400">{t("emptyTitle")}</div>
   );
 
   return (
@@ -426,7 +429,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
       />
 
       <input
-        placeholder="Search categories..."
+        placeholder={t("searchPlaceholder")}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -441,8 +444,8 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
       }}
       className="h-[44px] rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm focus:outline-none"
     >
-      <option value="all">Active</option>
-      <option value="active">Inactive</option>
+      <option value="all">{t("statusOptions.all")}</option>
+      <option value="active">{commonT("inactive")}</option>
     </select>
 
     {/* <select
@@ -464,7 +467,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
       onClick={handleManualSearch}
       className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm"
     >
-      Search
+      {commonT("search")}
     </Button>
   </div>
 </div>
@@ -472,7 +475,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
       {isReordering && !isBranchAdmin ? (
         <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
           <Loader2 size={14} className="animate-spin" />
-          Saving category order...
+          {t("savingOrder")}
         </div>
       ) : null}
 
@@ -481,11 +484,11 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
           <thead>
             <tr className="border-b text-left text-gray-500">
               <th className="w-[48px] px-2 py-3"></th>
-              <th className="px-2 py-3">Category</th>
-              <th className="px-2">Description</th>
-              <th className="px-2 text-center">Slug</th>
-              <th className="px-2 text-center">Status</th>
-              <th className="px-2 text-center">Actions</th>
+              <th className="px-2 py-3">{commonT("category")}</th>
+              <th className="px-2">{commonT("description")}</th>
+              <th className="px-2 text-center">{commonT("slug")}</th>
+              <th className="px-2 text-center">{commonT("status")}</th>
+              <th className="px-2 text-center">{commonT("actions")}</th>
             </tr>
           </thead>
 
@@ -515,7 +518,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
                 >
                   <td className="px-2 py-4">
                     {isBranchAdmin ? (
-                      <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">Scoped</span>
+                      <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">{t("scoped")}</span>
                     ) : (
                       <div className="flex cursor-grab justify-center text-gray-400 active:cursor-grabbing">
                         <GripVertical size={18} />
@@ -527,7 +530,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
                     <div className="flex items-center gap-3">
                       <img
                         src={item.imageUrl || "https://via.placeholder.com/40"}
-                        alt={item.name || "Category"}
+                        alt={item.name || t("imageAlt")}
                         className="h-10 w-10 rounded-[10px] border object-cover"
                         loading="lazy"
                       />
@@ -570,7 +573,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {(item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive) ? "Active" : "Inactive"}
+                      {(item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive) ? commonT("active") : commonT("inactive")}
                     </span>
                   </td>
 
@@ -590,11 +593,11 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
         <>
           <DropdownMenuItem onClick={() => handleOverrideOpen(item)} className="cursor-pointer">
             <SlidersHorizontal className="mr-2 h-4 w-4" />
-            Branch Override
+            {t("branchOverride")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push(`/menu/categories/${item.id}`)} className="cursor-pointer">
             <Eye className="mr-2 h-4 w-4" />
-            View Details
+            {commonT("viewDetails")}
           </DropdownMenuItem>
         </>
       ) : (
@@ -607,7 +610,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
         className="cursor-pointer"
       >
         <FaPen className="mr-2" size={12} />
-        Edit
+        {commonT("edit")}
       </DropdownMenuItem>
 
       <DropdownMenuItem
@@ -617,7 +620,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
         className="cursor-pointer"
       >
         <Eye className="mr-2 h-4 w-4" />
-        View Details
+        {commonT("viewDetails")}
       </DropdownMenuItem>
 
       <DropdownMenuItem
@@ -638,7 +641,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
         }}
         className="cursor-pointer"
       >
-        {item.isActive ? "Deactivate" : "Activate"}
+        {item.isActive ? t("deactivate") : t("activate")}
       </DropdownMenuItem>
 
       <DropdownMenuItem
@@ -646,7 +649,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
         className="cursor-pointer text-red-500 focus:text-red-500"
       >
         <FaTrash className="mr-2" size={12} />
-        Delete
+        {commonT("delete")}
       </DropdownMenuItem>
         </>
       )}
@@ -693,11 +696,11 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
             >
               <div className="mb-3 flex justify-end">
                 {isBranchAdmin ? (
-                  <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">Scoped branch</span>
+                  <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">{t("scopedBranch")}</span>
                 ) : (
                   <div className="flex cursor-grab items-center gap-1 text-xs text-gray-400 active:cursor-grabbing">
                     <GripVertical size={16} />
-                    Drag
+                    {t("drag")}
                   </div>
                 )}
               </div>
@@ -705,7 +708,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
               <div className="flex gap-4">
                 <img
                   src={item.imageUrl || "https://via.placeholder.com/80"}
-                  alt={item.name || "Category"}
+                  alt={item.name || t("imageAlt")}
                   className="h-20 w-20 rounded-[14px] object-cover"
                   loading="lazy"
                 />
@@ -721,7 +724,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
                         ? item.description.length > 50
                           ? `${item.description.slice(0, 50)}...`
                           : item.description
-                        : "No description"}
+                        : commonT("noData")}
                     </p>
                   </div>
 
@@ -737,7 +740,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {(item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive) ? "Active" : "Inactive"}
+                      {(item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive) ? commonT("active") : commonT("inactive")}
                     </span>
 
                   <DropdownMenu>
@@ -755,11 +758,11 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
       <>
         <DropdownMenuItem onClick={() => handleOverrideOpen(item)} className="cursor-pointer">
           <SlidersHorizontal className="mr-2 h-4 w-4" />
-          Branch Override
+          {t("branchOverride")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push(`/menu/categories/${item.id}`)} className="cursor-pointer">
           <Eye className="mr-2 h-4 w-4" />
-          View Details
+          {commonT("viewDetails")}
         </DropdownMenuItem>
       </>
     ) : (
@@ -772,7 +775,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
       className="cursor-pointer"
     >
       <FaPen className="mr-2" size={12} />
-      Edit
+      {commonT("edit")}
     </DropdownMenuItem>
 
     <DropdownMenuItem
@@ -782,7 +785,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
       className="cursor-pointer"
     >
       <Eye className="mr-2 h-4 w-4" />
-      View Details
+      {commonT("viewDetails")}
     </DropdownMenuItem>
 
     <DropdownMenuItem
@@ -803,7 +806,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
       }}
       className="cursor-pointer"
     >
-      {item.isActive ? "Deactivate" : "Activate"}
+      {item.isActive ? t("deactivate") : t("activate")}
     </DropdownMenuItem>
 
     <DropdownMenuItem
@@ -811,7 +814,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
       className="cursor-pointer text-red-500 focus:text-red-500"
     >
       <FaTrash className="mr-2" size={12} />
-      Delete
+      {commonT("delete")}
     </DropdownMenuItem>
       </>
     )}
@@ -840,15 +843,15 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
         <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-[440px] rounded-[20px] bg-white p-6 shadow-xl">
             <div className="mb-5">
-              <h3 className="text-lg font-semibold text-gray-900">Branch category override</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t("overrideTitle")}</h3>
               <p className="mt-1 text-sm text-gray-500">
-                Override availability for {overrideCategory?.name || "this category"} in your assigned branch.
+                {t("overrideDescription", { name: overrideCategory?.name || t("thisCategory") })}
               </p>
             </div>
 
             <div className="space-y-4">
               <label className="flex items-center justify-between rounded-[14px] border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700">
-                Available in branch
+                {t("availableInBranch")}
                 <input
                   type="checkbox"
                   checked={overrideForm.isAvailable}
@@ -860,13 +863,13 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
               </label>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-600">Reason / note</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-600">{t("reasonNote")}</label>
                 <textarea
                   value={overrideForm.reason}
                   onChange={(event) =>
                     setOverrideForm((prev) => ({ ...prev, reason: event.target.value }))
                   }
-                  placeholder="Optional branch note"
+                  placeholder={t("optionalBranchNote")}
                   className="min-h-[92px] w-full rounded-[14px] border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
                 />
               </div>
@@ -874,10 +877,10 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
 
             <div className="mt-6 flex justify-end gap-3">
               <Button type="button" variant="outline" onClick={() => setOverrideCategory(null)}>
-                Cancel
+                {commonT("cancel")}
               </Button>
               <Button type="button" onClick={handleSaveOverride} disabled={isSavingOverride || !branchId}>
-                {isSavingOverride ? "Saving..." : "Save override"}
+                {isSavingOverride ? commonT("saving") : t("saveOverride")}
               </Button>
             </div>
           </div>
@@ -906,8 +909,8 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
         }}
         onConfirm={handleDelete}
         isLoading={isDeleting}
-        title="Delete Category"
-        description="Are you sure you want to delete this category? This action cannot be undone."
+        title={t("deleteTitle")}
+        description={t("deleteDescription")}
       />
     </div>
   );
