@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 type EmptyStateProps = {
   title?: string;
@@ -11,26 +12,26 @@ type EmptyStateProps = {
 
 const emptyStateMap: Record<
   string,
-  { title: string; description: string }
+  { titleKey: string; descriptionKey: string }
 > = {
   "/menu": {
-    title: "Looks like there are no menus yet!",
-    description: "You haven’t added any menus yet. Start by creating a new one.",
+    titleKey: "emptyMenuTitle",
+    descriptionKey: "emptyMenuDescription",
   },
 
   "/menu/trash": {
-    title: "Trash is empty",
-    description: "Deleted menus will appear here.",
+    titleKey: "emptyTrashTitle",
+    descriptionKey: "emptyTrashDescription",
   },
 
   "/branches": {
-    title: "No branches found",
-    description: "Create your first branch to get started.",
+    titleKey: "emptyBranchesTitle",
+    descriptionKey: "emptyBranchesDescription",
   },
 
   "/products": {
-    title: "No products yet",
-    description: "Add products to start selling.",
+    titleKey: "emptyProductsTitle",
+    descriptionKey: "emptyProductsDescription",
   },
 };
 
@@ -41,16 +42,16 @@ export default function EmptyState({
   description,
 }: EmptyStateProps) {
   const pathname = usePathname();
+  const t = useTranslations("common");
 
   const routeContent = emptyStateMap[pathname];
 
   const finalTitle =
-    title ?? routeContent?.title ?? "Looks like there is no data yet!";
+    title ?? (routeContent ? t(routeContent.titleKey) : t("emptyDefaultTitle"));
 
   const finalDescription =
     description ??
-    routeContent?.description ??
-    "You haven’t added anything yet. Start by creating a new one.";
+    (routeContent ? t(routeContent.descriptionKey) : t("emptyDefaultDescription"));
 
   return (
     <div className="w-full bg-[#F5F5F5] rounded-[16px] py-16 px-6 flex flex-col items-center text-center">

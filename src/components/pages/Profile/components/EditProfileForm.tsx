@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,8 @@ const defaultValues: ProfileFormValues = {
 
 export default function EditProfile() {
   const router = useRouter();
+  const t = useTranslations("profile");
+  const common = useTranslations("common");
   const { user, token, setUser } = useAuth();
   const { uploadFile, uploading } = useFileUpload();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -162,14 +165,14 @@ export default function EditProfile() {
         }
       }
 
-      toast.success("Profile updated successfully");
+      toast.success(t("profileUpdated"));
       if (previewObjectUrlRef.current) {
         URL.revokeObjectURL(previewObjectUrlRef.current);
         previewObjectUrlRef.current = null;
       }
       router.push("/profile");
     } catch (error) {
-      toast.error(getApiErrorMessage(error, "Unable to update profile"));
+      toast.error(getApiErrorMessage(error, t("updateProfileError")));
     } finally {
       setSaving(false);
     }
@@ -197,7 +200,7 @@ export default function EditProfile() {
 
             <button
               type="button"
-              aria-label={avatarUrl ? "Change profile photo" : "Upload profile photo"}
+              aria-label={avatarUrl ? t("changePhoto") : t("uploadPhoto")}
               onClick={openFilePicker}
               disabled={uploading}
               className="absolute bottom-2 right-2 rounded-full border bg-white p-2 shadow hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
@@ -208,7 +211,7 @@ export default function EditProfile() {
             {avatarUrl ? (
               <button
                 type="button"
-                aria-label="Remove profile photo"
+                aria-label={t("removePhoto")}
                 onClick={clearAvatar}
                 className="absolute bottom-2 left-2 rounded-full border bg-white p-2 shadow hover:bg-gray-50"
               >
@@ -216,7 +219,7 @@ export default function EditProfile() {
               </button>
             ) : null}
           </div>
-          {uploading ? <p className="mt-2 text-xs text-gray-400">Uploading profile image...</p> : null}
+          {uploading ? <p className="mt-2 text-xs text-gray-400">{t("uploadingImage")}</p> : null}
 
           <h2 className="mt-6 text-2xl font-semibold text-[#030401]">
             {displayName}
@@ -225,7 +228,7 @@ export default function EditProfile() {
           <p className="text-sm text-[#909090]">{user?.email ?? "—"}</p>
 
           <p className="mt-3 max-w-lg text-center text-sm leading-relaxed text-[#909090]">
-            {bio ?? "No description provided."}
+            {bio ?? t("noDescription")}
           </p>
         </div>
 
@@ -233,15 +236,15 @@ export default function EditProfile() {
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <FormInput
               id="profile-first-name"
-              label="First Name *"
-              placeholder="Enter first name"
+              label={t("firstName")}
+              placeholder={t("firstNamePlaceholder")}
               errorText={errors.firstName?.message}
               {...register("firstName")}
             />
             <FormInput
               id="profile-last-name"
-              label="Last Name *"
-              placeholder="Enter last name"
+              label={t("lastName")}
+              placeholder={t("lastNamePlaceholder")}
               errorText={errors.lastName?.message}
               {...register("lastName")}
             />
@@ -250,8 +253,8 @@ export default function EditProfile() {
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <FormInput
               id="profile-phone"
-              label="Phone Number"
-              placeholder="Enter phone number"
+              label={t("phoneNumber")}
+              placeholder={t("phonePlaceholder")}
               errorText={errors.phone?.message}
               {...register("phone")}
             />
@@ -260,11 +263,11 @@ export default function EditProfile() {
 
           <div>
             <label htmlFor="profile-bio" className={`mb-2 block ${LABEL_TEXT_CLASS}`}>
-              Bio
+              {t("bio")}
             </label>
             <textarea
               id="profile-bio"
-              placeholder="Tell customers a little about you"
+              placeholder={t("bioPlaceholder")}
               className="min-h-28 w-full rounded-[9px] border border-[#BBBBBB] px-3 py-2 text-sm outline-none focus:border-2 focus:border-primary"
               {...register("bio")}
             />
@@ -278,7 +281,7 @@ export default function EditProfile() {
             disabled={saving || uploading}
             className="h-[46px] w-full rounded-xl bg-primary text-white hover:bg-red-600"
           >
-            {saving ? "Saving..." : "Save Profile"}
+            {saving ? common("saving") : t("saveProfile")}
           </Button>
         </div>
       </form>

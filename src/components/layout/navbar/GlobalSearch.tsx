@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { GlobalSearchDropdown } from "@/components/layout/navbar/GlobalSearchDropdown";
 import { buildUnifiedSearchHref } from "@/components/layout/navbar/global-search-config";
@@ -23,6 +24,7 @@ const useDebouncedValue = (value: string, delay: number) => {
 
 export function GlobalSearch() {
   const router = useRouter();
+  const t = useTranslations("globalSearch");
   const scope = useCurrentScope();
   const containerRef = useRef<HTMLDivElement>(null);
   const [searchValue, setSearchValue] = useState("");
@@ -122,7 +124,7 @@ export function GlobalSearch() {
       <div className="relative flex items-center bg-white border border-gray-300 rounded-lg px-3 h-[56px] focus-within:ring-2 focus-within:ring-ring transition-all">
         <Input
           type="text"
-          placeholder="Search here"
+          placeholder={t("placeholder")}
           value={searchValue}
           onChange={(event) => {
             setSearchValue(event.target.value);
@@ -132,7 +134,7 @@ export function GlobalSearch() {
             if (trimmedQuery.length >= 2) setIsOpen(true);
           }}
           onKeyDown={handleKeyDown}
-          aria-label="Global search"
+          aria-label={t("ariaLabel")}
           aria-expanded={isOpen}
           aria-controls="global-search-dropdown"
           aria-autocomplete="list"
@@ -149,7 +151,7 @@ export function GlobalSearch() {
             <GlobalSearchDropdown
               groups={data?.groups ?? []}
               loading={isFetching && !data}
-              error={error ? "Search is temporarily unavailable" : undefined}
+              error={error ? t("temporaryUnavailable") : undefined}
               selectedHref={selectedResult?.href}
               onResultClick={handleResultClick}
               onViewAllClick={navigate}

@@ -1,13 +1,18 @@
+"use client";
+
 import Container from "@/components/common/Container";
 import ProfileHeader from "@/components/pages/Profile/components/ProfileHeader";
 import UserProfile from "@/components/pages/Profile/components/UserProfile";
+import { useTranslations } from "next-intl";
 
 export default function ProfilePage() {
+  const t = useTranslations("profile");
+
   return (
     <Container>
       <ProfileHeader
-        title="Profile Management"
-        description="View and manage your profile"
+        title={t("managementTitle")}
+        description={t("managementDescription")}
       />
       <UserProfile />
     </Container>

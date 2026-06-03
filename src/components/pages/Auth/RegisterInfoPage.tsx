@@ -1,4 +1,10 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 const RegisterInfoPage = () => {
+  const t = useTranslations("auth");
+
   return (
     <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6 lg:px-8">
       <section className="mx-auto flex min-h-[70vh] max-w-4xl items-center justify-center">
@@ -8,17 +14,15 @@ const RegisterInfoPage = () => {
           </div>
 
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-primary">
-            Admin Panel
+            {t("adminPanel")}
           </p>
 
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-            Restaurant Management Admin Panel
+            {t("registerInfoTitle")}
           </h1>
 
           <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-            This area is reserved for restaurant administrators. Restaurant
-            registration is completed through the landing page, and approved
-            restaurants can then access their admin dashboard from here.
+            {t("registerInfoDescription")}
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -28,45 +32,42 @@ const RegisterInfoPage = () => {
               rel="noreferrer"
               className="inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 sm:w-auto"
             >
-              Go to Registration Page
+              {t("goToRegistrationPage")}
             </a>
 
             <a
               href="/login"
               className="inline-flex w-full items-center justify-center rounded-full border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground transition hover:bg-muted sm:w-auto"
             >
-              Admin Login
+              {t("adminLogin")}
             </a>
           </div>
 
           <div className="mt-10 grid gap-4 text-left sm:grid-cols-3">
             <div className="rounded-2xl border border-border bg-background p-4">
               <h2 className="text-sm font-semibold text-foreground">
-                Register Restaurant
+                {t("registerRestaurant")}
               </h2>
               <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                New restaurants should submit their registration from the
-                public landing page.
+                {t("registerRestaurantDescription")}
               </p>
             </div>
 
             <div className="rounded-2xl border border-border bg-background p-4">
               <h2 className="text-sm font-semibold text-foreground">
-                Approval Process
+                {t("approvalProcess")}
               </h2>
               <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                Admin access is available after restaurant information is
-                reviewed and approved.
+                {t("approvalProcessDescription")}
               </p>
             </div>
 
             <div className="rounded-2xl border border-border bg-background p-4">
               <h2 className="text-sm font-semibold text-foreground">
-                Manage Operations
+                {t("manageOperations")}
               </h2>
               <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                Approved admins can manage menus, orders, branches, reports,
-                and restaurant settings.
+                {t("manageOperationsDescription")}
               </p>
             </div>
           </div>

@@ -3,6 +3,7 @@
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChangeEvent } from "react";
+import { useTranslations } from "next-intl";
 
 interface SearchBarProps {
   value?: string;
@@ -16,9 +17,12 @@ export default function BorderedSearchBar({
   value,
   onChange,
   onSearch,
-  placeholder = "Search...",
+  placeholder,
   className = "",
 }: SearchBarProps) {
+  const t = useTranslations("common");
+  const searchPlaceholder = placeholder ?? t("searchEllipsis");
+
   return (
     <div className={`relative bg-white rounded-[14px] ${className}`}>
       {/* Search Icon */}
@@ -32,7 +36,7 @@ export default function BorderedSearchBar({
         type="text"
         value={value}
         onChange={onChange}
-        placeholder={placeholder}
+        placeholder={searchPlaceholder}
         className="
           w-full h-[52px]
           pl-12 pr-[140px]
@@ -60,7 +64,7 @@ export default function BorderedSearchBar({
           hover:bg-primary/90
         "
       >
-        Search
+        {t("search")}
       </Button>
     </div>
   );

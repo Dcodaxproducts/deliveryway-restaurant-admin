@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { GlobalSearchGroup, GlobalSearchResult } from "@/types/global-search";
 
 type GlobalSearchDropdownProps = {
@@ -20,6 +21,7 @@ export function GlobalSearchDropdown({
   onResultClick,
   onViewAllClick,
 }: GlobalSearchDropdownProps) {
+  const t = useTranslations("globalSearch");
   const hasResults = groups.some((group) => group.results.length > 0);
 
   return (
@@ -27,7 +29,7 @@ export function GlobalSearchDropdown({
       {loading ? (
         <div className="flex items-center gap-2 px-4 py-4 text-sm text-gray-500">
           <Loader2 className="size-4 animate-spin" />
-          Searching...
+          {t("searching")}
         </div>
       ) : null}
 
@@ -36,7 +38,7 @@ export function GlobalSearchDropdown({
       ) : null}
 
       {!loading && !error && !hasResults ? (
-        <div className="px-4 py-4 text-sm text-gray-500">No results found</div>
+        <div className="px-4 py-4 text-sm text-gray-500">{t("noResults")}</div>
       ) : null}
 
       {!loading && !error && hasResults ? (
@@ -47,7 +49,7 @@ export function GlobalSearchDropdown({
               <section key={group.entity} className="border-b border-gray-100 last:border-b-0">
                 <div className="flex items-center justify-between px-4 py-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    {group.label}
+                    {t(`groups.${group.entity}`)}
                   </p>
                   <button
                     type="button"
@@ -55,7 +57,7 @@ export function GlobalSearchDropdown({
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => onViewAllClick(group.href)}
                   >
-                    View all
+                    {t("viewAll")}
                   </button>
                 </div>
 

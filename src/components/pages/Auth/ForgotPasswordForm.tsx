@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import FormInput from "@/components/forms/common/FormInput";
 import AuthPageShell, {
@@ -24,6 +25,7 @@ import {
 
 const ForgotPasswordForm = () => {
   const router = useRouter();
+  const t = useTranslations("auth");
   const {
     control,
     handleSubmit,
@@ -39,11 +41,11 @@ const ForgotPasswordForm = () => {
   const onSubmit = async (values: ForgotPasswordFormValues) => {
     try {
       await authApi.forgotPassword(values);
-      toast.success("If the account exists, you can now reset your password");
+      toast.success(t("forgotPasswordSuccess"));
 
       router.push(`/reset-password?email=${encodeURIComponent(values.email)}&restaurantId=${values.restaurantId ?? ""}`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      toast.error(error instanceof Error ? error.message : t("genericError"));
     }
   };
 
@@ -59,11 +61,11 @@ const ForgotPasswordForm = () => {
         </div>
 
         <h1 className={AUTH_TITLE_CLASS}>
-          Forgot password?
+          {t("forgotPasswordTitle")}
         </h1>
 
         <p className={AUTH_DESCRIPTION_CLASS}>
-          Enter the email address associated with your account and we'll send you a link to reset your password.
+          {t("forgotPasswordDescription")}
         </p>
 
         <form className="mt-8 space-y-6" noValidate onSubmit={handleSubmit(onSubmit)}>
@@ -72,8 +74,8 @@ const ForgotPasswordForm = () => {
             name="email"
             render={({ field }) => (
               <FormInput
-                label="Email"
-                placeholder="Enter Your Email"
+                label={t("email")}
+                placeholder={t("emailPlaceholderTitle")}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -88,8 +90,8 @@ const ForgotPasswordForm = () => {
             name="restaurantId"
             render={({ field }) => (
               <FormInput
-                label="Restaurant ID"
-                placeholder="Enter Your restaurant id"
+                label={t("restaurantId")}
+                placeholder={t("restaurantIdPlaceholder")}
                 value={field.value ?? ""}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -104,18 +106,18 @@ const ForgotPasswordForm = () => {
             className={AUTH_PRIMARY_SUBMIT_BUTTON_CLASS}
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Sending..." : "Send Reset Link"}
+            {isSubmitting ? t("sending") : t("sendResetLink")}
           </Button>
 
           <div className="flex items-center gap-4">
             <div className={AUTH_DIVIDER_LINE_CLASS} />
-            <span className="text-sm text-gray-700">or</span>
+            <span className="text-sm text-gray-700">{t("or")}</span>
             <div className={AUTH_DIVIDER_LINE_CLASS} />
           </div>
 
           <Link href="/login" className="flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] border border-gray-300 text-sm font-medium text-blue-600 transition hover:bg-gray-50">
             <ArrowLeft size={16} />
-            Back to login
+            {t("backToLogin")}
           </Link>
         </form>
       </div>

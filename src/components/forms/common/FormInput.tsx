@@ -2,6 +2,7 @@
 
 import { Eye, EyeOff } from "lucide-react";
 import { forwardRef, useId, useState, type InputHTMLAttributes } from "react";
+import { useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +44,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
     },
     ref
   ) => {
+    const t = useTranslations("auth");
     const generatedId = useId();
     const inputId = id ?? generatedId;
     const [showPassword, setShowPassword] = useState(false);
@@ -87,7 +89,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           {showPasswordToggle && type === "password" && (
             <button
               type="button"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? t("hidePassword") : t("showPassword")}
               aria-pressed={showPassword}
               onClick={() => setShowPassword((prev) => !prev)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"

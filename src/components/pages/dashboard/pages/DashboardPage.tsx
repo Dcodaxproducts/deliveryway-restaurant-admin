@@ -9,8 +9,10 @@ import { managementData } from "@/config/dashboard";
 import ManagementSection from "@/components/pages/Dashboard/components/dashboard/ManagementSection";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetRestaurantDashboardOverview } from "@/hooks/useDashboard";
+import { useTranslations } from "next-intl";
 
 export default function Home() {
+  const t = useTranslations("dashboard");
   const { restaurantId, branchId, isBranchAdmin, loading: authLoading } = useAuth();
   const scopedDashboardParams = restaurantId
     ? {
@@ -26,15 +28,38 @@ export default function Home() {
           item.id === "restaurants"
             ? {
                 ...item,
-                title: "My Branch Workspace",
-                description:
-                  "Manage orders, POS, menu overrides, delivery team, staff, settings, and reports for your assigned branch only.",
-                actionLabel: "Open My Branch",
+                title: t("management.branchWorkspaceTitle"),
+                description: t("management.branchWorkspaceDescription"),
+                actionLabel: t("management.branchWorkspaceAction"),
                 actionHref: "/branch-workspace",
               }
             : item
         )
     : managementData;
+
+  const translatedManagementItems = dashboardManagementItems.map((item) => {
+    const keyById: Record<string, string> = {
+      restaurants: "restaurants",
+      menu: "menu",
+      orders: "orders",
+      pos: "pos",
+      customers: "customers",
+      delivery: "delivery",
+      employees: "employees",
+      reports: "reports",
+      promotions: "promotions",
+    };
+    const key = item.actionHref === "/branch-workspace" ? "branchWorkspace" : keyById[item.id];
+
+    if (!key) return item;
+
+    return {
+      ...item,
+      title: t(`management.${key}Title`),
+      description: t(`management.${key}Description`),
+      actionLabel: t(`management.${key}Action`),
+    };
+  });
 
   const {
     data: dashboardOverviewResponse,
@@ -47,59 +72,59 @@ export default function Home() {
   const statsData = [
     {
       _id: "total-orders",
-      title: "Total Orders",
+      title: t("totalOrders"),
       value: overview?.totalOrders ?? 0,
       icon: "orders",
       iconStyle: "default",
       trend: {
         direction: "up",
-        percentage: `${overview?.activeOrders ?? 0} Active`,
+        percentage: t("activeSuffix", { count: overview?.activeOrders ?? 0 }),
       },
     },
     {
       _id: "total-revenue",
-      title: "Total Revenue",
+      title: t("totalRevenue"),
       value: `${Number(overview?.totalRevenue ?? 0).toLocaleString()}`,
       icon: "revenue",
       iconStyle: "default",
       trend: {
         direction: "up",
-        percentage: `Avg: ${Number(
-          overview?.averageOrderValue ?? 0
-        ).toLocaleString()}`,
+        percentage: t("averagePrefix", {
+          value: Number(overview?.averageOrderValue ?? 0).toLocaleString(),
+        }),
       },
     },
     {
       _id: "total-customers",
-      title: "Total Customers",
+      title: t("totalCustomers"),
       value: overview?.totalCustomers ?? 0,
       icon: "users",
       iconStyle: "default",
       trend: {
         direction: "up",
-        percentage: `${overview?.activeCustomers ?? 0} Active`,
+        percentage: t("activeSuffix", { count: overview?.activeCustomers ?? 0 }),
       },
     },
     {
       _id: "deliverymen",
-      title: "Available Deliverymen",
+      title: t("availableDeliverymen"),
       value: overview?.availableDeliverymen ?? 0,
       icon: "ongoing",
       iconStyle: "default",
       trend: {
         direction: "up",
-        percentage: `${overview?.totalDeliverymen ?? 0} Total`,
+        percentage: t("totalSuffix", { count: overview?.totalDeliverymen ?? 0 }),
       },
     },
     {
       _id: "employees",
-      title: "Active Employees",
+      title: t("activeEmployees"),
       value: overview?.activeEmployees ?? 0,
       icon: "completed",
       iconStyle: "default",
       trend: {
         direction: "up",
-        percentage: `${overview?.totalEmployees ?? 0} Total`,
+        percentage: t("totalSuffix", { count: overview?.totalEmployees ?? 0 }),
       },
     },
   ] as any;
@@ -109,11 +134,11 @@ export default function Home() {
   return (
     <Container>
       <Header
-        title={isBranchAdmin ? "Branch Dashboard Overview" : "Dashboard Overview"}
+        title={isBranchAdmin ? t("branchOverviewTitle") : t("overviewTitle")}
         description={
           isBranchAdmin
-            ? "Your assigned branch activity is scoped automatically. Last updated: Just now · Live sync active"
-            : "Welcome back! Here's what's happening today. Last updated: Just now · Live sync active"
+            ? t("branchOverviewDescription")
+            : t("overviewDescription")
         }
       />
 
@@ -123,7 +148,7 @@ export default function Home() {
         className="xl:grid-cols-5"
       />
 
-      <ManagementSection items={dashboardManagementItems} />
+      <ManagementSection items={translatedManagementItems} />
 
       <AnalyticsGrid />
 

@@ -8,6 +8,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useTranslations } from "next-intl";
 
 type PaginationMeta = {
   page: number;
@@ -25,6 +26,8 @@ const PaginationSection = ({
   meta,
   onPageChange = () => undefined,
 }: PaginationSectionProps) => {
+  const t = useTranslations("common");
+
   if (!meta) return null;
 
   const { page, totalPages, total, limit } = meta;
@@ -34,8 +37,11 @@ const PaginationSection = ({
     <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
       <div>
         <p className="text-sm">
-          Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)} of{" "}
-          {total} data
+          {t("paginationSummary", {
+            from: (page - 1) * limit + 1,
+            to: Math.min(page * limit, total),
+            total,
+          })}
         </p>
       </div>
 

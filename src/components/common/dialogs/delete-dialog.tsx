@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type Props = {
     open: boolean;
@@ -25,9 +26,13 @@ export default function DeleteDialog({
     onOpenChange,
     onConfirm,
     isLoading,
-    title = "Confirm Deletion",
-    description = "Are you sure you want to delete this item? This action cannot be undone."
+    title,
+    description
 }: Props) {
+    const t = useTranslations("common");
+    const dialogTitle = title ?? t("confirmDeletion");
+    const dialogDescription = description ?? t("deleteConfirmation");
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-[400px] p-[30px]">
@@ -36,10 +41,10 @@ export default function DeleteDialog({
                         <Trash2 size={24} className="text-red-500" />
                     </div>
                     <DialogTitle className="text-[18px] font-semibold text-gray-800">
-                        {title}
+                        {dialogTitle}
                     </DialogTitle>
                     <DialogDescription className="text-sm text-gray-500 text-center">
-                        {description}
+                        {dialogDescription}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -51,7 +56,7 @@ export default function DeleteDialog({
                         onClick={() => onOpenChange(false)}
                         disabled={isLoading}
                     >
-                        Cancel
+                        {t("cancel")}
                     </Button>
                     <Button
                         type="button"
@@ -59,7 +64,7 @@ export default function DeleteDialog({
                         onClick={onConfirm}
                         disabled={isLoading}
                     >
-                        {isLoading ? "Deleting..." : "Delete"}
+                        {isLoading ? t("deleting") : t("delete")}
                     </Button>
                 </DialogFooter>
             </DialogContent>

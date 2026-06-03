@@ -5,12 +5,14 @@ import Container from "@/components/common/Container";
 import { buildSearchHref } from "@/components/layout/navbar/global-search-config";
 import { useCurrentScope } from "@/hooks/useCurrentScope";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
+import { useTranslations } from "next-intl";
 
 type SearchPageProps = {
   initialQuery: string;
 };
 
 export function SearchPage({ initialQuery }: SearchPageProps) {
+  const t = useTranslations("globalSearch");
   const scope = useCurrentScope();
   const query = initialQuery.trim();
   const { data, isFetching, error } = useGlobalSearch({
@@ -27,27 +29,27 @@ export function SearchPage({ initialQuery }: SearchPageProps) {
     <Container>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Search Results</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">{t("resultsTitle")}</h1>
           {query ? (
-            <p className="mt-1 text-sm text-gray-500">Showing results for "{query}"</p>
+            <p className="mt-1 text-sm text-gray-500">{t("showingResults", { query })}</p>
           ) : null}
         </div>
 
         <div className="rounded-lg bg-white p-4 shadow-sm lg:p-6">
           {query.length < 2 ? (
-            <p className="text-sm text-gray-500">Enter at least 2 characters to search.</p>
+            <p className="text-sm text-gray-500">{t("minimumCharacters")}</p>
           ) : null}
 
           {query.length >= 2 && isFetching && !data ? (
-            <p className="text-sm text-gray-500">Searching...</p>
+            <p className="text-sm text-gray-500">{t("searching")}</p>
           ) : null}
 
           {query.length >= 2 && error ? (
-            <p className="text-sm text-red-500">Search is temporarily unavailable.</p>
+            <p className="text-sm text-red-500">{t("temporaryUnavailableWithPeriod")}</p>
           ) : null}
 
           {query.length >= 2 && !isFetching && !error && !hasResults ? (
-            <p className="text-sm text-gray-500">No results found</p>
+            <p className="text-sm text-gray-500">{t("noResults")}</p>
           ) : null}
 
           {query.length >= 2 && !error && hasResults ? (
@@ -57,12 +59,14 @@ export function SearchPage({ initialQuery }: SearchPageProps) {
                 .map((group) => (
                   <section key={group.entity} className="space-y-3">
                     <div className="flex items-center justify-between gap-3">
-                      <h2 className="text-base font-semibold text-gray-900">{group.label}</h2>
+                      <h2 className="text-base font-semibold text-gray-900">
+                        {t(`groups.${group.entity}`)}
+                      </h2>
                       <Link
                         href={buildSearchHref(group.href.split("?")[0] || group.href, query)}
                         className="text-sm font-medium text-primary hover:underline"
                       >
-                        View all
+                        {t("viewAll")}
                       </Link>
                     </div>
 

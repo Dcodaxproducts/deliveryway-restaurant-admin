@@ -7,6 +7,7 @@ import {
   Cell,
   ResponsiveContainer,
 } from "recharts";
+import { useTranslations } from "next-intl";
 
 const data = [
   {
@@ -30,27 +31,38 @@ const data = [
 ];
 
 const PieStatsGraph = () => {
+  const t = useTranslations("dashboard");
+  const translatedData = data.map((item) => ({
+    ...item,
+    label:
+      item.label === "Total Order"
+        ? t("totalOrder")
+        : item.label === "Customer Growth"
+          ? t("customerGrowth")
+          : t("totalRevenue"),
+  }));
+
   return (
    <Card className="p-[24px] border-none shadow-none rounded-[16px] bg-white h-full ">
 
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-base font-medium text-dark">Pie Chart</h3>
+        <h3 className="text-base font-medium text-dark">{t("pieChart")}</h3>
 
         <div className="flex items-center gap-6 text-sm text-gray-500">
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" className="rounded" />
-            Chart
+            {t("chart")}
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked readOnly className="accent-primary" />
-            Show Value
+            {t("showValue")}
           </label>
         </div>
       </div>
 
       {/* Donuts */}
       <div className="grid grid-cols-3 gap-6">
-        {data.map((item) => (
+        {translatedData.map((item) => (
           <div key={item.label} className="flex flex-col items-center">
             <div className="relative size-[110px]">
               <ResponsiveContainer width="100%" height="100%">

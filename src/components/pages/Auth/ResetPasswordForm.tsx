@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import FormInput from "@/components/forms/common/FormInput";
 import AuthPageShell, {
@@ -26,6 +27,7 @@ import {
 const ResetPasswordForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("auth");
   const [isResending, setIsResending] = useState(false);
   const [countdown, setCountdown] = useState(60);
 
@@ -66,10 +68,10 @@ const ResetPasswordForm = () => {
   const onSubmit = async (values: ResetPasswordFormValues) => {
     try {
       await authApi.resetPassword(values);
-      toast.success("Password reset successfully!");
+      toast.success(t("passwordResetSuccess"));
       router.push("/login");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      toast.error(error instanceof Error ? error.message : t("genericError"));
     }
   };
 
@@ -77,17 +79,17 @@ const ResetPasswordForm = () => {
     const { email, restaurantId } = getValues();
 
     if (!email || !restaurantId) {
-      toast.error("Missing email or restaurant id");
+      toast.error(t("missingEmailOrRestaurant"));
       return;
     }
 
     try {
       setIsResending(true);
       await authApi.resendOtp({ email, restaurantId });
-      toast.success("OTP resent successfully");
+      toast.success(t("otpResent"));
       setCountdown(60);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      toast.error(error instanceof Error ? error.message : t("genericError"));
     } finally {
       setIsResending(false);
     }
@@ -105,11 +107,11 @@ const ResetPasswordForm = () => {
         </div>
 
         <h1 className={AUTH_TITLE_CLASS}>
-          Reset your password
+          {t("resetPasswordTitle")}
         </h1>
 
         <p className={AUTH_DESCRIPTION_CLASS}>
-          Enter the OTP sent to your email and choose a new password.
+          {t("resetPasswordDescription")}
         </p>
 
         <form className="mt-8 space-y-6" noValidate onSubmit={handleSubmit(onSubmit)}>
@@ -118,8 +120,8 @@ const ResetPasswordForm = () => {
             name="email"
             render={({ field }) => (
               <FormInput
-                label="Email"
-                placeholder="Enter your email"
+                label={t("email")}
+                placeholder={t("emailPlaceholder")}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -134,8 +136,8 @@ const ResetPasswordForm = () => {
             name="otp"
             render={({ field }) => (
               <FormInput
-                label="OTP"
-                placeholder="Enter 5 digit OTP"
+                label={t("otp")}
+                placeholder={t("otpPlaceholder")}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -147,7 +149,7 @@ const ResetPasswordForm = () => {
 
           <div className="flex items-center justify-between text-sm">
             {countdown > 0 ? (
-              <span className="text-gray-500">Resend OTP in {countdown}s</span>
+              <span className="text-gray-500">{t("resendOtpCountdown", { seconds: countdown })}</span>
             ) : (
               <button
                 type="button"
@@ -155,7 +157,7 @@ const ResetPasswordForm = () => {
                 disabled={isResending}
                 className="text-blue-600 hover:underline"
               >
-                {isResending ? "Sending..." : "Resend OTP"}
+                {isResending ? t("sending") : t("resendOtp")}
               </button>
             )}
           </div>
@@ -165,9 +167,9 @@ const ResetPasswordForm = () => {
             name="newPassword"
             render={({ field }) => (
               <FormInput
-                label="New Password"
+                label={t("newPassword")}
                 type="password"
-                placeholder="Enter new password"
+                placeholder={t("newPasswordPlaceholder")}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -183,8 +185,8 @@ const ResetPasswordForm = () => {
             name="restaurantId"
             render={({ field }) => (
               <FormInput
-                label="Restaurant ID"
-                placeholder="Enter Your restaurant id"
+                label={t("restaurantId")}
+                placeholder={t("restaurantIdPlaceholder")}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -199,18 +201,18 @@ const ResetPasswordForm = () => {
             className={AUTH_PRIMARY_SUBMIT_BUTTON_CLASS}
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Resetting..." : "Reset Password"}
+            {isSubmitting ? t("resetting") : t("resetPassword")}
           </Button>
 
           <div className="flex items-center gap-4">
             <div className={AUTH_DIVIDER_LINE_CLASS} />
-            <span className="text-sm text-gray-700">or</span>
+            <span className="text-sm text-gray-700">{t("or")}</span>
             <div className={AUTH_DIVIDER_LINE_CLASS} />
           </div>
 
           <Link href="/login" className="flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] border border-gray-300 text-sm font-medium text-blue-600 transition hover:bg-gray-50">
             <ArrowLeft size={16} />
-            Back to login
+            {t("backToLogin")}
           </Link>
         </form>
       </div>

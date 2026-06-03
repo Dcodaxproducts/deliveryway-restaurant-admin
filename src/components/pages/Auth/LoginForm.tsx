@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, type FormEvent } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import FormInput from "@/components/forms/common/FormInput";
 import AuthPageShell from "@/components/pages/Auth/components/AuthPageShell";
@@ -25,6 +26,7 @@ const LoginForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuthContext();
+  const t = useTranslations("auth");
 
   const {
     control,
@@ -50,28 +52,28 @@ const LoginForm = () => {
       const user = authPayload.user;
 
       if (!user) {
-        throw new Error("Invalid login response");
+        throw new Error(t("invalidLoginResponse"));
       }
 
       if (!isAllowedAdminRole(user.role)) {
-        toast.error("You are not authorized to access this admin panel");
+        toast.error(t("notAuthorized"));
         return;
       }
 
       if (user.role === "BRANCH_ADMIN" && !user.branchId) {
-        toast.error("Branch admin account is missing branch assignment");
+        toast.error(t("missingBranchAssignment"));
         return;
       }
 
       login(authPayload);
-      toast.success(`Login successful as ${getRoleLabel(user.role)}`);
+      toast.success(t("loginSuccess", { role: getRoleLabel(user.role) }));
 
       const defaultRedirectPath = user.role === "BRANCH_ADMIN" ? "/branch-workspace" : "/";
       const redirectPath = getSafeRedirectPath(searchParams.get("redirect") ?? defaultRedirectPath);
 
       router.push(redirectPath);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      toast.error(error instanceof Error ? error.message : t("genericError"));
     }
   };
 
@@ -90,14 +92,14 @@ const LoginForm = () => {
     <AuthPageShell>
       <div className="w-full max-w-[420px]">
         <h1 className="text-center text-[26px] font-semibold">
-          Try <br />
-          <span className="text-primary">SaaS Based Food Delivery</span>
+          {t("try")} <br />
+          <span className="text-primary">{t("saasTitle")}</span>
           <br />
-          to build your business
+          {t("buildBusiness")}
         </h1>
 
         <p className="mt-3 text-center text-sm text-gray-400">
-          Digitalize your business and empowering growth
+          {t("loginSubtitle")}
         </p>
 
         <form className="mt-10 space-y-6" noValidate onSubmit={handleFormSubmit}>
@@ -106,8 +108,8 @@ const LoginForm = () => {
             name="email"
             render={({ field }) => (
               <FormInput
-                label="Email"
-                placeholder="Enter your email"
+                label={t("email")}
+                placeholder={t("emailPlaceholder")}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -122,9 +124,9 @@ const LoginForm = () => {
             name="password"
             render={({ field }) => (
               <FormInput
-                label="Password"
+                label={t("password")}
                 type="password"
-                placeholder="Enter your password"
+                placeholder={t("passwordPlaceholder")}
                 showPasswordToggle
                 value={field.value}
                 onChange={field.onChange}
@@ -138,11 +140,11 @@ const LoginForm = () => {
           <div className="flex items-center justify-between text-sm">
             <label className="flex cursor-pointer items-center gap-2 text-gray-500">
               <Checkbox checked />
-              Remember me
+              {t("rememberMe")}
             </label>
 
             <Link href="/forgot-password" className="text-primary hover:underline">
-              Forgot Password?
+              {t("forgotPasswordLink")}
             </Link>
           </div>
 
@@ -152,12 +154,12 @@ const LoginForm = () => {
             onClick={handleLoginClick}
             className="h-[48px] w-full rounded-[12px] text-base"
           >
-            {isSubmitting ? "Signing in..." : "Sign in"}
+            {isSubmitting ? t("signingIn") : t("signIn")}
           </Button>
 
           <div className="my-6 flex items-center gap-4">
             <div className="h-px flex-1 bg-gray-200" />
-            <span className="text-xs text-gray-900">or</span>
+            <span className="text-xs text-gray-900">{t("or")}</span>
             <div className="h-px flex-1 bg-gray-200" />
           </div>
 
@@ -165,8 +167,8 @@ const LoginForm = () => {
             type="button"
             className="flex h-[48px] w-full items-center justify-center gap-3 rounded-[12px] border border-[#BBBBBB] text-sm font-medium transition hover:bg-gray-50"
           >
-            <Image src="/google_icon.png" alt="Google" width={18} height={18} />
-            Sign in With Google
+            <Image src="/google_icon.png" alt={t("googleAlt")} width={18} height={18} />
+            {t("signInWithGoogle")}
           </button>
         </form>
       </div>

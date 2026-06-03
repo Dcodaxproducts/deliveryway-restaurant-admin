@@ -30,6 +30,7 @@ export type SidebarRole = "BUSINESS_ADMIN" | "RESTAURANT_ADMIN" | "BRANCH_ADMIN"
 
 export interface MenuItem {
   title: string;
+  labelKey?: string;
   href?: string;
   icon: any;
   section: SidebarSection;
@@ -44,6 +45,7 @@ const branchAdminOnly: SidebarRole[] = ["BRANCH_ADMIN"];
 export const menuItems: MenuItem[] = [
   {
     title: "Dashboard",
+    labelKey: "dashboard",
     href: "/",
     icon: LayoutGrid,
     section: "main",
@@ -51,6 +53,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "Branch Management",
+    labelKey: "branchManagement",
     href: "/branches",
     icon: Store,
     section: "main",
@@ -58,6 +61,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "My Branch",
+    labelKey: "myBranch",
     href: "/branch-workspace",
     icon: Store,
     section: "main",
@@ -65,6 +69,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "Menu Management",
+    labelKey: "menuManagement",
     href: "/menu",
     icon: List,
     section: "main",
@@ -72,6 +77,7 @@ export const menuItems: MenuItem[] = [
     children: [
       {
         title: "Menu",
+        labelKey: "menu",
         href: "/menu",
         icon: List,
         section: "main",
@@ -79,6 +85,7 @@ export const menuItems: MenuItem[] = [
       },
       {
         title: "Categories",
+        labelKey: "categories",
         href: "/menu/categories",
         icon: ClipboardList,
         section: "main",
@@ -86,6 +93,7 @@ export const menuItems: MenuItem[] = [
       },
       {
         title: "Modifiers",
+        labelKey: "modifiers",
         href: "/menu/modifier",
         icon: Tags,
         section: "main",
@@ -93,6 +101,7 @@ export const menuItems: MenuItem[] = [
       },
       {
         title: "Variations",
+        labelKey: "variations",
         href: "/menu/variations",
         icon: ClipboardList,
         section: "main",
@@ -100,6 +109,7 @@ export const menuItems: MenuItem[] = [
       },
       {
         title: "Deals",
+        labelKey: "deals",
         href: "/menu/deals",
         icon: BadgePercent,
         section: "main",
@@ -107,6 +117,7 @@ export const menuItems: MenuItem[] = [
       },
       {
         title: "Items",
+        labelKey: "menuItems",
         href: "/menu/items",
         icon: PackagePlus,
         section: "main",
@@ -114,6 +125,7 @@ export const menuItems: MenuItem[] = [
       },
       {
         title: "Allergen",
+        labelKey: "allergen",
         href: "/menu/allergen",
         icon: AlertTriangle,
         section: "main",
@@ -121,6 +133,7 @@ export const menuItems: MenuItem[] = [
       },
       {
         title: "Labels",
+        labelKey: "labels",
         href: "/menu/labels",
         icon: BadgeCheck,
         section: "main",
@@ -130,6 +143,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "Order Management",
+    labelKey: "orderManagement",
     href: "/orders",
     icon: ShoppingBag,
     section: "main",
@@ -137,6 +151,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "Table Reservations",
+    labelKey: "tableReservations",
     href: "/table-reservations",
     icon: CalendarCheck,
     section: "main",
@@ -144,6 +159,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "POS Management",
+    labelKey: "posManagement",
     href: "/pos",
     icon: Monitor,
     section: "main",
@@ -152,6 +168,7 @@ export const menuItems: MenuItem[] = [
   // Inventory module is intentionally hidden for now.
   // {
   //   title: "Inventory",
+  //   labelKey: "inventory",
   //   href: "/inventory",
   //   icon: PackagePlus,
   //   section: "main",
@@ -159,6 +176,7 @@ export const menuItems: MenuItem[] = [
   // },
   {
     title: "Customer Management",
+    labelKey: "customerManagement",
     href: "/customer-settings",
     icon: PiUsersThree,
     section: "main",
@@ -166,6 +184,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "Loyalty Program",
+    labelKey: "loyaltyProgram",
     href: "/loyalty",
     icon: Coins,
     section: "main",
@@ -173,6 +192,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "Deliveryman",
+    labelKey: "deliveryman",
     href: "/deliveryman",
     icon: Truck,
     section: "main",
@@ -180,6 +200,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "Employees",
+    labelKey: "employees",
     href: "/employees-settings",
     icon: UserCog,
     section: "main",
@@ -187,6 +208,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "Promotion Management",
+    labelKey: "promotionManagement",
     href: "/promotion-management",
     icon: Gift,
     section: "main",
@@ -194,6 +216,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "Content Management",
+    labelKey: "contentManagement",
     href: "/content-management",
     icon: FileText,
     section: "main",
@@ -201,6 +224,7 @@ export const menuItems: MenuItem[] = [
     children: [
       {
         title: "Faqs",
+        labelKey: "faqs",
         href: "/faqs",
         icon: FileText,
         section: "main",
@@ -208,6 +232,7 @@ export const menuItems: MenuItem[] = [
       },
       {
         title: "Privacy Policy",
+        labelKey: "privacyPolicy",
         href: "/privacy-policy",
         icon: ShieldCheck,
         section: "main",
@@ -217,6 +242,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "Profile",
+    labelKey: "profile",
     href: "/profile",
     icon: User,
     section: "account",
@@ -224,6 +250,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "Auto-Printing / POS",
+    labelKey: "autoPrintingPos",
     href: "/auto-printing",
     icon: Printer,
     section: "account",
@@ -231,6 +258,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "Reports & Payouts",
+    labelKey: "reportsPayouts",
     href: "/reports",
     icon: BarChart3,
     section: "account",
@@ -239,6 +267,7 @@ export const menuItems: MenuItem[] = [
 
   {
     title: "Notifications",
+    labelKey: "notifications",
     href: "/notifications",
     icon: Bell,
     section: "account",
@@ -246,6 +275,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "Storefront Settings",
+    labelKey: "storefrontSettings",
     href: "/theme-settings",
     icon: Palette,
     section: "account",

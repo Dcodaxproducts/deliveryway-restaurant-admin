@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +16,8 @@ import { authApi } from "@/services/auth/auth.api";
 
 export default function UserProfile() {
   const { user, token, setUser } = useAuth();
+  const t = useTranslations("profile");
+  const common = useTranslations("common");
   const [refreshing, setRefreshing] = useState(false);
 
   const formatDate = (date?: string | null) => {
@@ -53,18 +56,18 @@ export default function UserProfile() {
   const initials = getInitials(user);
 
   const rows = [
-    ["User ID", user?.id],
-    ["Email", user?.email],
-    ["Role", user?.role],
-    ["Tenant ID", user?.tenantId],
-    ["Restaurant ID", user?.restaurantId],
-    ["Branch ID", user?.branchId],
-    ["Phone", profile?.phone],
+    [t("userId"), user?.id],
+    [t("email"), user?.email],
+    [t("role"), user?.role],
+    [t("tenantId"), user?.tenantId],
+    [t("restaurantId"), user?.restaurantId],
+    [t("branchId"), user?.branchId],
+    [t("phone"), profile?.phone],
     // ["Profile ID", profile?.id],
     // ["Profile User ID", profile?.userId],
-    ["Status", user?.isActive === false ? "Inactive" : "Active"],
-    ["Created At", formatDate(profile?.createdAt)],
-    ["Updated At", formatDate(profile?.updatedAt)],
+    [t("status"), user?.isActive === false ? common("inactive") : common("active")],
+    [common("createdAt"), formatDate(profile?.createdAt)],
+    [common("updatedAt"), formatDate(profile?.updatedAt)],
     // ["Deleted At", formatDate(profile?.deletedAt)],
   ];
 
@@ -85,14 +88,14 @@ export default function UserProfile() {
         </h2>
 
         <p className="text-[#909090] text-sm">{user?.email || "—"}</p>
-        {refreshing ? <p className="mt-2 text-xs text-gray-400">Refreshing profile...</p> : null}
+        {refreshing ? <p className="mt-2 text-xs text-gray-400">{t("refreshing")}</p> : null}
       </div>
 
       {/* Description */}
       <div className="text-center mt-8">
-        <p className="font-medium text-gray-700 mb-2">Description</p>
+        <p className="font-medium text-gray-700 mb-2">{t("description")}</p>
         <p className="text-[#909090] text-sm max-w-xl mx-auto leading-relaxed">
-          {profile?.bio || "No description provided."}
+          {profile?.bio || t("noDescription")}
         </p>
       </div>
 
@@ -120,7 +123,7 @@ export default function UserProfile() {
           {/* Colors section kept exactly same */}
           <div className="grid grid-cols-[1fr_1fr] items-start">
             <span className="text-left font-medium text-gray-600">
-              Colors
+              {t("colors")}
             </span>
 
             <div className="grid grid-cols-[1fr_auto_1fr]">
@@ -131,12 +134,12 @@ export default function UserProfile() {
             <div className="pl-1 space-y-3 text-gray-400 text-sm mt-3">
               <div className="flex items-center gap-3">
                 <span className="w-4 h-4 rounded-full bg-red-600" />
-                Primary
+                {t("primary")}
               </div>
 
               <div className="flex items-center gap-3">
                 <span className="w-4 h-4 rounded-full bg-black" />
-                Secondary
+                {t("secondary")}
               </div>
             </div>
           </div>

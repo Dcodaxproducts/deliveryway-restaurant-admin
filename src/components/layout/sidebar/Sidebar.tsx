@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, ChevronDown, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { menuItems, MenuItem, type SidebarRole } from "@/config/sidebarItems";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -24,9 +25,11 @@ const SidebarItem = ({
   onLinkClick,
   isActiveRoute,
 }: SidebarItemProps): ReactElement => {
+  const t = useTranslations("navigation");
   const Icon = item.icon;
   const isDashboard = item.title === "Dashboard";
   const hasChildren = Boolean(item.children?.length);
+  const label = item.labelKey ? t(item.labelKey) : item.title;
 
   const [open, setOpen] = useState<boolean>(isActive);
 
@@ -60,7 +63,7 @@ const SidebarItem = ({
                   : "text-gray hover:text-primary"
               }`}
             >
-              {item.title}
+              {label}
             </span>
           </div>
 
@@ -76,6 +79,7 @@ const SidebarItem = ({
             {item.children?.map((child) => {
               const ChildIcon = child.icon;
               const childActive = isActiveRoute(child.href, child.children);
+              const childLabel = child.labelKey ? t(child.labelKey) : child.title;
 
               return (
                 <Link
@@ -94,7 +98,7 @@ const SidebarItem = ({
                     </div>
                   )}
 
-                  <span className="truncate">{child.title}</span>
+                  <span className="truncate">{childLabel}</span>
                 </Link>
               );
             })}
@@ -127,7 +131,7 @@ const SidebarItem = ({
             : "text-gray hover:text-primary"
         }`}
       >
-        {item.title}
+        {label}
       </span>
     </Link>
   );
@@ -140,6 +144,7 @@ export default function Sidebar({
 }): ReactElement {
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations("navigation");
   const { role, isBranchAdmin, logout } = useAuth();
 
   const isSidebarRole = (value?: string | null): value is SidebarRole =>
@@ -186,7 +191,7 @@ export default function Sidebar({
 
   const handleLogout = (): void => {
     logout();
-    toast.success("Logged out successfully");
+    toast.success(t("logoutSuccess"));
 
     setTimeout(() => {
       router.push("/login");
@@ -208,7 +213,7 @@ export default function Sidebar({
 
         <div className="mt-5 px-6">
           <p className="text-xs font-semibold uppercase tracking-wide text-foreground">
-            Account Settings
+            {t("accountSettings")}
           </p>
         </div>
 
@@ -236,7 +241,7 @@ export default function Sidebar({
             <div className="absolute -top-10 left-1/2 -translate-x-1/2">
               <Image
                 src="/user_logo.png"
-                alt="Support"
+                alt={t("supportAlt")}
                 width={90}
                 height={90}
                 className="drop-shadow-md"
@@ -244,8 +249,8 @@ export default function Sidebar({
             </div>
 
             <div className="text-left mb-4">
-              <p className="text-base font-semibold">Need help?</p>
-              <p className="text-sm opacity-90">Please check our docs</p>
+              <p className="text-base font-semibold">{t("needHelp")}</p>
+              <p className="text-sm opacity-90">{t("checkDocs")}</p>
             </div>
 
             <Button
@@ -253,7 +258,7 @@ export default function Sidebar({
               className="w-full bg-white text-primary hover:bg-white/90 font-semibold"
               onClick={() => router.push(isBranchAdmin ? "/branch-workspace" : "/menu?create=true")}
             >
-              {isBranchAdmin ? "MY BRANCH" : "ADD MENU"}
+              {isBranchAdmin ? t("myBranchCta") : t("addMenuCta")}
             </Button>
           </div>
 
@@ -265,7 +270,7 @@ export default function Sidebar({
             <div className="size-10 rounded-xl bg-[#F9FAFB] flex items-center justify-center">
               <LogOut size={18} />
             </div>
-            <span className="text-sm font-semibold">Logout</span>
+            <span className="text-sm font-semibold">{t("logout")}</span>
           </Button>
         </div>
       </nav>

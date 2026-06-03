@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Check, Store } from "lucide-react";
+import { ChevronDown, Check } from "lucide-react";
 import BrandLogo from "@/components/common/BrandLogo";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useGetRestaurants } from "@/hooks/useRestaurants";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   canSwitchRestaurant,
   getRecordValue,
@@ -25,6 +26,8 @@ type RestaurantOption = {
 };
 
 export default function RestaurantPicker() {
+  const t = useTranslations("common");
+  const navigation = useTranslations("navigation");
   const { token, user, setUser, isBranchAdmin, branchId, logout } = useAuth();
   const { data: assignedBranch } = useGetBranch(isBranchAdmin && branchId ? branchId : "");
   const router = useRouter();
@@ -38,7 +41,7 @@ export default function RestaurantPicker() {
 
   const handleLogout = (): void => {
     logout();
-    toast.success("Logged out successfully");
+    toast.success(navigation("logoutSuccess"));
 
     setTimeout(() => {
       router.push("/login");
@@ -128,11 +131,11 @@ export default function RestaurantPicker() {
       saveStoredAuth(stored);
     }
 
-    toast.success("Switched successfully");
+    toast.success(t("switchedSuccessfully"));
   };
 
   const renderLabel = () => {
-    if (!selectedRestaurant) return "Select Restaurant";
+    if (!selectedRestaurant) return t("selectRestaurant");
     return selectedRestaurant.name;
   };
 
@@ -141,7 +144,7 @@ export default function RestaurantPicker() {
       assignedBranch?.name ||
       assignedBranch?.data?.name ||
       user?.branchName ||
-      "Assigned branch";
+      t("assignedBranch");
 
     return (
       <button
@@ -158,7 +161,7 @@ export default function RestaurantPicker() {
         />
         <span className="min-w-0">
           <span className="block text-xs font-semibold uppercase tracking-wide text-primary/80">
-            Branch scope
+            {t("branchScope")}
           </span>
           <span className="block truncate font-semibold">
             {branchLabel}
@@ -197,7 +200,7 @@ export default function RestaurantPicker() {
       {open && (
         <div className="absolute top-[110%] left-0 w-full bg-white shadow-xl rounded-xl p-3 z-50 border animate-in fade-in zoom-in-95 duration-200">
           <p className="text-xs text-gray-400 px-2 mb-2">
-            Select Restaurant
+            {t("selectRestaurant")}
           </p>
 
           <div className="space-y-1 max-h-[240px] overflow-auto">
@@ -240,17 +243,17 @@ export default function RestaurantPicker() {
             {!isFetching && restaurants.length === 0 && (
               <div className="text-center text-xs text-gray-500 py-3 space-y-2">
                 <p>
-                  You haven’t registered any restaurant or it might have been deleted.
+                  {t("noRestaurants")}
                 </p>
                 <p>
-                  Please request Super Admin to add one, then login again.
+                  {t("requestRestaurant")}
                 </p>
 
                 <button
                   onClick={handleLogout}
                   className="mt-2 rounded-md bg-primary px-3 py-1.5 text-xs text-white hover:bg-primary/90"
                 >
-                  Go to Login
+                  {t("goToLogin")}
                 </button>
               </div>
             )}

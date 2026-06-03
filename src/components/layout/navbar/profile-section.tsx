@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   User,
   HelpCircle,
@@ -22,6 +23,8 @@ import { getAvatarUrl, getDisplayName, getInitials } from "@/lib/auth";
 
 export default function ProfileSection() {
   const router = useRouter();
+  const navbar = useTranslations("navbar");
+  const navigation = useTranslations("navigation");
   const { user, logout } = useAuth();
   const displayName = getDisplayName(user);
   const initials = getInitials(user);
@@ -33,7 +36,7 @@ export default function ProfileSection() {
   const handleLogout = () => {
     logout();
 
-    toast.success("Logged out successfully");
+    toast.success(navigation("logoutSuccess"));
 
     setTimeout(() => {
       router.push("/login");
@@ -48,7 +51,7 @@ export default function ProfileSection() {
         >
           <div className="flex flex-col items-start justify-center">
             {/* Hide 'Hello' and 'User Name' on mobile */}
-            <span className="lg:text-base text-muted-foreground hidden lg:block">Hello,</span>
+            <span className="lg:text-base text-muted-foreground hidden lg:block">{navbar("hello")}</span>
             <span className="lg:text-base font-semibold text-foreground hidden lg:block">
               {displayName}
             </span>
@@ -89,12 +92,12 @@ export default function ProfileSection() {
           <div className="py-2">
             <MenuItem
               icon={<User size={18} />}
-              label="My Profile"
+              label={navbar("profile")}
               onClick={() => navigate("/profile")}
             />
             <MenuItem
               icon={<HelpCircle size={18} />}
-              label="Help Center"
+              label={navbar("helpCenter")}
               onClick={() => navigate("/live-chat")}
             />
           </div>
@@ -107,7 +110,7 @@ export default function ProfileSection() {
             className="mx-2 my-2 flex items-center gap-3 px-3 py-3 text-sm text-red-600 rounded-xl cursor-pointer hover:bg-red-50 hover:text-red-700 focus:bg-red-50 focus:text-red-700 [&_svg]:text-red-600"
           >
             <LogOut size={18} />
-            Logout
+            {navigation("logout")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </div>
