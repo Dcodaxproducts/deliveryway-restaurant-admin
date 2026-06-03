@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 import { cleanParams } from "@/lib/params";
+import type { MenuItemsListParams } from "@/types/menu-items";
 import {
   BulkMenuItemsValues,
   GetMenuVariationsParams,
@@ -28,17 +29,7 @@ export const createMenuItem = async (payload: MenuItemValues) => {
   return data;
 };
 
-export const getMenuItems = async (params?: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  restaurantId?: string;
-  branchId?: string;
-  categoryId?: string;
-  menuId?: string;
-  includeAll?: boolean;
-  inactive?: boolean;
-}) => {
+export const getMenuItems = async (params?: MenuItemsListParams) => {
   // The menu catalog list endpoints are restaurant/catalog reads.
   // Backend validation rejects branchId here; branch-specific behavior is handled by JWT scope
   // and the /menu/branch-overrides/* endpoints.

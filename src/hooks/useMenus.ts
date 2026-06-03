@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cleanParams } from "@/lib/params";
+import type { MenuItemsListParams } from "@/types/menu-items";
 import { toast } from "sonner";
 import {
   addItemToMenu,
@@ -65,17 +66,7 @@ export const useCreateMenuItem = () => {
     },
   });
 };
-export const useGetMenuItems = (params?: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  restaurantId?: string;
-  branchId?: string;
-  categoryId?: string;
-  menuId?: string;
-  includeAll?: boolean;
-  inactive?: boolean;
-}) => {
+export const useGetMenuItems = (params?: MenuItemsListParams) => {
   return useQuery({
     queryKey: [
       "menu-items",

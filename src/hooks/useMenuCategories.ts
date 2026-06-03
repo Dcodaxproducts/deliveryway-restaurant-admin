@@ -1,10 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   bulkCreateMenuCategories,
   createMenuCategory,
   deleteMenuCategory,
   getMenuCategories,
+  getMenuCategoryOptions,
   getMenuCategoryById,
   getModifierGroupCategories,
   reorderMenuCategories,
@@ -12,6 +18,11 @@ import {
   upsertMenuCategoryBranchOverride,
   type MenuCategoryBranchOverridePayload,
 } from "@/services/menu/categories/menu-categories.api";
+import type { ApiMeta } from "@/lib/response";
+import type {
+  MenuCategoriesListResponse,
+  MenuCategoryListParams,
+} from "@/types/categories";
 import type {
   BulkMenuCategoriesValues,
   MenuCategoryValues,
@@ -66,6 +77,54 @@ export const useGetMenuCategories = (params?: {
       params?.sortOrder,
     ],
     queryFn: () => getMenuCategories(params),
+  });
+};
+
+export const getNextCategoriesPageParam = (
+  lastPage: MenuCategoriesListResponse,
+  allPages: MenuCategoriesListResponse[]
+) => {
+  const meta: ApiMeta | null = lastPage.meta;
+  const currentPage = Number(meta?.page ?? allPages.length);
+  const totalPages = Number(meta?.totalPages ?? meta?.pages ?? 0);
+
+  if (typeof meta?.hasNext === "boolean") {
+    return meta.hasNext ? currentPage + 1 : undefined;
+  }
+
+  if (totalPages > 0) {
+    return currentPage < totalPages ? currentPage + 1 : undefined;
+  }
+
+  return lastPage.data.length > 0 ? allPages.length + 1 : undefined;
+};
+
+export const useInfiniteCategories = (params?: MenuCategoryListParams) => {
+  const limit = params?.limit ?? 20;
+
+  return useInfiniteQuery({
+    queryKey: [
+      "menu-categories",
+      "infinite",
+      params?.search ?? "",
+      params?.restaurantId ?? "",
+      params?.branchId ?? "",
+      params?.parentCategoryId ?? "",
+      params?.inactive,
+      params?.includeInactive,
+      params?.sortBy ?? "",
+      params?.sortOrder ?? "",
+      limit,
+    ],
+    queryFn: ({ pageParam }) =>
+      getMenuCategoryOptions({
+        ...params,
+        page: pageParam,
+        limit,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: getNextCategoriesPageParam,
+    enabled: Boolean(params?.restaurantId),
   });
 };
 

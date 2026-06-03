@@ -1,5 +1,11 @@
 import api from "@/lib/axios";
+import { normalizeCategoryOption } from "@/lib/category-options";
 import { cleanParams } from "@/lib/params";
+import { extractResponseItems, extractResponseMeta } from "@/lib/response";
+import type {
+  MenuCategoriesListResponse,
+  MenuCategoryListParams,
+} from "@/types/categories";
 import {
   BulkMenuCategoriesValues,
   MenuCategoryValues,
@@ -18,19 +24,7 @@ export const createMenuCategory = async (payload: MenuCategoryValues) => {
 };
 
 
-export const getMenuCategories = async (params?: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  restaurantId?: string;
-  branchId?: string;
-  parentCategoryId?: string;
-  inactive?: boolean;
-  menuId?: string;
-  sortBy?: string;
-  sortOrder?: "ASC" | "DESC";
-  includeInactive?: boolean;
-}) => {
+export const getMenuCategories = async (params?: MenuCategoryListParams) => {
   // Do not send branchId to the category list endpoint. Branch admins are scoped by JWT,
   // and branch category changes go through /menu/branch-overrides/categories.
   const allowedParams = { ...params };
@@ -40,6 +34,24 @@ export const getMenuCategories = async (params?: {
     params: cleanParams(allowedParams),
   });
   return data;
+};
+
+export const normalizeMenuCategoriesResponse = (
+  response: unknown
+): MenuCategoriesListResponse => ({
+  data: extractResponseItems(response)
+    .map(normalizeCategoryOption)
+    .filter((category): category is NonNullable<typeof category> =>
+      Boolean(category)
+    ),
+  meta: extractResponseMeta(response),
+});
+
+export const getMenuCategoryOptions = async (
+  params?: MenuCategoryListParams
+): Promise<MenuCategoriesListResponse> => {
+  const response = await getMenuCategories(params);
+  return normalizeMenuCategoriesResponse(response);
 };
 
 export const bulkCreateMenuCategories = async (

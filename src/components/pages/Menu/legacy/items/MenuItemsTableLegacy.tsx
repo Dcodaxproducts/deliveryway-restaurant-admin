@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import CategoryInfiniteSelect from "@/components/common/CategoryInfiniteSelect";
 import { FaPen, FaTrash } from "react-icons/fa";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -104,6 +105,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] =
     useState<MenuItemStatusFilter>("active");
+  const [categoryId, setCategoryId] = useState<string | undefined>();
 
   const [allItems, setAllItems] = useState<any[]>([]);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
@@ -131,8 +133,13 @@ export default function MenuItemsTable({ refetchKey }: any) {
   );
 
   const hasActiveFilters = useMemo(() => {
-    return Boolean(search.trim() || debouncedSearch || statusFilter !== "active");
-  }, [search, debouncedSearch, statusFilter]);
+    return Boolean(
+      search.trim() ||
+        debouncedSearch ||
+        statusFilter !== "active" ||
+        categoryId
+    );
+  }, [search, debouncedSearch, statusFilter, categoryId]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -151,9 +158,10 @@ export default function MenuItemsTable({ refetchKey }: any) {
       limit,
       search: debouncedSearch || undefined,
       restaurantId: restaurantId || undefined,
+      categoryId,
       inactive: statusFilter === "inactive" ? true : undefined,
     }),
-    [page, limit, debouncedSearch, restaurantId, statusFilter]
+    [page, limit, debouncedSearch, restaurantId, categoryId, statusFilter]
   );
 
   const querySignature = useMemo(
@@ -162,8 +170,9 @@ export default function MenuItemsTable({ refetchKey }: any) {
         restaurantId: restaurantId || "",
         search: debouncedSearch || "",
         statusFilter,
+        categoryId: categoryId || "",
       }),
-    [restaurantId, debouncedSearch, statusFilter]
+    [restaurantId, debouncedSearch, statusFilter, categoryId]
   );
 
   useEffect(() => {
@@ -181,7 +190,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
     isLoading,
     isFetching,
     refetch,
-  } = useGetMenuItems(menuItemQueryParams as any);
+  } = useGetMenuItems(menuItemQueryParams);
 
   const { mutate: deleteMenuItem, isPending: isDeleting } =
     useDeleteMenuItem();
@@ -497,10 +506,16 @@ export default function MenuItemsTable({ refetchKey }: any) {
     setPage(1);
   };
 
+  const handleCategoryChange = (nextCategoryId: string | undefined) => {
+    setCategoryId(nextCategoryId);
+    setPage(1);
+  };
+
   const handleResetFilters = () => {
     setSearch("");
     setDebouncedSearch("");
     setStatusFilter("active");
+    setCategoryId(undefined);
     setPage(1);
 
     if (!hasActiveFilters) {
@@ -577,7 +592,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
           </div>
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_340px_auto_auto] lg:items-end">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px_260px_auto_auto] lg:items-end">
           <div className="min-w-0">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               Search
@@ -631,7 +646,22 @@ export default function MenuItemsTable({ refetchKey }: any) {
             </div>
           </div>
 
+          <div className="min-w-0">
+            <label className="mb-1.5 block text-xs font-medium text-gray-600">
+              Category
+            </label>
+
+            <CategoryInfiniteSelect
+              value={categoryId}
+              onChange={handleCategoryChange}
+              restaurantId={restaurantId || undefined}
+              branchId={branchId || undefined}
+              disabled={!canFetchItems}
+            />
+          </div>
+
           <Button
+            type="button"
             disabled={!canFetchItems}
             onClick={handleManualSearch}
             className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm hover:bg-primary/90"
