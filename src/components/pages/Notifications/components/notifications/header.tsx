@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/common/PageHeader";
 import { useMarkAllNotificationsSeen } from "@/hooks/useNotifications";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface Props {
   title: string;
@@ -20,6 +21,8 @@ export default function NotificationsHeader({
   notifications,
   refetch,
 }: Props) {
+  const common = useTranslations("common");
+  const t = useTranslations("notifications");
   const markAllSeenMutation = useMarkAllNotificationsSeen();
   const loading = markAllSeenMutation.isPending;
 
@@ -31,10 +34,10 @@ export default function NotificationsHeader({
     try {
       await markAllSeenMutation.mutateAsync();
 
-      toast.success("All notifications marked as read");
+      toast.success(t("allMarkedRead"));
       refetch();
     } catch {
-      toast.error("Failed to update notifications");
+      toast.error(t("updateFailed"));
     }
   };
 
@@ -48,7 +51,7 @@ export default function NotificationsHeader({
         onClick={handleMarkAllRead}
         className="h-[44px] rounded-[12px] px-5 flex items-center gap-2 bg-primary hover:bg-red-800 text-white text-[15px] font-[500] disabled:opacity-50"
       >
-        {loading ? "Updating..." : "Mark all as read"}
+        {loading ? common("updating") : t("markAllRead")}
       </Button>
     </div>
   );

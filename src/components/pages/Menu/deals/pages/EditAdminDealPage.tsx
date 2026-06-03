@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGetBranches } from "@/hooks/useBranches";
 import type { AdminDealFormValues } from "@/types/admin-deals";
 import { buildAdminDealUpdatePayload } from "@/validations/admin-deals";
+import { useTranslations } from "next-intl";
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -35,6 +36,7 @@ const getBranchOptions = (payload: unknown): AdminDealFormBranchOption[] => {
 
 export default function EditAdminDealPage() {
   const router = useRouter();
+  const t = useTranslations("deals");
   const params = useParams<{ id: string }>();
   const id = typeof params.id === "string" ? params.id : "";
   const { restaurantId, branchId, isBranchAdmin } = useAuth();
@@ -93,14 +95,14 @@ export default function EditAdminDealPage() {
     <Container>
       <div className="rounded-lg bg-white shadow-sm">
         <AdminDealForm
-          title="Edit Deal"
+          title={t("editTitle")}
           initialDeal={dealQuery.data}
           restaurantId={restaurantId}
           branchId={branchId}
           isBranchAdmin={isBranchAdmin}
           branchOptions={branchOptions}
           submitting={updateMutation.isPending}
-          submitLabel="Update Deal"
+          submitLabel={t("updateDeal")}
           onCancel={() => router.push("/menu/deals")}
           onSubmit={handleSubmit}
         />

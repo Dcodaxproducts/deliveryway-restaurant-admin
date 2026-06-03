@@ -22,6 +22,8 @@ import {
 import TableSkeleton from "@/components/common/TableSkeleton";
 import SortHeader from "@/components/common/sort-header";
 import { OrderStatusUpdateDialog } from "@/components/pages/Orders/components/orders/OrderStatusUpdateDialog";
+import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
+import { useTranslations } from "next-intl";
 
 export type OrdersTableRow = {
   id: string;
@@ -53,17 +55,23 @@ export function OrdersTable({
   activeTab
 }: OrdersTableProps) {
   const router = useRouter();
+  const common = useTranslations("common");
+  const t = useTranslations("orders");
   const [statusOrder, setStatusOrder] = useState<OrdersTableRow | null>(null);
+  const getStatusLabel = (status?: string) =>
+    status && ORDER_STATUS_LABEL_KEYS[status]
+      ? t(ORDER_STATUS_LABEL_KEYS[status])
+      : status;
 
   if (loading) {
     return (
       <>
         <div className="lg:hidden text-sm text-gray-400 py-10 text-center">
-          Loading orders...
+          {t("loading")}
         </div>
 
         <TableSkeleton
-          headers={["Order ID", "Date", "Order Type", "Amount", "Status"]}
+          headers={[t("orderId"), t("date"), t("orderType"), t("amount"), t("statusLabel")]}
           rows={6}
           showCheckbox
           showActions
@@ -75,8 +83,8 @@ export function OrdersTable({
   if (!orders || orders.length === 0) {
     return (
       <EmptyState
-        title="Looks like there are no orders yet!"
-        description="You haven’t received any orders yet."
+        title={t("emptyTitle")}
+        description={t("emptyDescription")}
       />
     );
   }
@@ -99,23 +107,23 @@ export function OrdersTable({
 
     {activeTab === "reservations" ? (
       <>
-        <SortHeader label="Reservation ID" sortKey="id" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label="Customer" sortKey="customerName" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label="Guests" sortKey="guestCount" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label="Reservation Date" sortKey="reservationDate" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label="Status" sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} />
+        <SortHeader label={t("reservationId")} sortKey="id" activeKey={sortKey} direction={sortDir} onSort={onSort} />
+        <SortHeader label={t("customer")} sortKey="customerName" activeKey={sortKey} direction={sortDir} onSort={onSort} />
+        <SortHeader label={t("guests")} sortKey="guestCount" activeKey={sortKey} direction={sortDir} onSort={onSort} />
+        <SortHeader label={t("reservationDate")} sortKey="reservationDate" activeKey={sortKey} direction={sortDir} onSort={onSort} />
+        <SortHeader label={t("statusLabel")} sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} />
       </>
     ) : (
       <>
-        <SortHeader label="Order ID" sortKey="id" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label="Date" sortKey="createdAt" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label="Order Type" sortKey="orderType" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label="Amount" sortKey="totalAmount" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label="Status" sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} />
+        <SortHeader label={t("orderId")} sortKey="id" activeKey={sortKey} direction={sortDir} onSort={onSort} />
+        <SortHeader label={t("date")} sortKey="createdAt" activeKey={sortKey} direction={sortDir} onSort={onSort} />
+        <SortHeader label={t("orderType")} sortKey="orderType" activeKey={sortKey} direction={sortDir} onSort={onSort} />
+        <SortHeader label={t("amount")} sortKey="totalAmount" activeKey={sortKey} direction={sortDir} onSort={onSort} />
+        <SortHeader label={t("statusLabel")} sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} />
       </>
     )}
 
-    <TableHead className="text-center">Actions</TableHead>
+    <TableHead className="text-center">{common("actions")}</TableHead>
   </TableRow>
 </TableHeader>
 
@@ -158,7 +166,7 @@ export function OrdersTable({
 
           <TableCell className="px-4">
             <span className="text-yellow-600 font-medium">
-              {status}
+              {getStatusLabel(status)}
             </span>
           </TableCell>
         </>
@@ -182,7 +190,7 @@ export function OrdersTable({
 
           <TableCell className="px-4">
             <span className="text-sm font-medium text-yellow-600">
-              {status}
+              {getStatusLabel(status)}
             </span>
           </TableCell>
         </>
@@ -207,11 +215,11 @@ export function OrdersTable({
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem onClick={() => router.push(getOrderRoute(order))}>
                 <Eye size={16} />
-                View Details
+                {common("viewDetails")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setStatusOrder(order)}>
                 <RefreshCw size={16} />
-                Update Status
+                {common("updateStatus")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

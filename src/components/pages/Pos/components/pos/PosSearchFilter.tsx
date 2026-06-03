@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import BorderedSearchBar from "@/components/common/BorderedSearchBar";
 import FilterModal from "@/components/common/FilterModal";
+import { useTranslations } from "next-intl";
 
 export default function PosSearchFilter() {
+  const t = useTranslations("pos");
+  const commonT = useTranslations("common");
   const [query, setQuery] = useState("");
 const [open, setOpen] = useState(false);
   return (
@@ -17,7 +20,7 @@ const [open, setOpen] = useState(false);
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onSearch={() => undefined}
-          placeholder="Search by name"
+          placeholder={t("searchPlaceholder")}
           className="flex-1"
         />
 
@@ -36,7 +39,7 @@ const [open, setOpen] = useState(false);
           "
         >
           <SlidersHorizontal size={18} />
-          Filter
+          {commonT("filter")}
         </Button>
       </div>
       <FilterModal open={open} onOpenChange={setOpen} />

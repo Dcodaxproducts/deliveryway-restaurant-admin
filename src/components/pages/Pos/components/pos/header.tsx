@@ -7,6 +7,7 @@ import { useState } from "react";
 import OngoingOrdersModal from "@/components/common/modals/OngoingOrdersModal";
 import HoldOrdersModal from "@/components/common/modals/HoldOrdersModal";
 import MakeReservationModal from "@/components/common/modals/MakeReservationModal";
+import { useTranslations } from "next-intl";
 
 interface HeaderProps {
   title: string;
@@ -14,6 +15,7 @@ interface HeaderProps {
 }
 
 export default function PosHeader({ title, description }: HeaderProps) {
+  const t = useTranslations("pos");
   const router = useRouter();
 const [openOngoingOrders, setOpenOngoingOrders] = useState(false);
 const [openHoldOrders, setOpenHoldOrders] = useState(false);
@@ -59,7 +61,7 @@ const [openMakeReservation, setOpenMakeReservation] = useState(false);
            className="h-[38px] sm:h-[44px] rounded-[12px] px-4 sm:px-5 flex items-center gap-2 bg-primary hover:bg-red-700 text-white text-[13px] sm:text-[15px] font-[500]"
         onClick={() => setOpenMakeReservation(true)}
         >
-          Make Reservation
+          {t("makeReservation")}
         </Button>
       </div>
 

@@ -8,9 +8,11 @@ import { PlusCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import CategoriesTable from "@/components/pages/Menu/categories/components/CategoriesTable/CategoriesTable";
 import CreateCategoryModalParent from "@/components/pages/Menu/legacy/root-menu-components/listing/CreateCategoryModalParent";
+import { useTranslations } from "next-intl";
 
 const MenuCategoriesPage = () => {
   const { isBranchAdmin } = useAuth();
+  const t = useTranslations("menu");
   const [open, setOpen] = useState(false);
   const [refetchKey, setRefetchKey] = useState(0);
 
@@ -22,11 +24,11 @@ const MenuCategoriesPage = () => {
     <Container>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between w-full">
         <Header
-          title={isBranchAdmin ? "Category Branch Overrides" : "Menu Categories"}
+          title={isBranchAdmin ? t("categoryBranchOverrides") : t("categoriesTitle")}
           description={
             isBranchAdmin
-              ? "Adjust category availability for your assigned branch"
-              : "Manage menu categories from here"
+              ? t("categoryBranchOverridesDescription")
+              : t("categoriesDescription")
           }
         />
 
@@ -36,7 +38,7 @@ const MenuCategoriesPage = () => {
           className="h-[44px] rounded-[14px] px-5 flex items-center gap-2 bg-primary hover:bg-red-700 text-white text-[15px] font-[500] shadow-md"
         >
           <PlusCircle size={18} />
-          Add categories
+          {t("addCategories")}
         </Button>
         ) : null}
       </div>

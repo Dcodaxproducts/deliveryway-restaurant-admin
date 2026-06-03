@@ -1,8 +1,10 @@
 "use client";
 
 import { Truck } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const UserProfile = ({ order }: { order: any }) => {
+  const t = useTranslations("orders");
   const customer = order?.customer;
 
   return (
@@ -17,19 +19,19 @@ const UserProfile = ({ order }: { order: any }) => {
 
         {/* Name */}
         <h3 className="text-xl font-semibold">
-          {customer?.fullName || "Unknown User"}
+          {customer?.fullName || t("unknownUser")}
         </h3>
 
         {/* Role */}
         <p className="text-sm text-primary mb-4 bg-primary/10 rounded-full px-4 py-1">
-          Customer
+          {t("customerRole")}
         </p>
 
         {/* Note */}
         <div className="w-full px-6 py-3 rounded-lg text-left">
-          <h4 className="text-lg font-medium mb-2">Note Order</h4>
+          <h4 className="text-lg font-medium mb-2">{t("noteOrder")}</h4>
           <p className="text-sm text-gray-600">
-            {order?.customerNote || "No note provided for this order."}
+            {order?.customerNote || t("noOrderNote")}
           </p>
         </div>
       </div>
@@ -41,7 +43,7 @@ const UserProfile = ({ order }: { order: any }) => {
         </div>
 
         <p className="text-sm">
-          {order?.deliveryAddress?.address || "Takeaway Order"}
+          {order?.deliveryAddress?.address || t("takeawayOrder")}
         </p>
       </div>
     </div>

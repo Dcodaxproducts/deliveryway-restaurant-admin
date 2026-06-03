@@ -4,8 +4,10 @@ import Header from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 import { useGetOrderById } from "@/hooks/useOrders";
+import { useTranslations } from "next-intl";
 
 export default function GroupOrderDetails() {
+  const t = useTranslations("orders");
   const { orderId } = useParams();
   const { data: order, isLoading: loading } = useGetOrderById(orderId as string);
 
@@ -14,7 +16,7 @@ export default function GroupOrderDetails() {
   if (loading || !order) {
     return (
       <div className="p-6 text-center text-gray-400">
-        Loading order details...
+        {t("loadingDetails")}
       </div>
     );
   }
@@ -26,15 +28,18 @@ export default function GroupOrderDetails() {
     return (
       user?.fullName ||
       `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
-      "User"
+      t("userFallback")
     );
   };
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <Header
-        title="Group Order"
-        description={`Organizing ${totalItems} items across ${participants.length} participants.`}
+        title={t("groupOrder")}
+        description={t("groupOrderDescription", {
+          totalItems,
+          participants: participants.length,
+        })}
         titleClassName="text-2xl font-semibold text-dark"
         descriptionClassName="text-sm text-gray-500"
       />
@@ -43,7 +48,7 @@ export default function GroupOrderDetails() {
 
         <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
           <div>
-            <p className="text-xs text-gray-500">Order ID#</p>
+            <p className="text-xs text-gray-500">{t("orderId")}#</p>
             <p className="text-red-600 font-semibold">#{order.id}</p>
 
             <h3 className="text-lg font-semibold mt-3">
@@ -58,28 +63,28 @@ export default function GroupOrderDetails() {
 
           <div className="flex flex-col sm:items-end gap-3">
             <div className="text-right">
-              <p className="text-xs text-gray-500">Order Type</p>
+              <p className="text-xs text-gray-500">{t("orderType")}</p>
               <p className="text-red-600 font-semibold">
                 {order.orderType}
               </p>
             </div>
 
             <Button className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md">
-              Print Label
+              {t("printLabel")}
             </Button>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-4 text-xs sm:text-sm">
           <span className="px-3 py-1 bg-gray-100 rounded">
-            Status: {order.status}
+            {t("statusLabel")}: {order.status}
           </span>
           <span className="px-3 py-1 bg-gray-100 rounded">
-            Payment: {order.paymentStatus}
+            {t("payment")}: {order.paymentStatus}
           </span>
           {order.isScheduled && (
             <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded">
-              Scheduled:{" "}
+              {t("scheduled")}:{" "}
               {new Date(order.orderTime).toLocaleString()}
             </span>
           )}
@@ -98,7 +103,7 @@ export default function GroupOrderDetails() {
                 </h4>
 
                 <span className="text-[10px] bg-[#FFE2DE] px-2 py-1 rounded">
-                  {p.isHost ? "HOST" : p.status}
+                  {p.isHost ? t("host") : p.status}
                 </span>
               </div>
 
@@ -120,13 +125,13 @@ export default function GroupOrderDetails() {
                       {/* modifiers */}
                       {item.modifiers?.length > 0 && (
                         <p className="text-[12px] text-gray-400">
-                          + modifiers
+                          + {t("modifiers")}
                         </p>
                       )}
 
                       {item.note && (
                         <p className="text-[11px] text-gray-500">
-                          Note: {item.note}
+                          {t("note")}: {item.note}
                         </p>
                       )}
                     </div>
@@ -139,7 +144,7 @@ export default function GroupOrderDetails() {
               </div>
 
               <div className="mt-3 pt-2 border-t text-xs text-gray-500 flex justify-between">
-                <span>ITEM LIST ({p.items?.length || 0})</span>
+                <span>{t("itemList", { count: p.items?.length || 0 })}</span>
                 <span>{p.status}</span>
               </div>
             </div>
@@ -149,7 +154,7 @@ export default function GroupOrderDetails() {
 
       {/* ITEMS PREVIEW ( NEW) */}
       <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 space-y-4">
-        <h3 className="font-semibold">Items Overview</h3>
+        <h3 className="font-semibold">{t("itemsOverview")}</h3>
 
         {order.itemsPreview?.map((item: any) => (
           <div
@@ -190,23 +195,23 @@ export default function GroupOrderDetails() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 space-y-4">
-        <h3 className="font-semibold">Order Summary</h3>
+        <h3 className="font-semibold">{t("orderSummary")}</h3>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
           <div>
-            <p className="text-gray-500">Subtotal</p>
+            <p className="text-gray-500">{t("subtotal")}</p>
             <p>${order.subtotal}</p>
           </div>
           <div>
-            <p className="text-gray-500">Delivery Fee</p>
+            <p className="text-gray-500">{t("deliveryFee")}</p>
             <p>${order.deliveryFee}</p>
           </div>
           <div>
-            <p className="text-gray-500">Tax</p>
+            <p className="text-gray-500">{t("tax")}</p>
             <p>${order.taxAmount}</p>
           </div>
           <div>
-            <p className="text-gray-500">Total</p>
+            <p className="text-gray-500">{t("total")}</p>
             <p className="text-green-600 font-semibold">
               ${order.totalAmount}
             </p>
@@ -216,7 +221,7 @@ export default function GroupOrderDetails() {
 
       {order.customerNote && (
         <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-          <h3 className="font-semibold mb-2">Customer Note</h3>
+          <h3 className="font-semibold mb-2">{t("customerNote")}</h3>
           <p className="text-sm text-gray-600">
             {order.customerNote}
           </p>
@@ -227,29 +232,29 @@ export default function GroupOrderDetails() {
         <div className="flex-1 space-y-4">
           <div>
             <h3 className="font-semibold text-sm sm:text-base">
-              Print Configuration
+              {t("printConfiguration")}
             </h3>
             <p className="text-xs sm:text-sm text-gray-500">
-              Fine-tune label dimensions and kitchen routing for this group batch.
+              {t("printConfigurationDescription")}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="border border-[#bbbbbb] rounded-lg p-4">
               <p className="text-[10px] sm:text-xs text-primary mb-1">
-                PRINTER DESTINATION
+                {t("printerDestination")}
               </p>
               <p className="text-xs sm:text-sm font-medium">
-                Kitchen Main (Thermal 02)
+                {t("printerDestinationValue")}
               </p>
             </div>
 
             <div className="border border-[#bbbbbb] rounded-lg p-4">
               <p className="text-[10px] sm:text-xs text-primary mb-1">
-                LABEL SIZE
+                {t("labelSize")}
               </p>
               <p className="text-xs sm:text-sm font-medium">
-                Standard (4" × 3")
+                {t("labelSizeValue")}
               </p>
             </div>
           </div>
@@ -259,7 +264,7 @@ export default function GroupOrderDetails() {
           <div>
             <div className="text-red-500 text-lg mb-2">▣▣</div>
             <p className="px-2">
-              Scan to preview on handheld device
+              {t("scanPreview")}
             </p>
           </div>
         </div>

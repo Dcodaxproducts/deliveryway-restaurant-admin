@@ -3,6 +3,7 @@
 import StatsSection from "@/components/common/stats-section";
 import type { TableReservation } from "@/types/table-reservations";
 import type { StatItem } from "@/types/stats";
+import { useTranslations } from "next-intl";
 
 type TableReservationsStatsProps = {
   reservations: TableReservation[];
@@ -27,6 +28,7 @@ export default function TableReservationsStats({
   total,
   loading,
 }: TableReservationsStatsProps) {
+  const t = useTranslations("tableReservations");
   const requestedCount = countByStatus(reservations, "REQUESTED");
   const confirmedCount = countByStatus(reservations, "CONFIRMED");
   const guestsCount = getGuestCount(reservations);
@@ -34,46 +36,46 @@ export default function TableReservationsStats({
   const stats: StatItem[] = [
     {
       _id: "total-table-reservations",
-      title: "Total Reservations",
+      title: t("totalReservations"),
       value: total.toLocaleString(),
       icon: "orders",
       iconStyle: "default",
       trend: {
         direction: "up",
-        percentage: `${reservations.length} shown`,
+        percentage: t("shown", { count: reservations.length }),
       },
     },
     {
       _id: "requested-table-reservations",
-      title: "Requested",
+      title: t("requested"),
       value: requestedCount.toLocaleString(),
       icon: "ongoing",
       iconStyle: "default",
       trend: {
         direction: "up",
-        percentage: "Current page",
+        percentage: t("currentPage"),
       },
     },
     {
       _id: "confirmed-table-reservations",
-      title: "Confirmed",
+      title: t("confirmed"),
       value: confirmedCount.toLocaleString(),
       icon: "completed",
       iconStyle: "default",
       trend: {
         direction: "up",
-        percentage: "Current page",
+        percentage: t("currentPage"),
       },
     },
     {
       _id: "visible-table-reservation-guests",
-      title: "Guests",
+      title: t("guests"),
       value: guestsCount.toLocaleString(),
       icon: "users",
       iconStyle: "default",
       trend: {
         direction: "up",
-        percentage: "Current page",
+        percentage: t("currentPage"),
       },
     },
   ];

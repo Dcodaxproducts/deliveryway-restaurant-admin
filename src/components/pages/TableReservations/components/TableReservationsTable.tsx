@@ -20,6 +20,7 @@ import type { TableReservation } from "@/types/table-reservations";
 import TableReservationCustomerCell from "./TableReservationCustomerCell";
 import TableReservationStatusBadge from "./TableReservationStatusBadge";
 import TableReservationsEmptyState from "./TableReservationsEmptyState";
+import { useTranslations } from "next-intl";
 
 type TableReservationsTableProps = {
   reservations: TableReservation[];
@@ -38,6 +39,8 @@ export function TableReservationsTable({
   restaurantId,
   branchId,
 }: TableReservationsTableProps) {
+  const common = useTranslations("common");
+  const t = useTranslations("tableReservations");
   const [statusReservation, setStatusReservation] =
     useState<TableReservation | null>(null);
 
@@ -45,7 +48,7 @@ export function TableReservationsTable({
     return (
       <>
         <div className="lg:hidden py-10 text-center text-sm text-gray-400">
-          Loading table reservations...
+          {t("loading")}
         </div>
         <div className="hidden w-full max-w-full overflow-hidden rounded-[18px] border border-gray-100 bg-white shadow-sm md:block">
           <table className="w-full table-fixed text-sm">
@@ -75,8 +78,8 @@ export function TableReservationsTable({
   if (error) {
     return (
       <EmptyState
-        title="Unable to load table reservations."
-        description={error.message || "Please refresh and try again."}
+        title={t("errorTitle")}
+        description={error.message || common("refreshAndTry")}
       />
     );
   }
@@ -91,13 +94,13 @@ export function TableReservationsTable({
         <table className="w-full table-fixed text-sm">
           <thead>
             <tr className="border-b bg-[#FAFAFA] text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <th className="w-[16%] px-5 py-4">Reservation</th>
-              <th className="w-[23%] px-3 py-4">Customer</th>
-              <th className="w-[16%] px-3 py-4">Date & Time</th>
-              <th className="w-[9%] px-3 py-4 text-center">Guests</th>
-              <th className="w-[17%] px-3 py-4">Branch / Note</th>
-              <th className="w-[11%] px-3 py-4 text-center">Status</th>
-              <th className="w-[8%] px-5 py-4 text-center">Actions</th>
+              <th className="w-[16%] px-5 py-4">{t("reservation")}</th>
+              <th className="w-[23%] px-3 py-4">{t("customer")}</th>
+              <th className="w-[16%] px-3 py-4">{t("dateTime")}</th>
+              <th className="w-[9%] px-3 py-4 text-center">{t("guests")}</th>
+              <th className="w-[17%] px-3 py-4">{t("branchNote")}</th>
+              <th className="w-[11%] px-3 py-4 text-center">{common("status")}</th>
+              <th className="w-[8%] px-5 py-4 text-center">{common("actions")}</th>
             </tr>
           </thead>
 
@@ -113,11 +116,11 @@ export function TableReservationsTable({
                       {formatShortId(reservation.id)}
                     </p>
                     <p className="mt-0.5 truncate text-xs text-gray-400">
-                      Created: {formatDateTime(reservation.createdAt)}
+                      {t("created")}: {formatDateTime(reservation.createdAt)}
                     </p>
                     {reservation.cancelledAt ? (
                       <p className="mt-0.5 truncate text-xs text-red-500">
-                        Cancelled: {formatDateTime(reservation.cancelledAt)}
+                        {t("cancelledLabel")}: {formatDateTime(reservation.cancelledAt)}
                       </p>
                     ) : null}
                   </div>
@@ -146,10 +149,10 @@ export function TableReservationsTable({
                     </p>
                     <p className="mt-0.5 truncate text-xs text-gray-400">
                       {reservation.branch?.address ||
-                        (reservation.branchId ? `Branch ID: ${reservation.branchId}` : "No branch")}
+                        (reservation.branchId ? t("branchId", { id: reservation.branchId }) : t("noBranch"))}
                     </p>
                     <p className="mt-1 line-clamp-1 break-words text-xs text-gray-500">
-                      {reservation.note || "No note"}
+                      {reservation.note || t("noNote")}
                     </p>
                   </div>
                 </td>
@@ -173,7 +176,7 @@ export function TableReservationsTable({
                         onClick={() => setStatusReservation(reservation)}
                       >
                         <RefreshCw size={16} />
-                        Update Status
+                        {common("updateStatus")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -209,28 +212,28 @@ export function TableReservationsTable({
 
             <div className="mt-4 grid grid-cols-2 gap-2">
               <div className="min-w-0 rounded-[12px] bg-[#FAFAFA] p-3">
-                <p className="text-xs text-gray-400">Guests</p>
+                <p className="text-xs text-gray-400">{t("guests")}</p>
                 <p className="truncate text-sm font-semibold text-gray-900">
                   {reservation.guestCount}
                 </p>
               </div>
 
               <div className="min-w-0 rounded-[12px] bg-[#FAFAFA] p-3">
-                <p className="text-xs text-gray-400">Branch</p>
+                <p className="text-xs text-gray-400">{t("branch")}</p>
                 <p className="truncate text-sm font-semibold text-gray-900">
                   {getBranchName(reservation)}
                 </p>
               </div>
 
               <div className="min-w-0 rounded-[12px] bg-[#FAFAFA] p-3">
-                <p className="text-xs text-gray-400">Created</p>
+                <p className="text-xs text-gray-400">{t("created")}</p>
                 <p className="truncate text-sm font-semibold text-gray-900">
                   {formatDateTime(reservation.createdAt)}
                 </p>
               </div>
 
               <div className="min-w-0 rounded-[12px] bg-[#FAFAFA] p-3">
-                <p className="text-xs text-gray-400">Cancelled</p>
+                <p className="text-xs text-gray-400">{t("cancelledLabel")}</p>
                 <p className="truncate text-sm font-semibold text-gray-900">
                   {reservation.cancelledAt
                     ? formatDateTime(reservation.cancelledAt)
@@ -240,7 +243,7 @@ export function TableReservationsTable({
             </div>
 
             <p className="mt-3 line-clamp-2 break-words text-sm text-gray-500">
-              {reservation.note || "No note"}
+              {reservation.note || t("noNote")}
             </p>
 
             <button
@@ -249,7 +252,7 @@ export function TableReservationsTable({
               onClick={() => setStatusReservation(reservation)}
             >
               <RefreshCw size={16} />
-              Update Status
+              {common("updateStatus")}
             </button>
           </div>
         ))}

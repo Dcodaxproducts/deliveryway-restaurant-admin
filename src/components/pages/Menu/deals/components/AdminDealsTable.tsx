@@ -15,6 +15,7 @@ import {
 } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
 import { Button } from "@/components/ui/button";
 import type { AdminDeal } from "@/types/admin-deals";
+import { useTranslations } from "next-intl";
 
 type AdminDealsTableProps = {
   deals: AdminDeal[];
@@ -32,6 +33,8 @@ export default function AdminDealsTable({
   onStats,
 }: AdminDealsTableProps) {
   const router = useRouter();
+  const t = useTranslations("deals");
+  const commonT = useTranslations("common");
 
   if (loading) {
     return (
@@ -44,7 +47,7 @@ export default function AdminDealsTable({
   if (error) {
     return (
       <div className="rounded-[16px] border border-red-100 bg-red-50 p-5 text-sm text-red-700">
-        Unable to load deals. Please try again.
+        {t("unableToLoad")}
       </div>
     );
   }
@@ -57,14 +60,14 @@ export default function AdminDealsTable({
         <table className="w-full table-fixed text-left">
           <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
             <tr>
-              <th className="w-[25%] px-4 py-3 font-semibold">Deal</th>
-              <th className="w-[12%] px-4 py-3 font-semibold">Fixed Price</th>
-              <th className="w-[10%] px-4 py-3 font-semibold">Items</th>
-              <th className="w-[18%] px-4 py-3 font-semibold">Schedule</th>
-              <th className="w-[13%] px-4 py-3 font-semibold">Usage</th>
-              <th className="w-[12%] px-4 py-3 font-semibold">Status</th>
+              <th className="w-[25%] px-4 py-3 font-semibold">{t("deal")}</th>
+              <th className="w-[12%] px-4 py-3 font-semibold">{t("fixedPrice")}</th>
+              <th className="w-[10%] px-4 py-3 font-semibold">{t("items")}</th>
+              <th className="w-[18%] px-4 py-3 font-semibold">{t("schedule")}</th>
+              <th className="w-[13%] px-4 py-3 font-semibold">{t("usage")}</th>
+              <th className="w-[12%] px-4 py-3 font-semibold">{commonT("status")}</th>
               <th className="w-[10%] px-4 py-3 text-right font-semibold">
-                Actions
+                {commonT("actions")}
               </th>
             </tr>
           </thead>
@@ -95,7 +98,7 @@ export default function AdminDealsTable({
                         {deal.code || formatShortDealId(deal.id)}
                       </p>
                       <p className="mt-1 line-clamp-2 text-xs text-gray-500">
-                        {deal.description || "No description"}
+                        {deal.description || t("noDescription")}
                       </p>
                     </div>
                   </div>
@@ -111,9 +114,9 @@ export default function AdminDealsTable({
                   <div className="mt-1 text-gray-400">{formatDealDate(deal.expiresAt)}</div>
                 </td>
                 <td className="px-4 py-4 align-top text-xs text-gray-600">
-                  <div>Uses: {formatUsageLimit(deal.maxUses)}</div>
+                  <div>{t("uses")}: {formatUsageLimit(deal.maxUses)}</div>
                   <div className="mt-1 text-gray-400">
-                    Customer: {formatUsageLimit(deal.maxUsesPerCustomer)}
+                    {t("customer")}: {formatUsageLimit(deal.maxUsesPerCustomer)}
                   </div>
                 </td>
                 <td className="px-4 py-4 align-top">
@@ -121,22 +124,22 @@ export default function AdminDealsTable({
                     <AdminDealLifecycleBadge lifecycle={deal.lifecycle} />
                     <AdminDealStatusBadge deal={deal} />
                     <span className="text-xs text-gray-400">
-                      {deal.branchId ? `Branch ${formatShortDealId(deal.branchId)}` : "All branches"}
+                      {deal.branchId ? `${commonT("branch")} ${formatShortDealId(deal.branchId)}` : commonT("allBranches")}
                     </span>
                   </div>
                 </td>
                 <td className="px-4 py-4 align-top">
                   <div className="flex justify-end gap-1">
-                    <IconButton label="View stats" onClick={() => onStats(deal)}>
+                    <IconButton label={t("viewStats")} onClick={() => onStats(deal)}>
                       <BarChart3 size={16} />
                     </IconButton>
                     <IconButton
-                      label="Edit"
+                      label={commonT("edit")}
                       onClick={() => router.push(`/menu/deals/${deal.id}/edit`)}
                     >
                       <Edit size={16} />
                     </IconButton>
-                    <IconButton label="Delete" onClick={() => onDelete(deal)}>
+                    <IconButton label={commonT("delete")} onClick={() => onDelete(deal)}>
                       <Trash2 size={16} />
                     </IconButton>
                   </div>
@@ -178,29 +181,29 @@ export default function AdminDealsTable({
               <AdminDealLifecycleBadge lifecycle={deal.lifecycle} />
             </div>
             <p className="line-clamp-2 text-xs text-gray-500">
-              {deal.description || "No description"}
+              {deal.description || t("noDescription")}
             </p>
             <div className="grid grid-cols-2 gap-3 text-xs text-gray-600">
-              <Info label="Fixed Price" value={formatDealPrice(deal.discountValue)} />
-              <Info label="Items" value={deal.scopeMenuItemIds.length.toLocaleString()} />
-              <Info label="Starts" value={formatDealDate(deal.startsAt)} />
-              <Info label="Expires" value={formatDealDate(deal.expiresAt)} />
-              <Info label="Max Uses" value={formatUsageLimit(deal.maxUses)} />
-              <Info label="Branch" value={deal.branchId ? formatShortDealId(deal.branchId) : "All branches"} />
+              <Info label={t("fixedPrice")} value={formatDealPrice(deal.discountValue)} />
+              <Info label={t("items")} value={deal.scopeMenuItemIds.length.toLocaleString()} />
+              <Info label={t("starts")} value={formatDealDate(deal.startsAt)} />
+              <Info label={t("expires")} value={formatDealDate(deal.expiresAt)} />
+              <Info label={t("maxUses")} value={formatUsageLimit(deal.maxUses)} />
+              <Info label={commonT("branch")} value={deal.branchId ? formatShortDealId(deal.branchId) : commonT("allBranches")} />
             </div>
             <div className="flex items-center justify-between gap-3">
               <AdminDealStatusBadge deal={deal} />
               <div className="flex gap-1">
-                <IconButton label="View stats" onClick={() => onStats(deal)}>
+                <IconButton label={t("viewStats")} onClick={() => onStats(deal)}>
                   <BarChart3 size={16} />
                 </IconButton>
                 <IconButton
-                  label="Edit"
+                  label={commonT("edit")}
                   onClick={() => router.push(`/menu/deals/${deal.id}/edit`)}
                 >
                   <Edit size={16} />
                 </IconButton>
-                <IconButton label="Delete" onClick={() => onDelete(deal)}>
+                <IconButton label={commonT("delete")} onClick={() => onDelete(deal)}>
                   <Trash2 size={16} />
                 </IconButton>
               </div>

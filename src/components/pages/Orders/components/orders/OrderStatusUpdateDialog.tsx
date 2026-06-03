@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/select";
 import { useUpdateOrderStatus } from "@/hooks/useOrders";
 import { ORDER_STATUS_OPTIONS } from "@/types/orders";
+import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
+import { useTranslations } from "next-intl";
 import {
   orderStatusUpdateSchema,
   type OrderStatusUpdateValues,
@@ -45,6 +47,8 @@ export function OrderStatusUpdateDialog({
   onOpenChange,
 }: OrderStatusUpdateDialogProps) {
   const updateStatusMutation = useUpdateOrderStatus();
+  const common = useTranslations("common");
+  const t = useTranslations("orders");
   const {
     control,
     formState: { errors },
@@ -85,28 +89,30 @@ export function OrderStatusUpdateDialog({
       <DialogContent className="max-w-[440px] rounded-[20px] p-6">
         <DialogHeader className="space-y-1">
           <DialogTitle className="text-xl font-semibold">
-            Update Order Status
+            {t("updateStatusTitle")}
           </DialogTitle>
           <DialogDescription>
-            Select the next status for this order.
+            {t("updateStatusDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <form className="mt-5 space-y-4" noValidate onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-2">
-            <Label htmlFor="order-status">Status</Label>
+            <Label htmlFor="order-status">{common("status")}</Label>
             <Controller
               control={control}
               name="status"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="order-status">
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={common("selectStatus")} />
                   </SelectTrigger>
                   <SelectContent>
                     {ORDER_STATUS_OPTIONS.map((status) => (
                       <SelectItem key={status.value} value={status.value}>
-                        {status.label}
+                        {ORDER_STATUS_LABEL_KEYS[status.value]
+                          ? t(ORDER_STATUS_LABEL_KEYS[status.value])
+                          : status.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -119,10 +125,10 @@ export function OrderStatusUpdateDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="order-delivery-otp">Delivery OTP</Label>
+            <Label htmlFor="order-delivery-otp">{t("deliveryOtp")}</Label>
             <Input
               id="order-delivery-otp"
-              placeholder="Optional"
+              placeholder={common("optional")}
               {...register("deliveryOtp")}
             />
             {errors.deliveryOtp?.message ? (
@@ -136,10 +142,10 @@ export function OrderStatusUpdateDialog({
               variant="outline"
               onClick={() => handleOpenChange(false)}
             >
-              Cancel
+              {common("cancel")}
             </Button>
             <Button type="submit" disabled={updateStatusMutation.isPending}>
-              {updateStatusMutation.isPending ? "Updating..." : "Update Status"}
+              {updateStatusMutation.isPending ? common("updating") : common("updateStatus")}
             </Button>
           </DialogFooter>
         </form>

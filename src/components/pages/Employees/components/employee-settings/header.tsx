@@ -14,6 +14,7 @@ type HeaderProps = {
 };
 
 import { AddRoleModal } from './AddRoleModal'
+import { useTranslations } from 'next-intl'
 export default function EmployeeSettingsHeader({
   title,
   description,
@@ -21,6 +22,7 @@ export default function EmployeeSettingsHeader({
   onRoleSuccess,
 }: HeaderProps) {
     const router = useRouter()
+   const t = useTranslations("employees");
    const [open, setOpen] = useState(false);
    const [openRoleModal, setOpenRoleModal] = useState(false);
 
@@ -48,7 +50,7 @@ export default function EmployeeSettingsHeader({
               className="h-[44px] rounded-[12px] px-4 flex items-center gap-2 border-[#E6E7EC] text-[15px] font-[500] text-[#767676]"
            onClick={()=>  setOpenRoleModal(true)}
                 >
-                    <p>Add Role</p>
+                    <p>{t("addRole")}</p>
                     {/* <HelpCircle size={18} className="text-[#767676]" /> */}
                 </Button>
 
@@ -57,7 +59,7 @@ export default function EmployeeSettingsHeader({
                     onClick={() => setOpen(true)}
               className="h-[44px] rounded-[12px] px-5 flex items-center gap-2 bg-primary hover:bg-red-700 text-white text-[15px] font-[500]"
             >
-                    Add New Employee
+                    {t("addNew")}
                 </Button>
             </div>
         </div>

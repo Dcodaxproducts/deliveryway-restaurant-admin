@@ -4,6 +4,7 @@ import { Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Header from "@/components/common/PageHeader"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 
 interface Order {
   id: string
@@ -32,22 +33,24 @@ export default function OrdersHeader({
   orders,
 }: HeaderProps) {
   const router = useRouter()
+  const common = useTranslations("common")
+  const ordersT = useTranslations("orders")
 
   //  CSV GENERATOR
   const handleExport = () => {
     if (!orders || orders.length === 0) return
 
     const headers = [
-      "Order ID",
-      "Customer Name",
-      "Phone",
-      "Email",
-      "Order Type",
-      "Status",
-      "Payment Method",
-      "Payment Status",
-      "Amount",
-      "Date",
+      ordersT("orderId"),
+      ordersT("customerName"),
+      ordersT("phone"),
+      ordersT("email"),
+      ordersT("orderType"),
+      ordersT("statusLabel"),
+      ordersT("paymentMethod"),
+      ordersT("paymentStatus"),
+      ordersT("amount"),
+      ordersT("date"),
     ]
 
     const rows = orders.map((o) => [
@@ -94,7 +97,7 @@ export default function OrdersHeader({
             className="w-fit sm:w-auto justify-between sm:justify-start flex items-center gap-2"
           >
             <Download size={18} className="text-gray-600" />
-            <p className="pt-1">Export</p>
+            <p className="pt-1">{common("export")}</p>
           </Button>
         </div>
       </div>

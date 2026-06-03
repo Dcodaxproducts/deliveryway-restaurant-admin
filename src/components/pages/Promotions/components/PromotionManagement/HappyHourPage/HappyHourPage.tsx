@@ -8,6 +8,7 @@ import PromotionStatCard from "@/components/cards/PromotionStatCard";
 import HappyHoursTable from "./table";
 import { useGetAdminHappyHours } from "@/hooks/usePromotions";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslations } from "next-intl";
 
 const getListFromResponse = (response: any) => {
   if (Array.isArray(response?.data)) return response.data;
@@ -20,6 +21,7 @@ const getMetaFromResponse = (response: any) => {
 };
 
 export default function HappyHoursPage() {
+  const t = useTranslations("promotions");
   const { user, restaurantId } = useAuth();
 
   const branchId = user?.branchId ?? null;
@@ -63,10 +65,10 @@ export default function HappyHoursPage() {
   return (
     <div className="mt-1 space-y-10">
       <PromotionSectionHeader
-        title="Happy Hours"
-        description="Create time-based offers to increase sales during selected hours"
+        title={t("happyHours")}
+        description={t("happyHoursDescription")}
         showViewAll={false}
-        actionLabel="Add Happy Hour"
+        actionLabel={t("addHappyHour")}
         actionHref="/promotion-management/happy-hour/add"
       />
 
@@ -74,28 +76,28 @@ export default function HappyHoursPage() {
         <PromotionStatCard
           icon={<Clock size={18} />}
           value={stats.total}
-          label="Total Happy Hours"
+          label={t("totalHappyHours")}
           loading={loading}
         />
 
         <PromotionStatCard
           icon={<Clock size={18} />}
           value={stats.active}
-          label="Active Happy Hours"
+          label={t("activeHappyHours")}
           loading={loading}
         />
 
         <PromotionStatCard
           icon={<Clock size={18} />}
           value={stats.upcoming}
-          label="Upcoming Happy Hours"
+          label={t("upcomingHappyHours")}
           loading={loading}
         />
 
         <PromotionStatCard
           icon={<Clock size={18} />}
           value={stats.expired}
-          label="Expired Happy Hours"
+          label={t("expiredHappyHours")}
           loading={loading}
         />
       </div>

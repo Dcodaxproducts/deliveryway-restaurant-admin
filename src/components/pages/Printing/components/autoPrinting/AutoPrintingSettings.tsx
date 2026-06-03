@@ -12,6 +12,7 @@ import {
   useUpdateAdminPrintingSettings,
 } from "@/hooks/usePrinting";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 type ConnectionType = "USB" | "NETWORK" | "QUEUE" | "";
 
@@ -83,6 +84,8 @@ const formatDateTime = (value?: string | null) => {
 export default function AutoPrintingSettings({
   branchId,
 }: AutoPrintingSettingsProps) {
+  const t = useTranslations("printing");
+  const commonT = useTranslations("common");
   const { restaurantId, branchId: authBranchId, isBranchAdmin, loading: authLoading } = useAuth();
   const effectiveBranchId = branchId || (isBranchAdmin ? authBranchId : undefined);
 
@@ -171,7 +174,7 @@ export default function AutoPrintingSettings({
 
   const handleSave = async () => {
     if (!restaurantId) {
-      toast.error("Restaurant ID is missing.");
+      toast.error(t("toast.restaurantMissing"));
       return;
     }
 
@@ -193,10 +196,10 @@ export default function AutoPrintingSettings({
         queueName: form.queueName || undefined,
       } as any);
 
-      toast.success("Printing settings updated successfully.");
+      toast.success(t("toast.updated"));
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message || "Failed to update printing settings."
+        error?.response?.data?.message || t("toast.failedUpdate")
       );
     }
   };
@@ -213,40 +216,40 @@ export default function AutoPrintingSettings({
     <div className="mt-6 rounded-xl bg-white p-8">
       <div className="mb-12 flex items-start justify-between gap-6">
         <div>
-          <h3 className="text-2xl font-semibold">Printer Status</h3>
+          <h3 className="text-2xl font-semibold">{t("printerStatus")}</h3>
 
           <p className="mt-2 text-sm text-gray-500">
-            Source:{" "}
+            {t("source")}:{" "}
             <span className="font-medium capitalize text-gray-700">
-              {source || "restaurant"}
+              {source || t("restaurant")}
             </span>
-            {inheritedFromRestaurant ? " · Inherited from restaurant" : ""}
+            {inheritedFromRestaurant ? ` · ${t("inheritedFromRestaurant")}` : ""}
           </p>
 
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm text-gray-600 md:grid-cols-4">
             <div className="rounded-lg border border-gray-100 p-3">
-              <p className="text-xs text-gray-400">Total Events</p>
+              <p className="text-xs text-gray-400">{t("totalEvents")}</p>
               <p className="font-semibold text-gray-800">
                 {health?.totalEvents ?? 0}
               </p>
             </div>
 
             <div className="rounded-lg border border-gray-100 p-3">
-              <p className="text-xs text-gray-400">Success</p>
+              <p className="text-xs text-gray-400">{t("success")}</p>
               <p className="font-semibold text-green-600">
                 {health?.successCount ?? 0}
               </p>
             </div>
 
             <div className="rounded-lg border border-gray-100 p-3">
-              <p className="text-xs text-gray-400">Failed</p>
+              <p className="text-xs text-gray-400">{t("failed")}</p>
               <p className="font-semibold text-red-600">
                 {health?.failedCount ?? 0}
               </p>
             </div>
 
             <div className="rounded-lg border border-gray-100 p-3">
-              <p className="text-xs text-gray-400">Warnings</p>
+              <p className="text-xs text-gray-400">{t("warnings")}</p>
               <p className="font-semibold text-yellow-600">
                 {health?.warningCount ?? 0}
               </p>
@@ -262,7 +265,7 @@ export default function AutoPrintingSettings({
           </p>
 
           <p className="text-xs text-gray-600">
-            Latest: {formatDateTime(health?.latest)}
+            {t("latest")}: {health?.latest ? formatDateTime(health.latest) : t("noRecentActivity")}
           </p>
 
           {health?.latestErrorMessage ? (
@@ -283,16 +286,16 @@ export default function AutoPrintingSettings({
             ) : (
               <RefreshCw size={16} className="mr-2" />
             )}
-            Refresh
+            {commonT("refresh")}
           </Button>
         </div>
       </div>
 
 <div className="mb-12">
-  <h3 className="mb-6 text-2xl font-semibold">Connect Printer</h3>
+  <h3 className="mb-6 text-2xl font-semibold">{t("connectPrinter")}</h3>
 
   <div className="mb-6">
-    <label className="mb-2 block text-[16px]">Connection Type</label>
+    <label className="mb-2 block text-[16px]">{t("connectionType")}</label>
 
     <div className="relative">
       <select
@@ -302,10 +305,10 @@ export default function AutoPrintingSettings({
         }
         className="h-11 w-full appearance-none rounded-[10px] border border-[#BBBBBB] px-4 pr-12 text-sm text-gray-500 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
       >
-        <option value="">Select connection type</option>
+        <option value="">{t("selectConnectionType")}</option>
         <option value="USB">USB</option>
-        <option value="NETWORK">Network / IP</option>
-        <option value="QUEUE">Print Queue</option>
+        <option value="NETWORK">{t("networkIp")}</option>
+        <option value="QUEUE">{t("printQueue")}</option>
       </select>
 
       <div className="pointer-events-none absolute right-0 top-0 flex h-full w-10 items-center justify-center rounded-r-[10px] bg-primary">
@@ -316,36 +319,36 @@ export default function AutoPrintingSettings({
 
   <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
     <FormInput
-      label="Printer Name"
-      placeholder="eg. Kitchen Printer"
+      label={t("printerName")}
+      placeholder={t("printerNamePlaceholder")}
       value={form.printerName}
       onChange={(value) => updateField("printerName", value)}
     />
 
     <FormInput
-      label="Printer Target"
-      placeholder="eg. EPSON-TM-T20"
+      label={t("printerTarget")}
+      placeholder={t("printerTargetPlaceholder")}
       value={form.printerTarget}
       onChange={(value) => updateField("printerTarget", value)}
     />
 
     <FormInput
-      label="Device ID"
-      placeholder="eg. USB_DEVICE_001"
+      label={t("deviceId")}
+      placeholder={t("deviceIdPlaceholder")}
       value={form.deviceId}
       onChange={(value) => updateField("deviceId", value)}
     />
 
     <FormInput
-      label="IP Address"
-      placeholder="eg. 192.168.1.50"
+      label={t("ipAddress")}
+      placeholder={t("ipAddressPlaceholder")}
       value={form.ipAddress}
       onChange={(value) => updateField("ipAddress", value)}
     />
 
     <FormInput
-      label="Queue Name"
-      placeholder="eg. kitchen-printer-queue"
+      label={t("queueName")}
+      placeholder={t("queueNamePlaceholder")}
       value={form.queueName}
       onChange={(value) => updateField("queueName", value)}
     />
@@ -361,21 +364,21 @@ export default function AutoPrintingSettings({
       {updating ? (
         <>
           <Loader2 size={16} className="mr-2 animate-spin" />
-          Saving...
+          {commonT("saving")}
         </>
       ) : (
-        "Connect"
+        t("connect")
       )}
     </Button>
   </div>
 </div>
 
       <div className="mb-12">
-        <h3 className="mb-6 text-2xl font-semibold">Print Settings</h3>
+        <h3 className="mb-6 text-2xl font-semibold">{t("printSettings")}</h3>
 
         <div className="space-y-6">
           <div className="flex items-center gap-4">
-            <span className="text-sm font-medium">Printing Enabled</span>
+            <span className="text-sm font-medium">{t("printingEnabled")}</span>
             <Switch
               checked={form.enabled}
               onCheckedChange={(checked) => updateField("enabled", checked)}
@@ -383,16 +386,16 @@ export default function AutoPrintingSettings({
           </div>
 
           <div>
-            <p className="mb-3 text-sm font-medium">Print Copies</p>
+            <p className="mb-3 text-sm font-medium">{t("printCopies")}</p>
 
             <div className="flex flex-wrap gap-6">
               {[
                 {
-                  label: "Kitchen Ticket",
+                  label: t("kitchenTicket"),
                   key: "printKitchenTicket" as const,
                 },
                 {
-                  label: "Customer Receipt",
+                  label: t("customerReceipt"),
                   key: "printCustomerReceipt" as const,
                 },
               ].map((item) => (
@@ -422,16 +425,16 @@ export default function AutoPrintingSettings({
       </div>
 
       <div>
-        <h3 className="mb-6 text-2xl font-semibold">Order Print Rules</h3>
+        <h3 className="mb-6 text-2xl font-semibold">{t("orderPrintRules")}</h3>
 
         <div className="space-y-3">
           {[
             {
-              label: "Print New Orders Automatically",
+              label: t("printNewOrdersAutomatically"),
               key: "autoPrintOnNewOrder" as const,
             },
             {
-              label: "Print Updated Orders / Status Changes",
+              label: t("printUpdatedOrders"),
               key: "autoPrintOnStatusChange" as const,
             },
           ].map((rule) => (
@@ -467,10 +470,10 @@ export default function AutoPrintingSettings({
             {updating ? (
               <>
                 <Loader2 size={16} className="mr-2 animate-spin" />
-                Saving...
+                {commonT("saving")}
               </>
             ) : (
-              "Save Settings"
+              t("saveSettings")
             )}
           </Button>
         </div>

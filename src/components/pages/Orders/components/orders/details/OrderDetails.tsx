@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const formatDate = (date?: string) => {
   if (!date) return "-";
@@ -8,33 +9,34 @@ const formatDate = (date?: string) => {
 };
 
 const OrderDetailsMain = ({ order }: { order: any }) => {
+  const t = useTranslations("orders");
   const items = order?.items || [];
 
   const history = [
     {
-      label: "Order Delivered",
+      label: t("orderDelivered"),
       date: formatDate(order?.deliveredAt),
       active: !!order?.deliveredAt,
     },
     {
-      label: "On Delivery",
-      date: order?.status === "ON_DELIVERY" ? "In progress" : "-",
+      label: t("onDelivery"),
+      date: order?.status === "ON_DELIVERY" ? t("inProgress") : "-",
       active:
         order?.status === "ON_DELIVERY" ||
         order?.status === "DELIVERED",
     },
     {
-      label: "Payment Success",
+      label: t("paymentSuccess"),
       date:
         order?.paymentStatus === "PAID"
-          ? "Paid"
+          ? t("paid")
           : order?.paymentStatus,
       active:
         order?.paymentStatus === "PAID" ||
         order?.status === "DELIVERED",
     },
     {
-      label: "Order Created",
+      label: t("orderCreated"),
       date: formatDate(order?.createdAt),
       active: true,
     },
@@ -51,10 +53,10 @@ const OrderDetailsMain = ({ order }: { order: any }) => {
           <div className="w-full overflow-x-auto">
             
             <div className="min-w-[600px] grid grid-cols-[1fr_80px_100px_120px_40px] text-xs sm:text-sm font-semibold text-gray-600 pb-4 border-b">
-              <span>Items</span>
-              <span className="text-center">Qty</span>
-              <span className="text-right">Price</span>
-              <span className="text-right">Total Price</span>
+              <span>{t("items")}</span>
+              <span className="text-center">{t("qty")}</span>
+              <span className="text-right">{t("price")}</span>
+              <span className="text-right">{t("totalPrice")}</span>
               <span />
             </div>
 
@@ -73,7 +75,7 @@ const OrderDetailsMain = ({ order }: { order: any }) => {
 
                     <div className="min-w-0">
                       <p className="text-[10px] sm:text-xs font-semibold text-red-500 uppercase truncate">
-                        {item?.menuItem?.category?.name || "Item"}
+                        {item?.menuItem?.category?.name || t("itemFallback")}
                       </p>
 
                       <p className="font-medium text-gray-900 text-xs sm:text-sm truncate">
@@ -111,7 +113,7 @@ const OrderDetailsMain = ({ order }: { order: any }) => {
         {/* HISTORY */}
         <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm">
           <h3 className="text-base sm:text-lg font-semibold mb-4 sm:mb-6">
-            History
+            {t("history")}
           </h3>
 
           <div className="space-y-0">

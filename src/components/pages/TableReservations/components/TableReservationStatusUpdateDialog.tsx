@@ -26,6 +26,8 @@ import {
   type TableReservation,
   type TableReservationStatusUpdateValue,
 } from "@/types/table-reservations";
+import { TABLE_RESERVATION_STATUS_LABEL_KEYS } from "@/lib/status-labels";
+import { useTranslations } from "next-intl";
 import {
   tableReservationStatusUpdateSchema,
   type TableReservationStatusUpdateValues,
@@ -53,6 +55,8 @@ export function TableReservationStatusUpdateDialog({
   onOpenChange,
 }: TableReservationStatusUpdateDialogProps) {
   const updateStatusMutation = useUpdateTableReservationStatus();
+  const common = useTranslations("common");
+  const t = useTranslations("tableReservations");
   const {
     control,
     formState: { errors },
@@ -97,28 +101,30 @@ export function TableReservationStatusUpdateDialog({
       <DialogContent className="max-w-[420px] rounded-[20px] p-6">
         <DialogHeader className="space-y-1">
           <DialogTitle className="text-xl font-semibold">
-            Update Reservation Status
+            {t("updateStatusTitle")}
           </DialogTitle>
           <DialogDescription>
-            Select the current status for this table reservation.
+            {t("updateStatusDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <form className="mt-5 space-y-4" noValidate onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-2">
-            <Label htmlFor="reservation-status">Status</Label>
+            <Label htmlFor="reservation-status">{common("status")}</Label>
             <Controller
               control={control}
               name="status"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="reservation-status">
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={common("selectStatus")} />
                   </SelectTrigger>
                   <SelectContent>
                     {TABLE_RESERVATION_STATUS_OPTIONS.map((status) => (
                       <SelectItem key={status.value} value={status.value}>
-                        {status.label}
+                        {TABLE_RESERVATION_STATUS_LABEL_KEYS[status.value]
+                          ? t(TABLE_RESERVATION_STATUS_LABEL_KEYS[status.value])
+                          : status.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -136,10 +142,10 @@ export function TableReservationStatusUpdateDialog({
               variant="outline"
               onClick={() => handleOpenChange(false)}
             >
-              Cancel
+              {common("cancel")}
             </Button>
             <Button type="submit" disabled={updateStatusMutation.isPending}>
-              {updateStatusMutation.isPending ? "Updating..." : "Update Status"}
+              {updateStatusMutation.isPending ? common("updating") : common("updateStatus")}
             </Button>
           </DialogFooter>
         </form>

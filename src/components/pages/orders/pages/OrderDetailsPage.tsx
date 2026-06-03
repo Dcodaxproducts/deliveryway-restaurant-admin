@@ -7,13 +7,15 @@ import OrderDetailsHeader from "@/components/pages/Orders/components/orders/deta
 import OrderTrackingSection from "@/components/pages/Orders/components/orders/details/OrderTrackingSection";
 import UserProfile from "@/components/pages/Orders/components/orders/details/UserProfile";
 import { useGetOrderById } from "@/hooks/useOrders";
+import { useTranslations } from "next-intl";
 
 export default function OrderDetails() {
+  const t = useTranslations("orders");
   const { orderId } = useParams();
   const { data: order, isLoading: loading } = useGetOrderById(orderId as string);
 
   if (loading || !order) {
-    return <div className="p-6">Loading order...</div>;
+    return <div className="p-6">{t("loadingOrder")}</div>;
   }
 
   return (

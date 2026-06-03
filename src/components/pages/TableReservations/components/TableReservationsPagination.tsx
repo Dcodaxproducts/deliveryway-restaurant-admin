@@ -3,6 +3,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PaginationSection from "@/components/common/pagination";
 import type { TableReservationsMeta } from "@/types/table-reservations";
+import { useTranslations } from "next-intl";
 
 type TableReservationsPaginationProps = {
   meta: TableReservationsMeta;
@@ -19,6 +20,8 @@ export default function TableReservationsPagination({
   onLimitChange,
   onPageChange,
 }: TableReservationsPaginationProps) {
+  const common = useTranslations("common");
+
   return (
     <div className="flex flex-col gap-4">
       <PaginationSection
@@ -32,7 +35,7 @@ export default function TableReservationsPagination({
       />
 
       <div className="flex items-center gap-2 self-start text-sm text-gray-500 sm:self-end">
-        <span>Rows per page</span>
+        <span>{common("rowsPerPage")}</span>
         <Select value={String(limit)} onValueChange={(value) => onLimitChange(Number(value))}>
           <SelectTrigger className="h-10 w-[90px] rounded-[14px]">
             <SelectValue />

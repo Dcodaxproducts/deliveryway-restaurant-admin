@@ -2,12 +2,14 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Phone, MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type Props = {
   order: any;
 };
 
 export default function OrderTrackingSection({ order }: Props) {
+  const t = useTranslations("orders");
   // =========================
   // STATUS → PROGRESS MAPPING
   // =========================
@@ -33,7 +35,7 @@ export default function OrderTrackingSection({ order }: Props) {
   // =========================
   const estimatedTime = order?.isScheduled
     ? new Date(order.orderTime).toLocaleTimeString()
-    : "4-6 mins";
+    : t("estimatedMinutes");
 
   return (
     <Card className="w-full rounded-2xl shadow-sm border-0">
@@ -76,14 +78,14 @@ export default function OrderTrackingSection({ order }: Props) {
           <div className="absolute left-[250px] top-[60px] bg-white shadow-md rounded-xl px-4 py-2 text-sm font-semibold z-10">
             {estimatedTime}
             <p className="text-[11px] text-muted-foreground font-normal">
-              Estimated time
+              {t("estimatedTime")}
             </p>
           </div>
 
           <div className="absolute right-8 top-8 text-right z-10">
-            <h3 className="text-lg font-semibold">Track Orders</h3>
+            <h3 className="text-lg font-semibold">{t("trackOrders")}</h3>
             <p className="text-sm text-muted-foreground">
-              {order?.status || "Tracking..."}
+              {order?.status || t("tracking")}
             </p>
           </div>
         </div>
@@ -92,7 +94,7 @@ export default function OrderTrackingSection({ order }: Props) {
 
           {/* LEFT */}
           <div className="space-y-3">
-            <p className="font-semibold text-base">Customer</p>
+            <p className="font-semibold text-base">{t("customer")}</p>
 
             <div className="flex items-center gap-4">
               <img
@@ -106,7 +108,7 @@ export default function OrderTrackingSection({ order }: Props) {
                   {order?.customer?.fullName || "N/A"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  ID {order?.customer?.id}
+                  {t("customerId", { id: order?.customer?.id })}
                 </p>
               </div>
             </div>
@@ -121,7 +123,7 @@ export default function OrderTrackingSection({ order }: Props) {
 
             <div className="flex items-center gap-3 text-sm text-muted-foreground max-w-[260px]">
               <MapPin size={16} />
-              {order?.deliveryAddress?.address || "Takeaway Order"}
+              {order?.deliveryAddress?.address || t("takeawayOrder")}
             </div>
           </div>
         </div>

@@ -1,11 +1,13 @@
 import EmptyState from "@/components/common/EmptyState";
+import { useTranslations } from "next-intl";
 
 export default function TableReservationsEmptyState() {
+  const t = useTranslations("tableReservations");
+
   return (
     <EmptyState
-      title="No table reservations found."
-      description="Customer table reservation requests will appear here."
+      title={t("emptyTitle")}
+      description={t("emptyDescription")}
     />
   );
 }
-

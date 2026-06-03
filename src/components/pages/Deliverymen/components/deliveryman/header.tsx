@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button'
 import Header from '@/components/common/PageHeader'
 import { useRouter } from 'next/navigation'
 import type { HeaderProps } from '@/types/page-header'
+import { useTranslations } from 'next-intl'
 
 export default function DeliveryManHeader({ title, description }: HeaderProps) {
     const router = useRouter()
+    const t = useTranslations("deliverymen")
  
     return (
         <>
@@ -24,7 +26,7 @@ export default function DeliveryManHeader({ title, description }: HeaderProps) {
                 className="h-[44px] rounded-[12px] px-4 flex items-center gap-2 border-[#E6E7EC] text-[15px] font-[500] text-[#767676]"
               onClick={()=>router.push("/deliveryman/trash")}
                 >
-                    <p>View Trash</p>
+                    <p>{t("viewTrash")}</p>
                     <HelpCircle size={18} className="text-[#767676]" />
                 </Button>
 
@@ -33,7 +35,7 @@ export default function DeliveryManHeader({ title, description }: HeaderProps) {
                     onClick={() => router.push("/deliveryman/add")}
                  className="h-[44px] rounded-[12px] px-5 flex items-center gap-2 bg-primary hover:bg-red-700 text-white text-[15px] font-[500]"
          >
-                    Add New Delivery Man
+                    {t("addNew")}
                 </Button>
             </div>
         </div>

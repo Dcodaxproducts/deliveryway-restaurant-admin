@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { AdminDealSortOrder } from "@/types/admin-deals";
+import { useTranslations } from "next-intl";
 
 export type AdminDealsFilterState = {
   search: string;
@@ -35,38 +36,6 @@ type AdminDealsFiltersProps = {
   onFiltersChange: (filters: Partial<AdminDealsFilterState>) => void;
 };
 
-const lifecycleOptions = [
-  { label: "All lifecycles", value: "ALL" },
-  { label: "Upcoming", value: "UPCOMING" },
-  { label: "Active", value: "ACTIVE" },
-  { label: "Expired", value: "EXPIRED" },
-  { label: "Ended", value: "ENDED" },
-  { label: "Inactive", value: "INACTIVE" },
-  { label: "Deleted", value: "DELETED" },
-];
-
-const kindOptions = [
-  { label: "All kinds", value: "ALL" },
-  { label: "Fixed Price", value: "FIXED_PRICE" },
-  { label: "Item Deal", value: "ITEM_DEAL" },
-  { label: "Bundle", value: "BUNDLE" },
-];
-
-const discountTypeOptions = [
-  { label: "All discounts", value: "ALL" },
-  { label: "Fixed Price", value: "FIXED_PRICE" },
-  { label: "Percentage", value: "PERCENTAGE" },
-  { label: "Flat", value: "FLAT" },
-];
-
-const sortByOptions = [
-  { label: "Created at", value: "createdAt" },
-  { label: "Starts at", value: "startsAt" },
-  { label: "Expires at", value: "expiresAt" },
-  { label: "Title", value: "title" },
-  { label: "Fixed price", value: "discountValue" },
-];
-
 export default function AdminDealsFilters({
   filters,
   branchOptions,
@@ -78,7 +47,37 @@ export default function AdminDealsFilters({
   isFetching,
   onFiltersChange,
 }: AdminDealsFiltersProps) {
+  const t = useTranslations("deals");
+  const commonT = useTranslations("common");
   const [searchValue, setSearchValue] = useState(filters.search);
+  const lifecycleOptions = [
+    { label: t("allLifecycles"), value: "ALL" },
+    { label: t("lifecycle.upcoming"), value: "UPCOMING" },
+    { label: t("lifecycle.active"), value: "ACTIVE" },
+    { label: t("lifecycle.expired"), value: "EXPIRED" },
+    { label: t("lifecycle.ended"), value: "ENDED" },
+    { label: t("lifecycle.inactive"), value: "INACTIVE" },
+    { label: t("lifecycle.deleted"), value: "DELETED" },
+  ];
+  const kindOptions = [
+    { label: t("allKinds"), value: "ALL" },
+    { label: t("fixedPrice"), value: "FIXED_PRICE" },
+    { label: t("itemDeal"), value: "ITEM_DEAL" },
+    { label: t("bundle"), value: "BUNDLE" },
+  ];
+  const discountTypeOptions = [
+    { label: t("allDiscounts"), value: "ALL" },
+    { label: t("fixedPrice"), value: "FIXED_PRICE" },
+    { label: t("percentage"), value: "PERCENTAGE" },
+    { label: t("flat"), value: "FLAT" },
+  ];
+  const sortByOptions = [
+    { label: commonT("createdAt"), value: "createdAt" },
+    { label: t("startsAt"), value: "startsAt" },
+    { label: t("expiresAt"), value: "expiresAt" },
+    { label: t("dealTitle"), value: "title" },
+    { label: t("fixedPrice"), value: "discountValue" },
+  ];
 
   const hasActiveFilters = Boolean(
     searchValue.trim() ||
@@ -128,22 +127,23 @@ export default function AdminDealsFilters({
             <Filter size={18} />
           </div>
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-gray-900">Deal Filters</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{t("filtersTitle")}</h3>
             <p className="mt-1 text-xs text-gray-500">
-              Filter fixed-price deals by title, lifecycle, type, and branch.
+              {t("filtersDescription")}
             </p>
           </div>
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs text-gray-500">
           <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-            Showing {visibleCount}
-            {totalCount > 0 ? ` of ${totalCount}` : ""}
+            {totalCount > 0
+              ? t("showingOf", { visible: visibleCount, total: totalCount })
+              : commonT("shown", { count: visibleCount })}
           </span>
           {isFetching ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 font-medium text-primary">
               <Loader2 size={12} className="animate-spin" />
-              Refreshing
+              {commonT("refreshing")}
             </span>
           ) : null}
         </div>
@@ -152,7 +152,7 @@ export default function AdminDealsFilters({
       <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
         <div className="min-w-0 xl:col-span-3">
           <label className="mb-1.5 block text-xs font-medium text-gray-600">
-            Search
+            {commonT("search")}
           </label>
           <div className="relative min-w-0">
             <Search
@@ -160,7 +160,7 @@ export default function AdminDealsFilters({
               size={18}
             />
             <input
-              placeholder="Search deals..."
+              placeholder={t("searchPlaceholder")}
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
               onKeyDown={(event) => {
@@ -172,7 +172,7 @@ export default function AdminDealsFilters({
         </div>
 
         <FilterSelect
-          label="Lifecycle"
+          label={t("lifecycleLabel")}
           value={filters.lifecycle}
           options={lifecycleOptions}
           onChange={(lifecycle) => onFiltersChange({ lifecycle })}
@@ -180,7 +180,7 @@ export default function AdminDealsFilters({
         />
 
         <FilterSelect
-          label="Kind"
+          label={t("kind")}
           value={filters.kind}
           options={kindOptions}
           onChange={(kind) => onFiltersChange({ kind })}
@@ -188,7 +188,7 @@ export default function AdminDealsFilters({
         />
 
         <FilterSelect
-          label="Discount"
+          label={t("discount")}
           value={filters.discountType}
           options={discountTypeOptions}
           onChange={(discountType) => onFiltersChange({ discountType })}
@@ -197,7 +197,7 @@ export default function AdminDealsFilters({
 
         <div className="min-w-0 xl:col-span-2">
           <label className="mb-1.5 block text-xs font-medium text-gray-600">
-            Branch
+            {commonT("branch")}
           </label>
           {isBranchAdmin ? (
             <Button
@@ -206,7 +206,7 @@ export default function AdminDealsFilters({
               disabled
               className="h-[44px] w-full justify-start rounded-[14px] border-gray-200 bg-[#FAFAFA] px-3 text-gray-500"
             >
-              <span className="truncate">{branchName || "Current branch"}</span>
+              <span className="truncate">{branchName || commonT("currentBranch")}</span>
             </Button>
           ) : (
             <select
@@ -217,7 +217,7 @@ export default function AdminDealsFilters({
               }}
               className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-3 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
             >
-              <option value="ALL">All branches</option>
+              <option value="ALL">{commonT("allBranches")}</option>
               {branchOptions.map((branch) => (
                 <option key={branch.id} value={branch.id}>
                   {branch.name}
@@ -232,11 +232,11 @@ export default function AdminDealsFilters({
           onClick={handleSearch}
           className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm hover:bg-primary/90 md:w-full xl:col-span-1"
         >
-          Search
+          {commonT("search")}
         </Button>
 
         <FilterSelect
-          label="Sort By"
+          label={commonT("sortBy")}
           value={filters.sortBy}
           options={sortByOptions}
           onChange={(sortBy) => onFiltersChange({ sortBy })}
@@ -244,7 +244,7 @@ export default function AdminDealsFilters({
         />
 
         <FilterSelect
-          label="Order"
+          label={commonT("order")}
           value={filters.sortOrder}
           options={[
             { label: "DESC", value: "DESC" },
@@ -265,7 +265,7 @@ export default function AdminDealsFilters({
             }
             className="accent-[var(--primary)]"
           />
-          Include inactive
+          {t("includeInactive")}
         </label>
 
         {canViewDeleted ? (
@@ -278,7 +278,7 @@ export default function AdminDealsFilters({
               }
               className="accent-[var(--primary)]"
             />
-            With deleted
+            {t("withDeleted")}
           </label>
         ) : null}
 
@@ -290,7 +290,7 @@ export default function AdminDealsFilters({
           className="h-[44px] rounded-[14px] border-gray-200 px-4 text-gray-700 md:w-full xl:col-span-1"
         >
           <RefreshCcw size={15} className="mr-2" />
-          Reset
+          {commonT("reset")}
         </Button>
       </div>
     </div>

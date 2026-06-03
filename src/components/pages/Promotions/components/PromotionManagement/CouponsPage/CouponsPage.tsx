@@ -4,15 +4,18 @@ import { Tag } from "lucide-react";
 import PromotionSectionHeader from "../PromotionOverview/PromotionSectionHeader";
 import PromotionStatCard from "@/components/cards/PromotionStatCard";
 import CouponsTable from "./table";
+import { useTranslations } from "next-intl";
 
 export default function CouponsPage() {
+  const t = useTranslations("promotions");
+
   return (
     <div className="mt-1 space-y-10">
       <PromotionSectionHeader
-        title="Coupons"
-        description="Boost Customer Loyalty with Custom Coupon Offers"
+        title={t("coupons")}
+        description={t("description")}
         showViewAll={false}
-        actionLabel="Add Coupon"
+        actionLabel={t("addCoupon")}
         actionHref="/promotion-management/coupons/add"
       />
 
@@ -20,25 +23,25 @@ export default function CouponsPage() {
         <PromotionStatCard
           icon={<Tag size={18} />}
           value="10"
-          label="Total Coupons"
+          label={t("totalCoupons")}
         />
 
         <PromotionStatCard
           icon={<Tag size={18} />}
           value="3"
-          label="Active Coupon"
+          label={t("activeCoupon")}
         />
 
         <PromotionStatCard
           icon={<Tag size={18} />}
           value="6"
-          label="Upcoming Coupons"
+          label={t("upcomingCoupons")}
         />
 
         <PromotionStatCard
           icon={<Tag size={18} />}
           value="6"
-          label="Expired Coupons"
+          label={t("expiredCoupons")}
         />
       </div>
 

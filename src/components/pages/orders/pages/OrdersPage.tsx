@@ -21,8 +21,10 @@ import {
   type Order,
   type OrderTab,
 } from "@/components/pages/orders/utils/orders-page.helpers";
+import { useTranslations } from "next-intl";
 
 export function OrdersPage() {
+  const t = useTranslations("orders");
   const [activeTab, setActiveTab] = useState<OrderTab>("delivery");
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
@@ -53,7 +55,7 @@ export function OrdersPage() {
 
   const orderStats = orderStatsResponse?.data;
 
-  const dynamicStats = buildOrderStats(orderStats);
+  const dynamicStats = buildOrderStats(orderStats, t);
 
   const orderType = activeTab === "delivery" ? "DELIVERY" : activeTab === "pickup" ? "TAKEAWAY" : undefined;
   const orderKind = activeTab === "group" ? "group-orders" : "order";
@@ -94,7 +96,7 @@ export function OrdersPage() {
 
   const sortedOrders = sortKey ? sortData(orders, sortKey as keyof Order, sortDir) : orders;
 
-  const { title, description } = getOrdersHeaderContent(activeTab, isBranchAdmin);
+  const { title, description } = getOrdersHeaderContent(activeTab, isBranchAdmin, t);
 
   return (
     <Container>
@@ -112,21 +114,21 @@ export function OrdersPage() {
             active={activeTab === "delivery"}
             onClick={() => setActiveTab("delivery")}
           >
-            Delivery Orders
+            {t("deliveryOrders")}
           </TabButton>
 
           <TabButton
             active={activeTab === "pickup"}
             onClick={() => setActiveTab("pickup")}
           >
-            Pick up Orders
+            {t("pickupOrders")}
           </TabButton>
 
           <TabButton
             active={activeTab === "group"}
             onClick={() => setActiveTab("group")}
           >
-            Group Orders
+            {t("groupOrders")}
           </TabButton>
         </div>
 

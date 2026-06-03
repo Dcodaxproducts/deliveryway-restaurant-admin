@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslations } from "next-intl";
 
 interface Props {
   onSearch: (value: string) => void;
@@ -24,22 +25,24 @@ export default function OrdersFilters({
   const [searchValue, setSearchValue] = useState("");
   const [sort, setSort] = useState<"ASC" | "DESC">("DESC");
   const [status, setStatus] = useState("ALL");
+  const common = useTranslations("common");
+  const t = useTranslations("orders");
 
   const handleSearch = () => {
     onSearch(searchValue);
   };
 
   const statuses = [
-    { label: "All Status", value: "ALL" },
-    { label: "Placed", value: "PLACED" },
-    { label: "Confirmed", value: "CONFIRMED" },
-    { label: "Preparing", value: "PREPARING" },
-    { label: "Ready for Pickup", value: "READY_FOR_PICKUP" },
-    { label: "Picked Up", value: "PICKED_UP" },
-    { label: "Out for Delivery", value: "OUT_FOR_DELIVERY" },
-    { label: "Delivered", value: "DELIVERED" },
-    { label: "Cancelled", value: "CANCELLED" },
-    { label: "Rejected", value: "REJECTED" },
+    { label: t("allStatus"), value: "ALL" },
+    { label: t("status.PLACED"), value: "PLACED" },
+    { label: t("status.CONFIRMED"), value: "CONFIRMED" },
+    { label: t("status.PREPARING"), value: "PREPARING" },
+    { label: t("status.READY"), value: "READY_FOR_PICKUP" },
+    { label: t("status.PICKED_UP"), value: "PICKED_UP" },
+    { label: t("status.OUT_FOR_DELIVERY"), value: "OUT_FOR_DELIVERY" },
+    { label: t("status.DELIVERED"), value: "DELIVERED" },
+    { label: t("status.CANCELLED"), value: "CANCELLED" },
+    { label: t("status.REJECTED"), value: "REJECTED" },
   ];
 
   return (
@@ -56,7 +59,7 @@ export default function OrdersFilters({
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             type="text"
-            placeholder="Search by order id"
+            placeholder={t("searchPlaceholder")}
             className="w-full h-[49px] pl-12 pr-[150px] border border-gray-200 rounded-[16px]"
           />
 
@@ -64,7 +67,7 @@ export default function OrdersFilters({
             onClick={handleSearch}
             className="absolute right-0 h-full px-8 rounded-[14px] bg-primary text-white"
           >
-            Search
+            {common("search")}
           </Button>
         </div>
 
@@ -97,7 +100,7 @@ export default function OrdersFilters({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button className="h-[48px] px-6 rounded-[14px] text-red-600 border-red-200 bg-red-50 flex items-center gap-2 hover:text-white">
-              {sort === "DESC" ? "Newest" : "Oldest"}
+              {sort === "DESC" ? common("newest") : common("oldest")}
               <ChevronDown size={18} />
             </Button>
           </DropdownMenuTrigger>
@@ -109,7 +112,7 @@ export default function OrdersFilters({
                 onSortChange("DESC");
               }}
             >
-              Newest
+              {common("newest")}
             </DropdownMenuItem>
 
             <DropdownMenuItem
@@ -118,7 +121,7 @@ export default function OrdersFilters({
                 onSortChange("ASC");
               }}
             >
-              Oldest
+              {common("oldest")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

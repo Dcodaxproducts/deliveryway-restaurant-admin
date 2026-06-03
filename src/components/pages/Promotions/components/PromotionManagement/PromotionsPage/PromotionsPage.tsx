@@ -8,6 +8,7 @@ import PromotionStatCard from "@/components/cards/PromotionStatCard";
 import PromotionsTable from "./table";
 import { useGetAdminPromotionCampaigns } from "@/hooks/usePromotions";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslations } from "next-intl";
 
 const getListFromResponse = (response: any) => {
   if (Array.isArray(response?.data)) return response.data;
@@ -20,6 +21,7 @@ const getMetaFromResponse = (response: any) => {
 };
 
 export default function PromotionsPage() {
+  const t = useTranslations("promotions");
   const { user, restaurantId } = useAuth();
 
   const branchId = user?.branchId ?? null;
@@ -63,10 +65,10 @@ export default function PromotionsPage() {
   return (
     <div className="mt-1 space-y-10">
       <PromotionSectionHeader
-        title="Promotions"
-        description="Boost Customer Loyalty with Custom Coupon Offers"
+        title={t("title")}
+        description={t("description")}
         showViewAll={false}
-        actionLabel="Add Promotion"
+        actionLabel={t("addPromotion")}
         actionHref="/promotion-management/promotions/add"
       />
 
@@ -74,28 +76,28 @@ export default function PromotionsPage() {
         <PromotionStatCard
           icon={<Tag size={18} />}
           value={stats.total}
-          label="Total Promotions"
+          label={t("totalPromotions")}
           loading={loading}
         />
 
         <PromotionStatCard
           icon={<Tag size={18} />}
           value={stats.active}
-          label="Active Promotions"
+          label={t("activePromotions")}
           loading={loading}
         />
 
         <PromotionStatCard
           icon={<Tag size={18} />}
           value={stats.upcoming}
-          label="Upcoming Promotions"
+          label={t("upcomingPromotions")}
           loading={loading}
         />
 
         <PromotionStatCard
           icon={<Tag size={18} />}
           value={stats.expired}
-          label="Expired Promotions"
+          label={t("expiredPromotions")}
           loading={loading}
         />
       </div>

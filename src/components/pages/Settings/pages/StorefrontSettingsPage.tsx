@@ -31,6 +31,7 @@ import {
   type BrandingFormValues,
   restaurantBrandingPayloadSchema,
 } from "@/validations/branding";
+import { useTranslations } from "next-intl";
 
 type TextFieldConfig = {
   id: string;
@@ -134,6 +135,8 @@ const socialFields: TextFieldConfig[] = [
 ];
 
 export default function StorefrontSettingsPage() {
+  const common = useTranslations("common");
+  const t = useTranslations("settings");
   const {
     savedBranding,
     updateBrandingDraft,
@@ -237,8 +240,8 @@ export default function StorefrontSettingsPage() {
   return (
     <Container>
       <Header
-        title="Storefront Settings"
-        description="Manage restaurant profile, branding, assets, support contact, and customer-facing appearance."
+        title={t("storefrontTitle")}
+        description={t("storefrontDescription")}
       />
       <RestaurantPicker />
       {brandingError ? (
@@ -254,7 +257,7 @@ export default function StorefrontSettingsPage() {
             disabled={!isBrandingReady || isBrandingBusy}
             onClick={handleApplyPreview}
           >
-            Apply preview
+            {t("applyPreview")}
           </button>
           {hasUnsavedChanges ? (
             <button
@@ -263,7 +266,7 @@ export default function StorefrontSettingsPage() {
               disabled={!isBrandingReady || isBrandingBusy}
               onClick={handleDiscardChanges}
             >
-              Discard changes
+              {t("discardChanges")}
             </button>
           ) : null}
           <button
@@ -272,15 +275,15 @@ export default function StorefrontSettingsPage() {
             disabled={!isBrandingReady || isBrandingBusy}
             onClick={handleResetBranding}
           >
-            Reset
+            {common("reset")}
           </button>
           <button type="submit" className={BRANDING_PRIMARY_BUTTON_CLASS} disabled={!isBrandingReady || isBrandingBusy}>
-            {isBrandingSaving ? "Saving..." : "Save branding"}
+            {isBrandingSaving ? common("saving") : t("saveBranding")}
           </button>
         </div>
 
         <div className={BRANDING_PANEL_CLASS}>
-          <h3 className={BRANDING_SECTION_TITLE_CLASS}>Restaurant Profile</h3>
+          <h3 className={BRANDING_SECTION_TITLE_CLASS}>{t("restaurantProfile")}</h3>
           <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
             {profileFields.map(renderTextField)}
             {profileTextAreas.map(renderTextAreaField)}
@@ -289,11 +292,11 @@ export default function StorefrontSettingsPage() {
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <div className={BRANDING_PANEL_CLASS}>
-            <h3 className={BRANDING_SECTION_TITLE_CLASS}>Support Contact</h3>
+            <h3 className={BRANDING_SECTION_TITLE_CLASS}>{t("supportContact")}</h3>
             <div className="mt-6 space-y-6">{supportFields.map(renderTextField)}</div>
           </div>
           <div className={BRANDING_PANEL_CLASS}>
-            <h3 className={BRANDING_SECTION_TITLE_CLASS}>Social Media</h3>
+            <h3 className={BRANDING_SECTION_TITLE_CLASS}>{t("socialMedia")}</h3>
             <div className="mt-6 space-y-6">{socialFields.map(renderTextField)}</div>
           </div>
         </div>

@@ -17,14 +17,16 @@ export interface Order {
 const countByStatus = (list: any[] | undefined, status: string) =>
   list?.find((item: any) => item.status?.toUpperCase() === status)?.count ?? 0;
 
-export const buildOrderStats = (orderStats: any): StatItem[] => {
+type Translate = (key: string, values?: Record<string, string | number>) => string;
+
+export const buildOrderStats = (orderStats: any, t: Translate): StatItem[] => {
   const paidOrders = countByStatus(orderStats?.paymentStatusBreakdown, "PAID");
   const cancelledOrders = countByStatus(orderStats?.statusBreakdown, "CANCELLED");
 
   return [
     {
       _id: "total-orders",
-      title: "Total Orders",
+      title: t("totalOrders"),
       value: orderStats?.totalOrders ?? 0,
       icon: "orders",
       iconStyle: "default",
@@ -32,55 +34,55 @@ export const buildOrderStats = (orderStats: any): StatItem[] => {
     },
     {
       _id: "total-revenue",
-      title: "Total Revenue",
+      title: t("totalRevenue"),
       value: `${Number(orderStats?.totalRevenue ?? 0).toLocaleString()}`,
       icon: "revenue",
       iconStyle: "default",
       trend: {
         direction: "up",
-        percentage: `Avg: ${Number(orderStats?.averageOrderValue ?? 0).toLocaleString()}`,
+        percentage: t("averagePrefix", { value: Number(orderStats?.averageOrderValue ?? 0).toLocaleString() }),
       },
     },
     {
       _id: "average-order-value",
-      title: "Average Order Value",
+      title: t("averageOrderValue"),
       value: `${Number(orderStats?.averageOrderValue ?? 0).toLocaleString()}`,
       icon: "completed",
       iconStyle: "default",
-      trend: { direction: "up", percentage: `${paidOrders} Paid` },
+      trend: { direction: "up", percentage: t("paidCount", { count: paidOrders }) },
     },
     {
       _id: "cancelled-orders",
-      title: "Cancelled Orders",
+      title: t("cancelledOrders"),
       value: cancelledOrders,
       icon: "cancelled",
       iconStyle: "danger",
       trend: {
         direction: cancelledOrders > 0 ? "down" : "up",
-        percentage: `${cancelledOrders} Cancelled`,
+        percentage: t("cancelledCount", { count: cancelledOrders }),
       },
     },
   ] as StatItem[];
 };
 
-export const getOrdersHeaderContent = (tab: OrderTab, isBranchAdmin: boolean) => {
+export const getOrdersHeaderContent = (tab: OrderTab, isBranchAdmin: boolean, t: Translate) => {
   switch (tab) {
     case "delivery":
       return {
-        title: isBranchAdmin ? "Branch Delivery Orders" : "Delivery Orders",
-        description: isBranchAdmin ? "View delivery orders for your assigned branch" : "View all delivery orders here",
+        title: isBranchAdmin ? t("branchDeliveryOrders") : t("deliveryOrders"),
+        description: isBranchAdmin ? t("deliveryDescription") : t("description"),
       };
     case "pickup":
       return {
-        title: isBranchAdmin ? "Branch Pick Up Orders" : "Pick Up Orders",
-        description: isBranchAdmin ? "View pick up orders for your assigned branch" : "View all pick up orders here",
+        title: isBranchAdmin ? t("branchPickupOrders") : t("pickupOrders"),
+        description: isBranchAdmin ? t("pickupDescription") : t("pickupOrdersDescription"),
       };
     case "reservations":
-      return { title: "Reservations", description: "View all reservations here" };
+      return { title: t("reservationsTitle"), description: t("reservationsDescription") };
     case "group":
-      return { title: "Group Order Summary", description: "View all group orders here" };
+      return { title: t("groupOrderSummaryTitle"), description: t("groupOrderSummaryDescription") };
     default:
-      return { title: "Order List", description: "View orders here" };
+      return { title: t("orderList"), description: t("orderListDescription") };
   }
 };
 

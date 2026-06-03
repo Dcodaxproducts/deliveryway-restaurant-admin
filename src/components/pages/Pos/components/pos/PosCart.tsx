@@ -23,8 +23,11 @@ import {
   useSetCartOrderType,
   useUpdateCartItemQuantity,
 } from "@/hooks/usePos";
+import { useTranslations } from "next-intl";
 
 export default function PosCart() {
+  const t = useTranslations("pos");
+  const commonT = useTranslations("common");
   const { branchId, isBranchAdmin } = useAuth();
 
   const [cartItems, setCartItems] = useState<any[]>([]);
@@ -89,7 +92,7 @@ useEffect(() => {
         )
       );
     } catch {
-      toast.error("Failed to update quantity");
+      toast.error(t("toast.failedUpdateQuantity"));
     }
   };
 
@@ -99,9 +102,9 @@ useEffect(() => {
     try {
       await deleteCartItemMutation.mutateAsync({ customerId, itemId: id });
       setCartItems((prev) => prev.filter((i) => i.id !== id));
-      toast.success("Item removed");
+      toast.success(t("toast.itemRemoved"));
     } catch {
-      toast.error("Failed to remove item");
+      toast.error(t("toast.failedRemoveItem"));
     }
   };
 
@@ -115,7 +118,7 @@ useEffect(() => {
       setAddresses([]);
 setSelectedAddress(null);
     } catch {
-      toast.error("Failed to clear cart");
+      toast.error(t("toast.failedClearCart"));
     }
   };
 
@@ -125,7 +128,7 @@ setSelectedAddress(null);
     const res = await setOrderTypeMutation.mutateAsync({ customerId, orderType });
 
     if (!res || res.error) {
-      toast.error("Failed to set order type");
+      toast.error(t("toast.failedSetOrderType"));
       return false;
     }
 
@@ -136,7 +139,7 @@ setSelectedAddress(null);
     if (orderType !== "DELIVERY") return true;
 
     if (!selectedAddress) {
-      toast.error("Select address");
+      toast.error(t("toast.selectAddress"));
       return false;
     }
 
@@ -144,7 +147,7 @@ setSelectedAddress(null);
     const res = await setAddressMutation.mutateAsync({ customerId, deliveryAddressId: selectedAddress });
 
     if (!res || res.error) {
-      toast.error("Failed to set address");
+      toast.error(t("toast.failedSetAddress"));
       return false;
     }
 
@@ -155,7 +158,7 @@ setSelectedAddress(null);
     if (!customerId) return;
 
     if (!cartItems.length) {
-      return toast.error("Cart empty");
+      return toast.error(t("toast.cartEmpty"));
     }
 
     try {
@@ -177,17 +180,17 @@ setSelectedAddress(null);
       });
 
       if (!res || res.error) {
-        return toast.error("Checkout failed");
+        return toast.error(t("toast.checkoutFailed"));
       }
 
-      toast.success("Order placed");
+      toast.success(t("toast.orderPlaced"));
       await clearCart();
       removeClientStorageItem("activeCustomerId");
       setAddresses([]);
 setSelectedAddress(null);
     } catch (err) {
       void err;
-      toast.error("Order failed");
+      toast.error(t("toast.orderFailed"));
     } finally {
       setPlacingOrder(false);
     }
@@ -203,7 +206,7 @@ setSelectedAddress(null);
 
       <Collapsible defaultOpen>
         <CollapsibleTrigger className="flex justify-between w-full text-sm font-medium">
-          Cart List
+          {t("cartList")}
           <ChevronDown size={18} />
         </CollapsibleTrigger>
 
@@ -212,12 +215,12 @@ setSelectedAddress(null);
         <CollapsibleContent>
           {loading ? (
             <p className="text-center text-sm text-gray-400 py-6">
-              Loading...
+              {commonT("loading")}
             </p>
           ) : cartItems.length === 0 ? (
             <div className="text-center py-8">
               <ShoppingCart className="mx-auto mb-2" />
-              <p className="text-sm text-gray-400">No items</p>
+              <p className="text-sm text-gray-400">{t("noItems")}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -256,7 +259,7 @@ setSelectedAddress(null);
 
       <Collapsible defaultOpen>
         <CollapsibleTrigger className="flex justify-between w-full text-sm font-medium">
-          Order Information
+          {t("orderInformation")}
           <ChevronDown size={18} />
         </CollapsibleTrigger>
 
@@ -265,7 +268,7 @@ setSelectedAddress(null);
         <CollapsibleContent className="space-y-4">
 
           <div>
-            <p className="text-xs text-gray-400 mb-2">Order Type</p>
+            <p className="text-xs text-gray-400 mb-2">{t("orderType")}</p>
 
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -275,7 +278,7 @@ setSelectedAddress(null);
                   onChange={() => setOrderType("TAKEAWAY")}
                    className="accent-primary cursor-pointer"
                 />
-                Pickup
+                {t("pickup")}
               </label>
 
               <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -285,19 +288,19 @@ setSelectedAddress(null);
                   onChange={() => setOrderType("DELIVERY")}
                    className="accent-primary cursor-pointer"
                 />
-                Delivery
+                {t("delivery")}
               </label>
             </div>
           </div>
 
           {orderType === "DELIVERY" && (
             <div>
-              <p className="text-xs text-gray-400 mb-2">Select Address</p>
+              <p className="text-xs text-gray-400 mb-2">{t("selectAddress")}</p>
 
               {loadingAddresses ? (
-                <p className="text-sm text-gray-400">Loading...</p>
+                <p className="text-sm text-gray-400">{commonT("loading")}</p>
               ) : addresses.length === 0 ? (
-                <p className="text-sm text-red-500">No address found</p>
+                <p className="text-sm text-red-500">{t("noAddressFound")}</p>
               ) : (
                 <div className="space-y-2">
                   {addresses.map((addr) => (
@@ -321,7 +324,7 @@ setSelectedAddress(null);
 
 {addr.isDefault && (
   <span className="text-[10px] text-primary font-medium">
-    Default
+    {t("defaultAddress")}
   </span>
 )}
                       </div>
@@ -337,7 +340,7 @@ setSelectedAddress(null);
 
       <Collapsible defaultOpen>
         <CollapsibleTrigger className="flex justify-between w-full text-sm font-medium">
-          Billing
+          {t("billing")}
           <ChevronDown size={18} />
         </CollapsibleTrigger>
 
@@ -345,14 +348,14 @@ setSelectedAddress(null);
 
         <CollapsibleContent className="space-y-3 text-sm">
           <div className="flex justify-between text-gray-500">
-            <span>Subtotal</span>
+            <span>{t("subtotal")}</span>
             <span>${total.toFixed(2)}</span>
           </div>
 
           <Separator />
 
           <div className="flex justify-between font-semibold">
-            <span>Total</span>
+            <span>{t("total")}</span>
             <span>${total.toFixed(2)}</span>
           </div>
         </CollapsibleContent>
@@ -360,7 +363,7 @@ setSelectedAddress(null);
 
       <div className="flex gap-2">
         <Button variant="outline" className="flex-1" onClick={clearCart}>
-          Clear
+          {commonT("clear")}
         </Button>
       </div>
 
@@ -369,7 +372,7 @@ setSelectedAddress(null);
         disabled={placingOrder}
         className="w-full bg-primary text-white h-11"
       >
-        {placingOrder ? "Placing..." : "Place Order"}
+        {placingOrder ? t("placing") : t("placeOrder")}
       </Button>
 
     </div>

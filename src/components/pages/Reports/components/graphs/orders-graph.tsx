@@ -14,10 +14,13 @@ import { Download, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetOrdersTrend } from "@/hooks/useDashboard";
+import { useTranslations } from "next-intl";
 
 type TrendRange = "daily" | "weekly" | "monthly";
 
 const OrdersGraph = () => {
+  const common = useTranslations("common");
+  const t = useTranslations("reports");
   const { restaurantId, branchId, isBranchAdmin, loading: authLoading } = useAuth();
   const [range, setRange] = useState<TrendRange>("daily");
 
@@ -58,16 +61,16 @@ return (
     <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-3">
-          <h3 className="text-[18px] font-semibold text-dark">Order Trend</h3>
+          <h3 className="text-[18px] font-semibold text-dark">{t("orderTrend")}</h3>
 
           <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            {loading ? "Loading..." : `${totalOrdersInRange} orders`}
+            {loading ? common("loading") : t("ordersCount", { count: totalOrdersInRange })}
           </div>
         </div>
 
         <p className="mt-1 text-sm text-gray-400">
-          Track order volume across the selected{" "}
-          <span className="capitalize">{currentRange}</span> range
+          {t("trackOrderVolumePrefix")}{" "}
+          <span className="capitalize">{currentRange}</span> {t("range")}
         </p>
       </div>
 

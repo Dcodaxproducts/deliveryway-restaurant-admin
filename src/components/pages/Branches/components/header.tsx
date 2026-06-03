@@ -14,6 +14,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import CreateBranchModal from "./CreateBranchModal";
 import ImportModal from "@/components/common/ImportModal";
+import { useTranslations } from "next-intl";
 
 interface HeaderProps {
   title: string;
@@ -29,6 +30,7 @@ export default function BranchesHeader({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isBranchAdmin } = useAuth();
+  const t = useTranslations("branches");
 
   const branchId = searchParams.get("branchId"); //  detect edit mode
   const isEditMode = !!branchId;
@@ -63,7 +65,7 @@ export default function BranchesHeader({
               onClick={() => setOpen(true)}
             >
               <Download size={18} className="text-[#767676]" />
-              Import
+              {t("import")}
               <HelpCircle size={16} className="text-[#767676]" />
             </Button>
 
@@ -73,7 +75,7 @@ export default function BranchesHeader({
               onClick={() => setCreateBranch(true)}
             >
               <PlusCircle size={18} color="#fff" />
-              Create Branch
+              {t("createBranch")}
             </Button>
           </>
         ) : (
@@ -84,7 +86,7 @@ export default function BranchesHeader({
              onClick={() => router.push(isBranchAdmin ? "/branch-workspace" : "/branches")}
           >
             <ArrowLeft size={18} />
-            Back
+            {t("back")}
           </Button>
         )}
       </div>

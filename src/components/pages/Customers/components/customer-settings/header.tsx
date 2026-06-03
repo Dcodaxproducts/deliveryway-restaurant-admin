@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import Header from "@/components/common/PageHeader"
 import AddCustomerModal from "./AddCustomerModal"
+import { useTranslations } from "next-intl"
 
 interface HeaderProps {
   title: string
@@ -17,6 +18,7 @@ export default function EmployeeSettingsHeader({
   onRefresh,
 }: HeaderProps) {
   const [open, setOpen] = useState(false)
+  const t = useTranslations("customers")
 
   return (
     <>
@@ -28,7 +30,7 @@ export default function EmployeeSettingsHeader({
             onClick={() => setOpen(true)}
             className="h-[38px] sm:h-[44px] rounded-[12px] px-4 sm:px-5 flex items-center gap-2 bg-primary hover:bg-red-700 text-white text-[13px] sm:text-[15px] font-[500]"
           >
-            Add New Customer
+            {t("addNewCustomer")}
           </Button>
         </div>
       </div>
