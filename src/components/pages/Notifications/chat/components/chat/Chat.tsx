@@ -200,8 +200,8 @@ const fetchMessages = async () => {
   }, [token]);
 
   return (
-    <div className="flex h-screen bg-[#f7f6f5] text-[13px] text-[#1f1f1f]">
-      <aside className="hidden md:flex flex-col w-[260px] bg-white px-4 py-5">
+    <div className="flex h-[calc(100vh-190px)] min-h-[520px] overflow-hidden bg-[#f7f6f5] text-[13px] text-[#1f1f1f]">
+      <aside className="hidden min-h-0 w-[260px] shrink-0 flex-col bg-white px-4 py-5 md:flex">
         <p className="text-[10px] tracking-widest text-gray-400 mb-3">
           USER CONTEXT
         </p>
@@ -245,12 +245,12 @@ const fetchMessages = async () => {
         </div>
 
         {/* THREADS */}
-        <div className="mt-6">
+        <div className="mt-6 flex min-h-0 flex-1 flex-col">
           <p className="text-[10px] tracking-widest text-gray-400 mb-3">
             CONVERSATIONS
           </p>
 
-          <div className="space-y-2">
+          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1 custom-scrollbar">
             {threads.map((t) => (
               <div
                 key={t.id}
@@ -280,7 +280,7 @@ const fetchMessages = async () => {
       </aside>
 
       {/* MAIN */}
-      <main className="flex flex-col flex-1 border border-[#F0EDED] rounded-sm">
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col rounded-sm border border-[#F0EDED]">
         <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
          <h2 className="font-medium text-[14px]">
   {activeThread?.orderId
@@ -294,7 +294,7 @@ const fetchMessages = async () => {
         </div>
 
         {/* CHAT BODY */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar">
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 custom-scrollbar">
           <div className="bg-[#2f2f2f] text-white rounded-md px-4 py-3 max-w-[720px]">
             <p className="text-[10px] uppercase tracking-wider opacity-60 mb-1">
               Note
