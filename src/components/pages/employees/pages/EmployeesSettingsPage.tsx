@@ -10,12 +10,16 @@ import { Button } from "@/components/ui/button";
 import RolesTable from "@/components/pages/Employees/components/employee-settings/RolesTable";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetEmployeesStats } from "@/hooks/useDashboard";
+import { useTranslations } from "next-intl";
 
 const EmployeesSettingsPage = () => {
   const { restaurantId, branchId, isBranchAdmin } = useAuth();
+  const t = useTranslations("employees");
   const scopedBranchId = isBranchAdmin ? branchId : undefined;
 
-  const [activeTab, setActiveTab] = useState<"employees" | "roles">("employees");
+  const [activeTab, setActiveTab] = useState<"employees" | "roles">(
+    "employees",
+  );
   const [refreshEmployees, setRefreshEmployees] = useState(false);
   const [refreshRoles, setRefreshRoles] = useState(false);
 
@@ -30,7 +34,7 @@ const EmployeesSettingsPage = () => {
           restaurantId,
           ...(scopedBranchId ? { branchId: scopedBranchId } : {}),
         }
-      : undefined
+      : undefined,
   );
 
   const employeeStats = employeeStatsResponse?.data;
@@ -48,11 +52,9 @@ const EmployeesSettingsPage = () => {
   return (
     <Container>
       <Header
-        title={isBranchAdmin ? "Branch Staff" : "Employee List"}
+        title={isBranchAdmin ? t("branchTitle") : t("listTitle")}
         description={
-          isBranchAdmin
-            ? "Manage staff and roles for your assigned branch"
-            : "Manage and view all invited employee in one place"
+          isBranchAdmin ? t("branchDescription") : t("listDescription")
         }
         onEmployeeSuccess={triggerEmployeesRefresh}
         onRoleSuccess={triggerRolesRefresh}
@@ -71,8 +73,8 @@ const EmployeesSettingsPage = () => {
         {/* Tabs */}
         <div className="flex gap-3 flex-wrap">
           {[
-            { key: "employees", label: "Employees" },
-            { key: "roles", label: "Roles" },
+            { key: "employees", label: t("employees") },
+            { key: "roles", label: t("roles") },
           ].map((tab) => {
             const isActive = activeTab === tab.key;
 
@@ -99,7 +101,9 @@ const EmployeesSettingsPage = () => {
         {activeTab === "employees" && (
           <EmployeeTable
             refreshFlag={refreshEmployees}
-            restaurantId={isBranchAdmin ? undefined : restaurantId ?? undefined}
+            restaurantId={
+              isBranchAdmin ? undefined : (restaurantId ?? undefined)
+            }
             branchId={isBranchAdmin ? undefined : scopedBranchId}
             onSuccess={triggerEmployeesRefresh}
           />
@@ -108,7 +112,9 @@ const EmployeesSettingsPage = () => {
         {activeTab === "roles" && (
           <RolesTable
             refreshFlag={refreshRoles}
-            restaurantId={isBranchAdmin ? undefined : restaurantId ?? undefined}
+            restaurantId={
+              isBranchAdmin ? undefined : (restaurantId ?? undefined)
+            }
             branchId={isBranchAdmin ? undefined : scopedBranchId}
             onSuccess={triggerRolesRefresh}
           />

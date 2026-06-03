@@ -1,10 +1,11 @@
-"use client"
+"use client";
 
-import { Button } from '@/components/ui/button'
-import Header from '@/components/common/PageHeader'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import EditCustomerModal from './AddEmployeeModal'
+import { Button } from "@/components/ui/button";
+import Header from "@/components/common/PageHeader";
+import { useState } from "react";
+import EditCustomerModal from "./AddEmployeeModal";
+import { AddRoleModal } from "./AddRoleModal";
+import { useTranslations } from "next-intl";
 
 type HeaderProps = {
   title: string;
@@ -13,30 +14,24 @@ type HeaderProps = {
   onRoleSuccess?: () => void;
 };
 
-import { AddRoleModal } from './AddRoleModal'
-import { useTranslations } from 'next-intl'
 export default function EmployeeSettingsHeader({
   title,
   description,
   onEmployeeSuccess,
   onRoleSuccess,
 }: HeaderProps) {
-    const router = useRouter()
-   const t = useTranslations("employees");
-   const [open, setOpen] = useState(false);
-   const [openRoleModal, setOpenRoleModal] = useState(false);
+  const t = useTranslations("employees");
+  const [open, setOpen] = useState(false);
+  const [openRoleModal, setOpenRoleModal] = useState(false);
 
-    return (
-        <>
-        <div className="flex flex-col gap-4 md:gap-6 lg:flex-row lg:items-center lg:justify-between w-full">
-            <Header
-                title={title}
-                description={description}
-            />
+  return (
+    <>
+      <div className="flex flex-col gap-4 md:gap-6 lg:flex-row lg:items-center lg:justify-between w-full">
+        <Header title={title} description={description} />
 
-            {/* 2. Buttons stack on tiny mobile, become row on sm (640px) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4">
-                {/* <Button
+        {/* 2. Buttons stack on tiny mobile, become row on sm (640px) */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4">
+          {/* <Button
                     variant="outline"
               className="h-[44px] rounded-[12px] px-4 flex items-center gap-2 border-[#E6E7EC] text-[15px] font-[500] text-[#767676]"
                 onClick={()=>router.push("/employees-settings/trash")}
@@ -45,35 +40,34 @@ export default function EmployeeSettingsHeader({
                     <HelpCircle size={18} className="text-[#767676]" />
                 </Button> */}
 
-                  <Button
-                    variant="outline"
-              className="h-[44px] rounded-[12px] px-4 flex items-center gap-2 border-[#E6E7EC] text-[15px] font-[500] text-[#767676]"
-           onClick={()=>  setOpenRoleModal(true)}
-                >
-                    <p>{t("addRole")}</p>
-                    {/* <HelpCircle size={18} className="text-[#767676]" /> */}
-                </Button>
+          <Button
+            variant="outline"
+            className="h-[44px] rounded-[12px] px-4 flex items-center gap-2 border-[#E6E7EC] text-[15px] font-[500] text-[#767676]"
+            onClick={() => setOpenRoleModal(true)}
+          >
+            <p>{t("addRole")}</p>
+            {/* <HelpCircle size={18} className="text-[#767676]" /> */}
+          </Button>
 
-
-                <Button
-                    onClick={() => setOpen(true)}
-              className="h-[44px] rounded-[12px] px-5 flex items-center gap-2 bg-primary hover:bg-red-700 text-white text-[15px] font-[500]"
-            >
-                    {t("addNew")}
-                </Button>
-            </div>
+          <Button
+            onClick={() => setOpen(true)}
+            className="h-[44px] rounded-[12px] px-5 flex items-center gap-2 bg-primary hover:bg-red-700 text-white text-[15px] font-[500]"
+          >
+            {t("addNew")}
+          </Button>
         </div>
+      </div>
 
-          <EditCustomerModal
+      <EditCustomerModal
         open={open}
         onOpenChange={setOpen}
         onSuccess={onEmployeeSuccess}
       />
       <AddRoleModal
-  open={openRoleModal}
-  onOpenChange={setOpenRoleModal}
-   onSuccess={onRoleSuccess}
-/>
-      </>
-    )
+        open={openRoleModal}
+        onOpenChange={setOpenRoleModal}
+        onSuccess={onRoleSuccess}
+      />
+    </>
+  );
 }

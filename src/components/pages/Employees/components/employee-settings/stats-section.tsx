@@ -1,12 +1,8 @@
 "use client";
 
-import {
-  Users,
-  UserCheck,
-  UserX,
-  BriefcaseBusiness,
-} from "lucide-react";
+import { Users, UserCheck, UserX, BriefcaseBusiness } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 type EmployeeRoleBreakdown = {
   staffRoleId: string;
@@ -27,6 +23,7 @@ interface StatsSectionProps {
 }
 
 const StatsSection = ({ stats, loading }: StatsSectionProps) => {
+  const t = useTranslations("employees");
   const totalEmployees = stats?.totalEmployees ?? 0;
   const activeEmployees = stats?.activeEmployees ?? 0;
   const inactiveEmployees = stats?.inactiveEmployees ?? 0;
@@ -34,22 +31,22 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
 
   const cards = [
     {
-      title: "Total Employees",
+      title: t("stats.totalEmployees"),
       value: totalEmployees,
       icon: Users,
     },
     {
-      title: "Active Employees",
+      title: t("stats.activeEmployees"),
       value: activeEmployees,
       icon: UserCheck,
     },
     {
-      title: "Inactive Employees",
+      title: t("stats.inactiveEmployees"),
       value: inactiveEmployees,
       icon: UserX,
     },
     {
-      title: "Total Roles",
+      title: t("stats.totalRoles"),
       value: totalRoles,
       icon: BriefcaseBusiness,
     },
@@ -67,7 +64,7 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
           >
             <div
               className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center bg-gray/10 text-primary shrink-0"
+                "w-12 h-12 rounded-full flex items-center justify-center bg-gray/10 text-primary shrink-0",
               )}
             >
               {loading ? (
@@ -89,9 +86,7 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
                     {stat.value}
                   </p>
 
-                  <p className="text-base text-gray">
-                    {stat.title}
-                  </p>
+                  <p className="text-base text-gray">{stat.title}</p>
                 </>
               )}
             </div>

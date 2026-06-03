@@ -21,6 +21,7 @@ import Pagination from "@/components/common/PaginationSection";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import EmployeeInvitationModal from "./AddEmployeeModal";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslations } from "next-intl";
 
 interface EmployeeTableProps {
   refreshFlag?: boolean | number | string;
@@ -37,7 +38,12 @@ export default function EmployeeTable({
   restaurantId: scopedRestaurantId,
   branchId: scopedBranchId,
 }: EmployeeTableProps) {
-  const { restaurantId: authRestaurantId, branchId: authBranchId, isBranchAdmin } = useAuth();
+  const t = useTranslations("employees");
+  const {
+    restaurantId: authRestaurantId,
+    branchId: authBranchId,
+    isBranchAdmin,
+  } = useAuth();
   const restaurantId = scopedRestaurantId ?? authRestaurantId ?? undefined;
   const branchId = scopedBranchId ?? (isBranchAdmin ? authBranchId : undefined);
 
@@ -62,15 +68,22 @@ export default function EmployeeTable({
     };
   }, [page, search, restaurantId, branchId, isBranchAdmin]);
 
-  const {
-    data,
-    isLoading,
-    isFetching,
-    refetch,
-  } = useGetStaffList(isBranchAdmin || restaurantId ? queryParams : undefined);
+  const { data, isLoading, isFetching, refetch } = useGetStaffList(
+    isBranchAdmin || restaurantId ? queryParams : undefined,
+  );
 
-  const { mutate: deleteStaff } = useDeleteStaff();
-  const { mutate: updateStatus } = useUpdateStaffStatus();
+  const { mutate: deleteStaff } = useDeleteStaff({
+    messages: {
+      success: t("messages.staffDeleted"),
+      error: t("messages.failedDeleteStaff"),
+    },
+  });
+  const { mutate: updateStatus } = useUpdateStaffStatus({
+    messages: {
+      success: t("messages.staffStatusUpdated"),
+      error: t("messages.failedUpdateStatus"),
+    },
+  });
 
   const employees = data?.data || [];
   const meta = data?.meta;
@@ -108,7 +121,7 @@ export default function EmployeeTable({
           refetch();
           onSuccess?.();
         },
-      }
+      },
     );
   };
 
@@ -117,12 +130,12 @@ export default function EmployeeTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>SL</TableHead>
-            <TableHead>Employee</TableHead>
-            <TableHead>Details</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-center">Actions</TableHead>
+            <TableHead>{t("table.serial")}</TableHead>
+            <TableHead>{t("table.employee")}</TableHead>
+            <TableHead>{t("table.details")}</TableHead>
+            <TableHead>{t("table.role")}</TableHead>
+            <TableHead>{t("table.status")}</TableHead>
+            <TableHead className="text-center">{t("table.actions")}</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -138,10 +151,13 @@ export default function EmployeeTable({
           ) : employees.length > 0 ? (
             employees.map((item: any, i: number) => (
               <TableRow key={item.id}>
-                <TableCell>{(meta?.page - 1) * (meta?.limit || 10) + i + 1 || i + 1}</TableCell>
+                <TableCell>
+                  {(meta?.page - 1) * (meta?.limit || 10) + i + 1 || i + 1}
+                </TableCell>
 
                 <TableCell>
-                  {`${item.firstName || ""} ${item.lastName || ""}`.trim() || "-"}
+                  {`${item.firstName || ""} ${item.lastName || ""}`.trim() ||
+                    "-"}
                 </TableCell>
 
                 <TableCell>
@@ -179,8 +195,11 @@ export default function EmployeeTable({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="py-10 text-center text-sm text-gray-500">
-                No employees found.
+              <TableCell
+                colSpan={6}
+                className="py-10 text-center text-sm text-gray-500"
+              >
+                {t("noEmployeesFound")}
               </TableCell>
             </TableRow>
           )}

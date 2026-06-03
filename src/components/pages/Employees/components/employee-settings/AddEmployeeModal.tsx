@@ -22,13 +22,17 @@ import {
   useUpdateStaff,
 } from "@/hooks/useEmployees";
 import { useFileUpload } from "@/hooks/useFileUpload";
-import { FIELD_ERROR_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
+import {
+  FIELD_ERROR_CLASS,
+  MUTED_TEXT_SM_CLASS,
+} from "@/components/common/common-classes";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
   staffModalSchema,
   type StaffModalValues,
   type StaffValues,
 } from "@/validations/employees";
+import { useTranslations } from "next-intl";
 
 type StaffRoleOption = {
   id: string;
@@ -64,12 +68,23 @@ export default function EmployeeInvitationModal({
   initialData,
   onSuccess,
 }: EmployeeInvitationModalProps) {
+  const t = useTranslations("employees");
   const { uploadFile, uploading } = useFileUpload();
   const { restaurantId, branchId, isBranchAdmin } = useAuth();
   const isEdit = Boolean(initialData?.id);
 
-  const createStaffMutation = useCreateStaff();
-  const updateStaffMutation = useUpdateStaff();
+  const createStaffMutation = useCreateStaff({
+    messages: {
+      success: t("messages.staffCreated"),
+      error: t("messages.failedCreateStaff"),
+    },
+  });
+  const updateStaffMutation = useUpdateStaff({
+    messages: {
+      success: t("messages.staffUpdated"),
+      error: t("messages.failedUpdateStaff"),
+    },
+  });
 
   const { data: rolesData } = useGetStaffRoles(
     isBranchAdmin
@@ -78,13 +93,30 @@ export default function EmployeeInvitationModal({
           page: 1,
           restaurantId: restaurantId || undefined,
           ...(branchId ? { branchId } : {}),
-        }
+        },
   );
   const roles = ((rolesData?.data ?? []) as StaffRoleOption[]).filter(
-    (role): role is StaffRoleOption => Boolean(role?.id && role?.name)
+    (role): role is StaffRoleOption => Boolean(role?.id && role?.name),
   );
 
-  const loading = createStaffMutation.isPending || updateStaffMutation.isPending;
+  const loading =
+    createStaffMutation.isPending || updateStaffMutation.isPending;
+
+  const translateValidationError = (message?: string) => {
+    if (!message) return undefined;
+
+    const validationMessages: Record<string, string> = {
+      "Invalid email": t("validation.invalidEmail"),
+      "Password must be at least 8 characters": t("validation.passwordMin"),
+      "First name is required": t("validation.firstNameRequired"),
+      "Last name is required": t("validation.lastNameRequired"),
+      "Staff role is required": t("validation.staffRoleRequired"),
+      "Invalid phone number": t("validation.invalidPhone"),
+      "Bio must be under 500 characters": t("validation.bioMax"),
+    };
+
+    return validationMessages[message] || message;
+  };
 
   const {
     control,
@@ -116,7 +148,7 @@ export default function EmployeeInvitationModal({
             bio: initialData.bio ?? "",
             isActive: initialData.isActive ?? true,
           }
-        : defaultValues
+        : defaultValues,
     );
   }, [initialData, open, reset]);
 
@@ -156,7 +188,7 @@ export default function EmployeeInvitationModal({
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
-      toast.error(getApiErrorMessage(error, "Unable to save employee"));
+      toast.error(getApiErrorMessage(error, t("messages.unableSaveEmployee")));
     }
   };
 
@@ -165,20 +197,28 @@ export default function EmployeeInvitationModal({
       <DialogContent className="max-h-[100vh] max-w-[460px] overflow-auto rounded-[20px] p-6">
         <DialogHeader className="space-y-1 text-center">
           <DialogTitle className="text-xl font-semibold">
-            {isEdit ? "Edit Employee" : "Employee Invitation"}
+            {isEdit
+              ? t("employeeModal.editTitle")
+              : t("employeeModal.inviteTitle")}
           </DialogTitle>
           <DialogDescription className={`text-left ${MUTED_TEXT_SM_CLASS}`}>
-            {isEdit ? "Update employee details" : "Send invitation to employee"}
+            {isEdit
+              ? t("employeeModal.editDescription")
+              : t("employeeModal.inviteDescription")}
           </DialogDescription>
         </DialogHeader>
 
-        <form className="mt-6 space-y-4" noValidate onSubmit={handleSubmit(onSubmit)}>
+        <form
+          className="mt-6 space-y-4"
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <EmployeeField
             control={control}
             name="email"
             id="employee-email"
-            label="Email *"
-            error={errors.email?.message}
+            label={t("employeeModal.email")}
+            error={translateValidationError(errors.email?.message)}
           />
 
           <div className="grid grid-cols-2 gap-3">
@@ -186,15 +226,15 @@ export default function EmployeeInvitationModal({
               control={control}
               name="firstName"
               id="employee-first-name"
-              label="First Name *"
-              error={errors.firstName?.message}
+              label={t("employeeModal.firstName")}
+              error={translateValidationError(errors.firstName?.message)}
             />
             <EmployeeField
               control={control}
               name="lastName"
               id="employee-last-name"
-              label="Last Name *"
-              error={errors.lastName?.message}
+              label={t("employeeModal.lastName")}
+              error={translateValidationError(errors.lastName?.message)}
             />
           </div>
 
@@ -203,22 +243,22 @@ export default function EmployeeInvitationModal({
               control={control}
               name="phone"
               id="employee-phone"
-              label="Phone"
-              error={errors.phone?.message}
+              label={t("employeeModal.phone")}
+              error={translateValidationError(errors.phone?.message)}
             />
             <EmployeeField
               control={control}
               name="password"
               id="employee-password"
-              label="Password *"
+              label={t("employeeModal.password")}
               type="password"
-              error={errors.password?.message}
+              error={translateValidationError(errors.password?.message)}
             />
           </div>
 
           <div>
             <Label htmlFor="employee-role" className="text-sm font-medium">
-              Role *
+              {t("employeeModal.role")}
             </Label>
             <Controller
               control={control}
@@ -231,7 +271,7 @@ export default function EmployeeInvitationModal({
                   onBlur={field.onBlur}
                   className="mt-1 h-[44px] w-full rounded-lg border border-gray-300 px-3 text-sm"
                 >
-                  <option value="">Select Role</option>
+                  <option value="">{t("employeeModal.selectRole")}</option>
                   {roles.map((role) => (
                     <option key={role.id} value={role.id}>
                       {role.name}
@@ -241,13 +281,15 @@ export default function EmployeeInvitationModal({
               )}
             />
             {errors.staffRoleId?.message ? (
-              <p className={FIELD_ERROR_CLASS}>{errors.staffRoleId.message}</p>
+              <p className={FIELD_ERROR_CLASS}>
+                {translateValidationError(errors.staffRoleId.message)}
+              </p>
             ) : null}
           </div>
 
           <div>
             <Label htmlFor="employee-avatar" className="text-sm font-medium">
-              Avatar
+              {t("employeeModal.avatar")}
             </Label>
             <Input
               id="employee-avatar"
@@ -255,15 +297,19 @@ export default function EmployeeInvitationModal({
               onChange={handleFile}
               className="mt-1 h-[40px] rounded-lg border border-gray-300 pt-1"
             />
-            {uploading ? <p className="mt-1 text-xs text-gray-400">Uploading...</p> : null}
+            {uploading ? (
+              <p className="mt-1 text-xs text-gray-400">
+                {t("employeeModal.uploading")}
+              </p>
+            ) : null}
           </div>
 
           <EmployeeField
             control={control}
             name="bio"
             id="employee-bio"
-            label="Bio"
-            error={errors.bio?.message}
+            label={t("employeeModal.bio")}
+            error={translateValidationError(errors.bio?.message)}
           />
 
           <Button
@@ -271,7 +317,13 @@ export default function EmployeeInvitationModal({
             disabled={loading}
             className="mt-6 h-[46px] w-full rounded-xl bg-primary text-white hover:bg-red-600"
           >
-            {loading ? (isEdit ? "Updating..." : "Sending...") : isEdit ? "Update Employee" : "Send Invitation"}
+            {loading
+              ? isEdit
+                ? t("actions.updating")
+                : t("actions.sending")
+              : isEdit
+                ? t("actions.updateEmployee")
+                : t("actions.sendInvitation")}
           </Button>
         </form>
       </DialogContent>
@@ -281,14 +333,24 @@ export default function EmployeeInvitationModal({
 
 type EmployeeFieldProps = {
   control: Control<StaffModalValues>;
-  name: keyof Pick<StaffModalValues, "email" | "password" | "firstName" | "lastName" | "phone" | "bio">;
+  name: keyof Pick<
+    StaffModalValues,
+    "email" | "password" | "firstName" | "lastName" | "phone" | "bio"
+  >;
   id: string;
   label: string;
   type?: string;
   error?: string;
 };
 
-function EmployeeField({ control, name, id, label, type = "text", error }: EmployeeFieldProps) {
+function EmployeeField({
+  control,
+  name,
+  id,
+  label,
+  type = "text",
+  error,
+}: EmployeeFieldProps) {
   return (
     <div className="space-y-1">
       <Label htmlFor={id} className="text-sm font-medium">

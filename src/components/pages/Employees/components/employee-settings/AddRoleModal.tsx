@@ -24,6 +24,7 @@ import {
   type StaffPermissionValues,
   type StaffRoleValues,
 } from "@/validations/employees";
+import { useTranslations } from "next-intl";
 
 type RoleInitialData = Partial<StaffRoleValues> & {
   id?: string;
@@ -55,7 +56,12 @@ export function AddRoleModal({
   restaurantId: scopedRestaurantId,
   branchId: scopedBranchId,
 }: RoleModalProps) {
-  const { restaurantId: authRestaurantId, branchId: authBranchId, isBranchAdmin } = useAuth();
+  const t = useTranslations("employees");
+  const {
+    restaurantId: authRestaurantId,
+    branchId: authBranchId,
+    isBranchAdmin,
+  } = useAuth();
   const restaurantId = scopedRestaurantId ?? authRestaurantId ?? undefined;
   const branchId = scopedBranchId ?? (isBranchAdmin ? authBranchId : undefined);
 
@@ -63,8 +69,18 @@ export function AddRoleModal({
   const [selectedOps, setSelectedOps] = useState<string[]>([]);
 
   const isEditMode = Boolean(initialData?.id);
-  const createRoleMutation = useCreateStaffRole();
-  const updateRoleMutation = useUpdateStaffRole();
+  const createRoleMutation = useCreateStaffRole({
+    messages: {
+      success: t("messages.roleCreated"),
+      error: t("messages.failedCreateRole"),
+    },
+  });
+  const updateRoleMutation = useUpdateStaffRole({
+    messages: {
+      success: t("messages.roleUpdated"),
+      error: t("messages.failedUpdateRole"),
+    },
+  });
   const loading = createRoleMutation.isPending || updateRoleMutation.isPending;
 
   const {
@@ -80,6 +96,25 @@ export function AddRoleModal({
   });
 
   const permissions = watch("permissions") ?? [];
+
+  const getAccessLabel = (access: string) =>
+    ACCESS_OPTIONS.includes(access) ? t(`access.${access}`) : access;
+
+  const getOperationLabel = (operation: string) =>
+    OPERATIONS.includes(operation) ? t(`operations.${operation}`) : operation;
+
+  const translateValidationError = (message?: string) => {
+    if (!message) return undefined;
+
+    const validationMessages: Record<string, string> = {
+      "Role name is required": t("validation.roleNameRequired"),
+      "Access is required": t("validation.accessRequired"),
+      "At least one operation is required": t("validation.operationRequired"),
+      "At least one permission is required": t("validation.permissionRequired"),
+    };
+
+    return validationMessages[message] || message;
+  };
 
   useEffect(() => {
     if (!open) {
@@ -98,13 +133,13 @@ export function AddRoleModal({
             restaurantId: initialData.restaurantId,
             branchId: initialData.branchId,
           }
-        : defaultValues
+        : defaultValues,
     );
   }, [initialData, open, reset]);
 
   const toggleOperation = (op: string) => {
     setSelectedOps((prev) =>
-      prev.includes(op) ? prev.filter((item) => item !== op) : [...prev, op]
+      prev.includes(op) ? prev.filter((item) => item !== op) : [...prev, op],
     );
   };
 
@@ -116,7 +151,9 @@ export function AddRoleModal({
       operations: selectedOps,
     };
 
-    setValue("permissions", [...permissions, nextPermission], { shouldValidate: true });
+    setValue("permissions", [...permissions, nextPermission], {
+      shouldValidate: true,
+    });
     setSelectedAccess("");
     setSelectedOps([]);
   };
@@ -127,9 +164,10 @@ export function AddRoleModal({
       permissions.filter(
         (permission) =>
           permission.access !== permissionToRemove.access ||
-          permission.operations.join("|") !== permissionToRemove.operations.join("|")
+          permission.operations.join("|") !==
+            permissionToRemove.operations.join("|"),
       ),
-      { shouldValidate: true }
+      { shouldValidate: true },
     );
   };
 
@@ -157,7 +195,7 @@ export function AddRoleModal({
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
-      toast.error(getApiErrorMessage(error, "Unable to save role"));
+      toast.error(getApiErrorMessage(error, t("messages.unableSaveRole")));
     }
   };
 
@@ -168,14 +206,18 @@ export function AddRoleModal({
       <DialogContent className="max-w-[520px] rounded-[20px] p-6">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">
-            {isEditMode ? "Edit Role-Permission" : "Add Role-Permission"}
+            {isEditMode ? t("roleModal.editTitle") : t("roleModal.addTitle")}
           </DialogTitle>
         </DialogHeader>
 
-        <form className="mt-4 space-y-5" noValidate onSubmit={handleSubmit(onSubmit)}>
+        <form
+          className="mt-4 space-y-5"
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <div>
             <Label htmlFor="role-name" className="text-sm font-medium">
-              Role Name
+              {t("roleModal.roleName")}
             </Label>
             <Controller
               control={control}
@@ -183,7 +225,7 @@ export function AddRoleModal({
               render={({ field }) => (
                 <Input
                   id="role-name"
-                  placeholder="Enter Role Name"
+                  placeholder={t("roleModal.roleNamePlaceholder")}
                   value={field.value}
                   onChange={({ target: { value } }) => field.onChange(value)}
                   onBlur={field.onBlur}
@@ -191,15 +233,21 @@ export function AddRoleModal({
                 />
               )}
             />
-            {errors.name?.message ? <p className={FIELD_ERROR_CLASS}>{errors.name.message}</p> : null}
+            {errors.name?.message ? (
+              <p className={FIELD_ERROR_CLASS}>
+                {translateValidationError(errors.name.message)}
+              </p>
+            ) : null}
           </div>
 
           <div className="space-y-4 rounded-xl border p-4">
-            <p className="text-sm font-medium">Add Permission</p>
+            <p className="text-sm font-medium">
+              {t("roleModal.addPermission")}
+            </p>
 
             <div className="flex gap-2">
               <select
-                aria-label="Select access"
+                aria-label={t("roleModal.selectAccess")}
                 value={selectedAccess}
                 onChange={({ target: { value } }) => {
                   setSelectedAccess(value);
@@ -207,10 +255,10 @@ export function AddRoleModal({
                 }}
                 className="h-[42px] flex-1 rounded-lg border border-gray-300 px-3 text-sm"
               >
-                <option value="">Select Access</option>
+                <option value="">{t("roleModal.selectAccess")}</option>
                 {ACCESS_OPTIONS.map((option) => (
                   <option key={option} value={option}>
-                    {option}
+                    {getAccessLabel(option)}
                   </option>
                 ))}
               </select>
@@ -221,7 +269,7 @@ export function AddRoleModal({
                 disabled={isAddDisabled}
                 className="bg-red-500 px-5 text-white hover:bg-red-600 disabled:opacity-50"
               >
-                Add
+                {t("actions.add")}
               </Button>
             </div>
 
@@ -231,7 +279,11 @@ export function AddRoleModal({
                   const checkboxId = `role-operation-${operation}`;
 
                   return (
-                    <label key={operation} htmlFor={checkboxId} className="flex items-center gap-2 text-sm">
+                    <label
+                      key={operation}
+                      htmlFor={checkboxId}
+                      className="flex items-center gap-2 text-sm"
+                    >
                       <input
                         id={checkboxId}
                         type="checkbox"
@@ -239,7 +291,7 @@ export function AddRoleModal({
                         onChange={() => toggleOperation(operation)}
                         className="accent-red-500"
                       />
-                      {operation}
+                      {getOperationLabel(operation)}
                     </label>
                   );
                 })}
@@ -248,7 +300,9 @@ export function AddRoleModal({
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-medium">Permissions</p>
+            <p className="mb-2 text-sm font-medium">
+              {t("roleModal.permissions")}
+            </p>
 
             <div className="space-y-2">
               {permissions.map((permission) => {
@@ -260,7 +314,9 @@ export function AddRoleModal({
                     className="flex items-center justify-between rounded-lg border px-3 py-2"
                   >
                     <div className="flex items-center gap-3 text-sm">
-                      <span className="font-medium">{permission.access}</span>
+                      <span className="font-medium">
+                        {getAccessLabel(permission.access)}
+                      </span>
 
                       <div className="flex flex-wrap gap-1">
                         {permission.operations.map((operation) => (
@@ -268,7 +324,7 @@ export function AddRoleModal({
                             key={`${permissionKey}-${operation}`}
                             className="rounded bg-gray-100 px-2 py-0.5 text-xs"
                           >
-                            {operation}
+                            {getOperationLabel(operation)}
                           </span>
                         ))}
                       </div>
@@ -286,13 +342,15 @@ export function AddRoleModal({
               })}
             </div>
             {errors.permissions?.message ? (
-              <p className={FIELD_ERROR_CLASS}>{errors.permissions.message}</p>
+              <p className={FIELD_ERROR_CLASS}>
+                {translateValidationError(errors.permissions.message)}
+              </p>
             ) : null}
           </div>
 
           <div>
             <Label htmlFor="role-description" className="text-sm font-medium">
-              Description
+              {t("roleModal.description")}
             </Label>
             <Controller
               control={control}
@@ -300,7 +358,7 @@ export function AddRoleModal({
               render={({ field }) => (
                 <Input
                   id="role-description"
-                  placeholder="Short description..."
+                  placeholder={t("roleModal.descriptionPlaceholder")}
                   value={field.value ?? ""}
                   onChange={({ target: { value } }) => field.onChange(value)}
                   onBlur={field.onBlur}
@@ -309,7 +367,9 @@ export function AddRoleModal({
               )}
             />
             {errors.description?.message ? (
-              <p className={FIELD_ERROR_CLASS}>{errors.description.message}</p>
+              <p className={FIELD_ERROR_CLASS}>
+                {translateValidationError(errors.description.message)}
+              </p>
             ) : null}
           </div>
 
@@ -318,7 +378,13 @@ export function AddRoleModal({
             disabled={loading}
             className="h-[46px] w-full rounded-xl bg-red-500 text-white hover:bg-red-600"
           >
-            {loading ? (isEditMode ? "Updating..." : "Saving...") : isEditMode ? "Update Role" : "Save Role"}
+            {loading
+              ? isEditMode
+                ? t("actions.updating")
+                : t("actions.saving")
+              : isEditMode
+                ? t("actions.updateRole")
+                : t("actions.saveRole")}
           </Button>
         </form>
       </DialogContent>
