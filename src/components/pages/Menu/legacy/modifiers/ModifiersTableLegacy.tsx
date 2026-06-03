@@ -4,17 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FaPen, FaTrash } from "react-icons/fa";
 import ModifierModal from "@/components/pages/Menu/legacy/ModifierModal";
+import ModifierCategoryInfiniteSelect from "@/components/pages/Menu/modifiers/components/ModifierCategoryInfiniteSelect";
 import PaginationSection from "@/components/common/pagination";
 import { Copy, MoreVertical, Search } from "lucide-react";
-import {
-  useGetModifiers,
-  useDeleteModifier,
-  useDuplicateModifier,
-} from "@/hooks/useMenus";
+import { useDuplicateModifier } from "@/hooks/useMenus";
+import { useDeleteModifier, useModifiers } from "@/hooks/useModifiers";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useTranslations } from "next-intl";
+import type { Modifier } from "@/types/modifiers";
 
 export default function ModifiersTable() {
   const t = useTranslations("menu.modifiersTable");
@@ -31,8 +30,9 @@ export default function ModifiersTable() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<any>(null);
+  const [selected, setSelected] = useState<Modifier | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [categoryId, setCategoryId] = useState("");
 
   const [openActionId, setOpenActionId] = useState<string | null>(null);
 
@@ -50,11 +50,12 @@ export default function ModifiersTable() {
     isLoading,
     isFetching,
     refetch,
-  } = useGetModifiers({
+  } = useModifiers({
     page,
     limit,
     search: debouncedSearch || undefined,
     restaurantId,
+    categoryId: categoryId || undefined,
   });
 
   useEffect(() => {
@@ -68,38 +69,14 @@ export default function ModifiersTable() {
   const { mutate: duplicateModifier, isPending: isDuplicating } =
     useDuplicateModifier();
 
-  const items = useMemo(() => {
-    if (!response) return [];
-
-    const raw =
-      response?.data?.items ||
-      response?.data?.modifiers ||
-      response?.data?.data ||
-      response?.items ||
-      response?.modifiers ||
-      response?.data ||
-      [];
-
-    return Array.isArray(raw) ? raw : [];
-  }, [response]);
+  const items = useMemo(() => response?.data ?? [], [response?.data]);
 
   const pagination = useMemo(() => {
-    const source =
-      response?.data?.pagination ||
-      response?.data?.meta ||
-      response?.pagination ||
-      response?.meta ||
-      {};
-
-    const total = Number(source?.total ?? items.length ?? 0);
+    const source = response?.meta;
+    const total = Number(source?.total ?? items.length);
     const currentPage = Number(source?.page ?? page);
     const pageSize = Number(source?.limit ?? limit);
-
-    const totalPages = Number(
-      source?.totalPages ??
-        source?.pages ??
-        (pageSize > 0 ? Math.ceil(total / pageSize) : 1)
-    );
+    const totalPages = Number(source?.totalPages ?? 1);
 
     return {
       page: currentPage,
@@ -107,12 +84,11 @@ export default function ModifiersTable() {
       total,
       limit: pageSize || limit,
       hasNext: source?.hasNext ?? currentPage < (totalPages || 1),
-      hasPrevious:
-        source?.hasPrevious ?? source?.hasPrev ?? currentPage > 1,
+      hasPrevious: source?.hasPrevious ?? currentPage > 1,
     };
   }, [response, items.length, page, limit]);
 
-  const formatPrice = (value: any) => {
+  const formatPrice = (value?: number) => {
     const numeric = Number(value ?? 0);
 
     if (Number.isNaN(numeric)) return "0.00";
@@ -142,9 +118,10 @@ export default function ModifiersTable() {
 
   const SkeletonRow = () => (
     <tr>
-      <td colSpan={4} className="py-6">
+      <td colSpan={5} className="py-6">
         <div className="flex animate-pulse items-center gap-3">
           <div className="h-4 w-[160px] rounded bg-gray-200" />
+          <div className="h-4 w-[130px] rounded bg-gray-200" />
           <div className="h-4 w-[90px] rounded bg-gray-200" />
           <div className="h-4 w-[70px] rounded bg-gray-200" />
           <div className="h-4 w-[50px] rounded bg-gray-200" />
@@ -188,7 +165,7 @@ export default function ModifiersTable() {
         </Button>
       </div>
 
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center">
         <div className="relative w-full max-w-[420px]">
           <Search
             className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
@@ -200,6 +177,20 @@ export default function ModifiersTable() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+
+        <div className="w-full max-w-[360px]">
+          <ModifierCategoryInfiniteSelect
+            value={categoryId}
+            onChange={(value) => {
+              setCategoryId(value);
+              setPage(1);
+            }}
+            restaurantId={restaurantId}
+            placeholder={t("categoryFilterPlaceholder")}
+            disabled={!restaurantId}
+            allowClear
           />
         </div>
 
@@ -217,6 +208,7 @@ export default function ModifiersTable() {
           <thead>
             <tr className="border-b text-left text-gray-500">
               <th className="px-2 py-3">{commonT("name")}</th>
+              <th className="px-2 text-center">{t("category")}</th>
               <th className="px-2 text-center">{t("basePrice")}</th>
               <th className="px-2 text-center">{commonT("status")}</th>
               <th className="px-2 text-center">{commonT("actions")}</th>
@@ -230,12 +222,12 @@ export default function ModifiersTable() {
               ))
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={4} className="py-10 text-center text-gray-400">
+                <td colSpan={5} className="py-10 text-center text-gray-400">
                   {t("emptyTitle")}
                 </td>
               </tr>
             ) : (
-              items.map((item: any) => (
+              items.map((item) => (
                 <tr key={item.id} className="border-b hover:bg-gray-50">
                   <td className="px-2 py-4">
                     <div className="flex flex-col">
@@ -243,6 +235,10 @@ export default function ModifiersTable() {
                         {item.name || "-"}
                       </span>
                     </div>
+                  </td>
+
+                  <td className="px-2 text-center text-gray-600">
+                    {item.category?.name || t("uncategorized")}
                   </td>
 
                   <td className="px-2 text-center font-medium text-gray-900">
@@ -319,7 +315,7 @@ export default function ModifiersTable() {
             {t("emptyTitle")}
           </div>
         ) : (
-          items.map((item: any) => (
+          items.map((item) => (
             <div
               key={item.id}
               className="rounded-[18px] border bg-white p-4 shadow-sm"
@@ -332,6 +328,9 @@ export default function ModifiersTable() {
                 </div>
 
                 <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">
+                    {item.category?.name || t("uncategorized")}
+                  </span>
                   <span className="text-sm font-semibold text-primary">
                     ${formatPrice(item.priceDelta)}
                   </span>
@@ -427,7 +426,7 @@ function ActionDropdown({
   onClose,
   onDuplicate,
 }: {
-  item: any;
+  item: Modifier;
   isOpen: boolean;
   isDuplicating: boolean;
   onToggle: () => void;

@@ -23,6 +23,8 @@ import {
   BadgePercent,
   Coins,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { IconType } from "react-icons";
 import { PiUsersThree } from "react-icons/pi";
 
 export type SidebarSection = "main" | "account";
@@ -32,7 +34,7 @@ export interface MenuItem {
   title: string;
   labelKey?: string;
   href?: string;
-  icon: any;
+  icon: LucideIcon | IconType;
   section: SidebarSection;
   children?: MenuItem[];
   roles?: SidebarRole[];
@@ -90,6 +92,14 @@ export const menuItems: MenuItem[] = [
         icon: ClipboardList,
         section: "main",
         roles: allAdminRoles,
+      },
+      {
+        title: "Modifier Categories",
+        labelKey: "modifierCategories",
+        href: "/menu/modifier-categories",
+        icon: ClipboardList,
+        section: "main",
+        roles: restaurantAdminRoles,
       },
       {
         title: "Modifiers",

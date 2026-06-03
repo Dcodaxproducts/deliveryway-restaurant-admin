@@ -16,31 +16,47 @@ import {
   type InputHTMLAttributes,
 } from "react";
 import { toast } from "sonner";
-import { useCreateModifier, useUpdateModifier } from "@/hooks/useMenus";
+import { useCreateModifier, useUpdateModifier } from "@/hooks/useModifiers";
 import { useAuth } from "@/hooks/useAuth";
+import ModifierCategoryInfiniteSelect from "@/components/pages/Menu/modifiers/components/ModifierCategoryInfiniteSelect";
 import {
   blockInvalidNumberKeys,
   blockNegativeNumberPaste,
   sanitizeNonNegativeNumber,
 } from "@/lib/number-input";
+import { getApiErrorMessage } from "@/lib/errors";
 import { useTranslations } from "next-intl";
+import type { Modifier } from "@/types/modifiers";
 
 interface ModifierForm {
+  categoryId: string;
   name: string;
   priceDelta: string;
+  sortOrder: string;
+  isActive: boolean;
 }
 
 const getEmptyForm = (): ModifierForm => ({
+  categoryId: "",
   name: "",
   priceDelta: "0",
+  sortOrder: "0",
+  isActive: true,
 });
+
+type ModifierModalProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  initialData?: Partial<Modifier> | null;
+  refresh?: () => void;
+};
 
 export default function ModifierModal({
   open,
   onOpenChange,
   initialData,
   refresh,
-}: any) {
+}: ModifierModalProps) {
   const t = useTranslations("menu.modifierModal");
   const commonT = useTranslations("common");
   const { restaurantId: authRestaurantId } = useAuth();
@@ -62,10 +78,15 @@ export default function ModifierModal({
 
     if (initialData?.id) {
       setForm({
+        categoryId: initialData.categoryId || initialData.category?.id || "",
         name: initialData?.name || "",
         priceDelta: sanitizeNonNegativeNumber(
           String(initialData?.priceDelta ?? 0)
         ),
+        sortOrder: sanitizeNonNegativeNumber(
+          String(initialData?.sortOrder ?? 0)
+        ),
+        isActive: initialData?.isActive ?? true,
       });
 
       return;
@@ -74,17 +95,22 @@ export default function ModifierModal({
     setForm(getEmptyForm());
   }, [initialData, open]);
 
-  const handleChange = (key: keyof ModifierForm, value: string) => {
+  const handleChange = <K extends keyof ModifierForm>(
+    key: K,
+    value: ModifierForm[K]
+  ) => {
     setForm((prev) => ({
       ...prev,
       [key]:
-        key === "priceDelta" ? sanitizeNonNegativeNumber(String(value)) : value,
+        key === "priceDelta" || key === "sortOrder"
+          ? sanitizeNonNegativeNumber(String(value))
+          : value,
     }));
   };
 
   const canSubmit = useMemo(() => {
-    return Boolean(form.name?.trim());
-  }, [form.name]);
+    return Boolean(form.name?.trim() && form.categoryId.trim());
+  }, [form.categoryId, form.name]);
 
   const closeModal = () => {
     if (isSubmitting) return;
@@ -95,11 +121,17 @@ export default function ModifierModal({
 
 const handleSubmit = async () => {
   if (!canSubmit) {
+    if (!form.categoryId.trim()) {
+      toast.error(t("categoryRequired"));
+      return;
+    }
+
     toast.error(t("nameRequired"));
     return;
   }
 
   const priceDelta = Number(form.priceDelta);
+  const sortOrder = Number(form.sortOrder);
 
   if (form.priceDelta === "" || Number.isNaN(priceDelta)) {
     toast.error(t("basePriceInvalid"));
@@ -111,19 +143,32 @@ const handleSubmit = async () => {
     return;
   }
 
+  if (form.sortOrder === "" || Number.isNaN(sortOrder)) {
+    toast.error(t("sortOrderInvalid"));
+    return;
+  }
+
+  if (sortOrder < 0) {
+    toast.error(t("sortOrderNegative"));
+    return;
+  }
+
   const basePayload = {
+    categoryId: form.categoryId.trim(),
     name: form.name.trim(),
     priceDelta,
+    sortOrder,
+    isActive: form.isActive,
   };
 
   try {
-    if (isEditMode) {
+    if (isEditMode && initialData?.id) {
       /**
        * PATCH /menu/modifiers/:id does NOT accept restaurantId.
        */
       await updateModifier({
         id: initialData.id,
-        data: basePayload as any,
+        data: basePayload,
       });
     } else {
       if (!restaurantId) {
@@ -137,17 +182,13 @@ const handleSubmit = async () => {
       await createModifier({
         ...basePayload,
         restaurantId: String(restaurantId),
-      } as any);
+      });
     }
 
     refresh?.();
     closeModal();
-  } catch (err: any) {
-    toast.error(
-      err?.response?.data?.message ||
-        err?.message ||
-        t("saveFailed")
-    );
+  } catch (error: unknown) {
+    toast.error(getApiErrorMessage(error, t("saveFailed")));
   }
 };
 
@@ -177,6 +218,18 @@ const handleSubmit = async () => {
         </DialogHeader>
 
         <div className="mt-5 space-y-4 rounded-[16px] bg-white p-5">
+          <div className="space-y-1">
+            <p className="text-sm text-gray-600">{t("category")}</p>
+            <ModifierCategoryInfiniteSelect
+              value={form.categoryId}
+              onChange={(categoryId) => handleChange("categoryId", categoryId)}
+              restaurantId={restaurantId}
+              selectedCategory={initialData?.category ?? null}
+              placeholder={t("categoryPlaceholder")}
+              disabled={isSubmitting}
+            />
+          </div>
+
           <InputField
             label={t("name")}
             value={form.name}
@@ -184,6 +237,31 @@ const handleSubmit = async () => {
             placeholder={t("namePlaceholder")}
             disabled={isSubmitting}
           />
+
+          <InputField
+            label={t("sortOrder")}
+            type="number"
+            value={form.sortOrder}
+            onChange={(value: string) => handleChange("sortOrder", value)}
+            onKeyDown={blockInvalidNumberKeys}
+            onPaste={blockNegativeNumberPaste}
+            min={0}
+            placeholder="0"
+            disabled={isSubmitting}
+          />
+
+          <label className="flex items-center gap-2 text-sm text-gray-600">
+            <input
+              type="checkbox"
+              checked={form.isActive}
+              onChange={(event) =>
+                handleChange("isActive", event.target.checked)
+              }
+              disabled={isSubmitting}
+              className="size-4 rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            {t("activeStatus")}
+          </label>
 
           <InputField
             label={t("basePrice")}

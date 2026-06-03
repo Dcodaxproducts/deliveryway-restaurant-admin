@@ -1,6 +1,11 @@
 import api from "@/lib/axios";
-import { cleanParams } from "@/lib/params";
+import { cleanParams, type QueryParams } from "@/lib/params";
 import type { MenuItemsListParams } from "@/types/menu-items";
+import type {
+  ModifierCreatePayload,
+  ModifierListParams,
+  ModifierUpdatePayload,
+} from "@/types/modifiers";
 import {
   BulkMenuItemsValues,
   GetMenuVariationsParams,
@@ -8,13 +13,11 @@ import {
   MenuItemValues,
   MenuVariationValues,
   ModifierGroupValues,
-  ModifierValues,
   RestaurantMenuValues,
   UpdateLinkedMenuItemValues,
   UpdateMenuItemValues,
   UpdateMenuVariationValues,
   UpdateModifierGroupValues,
-  UpdateModifierValues,
   UpdateRestaurantMenuValues,
 } from "@/validations/menus";
 
@@ -142,25 +145,21 @@ export const deleteModifierGroup = async (id: string) => {
  * ==============================
  */
 
-export const createModifier = async (payload: ModifierValues) => {
+export const createModifier = async (payload: ModifierCreatePayload) => {
   const { data } = await api.post("/menu/modifiers", payload);
   return data;
 };
 
-export const getModifiers = async (params?: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  modifierGroupId?: string;
-  isActive?: boolean;
-}) => {
-  const { data } = await api.get("/menu/modifiers", { params });
+export const getModifiers = async (params?: ModifierListParams) => {
+  const { data } = await api.get("/menu/modifiers", {
+    params: cleanParams(params),
+  });
   return data;
 };
 
 export const updateModifier = async (
   id: string,
-  payload: Partial<UpdateModifierValues>
+  payload: ModifierUpdatePayload
 ) => {
   const { data } = await api.patch(`/menu/modifiers/${id}`, payload);
   return data;
@@ -202,7 +201,7 @@ export const getRestaurantMenus = async (params?: {
   isActive?: boolean;
   isDefault?: boolean;
 }) => {
-  const allowedParams = { ...(params as Record<string, any> | undefined) };
+  const allowedParams: QueryParams = { ...params };
   delete allowedParams.branchId;
 
   const { data } = await api.get("/menus", {

@@ -1,8 +1,8 @@
 export {
-  attachModifierGroupToItem,
   createModifier,
   deleteModifier,
-  duplicateModifier,
   getModifiers,
   updateModifier,
-} from "@/services/menus";
+} from "@/services/modifiers";
+
+export { attachModifierGroupToItem, duplicateModifier } from "@/services/menus";
