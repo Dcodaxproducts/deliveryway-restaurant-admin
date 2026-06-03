@@ -11,7 +11,7 @@ const NotificationSettingsPage = () => {
   const t = useTranslations("chat");
 
   return (
-    <Container>
+    <Container className="flex min-h-full flex-1 flex-col">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between w-full">
         <Header
           title={t("liveConsultation")}
@@ -21,7 +21,7 @@ const NotificationSettingsPage = () => {
         />
       </div>
 
-      <div className="flex flex-col gap-[32px] w-full bg-white p-[10px] rounded-[14px]">
+      <div className="flex min-h-0 flex-1 flex-col gap-[32px] w-full bg-white p-[10px] rounded-[14px]">
         <Suspense fallback={<div>{common("loading")}</div>}>
           <ChatUI />
         </Suspense>

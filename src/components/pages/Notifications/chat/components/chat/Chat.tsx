@@ -26,7 +26,6 @@ const [creatingThread, setCreatingThread] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const [sending, setSending] = useState(false);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const activeThreadRef = useRef<any>(null);
   const threadsQuery = useGetChatThreads(Boolean(token));
@@ -139,11 +138,6 @@ const fetchMessages = async () => {
     }
   };
 
-  // scroll
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   // initial load
   useEffect(() => {
     if (token) fetchThreads();
@@ -200,7 +194,7 @@ const fetchMessages = async () => {
   }, [token]);
 
   return (
-    <div className="flex h-[calc(100vh-190px)] min-h-[520px] overflow-hidden bg-[#f7f6f5] text-[13px] text-[#1f1f1f]">
+    <div className="flex min-h-0 flex-1 overflow-hidden bg-[#f7f6f5] text-[13px] text-[#1f1f1f]">
       <aside className="hidden min-h-0 w-[260px] shrink-0 flex-col bg-white px-4 py-5 md:flex">
         <p className="text-[10px] tracking-widest text-gray-400 mb-3">
           USER CONTEXT
@@ -341,8 +335,6 @@ const fetchMessages = async () => {
               </div>
             );
           })}
-
-          <div ref={bottomRef} />
         </div>
 
         {/* INPUT */}
