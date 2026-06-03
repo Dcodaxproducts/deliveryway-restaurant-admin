@@ -149,11 +149,6 @@ export default function AddHolidayHoursInfo({
   };
 
   const validateRows = () => {
-    if (rows.length === 0) {
-      toast.error(t("holidayAddOneEntry"));
-      return false;
-    }
-
     const usedDates = new Set<string>();
 
     for (const row of rows) {
