@@ -12,6 +12,17 @@ import {
   updateLoyaltyProgram,
 } from "@/services/loyalty/loyalty.api";
 
+type LoyaltyMutationMessages = {
+  success?: string;
+  creditSuccess?: string;
+  debitSuccess?: string;
+  error?: string;
+};
+
+type LoyaltyMutationOptions = {
+  messages?: LoyaltyMutationMessages;
+};
+
 /**
  * ==============================
  * QUERY KEYS
@@ -35,7 +46,7 @@ export const loyaltyKeys = {
  */
 
 export const useGetCustomerLoyaltySummary = (
-  params?: LoyaltyCustomerSummaryParams
+  params?: LoyaltyCustomerSummaryParams,
 ) => {
   return useQuery({
     queryKey: loyaltyKeys.customer(params?.customerId),
@@ -45,7 +56,9 @@ export const useGetCustomerLoyaltySummary = (
   });
 };
 
-export const useAdjustCustomerLoyaltyPoints = () => {
+export const useAdjustCustomerLoyaltyPoints = (
+  options?: LoyaltyMutationOptions,
+) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -63,14 +76,20 @@ export const useAdjustCustomerLoyaltyPoints = () => {
 
       toast.success(
         variables.payload.isCredit
-          ? "Loyalty points added successfully"
-          : "Loyalty points deducted successfully"
+          ? options?.messages?.creditSuccess ||
+              options?.messages?.success ||
+              "Loyalty points added successfully"
+          : options?.messages?.debitSuccess ||
+              options?.messages?.success ||
+              "Loyalty points deducted successfully",
       );
     },
 
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || "Failed to adjust loyalty points"
+        error?.response?.data?.message ||
+          options?.messages?.error ||
+          "Failed to adjust loyalty points",
       );
     },
   });
@@ -89,7 +108,7 @@ export const useGetLoyaltyProgram = (params?: GetLoyaltyProgramParams) => {
   });
 };
 
-export const useUpdateLoyaltyProgram = () => {
+export const useUpdateLoyaltyProgram = (options?: LoyaltyMutationOptions) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -105,12 +124,16 @@ export const useUpdateLoyaltyProgram = () => {
         queryKey: loyaltyKeys.all,
       });
 
-      toast.success("Loyalty program updated successfully");
+      toast.success(
+        options?.messages?.success || "Loyalty program updated successfully",
+      );
     },
 
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || "Failed to update loyalty program"
+        error?.response?.data?.message ||
+          options?.messages?.error ||
+          "Failed to update loyalty program",
       );
     },
   });

@@ -15,7 +15,11 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useGetLoyaltyProgram, useUpdateLoyaltyProgram } from "@/hooks/useLoyalty";
+import {
+  useGetLoyaltyProgram,
+  useUpdateLoyaltyProgram,
+} from "@/hooks/useLoyalty";
+import { useTranslations } from "next-intl";
 
 type LoyaltyProgramSettingsProps = {
   restaurantId?: string;
@@ -102,7 +106,9 @@ const ToggleRow = ({
         if (!disabled) onChange(!checked);
       }}
       className={`flex w-full items-center justify-between gap-4 rounded-[14px] border border-gray-100 bg-[#FAFAFA] p-4 text-left transition hover:border-primary/20 hover:bg-primary/[0.03] ${
-        disabled ? "cursor-not-allowed opacity-70 hover:border-gray-100 hover:bg-[#FAFAFA]" : ""
+        disabled
+          ? "cursor-not-allowed opacity-70 hover:border-gray-100 hover:bg-[#FAFAFA]"
+          : ""
       }`}
     >
       <div>
@@ -163,6 +169,7 @@ export default function LoyaltyProgramSettings({
   restaurantId,
   readOnly = false,
 }: LoyaltyProgramSettingsProps) {
+  const t = useTranslations("loyalty");
   const [form, setForm] = useState<LoyaltyProgramForm>(defaultForm);
 
   const {
@@ -175,7 +182,12 @@ export default function LoyaltyProgramSettings({
   });
 
   const { mutate: updateProgram, isPending: isUpdating } =
-    useUpdateLoyaltyProgram();
+    useUpdateLoyaltyProgram({
+      messages: {
+        success: t("messages.programUpdated"),
+        error: t("messages.failedUpdateProgram"),
+      },
+    });
 
   const program = programResponse?.data;
 
@@ -197,31 +209,31 @@ export default function LoyaltyProgramSettings({
   const stats = useMemo(() => {
     return [
       {
-        title: "Points / Currency",
+        title: t("pointsCurrency"),
         value: form.pointsPerCurrencyUnit || 0,
         icon: <Coins size={18} />,
       },
       {
-        title: "Redeem Value",
+        title: t("redeemValue"),
         value: form.redemptionValuePerPoint || 0,
         icon: <Gift size={18} />,
       },
       {
-        title: "Minimum Redeem",
+        title: t("minimumRedeem"),
         value: form.minimumRedeemPoints || 0,
         icon: <BadgePercent size={18} />,
       },
       {
-        title: "Expiry Days",
+        title: t("expiryDays"),
         value: form.pointsExpiryDays || 0,
         icon: <ShieldCheck size={18} />,
       },
     ];
-  }, [form]);
+  }, [form, t]);
 
   const update = <K extends keyof LoyaltyProgramForm>(
     key: K,
-    value: LoyaltyProgramForm[K]
+    value: LoyaltyProgramForm[K],
   ) => {
     setForm((prev) => ({
       ...prev,
@@ -239,16 +251,16 @@ export default function LoyaltyProgramSettings({
     ];
 
     const hasNegative = numericFields.some((field) =>
-      isNegativeNumber(String(form[field]))
+      isNegativeNumber(String(form[field])),
     );
 
     if (hasNegative) {
-      toast.error("Loyalty values cannot be negative");
+      toast.error(t("validation.negativeValues"));
       return false;
     }
 
     if (!restaurantId) {
-      toast.error("Restaurant ID is missing");
+      toast.error(t("validation.missingRestaurant"));
       return false;
     }
 
@@ -257,7 +269,7 @@ export default function LoyaltyProgramSettings({
 
   const handleSubmit = () => {
     if (readOnly) {
-      toast.error("Branch admin can view loyalty settings but cannot update the program");
+      toast.error(t("validation.branchProgramReadOnly"));
       return;
     }
 
@@ -279,7 +291,7 @@ export default function LoyaltyProgramSettings({
         onSuccess: () => {
           refetch();
         },
-      }
+      },
     );
   };
 
@@ -288,10 +300,10 @@ export default function LoyaltyProgramSettings({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-gray-950">
-            Loyalty Program Settings
+            {t("programSettingsTitle")}
           </h2>
           <p className="mt-1 text-sm leading-6 text-gray-500">
-            Configure how customers earn, redeem, and convert loyalty points.
+            {t("programSettingsDescription")}
           </p>
         </div>
 
@@ -308,7 +320,7 @@ export default function LoyaltyProgramSettings({
             ) : (
               <RefreshCcw size={16} className="mr-2" />
             )}
-            Refresh
+            {t("refresh")}
           </Button>
 
           <Button
@@ -322,14 +334,14 @@ export default function LoyaltyProgramSettings({
             ) : (
               <Save size={16} className="mr-2" />
             )}
-            {readOnly ? "Read Only" : "Save Settings"}
+            {readOnly ? t("readOnly") : t("saveSettings")}
           </Button>
         </div>
       </div>
 
       {readOnly ? (
         <div className="mt-4 rounded-[14px] border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-          Branch admins can review the loyalty program and customer balances. Program edits stay restricted to restaurant admins.
+          {t("branchReadOnlyNotice")}
         </div>
       ) : null}
 
@@ -358,40 +370,40 @@ export default function LoyaltyProgramSettings({
       <div className="mt-6 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-5 rounded-[18px] border border-gray-100 bg-white p-4">
           <Field
-            label="Points Per Currency Unit"
-            helper="How many points a customer earns per 1 currency unit spent."
+            label={t("pointsPerCurrencyUnit")}
+            helper={t("pointsPerCurrencyUnitHelper")}
             value={form.pointsPerCurrencyUnit}
             onChange={(value) => update("pointsPerCurrencyUnit", value)}
             disabled={readOnly}
           />
 
           <Field
-            label="Currency Amount Per Point"
-            helper="How much currency spend is required to generate one point."
+            label={t("currencyAmountPerPoint")}
+            helper={t("currencyAmountPerPointHelper")}
             value={form.currencyAmountPerPoint}
             onChange={(value) => update("currencyAmountPerPoint", value)}
             disabled={readOnly}
           />
 
           <Field
-            label="Redemption Value Per Point"
-            helper="Currency value received when one point is redeemed."
+            label={t("redemptionValuePerPoint")}
+            helper={t("redemptionValuePerPointHelper")}
             value={form.redemptionValuePerPoint}
             onChange={(value) => update("redemptionValuePerPoint", value)}
             disabled={readOnly}
           />
 
           <Field
-            label="Minimum Redeem Points"
-            helper="Minimum points required before customer can redeem."
+            label={t("minimumRedeemPoints")}
+            helper={t("minimumRedeemPointsHelper")}
             value={form.minimumRedeemPoints}
             onChange={(value) => update("minimumRedeemPoints", value)}
             disabled={readOnly}
           />
 
           <Field
-            label="Points Expiry Days"
-            helper="Number of days after which loyalty points expire. Use 0 if expiry is disabled."
+            label={t("pointsExpiryDays")}
+            helper={t("pointsExpiryDaysHelper")}
             value={form.pointsExpiryDays}
             onChange={(value) => update("pointsExpiryDays", value)}
             disabled={readOnly}
@@ -407,35 +419,34 @@ export default function LoyaltyProgramSettings({
 
               <div>
                 <p className="text-sm font-semibold text-gray-950">
-                  Program Controls
+                  {t("programControls")}
                 </p>
                 <p className="mt-1 text-xs leading-5 text-gray-600">
-                  Enable or disable earning, wallet conversion, and order
-                  discount usage.
+                  {t("programControlsDescription")}
                 </p>
               </div>
             </div>
           </div>
 
           <ToggleRow
-            title="Program Active"
-            description="Customers can earn and redeem loyalty points."
+            title={t("programActive")}
+            description={t("programActiveDescription")}
             checked={form.isActive}
             onChange={(checked) => update("isActive", checked)}
             disabled={readOnly}
           />
 
           <ToggleRow
-            title="Allow Wallet Conversion"
-            description="Customers can convert loyalty points into wallet balance."
+            title={t("allowWalletConversion")}
+            description={t("allowWalletConversionDescription")}
             checked={form.allowWalletConversion}
             onChange={(checked) => update("allowWalletConversion", checked)}
             disabled={readOnly}
           />
 
           <ToggleRow
-            title="Allow Order Discount"
-            description="Customers can use loyalty points as order discounts."
+            title={t("allowOrderDiscount")}
+            description={t("allowOrderDiscountDescription")}
             checked={form.allowOrderDiscount}
             onChange={(checked) => update("allowOrderDiscount", checked)}
             disabled={readOnly}

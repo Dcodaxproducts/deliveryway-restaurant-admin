@@ -30,6 +30,7 @@ import {
   useGetCustomerLoyaltySummary,
 } from "@/hooks/useLoyalty";
 import { getCustomersList } from "@/services/customers/customers.api";
+import { useLocale, useTranslations } from "next-intl";
 
 type AdjustmentForm = {
   points: string;
@@ -56,14 +57,14 @@ const toNumber = (value: string) => {
   return Number.isFinite(numeric) ? numeric : 0;
 };
 
-const formatDate = (value?: string | null) => {
+const formatDate = (value?: string | null, locale = "en-US") => {
   if (!value) return "-";
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) return "-";
 
-  return date.toLocaleString("de-DE", {
+  return date.toLocaleString(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -162,23 +163,20 @@ const getCustomerName = (customer: any) => {
 
 const getCustomerEmail = (customer: any) => {
   return (
-    customer?.email ||
-    customer?.customer?.email ||
-    customer?.user?.email ||
-    ""
+    customer?.email || customer?.customer?.email || customer?.user?.email || ""
   );
 };
 
 const getCustomerPhone = (customer: any) => {
   return (
-    customer?.phone ||
-    customer?.customer?.phone ||
-    customer?.user?.phone ||
-    ""
+    customer?.phone || customer?.customer?.phone || customer?.user?.phone || ""
   );
 };
 
-const mapCustomerToOption = (customer: any): CustomerOption | null => {
+const mapCustomerToOption = (
+  customer: any,
+  fallbackLabel: string,
+): CustomerOption | null => {
   const id = String(getCustomerId(customer) || "").trim();
 
   if (!id) return null;
@@ -190,7 +188,7 @@ const mapCustomerToOption = (customer: any): CustomerOption | null => {
   const displayName =
     [name, email].filter(Boolean).join(" · ") ||
     phone ||
-    `Customer ${id.slice(-8)}`;
+    `${fallbackLabel} ${id.slice(-8)}`;
 
   return {
     id,
@@ -245,17 +243,24 @@ const StatCard = ({
 
 export default function CustomerLoyaltyManager() {
   const { restaurantId, branchId, isBranchAdmin } = useAuth();
+  const t = useTranslations("loyalty");
+  const commonT = useTranslations("common");
+  const locale = useLocale();
+  const dateLocale = locale === "de" ? "de-DE" : "en-US";
 
   const normalizedRestaurantId = restaurantId ?? undefined;
-  const normalizedBranchId = isBranchAdmin ? branchId ?? undefined : undefined;
+  const normalizedBranchId = isBranchAdmin
+    ? (branchId ?? undefined)
+    : undefined;
 
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerOption | null>(null);
 
   const [activeCustomerId, setActiveCustomerId] = useState("");
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const [adjustmentForm, setAdjustmentForm] =
-    useState<AdjustmentForm>(defaultAdjustmentForm);
+  const [adjustmentForm, setAdjustmentForm] = useState<AdjustmentForm>(
+    defaultAdjustmentForm,
+  );
 
   const {
     data: summaryResponse,
@@ -267,11 +272,17 @@ export default function CustomerLoyaltyManager() {
       ? {
           customerId: activeCustomerId,
         }
-      : undefined
+      : undefined,
   );
 
   const { mutate: adjustPoints, isPending: isAdjusting } =
-    useAdjustCustomerLoyaltyPoints();
+    useAdjustCustomerLoyaltyPoints({
+      messages: {
+        creditSuccess: t("messages.pointsAdded"),
+        debitSuccess: t("messages.pointsDeducted"),
+        error: t("messages.failedAdjust"),
+      },
+    });
 
   const fetchCustomerOptions = useCallback(
     async ({ search, page }: { search: string; page: number }) => {
@@ -285,7 +296,7 @@ export default function CustomerLoyaltyManager() {
       });
 
       const customers = extractCustomers(response)
-        .map(mapCustomerToOption)
+        .map((customer) => mapCustomerToOption(customer, t("customer")))
         .filter(Boolean) as CustomerOption[];
 
       return {
@@ -293,7 +304,7 @@ export default function CustomerLoyaltyManager() {
         meta: extractMeta(response),
       };
     },
-    [normalizedRestaurantId, normalizedBranchId]
+    [normalizedRestaurantId, normalizedBranchId, t],
   );
 
   const summary = summaryResponse?.data;
@@ -305,7 +316,7 @@ export default function CustomerLoyaltyManager() {
   const stats = useMemo(() => {
     return [
       {
-        title: "Available Points",
+        title: t("availablePoints"),
         value: pickNumber(summary, [
           "availablePoints",
           "currentPoints",
@@ -316,22 +327,22 @@ export default function CustomerLoyaltyManager() {
         icon: <Coins size={18} />,
       },
       {
-        title: "Total Points",
+        title: t("totalPoints"),
         value: pickNumber(summary, ["totalPoints", "earnedPoints"]),
         icon: <WalletCards size={18} />,
       },
       {
-        title: "Redeemed Points",
+        title: t("redeemedPoints"),
         value: pickNumber(summary, ["redeemedPoints", "usedPoints"]),
         icon: <MinusCircle size={18} />,
       },
       {
-        title: "Expired Points",
+        title: t("expiredPoints"),
         value: pickNumber(summary, ["expiredPoints"]),
         icon: <History size={18} />,
       },
     ];
-  }, [summary]);
+  }, [summary, t]);
 
   const handleCustomerChange = (customer: CustomerOption | null) => {
     setSelectedCustomer(customer);
@@ -344,19 +355,19 @@ export default function CustomerLoyaltyManager() {
 
   const handleAdjust = () => {
     if (isBranchAdmin) {
-      toast.error("Branch admin can view loyalty data but cannot manually adjust points");
+      toast.error(t("validation.branchAdjustmentReadOnly"));
       return;
     }
 
     if (!activeCustomerId) {
-      toast.error("Select a customer first");
+      toast.error(t("validation.selectCustomerFirst"));
       return;
     }
 
     const points = toNumber(adjustmentForm.points);
 
     if (points <= 0) {
-      toast.error("Points must be greater than 0");
+      toast.error(t("validation.pointsPositive"));
       return;
     }
 
@@ -375,7 +386,7 @@ export default function CustomerLoyaltyManager() {
           resetAdjustment();
           refetch();
         },
-      }
+      },
     );
   };
 
@@ -384,12 +395,12 @@ export default function CustomerLoyaltyManager() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-gray-950">
-            Customer Loyalty
+            {t("customerLoyalty")}
           </h2>
           <p className="mt-1 text-sm leading-6 text-gray-500">
             {isBranchAdmin
-              ? "Select a branch customer and review loyalty summary/history."
-              : "Select a customer, review loyalty history, and manually add or deduct points."}
+              ? t("customerLoyaltyBranchDescription")
+              : t("customerLoyaltyDescription")}
           </p>
         </div>
 
@@ -401,7 +412,7 @@ export default function CustomerLoyaltyManager() {
             className="h-[42px] rounded-[12px] bg-primary px-5 text-white hover:bg-primary/90"
           >
             <PlusCircle size={16} className="mr-2" />
-            Adjust Points
+            {t("adjustPoints")}
           </Button>
         ) : null}
       </div>
@@ -410,13 +421,13 @@ export default function CustomerLoyaltyManager() {
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
           <div className="flex-1 space-y-1.5">
             <label className="text-sm font-semibold text-gray-900">
-              Select Customer
+              {t("selectCustomer")}
             </label>
 
             <AsyncSelect
               value={selectedCustomer}
               onChange={handleCustomerChange}
-              placeholder="Search and select customer"
+              placeholder={t("searchCustomer")}
               fetchOptions={fetchCustomerOptions}
               labelKey="displayName"
               valueKey="id"
@@ -435,7 +446,7 @@ export default function CustomerLoyaltyManager() {
             ) : (
               <RefreshCcw size={16} className="mr-2" />
             )}
-            Refresh
+            {t("refresh")}
           </Button>
         </div>
 
@@ -452,7 +463,7 @@ export default function CustomerLoyaltyManager() {
                 </p>
 
                 <p className="mt-1 break-all text-xs text-gray-500">
-                  Customer ID:{" "}
+                  {t("customerId")}:{" "}
                   <span className="font-semibold text-gray-700">
                     {selectedCustomer.id}
                   </span>
@@ -460,7 +471,7 @@ export default function CustomerLoyaltyManager() {
 
                 {selectedCustomer.phone ? (
                   <p className="mt-1 text-xs text-gray-500">
-                    Phone: {selectedCustomer.phone}
+                    {t("phone")}: {selectedCustomer.phone}
                   </p>
                 ) : null}
               </div>
@@ -476,12 +487,11 @@ export default function CustomerLoyaltyManager() {
           </div>
 
           <h3 className="mt-4 text-base font-semibold text-gray-950">
-            Select Customer Loyalty
+            {t("selectCustomerLoyalty")}
           </h3>
 
           <p className="mx-auto mt-1 max-w-[420px] text-sm leading-6 text-gray-500">
-            Search and select a customer to view loyalty summary and transaction
-            history.
+            {t("selectCustomerLoyaltyDescription")}
           </p>
         </div>
       ) : isLoading ? (
@@ -509,27 +519,27 @@ export default function CustomerLoyaltyManager() {
           <div className="mt-6 overflow-hidden rounded-[18px] border border-gray-100 bg-white shadow-sm">
             <div className="border-b border-gray-100 bg-[#FAFAFA] px-4 py-4">
               <h3 className="text-sm font-semibold text-gray-950">
-                Loyalty History
+                {t("loyaltyHistory")}
               </h3>
               <p className="mt-1 text-xs text-gray-500">
-                Points credit and debit history for this customer.
+                {t("loyaltyHistoryDescription")}
               </p>
             </div>
 
             {history.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-400">
-                No loyalty history found for this customer.
+                {t("emptyHistory")}
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[720px] text-sm">
                   <thead>
                     <tr className="border-b bg-white text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      <th className="px-4 py-3">Date</th>
-                      <th className="px-4 py-3">Type</th>
-                      <th className="px-4 py-3 text-right">Points</th>
-                      <th className="px-4 py-3">Note</th>
-                      <th className="px-4 py-3">Reference</th>
+                      <th className="px-4 py-3">{t("date")}</th>
+                      <th className="px-4 py-3">{t("type")}</th>
+                      <th className="px-4 py-3 text-right">{t("points")}</th>
+                      <th className="px-4 py-3">{t("note")}</th>
+                      <th className="px-4 py-3">{t("reference")}</th>
                     </tr>
                   </thead>
 
@@ -550,7 +560,8 @@ export default function CustomerLoyaltyManager() {
                               row?.createdAt ||
                                 row?.date ||
                                 row?.processedAt ||
-                                row?.updatedAt
+                                row?.updatedAt,
+                              dateLocale,
                             )}
                           </td>
 
@@ -562,7 +573,7 @@ export default function CustomerLoyaltyManager() {
                                   : "bg-red-50 text-red-600"
                               }`}
                             >
-                              {type}
+                              {isCredit ? t("credit") : t("debit")}
                             </span>
                           </td>
 
@@ -605,11 +616,11 @@ export default function CustomerLoyaltyManager() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <DialogTitle className="text-xl font-semibold text-gray-950">
-                  Adjust Loyalty Points
+                  {t("adjustLoyaltyPoints")}
                 </DialogTitle>
 
                 <p className="mt-1 text-sm text-gray-500">
-                  Manually add or deduct loyalty points for this customer.
+                  {t("adjustLoyaltyPointsDescription")}
                 </p>
               </div>
 
@@ -617,7 +628,7 @@ export default function CustomerLoyaltyManager() {
                 type="button"
                 onClick={() => setAdjustOpen(false)}
                 className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
-                aria-label="Close modal"
+                aria-label={t("closeModal")}
               >
                 <X size={18} />
               </button>
@@ -627,7 +638,7 @@ export default function CustomerLoyaltyManager() {
           <div className="space-y-4 px-5 py-5">
             <div className="rounded-[14px] border border-primary/10 bg-primary/[0.04] p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-                Customer
+                {t("customer")}
               </p>
 
               <p className="mt-1 break-all text-sm font-semibold text-gray-900">
@@ -641,7 +652,7 @@ export default function CustomerLoyaltyManager() {
 
             <div>
               <label className="mb-1.5 block text-sm font-semibold text-gray-900">
-                Adjustment Type
+                {t("adjustmentType")}
               </label>
 
               <div className="grid grid-cols-2 gap-2 rounded-[14px] bg-[#F7F7F7] p-1">
@@ -659,7 +670,7 @@ export default function CustomerLoyaltyManager() {
                       : "text-gray-500 hover:bg-white/70"
                   }`}
                 >
-                  Add Points
+                  {t("addPoints")}
                 </button>
 
                 <button
@@ -676,14 +687,14 @@ export default function CustomerLoyaltyManager() {
                       : "text-gray-500 hover:bg-white/70"
                   }`}
                 >
-                  Deduct Points
+                  {t("deductPoints")}
                 </button>
               </div>
             </div>
 
             <div>
               <label className="mb-1.5 block text-sm font-semibold text-gray-900">
-                Points
+                {t("points")}
               </label>
 
               <Input
@@ -703,7 +714,7 @@ export default function CustomerLoyaltyManager() {
 
             <div>
               <label className="mb-1.5 block text-sm font-semibold text-gray-900">
-                Note
+                {t("note")}
               </label>
 
               <textarea
@@ -714,7 +725,7 @@ export default function CustomerLoyaltyManager() {
                     note: event.target.value,
                   }))
                 }
-                placeholder="Reason for manual loyalty adjustment..."
+                placeholder={t("adjustmentReason")}
                 rows={4}
                 className="w-full resize-none rounded-[12px] border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-gray-400"
               />
@@ -732,7 +743,7 @@ export default function CustomerLoyaltyManager() {
               }}
               className="rounded-[12px]"
             >
-              Cancel
+              {commonT("cancel")}
             </Button>
 
             <Button
@@ -744,17 +755,17 @@ export default function CustomerLoyaltyManager() {
               {isAdjusting ? (
                 <>
                   <Loader2 size={16} className="mr-2 animate-spin" />
-                  Saving...
+                  {t("saving")}
                 </>
               ) : adjustmentForm.isCredit ? (
                 <>
                   <PlusCircle size={16} className="mr-2" />
-                  Add Points
+                  {t("addPoints")}
                 </>
               ) : (
                 <>
                   <MinusCircle size={16} className="mr-2" />
-                  Deduct Points
+                  {t("deductPoints")}
                 </>
               )}
             </Button>
