@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Check, Loader2, Search, X } from "lucide-react";
 import { toast } from "sonner";
@@ -110,6 +110,8 @@ export function ModifierGroupAssignmentForm({
   const [page, setPage] = useState(1);
   const [groupOptions, setGroupOptions] = useState<ModifierGroup[]>([]);
   const [draft, setDraft] = useState(DEFAULT_DRAFT);
+  const groupListRef = useRef<HTMLDivElement | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const { mutateAsync: assignItemGroup, isPending: isAssigningItem } =
     useAssignModifierGroupToItem();
@@ -164,6 +166,30 @@ export function ModifierGroupAssignmentForm({
   const hasMore =
     pagination?.hasNext ??
     Number(pagination?.page ?? page) < Number(pagination?.totalPages ?? 1);
+
+  useEffect(() => {
+    const root = groupListRef.current;
+    const sentinel = loadMoreRef.current;
+
+    if (!root || !sentinel || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting || isLoading || isFetching) return;
+
+        setPage((current) => current + 1);
+      },
+      {
+        root,
+        rootMargin: "80px 0px",
+        threshold: 0.1,
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => observer.disconnect();
+  }, [hasMore, isFetching, isLoading]);
 
   const updateAssignments = (nextAssignments: AssignmentDraft[]) => {
     setAssignments(nextAssignments);
@@ -305,7 +331,10 @@ export function ModifierGroupAssignmentForm({
             />
           </div>
 
-          <div className="max-h-[260px] space-y-2 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:thin]">
+          <div
+            ref={groupListRef}
+            className="max-h-[260px] space-y-2 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:thin]"
+          >
             {isLoading && groupOptions.length === 0 ? (
               <div className="flex items-center justify-center gap-2 rounded-[12px] bg-white p-5 text-sm text-gray-500">
                 <Loader2 size={16} className="animate-spin" />
@@ -316,62 +345,68 @@ export function ModifierGroupAssignmentForm({
                 No modifier groups found.
               </p>
             ) : (
-              groupOptions.map((group) => {
-                const selected = group.id === draft.groupId;
-                const assigned = assignedGroupIds.has(group.id);
+              <>
+                {groupOptions.map((group) => {
+                  const selected = group.id === draft.groupId;
+                  const assigned = assignedGroupIds.has(group.id);
 
-                return (
-                  <button
-                    key={group.id}
-                    type="button"
-                    onClick={() => updateDraft("groupId", group.id)}
-                    className={`w-full min-w-0 rounded-[12px] border bg-white p-3 text-left transition ${
-                      selected
-                        ? "border-primary ring-2 ring-primary/10"
-                        : "border-gray-100 hover:border-primary/30"
-                    }`}
+                  return (
+                    <button
+                      key={group.id}
+                      type="button"
+                      onClick={() => updateDraft("groupId", group.id)}
+                      className={`w-full min-w-0 rounded-[12px] border bg-white p-3 text-left transition ${
+                        selected
+                          ? "border-primary ring-2 ring-primary/10"
+                          : "border-gray-100 hover:border-primary/30"
+                      }`}
+                    >
+                      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
+                        <span
+                          className={`mt-0.5 hidden h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border sm:flex ${
+                            selected
+                              ? "border-primary bg-primary text-white"
+                              : "border-gray-300 text-transparent"
+                          }`}
+                        >
+                          <Check size={14} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block break-words text-sm font-semibold text-gray-900">
+                            {group.name}
+                          </span>
+                          <span className="mt-1 block break-words text-xs leading-5 text-gray-500">
+                            {getGroupDescription(group)}
+                          </span>
+                        </span>
+                        {assigned ? (
+                          <span className="w-fit shrink-0 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary">
+                            Added
+                          </span>
+                        ) : null}
+                      </div>
+                    </button>
+                  );
+                })}
+
+                {hasMore ? (
+                  <div
+                    ref={loadMoreRef}
+                    className="flex min-h-10 items-center justify-center gap-2 py-2 text-xs text-gray-500"
                   >
-                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
-                      <span
-                        className={`mt-0.5 hidden h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border sm:flex ${
-                          selected
-                            ? "border-primary bg-primary text-white"
-                            : "border-gray-300 text-transparent"
-                        }`}
-                      >
-                        <Check size={14} />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block break-words text-sm font-semibold text-gray-900">
-                          {group.name}
-                        </span>
-                        <span className="mt-1 block break-words text-xs leading-5 text-gray-500">
-                          {getGroupDescription(group)}
-                        </span>
-                      </span>
-                      {assigned ? (
-                        <span className="w-fit shrink-0 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary">
-                          Added
-                        </span>
-                      ) : null}
-                    </div>
-                  </button>
-                );
-              })
+                    {isFetching ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" />
+                        Loading more groups...
+                      </>
+                    ) : (
+                      <span className="sr-only">Load more groups</span>
+                    )}
+                  </div>
+                ) : null}
+              </>
             )}
           </div>
-
-          {hasMore ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setPage((current) => current + 1)}
-              disabled={isFetching}
-              className="mt-3 h-[38px] w-full rounded-[12px]"
-            >
-              {isFetching ? "Loading..." : "Load more groups"}
-            </Button>
-          ) : null}
         </div>
 
         <div className="min-w-0 space-y-4 rounded-[16px] border border-gray-100 bg-white p-3 sm:p-4">

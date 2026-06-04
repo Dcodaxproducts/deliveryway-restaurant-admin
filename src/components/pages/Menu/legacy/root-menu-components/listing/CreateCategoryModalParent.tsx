@@ -345,7 +345,7 @@ const restaurantId = authRestaurantId ?? undefined;
         onOpenChange(value);
       }}
     >
-      <DialogContent className="max-h-[95vh] w-[calc(100vw-24px)] max-w-[1180px] overflow-auto rounded-[20px] bg-[#F5F5F5] p-4 sm:p-6">
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] overflow-y-auto overflow-x-hidden rounded-[20px] bg-[#F5F5F5] p-4 sm:w-full sm:max-w-[calc(100vw-2rem)] sm:p-6 xl:max-w-[1180px]">
         <DialogHeader className="space-y-1">
           <DialogTitle className="text-2xl font-semibold">
             {isEditMode ? t("updateTitle") : t("createTitle")}
@@ -358,7 +358,7 @@ const restaurantId = authRestaurantId ?? undefined;
           </p>
         </DialogHeader>
 
-        <div className="mt-5 space-y-4 rounded-[16px] bg-white p-5">
+        <div className="mt-5 min-w-0 space-y-4 overflow-hidden rounded-[16px] bg-white p-4 sm:p-5">
           <FormInput
             label={t("name")}
             placeholder={t("namePlaceholder")}

@@ -58,7 +58,7 @@ const getDefaultValues = ({
 }): AdminDealFormValues => ({
   title: initialDeal?.title ?? "",
   description: initialDeal?.description ?? "",
-  thumbnailUrl: initialDeal?.thumbnailUrl ?? initialDeal?.imageUrl ?? "",
+  thumbnailUrl: initialDeal?.thumbnailUrl ?? "",
   imageUrl: initialDeal?.imageUrl ?? "",
   restaurantId: initialDeal?.restaurantId ?? restaurantId ?? "",
   branchId: initialDeal?.branchId ?? (isBranchAdmin ? branchId ?? "" : ""),
@@ -185,21 +185,39 @@ export default function AdminDealForm({
             )}
           />
 
-          <Controller
-            control={control}
-            name="thumbnailUrl"
-            render={({ field, fieldState }) => (
-              <ImageUploadField<AdminDealFormValues>
-                name="thumbnailUrl"
-                label={t("thumbnail")}
-                value={field.value}
-                error={fieldState.error?.message}
-                setValue={setValue}
-                previewAlt={t("thumbnailPreviewAlt")}
-                disabled={submitting}
-              />
-            )}
-          />
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <Controller
+              control={control}
+              name="thumbnailUrl"
+              render={({ field, fieldState }) => (
+                <ImageUploadField<AdminDealFormValues>
+                  name="thumbnailUrl"
+                  label={t("thumbnail")}
+                  value={field.value}
+                  error={fieldState.error?.message}
+                  setValue={setValue}
+                  previewAlt={t("thumbnailPreviewAlt")}
+                  disabled={submitting}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="imageUrl"
+              render={({ field, fieldState }) => (
+                <ImageUploadField<AdminDealFormValues>
+                  name="imageUrl"
+                  label={t("imageUrl")}
+                  value={field.value}
+                  error={fieldState.error?.message}
+                  setValue={setValue}
+                  previewAlt={t("imagePreviewAlt")}
+                  disabled={submitting}
+                />
+              )}
+            />
+          </div>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <Controller

@@ -1196,6 +1196,8 @@
       "descriptionPlaceholder": "Write deal description",
       "thumbnail": "Thumbnail",
       "thumbnailPreviewAlt": "Deal thumbnail preview",
+      "imageUrl": "Main image",
+      "imagePreviewAlt": "Deal main image preview",
       "fixedDealPrice": "Fixed deal price",
       "fixedDealPricePlaceholder": "eg. 29.99",
       "minimumOrderAmount": "Minimum order amount",

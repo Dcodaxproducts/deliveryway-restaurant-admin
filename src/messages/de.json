@@ -1196,6 +1196,8 @@
       "descriptionPlaceholder": "Angebotsbeschreibung schreiben",
       "thumbnail": "Vorschaubild",
       "thumbnailPreviewAlt": "Vorschau des Angebotsbildes",
+      "imageUrl": "Hauptbild",
+      "imagePreviewAlt": "Vorschau des Angebotshauptbildes",
       "fixedDealPrice": "Fester Angebotspreis",
       "fixedDealPricePlaceholder": "z. B. 29,99",
       "minimumOrderAmount": "Mindestbestellwert",
