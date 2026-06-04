@@ -2,10 +2,10 @@
 
 import Container from "@/components/common/Container";
 import Header from "@/components/common/PageHeader";
-import ModifierGroupsTable from "@/components/pages/Menu/modifier-groups/components/ModifierGroupsTable/ModifierGroupsTable";
+import { ModifierGroupsTable } from "@/components/pages/Menu/modifier-groups/components/ModifierGroupsTable/ModifierGroupsTable";
 import { useTranslations } from "next-intl";
 
-const ModifierGroupsPage = () => {
+export function ModifierGroupsPage() {
   const t = useTranslations("menu");
 
   return (
@@ -20,6 +20,4 @@ const ModifierGroupsPage = () => {
       </div>
     </Container>
   );
-};
-
-export default ModifierGroupsPage;
+}

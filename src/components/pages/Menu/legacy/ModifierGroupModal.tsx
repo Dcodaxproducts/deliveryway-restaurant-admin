@@ -10,136 +10,103 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import {
   useEffect,
+  useMemo,
   useState,
   type ChangeEvent,
   type InputHTMLAttributes,
 } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import AsyncSelect from "@/components/ui/AsyncSelect";
 import {
-  useAttachModifierGroupToCategory,
   useCreateModifierGroup,
   useUpdateModifierGroup,
-} from "@/hooks/useMenus";
-import { getMenuCategories } from "@/services/menu/categories/menu-categories.api";
+} from "@/hooks/useModifierGroups";
 import {
   blockInvalidNumberKeys,
   blockNegativeNumberPaste,
   sanitizeNonNegativeNumber,
 } from "@/lib/number-input";
+import { getApiErrorMessage } from "@/lib/errors";
+import type { ModifierGroup } from "@/types/modifier-groups";
+import {
+  modifierGroupSchema,
+  updateModifierGroupSchema,
+} from "@/validations/modifier-groups";
 import { useTranslations } from "next-intl";
 
-interface ModifierGroupForm {
+type ModifierGroupForm = {
   name: string;
   description: string;
   minSelect: string;
   maxSelect: string;
-  isRequired: boolean;
   sortOrder: string;
-}
+  isActive: boolean;
+};
 
-interface Props {
+type ModifierGroupModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  initialData?: any;
+  initialData?: ModifierGroup | null;
   refresh: () => void;
-}
+};
 
 const getDefaultForm = (): ModifierGroupForm => ({
   name: "",
   description: "",
   minSelect: "0",
   maxSelect: "1",
-  isRequired: false,
   sortOrder: "0",
+  isActive: true,
 });
 
-export default function ModifierGroupModal({
+export function ModifierGroupModal({
   open,
   onOpenChange,
   initialData,
   refresh,
-}: Props) {
+}: ModifierGroupModalProps) {
   const t = useTranslations("menu.modifierGroupModal");
   const commonT = useTranslations("common");
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { restaurantId: authRestaurantId } = useAuth();
+  const restaurantId = authRestaurantId ?? undefined;
 
   const [form, setForm] = useState<ModifierGroupForm>(getDefaultForm());
-  const [selectedCategory, setSelectedCategory] = useState<any>(null);
 
   const { mutateAsync: createModifierGroup, isPending: isCreating } =
     useCreateModifierGroup();
-
   const { mutateAsync: updateModifierGroup, isPending: isUpdating } =
     useUpdateModifierGroup();
 
-  const {
-    mutateAsync: attachModifierGroupToCategory,
-    isPending: isAttaching,
-  } = useAttachModifierGroupToCategory();
-
-  const isLoading = isCreating || isUpdating || isAttaching;
-
-  const resolveInitialCategory = async () => {
-    const directCategory = initialData?.category || initialData?.menuCategory;
-
-    if (directCategory?.id) {
-      setSelectedCategory(directCategory);
-      return;
-    }
-
-    const categoryId = initialData?.categoryIds?.[0];
-
-    if (!categoryId) {
-      setSelectedCategory(null);
-      return;
-    }
-
-    const res = await getMenuCategories({
-      page: 1,
-      limit: 100,
-      restaurantId: user?.restaurantId ?? undefined,
-    });
-
-    const categories = Array.isArray(res?.data)
-      ? res.data
-      : Array.isArray(res?.data?.data)
-      ? res.data.data
-      : [];
-
-    const matchedCategory = categories.find(
-      (category: any) => category.id === categoryId
-    );
-
-    setSelectedCategory(matchedCategory || null);
-  };
+  const isSubmitting = isCreating || isUpdating;
+  const isEditMode = Boolean(initialData?.id);
 
   useEffect(() => {
+    if (!open) return;
+
     if (initialData) {
       setForm({
-        name: initialData?.name || "",
-        description: initialData?.description || "",
-        minSelect: sanitizeNonNegativeNumber(String(initialData?.minSelect ?? 0)),
-        maxSelect: sanitizeNonNegativeNumber(String(initialData?.maxSelect ?? 1)),
-        isRequired: Boolean(initialData?.isRequired),
-        sortOrder: sanitizeNonNegativeNumber(String(initialData?.sortOrder ?? 0)),
+        name: initialData.name || "",
+        description: initialData.description || "",
+        minSelect: sanitizeNonNegativeNumber(String(initialData.minSelect ?? 0)),
+        maxSelect: sanitizeNonNegativeNumber(String(initialData.maxSelect ?? 1)),
+        sortOrder: sanitizeNonNegativeNumber(String(initialData.sortOrder ?? 0)),
+        isActive: initialData.isActive ?? true,
       });
-
-      resolveInitialCategory();
-    } else {
-      setForm(getDefaultForm());
-      setSelectedCategory(null);
+      return;
     }
-  }, [initialData, open, user?.restaurantId]);
+
+    setForm(getDefaultForm());
+  }, [initialData, open]);
+
+  const canSubmit = useMemo(() => {
+    return Boolean(form.name.trim() && restaurantId);
+  }, [form.name, restaurantId]);
 
   const handleChange = <K extends keyof ModifierGroupForm>(
     key: K,
     value: ModifierGroupForm[K]
   ) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((previous) => ({ ...previous, [key]: value }));
   };
 
   const handleNumberChange = (
@@ -150,148 +117,63 @@ export default function ModifierGroupModal({
   };
 
   const handleClose = (value: boolean) => {
+    if (isSubmitting) return;
+
     onOpenChange(value);
 
     if (!value) {
       setForm(getDefaultForm());
-      setSelectedCategory(null);
     }
   };
 
-  const fetchCategoryOptions = async ({
-    search,
-    page,
-  }: {
-    search: string;
-    page: number;
-  }): Promise<{ data: any[]; meta?: any }> => {
-    const res = await getMenuCategories({
-      page,
-      limit: 10,
-      search,
-      restaurantId: user?.restaurantId ?? undefined,
-    });
-
-    return {
-      data: Array.isArray(res?.data)
-        ? res.data
-        : Array.isArray(res?.data?.data)
-        ? res.data.data
-        : [],
-      meta: res?.meta || res?.data?.meta,
-    };
-  };
-
-  const extractCreatedGroupId = (res: any) => {
-    return (
-      res?.id ||
-      res?.data?.id ||
-      res?.data?.data?.id ||
-      res?.modifierGroup?.id ||
-      null
-    );
-  };
-
   const handleSubmit = async () => {
-    const minSelect = Number(form.minSelect);
-    const maxSelect = Number(form.maxSelect);
-    const sortOrder = Number(form.sortOrder);
-
-    if (!form.name.trim()) {
+    if (!canSubmit || !restaurantId) {
       toast.error(t("nameRequired"));
       return;
     }
 
-    if (form.minSelect === "" || Number.isNaN(minSelect)) {
-      toast.error(t("minInvalid"));
-      return;
-    }
-
-    if (form.maxSelect === "" || Number.isNaN(maxSelect)) {
-      toast.error(t("maxInvalid"));
-      return;
-    }
-
-    if (form.sortOrder === "" || Number.isNaN(sortOrder)) {
-      toast.error(t("sortInvalid"));
-      return;
-    }
-
-    if (minSelect < 0) {
-      toast.error(t("minNegative"));
-      return;
-    }
-
-    if (maxSelect < 0) {
-      toast.error(t("maxNegative"));
-      return;
-    }
-
-    if (sortOrder < 0) {
-      toast.error(t("sortNegative"));
-      return;
-    }
-
-    if (maxSelect < minSelect) {
-      toast.error(t("maxLessThanMin"));
-      return;
-    }
-
-    if (!selectedCategory?.id) {
-      toast.error(t("categoryRequired"));
-      return;
-    }
-
-    const payload: any = {
+    const payload = {
       name: form.name.trim(),
-      description: form.description.trim(),
-      minSelect,
-      maxSelect,
-      isRequired: form.isRequired,
-      sortOrder,
+      description: form.description.trim() || undefined,
+      minSelect: Number(form.minSelect),
+      maxSelect: Number(form.maxSelect),
+      sortOrder: Number(form.sortOrder),
+      isActive: form.isActive,
     };
 
-    if (!initialData?.id) {
-      payload.restaurantId = user?.restaurantId || "";
+    const parsed = isEditMode
+      ? updateModifierGroupSchema.safeParse(payload)
+      : modifierGroupSchema.safeParse({
+          ...payload,
+          restaurantId,
+        });
+
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message || t("saveFailed"));
+      return;
     }
 
     try {
-      if (initialData?.id) {
+      if (isEditMode && initialData?.id) {
         await updateModifierGroup({
           id: initialData.id,
           data: payload,
         });
-
-        await attachModifierGroupToCategory({
-          categoryId: selectedCategory.id,
-          groupId: initialData.id,
-          sortOrder: 0,
-        });
       } else {
-        const createdRes = await createModifierGroup(payload);
-        const groupId = extractCreatedGroupId(createdRes);
-
-        if (!groupId) {
-          throw new Error("Modifier group created but no group id was returned");
-        }
-
-        await attachModifierGroupToCategory({
-          categoryId: selectedCategory.id,
-          groupId,
-          sortOrder: 0,
+        await createModifierGroup({
+          ...payload,
+          restaurantId,
         });
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
-      await queryClient.invalidateQueries({ queryKey: ["menu-categories"] });
-
       refresh();
       handleClose(false);
-    } catch (err: any) {
+    } catch (error: unknown) {
       toast.error(
-        err?.response?.data?.message ||
-          err?.message ||
-          initialData?.id ? t("updateFailed") : t("createFailed")
+        getApiErrorMessage(
+          error,
+          isEditMode ? t("updateFailed") : t("createFailed")
+        )
       );
     }
   };
@@ -301,44 +183,30 @@ export default function ModifierGroupModal({
       <DialogContent className="max-h-[90vh] max-w-[420px] overflow-auto rounded-[20px] bg-[#F5F5F5] p-6">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">
-            {initialData ? t("editTitle") : t("addTitle")}
+            {isEditMode ? t("editTitle") : t("addTitle")}
           </DialogTitle>
 
-          <p className="text-sm text-gray-500">
-            {t("description")}
-          </p>
+          <p className="text-sm text-gray-500">{t("description")}</p>
         </DialogHeader>
 
         <div className="mt-5 space-y-4 rounded-[16px] bg-white p-5">
-          <div className="space-y-1">
-            <p className="text-sm text-gray-600">{commonT("category")}</p>
-            <AsyncSelect
-              value={selectedCategory}
-              onChange={setSelectedCategory}
-              placeholder={t("selectCategory")}
-              fetchOptions={fetchCategoryOptions}
-              labelKey="name"
-              valueKey="id"
-            />
-          </div>
-
           <InputField
             label={t("groupName")}
             value={form.name}
-            onChange={(v) => handleChange("name", v)}
+            onChange={(value) => handleChange("name", value)}
           />
 
           <InputField
             label={commonT("description")}
             value={form.description}
-            onChange={(v) => handleChange("description", v)}
+            onChange={(value) => handleChange("description", value)}
           />
 
           <InputField
             label={t("minSelect")}
             type="number"
             value={form.minSelect}
-            onChange={(v) => handleNumberChange("minSelect", v)}
+            onChange={(value) => handleNumberChange("minSelect", value)}
             onKeyDown={blockInvalidNumberKeys}
             onPaste={blockNegativeNumberPaste}
             min={0}
@@ -348,7 +216,7 @@ export default function ModifierGroupModal({
             label={t("maxSelect")}
             type="number"
             value={form.maxSelect}
-            onChange={(v) => handleNumberChange("maxSelect", v)}
+            onChange={(value) => handleNumberChange("maxSelect", value)}
             onKeyDown={blockInvalidNumberKeys}
             onPaste={blockNegativeNumberPaste}
             min={0}
@@ -358,7 +226,7 @@ export default function ModifierGroupModal({
             label={t("sortOrder")}
             type="number"
             value={form.sortOrder}
-            onChange={(v) => handleNumberChange("sortOrder", v)}
+            onChange={(value) => handleNumberChange("sortOrder", value)}
             onKeyDown={blockInvalidNumberKeys}
             onPaste={blockNegativeNumberPaste}
             min={0}
@@ -367,26 +235,26 @@ export default function ModifierGroupModal({
           <label className="flex items-center gap-2 text-sm text-gray-600">
             <input
               type="checkbox"
-              checked={form.isRequired}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleChange("isRequired", e.target.checked)
+              checked={form.isActive}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                handleChange("isActive", event.target.checked)
               }
               className="accent-primary"
             />
-            {t("required")}
+            {t("activeStatus")}
           </label>
 
           <Button
             onClick={handleSubmit}
-            disabled={isLoading}
+            disabled={isSubmitting}
             className="mt-2 w-full rounded-[10px] bg-primary py-4"
           >
-            {isLoading ? (
+            {isSubmitting ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="animate-spin" size={18} />
                 {commonT("saving")}
               </span>
-            ) : initialData ? (
+            ) : isEditMode ? (
               t("update")
             ) : (
               t("create")
@@ -423,8 +291,8 @@ function InputField({
       <input
         type={type}
         value={value}
-        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-          onChange(e.target.value)
+        onChange={(event: ChangeEvent<HTMLInputElement>) =>
+          onChange(event.target.value)
         }
         className={`
           h-[40px]

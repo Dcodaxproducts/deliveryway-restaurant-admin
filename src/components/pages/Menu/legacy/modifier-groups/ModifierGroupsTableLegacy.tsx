@@ -3,30 +3,34 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FaPen, FaTrash } from "react-icons/fa";
-import { Search } from "lucide-react";
-import ModifierGroupModal from "@/components/pages/Menu/legacy/ModifierGroupModal";
+import { Search, SlidersHorizontal } from "lucide-react";
+import { ModifierGroupModal } from "@/components/pages/Menu/legacy/ModifierGroupModal";
+import { ManageGroupModifiersDialog } from "@/components/pages/Menu/modifier-groups/components/ManageGroupModifiersDialog";
 import PaginationSection from "@/components/common/pagination";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import {
-  useGetModifierGroups,
   useDeleteModifierGroup,
-} from "@/hooks/useMenus";
+  useModifierGroups,
+} from "@/hooks/useModifierGroups";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslations } from "next-intl";
+import type { ModifierGroup } from "@/types/modifier-groups";
 
-export default function ModifierGroupsTable() {
+export function ModifierGroupsTableLegacy() {
   const t = useTranslations("menu.modifierGroupsTable");
   const commonT = useTranslations("common");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-const { restaurantId } = useAuth();
+  const { restaurantId: authRestaurantId } = useAuth();
+  const restaurantId = authRestaurantId ?? undefined;
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<any>(null);
+  const [selected, setSelected] = useState<ModifierGroup | null>(null);
+  const [manageGroup, setManageGroup] = useState<ModifierGroup | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -39,16 +43,17 @@ const { restaurantId } = useAuth();
   }, [search]);
 
   const {
-  data: response,
-  isLoading,
-  isFetching,
-  refetch,
-} = useGetModifierGroups({
-  page,
-  limit,
-  search: debouncedSearch,
-  ...(restaurantId ? { restaurantId } : {}),
-});
+    data: response,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useModifierGroups({
+    page,
+    limit,
+    search: debouncedSearch || undefined,
+    restaurantId,
+  });
+
   useEffect(() => {
     if (refreshKey) {
       refetch();
@@ -58,26 +63,10 @@ const { restaurantId } = useAuth();
   const { mutate: deleteModifierGroup, isPending: isDeleting } =
     useDeleteModifierGroup();
 
-  const items = useMemo(() => {
-    if (!response) return [];
-
-    return (
-      response?.data?.items ||
-      response?.data?.modifierGroups ||
-      response?.data?.data ||
-      response?.items ||
-      response?.modifierGroups ||
-      response?.data ||
-      []
-    );
-  }, [response]);
+  const items = useMemo(() => response?.data ?? [], [response?.data]);
 
   const pagination = useMemo(() => {
-    const source =
-      response?.data?.pagination ||
-      response?.pagination ||
-      response?.meta ||
-      {};
+    const source = response?.meta;
 
     const total = Number(source?.total ?? items.length ?? 0);
     const currentPage = Number(source?.page ?? page);
@@ -180,9 +169,9 @@ const { restaurantId } = useAuth();
             <tr className="border-b text-left text-gray-500">
               <th className="py-3 px-2">{commonT("name")}</th>
               <th className="px-2">{commonT("description")}</th>
-              <th className="px-2 text-center">{t("min")}</th>
-              <th className="px-2 text-center">{t("max")}</th>
-              <th className="px-2 text-center">{t("required")}</th>
+              <th className="px-2 text-center">{t("minMax")}</th>
+              <th className="px-2 text-center">{t("modifiersCount")}</th>
+              <th className="px-2 text-center">{commonT("status")}</th>
               <th className="px-2 text-center">{t("sort")}</th>
               <th className="px-2 text-center">{commonT("actions")}</th>
             </tr>
@@ -198,7 +187,7 @@ const { restaurantId } = useAuth();
                 </td>
               </tr>
             ) : (
-              items.map((item: any) => (
+              items.map((item) => (
                 <tr key={item.id} className="border-b hover:bg-gray-50">
                   <td className="px-2 py-4">
                     <div className="flex flex-col">
@@ -212,19 +201,23 @@ const { restaurantId } = useAuth();
                     </span>
                   </td>
 
-                  <td className="px-2 text-center">{item.minSelect ?? 0}</td>
+                  <td className="px-2 text-center">
+                    {item.minSelect ?? 0}/{item.maxSelect ?? 0}
+                  </td>
 
-                  <td className="px-2 text-center">{item.maxSelect ?? 0}</td>
+                  <td className="px-2 text-center">
+                    {item.modifiers?.length ?? 0}
+                  </td>
 
                   <td className="px-2 text-center">
                     <span
                       className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                        item.isRequired
+                        item.isActive
                           ? "bg-green-100 text-green-700"
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {item.isRequired ? commonT("yes") : commonT("no")}
+                      {item.isActive ? commonT("active") : commonT("inactive")}
                     </span>
                   </td>
 
@@ -234,6 +227,14 @@ const { restaurantId } = useAuth();
 
                   <td className="px-2 text-center">
                     <div className="flex justify-center gap-3">
+                      <button
+                        onClick={() => setManageGroup(item)}
+                        className="text-gray-500 hover:text-primary"
+                        aria-label={t("manageModifiers")}
+                      >
+                        <SlidersHorizontal size={15} />
+                      </button>
+
                       <button
                         onClick={() => {
                           setSelected(item);
@@ -271,7 +272,7 @@ const { restaurantId } = useAuth();
             {t("emptyTitle")}
           </div>
         ) : (
-          items.map((item: any) => (
+          items.map((item) => (
             <div
               key={item.id}
               className="rounded-[18px] bg-white p-4 shadow-sm border"
@@ -292,24 +293,39 @@ const { restaurantId } = useAuth();
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                  <p>{t("min")}: {item.minSelect ?? 0}</p>
-                  <p>{t("max")}: {item.maxSelect ?? 0}</p>
+                  <p>
+                    {t("minMax")}: {item.minSelect ?? 0}/{item.maxSelect ?? 0}
+                  </p>
+                  <p>
+                    {t("modifiersCount")}: {item.modifiers?.length ?? 0}
+                  </p>
                   <p>{t("sort")}: {item.sortOrder ?? "-"}</p>
-                  <p>{t("required")}: {item.isRequired ? commonT("yes") : commonT("no")}</p>
+                  <p>
+                    {commonT("status")}:{" "}
+                    {item.isActive ? commonT("active") : commonT("inactive")}
+                  </p>
                 </div>
 
                 <div className="mt-2 flex justify-between items-center">
                   <span
                     className={`rounded-full px-2 py-1 text-xs ${
-                      item.isRequired
+                      item.isActive
                         ? "bg-green-100 text-green-700"
                         : "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {item.isRequired ? t("required") : commonT("optional")}
+                    {item.isActive ? commonT("active") : commonT("inactive")}
                   </span>
 
                   <div className="flex gap-3">
+                    <button
+                      onClick={() => setManageGroup(item)}
+                      className="text-gray-500 hover:text-primary"
+                      aria-label={t("manageModifiers")}
+                    >
+                      <SlidersHorizontal size={15} />
+                    </button>
+
                     <button
                       onClick={() => {
                         setSelected(item);
@@ -348,6 +364,15 @@ const { restaurantId } = useAuth();
           setRefreshKey((prev) => prev + 1);
           refetch();
         }}
+      />
+
+      <ManageGroupModifiersDialog
+        open={!!manageGroup}
+        onOpenChange={(value) => {
+          if (!value) setManageGroup(null);
+        }}
+        group={manageGroup}
+        restaurantId={restaurantId}
       />
 
       {/* DELETE */}
