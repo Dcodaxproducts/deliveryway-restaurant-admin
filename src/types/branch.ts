@@ -26,3 +26,35 @@ export interface BranchProps {
   } | null;
 };
 }
+
+export type BranchDeliveryMode =
+  | "RADIUS"
+  | "ZONE"
+  | "POSTAL_CODE"
+  | string;
+
+export type PostalCodeDeliveryRule = {
+  postalCode: string;
+  deliveryFee: number;
+  minOrderAmount: number;
+  freeDeliveryThreshold: number;
+};
+
+export type BranchDeliveryConfig = {
+  mode: BranchDeliveryMode;
+  radiusKm?: number;
+  minOrderAmount?: number;
+  deliveryFee?: number;
+  isFreeDelivery?: boolean;
+  freeDeliveryThreshold?: number;
+  zones?: unknown[];
+  zoneBands?: unknown[];
+  postalCodeRules?: PostalCodeDeliveryRule[];
+};
+
+export type BranchSettings = {
+  deliveryConfig?: BranchDeliveryConfig;
+  tableReservationsEnabled?: boolean;
+  tableReservationAutoAccept?: boolean;
+  tableCount?: number;
+};

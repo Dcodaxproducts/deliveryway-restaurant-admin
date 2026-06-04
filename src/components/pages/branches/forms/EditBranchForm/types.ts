@@ -29,6 +29,8 @@ export type PostalCodeRule = {
   id?: string;
   postalCode: string;
   deliveryFee: number;
+  minOrderAmount: number;
+  freeDeliveryThreshold: number;
 };
 
 export type DeliveryConfig = {

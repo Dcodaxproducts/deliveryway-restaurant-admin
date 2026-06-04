@@ -129,6 +129,8 @@ const normalizePostalCodeRulesForApi = (rules: any): PostalCodeRule[] => {
     ...(rule?.id ? { id: String(rule.id) } : {}),
     postalCode: String(rule?.postalCode || "").trim(),
     deliveryFee: toNumber(rule?.deliveryFee, 0),
+    minOrderAmount: toNumber(rule?.minOrderAmount, 0),
+    freeDeliveryThreshold: toNumber(rule?.freeDeliveryThreshold, 0),
   }));
 };
 
@@ -200,12 +202,47 @@ export const getDeliveryConfigValidationError = (deliveryConfig: DeliveryConfig)
       return "Please add at least one postal code delivery rule";
     }
 
+    const seenPostalCodes = new Set<string>();
+
     for (const [index, rule] of deliveryConfig.postalCodeRules.entries()) {
       if (!rule.postalCode) return `Postal code rule ${index + 1} requires a postal code`;
+      const postalCode = rule.postalCode.trim().toLowerCase();
+
+      if (seenPostalCodes.has(postalCode)) {
+        return `Postal code rule ${index + 1} duplicates another postal code`;
+      }
+
+      seenPostalCodes.add(postalCode);
+
       if (rule.deliveryFee < 0) {
         return `Postal code rule ${index + 1} delivery fee cannot be negative`;
       }
+      if (rule.minOrderAmount < 0) {
+        return `Postal code rule ${index + 1} minimum order cannot be negative`;
+      }
+      if (rule.freeDeliveryThreshold < 0) {
+        return `Postal code rule ${index + 1} free delivery threshold cannot be negative`;
+      }
     }
+  }
+
+  return null;
+};
+
+export const getBranchSettingsValidationError = (settings: unknown) => {
+  const branchSettings = settings as {
+    tableReservationsEnabled?: unknown;
+    tableCount?: unknown;
+  } | null;
+  const tableReservationsEnabled = Boolean(
+    branchSettings?.tableReservationsEnabled ?? false
+  );
+  const tableCount = toNumber(branchSettings?.tableCount, 0);
+
+  if (tableCount < 0) return "Table count cannot be negative";
+  if (!Number.isInteger(tableCount)) return "Table count must be a whole number";
+  if (tableReservationsEnabled && tableCount < 1) {
+    return "Table count must be at least 1 when table reservations are enabled";
   }
 
   return null;
@@ -254,6 +291,8 @@ export const buildSafeBranchSettings = (settings: any, deliveryConfig: DeliveryC
       ? settings.allowedPaymentMethods
       : DEFAULT_ALLOWED_PAYMENT_METHODS,
     tableReservationsEnabled: settings?.tableReservationsEnabled ?? false,
+    tableReservationAutoAccept: settings?.tableReservationAutoAccept ?? false,
+    tableCount: Math.max(0, Math.trunc(toNumber(settings?.tableCount, 0))),
     deliveryTime:
       settings?.deliveryTime === "" ||
       settings?.deliveryTime === undefined ||
@@ -275,5 +314,21 @@ export const buildSafeBranchSettings = (settings: any, deliveryConfig: DeliveryC
       whatsapp: settings?.contact?.whatsapp || "",
     },
     deliveryConfig,
+  };
+};
+
+export const hydrateBranchForEdit = (branchData: BranchFormData): BranchFormData => {
+  const settings = branchData.settings || {};
+  const deliveryConfig = normalizeDeliveryConfigForApi(settings.deliveryConfig);
+
+  return {
+    ...branchData,
+    settings: {
+      ...settings,
+      tableReservationsEnabled: Boolean(settings?.tableReservationsEnabled ?? false),
+      tableReservationAutoAccept: Boolean(settings?.tableReservationAutoAccept ?? false),
+      tableCount: Math.max(0, Math.trunc(toNumber(settings?.tableCount, 0))),
+      deliveryConfig,
+    },
   };
 };

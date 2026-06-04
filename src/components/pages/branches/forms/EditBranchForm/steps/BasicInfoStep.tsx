@@ -1,6 +1,5 @@
 "use client";
 
-import { Label } from "@/components/ui/label";
 import Section from "@/components/pages/Promotions/forms/Section";
 import FormInput from "@/components/forms/common/FormInput";
 import { Switch } from "@/components/ui/switch";
@@ -207,23 +206,58 @@ export default function EditBranchStepOne({ data, setData }: any) {
         </div>
       </Section>
 
-      <div className="flex items-center justify-between rounded-[12px] border p-4">
-  <div>
-    <p className="text-sm font-medium text-gray-900">
-      {t("enableTableReservations")}
-    </p>
-    <p className="text-xs text-gray-500">
-      {t("allowTableReservations")}
-    </p>
-  </div>
+      <Section label={t("tableReservationSettings")}>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between rounded-[12px] border p-4">
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {t("enableTableReservations")}
+              </p>
+              <p className="text-xs text-gray-500">
+                {t("allowTableReservations")}
+              </p>
+            </div>
 
-  <Switch
-    checked={data.settings?.tableReservationsEnabled || false}
-    onCheckedChange={(val) =>
-      update(["settings", "tableReservationsEnabled"], val)
-    }
-  />
-</div>
+            <Switch
+              checked={data.settings?.tableReservationsEnabled || false}
+              onCheckedChange={(val) =>
+                update(["settings", "tableReservationsEnabled"], val)
+              }
+            />
+          </div>
+
+          <div className="flex items-center justify-between rounded-[12px] border p-4">
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {t("autoAcceptReservations")}
+              </p>
+              <p className="text-xs text-gray-500">
+                {t("autoAcceptReservationsHelper")}
+              </p>
+            </div>
+
+            <Switch
+              checked={data.settings?.tableReservationAutoAccept || false}
+              onCheckedChange={(val) =>
+                update(["settings", "tableReservationAutoAccept"], val)
+              }
+            />
+          </div>
+
+          <div className="rounded-[12px] border p-4">
+            <FormInput
+              label={t("tableCount")}
+              value={data.settings?.tableCount ?? 0}
+              onChange={(val) =>
+                update(["settings", "tableCount"], val ? Number(val) : 0)
+              }
+            />
+            <p className="mt-2 text-xs text-gray-500">
+              {t("tableCountHelper")}
+            </p>
+          </div>
+        </div>
+      </Section>
 
     </div>
   );

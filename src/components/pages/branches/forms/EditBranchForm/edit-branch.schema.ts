@@ -28,6 +28,8 @@ export const postalCodeRuleSchema = z.object({
   id: z.string().optional(),
   postalCode: z.string().trim().min(1, validationMessages.required),
   deliveryFee: z.coerce.number().min(0),
+  minOrderAmount: z.coerce.number().min(0),
+  freeDeliveryThreshold: z.coerce.number().min(0),
 });
 
 export const deliveryConfigSchema = z.object({
@@ -40,6 +42,34 @@ export const deliveryConfigSchema = z.object({
   zones: z.array(deliveryZoneSchema),
   zoneBands: z.array(zoneBandSchema),
   postalCodeRules: z.array(postalCodeRuleSchema),
+}).superRefine((deliveryConfig, ctx) => {
+  if (deliveryConfig.mode !== "POSTAL_CODE") return;
+
+  if (!deliveryConfig.postalCodeRules.length) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Please add at least one postal code delivery rule",
+      path: ["postalCodeRules"],
+    });
+    return;
+  }
+
+  const seenPostalCodes = new Set<string>();
+
+  deliveryConfig.postalCodeRules.forEach((rule, index) => {
+    const postalCode = rule.postalCode.trim().toLowerCase();
+
+    if (seenPostalCodes.has(postalCode)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Duplicate postal codes are not allowed",
+        path: ["postalCodeRules", index, "postalCode"],
+      });
+      return;
+    }
+
+    seenPostalCodes.add(postalCode);
+  });
 });
 
 export const editBranchSchema = z.object({

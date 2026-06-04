@@ -78,11 +78,15 @@ export default function ImportModal({
           allowedPaymentMethods: ["COD"] as const,
 
           deliveryConfig: {
+            mode: "RADIUS",
             radiusKm: 5,
             minOrderAmount: 0,
             deliveryFee: 0,
             isFreeDelivery: false,
             freeDeliveryThreshold: 0,
+            zones: [],
+            zoneBands: [],
+            postalCodeRules: [],
           },
 
           automation: {
@@ -95,6 +99,8 @@ export default function ImportModal({
           },
 
           tableReservationsEnabled: false,
+          tableReservationAutoAccept: false,
+          tableCount: 0,
 
           contact: {
             phone: "",

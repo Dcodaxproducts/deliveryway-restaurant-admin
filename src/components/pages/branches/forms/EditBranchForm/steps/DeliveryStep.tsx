@@ -154,6 +154,8 @@ const createDefaultZoneBand = (fromKm = 0, deliveryFee = 0) => ({
 const createDefaultPostalCodeRule = (deliveryFee = 0) => ({
   postalCode: "",
   deliveryFee,
+  minOrderAmount: 0,
+  freeDeliveryThreshold: 0,
 });
 
 const getValidPoint = (point: any) => {
@@ -1705,7 +1707,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                   {postalCodeRules.map((rule: any, index: number) => (
                     <div
                       key={`postal-rule-${index}`}
-                      className="grid grid-cols-1 gap-3 rounded-2xl border border-gray-200 bg-white p-4 lg:grid-cols-[1fr_1fr_auto]"
+                      className="grid grid-cols-1 gap-3 rounded-2xl border border-gray-200 bg-white p-4 lg:grid-cols-4"
                     >
                       <FormInput
                         label={t("postalCode")}
@@ -1722,6 +1724,30 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updatePostalRule(
                             index,
                             "deliveryFee",
+                            val ? Number(val) : 0
+                          )
+                        }
+                      />
+
+                      <FormInput
+                        label={t("minimumOrderAmount")}
+                        value={toInputNumber(rule?.minOrderAmount)}
+                        onChange={(val) =>
+                          updatePostalRule(
+                            index,
+                            "minOrderAmount",
+                            val ? Number(val) : 0
+                          )
+                        }
+                      />
+
+                      <FormInput
+                        label={t("freeDeliveryThreshold")}
+                        value={toInputNumber(rule?.freeDeliveryThreshold)}
+                        onChange={(val) =>
+                          updatePostalRule(
+                            index,
+                            "freeDeliveryThreshold",
                             val ? Number(val) : 0
                           )
                         }

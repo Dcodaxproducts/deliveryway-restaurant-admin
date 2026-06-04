@@ -14,6 +14,7 @@ import { CARD_PANEL_CLASS, FIELD_ERROR_CLASS, MUTED_TEXT_SM_CLASS } from "@/comp
 import { useCreateBranch } from "@/hooks/useBranches";
 import {
   createBranchSchema,
+  type BranchValues,
   type CreateBranchFormValues,
 } from "@/validations/branches";
 import { useTranslations } from "next-intl";
@@ -28,6 +29,36 @@ const INPUT_CLASS =
   "h-[44px] rounded-[10px] px-3 text-sm placeholder:text-gray-400 border-gray-300 focus-visible:ring-1 focus-visible:ring-primary";
 const PRIMARY_INPUT_CLASS = `${INPUT_CLASS} border-primary bg-primary/5`;
 
+const defaultCreateBranchSettings: NonNullable<BranchValues["settings"]> = {
+    deliveryConfig: {
+      mode: "RADIUS",
+      radiusKm: 5,
+      minOrderAmount: 0,
+      deliveryFee: 0,
+      isFreeDelivery: false,
+      freeDeliveryThreshold: 0,
+      zones: [],
+      zoneBands: [],
+      postalCodeRules: [],
+    },
+    allowedOrderTypes: ["DELIVERY"],
+    allowedPaymentMethods: ["COD"],
+    automation: {
+      autoAcceptOrders: false,
+      estimatedPrepTime: 30,
+    },
+    taxation: {
+      taxPercentage: 0,
+    },
+    tableReservationsEnabled: false,
+    tableReservationAutoAccept: false,
+    tableCount: 0,
+    contact: {
+      phone: "",
+      whatsapp: "",
+    },
+};
+
 const defaultValues: CreateBranchFormValues = {
   restaurantId: "",
   name: "",
@@ -39,6 +70,7 @@ const defaultValues: CreateBranchFormValues = {
   lat: "",
   lng: "",
   isMain: false,
+  settings: defaultCreateBranchSettings,
   branchAdmin: {
     email: "",
     password: "",
@@ -47,6 +79,32 @@ const defaultValues: CreateBranchFormValues = {
     phone: "",
   },
 };
+
+const buildCreateBranchSettings = (
+  settings: CreateBranchFormValues["settings"]
+): NonNullable<BranchValues["settings"]> => ({
+  ...defaultCreateBranchSettings,
+  ...(settings ?? {}),
+  deliveryConfig: {
+    ...defaultCreateBranchSettings.deliveryConfig,
+    ...(settings?.deliveryConfig ?? {}),
+  },
+  automation: {
+    ...defaultCreateBranchSettings.automation,
+    ...(settings?.automation ?? {}),
+  },
+  taxation: {
+    ...defaultCreateBranchSettings.taxation,
+    ...(settings?.taxation ?? {}),
+  },
+  contact: {
+    ...defaultCreateBranchSettings.contact,
+    ...(settings?.contact ?? {}),
+  },
+  tableReservationsEnabled: settings?.tableReservationsEnabled ?? false,
+  tableReservationAutoAccept: settings?.tableReservationAutoAccept ?? false,
+  tableCount: settings?.tableCount ?? 0,
+});
 
 type FieldConfig = {
   name: Path<CreateBranchFormValues>;
@@ -149,6 +207,7 @@ export default function CreateBranchModal({
         lat: values.lat ?? "",
         lng: values.lng ?? "",
         isMain: values.isMain,
+        settings: buildCreateBranchSettings(values.settings),
         branchAdmin: {
           email: values.branchAdmin.email ?? "",
           password: values.branchAdmin.password ?? "",
@@ -219,6 +278,76 @@ export default function CreateBranchModal({
                   />
                 )}
               />
+            </div>
+
+            <hr className="border-gray-200 my-2" />
+
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium text-gray-900">
+                {t("tableReservationSettings")}
+              </h4>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="create-branch-table-reservations" className="text-sm">
+                    {t("enableTableReservations")}
+                  </Label>
+                  <p className="text-xs text-gray-500">{t("allowTableReservations")}</p>
+                </div>
+                <Controller
+                  control={control}
+                  name="settings.tableReservationsEnabled"
+                  render={({ field }) => (
+                    <Switch
+                      id="create-branch-table-reservations"
+                      checked={field.value ?? false}
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-primary"
+                    />
+                  )}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="create-branch-auto-accept-reservations" className="text-sm">
+                    {t("autoAcceptReservations")}
+                  </Label>
+                  <p className="text-xs text-gray-500">{t("autoAcceptReservationsHelper")}</p>
+                </div>
+                <Controller
+                  control={control}
+                  name="settings.tableReservationAutoAccept"
+                  render={({ field }) => (
+                    <Switch
+                      id="create-branch-auto-accept-reservations"
+                      checked={field.value ?? false}
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-primary"
+                    />
+                  )}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="create-branch-table-count" className="text-sm">
+                  {t("tableCount")}
+                </Label>
+                <Input
+                  id="create-branch-table-count"
+                  type="number"
+                  min={0}
+                  className={INPUT_CLASS}
+                  aria-invalid={Boolean(errors.settings?.tableCount?.message)}
+                  {...register("settings.tableCount", { valueAsNumber: true })}
+                />
+                <p className="text-xs text-gray-500">{t("tableCountHelper")}</p>
+                {errors.settings?.tableCount?.message ? (
+                  <p className={FIELD_ERROR_CLASS}>
+                    {errors.settings.tableCount.message}
+                  </p>
+                ) : null}
+              </div>
             </div>
 
             <hr className="border-gray-200 my-2" />
