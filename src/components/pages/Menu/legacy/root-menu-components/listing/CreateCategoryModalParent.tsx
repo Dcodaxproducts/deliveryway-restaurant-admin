@@ -345,7 +345,7 @@ const restaurantId = authRestaurantId ?? undefined;
         onOpenChange(value);
       }}
     >
-      <DialogContent className="max-h-[95vh] max-w-[420px] overflow-auto rounded-[20px] bg-[#F5F5F5] p-6">
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-24px)] max-w-[1180px] overflow-auto rounded-[20px] bg-[#F5F5F5] p-4 sm:p-6">
         <DialogHeader className="space-y-1">
           <DialogTitle className="text-2xl font-semibold">
             {isEditMode ? t("updateTitle") : t("createTitle")}
