@@ -5,7 +5,10 @@ import {
   formatDealPrice,
   formatUsageLimit,
   fromDateTimeLocalValue,
+  getDealRequiredQuantityLabel,
+  getDealSelectedCountLabel,
   getDealLifecycleLabel,
+  getDealTypeLabel,
   toDateTimeLocalValue,
 } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
 
@@ -41,6 +44,33 @@ describe("admin deal formatters", () => {
 
   it("formats lifecycle labels", () => {
     expect(getDealLifecycleLabel("NO_SHOW")).toBe("No Show");
+    expect(getDealLifecycleLabel("scheduled")).toBe("Scheduled");
     expect(getDealLifecycleLabel(undefined)).toBe("Unknown");
+  });
+
+  it("formats deal type labels", () => {
+    expect(getDealTypeLabel({ dealSelectionMode: "FIXED_ITEMS" })).toBe("Fixed Items");
+    expect(getDealTypeLabel({ dealSelectionMode: "FLEXIBLE_ITEMS" })).toBe("Flexible Any-N Items");
+    expect(
+      getDealTypeLabel({
+        dealSelectionMode: "FLEXIBLE_ITEMS",
+        scopeCategoryIds: ["category-1"],
+      })
+    ).toBe("Flexible Any-N Categories");
+  });
+
+  it("formats selected count labels", () => {
+    expect(getDealSelectedCountLabel({ scopeMenuItemIds: ["item-1", "item-2"] })).toBe("2 items");
+    expect(getDealSelectedCountLabel({ scopeCategoryIds: ["category-1"] })).toBe("1 category");
+  });
+
+  it("formats required quantity labels", () => {
+    expect(
+      getDealRequiredQuantityLabel({
+        dealSelectionMode: "FLEXIBLE_ITEMS",
+        dealRequiredQuantity: 2,
+      })
+    ).toBe("2");
+    expect(getDealRequiredQuantityLabel({ dealSelectionMode: "FIXED_ITEMS" })).toBe("—");
   });
 });

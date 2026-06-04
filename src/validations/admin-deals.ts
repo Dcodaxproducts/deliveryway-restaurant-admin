@@ -17,43 +17,39 @@ const optionalText = z
   .optional()
   .transform((value) => (value ? value : undefined));
 
-const optionalNumber = z.preprocess(
+const requiredQuantitySchema = z.preprocess(
   (value) => {
-    if (value === "" || value === null || value === undefined) return undefined;
+    if (value === "" || value === null || value === undefined) return null;
     return Number(value);
   },
-  z.number().min(0).optional()
+  z.number().int().min(1).nullable().optional()
 );
 
-const optionalInteger = z.preprocess(
-  (value) => {
-    if (value === "" || value === null || value === undefined) return undefined;
-    return Number(value);
-  },
-  z.number().int().min(1).optional()
-);
+const optionalImageUrlSchema = thumbnailUrlSchema.optional().default("");
+
+const getTrimmedUrl = (value: string | null | undefined) => {
+  return getOptionalThumbnailUrl(value);
+};
 
 export const adminDealFormSchema = z
   .object({
-    code: optionalText,
     title: z.string().trim().min(1, "Title is required."),
     description: optionalText,
-    thumbnailUrl: thumbnailUrlSchema.optional().default(""),
     restaurantId: optionalText,
     branchId: optionalText,
+    thumbnailUrl: optionalImageUrlSchema,
+    imageUrl: optionalImageUrlSchema,
     discountValue: z.preprocess(
       (value) => Number(value),
       z.number().positive("Fixed Deal Price must be greater than 0.")
     ),
-    maxDiscountAmount: optionalNumber.nullable(),
-    minOrderAmount: optionalNumber.nullable(),
-    maxUses: optionalInteger.nullable(),
-    maxUsesPerCustomer: optionalInteger.nullable(),
     startsAt: z.string().trim().min(1, "Starts At is required."),
     expiresAt: z.string().trim().min(1, "Expires At is required."),
-    scopeMenuItemIds: z
-      .array(z.string())
-      .min(2, "Select at least 2 menu items for a deal."),
+    dealSelectionMode: z.enum(["FIXED_ITEMS", "FLEXIBLE_ITEMS"]),
+    dealSourceType: z.enum(["ITEMS", "CATEGORIES"]),
+    dealRequiredQuantity: requiredQuantitySchema,
+    scopeMenuItemIds: z.array(z.string()).default([]),
+    scopeCategoryIds: z.array(z.string()).default([]),
     isActive: z.boolean().default(true),
   })
   .superRefine((values, context) => {
@@ -71,56 +67,136 @@ export const adminDealFormSchema = z
         message: "Expires At must be after Starts At.",
       });
     }
+
+    if (values.dealSelectionMode === "FIXED_ITEMS") {
+      if (values.dealSourceType !== "ITEMS") {
+        context.addIssue({
+          code: "custom",
+          path: ["dealSourceType"],
+          message: "Fixed item deals must use selected menu items.",
+        });
+      }
+
+      if (values.scopeMenuItemIds.length < 2) {
+        context.addIssue({
+          code: "custom",
+          path: ["scopeMenuItemIds"],
+          message: "Select at least 2 menu items for a fixed item deal.",
+        });
+      }
+
+      if (values.scopeCategoryIds.length > 0) {
+        context.addIssue({
+          code: "custom",
+          path: ["scopeCategoryIds"],
+          message: "Categories are only available for flexible deals.",
+        });
+      }
+
+      return;
+    }
+
+    if (!values.dealRequiredQuantity) {
+      context.addIssue({
+        code: "custom",
+        path: ["dealRequiredQuantity"],
+        message: "Required quantity is required for flexible deals.",
+      });
+    }
+
+    if (values.dealSourceType === "ITEMS") {
+      if (
+        values.dealRequiredQuantity &&
+        values.scopeMenuItemIds.length < values.dealRequiredQuantity
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["scopeMenuItemIds"],
+          message: "Selected menu items must be at least the required quantity.",
+        });
+      }
+
+      if (values.scopeCategoryIds.length > 0) {
+        context.addIssue({
+          code: "custom",
+          path: ["scopeCategoryIds"],
+          message: "Category scope must be empty for item-based deals.",
+        });
+      }
+
+      return;
+    }
+
+    if (values.scopeCategoryIds.length < 1) {
+      context.addIssue({
+        code: "custom",
+        path: ["scopeCategoryIds"],
+        message: "Select at least 1 category for a flexible category deal.",
+      });
+    }
+
+    if (values.scopeMenuItemIds.length > 0) {
+      context.addIssue({
+        code: "custom",
+        path: ["scopeMenuItemIds"],
+        message: "Menu item scope must be empty for category-based deals.",
+      });
+    }
   });
 
-type BaseAdminDealPayload = Omit<AdminDealCreatePayload, "autoApply">;
-
-const addOptionalNumber = (
-  payload: BaseAdminDealPayload,
-  key:
-    | "maxDiscountAmount"
-    | "minOrderAmount"
-    | "maxUses"
-    | "maxUsesPerCustomer",
-  value: number | null | undefined
-) => {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    payload[key] = value;
-  }
-};
-
-const buildBasePayload = (values: AdminDealFormValues) => {
-  const payload: BaseAdminDealPayload = {
+const buildBasePayload = (values: AdminDealFormValues): AdminDealCreatePayload => {
+  const payload: AdminDealCreatePayload = {
     title: values.title.trim(),
     discountValue: values.discountValue,
     startsAt: fromDateTimeLocalValue(values.startsAt),
     expiresAt: fromDateTimeLocalValue(values.expiresAt),
-    scopeMenuItemIds: values.scopeMenuItemIds,
+    dealSelectionMode: values.dealSelectionMode,
     isActive: values.isActive,
   };
 
-  if (values.code?.trim()) payload.code = values.code.trim();
   if (values.description?.trim()) payload.description = values.description.trim();
-  const thumbnailUrl = getOptionalThumbnailUrl(values.thumbnailUrl);
-  if (thumbnailUrl) payload.thumbnailUrl = thumbnailUrl;
   if (values.restaurantId?.trim()) payload.restaurantId = values.restaurantId.trim();
   if (values.branchId?.trim()) payload.branchId = values.branchId.trim();
 
-  addOptionalNumber(payload, "maxDiscountAmount", values.maxDiscountAmount);
-  addOptionalNumber(payload, "minOrderAmount", values.minOrderAmount);
-  addOptionalNumber(payload, "maxUses", values.maxUses);
-  addOptionalNumber(payload, "maxUsesPerCustomer", values.maxUsesPerCustomer);
+  const thumbnailUrl = getTrimmedUrl(values.thumbnailUrl);
+  if (thumbnailUrl) payload.thumbnailUrl = thumbnailUrl;
+
+  const imageUrl = getTrimmedUrl(values.imageUrl);
+  if (imageUrl) payload.imageUrl = imageUrl;
+
+  if (values.dealSelectionMode === "FIXED_ITEMS") {
+    payload.scopeMenuItemIds = values.scopeMenuItemIds;
+    return payload;
+  }
+
+  if (typeof values.dealRequiredQuantity === "number") {
+    payload.dealRequiredQuantity = values.dealRequiredQuantity;
+  }
+
+  if (values.dealSourceType === "CATEGORIES") {
+    payload.scopeCategoryIds = values.scopeCategoryIds;
+    return payload;
+  }
+
+  payload.scopeMenuItemIds = values.scopeMenuItemIds;
 
   return payload;
 };
 
 export const buildAdminDealCreatePayload = (
   values: AdminDealFormValues
-): AdminDealCreatePayload => ({
-  ...buildBasePayload(values),
-  autoApply: true,
-});
+): AdminDealCreatePayload => buildBasePayload(values);
 
 export const buildAdminDealUpdatePayload = (
   values: AdminDealFormValues
-): AdminDealUpdatePayload => buildBasePayload(values);
+): AdminDealUpdatePayload => {
+  const payload: AdminDealUpdatePayload = buildBasePayload(values);
+
+  if (values.dealSelectionMode === "FIXED_ITEMS" || values.dealSourceType === "ITEMS") {
+    payload.scopeCategoryIds = [];
+  } else {
+    payload.scopeMenuItemIds = [];
+  }
+
+  return payload;
+};

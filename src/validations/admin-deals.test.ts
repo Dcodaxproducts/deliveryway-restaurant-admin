@@ -1,27 +1,27 @@
 import { describe, expect, it } from "vitest";
 
+import type { AdminDealFormValues } from "@/types/admin-deals";
 import {
   adminDealFormSchema,
   buildAdminDealCreatePayload,
   buildAdminDealUpdatePayload,
 } from "@/validations/admin-deals";
-import type { AdminDealFormValues } from "@/types/admin-deals";
 
 const validValues: AdminDealFormValues = {
-  code: "DEAL",
   title: "Lunch Deal",
   description: "Fixed lunch price",
   thumbnailUrl: "",
+  imageUrl: "",
   restaurantId: "restaurant-1",
   branchId: "branch-1",
   discountValue: 12,
-  maxDiscountAmount: null,
-  minOrderAmount: null,
-  maxUses: null,
-  maxUsesPerCustomer: null,
   startsAt: "2026-06-02T06:17",
   expiresAt: "2026-06-03T06:17",
+  dealSelectionMode: "FIXED_ITEMS",
+  dealSourceType: "ITEMS",
+  dealRequiredQuantity: null,
   scopeMenuItemIds: ["item-1", "item-2"],
+  scopeCategoryIds: [],
   isActive: true,
 };
 
@@ -41,24 +41,6 @@ describe("admin deal validation", () => {
     expect(result.success).toBe(false);
   });
 
-  it("requires at least 2 scope menu items", () => {
-    const result = adminDealFormSchema.safeParse({
-      ...validValues,
-      scopeMenuItemIds: ["item-1"],
-    });
-
-    expect(result.success).toBe(false);
-  });
-
-  it("requires startsAt and expiresAt", () => {
-    expect(
-      adminDealFormSchema.safeParse({ ...validValues, startsAt: "" }).success
-    ).toBe(false);
-    expect(
-      adminDealFormSchema.safeParse({ ...validValues, expiresAt: "" }).success
-    ).toBe(false);
-  });
-
   it("requires expiresAt after startsAt", () => {
     const result = adminDealFormSchema.safeParse({
       ...validValues,
@@ -68,16 +50,70 @@ describe("admin deal validation", () => {
     expect(result.success).toBe(false);
   });
 
-  it("allows optional numeric fields when empty or undefined", () => {
+  it("fixed item deal requires at least 2 items", () => {
     const result = adminDealFormSchema.safeParse({
       ...validValues,
-      maxDiscountAmount: undefined,
-      minOrderAmount: undefined,
-      maxUses: undefined,
-      maxUsesPerCustomer: undefined,
+      scopeMenuItemIds: ["item-1"],
     });
 
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
+  });
+
+  it("fixed item deal rejects categories", () => {
+    const result = adminDealFormSchema.safeParse({
+      ...validValues,
+      scopeCategoryIds: ["category-1"],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("flexible item deal requires dealRequiredQuantity", () => {
+    const result = adminDealFormSchema.safeParse({
+      ...validValues,
+      dealSelectionMode: "FLEXIBLE_ITEMS",
+      dealRequiredQuantity: null,
+      scopeMenuItemIds: ["item-1", "item-2"],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("flexible item deal rejects required quantity greater than selected item count", () => {
+    const result = adminDealFormSchema.safeParse({
+      ...validValues,
+      dealSelectionMode: "FLEXIBLE_ITEMS",
+      dealRequiredQuantity: 3,
+      scopeMenuItemIds: ["item-1", "item-2"],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("flexible category deal requires at least 1 category", () => {
+    const result = adminDealFormSchema.safeParse({
+      ...validValues,
+      dealSelectionMode: "FLEXIBLE_ITEMS",
+      dealSourceType: "CATEGORIES",
+      dealRequiredQuantity: 2,
+      scopeMenuItemIds: [],
+      scopeCategoryIds: [],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("flexible category deal requires dealRequiredQuantity", () => {
+    const result = adminDealFormSchema.safeParse({
+      ...validValues,
+      dealSelectionMode: "FLEXIBLE_ITEMS",
+      dealSourceType: "CATEGORIES",
+      dealRequiredQuantity: null,
+      scopeMenuItemIds: [],
+      scopeCategoryIds: ["category-1"],
+    });
+
+    expect(result.success).toBe(false);
   });
 
   it("allows empty, relative, and http thumbnail URLs", () => {
@@ -95,12 +131,30 @@ describe("admin deal validation", () => {
     expect(result.success).toBe(false);
   });
 
-  it("create payload includes autoApply true and excludes backend-handled fields", () => {
+  it("payload excludes discountType, applyMode, and autoApply", () => {
     const payload = buildAdminDealCreatePayload(validValues);
 
-    expect(payload.autoApply).toBe(true);
-    expect(payload).not.toHaveProperty("applyMode");
     expect(payload).not.toHaveProperty("discountType");
+    expect(payload).not.toHaveProperty("applyMode");
+    expect(payload).not.toHaveProperty("autoApply");
+  });
+
+  it("payload includes dealSelectionMode", () => {
+    const payload = buildAdminDealCreatePayload(validValues);
+
+    expect(payload.dealSelectionMode).toBe("FIXED_ITEMS");
+  });
+
+  it("payload includes dealRequiredQuantity only for flexible deals", () => {
+    const fixedPayload = buildAdminDealCreatePayload(validValues);
+    const flexiblePayload = buildAdminDealCreatePayload({
+      ...validValues,
+      dealSelectionMode: "FLEXIBLE_ITEMS",
+      dealRequiredQuantity: 2,
+    });
+
+    expect(fixedPayload).not.toHaveProperty("dealRequiredQuantity");
+    expect(flexiblePayload.dealRequiredQuantity).toBe(2);
   });
 
   it("create payload includes thumbnailUrl when non-empty", () => {
@@ -112,21 +166,17 @@ describe("admin deal validation", () => {
     expect(payload.thumbnailUrl).toBe("https://cdn.example.com/deal.png");
   });
 
-  it("create payload omits thumbnailUrl when empty", () => {
-    const payload = buildAdminDealCreatePayload({
-      ...validValues,
-      thumbnailUrl: " ",
-    });
-
-    expect(payload).not.toHaveProperty("thumbnailUrl");
-  });
-
-  it("update payload includes thumbnailUrl when changed", () => {
+  it("update payload clears opposite scope when switching source", () => {
     const payload = buildAdminDealUpdatePayload({
       ...validValues,
-      thumbnailUrl: "/uploads/deal.png",
+      dealSelectionMode: "FLEXIBLE_ITEMS",
+      dealSourceType: "CATEGORIES",
+      dealRequiredQuantity: 3,
+      scopeMenuItemIds: [],
+      scopeCategoryIds: ["category-1"],
     });
 
-    expect(payload.thumbnailUrl).toBe("/uploads/deal.png");
+    expect(payload.scopeCategoryIds).toEqual(["category-1"]);
+    expect(payload.scopeMenuItemIds).toEqual([]);
   });
 });

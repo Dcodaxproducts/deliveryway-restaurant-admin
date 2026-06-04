@@ -5,17 +5,19 @@ type AdminDealLifecycleBadgeProps = {
 };
 
 const getLifecycleClassName = (lifecycle?: string) => {
-  switch (lifecycle) {
+  switch (lifecycle?.toLowerCase()) {
     case "ACTIVE":
+    case "active":
       return "bg-green-50 text-green-700";
-    case "UPCOMING":
+    case "upcoming":
+    case "scheduled":
       return "bg-blue-50 text-blue-700";
-    case "EXPIRED":
-    case "ENDED":
+    case "expired":
+    case "ended":
       return "bg-gray-100 text-gray-600";
-    case "DELETED":
+    case "deleted":
       return "bg-red-50 text-red-700";
-    case "INACTIVE":
+    case "inactive":
       return "bg-yellow-50 text-yellow-700";
     default:
       return "bg-gray-100 text-gray-600";
@@ -24,6 +26,7 @@ const getLifecycleClassName = (lifecycle?: string) => {
 
 type LifecycleMessageKey =
   | "active"
+  | "scheduled"
   | "upcoming"
   | "expired"
   | "ended"
@@ -35,18 +38,20 @@ const getLocalizedLifecycleLabel = (
   lifecycle: string | undefined,
   t: (key: LifecycleMessageKey) => string
 ) => {
-  switch (lifecycle) {
-    case "ACTIVE":
+  switch (lifecycle?.toLowerCase()) {
+    case "active":
       return t("active");
-    case "UPCOMING":
+    case "upcoming":
       return t("upcoming");
-    case "EXPIRED":
+    case "scheduled":
+      return t("scheduled");
+    case "expired":
       return t("expired");
-    case "ENDED":
+    case "ended":
       return t("ended");
-    case "DELETED":
+    case "deleted":
       return t("deleted");
-    case "INACTIVE":
+    case "inactive":
       return t("inactive");
     default:
       return t("unknown");

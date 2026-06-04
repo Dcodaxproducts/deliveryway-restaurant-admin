@@ -25,7 +25,17 @@ type AdminDealScopeParams = {
 
 export const adminDealsQueryKeys = {
   all: ["admin-deals"] as const,
-  list: (params?: AdminDealsListParams) => ["admin-deals", "list", params] as const,
+  list: (params?: AdminDealsListParams) =>
+    [
+      "admin-deals",
+      "list",
+      params?.restaurantId ?? "",
+      params?.branchId ?? "",
+      params?.page ?? 1,
+      params?.limit ?? 20,
+      params?.search ?? "",
+      params?.lifecycle ?? "",
+    ] as const,
   detail: (id: string | null, params?: AdminDealScopeParams) =>
     ["admin-deals", "detail", id, params] as const,
   stats: (id: string | null, params?: AdminDealScopeParams) =>

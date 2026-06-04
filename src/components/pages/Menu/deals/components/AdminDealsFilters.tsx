@@ -4,19 +4,12 @@ import { Filter, Loader2, RefreshCcw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import type { AdminDealSortOrder } from "@/types/admin-deals";
 import { useTranslations } from "next-intl";
 
 export type AdminDealsFilterState = {
   search: string;
   lifecycle: string;
-  kind: string;
-  discountType: string;
   branchId: string;
-  includeInactive: boolean;
-  withDeleted: boolean;
-  sortBy: string;
-  sortOrder: AdminDealSortOrder;
 };
 
 export type AdminDealBranchOption = {
@@ -29,7 +22,6 @@ type AdminDealsFiltersProps = {
   branchOptions: AdminDealBranchOption[];
   isBranchAdmin: boolean;
   branchName?: string;
-  canViewDeleted: boolean;
   visibleCount: number;
   totalCount: number;
   isFetching: boolean;
@@ -41,7 +33,6 @@ export default function AdminDealsFilters({
   branchOptions,
   isBranchAdmin,
   branchName,
-  canViewDeleted,
   visibleCount,
   totalCount,
   isFetching,
@@ -52,44 +43,17 @@ export default function AdminDealsFilters({
   const [searchValue, setSearchValue] = useState(filters.search);
   const lifecycleOptions = [
     { label: t("allLifecycles"), value: "ALL" },
-    { label: t("lifecycle.upcoming"), value: "UPCOMING" },
-    { label: t("lifecycle.active"), value: "ACTIVE" },
-    { label: t("lifecycle.expired"), value: "EXPIRED" },
-    { label: t("lifecycle.ended"), value: "ENDED" },
-    { label: t("lifecycle.inactive"), value: "INACTIVE" },
-    { label: t("lifecycle.deleted"), value: "DELETED" },
-  ];
-  const kindOptions = [
-    { label: t("allKinds"), value: "ALL" },
-    { label: t("fixedPrice"), value: "FIXED_PRICE" },
-    { label: t("itemDeal"), value: "ITEM_DEAL" },
-    { label: t("bundle"), value: "BUNDLE" },
-  ];
-  const discountTypeOptions = [
-    { label: t("allDiscounts"), value: "ALL" },
-    { label: t("fixedPrice"), value: "FIXED_PRICE" },
-    { label: t("percentage"), value: "PERCENTAGE" },
-    { label: t("flat"), value: "FLAT" },
-  ];
-  const sortByOptions = [
-    { label: commonT("createdAt"), value: "createdAt" },
-    { label: t("startsAt"), value: "startsAt" },
-    { label: t("expiresAt"), value: "expiresAt" },
-    { label: t("dealTitle"), value: "title" },
-    { label: t("fixedPrice"), value: "discountValue" },
+    { label: t("lifecycle.active"), value: "active" },
+    { label: t("lifecycle.scheduled"), value: "scheduled" },
+    { label: t("lifecycle.expired"), value: "expired" },
+    { label: t("lifecycle.inactive"), value: "inactive" },
   ];
 
   const hasActiveFilters = Boolean(
     searchValue.trim() ||
       filters.search ||
       filters.lifecycle !== "ALL" ||
-      filters.kind !== "ALL" ||
-      filters.discountType !== "ALL" ||
-      filters.branchId ||
-      filters.includeInactive ||
-      filters.withDeleted ||
-      filters.sortBy !== "createdAt" ||
-      filters.sortOrder !== "DESC"
+      filters.branchId
   );
 
   useEffect(() => {
@@ -109,13 +73,7 @@ export default function AdminDealsFilters({
     onFiltersChange({
       search: "",
       lifecycle: "ALL",
-      kind: "ALL",
-      discountType: "ALL",
       branchId: "",
-      includeInactive: false,
-      withDeleted: false,
-      sortBy: "createdAt",
-      sortOrder: "DESC",
     });
   };
 
@@ -179,22 +137,6 @@ export default function AdminDealsFilters({
           className="xl:col-span-2"
         />
 
-        <FilterSelect
-          label={t("kind")}
-          value={filters.kind}
-          options={kindOptions}
-          onChange={(kind) => onFiltersChange({ kind })}
-          className="xl:col-span-2"
-        />
-
-        <FilterSelect
-          label={t("discount")}
-          value={filters.discountType}
-          options={discountTypeOptions}
-          onChange={(discountType) => onFiltersChange({ discountType })}
-          className="xl:col-span-2"
-        />
-
         <div className="min-w-0 xl:col-span-2">
           <label className="mb-1.5 block text-xs font-medium text-gray-600">
             {commonT("branch")}
@@ -234,53 +176,6 @@ export default function AdminDealsFilters({
         >
           {commonT("search")}
         </Button>
-
-        <FilterSelect
-          label={commonT("sortBy")}
-          value={filters.sortBy}
-          options={sortByOptions}
-          onChange={(sortBy) => onFiltersChange({ sortBy })}
-          className="xl:col-span-3"
-        />
-
-        <FilterSelect
-          label={commonT("order")}
-          value={filters.sortOrder}
-          options={[
-            { label: "DESC", value: "DESC" },
-            { label: "ASC", value: "ASC" },
-          ]}
-          onChange={(sortOrder) =>
-            onFiltersChange({ sortOrder: sortOrder === "ASC" ? "ASC" : "DESC" })
-          }
-          className="xl:col-span-2"
-        />
-
-        <label className="flex h-[44px] items-center gap-2 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-3 text-sm text-gray-700 xl:col-span-2">
-          <input
-            type="checkbox"
-            checked={filters.includeInactive}
-            onChange={(event) =>
-              onFiltersChange({ includeInactive: event.target.checked })
-            }
-            className="accent-[var(--primary)]"
-          />
-          {t("includeInactive")}
-        </label>
-
-        {canViewDeleted ? (
-          <label className="flex h-[44px] items-center gap-2 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-3 text-sm text-gray-700 xl:col-span-2">
-            <input
-              type="checkbox"
-              checked={filters.withDeleted}
-              onChange={(event) =>
-                onFiltersChange({ withDeleted: event.target.checked })
-              }
-              className="accent-[var(--primary)]"
-            />
-            {t("withDeleted")}
-          </label>
-        ) : null}
 
         <Button
           type="button"

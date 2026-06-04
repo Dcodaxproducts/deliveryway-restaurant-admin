@@ -11,7 +11,9 @@ import {
   formatDealDate,
   formatDealPrice,
   formatShortDealId,
-  formatUsageLimit,
+  getDealRequiredQuantityLabel,
+  getDealSelectedCountLabel,
+  getDealTypeLabel,
 } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
 import { Button } from "@/components/ui/button";
 import type { AdminDeal } from "@/types/admin-deals";
@@ -35,7 +37,6 @@ export default function AdminDealsTable({
   const router = useRouter();
   const t = useTranslations("deals");
   const commonT = useTranslations("common");
-  const unlimitedLabel = t("unlimited");
 
   if (loading) {
     return (
@@ -61,11 +62,12 @@ export default function AdminDealsTable({
         <table className="w-full table-fixed text-left">
           <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
             <tr>
-              <th className="w-[25%] px-4 py-3 font-semibold">{t("deal")}</th>
-              <th className="w-[12%] px-4 py-3 font-semibold">{t("fixedPrice")}</th>
-              <th className="w-[10%] px-4 py-3 font-semibold">{t("items")}</th>
+              <th className="w-[22%] px-4 py-3 font-semibold">{t("deal")}</th>
+              <th className="w-[14%] px-4 py-3 font-semibold">{t("dealType")}</th>
+              <th className="w-[11%] px-4 py-3 font-semibold">{t("fixedPrice")}</th>
+              <th className="w-[12%] px-4 py-3 font-semibold">{t("scope")}</th>
               <th className="w-[18%] px-4 py-3 font-semibold">{t("schedule")}</th>
-              <th className="w-[13%] px-4 py-3 font-semibold">{t("usage")}</th>
+              <th className="w-[10%] px-4 py-3 font-semibold">{t("requiredQty")}</th>
               <th className="w-[12%] px-4 py-3 font-semibold">{commonT("status")}</th>
               <th className="w-[10%] px-4 py-3 text-right font-semibold">
                 {commonT("actions")}
@@ -77,9 +79,9 @@ export default function AdminDealsTable({
               <tr key={deal.id} className="hover:bg-gray-50/70">
                 <td className="px-4 py-4 align-top">
                   <div className="flex min-w-0 items-start gap-3">
-                    {deal.thumbnailUrl ? (
+                    {deal.thumbnailUrl || deal.imageUrl ? (
                       <Image
-                        src={deal.thumbnailUrl}
+                        src={deal.thumbnailUrl || deal.imageUrl || ""}
                         alt={`${deal.title} thumbnail`}
                         width={40}
                         height={40}
@@ -104,21 +106,21 @@ export default function AdminDealsTable({
                     </div>
                   </div>
                 </td>
+                <td className="px-4 py-4 align-top text-sm text-gray-700">
+                  {getDealTypeLabel(deal)}
+                </td>
                 <td className="px-4 py-4 align-top text-sm font-semibold text-gray-900">
                   {formatDealPrice(deal.discountValue)}
                 </td>
                 <td className="px-4 py-4 align-top text-sm text-gray-700">
-                  {deal.scopeMenuItemIds.length.toLocaleString()}
+                  {getDealSelectedCountLabel(deal)}
                 </td>
                 <td className="px-4 py-4 align-top text-xs text-gray-600">
                   <div>{formatDealDate(deal.startsAt)}</div>
                   <div className="mt-1 text-gray-400">{formatDealDate(deal.expiresAt)}</div>
                 </td>
                 <td className="px-4 py-4 align-top text-xs text-gray-600">
-                  <div>{t("uses")}: {formatUsageLimit(deal.maxUses, unlimitedLabel)}</div>
-                  <div className="mt-1 text-gray-400">
-                    {t("customer")}: {formatUsageLimit(deal.maxUsesPerCustomer, unlimitedLabel)}
-                  </div>
+                  {getDealRequiredQuantityLabel(deal)}
                 </td>
                 <td className="px-4 py-4 align-top">
                   <div className="flex flex-col items-start gap-2">
@@ -156,9 +158,9 @@ export default function AdminDealsTable({
           <div key={deal.id} className="space-y-4 p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-start gap-3">
-                {deal.thumbnailUrl ? (
+                {deal.thumbnailUrl || deal.imageUrl ? (
                   <Image
-                    src={deal.thumbnailUrl}
+                    src={deal.thumbnailUrl || deal.imageUrl || ""}
                     alt={`${deal.title} thumbnail`}
                     width={40}
                     height={40}
@@ -185,11 +187,12 @@ export default function AdminDealsTable({
               {deal.description || t("noDescription")}
             </p>
             <div className="grid grid-cols-2 gap-3 text-xs text-gray-600">
+              <Info label={t("dealType")} value={getDealTypeLabel(deal)} />
               <Info label={t("fixedPrice")} value={formatDealPrice(deal.discountValue)} />
-              <Info label={t("items")} value={deal.scopeMenuItemIds.length.toLocaleString()} />
+              <Info label={t("scope")} value={getDealSelectedCountLabel(deal)} />
+              <Info label={t("requiredQty")} value={getDealRequiredQuantityLabel(deal)} />
               <Info label={t("starts")} value={formatDealDate(deal.startsAt)} />
               <Info label={t("expires")} value={formatDealDate(deal.expiresAt)} />
-              <Info label={t("maxUses")} value={formatUsageLimit(deal.maxUses, unlimitedLabel)} />
               <Info label={commonT("branch")} value={deal.branchId ? formatShortDealId(deal.branchId) : commonT("allBranches")} />
             </div>
             <div className="flex items-center justify-between gap-3">

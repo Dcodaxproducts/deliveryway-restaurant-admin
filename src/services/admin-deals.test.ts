@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { httpClient } from "@/lib/axios";
 import {
   ADMIN_DEALS_ENDPOINT,
   createAdminDeal,
@@ -9,7 +10,6 @@ import {
   getAdminDealStats,
   updateAdminDeal,
 } from "@/services/admin-deals";
-import { httpClient } from "@/lib/axios";
 import type { AdminDealCreatePayload } from "@/types/admin-deals";
 
 vi.mock("@/lib/axios", () => ({
@@ -26,13 +26,13 @@ const mockedPost = vi.mocked(httpClient.post);
 const mockedPatch = vi.mocked(httpClient.patch);
 const mockedDelete = vi.mocked(httpClient.delete);
 
-const dealPayload: AdminDealCreatePayload = {
+const fixedDealPayload: AdminDealCreatePayload = {
   title: "Lunch Deal",
   discountValue: 12,
   startsAt: "2026-06-02T06:17:00.000Z",
   expiresAt: "2026-06-03T06:17:00.000Z",
+  dealSelectionMode: "FIXED_ITEMS",
   scopeMenuItemIds: ["item-1", "item-2"],
-  autoApply: true,
   isActive: true,
 };
 
@@ -41,9 +41,11 @@ const dealResponse = {
     id: "deal-1",
     title: "Lunch Deal",
     thumbnailUrl: "https://cdn.example.com/deal.png",
+    imageUrl: "https://cdn.example.com/deal-full.png",
     discountValue: 12,
     startsAt: "2026-06-02T06:17:00.000Z",
     expiresAt: "2026-06-03T06:17:00.000Z",
+    dealSelectionMode: "FIXED_ITEMS",
     scopeMenuItemIds: ["item-1", "item-2"],
     isActive: true,
   },
@@ -57,44 +59,30 @@ describe("admin deals service", () => {
     mockedDelete.mockReset();
   });
 
-  it("list calls /admin/deals without duplicating /api/v1", async () => {
+  it("list sends lifecycle/search/page/limit without duplicating /api/v1", async () => {
     mockedGet.mockResolvedValue({ data: [], meta: { page: 1, limit: 20 } });
 
-    await getAdminDeals({ page: 1, limit: 20 });
-
-    expect(mockedGet).toHaveBeenCalledWith(ADMIN_DEALS_ENDPOINT, {
-      params: { page: 1, limit: 20 },
-    });
-    expect(ADMIN_DEALS_ENDPOINT).toBe("/admin/deals");
-    expect(ADMIN_DEALS_ENDPOINT).not.toContain("/api/v1");
-  });
-
-  it("list passes filters and removes empty params", async () => {
-    mockedGet.mockResolvedValue({ data: [], meta: { page: 2, limit: 10 } });
-
     await getAdminDeals({
-      page: 2,
-      limit: 10,
-      search: "",
-      lifecycle: "",
+      page: 1,
+      limit: 20,
+      search: "pizza",
+      lifecycle: "active",
       restaurantId: "restaurant-1",
       branchId: "branch-1",
-      includeInactive: true,
-      sortBy: "createdAt",
-      sortOrder: "DESC",
     });
 
     expect(mockedGet).toHaveBeenCalledWith(ADMIN_DEALS_ENDPOINT, {
       params: {
-        page: 2,
-        limit: 10,
+        page: 1,
+        limit: 20,
+        search: "pizza",
+        lifecycle: "active",
         restaurantId: "restaurant-1",
         branchId: "branch-1",
-        includeInactive: true,
-        sortBy: "createdAt",
-        sortOrder: "DESC",
       },
     });
+    expect(ADMIN_DEALS_ENDPOINT).toBe("/admin/deals");
+    expect(ADMIN_DEALS_ENDPOINT).not.toContain("/api/v1");
   });
 
   it("normalizes safe default meta when meta is missing", async () => {
@@ -113,39 +101,62 @@ describe("admin deals service", () => {
     });
   });
 
-  it("create calls POST /admin/deals and does not send applyMode or discountType", async () => {
+  it("create sends /admin/deals fixed item payload", async () => {
     mockedPost.mockResolvedValue(dealResponse);
 
-    await createAdminDeal(dealPayload);
+    await createAdminDeal(fixedDealPayload);
 
-    expect(mockedPost).toHaveBeenCalledWith(ADMIN_DEALS_ENDPOINT, dealPayload);
+    expect(mockedPost).toHaveBeenCalledWith(ADMIN_DEALS_ENDPOINT, fixedDealPayload);
     expect(mockedPost.mock.calls[0]?.[1]).not.toHaveProperty("applyMode");
     expect(mockedPost.mock.calls[0]?.[1]).not.toHaveProperty("discountType");
+    expect(mockedPost.mock.calls[0]?.[1]).not.toHaveProperty("autoApply");
   });
 
-  it("normalizes deal thumbnailUrl from detail responses", async () => {
-    mockedGet.mockResolvedValue(dealResponse);
+  it("create sends flexible item payload", async () => {
+    mockedPost.mockResolvedValue(dealResponse);
+    const payload: AdminDealCreatePayload = {
+      ...fixedDealPayload,
+      dealSelectionMode: "FLEXIBLE_ITEMS",
+      dealRequiredQuantity: 2,
+      scopeMenuItemIds: ["item-1", "item-2", "item-3"],
+    };
 
-    const result = await getAdminDeal("deal-1");
+    await createAdminDeal(payload);
 
-    expect(result.thumbnailUrl).toBe("https://cdn.example.com/deal.png");
+    expect(mockedPost).toHaveBeenCalledWith(ADMIN_DEALS_ENDPOINT, payload);
   });
 
-  it("normalizes edit detail fields from scoped menu item response data", async () => {
+  it("create sends flexible category payload", async () => {
+    mockedPost.mockResolvedValue(dealResponse);
+    const payload: AdminDealCreatePayload = {
+      title: "Any 3 Pizza Deal",
+      discountValue: 1499,
+      startsAt: "2026-06-02T06:17:00.000Z",
+      expiresAt: "2026-06-03T06:17:00.000Z",
+      dealSelectionMode: "FLEXIBLE_ITEMS",
+      dealRequiredQuantity: 3,
+      scopeCategoryIds: ["category-1"],
+      isActive: true,
+    };
+
+    await createAdminDeal(payload);
+
+    expect(mockedPost).toHaveBeenCalledWith(ADMIN_DEALS_ENDPOINT, payload);
+  });
+
+  it("normalizes deal detail fields", async () => {
     mockedGet.mockResolvedValue({
       success: true,
       data: [
         {
           id: "deal-1",
-          code: "PIZZA100",
           title: "Pizza Combo Deal",
-          description: "shorter desc",
           discountValue: 100,
-          minOrderAmount: 100,
-          maxUses: 100,
-          maxUsesPerCustomer: 2,
           startsAt: "2026-06-02T09:05:00.000Z",
           expiresAt: "2026-06-13T09:05:00.000Z",
+          dealSelectionMode: "FLEXIBLE_ITEMS",
+          dealRequiredQuantity: 2,
+          imageUrl: "https://cdn.example.com/deal.png",
           isActive: true,
           restaurant: {
             id: "restaurant-1",
@@ -155,13 +166,9 @@ describe("admin deals service", () => {
             id: "branch-1",
             name: "Main Branch",
           },
-          scopeMenuItems: [
+          scopeCategories: [
             {
-              id: "item-1",
-              name: "1. Basic Pizza Copy",
-            },
-            {
-              id: "item-2",
+              id: "category-1",
               name: "Pizza",
             },
           ],
@@ -171,10 +178,12 @@ describe("admin deals service", () => {
 
     const result = await getAdminDeal("deal-1");
 
-    expect(result.code).toBe("PIZZA100");
     expect(result.restaurantId).toBe("restaurant-1");
     expect(result.branchId).toBe("branch-1");
-    expect(result.scopeMenuItemIds).toEqual(["item-1", "item-2"]);
+    expect(result.dealSelectionMode).toBe("FLEXIBLE_ITEMS");
+    expect(result.dealRequiredQuantity).toBe(2);
+    expect(result.imageUrl).toBe("https://cdn.example.com/deal.png");
+    expect(result.scopeCategoryIds).toEqual(["category-1"]);
   });
 
   it("detail calls /admin/deals/:id", async () => {

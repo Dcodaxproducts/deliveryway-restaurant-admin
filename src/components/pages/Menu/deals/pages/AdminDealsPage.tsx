@@ -20,13 +20,7 @@ import type { AdminDeal, AdminDealsListParams } from "@/types/admin-deals";
 const defaultFilters: AdminDealsFilterState = {
   search: "",
   lifecycle: "ALL",
-  kind: "ALL",
-  discountType: "ALL",
   branchId: "",
-  includeInactive: false,
-  withDeleted: false,
-  sortBy: "createdAt",
-  sortOrder: "DESC",
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
@@ -50,7 +44,7 @@ const getBranchOptions = (payload: unknown): AdminDealBranchOption[] => {
 };
 
 export default function AdminDealsPage() {
-  const { user, restaurantId, branchId, isBranchAdmin, role } = useAuth();
+  const { user, restaurantId, branchId, isBranchAdmin } = useAuth();
   const [filters, setFilters] = useState(defaultFilters);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -75,34 +69,19 @@ export default function AdminDealsPage() {
   const scopedBranchId = isBranchAdmin
     ? branchId || undefined
     : filters.branchId || undefined;
-  const canViewDeleted = role === "SUPER_ADMIN";
 
   const params = useMemo<AdminDealsListParams>(
     () => ({
       page,
       limit,
       search: filters.search || undefined,
-      sortBy: filters.sortBy,
-      sortOrder: filters.sortOrder,
       restaurantId: restaurantId || undefined,
       branchId: scopedBranchId,
       lifecycle: filters.lifecycle !== "ALL" ? filters.lifecycle : undefined,
-      kind: filters.kind !== "ALL" ? filters.kind : undefined,
-      discountType:
-        filters.discountType !== "ALL" ? filters.discountType : undefined,
-      includeInactive: filters.includeInactive || undefined,
-      withDeleted: canViewDeleted && filters.withDeleted ? true : undefined,
     }),
     [
-      canViewDeleted,
-      filters.discountType,
-      filters.includeInactive,
-      filters.kind,
       filters.lifecycle,
       filters.search,
-      filters.sortBy,
-      filters.sortOrder,
-      filters.withDeleted,
       limit,
       page,
       restaurantId,
@@ -160,7 +139,6 @@ export default function AdminDealsPage() {
           branchOptions={branchOptions}
           isBranchAdmin={isBranchAdmin}
           branchName={user?.branchName ?? undefined}
-          canViewDeleted={canViewDeleted}
           visibleCount={deals.length}
           totalCount={meta.total}
           isFetching={dealsQuery.isFetching}

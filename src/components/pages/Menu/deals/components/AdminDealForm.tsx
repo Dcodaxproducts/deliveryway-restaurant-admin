@@ -3,12 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
-import { Controller, useForm, type FieldErrors } from "react-hook-form";
+import { Controller, useForm, useWatch, type FieldErrors } from "react-hook-form";
 import { toast } from "sonner";
 
 import { FIELD_ERROR_CLASS, INPUT_BASE_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
 import FormInput from "@/components/forms/common/FormInput";
 import { ImageUploadField } from "@/components/forms/common/ImageUploadField";
+import AdminDealCategorySelector from "@/components/pages/Menu/deals/components/AdminDealCategorySelector";
 import AdminDealMenuItemSelector from "@/components/pages/Menu/deals/components/AdminDealMenuItemSelector";
 import { toDateTimeLocalValue } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
 import PageWrapper from "@/components/pages/Promotions/forms/PageWrapper";
@@ -17,7 +18,12 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { AdminDeal, AdminDealFormValues, AdminDealMenuItemSummary } from "@/types/admin-deals";
+import type {
+  AdminDeal,
+  AdminDealCategorySummary,
+  AdminDealFormValues,
+  AdminDealMenuItemSummary,
+} from "@/types/admin-deals";
 import { adminDealFormSchema } from "@/validations/admin-deals";
 import { useTranslations } from "next-intl";
 
@@ -50,20 +56,24 @@ const getDefaultValues = ({
   branchId?: string;
   isBranchAdmin: boolean;
 }): AdminDealFormValues => ({
-  code: initialDeal?.code ?? "",
   title: initialDeal?.title ?? "",
   description: initialDeal?.description ?? "",
-  thumbnailUrl: initialDeal?.thumbnailUrl ?? "",
+  thumbnailUrl: initialDeal?.thumbnailUrl ?? initialDeal?.imageUrl ?? "",
+  imageUrl: initialDeal?.imageUrl ?? "",
   restaurantId: initialDeal?.restaurantId ?? restaurantId ?? "",
   branchId: initialDeal?.branchId ?? (isBranchAdmin ? branchId ?? "" : ""),
   discountValue: initialDeal?.discountValue ?? 0,
-  maxDiscountAmount: initialDeal?.maxDiscountAmount ?? null,
-  minOrderAmount: initialDeal?.minOrderAmount ?? null,
-  maxUses: initialDeal?.maxUses ?? null,
-  maxUsesPerCustomer: initialDeal?.maxUsesPerCustomer ?? null,
   startsAt: toDateTimeLocalValue(initialDeal?.startsAt),
   expiresAt: toDateTimeLocalValue(initialDeal?.expiresAt),
+  dealSelectionMode: initialDeal?.dealSelectionMode ?? "FIXED_ITEMS",
+  dealSourceType:
+    (initialDeal?.scopeCategoryIds?.length ?? 0) > 0 ||
+    (initialDeal?.scopeCategories?.length ?? 0) > 0
+      ? "CATEGORIES"
+      : "ITEMS",
+  dealRequiredQuantity: initialDeal?.dealRequiredQuantity ?? null,
   scopeMenuItemIds: initialDeal?.scopeMenuItemIds ?? [],
+  scopeCategoryIds: initialDeal?.scopeCategoryIds ?? [],
   isActive: initialDeal?.isActive ?? true,
 });
 
@@ -90,6 +100,10 @@ export default function AdminDealForm({
     () => initialDeal?.scopeMenuItems ?? [],
     [initialDeal?.scopeMenuItems]
   );
+  const initialCategories: AdminDealCategorySummary[] = useMemo(
+    () => initialDeal?.scopeCategories ?? [],
+    [initialDeal?.scopeCategories]
+  );
 
   const { control, handleSubmit, setValue } = useForm<AdminDealFormValues>({
     resolver: zodResolver(adminDealFormSchema),
@@ -100,6 +114,28 @@ export default function AdminDealForm({
       isBranchAdmin,
     }),
   });
+  const dealSelectionMode = useWatch({ control, name: "dealSelectionMode" });
+  const dealSourceType = useWatch({ control, name: "dealSourceType" });
+  const isFlexibleDeal = dealSelectionMode === "FLEXIBLE_ITEMS";
+  const isCategorySource = isFlexibleDeal && dealSourceType === "CATEGORIES";
+
+  const handleDealTypeChange = (value: AdminDealFormValues["dealSelectionMode"]) => {
+    setValue("dealSelectionMode", value, { shouldValidate: true });
+    if (value === "FIXED_ITEMS") {
+      setValue("dealSourceType", "ITEMS", { shouldValidate: true });
+      setValue("dealRequiredQuantity", null, { shouldValidate: true });
+      setValue("scopeCategoryIds", [], { shouldValidate: true });
+    }
+  };
+
+  const handleSourceTypeChange = (value: AdminDealFormValues["dealSourceType"]) => {
+    setValue("dealSourceType", value, { shouldValidate: true });
+    if (value === "CATEGORIES") {
+      setValue("scopeMenuItemIds", [], { shouldValidate: true });
+    } else {
+      setValue("scopeCategoryIds", [], { shouldValidate: true });
+    }
+  };
 
   return (
     <PageWrapper title={title}>
@@ -110,8 +146,10 @@ export default function AdminDealForm({
       >
         <Section label={t("setupBasicInfo")}>
           <div className="rounded-xl border border-primary/10 bg-primary/5 p-4 text-sm text-gray-600">
-            <span className="font-medium text-gray-900">{t("fixedPriceItemDeal")}</span>{" "}
-            {t("fixedPriceItemDealDescription")}
+            <span className="font-medium text-gray-900">
+              {isFlexibleDeal ? t("flexibleAnyNDeal") : t("fixedItemDeal")}
+            </span>{" "}
+            {isFlexibleDeal ? t("flexibleAnyNDealDescription") : t("fixedItemDealDescription")}
           </div>
 
           <Controller
@@ -126,20 +164,6 @@ export default function AdminDealForm({
                 onBlur={field.onBlur}
                 error={Boolean(fieldState.error)}
                 errorText={fieldState.error?.message}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="code"
-            render={({ field }) => (
-              <FormInput
-                label={t("dealCode")}
-                placeholder={t("dealCodePlaceholder")}
-                value={field.value ?? ""}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
               />
             )}
           />
@@ -176,6 +200,68 @@ export default function AdminDealForm({
               />
             )}
           />
+
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <Controller
+              control={control}
+              name="dealSelectionMode"
+              render={({ field, fieldState }) => (
+                <SelectField
+                  label={t("dealType")}
+                  value={field.value}
+                  error={fieldState.error?.message}
+                  options={[
+                    { label: t("fixedItemDeal"), value: "FIXED_ITEMS" },
+                    { label: t("flexibleAnyNDeal"), value: "FLEXIBLE_ITEMS" },
+                  ]}
+                  onChange={(value) =>
+                    handleDealTypeChange(
+                      value === "FLEXIBLE_ITEMS" ? "FLEXIBLE_ITEMS" : "FIXED_ITEMS"
+                    )
+                  }
+                />
+              )}
+            />
+
+            {isFlexibleDeal ? (
+              <Controller
+                control={control}
+                name="dealSourceType"
+                render={({ field, fieldState }) => (
+                  <SelectField
+                    label={t("dealSource")}
+                    value={field.value}
+                    error={fieldState.error?.message}
+                    options={[
+                      { label: t("sourceItems"), value: "ITEMS" },
+                      { label: t("sourceCategories"), value: "CATEGORIES" },
+                    ]}
+                    onChange={(value) =>
+                      handleSourceTypeChange(value === "CATEGORIES" ? "CATEGORIES" : "ITEMS")
+                    }
+                  />
+                )}
+              />
+            ) : null}
+          </div>
+
+          {isFlexibleDeal ? (
+            <Controller
+              control={control}
+              name="dealRequiredQuantity"
+              render={({ field, fieldState }) => (
+                <NumberField
+                  label={t("requiredQuantity")}
+                  value={field.value}
+                  min={1}
+                  step={1}
+                  placeholder={t("requiredQuantityPlaceholder")}
+                  error={fieldState.error?.message}
+                  onChange={field.onChange}
+                />
+              )}
+            />
+          ) : null}
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <Controller
@@ -226,72 +312,6 @@ export default function AdminDealForm({
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <Controller
               control={control}
-              name="minOrderAmount"
-              render={({ field, fieldState }) => (
-                <NumberField
-                  label={t("minimumOrderAmount")}
-                  value={field.value}
-                  min={0}
-                  placeholder={t("minimumOrderAmountPlaceholder")}
-                  error={fieldState.error?.message}
-                  onChange={field.onChange}
-                />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="maxDiscountAmount"
-              render={({ field, fieldState }) => (
-                <NumberField
-                  label={t("maximumDiscountAmount")}
-                  value={field.value}
-                  min={0}
-                  placeholder={t("maximumDiscountAmountPlaceholder")}
-                  error={fieldState.error?.message}
-                  onChange={field.onChange}
-                />
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <Controller
-              control={control}
-              name="maxUses"
-              render={({ field, fieldState }) => (
-                <NumberField
-                  label={t("maximumUses")}
-                  value={field.value}
-                  min={1}
-                  step={1}
-                  placeholder={t("maximumUsesPlaceholder")}
-                  error={fieldState.error?.message}
-                  onChange={field.onChange}
-                />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="maxUsesPerCustomer"
-              render={({ field, fieldState }) => (
-                <NumberField
-                  label={t("maximumUsesPerCustomer")}
-                  value={field.value}
-                  min={1}
-                  step={1}
-                  placeholder={t("maximumUsesPerCustomerPlaceholder")}
-                  error={fieldState.error?.message}
-                  onChange={field.onChange}
-                />
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <Controller
-              control={control}
               name="startsAt"
               render={({ field, fieldState }) => (
                 <DateField
@@ -334,26 +354,49 @@ export default function AdminDealForm({
           />
         </Section>
 
-        <Section label={t("selectedMenuItems")}>
-          <Controller
-            control={control}
-            name="scopeMenuItemIds"
-            render={({ field, fieldState }) => (
-              <div className="space-y-2">
-                <Label className="text-[16px]">{t("selectMenuItems")}</Label>
-                <p className={MUTED_TEXT_SM_CLASS}>
-                  {t("selectMenuItemsHelp")}
-                </p>
-                <AdminDealMenuItemSelector
-                  value={field.value}
-                  onChange={field.onChange}
-                  restaurantId={restaurantId}
-                  initialItems={initialMenuItems}
-                  error={fieldState.error?.message}
-                />
-              </div>
-            )}
-          />
+        <Section label={isCategorySource ? t("selectedCategories") : t("selectedMenuItems")}>
+          {isCategorySource ? (
+            <Controller
+              control={control}
+              name="scopeCategoryIds"
+              render={({ field, fieldState }) => (
+                <div className="space-y-2">
+                  <Label className="text-[16px]">{t("selectCategories")}</Label>
+                  <p className={MUTED_TEXT_SM_CLASS}>
+                    {t("flexibleCategoryHelp")}
+                  </p>
+                  <AdminDealCategorySelector
+                    value={field.value}
+                    onChange={field.onChange}
+                    restaurantId={restaurantId}
+                    branchId={branchId}
+                    initialCategories={initialCategories}
+                    error={fieldState.error?.message}
+                  />
+                </div>
+              )}
+            />
+          ) : (
+            <Controller
+              control={control}
+              name="scopeMenuItemIds"
+              render={({ field, fieldState }) => (
+                <div className="space-y-2">
+                  <Label className="text-[16px]">{t("selectMenuItems")}</Label>
+                  <p className={MUTED_TEXT_SM_CLASS}>
+                    {isFlexibleDeal ? t("flexibleItemsHelp") : t("fixedItemsHelp")}
+                  </p>
+                  <AdminDealMenuItemSelector
+                    value={field.value}
+                    onChange={field.onChange}
+                    restaurantId={restaurantId}
+                    initialItems={initialMenuItems}
+                    error={fieldState.error?.message}
+                  />
+                </div>
+              )}
+            />
+          )}
         </Section>
 
         <div className="flex justify-end gap-3">
@@ -414,6 +457,40 @@ function NumberField({
         }}
         className={INPUT_BASE_CLASS}
       />
+      {error ? <p className={FIELD_ERROR_CLASS}>{error}</p> : null}
+    </div>
+  );
+}
+
+type SelectFieldProps = {
+  label: string;
+  value: string;
+  options: { label: string; value: string }[];
+  error?: string;
+  onChange: (value: string) => void;
+};
+
+function SelectField({
+  label,
+  value,
+  options,
+  error,
+  onChange,
+}: SelectFieldProps) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={INPUT_BASE_CLASS}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
       {error ? <p className={FIELD_ERROR_CLASS}>{error}</p> : null}
     </div>
   );

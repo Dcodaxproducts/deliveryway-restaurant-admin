@@ -2,59 +2,84 @@
 
 import { Check, Loader2, Search, X } from "lucide-react";
 import type { UIEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-import { formatDealPrice } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
 import { Button } from "@/components/ui/button";
-import { useAdminDealMenuItems } from "@/hooks/useAdminDealMenuItems";
-import type { AdminDealMenuItemSummary } from "@/types/admin-deals";
+import { useInfiniteCategories } from "@/hooks/useMenuCategories";
+import type { AdminDealCategorySummary } from "@/types/admin-deals";
+import type { MenuCategoryOption } from "@/types/categories";
 import { useTranslations } from "next-intl";
 
-type AdminDealMenuItemSelectorProps = {
+type AdminDealCategorySelectorProps = {
   value: string[];
   onChange: (value: string[]) => void;
   restaurantId?: string;
-  initialItems?: AdminDealMenuItemSummary[];
+  branchId?: string;
+  initialCategories?: AdminDealCategorySummary[];
   error?: string;
 };
 
-const MENU_ITEMS_PAGE_SIZE = 10;
+const CATEGORY_PAGE_SIZE = 10;
 
-export default function AdminDealMenuItemSelector({
+const toCategorySummary = (
+  category: MenuCategoryOption | AdminDealCategorySummary
+): AdminDealCategorySummary => ({
+  id: category.id,
+  name: category.name,
+  imageUrl: category.imageUrl ?? null,
+  slug: category.slug ?? null,
+});
+
+const mergeCategories = (
+  current: AdminDealCategorySummary[],
+  next: AdminDealCategorySummary[]
+) => {
+  const categoryMap = new Map<string, AdminDealCategorySummary>();
+  [...current, ...next].forEach((category) => categoryMap.set(category.id, category));
+
+  return Array.from(categoryMap.values());
+};
+
+export default function AdminDealCategorySelector({
   value,
   onChange,
   restaurantId,
-  initialItems = [],
+  branchId,
+  initialCategories = [],
   error,
-}: AdminDealMenuItemSelectorProps) {
-  const t = useTranslations("deals.menuItemSelector");
+}: AdminDealCategorySelectorProps) {
+  const t = useTranslations("deals.categorySelector");
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const { options, hasNext, loading } = useAdminDealMenuItems({
-    page,
-    limit: MENU_ITEMS_PAGE_SIZE,
-    search,
+  const categoriesQuery = useInfiniteCategories({
     restaurantId,
-    initialItems,
+    branchId,
+    search,
+    limit: CATEGORY_PAGE_SIZE,
+    includeInactive: false,
   });
 
-  useEffect(() => {
-    setPage(1);
-  }, [restaurantId]);
+  const options = useMemo(() => {
+    const pageCategories =
+      categoriesQuery.data?.pages.flatMap((page) =>
+        page.data.map((category) => toCategorySummary(category))
+      ) ?? [];
 
-  const selectedItems = useMemo(() => {
+    return mergeCategories(initialCategories, pageCategories);
+  }, [categoriesQuery.data?.pages, initialCategories]);
+
+  const selectedCategories = useMemo(() => {
     return value
-      .map((id) => options.find((item) => item.id === id))
-      .filter((item): item is AdminDealMenuItemSummary => Boolean(item));
+      .map((id) => options.find((category) => category.id === id))
+      .filter((category): category is AdminDealCategorySummary => Boolean(category));
   }, [options, value]);
 
-  const toggleItem = (item: AdminDealMenuItemSummary) => {
-    if (value.includes(item.id)) {
-      onChange(value.filter((id) => id !== item.id));
+  const toggleCategory = (category: AdminDealCategorySummary) => {
+    if (value.includes(category.id)) {
+      onChange(value.filter((id) => id !== category.id));
       return;
     }
 
-    onChange([...value, item.id]);
+    onChange([...value, category.id]);
   };
 
   const handleOptionsScroll = (event: UIEvent<HTMLDivElement>) => {
@@ -62,10 +87,12 @@ export default function AdminDealMenuItemSelector({
     const isNearBottom =
       element.scrollHeight - element.scrollTop <= element.clientHeight + 40;
 
-    if (isNearBottom && hasNext && !loading) {
-      setPage((currentPage) => currentPage + 1);
+    if (isNearBottom && categoriesQuery.hasNextPage && !categoriesQuery.isFetchingNextPage) {
+      void categoriesQuery.fetchNextPage();
     }
   };
+
+  const loading = categoriesQuery.isLoading || categoriesQuery.isFetchingNextPage;
 
   return (
     <div className="space-y-3">
@@ -78,10 +105,7 @@ export default function AdminDealMenuItemSelector({
             />
             <input
               value={search}
-              onChange={(event) => {
-                setPage(1);
-                setSearch(event.target.value);
-              }}
+              onChange={(event) => setSearch(event.target.value)}
               placeholder={t("searchPlaceholder")}
               className="h-[42px] w-full rounded-[12px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
             />
@@ -92,25 +116,25 @@ export default function AdminDealMenuItemSelector({
           className="max-h-[360px] overflow-y-auto p-2"
           onScroll={handleOptionsScroll}
         >
-          {options.map((item) => {
-            const selected = value.includes(item.id);
+          {options.map((category) => {
+            const selected = value.includes(category.id);
 
             return (
               <button
-                key={item.id}
+                key={category.id}
                 type="button"
-                onClick={() => toggleItem(item)}
+                onClick={() => toggleCategory(category)}
                 className={`mb-2 flex w-full items-center gap-3 rounded-[12px] border p-3 text-left transition ${
                   selected
                     ? "border-primary/30 bg-primary/5"
                     : "border-gray-100 hover:bg-gray-50"
                 }`}
               >
-                {item.imageUrl ? (
+                {category.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={item.imageUrl}
-                    alt={item.name}
+                    src={category.imageUrl}
+                    alt={category.name}
                     className="h-12 w-12 shrink-0 rounded-[10px] object-cover"
                   />
                 ) : (
@@ -121,12 +145,13 @@ export default function AdminDealMenuItemSelector({
 
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-gray-900">
-                    {item.name}
+                    {category.name}
                   </p>
-                  <p className="mt-1 truncate text-xs text-gray-500">
-                    {item.category?.name || t("noCategory")} •{" "}
-                    {formatDealPrice(item.basePrice)}
-                  </p>
+                  {category.slug ? (
+                    <p className="mt-1 truncate text-xs text-gray-500">
+                      {category.slug}
+                    </p>
+                  ) : null}
                 </div>
 
                 <span
@@ -153,14 +178,6 @@ export default function AdminDealMenuItemSelector({
               {t("emptyTitle")}
             </div>
           ) : null}
-
-          {!loading && options.length > 0 ? (
-            <div className="border-t border-gray-100 px-2 py-3 text-center text-xs text-gray-400">
-              {hasNext
-                ? t("loadMoreHint")
-                : t("showingCount", { count: options.length.toLocaleString() })}
-            </div>
-          ) : null}
         </div>
       </div>
 
@@ -181,14 +198,14 @@ export default function AdminDealMenuItemSelector({
         ) : null}
       </div>
 
-      {selectedItems.length > 0 ? (
+      {selectedCategories.length > 0 ? (
         <div className="flex flex-wrap gap-2">
-          {selectedItems.map((item) => (
+          {selectedCategories.map((category) => (
             <span
-              key={item.id}
+              key={category.id}
               className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
             >
-              {item.name}
+              {category.name}
             </span>
           ))}
         </div>

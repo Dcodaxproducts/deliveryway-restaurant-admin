@@ -44,6 +44,47 @@ export const getDealLifecycleLabel = (lifecycle: string | null | undefined) => {
     .join(" ");
 };
 
+export const getDealTypeLabel = (deal: {
+  dealSelectionMode?: string | null;
+  scopeCategoryIds?: string[];
+  scopeCategories?: unknown[];
+}) => {
+  if (deal.dealSelectionMode === "FLEXIBLE_ITEMS") {
+    const categoryCount =
+      (deal.scopeCategoryIds?.length ?? 0) + (deal.scopeCategories?.length ?? 0);
+
+    return categoryCount > 0 ? "Flexible Any-N Categories" : "Flexible Any-N Items";
+  }
+
+  return "Fixed Items";
+};
+
+export const getDealSelectedCountLabel = (deal: {
+  scopeMenuItemIds?: string[];
+  scopeCategoryIds?: string[];
+}) => {
+  const categoryCount = deal.scopeCategoryIds?.length ?? 0;
+  if (categoryCount > 0) {
+    return `${categoryCount.toLocaleString()} ${
+      categoryCount === 1 ? "category" : "categories"
+    }`;
+  }
+
+  const itemCount = deal.scopeMenuItemIds?.length ?? 0;
+  return `${itemCount.toLocaleString()} ${itemCount === 1 ? "item" : "items"}`;
+};
+
+export const getDealRequiredQuantityLabel = (deal: {
+  dealSelectionMode?: string | null;
+  dealRequiredQuantity?: number | null;
+}) => {
+  if (deal.dealSelectionMode !== "FLEXIBLE_ITEMS") return "—";
+
+  return typeof deal.dealRequiredQuantity === "number"
+    ? deal.dealRequiredQuantity.toLocaleString()
+    : "—";
+};
+
 export const getDealStatusVariant = (deal: { isActive: boolean; deletedAt?: string | null }) => {
   if (deal.deletedAt) return "deleted";
   return deal.isActive ? "active" : "inactive";

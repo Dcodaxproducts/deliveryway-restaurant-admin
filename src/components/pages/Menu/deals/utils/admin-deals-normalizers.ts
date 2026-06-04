@@ -1,5 +1,7 @@
 import type {
   AdminDeal,
+  AdminDealCategorySummary,
+  AdminDealSelectionMode,
   AdminDealMenuItemSummary,
   AdminDealsListParams,
   AdminDealsListResponse,
@@ -70,6 +72,10 @@ const normalizeStringArray = (value: unknown) => {
   return value.filter((item): item is string => typeof item === "string");
 };
 
+const normalizeDealSelectionMode = (value: unknown): AdminDealSelectionMode => {
+  return value === "FLEXIBLE_ITEMS" ? "FLEXIBLE_ITEMS" : "FIXED_ITEMS";
+};
+
 const normalizeScopeMenuItemIds = (
   value: unknown,
   scopeMenuItems?: AdminDealMenuItemSummary[]
@@ -78,6 +84,16 @@ const normalizeScopeMenuItemIds = (
   if (explicitIds.length > 0) return explicitIds;
 
   return scopeMenuItems?.map((item) => item.id).filter(Boolean) ?? [];
+};
+
+const normalizeScopeCategoryIds = (
+  value: unknown,
+  scopeCategories?: AdminDealCategorySummary[]
+) => {
+  const explicitIds = normalizeStringArray(value);
+  if (explicitIds.length > 0) return explicitIds;
+
+  return scopeCategories?.map((category) => category.id).filter(Boolean) ?? [];
 };
 
 export const getDefaultAdminDealsMeta = (
@@ -116,6 +132,19 @@ export const normalizeAdminDealMenuItem = (
   };
 };
 
+export const normalizeAdminDealCategory = (
+  value: unknown
+): AdminDealCategorySummary | null => {
+  if (!isRecord(value)) return null;
+
+  return {
+    id: getString(value, "id"),
+    name: getString(value, "name", "Unnamed category"),
+    imageUrl: getNullableString(value, "imageUrl"),
+    slug: getNullableString(value, "slug"),
+  };
+};
+
 export const normalizeAdminDeal = (value: unknown): AdminDeal | null => {
   if (!isRecord(value)) return null;
 
@@ -124,6 +153,11 @@ export const normalizeAdminDeal = (value: unknown): AdminDeal | null => {
         .map((item) => normalizeAdminDealMenuItem(item))
         .filter((item): item is AdminDealMenuItemSummary => item !== null)
     : undefined;
+  const scopeCategories = Array.isArray(value.scopeCategories)
+    ? value.scopeCategories
+        .map((category) => normalizeAdminDealCategory(category))
+        .filter((category): category is AdminDealCategorySummary => category !== null)
+    : undefined;
 
   return {
     id: getString(value, "id"),
@@ -131,6 +165,7 @@ export const normalizeAdminDeal = (value: unknown): AdminDeal | null => {
     title: getString(value, "title", "Untitled deal"),
     description: getNullableString(value, "description"),
     thumbnailUrl: getNullableString(value, "thumbnailUrl"),
+    imageUrl: getNullableString(value, "imageUrl"),
     restaurantId: getNullableString(value, "restaurantId") ?? getNestedNullableString(value, "restaurant", "id"),
     branchId: getNullableString(value, "branchId") ?? getNestedNullableString(value, "branch", "id"),
     discountValue: getNumber(value, "discountValue"),
@@ -140,8 +175,12 @@ export const normalizeAdminDeal = (value: unknown): AdminDeal | null => {
     maxUsesPerCustomer: getNullableNumber(value, "maxUsesPerCustomer"),
     startsAt: getString(value, "startsAt"),
     expiresAt: getString(value, "expiresAt"),
+    dealSelectionMode: normalizeDealSelectionMode(value.dealSelectionMode),
+    dealRequiredQuantity: getNullableNumber(value, "dealRequiredQuantity"),
     scopeMenuItemIds: normalizeScopeMenuItemIds(value.scopeMenuItemIds, scopeMenuItems),
+    scopeCategoryIds: normalizeScopeCategoryIds(value.scopeCategoryIds, scopeCategories),
     ...(scopeMenuItems ? { scopeMenuItems } : {}),
+    ...(scopeCategories ? { scopeCategories } : {}),
     autoApply: getBoolean(value, "autoApply", true),
     isActive: getBoolean(value, "isActive"),
     lifecycle: getOptionalString(value, "lifecycle"),
@@ -174,7 +213,12 @@ export const normalizeAdminDealsResponse = (
   params: AdminDealsListParams = {}
 ): AdminDealsListResponse => {
   const source = isRecord(payload) ? payload : {};
-  const data = Array.isArray(source.data) ? source.data : [];
+  const nestedData = isRecord(source.data) ? source.data : {};
+  const data = Array.isArray(source.data)
+    ? source.data
+    : Array.isArray(nestedData.data)
+      ? nestedData.data
+      : [];
   const deals = data
     .map((item) => normalizeAdminDeal(item))
     .filter((item): item is AdminDeal => item !== null);
@@ -182,7 +226,7 @@ export const normalizeAdminDealsResponse = (
 
   return {
     deals,
-    meta: normalizeAdminDealsMeta(source.meta, params),
+    meta: normalizeAdminDealsMeta(source.meta ?? nestedData.meta, params),
     ...(message ? { message } : {}),
   };
 };

@@ -1,16 +1,14 @@
-export type AdminDealSortOrder = "ASC" | "DESC";
+export type AdminDealSelectionMode = "FIXED_ITEMS" | "FLEXIBLE_ITEMS";
 
 export type AdminDealLifecycle =
-  | "UPCOMING"
-  | "ACTIVE"
-  | "EXPIRED"
-  | "ENDED"
-  | "DELETED"
-  | "INACTIVE"
+  | "active"
+  | "scheduled"
+  | "expired"
+  | "inactive"
   | string;
 
+export type AdminDealSourceType = "ITEMS" | "CATEGORIES";
 export type AdminDealKind = "FIXED_PRICE" | "ITEM_DEAL" | "BUNDLE" | string;
-
 export type AdminDealDiscountType = "FIXED_PRICE" | "PERCENTAGE" | "FLAT" | string;
 
 export type AdminDealMenuItemSummary = {
@@ -25,12 +23,20 @@ export type AdminDealMenuItemSummary = {
   } | null;
 };
 
+export type AdminDealCategorySummary = {
+  id: string;
+  name: string;
+  imageUrl?: string | null;
+  slug?: string | null;
+};
+
 export type AdminDeal = {
   id: string;
   code?: string | null;
   title: string;
   description?: string | null;
   thumbnailUrl?: string | null;
+  imageUrl?: string | null;
   restaurantId?: string | null;
   branchId?: string | null;
   discountValue: number;
@@ -40,8 +46,12 @@ export type AdminDeal = {
   maxUsesPerCustomer?: number | null;
   startsAt: string;
   expiresAt: string;
+  dealSelectionMode: AdminDealSelectionMode;
+  dealRequiredQuantity?: number | null;
   scopeMenuItemIds: string[];
+  scopeCategoryIds: string[];
   scopeMenuItems?: AdminDealMenuItemSummary[];
+  scopeCategories?: AdminDealCategorySummary[];
   autoApply?: boolean;
   isActive: boolean;
   lifecycle?: AdminDealLifecycle;
@@ -65,14 +75,8 @@ export type AdminDealsListParams = {
   page?: number;
   limit?: number;
   search?: string;
-  sortBy?: string;
-  sortOrder?: AdminDealSortOrder;
-  withDeleted?: boolean;
-  includeInactive?: boolean;
   restaurantId?: string;
   branchId?: string;
-  kind?: string;
-  discountType?: string;
   lifecycle?: string;
 };
 
@@ -83,43 +87,44 @@ export type AdminDealsListResponse = {
 };
 
 export type AdminDealFormValues = {
-  code?: string;
   title: string;
   description?: string;
-  thumbnailUrl?: string | null;
   restaurantId?: string;
   branchId?: string;
+  thumbnailUrl?: string;
+  imageUrl?: string;
   discountValue: number;
-  maxDiscountAmount?: number | null;
-  minOrderAmount?: number | null;
-  maxUses?: number | null;
-  maxUsesPerCustomer?: number | null;
   startsAt: string;
   expiresAt: string;
+  dealSelectionMode: AdminDealSelectionMode;
+  dealSourceType: AdminDealSourceType;
+  dealRequiredQuantity?: number | null;
   scopeMenuItemIds: string[];
+  scopeCategoryIds: string[];
   isActive: boolean;
 };
 
 export type AdminDealCreatePayload = {
-  code?: string;
   title: string;
   description?: string;
   thumbnailUrl?: string;
+  imageUrl?: string;
   restaurantId?: string;
   branchId?: string;
   discountValue: number;
-  maxDiscountAmount?: number;
-  minOrderAmount?: number;
-  maxUses?: number;
-  maxUsesPerCustomer?: number;
   startsAt: string;
   expiresAt: string;
-  scopeMenuItemIds: string[];
-  autoApply: true;
+  dealSelectionMode: AdminDealSelectionMode;
+  dealRequiredQuantity?: number;
+  scopeMenuItemIds?: string[];
+  scopeCategoryIds?: string[];
   isActive: boolean;
 };
 
-export type AdminDealUpdatePayload = Partial<AdminDealCreatePayload>;
+export type AdminDealUpdatePayload = Partial<AdminDealCreatePayload> & {
+  scopeMenuItemIds?: string[];
+  scopeCategoryIds?: string[];
+};
 
 export type AdminDealStats = {
   dealId?: string;
