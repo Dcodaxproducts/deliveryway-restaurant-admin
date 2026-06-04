@@ -168,7 +168,7 @@ export function ManageGroupModifiersDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] max-w-[920px] overflow-auto rounded-[20px] bg-[#F5F5F5] p-6">
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] overflow-auto rounded-[20px] bg-[#F5F5F5] p-4 sm:w-full sm:max-w-[calc(100vw-2rem)] sm:p-6 xl:max-w-[1180px]">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">
             {t("title")}
@@ -180,7 +180,7 @@ export function ManageGroupModifiersDialog({
           </p>
         </DialogHeader>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[300px_1fr]">
+        <div className="mt-5 grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
           <section className="rounded-[16px] bg-white p-4">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-gray-900">
@@ -209,7 +209,7 @@ export function ManageGroupModifiersDialog({
           </section>
 
           <section className="rounded-[16px] bg-white p-4">
-            <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center">
+            <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
               <div className="relative w-full">
                 <Search
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
@@ -223,7 +223,7 @@ export function ManageGroupModifiersDialog({
                 />
               </div>
 
-              <div className="w-full xl:max-w-[300px]">
+              <div className="w-full lg:max-w-[300px]">
                 <ModifierCategoryInfiniteSelect
                   value={categoryId}
                   onChange={(value) => {
@@ -241,7 +241,7 @@ export function ManageGroupModifiersDialog({
                 type="button"
                 onClick={() => void refetch()}
                 disabled={!restaurantId}
-                className="h-[44px] rounded-[14px] bg-primary px-5 text-white"
+                className="h-[44px] w-full rounded-[14px] bg-primary px-5 text-white lg:w-auto"
               >
                 {commonT("search")}
               </Button>
@@ -338,7 +338,7 @@ function ModifierOption({
         </p>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="grid w-full grid-cols-[92px_minmax(0,1fr)] items-center gap-2 sm:flex sm:w-auto">
         <input
           type="number"
           min={0}

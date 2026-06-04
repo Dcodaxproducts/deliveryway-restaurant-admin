@@ -102,6 +102,14 @@ export const menuItems: MenuItem[] = [
         roles: restaurantAdminRoles,
       },
       {
+        title: "Modifier Groups",
+        labelKey: "modifierGroups",
+        href: "/menu/modifier-groups",
+        icon: ClipboardList,
+        section: "main",
+        roles: restaurantAdminRoles,
+      },
+      {
         title: "Modifiers",
         labelKey: "modifiers",
         href: "/menu/modifier",
