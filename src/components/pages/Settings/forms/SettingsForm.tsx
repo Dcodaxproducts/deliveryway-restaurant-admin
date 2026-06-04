@@ -7,6 +7,10 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/useAuth";
+import { usePaymentMethods } from "@/hooks/usePaymentMethods";
+import { getApiErrorMessage } from "@/lib/errors";
+import type { PaymentMethod } from "@/types/payment-methods";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
@@ -73,6 +77,9 @@ const sidebarLabelClassName =
   "text-base font-semibold text-[#646982] group-hover:text-primary transition-colors";
 
 export default function SettingsForm() {
+  const { isBranchAdmin, isRestaurantAdmin } = useAuth();
+  const canViewPaymentMethods = isBranchAdmin || isRestaurantAdmin;
+  const paymentMethodsQuery = usePaymentMethods(canViewPaymentMethods);
   const { handleSubmit, register, setValue, watch } = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues,
@@ -267,6 +274,15 @@ export default function SettingsForm() {
           />
         </section>
 
+        {canViewPaymentMethods ? (
+          <PaymentMethodsSection
+            isError={paymentMethodsQuery.isError}
+            isLoading={paymentMethodsQuery.isLoading}
+            error={paymentMethodsQuery.error}
+            methods={paymentMethodsQuery.data?.paymentMethods ?? []}
+          />
+        ) : null}
+
         <section className="flex flex-col sm:flex-row gap-4 justify-end">
           <Button
             type="button"
@@ -281,6 +297,81 @@ export default function SettingsForm() {
         </section>
       </div>
     </form>
+  );
+}
+
+type PaymentMethodsSectionProps = {
+  methods: PaymentMethod[];
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+};
+
+function PaymentMethodsSection({
+  methods,
+  isLoading,
+  isError,
+  error,
+}: PaymentMethodsSectionProps) {
+  return (
+    <section className="space-y-[18px] rounded-[14px] border border-[#E8E8E8] p-4">
+      <div className="space-y-[6px]">
+        <h2 className="text-lg font-semibold text-dark">Payment Methods</h2>
+        <p className="text-sm text-gray">
+          These platform payment methods are managed globally. Your role can view
+          available methods but cannot edit them.
+        </p>
+      </div>
+
+      {isLoading ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={`payment-method-skeleton-${index}`}
+              className="h-[76px] animate-pulse rounded-[10px] bg-gray-100"
+            />
+          ))}
+        </div>
+      ) : null}
+
+      {!isLoading && isError ? (
+        <p className="rounded-[10px] bg-red-50 px-3 py-2 text-sm text-red-600">
+          {getApiErrorMessage(error, "Unable to load payment methods.")}
+        </p>
+      ) : null}
+
+      {!isLoading && !isError && methods.length === 0 ? (
+        <p className="rounded-[10px] bg-gray-50 px-3 py-3 text-sm text-gray">
+          No payment methods found.
+        </p>
+      ) : null}
+
+      {!isLoading && !isError && methods.length > 0 ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {methods.map((method) => (
+            <PaymentMethodItem key={method.code} method={method} />
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function PaymentMethodItem({ method }: { method: PaymentMethod }) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-[10px] border border-[#E8E8E8] px-4 py-3">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold text-dark">{method.label}</p>
+        <p className="mt-1 text-xs font-medium text-gray">{method.code}</p>
+      </div>
+      <span
+        className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+          method.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+        }`}
+      >
+        {method.isActive ? "Active" : "Inactive"}
+      </span>
+    </div>
   );
 }
 
