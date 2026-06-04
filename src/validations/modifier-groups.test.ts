@@ -14,11 +14,11 @@ describe("modifier group validation", () => {
       minSelect: 0,
       maxSelect: 3,
       sortOrder: 1,
-      isActive: true,
     });
 
     expect(result.success).toBe(true);
     expect(result.data?.name).toBe("Choose Sauces");
+    expect(result.data).not.toHaveProperty("isActive");
   });
 
   it("requires name when creating a group", () => {

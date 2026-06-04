@@ -42,7 +42,6 @@ export type ModifierGroupCreatePayload = {
   minSelect: number;
   maxSelect: number;
   sortOrder?: number;
-  isActive?: boolean;
 };
 
 export type ModifierGroupUpdatePayload = {

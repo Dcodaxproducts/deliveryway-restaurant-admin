@@ -132,19 +132,22 @@ export function ModifierGroupModal({
       return;
     }
 
-    const payload = {
+    const basePayload = {
       name: form.name.trim(),
       description: form.description.trim() || undefined,
       minSelect: Number(form.minSelect),
       maxSelect: Number(form.maxSelect),
       sortOrder: Number(form.sortOrder),
+    };
+    const updatePayload = {
+      ...basePayload,
       isActive: form.isActive,
     };
 
     const parsed = isEditMode
-      ? updateModifierGroupSchema.safeParse(payload)
+      ? updateModifierGroupSchema.safeParse(updatePayload)
       : modifierGroupSchema.safeParse({
-          ...payload,
+          ...basePayload,
           restaurantId,
         });
 
@@ -157,11 +160,11 @@ export function ModifierGroupModal({
       if (isEditMode && initialData?.id) {
         await updateModifierGroup({
           id: initialData.id,
-          data: payload,
+          data: updatePayload,
         });
       } else {
         await createModifierGroup({
-          ...payload,
+          ...basePayload,
           restaurantId,
         });
       }

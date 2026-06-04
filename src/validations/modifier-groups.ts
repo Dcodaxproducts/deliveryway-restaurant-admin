@@ -68,7 +68,6 @@ const modifierGroupBaseSchema = z.object({
     integer: true,
     defaultValue: 0,
   }),
-  isActive: z.boolean().optional(),
 });
 
 export const modifierGroupSchema = modifierGroupBaseSchema.superRefine(
@@ -85,6 +84,9 @@ export const modifierGroupSchema = modifierGroupBaseSchema.superRefine(
 
 export const updateModifierGroupSchema = modifierGroupBaseSchema
   .omit({ restaurantId: true })
+  .extend({
+    isActive: z.boolean().optional(),
+  })
   .partial()
   .superRefine((value, context) => {
     if (
