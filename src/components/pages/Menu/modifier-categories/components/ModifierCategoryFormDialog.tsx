@@ -22,6 +22,8 @@ import {
 } from "@/hooks/useModifierCategories";
 import type { ModifierCategory } from "@/types/modifier-categories";
 import {
+  buildModifierCategoryCreatePayload,
+  buildModifierCategoryUpdatePayload,
   modifierCategorySchema,
   updateModifierCategorySchema,
 } from "@/validations/modifier-categories";
@@ -127,29 +129,31 @@ export default function ModifierCategoryFormDialog({
       isActive: form.isActive,
     };
 
-    const parsed = isEditMode
-      ? updateModifierCategorySchema.safeParse(basePayload)
-      : modifierCategorySchema.safeParse({
-          ...basePayload,
-          restaurantId,
-        });
-
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message || "Invalid category data.");
-      return;
-    }
-
     try {
       if (isEditMode && initialData?.id) {
+        const parsed = updateModifierCategorySchema.safeParse(basePayload);
+
+        if (!parsed.success) {
+          toast.error(parsed.error.issues[0]?.message || "Invalid category data.");
+          return;
+        }
+
         await updateCategory({
           id: initialData.id,
-          data: basePayload,
+          data: buildModifierCategoryUpdatePayload(parsed.data),
         });
       } else {
-        await createCategory({
+        const parsed = modifierCategorySchema.safeParse({
           ...basePayload,
           restaurantId,
         });
+
+        if (!parsed.success) {
+          toast.error(parsed.error.issues[0]?.message || "Invalid category data.");
+          return;
+        }
+
+        await createCategory(buildModifierCategoryCreatePayload(parsed.data));
       }
 
       closeDialog();
@@ -239,21 +243,23 @@ export default function ModifierCategoryFormDialog({
             disabled={isSubmitting}
           />
 
-          <label className="flex items-center gap-2 text-sm text-gray-600">
-            <input
-              type="checkbox"
-              checked={form.isActive}
-              onChange={(event) =>
-                setForm((previous) => ({
-                  ...previous,
-                  isActive: event.target.checked,
-                }))
-              }
-              disabled={isSubmitting}
-              className="size-4 rounded border-gray-300 text-primary focus:ring-primary"
-            />
-            Active
-          </label>
+          {isEditMode ? (
+            <label className="flex items-center gap-2 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={form.isActive}
+                onChange={(event) =>
+                  setForm((previous) => ({
+                    ...previous,
+                    isActive: event.target.checked,
+                  }))
+                }
+                disabled={isSubmitting}
+                className="size-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              Active
+            </label>
+          ) : null}
 
           <Button
             type="button"

@@ -22,17 +22,17 @@ export type ModifierCategoryListParams = {
 };
 
 export type ModifierCategoryCreatePayload = {
-  restaurantId: string;
+  restaurantId?: string;
   name: string;
   slug?: string;
-  description?: string | null;
+  description?: string;
   sortOrder?: number;
 };
 
 export type ModifierCategoryUpdatePayload = {
   name?: string;
   slug?: string;
-  description?: string | null;
+  description?: string;
   sortOrder?: number;
   isActive?: boolean;
 };

@@ -1,4 +1,8 @@
 import { z } from "zod";
+import type {
+  ModifierCategoryCreatePayload,
+  ModifierCategoryUpdatePayload,
+} from "@/types/modifier-categories";
 
 const requiredString = (message: string) => z.string().trim().min(1, message);
 
@@ -63,3 +67,32 @@ export type ModifierCategoryValues = z.infer<typeof modifierCategorySchema>;
 export type UpdateModifierCategoryValues = z.infer<
   typeof updateModifierCategorySchema
 >;
+
+export const buildModifierCategoryCreatePayload = (
+  values: ModifierCategoryValues
+): ModifierCategoryCreatePayload => {
+  const payload: ModifierCategoryCreatePayload = {
+    name: values.name.trim(),
+  };
+
+  if (values.restaurantId?.trim()) payload.restaurantId = values.restaurantId.trim();
+  if (values.slug?.trim()) payload.slug = values.slug.trim();
+  if (values.description?.trim()) payload.description = values.description.trim();
+  if (typeof values.sortOrder === "number") payload.sortOrder = values.sortOrder;
+
+  return payload;
+};
+
+export const buildModifierCategoryUpdatePayload = (
+  values: UpdateModifierCategoryValues
+): ModifierCategoryUpdatePayload => {
+  const payload: ModifierCategoryUpdatePayload = {};
+
+  if (values.name?.trim()) payload.name = values.name.trim();
+  if (values.slug?.trim()) payload.slug = values.slug.trim();
+  if (values.description?.trim()) payload.description = values.description.trim();
+  if (typeof values.sortOrder === "number") payload.sortOrder = values.sortOrder;
+  if (typeof values.isActive === "boolean") payload.isActive = values.isActive;
+
+  return payload;
+};

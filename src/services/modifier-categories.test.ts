@@ -112,4 +112,41 @@ describe("modifier categories service", () => {
     expect(mockedPatch.mock.calls[0]?.[0]).not.toContain("/api/v1");
     expect(mockedDelete.mock.calls[0]?.[0]).not.toContain("/api/v1");
   });
+
+  it("create service sends body without isActive", async () => {
+    mockedPost.mockResolvedValueOnce({ success: true });
+
+    await createModifierCategory({
+      restaurantId: "restaurant-1",
+      name: "Sauces",
+      slug: "sauces",
+      description: "Sauce options",
+      sortOrder: 1,
+    });
+
+    expect(mockedPost).toHaveBeenCalledWith("/menu/modifier-categories", {
+      restaurantId: "restaurant-1",
+      name: "Sauces",
+      slug: "sauces",
+      description: "Sauce options",
+      sortOrder: 1,
+    });
+    expect(mockedPost.mock.calls[0]?.[1]).not.toHaveProperty("isActive");
+    expect(mockedPost.mock.calls[0]?.[0]).not.toContain("/api/v1");
+  });
+
+  it("update service sends isActive when updating", async () => {
+    mockedPatch.mockResolvedValueOnce({ success: true });
+
+    await updateModifierCategory("modifier-category-1", {
+      isActive: false,
+    });
+
+    expect(mockedPatch).toHaveBeenCalledWith(
+      "/menu/modifier-categories/modifier-category-1",
+      {
+        isActive: false,
+      }
+    );
+  });
 });
