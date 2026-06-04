@@ -63,6 +63,11 @@ export function ManageGroupModifiersDialog({
   const [sortOrders, setSortOrders] = useState<Record<string, string>>({});
   const [attachingModifierId, setAttachingModifierId] = useState<string | null>(null);
   const [detachingModifierId, setDetachingModifierId] = useState<string | null>(null);
+  const [localAttachedModifiers, setLocalAttachedModifiers] = useState<
+    ModifierGroupModifier[]
+  >([]);
+  const [hasLocalAttachmentChanges, setHasLocalAttachmentChanges] =
+    useState(false);
 
   const groupId = group?.id;
   const {
@@ -71,6 +76,23 @@ export function ManageGroupModifiersDialog({
     refetch: refetchGroup,
   } = useModifierGroup(groupId, { restaurantId });
   const activeGroup = groupDetail ?? group;
+  const initialGroupModifiers = useMemo(
+    () => group?.modifiers ?? [],
+    [group?.modifiers]
+  );
+
+  useEffect(() => {
+    if (!open || hasLocalAttachmentChanges) return;
+
+    setLocalAttachedModifiers(initialGroupModifiers);
+    setHasLocalAttachmentChanges(false);
+  }, [groupId, hasLocalAttachmentChanges, initialGroupModifiers, open]);
+
+  useEffect(() => {
+    if (!open || hasLocalAttachmentChanges) return;
+
+    setLocalAttachedModifiers(activeGroup?.modifiers ?? []);
+  }, [activeGroup?.modifiers, hasLocalAttachmentChanges, open]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -90,6 +112,8 @@ export function ManageGroupModifiersDialog({
       setSortOrders({});
       setAttachingModifierId(null);
       setDetachingModifierId(null);
+      setLocalAttachedModifiers([]);
+      setHasLocalAttachmentChanges(false);
     }
   }, [open]);
 
@@ -115,8 +139,8 @@ export function ManageGroupModifiersDialog({
     [modifiersResponse?.data]
   );
   const attachedModifiers = useMemo(
-    () => activeGroup?.modifiers ?? [],
-    [activeGroup?.modifiers]
+    () => localAttachedModifiers,
+    [localAttachedModifiers]
   );
   const attachedModifierIds = useMemo(
     () => new Set(attachedModifiers.map((modifier) => modifier.id)),
@@ -166,11 +190,36 @@ export function ManageGroupModifiersDialog({
       await attachModifier({
         groupId,
         modifierId: modifier.id,
+        restaurantId,
         data: {
           sortOrder: parsed.data.sortOrder,
         },
       });
-      await refetchGroup();
+      setHasLocalAttachmentChanges(true);
+      setLocalAttachedModifiers((previous) => {
+        const nextModifier: ModifierGroupModifier = {
+          id: modifier.id,
+          name: modifier.name,
+          priceDelta: modifier.priceDelta ?? null,
+          sortOrder: parsed.data.sortOrder,
+          category: modifier.category ?? null,
+        };
+        const existingIndex = previous.findIndex(
+          (attachedModifier) => attachedModifier.id === modifier.id
+        );
+
+        if (existingIndex === -1) return [...previous, nextModifier];
+
+        return previous.map((attachedModifier, index) =>
+          index === existingIndex ? nextModifier : attachedModifier
+        );
+      });
+      setSortOrders((previous) => {
+        const nextSortOrders = { ...previous };
+        delete nextSortOrders[modifier.id];
+        return nextSortOrders;
+      });
+      void refetchGroup();
     } catch (error: unknown) {
       toast.error(getApiErrorMessage(error, t("attachFailed")));
     } finally {
@@ -186,8 +235,15 @@ export function ManageGroupModifiersDialog({
       await detachModifier({
         groupId,
         modifierId: modifier.id,
+        restaurantId,
       });
-      await refetchGroup();
+      setHasLocalAttachmentChanges(true);
+      setLocalAttachedModifiers((previous) =>
+        previous.filter(
+          (attachedModifier) => attachedModifier.id !== modifier.id
+        )
+      );
+      void refetchGroup();
     } catch (error: unknown) {
       toast.error(getApiErrorMessage(error, t("detachFailed")));
     } finally {

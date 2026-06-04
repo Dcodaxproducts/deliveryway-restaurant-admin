@@ -116,12 +116,23 @@ export const useAttachModifierToGroup = () => {
     }: {
       groupId: string;
       modifierId: string;
+      restaurantId?: string;
       data: AttachModifierToGroupPayload;
     }) => attachModifierToGroup(groupId, modifierId, data),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: modifierGroupKeys.all });
       queryClient.invalidateQueries({
-        queryKey: modifierGroupKeys.detail(variables.groupId),
+        queryKey: [
+          "modifier-groups",
+          "detail",
+          variables.groupId,
+        ] as const,
+      });
+      queryClient.invalidateQueries({
+        queryKey: modifierGroupKeys.detail(
+          variables.groupId,
+          variables.restaurantId
+        ),
       });
       toast.success("Modifier attached to group successfully!");
     },
@@ -141,11 +152,22 @@ export const useDetachModifierFromGroup = () => {
     }: {
       groupId: string;
       modifierId: string;
+      restaurantId?: string;
     }) => detachModifierFromGroup(groupId, modifierId),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: modifierGroupKeys.all });
       queryClient.invalidateQueries({
-        queryKey: modifierGroupKeys.detail(variables.groupId),
+        queryKey: [
+          "modifier-groups",
+          "detail",
+          variables.groupId,
+        ] as const,
+      });
+      queryClient.invalidateQueries({
+        queryKey: modifierGroupKeys.detail(
+          variables.groupId,
+          variables.restaurantId
+        ),
       });
       toast.success("Modifier detached from group successfully!");
     },
