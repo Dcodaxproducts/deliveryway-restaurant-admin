@@ -284,11 +284,6 @@ export function ModifierGroupAssignmentForm({
         </p>
       </div>
 
-      <div className="mb-4 rounded-[14px] border border-amber-100 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-        Updating/removing existing group assignments may require backend support
-        if not already available.
-      </div>
-
       <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="rounded-[16px] border border-gray-100 bg-[#FAFAFA] p-4">
           <div className="relative mb-3">
