@@ -1707,9 +1707,9 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                   {postalCodeRules.map((rule: any, index: number) => (
                     <div
                       key={`postal-rule-${index}`}
-                      className="grid grid-cols-1 gap-3 rounded-2xl border border-gray-200 bg-white p-4 lg:grid-cols-4"
+                      className="grid grid-cols-1 gap-3 rounded-2xl border border-gray-200 bg-white p-4 md:grid-cols-2 xl:grid-cols-[minmax(130px,1fr)_minmax(130px,1fr)_minmax(180px,1fr)_minmax(200px,1fr)_auto] xl:items-end"
                     >
-                      <FormInput
+                      <PostalRuleInput
                         label={t("postalCode")}
                         value={rule?.postalCode || ""}
                         onChange={(val) =>
@@ -1717,7 +1717,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                         }
                       />
 
-                      <FormInput
+                      <PostalRuleInput
                         label={t("deliveryFee")}
                         value={toInputNumber(rule?.deliveryFee)}
                         onChange={(val) =>
@@ -1729,7 +1729,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                         }
                       />
 
-                      <FormInput
+                      <PostalRuleInput
                         label={t("minimumOrderAmount")}
                         value={toInputNumber(rule?.minOrderAmount)}
                         onChange={(val) =>
@@ -1741,7 +1741,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                         }
                       />
 
-                      <FormInput
+                      <PostalRuleInput
                         label={t("freeDeliveryThreshold")}
                         value={toInputNumber(rule?.freeDeliveryThreshold)}
                         onChange={(val) =>
@@ -1753,7 +1753,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                         }
                       />
 
-                      <div className="flex items-end gap-2">
+                      <div className="flex items-end gap-2 md:col-span-2 xl:col-span-1">
                         <button
                           type="button"
                           onClick={() => duplicatePostalRule(index)}
@@ -1819,5 +1819,28 @@ export default function EditBranchStepTwo({ data, setData }: any) {
 
       {/* Taxation is intentionally hidden for now. */}
     </div>
+  );
+}
+
+function PostalRuleInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block min-w-0">
+      <span className="mb-2 block whitespace-nowrap text-sm font-medium text-gray-700">
+        {label}
+      </span>
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-11 w-full rounded-md border border-[#BBBBBB] px-3 text-sm outline-none placeholder:text-[#BBBBBB] focus:border-primary focus:ring-1 focus:ring-primary"
+      />
+    </label>
   );
 }
