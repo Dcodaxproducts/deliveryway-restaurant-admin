@@ -62,6 +62,7 @@ type FlatModifierVariationOverride = {
 import { extractResponseItems } from "@/lib/response";
 
 const PAGE_LIMIT = 20;
+const SHOW_LEGACY_DIRECT_MODIFIERS = false;
 
 const normalizeArray = (value: any): any[] => {
   if (!value) return [];
@@ -1240,38 +1241,43 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
         }}
       />
 
-      <ModifierSelectionSection
-        title={t("legacyAssignTitle")}
-        description={t("legacyAssignDescription")}
-        icon={<Tags size={18} />}
-        searchValue={modifierSearch}
-        onSearchChange={setModifierSearch}
-        searchPlaceholder={t("searchPlaceholder")}
-        loading={
-          (loadingModifiers || fetchingModifiers) && modifierOptions.length === 0
-        }
-        loadingMore={modifierPage > 1 && fetchingModifiers}
-        hasMore={modifierHasMore}
-        onLoadMore={loadMoreModifiers}
-        items={modifierOptions}
-        selectedIds={selectedModifierIds}
-        selectedModifiers={selectedModifiers}
-        emptyTitle={t("emptyTitle")}
-        emptyDescription={t("emptyDescription")}
-        onToggle={toggleModifier}
-        onClear={clearModifiers}
-      />
+      {SHOW_LEGACY_DIRECT_MODIFIERS ? (
+        <>
+          <ModifierSelectionSection
+            title={t("legacyAssignTitle")}
+            description={t("legacyAssignDescription")}
+            icon={<Tags size={18} />}
+            searchValue={modifierSearch}
+            onSearchChange={setModifierSearch}
+            searchPlaceholder={t("searchPlaceholder")}
+            loading={
+              (loadingModifiers || fetchingModifiers) &&
+              modifierOptions.length === 0
+            }
+            loadingMore={modifierPage > 1 && fetchingModifiers}
+            hasMore={modifierHasMore}
+            onLoadMore={loadMoreModifiers}
+            items={modifierOptions}
+            selectedIds={selectedModifierIds}
+            selectedModifiers={selectedModifiers}
+            emptyTitle={t("emptyTitle")}
+            emptyDescription={t("emptyDescription")}
+            onToggle={toggleModifier}
+            onClear={clearModifiers}
+          />
 
-      <ModifierPricingByVariationSection
-        selectedModifiers={selectedModifiers}
-        selectedVariations={selectedVariations}
-        getTopLevelPriceValue={getTopLevelModifierValue}
-        getTopLevelRequiredValue={getTopLevelModifierRequiredValue}
-        getNestedPriceValue={getNestedModifierValue}
-        onTopLevelPriceChange={handleTopLevelModifierChange}
-        onTopLevelRequiredChange={handleTopLevelRequiredChange}
-        onNestedPriceChange={handleNestedModifierChange}
-      />
+          <ModifierPricingByVariationSection
+            selectedModifiers={selectedModifiers}
+            selectedVariations={selectedVariations}
+            getTopLevelPriceValue={getTopLevelModifierValue}
+            getTopLevelRequiredValue={getTopLevelModifierRequiredValue}
+            getNestedPriceValue={getNestedModifierValue}
+            onTopLevelPriceChange={handleTopLevelModifierChange}
+            onTopLevelRequiredChange={handleTopLevelRequiredChange}
+            onNestedPriceChange={handleNestedModifierChange}
+          />
+        </>
+      ) : null}
     </div>
   );
 });

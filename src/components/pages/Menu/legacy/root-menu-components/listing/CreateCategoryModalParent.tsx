@@ -11,20 +11,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Loader2, PlusCircle } from "lucide-react";
 import FormInput from "@/components/forms/common/FormInput";
-import { ModifierGroupAssignmentForm } from "@/components/pages/Menu/components/ModifierGroupAssignmentForm";
 import { toast } from "sonner";
-import { useAssignModifierGroupToCategory } from "@/hooks/useModifierGroupAssignments";
 import {
   useCreateMenuCategory,
   useUpdateMenuCategory,
 } from "@/hooks/useMenuCategories";
 import ImageDropzoneUpload from "@/components/ui/ImageDropzoneUpload";
-import {
-  extractEntityId,
-  normalizeMenuCategoryModifierGroupAssignments,
-} from "@/lib/modifier-group-assignment-utils";
 import { getApiErrorMessage } from "@/lib/errors";
-import type { MenuCategoryModifierGroupAssignment } from "@/types/modifier-group-assignments";
 import { useTranslations } from "next-intl";
 
 interface CreateMenuModalProps {
@@ -68,9 +61,6 @@ const getInitialForm = (restaurantId?: string, initialData?: any) => ({
     typeof initialData?.isActive === "boolean" ? initialData.isActive : true,
   parentCategoryId:
     initialData?.parentCategoryId || initialData?.parentCategory?.id || "",
-  modifierGroupAssignments: normalizeMenuCategoryModifierGroupAssignments(
-    initialData?.modifierGroups
-  ),
   restaurantId: restaurantId || initialData?.restaurantId || "",
 });
 
@@ -109,13 +99,9 @@ const restaurantId = authRestaurantId ?? undefined;
 
   const { mutateAsync: updateMenuCategory, isPending: isUpdating } =
     useUpdateMenuCategory();
-  const {
-    mutateAsync: assignModifierGroupToCategory,
-    isPending: isAssigningModifierGroups,
-  } = useAssignModifierGroupToCategory();
 
   const isEditMode = Boolean(initialData?.id);
-  const isSubmitting = isCreating || isUpdating || isAssigningModifierGroups;
+  const isSubmitting = isCreating || isUpdating;
 
   const [form, setForm] = useState(getInitialForm(restaurantId, initialData));
   const [imageUploading, setImageUploading] = useState(false);
@@ -230,43 +216,6 @@ const restaurantId = authRestaurantId ?? undefined;
     resetForm();
   };
 
-  const getAssignmentsToAttach = () => {
-    const assignments = normalizeMenuCategoryModifierGroupAssignments(
-      form.modifierGroupAssignments
-    );
-    const existingGroupIds = new Set(
-      normalizeMenuCategoryModifierGroupAssignments(
-        initialData?.modifierGroups
-      ).map((assignment) => assignment.groupId)
-    );
-
-    return isEditMode
-      ? assignments.filter(
-          (assignment) => !existingGroupIds.has(assignment.groupId)
-        )
-      : assignments;
-  };
-
-  const attachModifierGroupAssignments = async (
-    categoryId: string,
-    assignments: MenuCategoryModifierGroupAssignment[]
-  ) => {
-    await Promise.all(
-      assignments.map((assignment) =>
-        assignModifierGroupToCategory({
-          categoryId,
-          groupId: assignment.groupId,
-          data: {
-            selectionType: assignment.selectionType,
-            minSelect: assignment.minSelect,
-            maxSelect: assignment.maxSelect,
-            sortOrder: assignment.sortOrder,
-          },
-        })
-      )
-    );
-  };
-
   const handleSubmit = async () => {
     if (imageUploading) {
       toast.error(t("waitForImageUpload"));
@@ -292,10 +241,6 @@ const restaurantId = authRestaurantId ?? undefined;
           data: updatePayload,
         });
 
-        await attachModifierGroupAssignments(
-          initialData.id,
-          getAssignmentsToAttach()
-        );
         onSuccess?.();
         onOpenChange(false);
         resetForm();
@@ -307,20 +252,9 @@ const restaurantId = authRestaurantId ?? undefined;
     }
 
     try {
-      const response = await createMenuCategory(
+      await createMenuCategory(
         payload as Parameters<typeof createMenuCategory>[0]
       );
-      const categoryId = extractEntityId(response);
-
-      if (categoryId) {
-        await attachModifierGroupAssignments(
-          categoryId,
-          getAssignmentsToAttach()
-        );
-      } else if (getAssignmentsToAttach().length > 0) {
-        toast.error("Category created but no category id was returned.");
-        return;
-      }
 
       onSuccess?.();
       onOpenChange(false);
@@ -345,7 +279,7 @@ const restaurantId = authRestaurantId ?? undefined;
         onOpenChange(value);
       }}
     >
-      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] overflow-y-auto overflow-x-hidden rounded-[20px] bg-[#F5F5F5] p-4 sm:w-full sm:max-w-[calc(100vw-2rem)] sm:p-6 xl:max-w-[1180px]">
+      <DialogContent className="max-h-[95vh] max-w-[520px] overflow-y-auto overflow-x-hidden rounded-[20px] bg-[#F5F5F5] p-6">
         <DialogHeader className="space-y-1">
           <DialogTitle className="text-2xl font-semibold">
             {isEditMode ? t("updateTitle") : t("createTitle")}
@@ -386,21 +320,6 @@ const restaurantId = authRestaurantId ?? undefined;
             previewAlt={t("imagePreviewAlt")}
             previewHeightClassName="h-[180px]"
             emptyTitle={t("imageEmptyTitle")}
-          />
-
-          <ModifierGroupAssignmentForm
-            mode="category"
-            targetId={initialData?.id || ""}
-            restaurantId={restaurantId}
-            defaultValues={normalizeMenuCategoryModifierGroupAssignments(
-              form.modifierGroupAssignments
-            )}
-            onAssignmentsChange={(assignments) => {
-              setForm((prev) => ({
-                ...prev,
-                modifierGroupAssignments: assignments,
-              }));
-            }}
           />
 
           {/* <div className="space-y-2">
