@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function PromotionManagementLayout({
@@ -10,15 +10,17 @@ export default function PromotionManagementLayout({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { isBranchAdmin, loading } = useAuth();
+  const isGiftCardsRoute = pathname.startsWith("/promotion-management/gift-cards");
 
   useEffect(() => {
-    if (!loading && isBranchAdmin) {
+    if (!loading && isBranchAdmin && !isGiftCardsRoute) {
       router.replace("/branch-workspace");
     }
-  }, [loading, isBranchAdmin, router]);
+  }, [loading, isBranchAdmin, isGiftCardsRoute, router]);
 
-  if (loading || isBranchAdmin) return null;
+  if (loading || (isBranchAdmin && !isGiftCardsRoute)) return null;
 
   return <>{children}</>;
 }

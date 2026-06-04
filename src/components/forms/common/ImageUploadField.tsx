@@ -22,6 +22,7 @@ type ImageUploadFieldProps<TFieldValues extends FieldValues> = {
   value?: string | null;
   error?: string;
   setValue: UseFormSetValue<TFieldValues>;
+  onValueChange?: (value: string) => void;
   placeholder?: string;
   helperText?: string;
   previewAlt?: string;
@@ -40,6 +41,7 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
   value,
   error,
   setValue,
+  onValueChange,
   placeholder = "https://cdn.example.com/image.jpg or /uploads/image.jpg",
   helperText = "Upload an image or paste an existing image URL.",
   previewAlt = "Image preview",
@@ -74,6 +76,7 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
       shouldTouch: true,
       shouldValidate: true,
     });
+    onValueChange?.(nextValue);
   };
 
   const openFilePicker = () => {
@@ -100,6 +103,7 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
         shouldTouch: true,
         shouldValidate: true,
       });
+      onValueChange?.(result.fileUrl);
     } else if (previewObjectUrlRef.current) {
       URL.revokeObjectURL(previewObjectUrlRef.current);
       previewObjectUrlRef.current = null;

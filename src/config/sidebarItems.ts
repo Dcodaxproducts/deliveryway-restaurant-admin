@@ -22,6 +22,7 @@ import {
   BadgeCheck,
   BadgePercent,
   Coins,
+  CreditCard,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { IconType } from "react-icons";
@@ -230,7 +231,25 @@ export const menuItems: MenuItem[] = [
     href: "/promotion-management",
     icon: Gift,
     section: "main",
-    roles: restaurantAdminRoles,
+    roles: allAdminRoles,
+    children: [
+      {
+        title: "Promotions",
+        labelKey: "promotions",
+        href: "/promotion-management",
+        icon: Gift,
+        section: "main",
+        roles: restaurantAdminRoles,
+      },
+      {
+        title: "Gift Cards",
+        labelKey: "giftCards",
+        href: "/promotion-management/gift-cards",
+        icon: CreditCard,
+        section: "main",
+        roles: allAdminRoles,
+      },
+    ],
   },
   {
     title: "Content Management",
