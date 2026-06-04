@@ -637,7 +637,7 @@
       "emptyFiltered": "No menu items match the selected filters.",
       "filtersTitle": "Item filters",
       "filtersDescription": "Filter menu items by name, status, and branch availability.",
-      "showingCount": "Showing {visible} of {total}",
+      "showingCount": "Showing {shown} of {total}",
       "searchPlaceholder": "Search menu items...",
       "savingOrder": "Saving order...",
       "imageAlt": "Menu item image",

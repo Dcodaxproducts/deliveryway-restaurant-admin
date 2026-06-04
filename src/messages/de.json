@@ -637,7 +637,7 @@
       "emptyFiltered": "Keine Menueartikel entsprechen den ausgewaehlten Filtern.",
       "filtersTitle": "Artikelfilter",
       "filtersDescription": "Menueartikel nach Name, Status und Filialverfuegbarkeit filtern.",
-      "showingCount": "Zeige {visible} von {total}",
+      "showingCount": "Zeige {shown} von {total}",
       "searchPlaceholder": "Menueartikel suchen...",
       "savingOrder": "Reihenfolge wird gespeichert...",
       "imageAlt": "Menueartikelbild",
