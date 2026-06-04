@@ -5,6 +5,7 @@ import {
   attachModifierToGroup,
   createModifierGroup,
   deleteModifierGroup,
+  detachModifierFromGroup,
   getModifierGroup,
   getModifierGroups,
   updateModifierGroup,
@@ -126,6 +127,30 @@ export const useAttachModifierToGroup = () => {
     },
     onError: (error: unknown) => {
       toast.error(getApiErrorMessage(error, "Failed to attach modifier"));
+    },
+  });
+};
+
+export const useDetachModifierFromGroup = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      groupId,
+      modifierId,
+    }: {
+      groupId: string;
+      modifierId: string;
+    }) => detachModifierFromGroup(groupId, modifierId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: modifierGroupKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: modifierGroupKeys.detail(variables.groupId),
+      });
+      toast.success("Modifier detached from group successfully!");
+    },
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, "Failed to detach modifier"));
     },
   });
 };

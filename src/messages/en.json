@@ -798,7 +798,6 @@
         "description": "Attach modifiers to this group.",
         "descriptionWithName": "Attach modifiers to {name}.",
         "attachedTitle": "Attached modifiers",
-        "detachUnavailable": "Removing modifiers from a group is not available yet.",
         "noAttached": "No modifiers attached yet.",
         "searchPlaceholder": "Search modifiers...",
         "categoryFilterPlaceholder": "All modifier categories",
@@ -808,8 +807,11 @@
         "attach": "Attach",
         "attached": "Attached",
         "attaching": "Attaching",
+        "detach": "Detach",
+        "detaching": "Detaching",
         "invalidModifier": "Invalid modifier.",
-        "attachFailed": "Unable to attach modifier."
+        "attachFailed": "Unable to attach modifier.",
+        "detachFailed": "Unable to detach modifier."
       }
     },
     "labelsTable": {

@@ -4,6 +4,7 @@ import { httpClient } from "@/lib/axios";
 import {
   attachModifierToGroup,
   createModifierGroup,
+  detachModifierFromGroup,
   getModifierGroups,
 } from "@/services/modifier-groups";
 
@@ -18,11 +19,13 @@ vi.mock("@/lib/axios", () => ({
 
 const mockedGet = vi.mocked(httpClient.get);
 const mockedPost = vi.mocked(httpClient.post);
+const mockedDelete = vi.mocked(httpClient.delete);
 
 describe("modifier groups service", () => {
   beforeEach(() => {
     mockedGet.mockReset();
     mockedPost.mockReset();
+    mockedDelete.mockReset();
   });
 
   it("creates a modifier group with the expected payload", async () => {
@@ -58,6 +61,17 @@ describe("modifier groups service", () => {
       { sortOrder: 2 }
     );
     expect(mockedPost.mock.calls[0]?.[0]).not.toContain("/api/v1");
+  });
+
+  it("detaches a modifier through the group modifier endpoint", async () => {
+    mockedDelete.mockResolvedValueOnce({ success: true });
+
+    await detachModifierFromGroup("group-1", "modifier-1");
+
+    expect(mockedDelete).toHaveBeenCalledWith(
+      "/menu/modifier-groups/group-1/modifiers/modifier-1"
+    );
+    expect(mockedDelete.mock.calls[0]?.[0]).not.toContain("/api/v1");
   });
 
   it("normalizes modifier arrays from list responses", async () => {

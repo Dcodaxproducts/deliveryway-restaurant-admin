@@ -798,7 +798,6 @@
         "description": "Modifier zu dieser Gruppe hinzufuegen.",
         "descriptionWithName": "Modifier zu {name} hinzufuegen.",
         "attachedTitle": "Zugewiesene Modifier",
-        "detachUnavailable": "Das Entfernen von Modifiern aus einer Gruppe ist noch nicht verfuegbar.",
         "noAttached": "Noch keine Modifier zugewiesen.",
         "searchPlaceholder": "Modifier suchen...",
         "categoryFilterPlaceholder": "Alle Modifier-Kategorien",
@@ -808,8 +807,11 @@
         "attach": "Hinzufuegen",
         "attached": "Zugewiesen",
         "attaching": "Wird hinzugefuegt",
+        "detach": "Entfernen",
+        "detaching": "Wird entfernt",
         "invalidModifier": "Ungueltiger Modifier.",
-        "attachFailed": "Modifier konnte nicht hinzugefuegt werden."
+        "attachFailed": "Modifier konnte nicht hinzugefuegt werden.",
+        "detachFailed": "Modifier konnte nicht entfernt werden."
       }
     },
     "labelsTable": {

@@ -13,6 +13,7 @@ import PaginationSection from "@/components/common/pagination";
 import ModifierCategoryInfiniteSelect from "@/components/pages/Menu/modifiers/components/ModifierCategoryInfiniteSelect";
 import {
   useAttachModifierToGroup,
+  useDetachModifierFromGroup,
   useModifierGroup,
 } from "@/hooks/useModifierGroups";
 import { useModifiers } from "@/hooks/useModifiers";
@@ -60,12 +61,15 @@ export function ManageGroupModifiersDialog({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [sortOrders, setSortOrders] = useState<Record<string, string>>({});
+  const [attachingModifierId, setAttachingModifierId] = useState<string | null>(null);
+  const [detachingModifierId, setDetachingModifierId] = useState<string | null>(null);
 
   const groupId = group?.id;
-  const { data: groupDetail, isFetching: isGroupFetching } = useModifierGroup(
-    groupId,
-    { restaurantId }
-  );
+  const {
+    data: groupDetail,
+    isFetching: isGroupFetching,
+    refetch: refetchGroup,
+  } = useModifierGroup(groupId, { restaurantId });
   const activeGroup = groupDetail ?? group;
 
   useEffect(() => {
@@ -84,6 +88,8 @@ export function ManageGroupModifiersDialog({
       setCategoryId("");
       setPage(1);
       setSortOrders({});
+      setAttachingModifierId(null);
+      setDetachingModifierId(null);
     }
   }, [open]);
 
@@ -101,6 +107,8 @@ export function ManageGroupModifiersDialog({
   });
   const { mutateAsync: attachModifier, isPending: isAttaching } =
     useAttachModifierToGroup();
+  const { mutateAsync: detachModifier, isPending: isDetaching } =
+    useDetachModifierFromGroup();
 
   const modifiers = useMemo(
     () => modifiersResponse?.data ?? [],
@@ -154,6 +162,7 @@ export function ManageGroupModifiersDialog({
     }
 
     try {
+      setAttachingModifierId(modifier.id);
       await attachModifier({
         groupId,
         modifierId: modifier.id,
@@ -161,8 +170,28 @@ export function ManageGroupModifiersDialog({
           sortOrder: parsed.data.sortOrder,
         },
       });
+      await refetchGroup();
     } catch (error: unknown) {
       toast.error(getApiErrorMessage(error, t("attachFailed")));
+    } finally {
+      setAttachingModifierId(null);
+    }
+  };
+
+  const handleDetach = async (modifier: ModifierGroupModifier) => {
+    if (!groupId) return;
+
+    try {
+      setDetachingModifierId(modifier.id);
+      await detachModifier({
+        groupId,
+        modifierId: modifier.id,
+      });
+      await refetchGroup();
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, t("detachFailed")));
+    } finally {
+      setDetachingModifierId(null);
     }
   };
 
@@ -191,10 +220,6 @@ export function ManageGroupModifiersDialog({
               ) : null}
             </div>
 
-            <p className="mt-2 text-xs text-gray-500">
-              {t("detachUnavailable")}
-            </p>
-
             <div className="mt-4 space-y-3">
               {attachedModifiers.length === 0 ? (
                 <p className="rounded-[12px] border border-dashed border-gray-200 p-4 text-center text-sm text-gray-400">
@@ -202,7 +227,14 @@ export function ManageGroupModifiersDialog({
                 </p>
               ) : (
                 attachedModifiers.map((modifier) => (
-                  <AttachedModifierCard key={modifier.id} modifier={modifier} />
+                  <AttachedModifierCard
+                    key={modifier.id}
+                    modifier={modifier}
+                    isDetaching={
+                      isDetaching && detachingModifierId === modifier.id
+                    }
+                    onDetach={() => void handleDetach(modifier)}
+                  />
                 ))
               )}
             </div>
@@ -268,7 +300,9 @@ export function ManageGroupModifiersDialog({
                     sortOrder={
                       sortOrders[modifier.id] ?? String(modifier.sortOrder ?? 0)
                     }
-                    isAttaching={isAttaching}
+                    isAttaching={
+                      isAttaching && attachingModifierId === modifier.id
+                    }
                     onSortOrderChange={(value) =>
                       updateSortOrder(modifier.id, value)
                     }
@@ -290,21 +324,41 @@ export function ManageGroupModifiersDialog({
 
 function AttachedModifierCard({
   modifier,
+  isDetaching,
+  onDetach,
 }: {
   modifier: ModifierGroupModifier;
+  isDetaching: boolean;
+  onDetach: () => void;
 }) {
   const t = useTranslations("menu.modifierGroupsTable.manage");
 
   return (
     <div className="rounded-[12px] border border-gray-100 bg-[#FAFAFA] p-3">
-      <p className="text-sm font-medium text-gray-900">{modifier.name}</p>
-      <p className="mt-1 text-xs text-gray-500">
-        {modifier.category?.name || t("noCategory")} · $
-        {formatPrice(modifier.priceDelta)}
-      </p>
-      <p className="mt-1 text-xs text-gray-400">
-        {t("sortOrder")}: {modifier.sortOrder ?? 0}
-      </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-gray-900">
+            {modifier.name}
+          </p>
+          <p className="mt-1 text-xs text-gray-500">
+            {modifier.category?.name || t("noCategory")} · $
+            {formatPrice(modifier.priceDelta)}
+          </p>
+          <p className="mt-1 text-xs text-gray-400">
+            {t("sortOrder")}: {modifier.sortOrder ?? 0}
+          </p>
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isDetaching}
+          onClick={onDetach}
+          className="h-[34px] rounded-[10px] border-gray-200 px-3 text-xs text-gray-700"
+        >
+          {isDetaching ? t("detaching") : t("detach")}
+        </Button>
+      </div>
     </div>
   );
 }

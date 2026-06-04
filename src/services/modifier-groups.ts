@@ -273,3 +273,11 @@ export const attachModifierToGroup = (
     `${MODIFIER_GROUPS_ENDPOINT}/${groupId}/modifiers/${modifierId}`,
     payload
   );
+
+export const detachModifierFromGroup = (
+  groupId: string,
+  modifierId: string
+) =>
+  httpClient.delete<unknown>(
+    `${MODIFIER_GROUPS_ENDPOINT}/${groupId}/modifiers/${modifierId}`
+  );
