@@ -39,6 +39,8 @@ type ManageGroupModifiersDialogProps = {
   restaurantId?: string;
 };
 
+const SHOW_DETACH_ACTION = false;
+
 const formatPrice = (priceDelta?: string | number | null) => {
   const numeric = Number(priceDelta ?? 0);
 
@@ -405,15 +407,17 @@ function AttachedModifierCard({
           </p>
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isDetaching}
-          onClick={onDetach}
-          className="h-[34px] rounded-[10px] border-gray-200 px-3 text-xs text-gray-700"
-        >
-          {isDetaching ? t("detaching") : t("detach")}
-        </Button>
+        {SHOW_DETACH_ACTION ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isDetaching}
+            onClick={onDetach}
+            className="h-[34px] rounded-[10px] border-gray-200 px-3 text-xs text-gray-700"
+          >
+            {isDetaching ? t("detaching") : t("detach")}
+          </Button>
+        ) : null}
       </div>
     </div>
   );
