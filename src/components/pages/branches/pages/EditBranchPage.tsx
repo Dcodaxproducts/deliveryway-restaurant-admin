@@ -20,7 +20,6 @@ import {
   getDeliveryConfigValidationError,
   hydrateBranchForEdit,
   normalizeDeliveryConfigForApi,
-  normalizeHolidayRangesForApi,
   normalizeOpeningHoursForApi,
   type BranchFormData,
   type EditTab,
@@ -87,9 +86,6 @@ export default function BranchesEditPage() {
       branchId: branchId as string,
       data: {
         openingHours: normalizeOpeningHoursForApi(settings.openingHours),
-        settings: {
-          holidayRanges: normalizeHolidayRangesForApi(settings.holidayRanges),
-        },
       },
     });
 

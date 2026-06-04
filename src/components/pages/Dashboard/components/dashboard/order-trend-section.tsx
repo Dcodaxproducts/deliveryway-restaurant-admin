@@ -5,7 +5,7 @@ import OrdersGraph from "@/components/pages/Reports/components/graphs/orders-gra
 
 export default function AnalyticsGrid() {
   return (
-   <div className="grid grid-cols-1 xl:grid-cols-2 gap-[24px] w-full">
+   <div className="grid w-full min-w-0 grid-cols-1 gap-[24px] overflow-hidden xl:grid-cols-2">
 
       {/* Pie chart section */}
       <PieStatsGraph />

@@ -19,6 +19,7 @@ import {
   UpdateBranchHolidayOpeningHoursPayload,
   updateBranchHolidayOpeningHours,
 } from "@/services/branches/branches.api";
+import type { OpeningHoursValues } from "@/validations/branches";
 import { useRouter } from "next/navigation";
 
 /**
@@ -196,7 +197,7 @@ export const useUpdateOpeningHours = () => {
       data,
     }: {
       branchId: string;
-      data: any;
+      data: OpeningHoursValues;
     }) => updateOpeningHours(branchId, data),
 
     onSuccess: (_, variables) => {

@@ -205,9 +205,18 @@ export const BulkBranchSchema = z.object({
 export const OpeningHoursSchema = z.object({
   dayOfWeek: DayOfWeekEnum,
   isClosed: z.boolean(),
-  openTime: z.any().optional(),
-  closeTime: z.any().optional(),
-  note: z.any().optional(),
+  openTime: z.string().optional(),
+  closeTime: z.string().optional(),
+  breakTimes: z
+    .array(
+      z.object({
+        startTime: z.string(),
+        endTime: z.string(),
+        note: z.string().optional(),
+      })
+    )
+    .optional(),
+  note: z.string().optional(),
 });
 
 export const UpdateOpeningHoursSchema = z.object({

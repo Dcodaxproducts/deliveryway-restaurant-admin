@@ -20,7 +20,7 @@ const DAYS = [
   "THURSDAY",
   "FRIDAY",
   "SATURDAY",
-];
+] as const;
 
 const DELIVERY_MODES: DeliveryMode[] = ["RADIUS", "ZONE", "ZONE_BANDS", "POSTAL_CODE"];
 

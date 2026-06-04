@@ -7,9 +7,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Clock, Loader2, Plus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { httpClient } from "@/lib/axios";
+import { Clock, Loader2, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useGetOpeningHours, useUpdateOpeningHours } from "@/hooks/useBranches";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
@@ -44,20 +44,6 @@ interface OpeningHour {
   note?: string;
 }
 
-interface HolidayRange {
-  id?: string;
-  fromDate: string;
-  toDate: string;
-  isClosed: boolean;
-  openTime: string;
-  closeTime: string;
-  note?: string;
-}
-
-type OpeningHoursSettings = Record<string, any> & {
-  holidayRanges?: HolidayRange[];
-};
-
 const DAYS: DayOfWeek[] = [
   "MONDAY",
   "TUESDAY",
@@ -77,15 +63,6 @@ const createDefaultOpeningHour = (dayOfWeek: DayOfWeek): OpeningHour => ({
   openTime: DEFAULT_OPEN_TIME,
   closeTime: DEFAULT_CLOSE_TIME,
   breakTimes: [],
-  note: "",
-});
-
-const createDefaultHolidayRange = (): HolidayRange => ({
-  fromDate: "",
-  toDate: "",
-  isClosed: true,
-  openTime: DEFAULT_OPEN_TIME,
-  closeTime: DEFAULT_CLOSE_TIME,
   note: "",
 });
 
@@ -124,22 +101,6 @@ const normalizeOpeningHours = (value: any): OpeningHour[] => {
   });
 };
 
-const normalizeHolidayRanges = (value: any): HolidayRange[] => {
-  if (!Array.isArray(value)) return [];
-
-  return value.map((holiday) => ({
-    id: holiday?.id,
-    fromDate: String(
-      holiday?.fromDate || holiday?.startDate || holiday?.dateFrom || ""
-    ),
-    toDate: String(holiday?.toDate || holiday?.endDate || holiday?.dateTo || ""),
-    isClosed: Boolean(holiday?.isClosed),
-    openTime: String(holiday?.openTime || DEFAULT_OPEN_TIME),
-    closeTime: String(holiday?.closeTime || DEFAULT_CLOSE_TIME),
-    note: String(holiday?.note || ""),
-  }));
-};
-
 const formatDayLabel = (day: string) => {
   return day
     .toLowerCase()
@@ -159,18 +120,6 @@ const getResponseOpeningHours = (payload: any) => {
   return [];
 };
 
-const getResponseSettings = (payload: any): OpeningHoursSettings => {
-  if (payload?.data?.settings && typeof payload.data.settings === "object") {
-    return payload.data.settings;
-  }
-
-  if (payload?.settings && typeof payload.settings === "object") {
-    return payload.settings;
-  }
-
-  return {};
-};
-
 export default function OpeningHoursModal({
   open,
   onOpenChange,
@@ -179,53 +128,22 @@ export default function OpeningHoursModal({
 }: Props) {
   const t = useTranslations("branches");
   const commonT = useTranslations("common");
-  const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(false);
   const [hours, setHours] = useState<OpeningHour[]>(
     DAYS.map(createDefaultOpeningHour)
   );
-  const [settings, setSettings] = useState<OpeningHoursSettings>({});
-  const [holidayRanges, setHolidayRanges] = useState<HolidayRange[]>([]);
-
-  const hasHolidayRanges = holidayRanges.length > 0;
-
-  const visibleHolidayRanges = useMemo(() => {
-    return hasHolidayRanges ? holidayRanges : [createDefaultHolidayRange()];
-  }, [hasHolidayRanges, holidayRanges]);
+  const {
+    data: openingHoursResponse,
+    isLoading: fetching,
+    isFetching,
+  } = useGetOpeningHours(open && branchId ? branchId : "");
+  const updateOpeningHoursMutation = useUpdateOpeningHours();
+  const loading = updateOpeningHoursMutation.isPending;
 
   useEffect(() => {
-    if (!open || !branchId) return;
+    if (!open || !openingHoursResponse) return;
 
-    const fetchHours = async () => {
-      try {
-        setFetching(true);
-
-        const data = await httpClient.get<Record<string, any>>(`/branches/${branchId}/opening-hours`);
-
-        const nextSettings = getResponseSettings(data);
-        const nextOpeningHours = normalizeOpeningHours(
-          getResponseOpeningHours(data)
-        );
-
-        const nextHolidayRanges = normalizeHolidayRanges(
-          nextSettings?.holidayRanges ||
-            data?.data?.holidayRanges ||
-            data?.holidayRanges ||
-            []
-        );
-
-        setHours(nextOpeningHours);
-        setSettings(nextSettings);
-        setHolidayRanges(nextHolidayRanges);
-      } catch (err: any) {
-        toast.error(err.message || t("failedFetchOpeningHours"));
-      } finally {
-        setFetching(false);
-      }
-    };
-
-    fetchHours();
-  }, [open, branchId]);
+    setHours(normalizeOpeningHours(getResponseOpeningHours(openingHoursResponse)));
+  }, [open, openingHoursResponse]);
 
   const handleHourChange = (
     index: number,
@@ -304,43 +222,6 @@ export default function OpeningHoursModal({
     );
   };
 
-  const ensureHolidayRangesVisible = () => {
-    if (!hasHolidayRanges) {
-      setHolidayRanges([createDefaultHolidayRange()]);
-    }
-  };
-
-  const addHolidayRange = () => {
-    setHolidayRanges((prev) => [...prev, createDefaultHolidayRange()]);
-  };
-
-  const updateHolidayRange = (
-    index: number,
-    field: keyof HolidayRange,
-    value: any
-  ) => {
-    ensureHolidayRangesVisible();
-
-    setHolidayRanges((prev) => {
-      const current = prev.length ? prev : [createDefaultHolidayRange()];
-
-      return current.map((holiday, holidayIndex) =>
-        holidayIndex === index
-          ? {
-              ...holiday,
-              [field]: value,
-            }
-          : holiday
-      );
-    });
-  };
-
-  const removeHolidayRange = (index: number) => {
-    setHolidayRanges((prev) =>
-      prev.filter((_, holidayIndex) => holidayIndex !== index)
-    );
-  };
-
   const validateOpeningHours = () => {
     for (const day of hours) {
       if (!day.isClosed && isTimeRangeInvalid(day.openTime, day.closeTime)) {
@@ -382,34 +263,6 @@ export default function OpeningHoursModal({
       }
     }
 
-    for (const holiday of holidayRanges) {
-      const hasAnyHolidayValue =
-        holiday.fromDate ||
-        holiday.toDate ||
-        holiday.note ||
-        (!holiday.isClosed && (holiday.openTime || holiday.closeTime));
-
-      if (!hasAnyHolidayValue) continue;
-
-      if (!holiday.fromDate || !holiday.toDate) {
-        toast.error(t("holidayRangeRequiresDates"));
-        return false;
-      }
-
-      if (holiday.fromDate > holiday.toDate) {
-        toast.error(t("holidayToDateInvalid"));
-        return false;
-      }
-
-      if (
-        !holiday.isClosed &&
-        isTimeRangeInvalid(holiday.openTime, holiday.closeTime)
-      ) {
-        toast.error(t("holidayCloseTimeInvalid"));
-        return false;
-      }
-    }
-
     return true;
   };
 
@@ -432,48 +285,19 @@ export default function OpeningHoursModal({
     }));
   };
 
-  const sanitizeHolidayRanges = () => {
-    return holidayRanges
-      .filter(
-        (holiday) =>
-          holiday.fromDate ||
-          holiday.toDate ||
-          holiday.note ||
-          (!holiday.isClosed && (holiday.openTime || holiday.closeTime))
-      )
-      .map((holiday) => ({
-        ...(holiday.id ? { id: holiday.id } : {}),
-        fromDate: holiday.fromDate,
-        toDate: holiday.toDate,
-        isClosed: Boolean(holiday.isClosed),
-        openTime: holiday.openTime || DEFAULT_OPEN_TIME,
-        closeTime: holiday.closeTime || DEFAULT_CLOSE_TIME,
-        note: holiday.note?.trim() || undefined,
-      }));
-  };
-
   const handleSubmit = async () => {
     if (!validateOpeningHours()) return;
 
     try {
-      setLoading(true);
-
       const payload = {
         openingHours: sanitizeOpeningHours(),
-        settings: {
-          ...settings,
-          holidayRanges: sanitizeHolidayRanges(),
-        },
       };
 
-      await httpClient.put(`/branches/${branchId}/opening-hours`, payload);
+      await updateOpeningHoursMutation.mutateAsync({ branchId, data: payload });
 
-      toast.success(t("openingHoursSaved"));
       onOpenChange(false);
-    } catch (err: any) {
-      toast.error(err.message || t("saveFailed"));
-    } finally {
-      setLoading(false);
+    } catch {
+      // useUpdateOpeningHours already surfaces the backend error message.
     }
   };
 
@@ -510,7 +334,7 @@ export default function OpeningHoursModal({
             </div>
           </div>
 
-          {fetching ? (
+          {fetching || isFetching ? (
             <div className="flex items-center gap-2 rounded-[12px] border border-gray-100 bg-gray-50 p-4 text-sm text-gray-500">
               <Loader2 size={16} className="animate-spin" />
               {t("loadingOpeningHours")}
@@ -728,166 +552,9 @@ export default function OpeningHoursModal({
           )}
         </section>
 
-        <section className="w-full min-w-0 overflow-hidden rounded-[16px] bg-white p-4 sm:p-5">
-          <div className="mb-4 flex min-w-0 flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <CalendarDays size={17} className="text-primary" />
-                <h3 className="text-base font-semibold text-gray-900">
-                  {t("holidayDateRanges")}
-                </h3>
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
-                {t("holidayDateRangesDescription")}
-              </p>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={addHolidayRange}
-              className="h-10 shrink-0 rounded-full border-primary/20 bg-primary/5 px-4 text-sm font-medium text-primary hover:bg-primary/10"
-            >
-              <Plus size={15} />
-              {t("addHolidayRange")}
-            </Button>
-          </div>
-
-          {!hasHolidayRanges ? (
-            <div className="rounded-[12px] border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
-              {t("noHolidayRange")}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {visibleHolidayRanges.map((holiday, index) => (
-                <div
-                  key={`holiday-range-${holiday.id || index}`}
-                  className="min-w-0 rounded-[14px] border border-gray-100 bg-gray-50/70 p-4"
-                >
-                  <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-gray-900">
-                      {t("holidayRange", { index: index + 1 })}
-                    </p>
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeHolidayRange(index)}
-                      className="h-9 w-9 rounded-md text-red-500 hover:bg-red-50 hover:text-red-600"
-                    >
-                      <Trash2 size={15} />
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <label className="min-w-0 space-y-1.5">
-                      <span className="text-xs font-medium text-gray-500">
-                        {t("fromDate")}
-                      </span>
-
-                      <input
-                        type="date"
-                        value={holiday.fromDate}
-                        onChange={(e) =>
-                          updateHolidayRange(
-                            index,
-                            "fromDate",
-                            e.target.value
-                          )
-                        }
-                        className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
-                      />
-                    </label>
-
-                    <label className="min-w-0 space-y-1.5">
-                      <span className="text-xs font-medium text-gray-500">
-                        {t("toDate")}
-                      </span>
-
-                      <input
-                        type="date"
-                        value={holiday.toDate}
-                        onChange={(e) =>
-                          updateHolidayRange(index, "toDate", e.target.value)
-                        }
-                        className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
-                      />
-                    </label>
-                  </div>
-
-                  <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={holiday.isClosed}
-                      onChange={(e) =>
-                        updateHolidayRange(index, "isClosed", e.target.checked)
-                      }
-                      className="accent-[var(--primary)]"
-                    />
-                    {t("closedDuringHolidayRange")}
-                  </label>
-
-                  {!holiday.isClosed ? (
-                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <label className="min-w-0 space-y-1.5">
-                        <span className="text-xs font-medium text-gray-500">
-                          {t("holidayOpenTime")}
-                        </span>
-
-                        <input
-                          type="time"
-                          value={holiday.openTime || ""}
-                          onChange={(e) =>
-                            updateHolidayRange(
-                              index,
-                              "openTime",
-                              e.target.value
-                            )
-                          }
-                          className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
-                        />
-                      </label>
-
-                      <label className="min-w-0 space-y-1.5">
-                        <span className="text-xs font-medium text-gray-500">
-                          {t("holidayCloseTime")}
-                        </span>
-
-                        <input
-                          type="time"
-                          value={holiday.closeTime || ""}
-                          onChange={(e) =>
-                            updateHolidayRange(
-                              index,
-                              "closeTime",
-                              e.target.value
-                            )
-                          }
-                          className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
-                        />
-                      </label>
-                    </div>
-                  ) : null}
-
-                  <input
-                    type="text"
-                    placeholder={t("holidayNoteOptional")}
-                    value={holiday.note || ""}
-                    onChange={(e) =>
-                      updateHolidayRange(index, "note", e.target.value)
-                    }
-                    className="mt-3 h-11 w-full min-w-0 rounded-[10px] border border-gray-200 bg-white px-3 text-sm outline-none placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/10"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
         <Button
           onClick={handleSubmit}
-          disabled={loading || fetching}
+          disabled={loading || fetching || isFetching}
           className="w-full rounded-[10px] bg-primary py-4 hover:bg-primary/90 disabled:opacity-50"
         >
           {loading ? commonT("saving") : t("saveOpeningHours")}

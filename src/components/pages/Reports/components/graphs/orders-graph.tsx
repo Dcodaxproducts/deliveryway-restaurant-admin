@@ -57,7 +57,7 @@ const OrdersGraph = () => {
 
   const loading = authLoading || isLoading || isFetching;
 return (
-  <Card className="h-full rounded-[16px] border-none bg-white p-[24px] shadow-none">
+  <Card className="h-full min-w-0 overflow-hidden rounded-[16px] border-none bg-white p-[24px] shadow-none">
     <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-3">
@@ -74,8 +74,8 @@ return (
         </p>
       </div>
 
-      <div className="flex items-center justify-between gap-3 sm:justify-end">
-        <div className="flex items-center rounded-[12px] bg-[#F5F6F8] p-1">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 sm:justify-end">
+        <div className="flex min-w-0 flex-wrap items-center rounded-[12px] bg-[#F5F6F8] p-1">
           {(["daily", "weekly", "monthly"] as TrendRange[]).map((item) => {
             const active = range === item;
 
@@ -109,7 +109,7 @@ return (
     </div>
 
     {/* Chart */}
-    <div className="h-[260px] w-full">
+    <div className="h-[260px] w-full min-w-0">
       {loading ? (
         <div className="h-full w-full animate-pulse rounded-[16px] bg-gray-100" />
       ) : chartData.length === 0 ? (

@@ -43,12 +43,12 @@ const PieStatsGraph = () => {
   }));
 
   return (
-   <Card className="p-[24px] border-none shadow-none rounded-[16px] bg-white h-full ">
+   <Card className="h-full min-w-0 overflow-hidden rounded-[16px] border-none bg-white p-[24px] shadow-none">
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-base font-medium text-dark">{t("pieChart")}</h3>
 
-        <div className="flex items-center gap-6 text-sm text-gray-500">
+        <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500">
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" className="rounded" />
             {t("chart")}
@@ -61,7 +61,7 @@ const PieStatsGraph = () => {
       </div>
 
       {/* Donuts */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
         {translatedData.map((item) => (
           <div key={item.label} className="flex flex-col items-center">
             <div className="relative size-[110px]">

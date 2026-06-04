@@ -132,7 +132,7 @@ export default function Home() {
   const statsLoading = authLoading || isLoading || isFetching;
 
   return (
-    <Container>
+    <Container className="max-w-full overflow-x-clip">
       <Header
         title={isBranchAdmin ? t("branchOverviewTitle") : t("overviewTitle")}
         description={

@@ -56,6 +56,13 @@ const createEmptyHolidayRow = (): HolidayHourRow => ({
   note: "",
 });
 
+const getLocalTodayInputValue = () => {
+  const today = new Date();
+  const timezoneOffsetMs = today.getTimezoneOffset() * 60_000;
+
+  return new Date(today.getTime() - timezoneOffsetMs).toISOString().slice(0, 10);
+};
+
 const extractHolidayOpeningHours = (response: any): any[] => {
   const candidates = [
     response?.data?.holidayOpeningHours,
@@ -99,6 +106,7 @@ export default function AddHolidayHoursInfo({
     useUpdateBranchHolidayOpeningHours();
 
   const fetching = isLoading || isFetching;
+  const todayDate = useMemo(() => getLocalTodayInputValue(), []);
 
   const closedCount = useMemo(() => {
     return rows.filter((row) => row.isClosed).length;
@@ -304,6 +312,7 @@ export default function AddHolidayHoursInfo({
                   key={row.id}
                   row={row}
                   index={index}
+                  minDate={todayDate}
                   isSaving={isSaving}
                   onChange={handleChange}
                   onRemove={handleRemoveRow}
@@ -384,6 +393,7 @@ export default function AddHolidayHoursInfo({
 function HolidayHourItem({
   row,
   index,
+  minDate,
   isSaving,
   onChange,
   onRemove,
@@ -391,6 +401,7 @@ function HolidayHourItem({
 }: {
   row: HolidayHourRow;
   index: number;
+  minDate: string;
   isSaving: boolean;
   onChange: (
     rowId: string,
@@ -467,6 +478,7 @@ function HolidayHourItem({
             <input
               type="date"
               value={row.date}
+              min={minDate}
               disabled={isSaving}
               onChange={(event) =>
                 onChange(row.id, "date", event.target.value)
