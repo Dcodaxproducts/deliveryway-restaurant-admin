@@ -273,7 +273,7 @@ export function ModifierGroupAssignmentForm({
   };
 
   return (
-    <section className="rounded-[18px] border border-gray-100 bg-white p-5 shadow-sm">
+    <section className="w-full min-w-0 rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
       <div className="mb-4">
         <h3 className="text-base font-semibold text-gray-900">
           Modifier Groups
@@ -284,8 +284,8 @@ export function ModifierGroupAssignmentForm({
         </p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[16px] border border-gray-100 bg-[#FAFAFA] p-4">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]">
+        <div className="min-w-0 rounded-[16px] border border-gray-100 bg-[#FAFAFA] p-3 sm:p-4">
           <div className="relative mb-3">
             <Search
               size={16}
@@ -299,7 +299,7 @@ export function ModifierGroupAssignmentForm({
             />
           </div>
 
-          <div className="max-h-[260px] space-y-2 overflow-y-auto pr-1 [scrollbar-width:thin]">
+          <div className="max-h-[260px] space-y-2 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:thin]">
             {isLoading && groupOptions.length === 0 ? (
               <div className="flex items-center justify-center gap-2 rounded-[12px] bg-white p-5 text-sm text-gray-500">
                 <Loader2 size={16} className="animate-spin" />
@@ -319,15 +319,15 @@ export function ModifierGroupAssignmentForm({
                     key={group.id}
                     type="button"
                     onClick={() => updateDraft("groupId", group.id)}
-                    className={`w-full rounded-[12px] border bg-white p-3 text-left transition ${
+                    className={`w-full min-w-0 rounded-[12px] border bg-white p-3 text-left transition ${
                       selected
                         ? "border-primary ring-2 ring-primary/10"
                         : "border-gray-100 hover:border-primary/30"
                     }`}
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
                       <span
-                        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border ${
+                        className={`mt-0.5 hidden h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border sm:flex ${
                           selected
                             ? "border-primary bg-primary text-white"
                             : "border-gray-300 text-transparent"
@@ -336,15 +336,15 @@ export function ModifierGroupAssignmentForm({
                         <Check size={14} />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold text-gray-900">
+                        <span className="block break-words text-sm font-semibold text-gray-900">
                           {group.name}
                         </span>
-                        <span className="mt-1 block truncate text-xs text-gray-500">
+                        <span className="mt-1 block break-words text-xs leading-5 text-gray-500">
                           {getGroupDescription(group)}
                         </span>
                       </span>
                       {assigned ? (
-                        <span className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary">
+                        <span className="w-fit shrink-0 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary">
                           Added
                         </span>
                       ) : null}
@@ -368,15 +368,15 @@ export function ModifierGroupAssignmentForm({
           ) : null}
         </div>
 
-        <div className="space-y-4 rounded-[16px] border border-gray-100 bg-white p-4">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="min-w-0 space-y-4 rounded-[16px] border border-gray-100 bg-white p-3 sm:p-4">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {PRESETS.map((preset) => (
               <Button
                 key={preset.label}
                 type="button"
                 variant="outline"
                 onClick={() => applyPreset(preset)}
-                className="h-auto min-h-[38px] rounded-[10px] px-3 py-2 text-xs"
+                className="h-auto min-h-[38px] whitespace-normal rounded-[10px] px-3 py-2 text-center text-xs leading-4"
               >
                 {preset.label}
               </Button>
@@ -396,7 +396,7 @@ export function ModifierGroupAssignmentForm({
             </select>
           </FieldLabel>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <FieldLabel label="Min select">
               <NumberInput
                 value={draft.minSelect}
@@ -409,14 +409,13 @@ export function ModifierGroupAssignmentForm({
                 onChange={(value) => updateDraft("maxSelect", value)}
               />
             </FieldLabel>
+            <FieldLabel label="Sort order">
+              <NumberInput
+                value={draft.sortOrder}
+                onChange={(value) => updateDraft("sortOrder", value)}
+              />
+            </FieldLabel>
           </div>
-
-          <FieldLabel label="Sort order">
-            <NumberInput
-              value={draft.sortOrder}
-              onChange={(value) => updateDraft("sortOrder", value)}
-            />
-          </FieldLabel>
 
           <Button
             type="button"
@@ -430,17 +429,17 @@ export function ModifierGroupAssignmentForm({
       </div>
 
       {assignments.length > 0 ? (
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 min-w-0 space-y-2">
           {assignments.map((assignment) => (
             <div
               key={assignment.groupId}
-              className="flex flex-col gap-3 rounded-[12px] border border-gray-100 bg-[#FAFAFA] p-3 sm:flex-row sm:items-center sm:justify-between"
+              className="flex min-w-0 flex-col gap-3 rounded-[12px] border border-gray-100 bg-[#FAFAFA] p-3 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-gray-900">
+                <p className="break-words text-sm font-semibold text-gray-900">
                   {assignment.group?.name || assignment.groupId}
                 </p>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 break-words text-xs leading-5 text-gray-500">
                   {assignment.selectionType} · {assignment.minSelect}/
                   {assignment.maxSelect} · Sort {assignment.sortOrder ?? 0} ·{" "}
                   {isRequiredModifierGroupAssignment(assignment)
@@ -475,8 +474,8 @@ function FieldLabel({
   children: ReactNode;
 }) {
   return (
-    <label className="block space-y-1">
-      <span className="text-sm text-gray-600">{label}</span>
+    <label className="block min-w-0 space-y-1">
+      <span className="block text-sm text-gray-600">{label}</span>
       {children}
     </label>
   );
@@ -497,7 +496,7 @@ function NumberInput({
       onKeyDown={blockInvalidNumberKeys}
       onPaste={blockNegativeNumberPaste}
       onChange={(event) => onChange(event.target.value)}
-      className="h-[40px] w-full rounded-[10px] border border-gray-200 px-3 text-sm outline-none focus:border-primary/40"
+      className="h-[40px] w-full min-w-0 rounded-[10px] border border-gray-200 px-3 text-sm outline-none focus:border-primary/40"
     />
   );
 }
