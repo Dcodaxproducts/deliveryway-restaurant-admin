@@ -106,6 +106,9 @@ export function TableReservationStatusUpdateDialog({
           <DialogDescription>
             {t("updateStatusDescription")}
           </DialogDescription>
+          <p className="text-xs leading-relaxed text-gray-500">
+            {t("statusCapacityHelper")}
+          </p>
         </DialogHeader>
 
         <form className="mt-5 space-y-4" noValidate onSubmit={handleSubmit(onSubmit)}>

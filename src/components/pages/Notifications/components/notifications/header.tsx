@@ -5,12 +5,13 @@ import Header from "@/components/common/PageHeader";
 import { useMarkAllNotificationsSeen } from "@/hooks/useNotifications";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import type { AdminNotification } from "@/types/notifications";
 
 interface Props {
   title: string;
   description: string;
   hasUnread: boolean;
-  notifications: any[];
+  notifications: AdminNotification[];
   refetch: () => void;
 }
 

@@ -36,7 +36,6 @@ const statusOptions = [
   { labelKey: "confirmed", value: "CONFIRMED", helperKey: "confirmedReservations" },
   { labelKey: "cancelled", value: "CANCELLED", helperKey: "cancelledReservations" },
   { labelKey: "completed", value: "COMPLETED", helperKey: "completedReservations" },
-  { labelKey: "noShow", value: "NO_SHOW", helperKey: "noShowReservations" },
   { labelKey: "seated", value: "SEATED", helperKey: "seatedReservations" },
 ];
 

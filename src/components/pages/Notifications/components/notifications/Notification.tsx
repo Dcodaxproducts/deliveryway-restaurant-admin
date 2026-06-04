@@ -7,9 +7,15 @@ import {
   Bell,
 } from "lucide-react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import {
+  formatAdminNotification,
+  type NotificationCategory,
+} from "@/components/pages/Notifications/utils/notification-formatters";
+import type { AdminNotification } from "@/types/notifications";
 
 interface Props {
-  notifications: any[];
+  notifications: AdminNotification[];
   loading: boolean;
   selectedTab: string;
   setSelectedTab: (tab: string) => void;
@@ -21,8 +27,8 @@ export default function Notifications({
   selectedTab,
   setSelectedTab,
 }: Props) {
-  const getIcon = (type: string) => {
-    switch (type) {
+  const getIcon = (category: NotificationCategory) => {
+    switch (category) {
       case "reservation":
         return <UserPlus />;
       case "payout":
@@ -40,6 +46,7 @@ export default function Notifications({
       : notifications.filter(
           (n) => n.status === "PENDING"
         );
+  const formattedNotifications = filteredNotifications.map(formatAdminNotification);
 
   return (
     <div className="space-y-4">
@@ -89,25 +96,21 @@ export default function Notifications({
 
       {/* List */}
       {!loading &&
-        filteredNotifications.map((notification) => (
-          <Card
-            key={notification.id}
-            className="bg-white shadow-sm hover:shadow-lg transition-all"
-          >
+        formattedNotifications.map((notification) => {
+          const content = (
             <CardContent className="flex items-center justify-between p-4">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-primary text-white rounded-full">
-                  {getIcon(notification.type)}
+                  {getIcon(notification.category)}
                 </div>
 
                 <div>
                   <CardTitle className="font-semibold text-gray-900 mb-1">
-                    {notification.title || "Notification"}
+                    {notification.title}
                   </CardTitle>
 
                   <p className="text-sm text-gray-500">
-                    {notification.description ||
-                      "No description"}
+                    {notification.description}
                   </p>
                 </div>
               </div>
@@ -120,8 +123,23 @@ export default function Notifications({
                   : ""}
               </span>
             </CardContent>
+          );
+
+          return (
+          <Card
+            key={notification.id}
+            className="bg-white shadow-sm hover:shadow-lg transition-all"
+          >
+            {notification.href ? (
+              <Link href={notification.href} className="block">
+                {content}
+              </Link>
+            ) : (
+              content
+            )}
           </Card>
-        ))}
+          );
+        })}
     </div>
   );
 }

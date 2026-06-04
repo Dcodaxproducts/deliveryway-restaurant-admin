@@ -467,6 +467,7 @@
     "branch": "Filiale",
     "updateStatusTitle": "Reservierungsstatus aktualisieren",
     "updateStatusDescription": "Wählen Sie den aktuellen Status für diese Tischreservierung aus.",
+    "statusCapacityHelper": "Das Bestätigen einer Reservierung kann fehlschlagen, wenn die Tischkapazität voll ist.",
     "totalReservations": "Reservierungen insgesamt",
     "shown": "{count} angezeigt",
     "currentPage": "Aktuelle Seite",

@@ -3,7 +3,6 @@ export type TableReservationStatus =
   | "CONFIRMED"
   | "CANCELLED"
   | "COMPLETED"
-  | "NO_SHOW"
   | "SEATED"
   | string;
 

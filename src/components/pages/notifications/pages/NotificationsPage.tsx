@@ -6,6 +6,7 @@ import NotificationsHeader from "@/components/pages/Notifications/components/not
 import Notifications from "@/components/pages/Notifications/components/notifications/Notification";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetNotifications } from "@/hooks/useNotifications";
+import type { AdminNotification } from "@/types/notifications";
 
 const NotificationsPage = () => {
   const { restaurantId, branchId, isBranchAdmin } = useAuth();
@@ -22,7 +23,9 @@ const NotificationsPage = () => {
   );
 
   const notifications = notificationsResponse?.data || [];
-  const hasUnread = notifications.some((notification: { seen?: boolean }) => !notification.seen);
+  const hasUnread = notifications.some(
+    (notification: AdminNotification) => !notification.seen
+  );
 
   return (
     <Container>

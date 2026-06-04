@@ -467,6 +467,7 @@
     "branch": "Branch",
     "updateStatusTitle": "Update Reservation Status",
     "updateStatusDescription": "Select the current status for this table reservation.",
+    "statusCapacityHelper": "Confirming a reservation may fail if table capacity is full.",
     "totalReservations": "Total Reservations",
     "shown": "{count} shown",
     "currentPage": "Current page",
