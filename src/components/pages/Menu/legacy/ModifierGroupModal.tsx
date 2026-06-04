@@ -235,18 +235,6 @@ export function ModifierGroupModal({
             min={0}
           />
 
-          <label className="flex items-center gap-2 text-sm text-gray-600">
-            <input
-              type="checkbox"
-              checked={form.isActive}
-              onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                handleChange("isActive", event.target.checked)
-              }
-              className="accent-primary"
-            />
-            {t("activeStatus")}
-          </label>
-
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting}
