@@ -22,6 +22,7 @@ import {
   extractEntityId,
   normalizeMenuItemModifierGroupAssignments,
 } from "@/lib/modifier-group-assignment-utils";
+import { cn } from "@/lib/utils";
 import { getApiErrorMessage } from "@/lib/errors";
 import type { MenuItemModifierGroupAssignment } from "@/types/modifier-group-assignments";
 import { useTranslations } from "next-intl";
@@ -1117,7 +1118,12 @@ export default function CreateMenuItemModal({
         }
       }}
     >
-      <DialogContent className="max-h-[95vh] w-[calc(100vw-24px)] max-w-[920px] overflow-hidden rounded-[24px] bg-[#F5F5F5] p-0">
+      <DialogContent
+        className={cn(
+          "max-h-[95vh] w-[calc(100vw-24px)] overflow-hidden rounded-[24px] bg-[#F5F5F5] p-0",
+          currentStep === 4 ? "max-w-[1180px]" : "max-w-[920px]"
+        )}
+      >
         <div className="max-h-[95vh] overflow-y-auto overflow-x-hidden p-5 sm:p-8 [scrollbar-width:thin]">
           <DialogHeader>
             <DialogTitle className="text-[24px] font-semibold sm:text-[26px]">

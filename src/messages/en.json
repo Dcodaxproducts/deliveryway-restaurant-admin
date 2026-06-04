@@ -989,6 +989,11 @@
         "imagePreviewAlt": "Menu item image preview",
         "addonSelectionRules": "Add-on selection rules",
         "addonSelectionDescription": "Control how customers select add-ons for this item.",
+        "selectionOptionalNoMax": "Customers can skip add-ons, with no maximum limit.",
+        "selectionOptionalWithMax": "Customers can choose up to {max} add-ons.",
+        "selectionRequiredWithMax": "Customers must choose {min} to {max} add-ons.",
+        "selectionRequiredNoMax": "Customers must choose at least {min} add-ons.",
+        "selectionMin": "Customers must choose at least {min} add-ons.",
         "addonLimitsHelp": "Set minimum and maximum add-on selections.",
         "requiredAddons": "Required add-ons",
         "requiredAddonsDescription": "Customers must select add-ons when this is enabled.",
@@ -1000,6 +1005,7 @@
         "noMaximum": "No maximum",
         "itemQuantityLimits": "Item quantity limits",
         "itemQuantityDescription": "Control item quantity limits per order.",
+        "quantitySummary": "Customers can order {min} to {max} of this item.",
         "quantityLimitsHelp": "Use these limits for bundle and deal rules.",
         "minItemQuantity": "Minimum item quantity",
         "minItemQuantityHelp": "Minimum quantity customers can order.",
@@ -1040,6 +1046,7 @@
         "maxItemQuantityInvalid": "Maximum item quantity must be at least 1.",
         "maxItemQuantityLessThanMin": "Maximum item quantity cannot be less than minimum quantity.",
         "waitForImageUpload": "Please wait until image upload is complete.",
+        "addonStyleHelp": "<required>Required</required> controls whether customers must choose add-ons. <min>Minimum</min> sets the least they can pick, and <max>Maximum</max> caps the number they can pick.",
         "invalidValue": "Invalid value."
       },
       "stepThree": {

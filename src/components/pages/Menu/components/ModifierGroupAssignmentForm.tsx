@@ -15,6 +15,7 @@ import {
   blockNegativeNumberPaste,
   sanitizeNonNegativeNumber,
 } from "@/lib/number-input";
+import { cn } from "@/lib/utils";
 import type {
   MenuCategoryModifierGroupAssignment,
   MenuItemModifierGroupAssignment,
@@ -188,6 +189,11 @@ export function ModifierGroupAssignmentForm({
     }));
   };
 
+  const isPresetSelected = (preset: Preset) =>
+    draft.selectionType === preset.values.selectionType &&
+    Number(draft.minSelect || 0) === preset.values.minSelect &&
+    Number(draft.maxSelect || 0) === preset.values.maxSelect;
+
   const resetDraft = () => {
     setDraft(DEFAULT_DRAFT);
   };
@@ -284,7 +290,7 @@ export function ModifierGroupAssignmentForm({
         </p>
       </div>
 
-      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(520px,1.25fr)_minmax(320px,0.75fr)]">
         <div className="min-w-0 rounded-[16px] border border-gray-100 bg-[#FAFAFA] p-3 sm:p-4">
           <div className="relative mb-3">
             <Search
@@ -370,17 +376,26 @@ export function ModifierGroupAssignmentForm({
 
         <div className="min-w-0 space-y-4 rounded-[16px] border border-gray-100 bg-white p-3 sm:p-4">
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {PRESETS.map((preset) => (
-              <Button
-                key={preset.label}
-                type="button"
-                variant="outline"
-                onClick={() => applyPreset(preset)}
-                className="h-auto min-h-[38px] whitespace-normal rounded-[10px] px-3 py-2 text-center text-xs leading-4"
-              >
-                {preset.label}
-              </Button>
-            ))}
+            {PRESETS.map((preset) => {
+              const selected = isPresetSelected(preset);
+
+              return (
+                <Button
+                  key={preset.label}
+                  type="button"
+                  variant={selected ? "default" : "outline"}
+                  onClick={() => applyPreset(preset)}
+                  className={cn(
+                    "h-auto min-h-[38px] whitespace-normal rounded-[10px] px-3 py-2 text-center text-xs leading-4",
+                    selected
+                      ? "bg-primary text-white hover:bg-primary/90"
+                      : "bg-white text-gray-700 hover:border-primary/30 hover:bg-primary/5"
+                  )}
+                >
+                  {preset.label}
+                </Button>
+              );
+            })}
           </div>
 
           <FieldLabel label="Selection type">

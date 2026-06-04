@@ -989,6 +989,11 @@
         "imagePreviewAlt": "Vorschau des Menueartikelbildes",
         "addonSelectionRules": "Add-on-Auswahlregeln",
         "addonSelectionDescription": "Steuern Sie, wie Kunden Add-ons fuer diesen Artikel auswaehlen.",
+        "selectionOptionalNoMax": "Kunden koennen Add-ons ueberspringen, ohne maximales Limit.",
+        "selectionOptionalWithMax": "Kunden koennen bis zu {max} Add-ons waehlen.",
+        "selectionRequiredWithMax": "Kunden muessen {min} bis {max} Add-ons waehlen.",
+        "selectionRequiredNoMax": "Kunden muessen mindestens {min} Add-ons waehlen.",
+        "selectionMin": "Kunden muessen mindestens {min} Add-ons waehlen.",
         "addonLimitsHelp": "Legen Sie minimale und maximale Add-on-Auswahl fest.",
         "requiredAddons": "Erforderliche Add-ons",
         "requiredAddonsDescription": "Kunden muessen Add-ons auswaehlen, wenn dies aktiviert ist.",
@@ -1000,6 +1005,7 @@
         "noMaximum": "Kein Maximum",
         "itemQuantityLimits": "Artikelmengenlimits",
         "itemQuantityDescription": "Mengenlimits pro Bestellung steuern.",
+        "quantitySummary": "Kunden koennen {min} bis {max} dieses Artikels bestellen.",
         "quantityLimitsHelp": "Nutzen Sie diese Limits fuer Bundle- und Angebotsregeln.",
         "minItemQuantity": "Minimale Artikelmenge",
         "minItemQuantityHelp": "Mindestmenge, die Kunden bestellen koennen.",
@@ -1040,6 +1046,7 @@
         "maxItemQuantityInvalid": "Maximale Artikelmenge muss mindestens 1 sein.",
         "maxItemQuantityLessThanMin": "Maximale Artikelmenge darf nicht kleiner als die Mindestmenge sein.",
         "waitForImageUpload": "Bitte warten Sie, bis der Bildupload abgeschlossen ist.",
+        "addonStyleHelp": "<required>Erforderlich</required> steuert, ob Kunden Add-ons waehlen muessen. <min>Minimum</min> legt die kleinste Auswahl fest, und <max>Maximum</max> begrenzt die Auswahl.",
         "invalidValue": "Ungueltiger Wert."
       },
       "stepThree": {
