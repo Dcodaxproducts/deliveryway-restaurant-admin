@@ -326,12 +326,14 @@ export default function CategoryDetailsPage() {
 
                       <span
                         className={`w-fit rounded-full px-3 py-1 text-xs font-medium ${
-                          group.isRequired
+                          Number(group.minSelect ?? 0) > 0
                             ? "bg-primary/10 text-primary"
                             : "bg-gray-100 text-gray-600"
                         }`}
                       >
-                        {group.isRequired ? t("required") : commonT("optional")}
+                        {Number(group.minSelect ?? 0) > 0
+                          ? t("required")
+                          : commonT("optional")}
                       </span>
                     </div>
 
@@ -339,8 +341,8 @@ export default function CategoryDetailsPage() {
                       <MiniMetric label={t("minSelect")} value={group.minSelect ?? 0} />
                       <MiniMetric label={t("maxSelect")} value={group.maxSelect ?? 0} />
                       <MiniMetric
-                        label={t("priority")}
-                        value={getPriorityLabel(group.sortOrder, t)}
+                        label={t("selectionType")}
+                        value={group.selectionType || "MULTIPLE"}
                       />
                       <MiniMetric
                         label={t("modifiers")}

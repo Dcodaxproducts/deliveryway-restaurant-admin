@@ -4,6 +4,7 @@ import {
   buildMenuItemPayload,
   getInitialForm,
 } from "@/components/pages/Menu/legacy/items/CreateMenuItemModalLegacy/CreateMenuItemModal";
+import { normalizeMenuItemModifierGroups } from "@/lib/modifier-group-assignment-utils";
 
 const baseForm = {
   name: "Pizza",
@@ -54,6 +55,120 @@ describe("menu item modifier required payload", () => {
     expect(form.modifierPriceOverrides).toEqual([
       { modifierId: "modifier-1", priceDelta: "2", isRequired: false },
     ]);
+  });
+
+  it("normalizes menu item modifierGroups for Step 4 assignment hydration", () => {
+    const form = getInitialForm("restaurant-1", {
+      id: "item-1",
+      name: "Pizza",
+      modifierGroups: [
+        {
+          id: "group-bread",
+          name: "Choose Bread",
+          description: "Pick one bread",
+          selectionType: "SINGLE",
+          minSelect: 1,
+          maxSelect: 1,
+          sortOrder: 1,
+          modifiers: [
+            {
+              id: "modifier-white-bread",
+              name: "White Bread",
+              priceDelta: 0,
+              sortOrder: 1,
+              category: {
+                id: "modifier-category-bread",
+                name: "Bread",
+                slug: "bread",
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(form.modifierGroupAssignments).toEqual([
+      {
+        groupId: "group-bread",
+        group: {
+          id: "group-bread",
+          name: "Choose Bread",
+          description: "Pick one bread",
+        },
+        id: "group-bread",
+        itemId: undefined,
+        selectionType: "SINGLE",
+        minSelect: 1,
+        maxSelect: 1,
+        sortOrder: 1,
+      },
+    ]);
+  });
+
+  it("normalizes menu item response modifierGroups with modifiers and category", () => {
+    const groups = normalizeMenuItemModifierGroups([
+      {
+        id: "group-bread",
+        name: "Choose Bread",
+        description: "Pick one bread",
+        selectionType: "SINGLE",
+        minSelect: 1,
+        maxSelect: 1,
+        sortOrder: 1,
+        modifiers: [
+          {
+            id: "modifier-white-bread",
+            name: "White Bread",
+            priceDelta: 0,
+            sortOrder: 1,
+            category: {
+              id: "modifier-category-bread",
+              name: "Bread",
+              slug: "bread",
+            },
+          },
+        ],
+      },
+    ]);
+
+    expect(groups).toEqual([
+      {
+        id: "group-bread",
+        groupId: "group-bread",
+        name: "Choose Bread",
+        description: "Pick one bread",
+        selectionType: "SINGLE",
+        minSelect: 1,
+        maxSelect: 1,
+        isRequired: true,
+        sortOrder: 1,
+        modifiers: [
+          {
+            id: "modifier-white-bread",
+            name: "White Bread",
+            priceDelta: 0,
+            sortOrder: 1,
+            category: {
+              id: "modifier-category-bread",
+              name: "Bread",
+              slug: "bread",
+            },
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("does not send item-level isRequired in menu item payloads", () => {
+    const payload = buildMenuItemPayload({
+      form: {
+        ...baseForm,
+        isRequired: true,
+      },
+      restaurantId: "restaurant-1",
+    });
+
+    expect(payload).not.toHaveProperty("isRequired");
   });
 
   it("does not add isRequired to nested variation modifier overrides", () => {

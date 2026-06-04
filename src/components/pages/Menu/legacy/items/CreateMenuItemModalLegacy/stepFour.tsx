@@ -14,8 +14,10 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { ModifierGroupAssignmentForm } from "@/components/pages/Menu/components/ModifierGroupAssignmentForm";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetModifiers } from "@/hooks/useMenus";
+import { normalizeMenuItemModifierGroupAssignments } from "@/lib/modifier-group-assignment-utils";
 import {
   blockInvalidNumberKeys,
   blockNegativeNumberPaste,
@@ -479,6 +481,14 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
     form?.modifierPriceOverrides,
     form?.variationPriceOverrides,
   ]);
+
+  const modifierGroupAssignments = useMemo(
+    () =>
+      normalizeMenuItemModifierGroupAssignments(
+        form?.modifierGroupAssignments || form?.modifierGroups
+      ),
+    [form?.modifierGroupAssignments, form?.modifierGroups]
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -1217,9 +1227,22 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
         </div>
       </div>
 
+      <ModifierGroupAssignmentForm
+        mode="item"
+        targetId={form?.id || ""}
+        restaurantId={restaurantId}
+        defaultValues={modifierGroupAssignments}
+        onAssignmentsChange={(assignments) => {
+          setForm((prev: Record<string, unknown>) => ({
+            ...prev,
+            modifierGroupAssignments: assignments,
+          }));
+        }}
+      />
+
       <ModifierSelectionSection
-        title={t("assignTitle")}
-        description={t("assignDescription")}
+        title={t("legacyAssignTitle")}
+        description={t("legacyAssignDescription")}
         icon={<Tags size={18} />}
         searchValue={modifierSearch}
         onSearchChange={setModifierSearch}
