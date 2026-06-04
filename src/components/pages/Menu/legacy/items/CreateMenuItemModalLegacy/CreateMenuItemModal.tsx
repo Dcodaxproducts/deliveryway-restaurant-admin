@@ -921,6 +921,7 @@ export default function CreateMenuItemModal({
 
   const isEditMode = Boolean(initialData?.id);
   const stepRef = useRef<any>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [form, setForm] = useState<any>(
@@ -945,6 +946,14 @@ export default function CreateMenuItemModal({
     setCurrentStep(1);
     setForm(getInitialForm(restaurantId, initialData));
   }, [open, restaurantId, initialData]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    requestAnimationFrame(() => {
+      scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }, [currentStep, open]);
 
   const buildPayload = () =>
     buildMenuItemPayload({
@@ -1118,7 +1127,10 @@ export default function CreateMenuItemModal({
       }}
     >
       <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] overflow-hidden rounded-[24px] bg-[#F5F5F5] p-0 sm:w-full sm:max-w-[calc(100vw-2rem)] xl:max-w-[1180px]">
-        <div className="max-h-[95vh] overflow-y-auto overflow-x-hidden p-5 sm:p-8 [scrollbar-width:thin]">
+        <div
+          ref={scrollContainerRef}
+          className="max-h-[95vh] overflow-y-auto overflow-x-hidden p-5 sm:p-8 [scrollbar-width:thin]"
+        >
           <DialogHeader>
             <DialogTitle className="text-[24px] font-semibold sm:text-[26px]">
               {isEditMode ? t("editTitle") : t("createTitle")}

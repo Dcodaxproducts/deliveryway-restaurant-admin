@@ -59,6 +59,12 @@ export default function BranchesEditPage() {
     if (branchQuery.data) setBranchData(hydrateBranchForEdit(branchQuery.data));
   }, [authBranchId, branchQuery.data, isBranchAdmin, requestedBranchId, router]);
 
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }, [activeTab]);
+
   const saveBasicInfo = async (fullSettings: any) => {
     await updateBranchMutation.mutateAsync({
       id: branchId as string,
