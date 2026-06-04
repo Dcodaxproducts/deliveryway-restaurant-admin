@@ -9,7 +9,6 @@ import {
 import { z } from "zod";
 import { parseSchema } from "@/lib/zod-errors";
 import {
-  AlertCircle,
   Info,
   ListChecks,
   Loader2,
@@ -60,6 +59,8 @@ const schema = z.object({
 });
 
 const PAGE_SIZE = 20;
+const SHOW_ADDON_SELECTION_RULES = false;
+const SHOW_ITEM_QUANTITY_LIMITS = false;
 
 const normalizeArray = (value: any): string[] => {
   if (!value) return [];
@@ -597,263 +598,267 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
         previewAlt={t("imagePreviewAlt")}
       />
 
-      <section className="rounded-[18px] border border-primary/10 bg-white p-4 shadow-sm">
-        <div className="mb-4 flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
-            <ListChecks size={18} />
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-gray-950">
-              {t("addonSelectionRules")}
-            </h3>
-            <p className="mt-1 text-sm leading-6 text-gray-500">
-              {t("addonSelectionDescription")}
-            </p>
-          </div>
-        </div>
-
-        <div className="rounded-[16px] border border-primary/15 bg-primary/[0.04] p-4">
-          <div className="flex items-start gap-3">
-            <Info size={18} className="mt-0.5 shrink-0 text-primary" />
+      {SHOW_ADDON_SELECTION_RULES ? (
+        <section className="rounded-[18px] border border-primary/10 bg-white p-4 shadow-sm">
+          <div className="mb-4 flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
+              <ListChecks size={18} />
+            </div>
 
             <div>
-              <p className="text-sm font-semibold text-gray-950">
-                {selectionSummary}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-gray-600">
-                {t("addonLimitsHelp")}
+              <h3 className="text-sm font-semibold text-gray-950">
+                {t("addonSelectionRules")}
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-gray-500">
+                {t("addonSelectionDescription")}
               </p>
             </div>
           </div>
-        </div>
 
-        <div className="mt-4 space-y-4">
-          <label className="flex cursor-pointer flex-col gap-3 rounded-[14px] border border-gray-200 bg-[#FAFAFA] p-4 transition hover:border-primary/30 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-gray-900">
-                {t("requiredAddons")}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-gray-500">
-                {t("requiredAddonsDescription")}
-              </p>
+          <div className="rounded-[16px] border border-primary/15 bg-primary/[0.04] p-4">
+            <div className="flex items-start gap-3">
+              <Info size={18} className="mt-0.5 shrink-0 text-primary" />
+
+              <div>
+                <p className="text-sm font-semibold text-gray-950">
+                  {selectionSummary}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-gray-600">
+                  {t("addonLimitsHelp")}
+                </p>
+              </div>
             </div>
-
-            <input
-              type="checkbox"
-              checked={Boolean(form.isRequired)}
-              onChange={(event) => {
-                const checked = event.target.checked;
-
-                update("isRequired", checked);
-
-                if (checked && Number(form.minSelect || 0) < 1) {
-                  update("minSelect", "1");
-                }
-              }}
-              className="h-4 w-4 accent-primary"
-            />
-          </label>
-
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold text-gray-900">
-              {t("minAddonSelect")}
-            </Label>
-
-            <Input
-              type="number"
-              min={0}
-              value={form.minSelect ?? "0"}
-              onKeyDown={blockInvalidNumberKeys}
-              onPaste={blockNegativeNumberPaste}
-              onChange={(event) =>
-                update(
-                  "minSelect",
-                  sanitizeNonNegativeNumber(event.target.value)
-                )
-              }
-              onBlur={(event) =>
-                validateField(
-                  "minSelect",
-                  sanitizeNonNegativeNumber(event.target.value)
-                )
-              }
-              placeholder="0"
-              className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
-            />
-
-            <p className="text-xs leading-5 text-gray-400">
-              {t("minAddonSelectHelp")}
-            </p>
-
-            {errors.minSelect && (
-              <p className="text-xs text-red-500">{errors.minSelect}</p>
-            )}
           </div>
 
-          <div className="space-y-2">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-4 space-y-4">
+            <label className="flex cursor-pointer flex-col gap-3 rounded-[14px] border border-gray-200 bg-[#FAFAFA] p-4 transition hover:border-primary/30 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  {t("requiredAddons")}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-gray-500">
+                  {t("requiredAddonsDescription")}
+                </p>
+              </div>
+
+              <input
+                type="checkbox"
+                checked={Boolean(form.isRequired)}
+                onChange={(event) => {
+                  const checked = event.target.checked;
+
+                  update("isRequired", checked);
+
+                  if (checked && Number(form.minSelect || 0) < 1) {
+                    update("minSelect", "1");
+                  }
+                }}
+                className="h-4 w-4 accent-primary"
+              />
+            </label>
+
+            <div className="space-y-2">
               <Label className="text-sm font-semibold text-gray-900">
-                {t("maxAddonSelect")}
+                {t("minAddonSelect")}
               </Label>
 
-              <label className="flex w-fit cursor-pointer items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={noMaximumLimit}
-                  onChange={(event) => {
-                    if (event.target.checked) {
-                      update("maxSelect", "");
-                      return;
-                    }
+              <Input
+                type="number"
+                min={0}
+                value={form.minSelect ?? "0"}
+                onKeyDown={blockInvalidNumberKeys}
+                onPaste={blockNegativeNumberPaste}
+                onChange={(event) =>
+                  update(
+                    "minSelect",
+                    sanitizeNonNegativeNumber(event.target.value)
+                  )
+                }
+                onBlur={(event) =>
+                  validateField(
+                    "minSelect",
+                    sanitizeNonNegativeNumber(event.target.value)
+                  )
+                }
+                placeholder="0"
+                className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
+              />
 
-                    update("maxSelect", form.minSelect || "1");
-                  }}
-                  className="accent-primary"
-                />
-                {t("noMaximumLimit")}
-              </label>
+              <p className="text-xs leading-5 text-gray-400">
+                {t("minAddonSelectHelp")}
+              </p>
+
+              {errors.minSelect && (
+                <p className="text-xs text-red-500">{errors.minSelect}</p>
+              )}
             </div>
 
-            <Input
-              type="number"
-              min={0}
-              value={form.maxSelect ?? ""}
-              disabled={noMaximumLimit}
-              onKeyDown={blockInvalidNumberKeys}
-              onPaste={blockNegativeNumberPaste}
-              onChange={(event) =>
-                update(
-                  "maxSelect",
-                  sanitizeNonNegativeNumber(event.target.value)
-                )
-              }
-              onBlur={(event) =>
-                validateField(
-                  "maxSelect",
-                  sanitizeNonNegativeNumber(event.target.value)
-                )
-              }
-              placeholder={t("noMaximum")}
-              className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
-            />
+            <div className="space-y-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <Label className="text-sm font-semibold text-gray-900">
+                  {t("maxAddonSelect")}
+                </Label>
 
-            <p className="text-xs leading-5 text-gray-400">
-              {t("maxAddonSelectHelp")}
-            </p>
+                <label className="flex w-fit cursor-pointer items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={noMaximumLimit}
+                    onChange={(event) => {
+                      if (event.target.checked) {
+                        update("maxSelect", "");
+                        return;
+                      }
 
-            {errors.maxSelect && (
-              <p className="text-xs text-red-500">{errors.maxSelect}</p>
-            )}
+                      update("maxSelect", form.minSelect || "1");
+                    }}
+                    className="accent-primary"
+                  />
+                  {t("noMaximumLimit")}
+                </label>
+              </div>
+
+              <Input
+                type="number"
+                min={0}
+                value={form.maxSelect ?? ""}
+                disabled={noMaximumLimit}
+                onKeyDown={blockInvalidNumberKeys}
+                onPaste={blockNegativeNumberPaste}
+                onChange={(event) =>
+                  update(
+                    "maxSelect",
+                    sanitizeNonNegativeNumber(event.target.value)
+                  )
+                }
+                onBlur={(event) =>
+                  validateField(
+                    "maxSelect",
+                    sanitizeNonNegativeNumber(event.target.value)
+                  )
+                }
+                placeholder={t("noMaximum")}
+                className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+              />
+
+              <p className="text-xs leading-5 text-gray-400">
+                {t("maxAddonSelectHelp")}
+              </p>
+
+              {errors.maxSelect && (
+                <p className="text-xs text-red-500">{errors.maxSelect}</p>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
-      <section className="rounded-[18px] border border-primary/10 bg-white p-4 shadow-sm">
-        <div className="mb-4 flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
-            <PackageCheck size={18} />
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-gray-950">
-              {t("itemQuantityLimits")}
-            </h3>
-            <p className="mt-1 text-sm leading-6 text-gray-500">
-              {t("itemQuantityDescription")}
-            </p>
-          </div>
-        </div>
-
-        <div className="rounded-[16px] border border-primary/15 bg-primary/[0.04] p-4">
-          <div className="flex items-start gap-3">
-            <Info size={18} className="mt-0.5 shrink-0 text-primary" />
+      {SHOW_ITEM_QUANTITY_LIMITS ? (
+        <section className="rounded-[18px] border border-primary/10 bg-white p-4 shadow-sm">
+          <div className="mb-4 flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
+              <PackageCheck size={18} />
+            </div>
 
             <div>
-              <p className="text-sm font-semibold text-gray-950">
-                {quantitySummary}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-gray-600">
-                {t("quantityLimitsHelp")}
+              <h3 className="text-sm font-semibold text-gray-950">
+                {t("itemQuantityLimits")}
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-gray-500">
+                {t("itemQuantityDescription")}
               </p>
             </div>
           </div>
-        </div>
 
-        <div className="mt-4 space-y-4">
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold text-gray-900">
-              {t("minItemQuantity")}
-            </Label>
+          <div className="rounded-[16px] border border-primary/15 bg-primary/[0.04] p-4">
+            <div className="flex items-start gap-3">
+              <Info size={18} className="mt-0.5 shrink-0 text-primary" />
 
-            <Input
-              type="number"
-              min={1}
-              value={form.minQuantity ?? "1"}
-              onKeyDown={blockInvalidNumberKeys}
-              onPaste={blockNegativeNumberPaste}
-              onChange={(event) =>
-                update(
-                  "minQuantity",
-                  sanitizeNonNegativeNumber(event.target.value)
-                )
-              }
-              onBlur={(event) =>
-                validateField(
-                  "minQuantity",
-                  sanitizeNonNegativeNumber(event.target.value)
-                )
-              }
-              placeholder="1"
-              className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
-            />
-
-            <p className="text-xs leading-5 text-gray-400">
-              {t("minItemQuantityHelp")}
-            </p>
-
-            {errors.minQuantity && (
-              <p className="text-xs text-red-500">{errors.minQuantity}</p>
-            )}
+              <div>
+                <p className="text-sm font-semibold text-gray-950">
+                  {quantitySummary}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-gray-600">
+                  {t("quantityLimitsHelp")}
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold text-gray-900">
-              {t("maxItemQuantity")}
-            </Label>
+          <div className="mt-4 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-900">
+                {t("minItemQuantity")}
+              </Label>
 
-            <Input
-              type="number"
-              min={1}
-              value={form.maxQuantity ?? "5"}
-              onKeyDown={blockInvalidNumberKeys}
-              onPaste={blockNegativeNumberPaste}
-              onChange={(event) =>
-                update(
-                  "maxQuantity",
-                  sanitizeNonNegativeNumber(event.target.value)
-                )
-              }
-              onBlur={(event) =>
-                validateField(
-                  "maxQuantity",
-                  sanitizeNonNegativeNumber(event.target.value)
-                )
-              }
-              placeholder="5"
-              className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
-            />
+              <Input
+                type="number"
+                min={1}
+                value={form.minQuantity ?? "1"}
+                onKeyDown={blockInvalidNumberKeys}
+                onPaste={blockNegativeNumberPaste}
+                onChange={(event) =>
+                  update(
+                    "minQuantity",
+                    sanitizeNonNegativeNumber(event.target.value)
+                  )
+                }
+                onBlur={(event) =>
+                  validateField(
+                    "minQuantity",
+                    sanitizeNonNegativeNumber(event.target.value)
+                  )
+                }
+                placeholder="1"
+                className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
+              />
 
-            <p className="text-xs leading-5 text-gray-400">
-              {t("maxItemQuantityHelp")}
-            </p>
+              <p className="text-xs leading-5 text-gray-400">
+                {t("minItemQuantityHelp")}
+              </p>
 
-            {errors.maxQuantity && (
-              <p className="text-xs text-red-500">{errors.maxQuantity}</p>
-            )}
+              {errors.minQuantity && (
+                <p className="text-xs text-red-500">{errors.minQuantity}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-900">
+                {t("maxItemQuantity")}
+              </Label>
+
+              <Input
+                type="number"
+                min={1}
+                value={form.maxQuantity ?? "5"}
+                onKeyDown={blockInvalidNumberKeys}
+                onPaste={blockNegativeNumberPaste}
+                onChange={(event) =>
+                  update(
+                    "maxQuantity",
+                    sanitizeNonNegativeNumber(event.target.value)
+                  )
+                }
+                onBlur={(event) =>
+                  validateField(
+                    "maxQuantity",
+                    sanitizeNonNegativeNumber(event.target.value)
+                  )
+                }
+                placeholder="5"
+                className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
+              />
+
+              <p className="text-xs leading-5 text-gray-400">
+                {t("maxItemQuantityHelp")}
+              </p>
+
+              {errors.maxQuantity && (
+                <p className="text-xs text-red-500">{errors.maxQuantity}</p>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       <section className="rounded-[18px] border border-primary/10 bg-white p-4 shadow-sm">
         <div className="mb-4 flex items-start gap-3">
@@ -1251,18 +1256,6 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
         </div>
       </section>
 
-      <div className="rounded-[16px] border border-primary/15 bg-primary/[0.04] p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle size={18} className="mt-0.5 shrink-0 text-primary" />
-          <p className="text-sm leading-6 text-gray-700">
-            {t.rich("addonStyleHelp", {
-              required: (chunks) => <strong>{chunks}</strong>,
-              min: (chunks) => <strong>{chunks}</strong>,
-              max: (chunks) => <strong>{chunks}</strong>,
-            })}
-          </p>
-        </div>
-      </div>
     </div>
   );
 });
