@@ -26,6 +26,7 @@ const PAYMENT_METHODS = [
   "JAZZCASH",
   "BANK_TRANSFER",
 ];
+const SHOW_ALLOWED_PAYMENT_METHODS = false;
 
 type DeliveryMode = "RADIUS" | "ZONE" | "ZONE_BANDS" | "POSTAL_CODE";
 type LatLngKey = "lat" | "lng";
@@ -1241,21 +1242,23 @@ export default function EditBranchStepTwo({ data, setData }: any) {
         </div>
       </Section>
 
-      <Section label={t("allowedPaymentMethods")}>
-        <div className="flex flex-wrap gap-4">
-          {PAYMENT_METHODS.map((method) => (
-            <label key={method} className="flex items-center gap-2">
-              <Checkbox
-                checked={settings.allowedPaymentMethods?.includes(method)}
-                onCheckedChange={() =>
-                  toggleArrayValue("allowedPaymentMethods", method)
-                }
-              />
-              <span className="text-sm">{formatLabel(method)}</span>
-            </label>
-          ))}
-        </div>
-      </Section>
+      {SHOW_ALLOWED_PAYMENT_METHODS ? (
+        <Section label={t("allowedPaymentMethods")}>
+          <div className="flex flex-wrap gap-4">
+            {PAYMENT_METHODS.map((method) => (
+              <label key={method} className="flex items-center gap-2">
+                <Checkbox
+                  checked={settings.allowedPaymentMethods?.includes(method)}
+                  onCheckedChange={() =>
+                    toggleArrayValue("allowedPaymentMethods", method)
+                  }
+                />
+                <span className="text-sm">{formatLabel(method)}</span>
+              </label>
+            ))}
+          </div>
+        </Section>
+      ) : null}
 
       <Section label={t("deliveryConfiguration")}>
         <div className="min-w-0 space-y-6">
