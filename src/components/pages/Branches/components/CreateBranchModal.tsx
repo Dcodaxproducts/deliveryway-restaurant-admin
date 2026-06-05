@@ -27,6 +27,7 @@ import {
 import { useTranslations } from "next-intl";
 
 interface CreateBranchModalProps {
+  hasExistingBranches?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
@@ -638,6 +639,7 @@ function CreateBranchLocationPicker({
 }
 
 export function CreateBranchModal({
+  hasExistingBranches = false,
   open,
   onOpenChange,
   onSuccess,
@@ -709,6 +711,34 @@ export function CreateBranchModal({
       void error;
     }
   };
+  const [branchNameFieldConfig, ...addressFieldConfigs] = branchFieldConfigs;
+
+  const renderBranchField = (config: FieldConfig) => {
+    const { labelKey, name, placeholderKey, primary, required, type } = config;
+    const errorMessage = getErrorMessage(errors, name);
+    const fieldId = `create-branch-${name.replace(/\./g, "-")}`;
+
+    return (
+      <div key={name} className="space-y-1">
+        {labelKey ? (
+          <Label htmlFor={fieldId} className="text-sm">
+            {t(labelKey)} {required ? <span className="text-primary">*</span> : null}
+          </Label>
+        ) : null}
+        <Input
+          id={fieldId}
+          type={type}
+          placeholder={t(placeholderKey)}
+          className={primary ? PRIMARY_INPUT_CLASS : INPUT_CLASS}
+          aria-invalid={Boolean(errorMessage)}
+          {...register(name)}
+        />
+        {errorMessage ? (
+          <p className={FIELD_ERROR_CLASS}>{errorMessage}</p>
+        ) : null}
+      </div>
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -720,32 +750,7 @@ export function CreateBranchModal({
 
         <form noValidate onSubmit={handleSubmit(onSubmit)}>
           <div className={`mt-4 ${CARD_PANEL_CLASS} space-y-4`}>
-            {branchFieldConfigs.map((config) => {
-              const { labelKey, name, placeholderKey, primary, required, type } = config;
-              const errorMessage = getErrorMessage(errors, name);
-              const fieldId = `create-branch-${name.replace(/\./g, "-")}`;
-
-              return (
-                <div key={name} className="space-y-1">
-                  {labelKey ? (
-                    <Label htmlFor={fieldId} className="text-sm">
-                      {t(labelKey)} {required ? <span className="text-primary">*</span> : null}
-                    </Label>
-                  ) : null}
-                  <Input
-                    id={fieldId}
-                    type={type}
-                    placeholder={t(placeholderKey)}
-                    className={primary ? PRIMARY_INPUT_CLASS : INPUT_CLASS}
-                    aria-invalid={Boolean(errorMessage)}
-                    {...register(name)}
-                  />
-                  {errorMessage ? (
-                    <p className={FIELD_ERROR_CLASS}>{errorMessage}</p>
-                  ) : null}
-                </div>
-              );
-            })}
+            {branchNameFieldConfig ? renderBranchField(branchNameFieldConfig) : null}
 
             <div className="space-y-2">
               <div>
@@ -759,23 +764,27 @@ export function CreateBranchModal({
               <CreateBranchLocationPicker setValue={setValue} />
             </div>
 
-            <div className="flex items-center justify-between">
-              <Label htmlFor="create-branch-is-main" className="text-sm">
-                {t("mainBranch")}
-              </Label>
-              <Controller
-                control={control}
-                name="isMain"
-                render={({ field }) => (
-                  <Switch
-                    id="create-branch-is-main"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    className="data-[state=checked]:bg-primary"
-                  />
-                )}
-              />
-            </div>
+            {addressFieldConfigs.map(renderBranchField)}
+
+            {!hasExistingBranches ? (
+              <div className="flex items-center justify-between">
+                <Label htmlFor="create-branch-is-main" className="text-sm">
+                  {t("mainBranch")}
+                </Label>
+                <Controller
+                  control={control}
+                  name="isMain"
+                  render={({ field }) => (
+                    <Switch
+                      id="create-branch-is-main"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-primary"
+                    />
+                  )}
+                />
+              </div>
+            ) : null}
 
             <hr className="border-gray-200 my-2" />
 

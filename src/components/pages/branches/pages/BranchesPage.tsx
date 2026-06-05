@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import BranchWorkspace from "@/components/pages/BranchWorkspace/components/branch-admin/BranchWorkspace";
 import { useTranslations } from "next-intl";
 
-export default function BranchesPage() {
+export function BranchesPage() {
   const { isBranchAdmin } = useAuth();
 
   if (isBranchAdmin) {
@@ -18,6 +18,8 @@ export default function BranchesPage() {
 
   return <RestaurantBranchesPage />;
 }
+
+export { BranchesPage as default };
 
 function RestaurantBranchesPage() {
   const t = useTranslations("branches");
@@ -39,6 +41,7 @@ function RestaurantBranchesPage() {
 
   const branches = data?.data || [];
   const meta = data?.meta || null;
+  const hasExistingBranches = Number(meta?.total ?? branches.length) > 0;
 
   const handleFetchBranches = (newFilters?: Partial<typeof filters>) => {
     setFilters((prev) => ({
@@ -50,6 +53,7 @@ function RestaurantBranchesPage() {
   return (
     <Container>
       <Header
+        hasExistingBranches={hasExistingBranches}
         title={t("branchList")}
         description={t("description")}
         onBranchCreated={refetch}

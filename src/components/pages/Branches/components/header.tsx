@@ -17,6 +17,7 @@ import ImportModal from "@/components/common/ImportModal";
 import { useTranslations } from "next-intl";
 
 interface HeaderProps {
+  hasExistingBranches?: boolean;
   title: string;
   description?: string;
   onBranchCreated?: () => void;
@@ -31,6 +32,7 @@ export function BranchesHeader(props: HeaderProps) {
 }
 
 function BranchesHeaderContent({
+  hasExistingBranches = false,
   title,
   description,
   onBranchCreated,
@@ -102,6 +104,7 @@ function BranchesHeaderContent({
       {/* Modals (only useful in non-edit mode, but safe to keep mounted) */}
       <ImportModal open={open} onOpenChange={setOpen} />
       <CreateBranchModal
+        hasExistingBranches={hasExistingBranches}
         open={createBranch}
         onOpenChange={setCreateBranch}
         onSuccess={onBranchCreated}
