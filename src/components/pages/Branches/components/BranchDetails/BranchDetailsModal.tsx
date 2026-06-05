@@ -223,7 +223,7 @@ export function BranchDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={closeDialog}>
-      <DialogContent className="flex max-h-[92vh] w-[calc(100vw-24px)] max-w-[680px] flex-col overflow-hidden rounded-[20px] p-0 sm:w-[calc(100vw-48px)]">
+      <DialogContent className="flex max-h-[92vh] w-[calc(100vw-24px)] max-w-[960px] flex-col overflow-hidden rounded-[20px] p-0 sm:w-[calc(100vw-48px)] sm:max-w-[960px]">
         <div className="relative h-44 shrink-0 bg-gray-200">
           {branch.coverImage ? (
             <Image src={branch.coverImage} alt="Branch cover" fill className="object-cover" />
