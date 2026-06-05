@@ -47,6 +47,33 @@ const hasServiceChargeSetting = (settings: BranchSettings | undefined) =>
   Boolean(settings) &&
   Object.prototype.hasOwnProperty.call(settings, "serviceCharge");
 
+const branchSettingsPatchBlocklist = [
+  "openingHours",
+  "openingsHours",
+  "holidayRanges",
+  "temporaryClosure",
+  "currentTemporaryClosure",
+  "temporaryClosures",
+  "closure",
+  "closures",
+  "holidayOpeningHours",
+  "reservationDateRanges",
+  "tableReservationDateRanges",
+  "reservationBlackoutRanges",
+] as const;
+
+const sanitizeBranchSettingsForPatch = (
+  settings: BranchSettings | undefined
+): BranchSettings => {
+  const safeSettings: BranchSettings = { ...(settings ?? {}) };
+
+  branchSettingsPatchBlocklist.forEach((key) => {
+    delete safeSettings[key];
+  });
+
+  return safeSettings;
+};
+
 export const updateBranch = async (
   id: string,
   payload: BranchUpdatePayload
@@ -57,10 +84,12 @@ export const updateBranch = async (
     const existingBranch = (await getBranch(id)) as { settings?: BranchSettings };
 
     nextPayload.settings = {
-      ...(existingBranch.settings ?? {}),
-      ...(payload.settings ?? {}),
+      ...sanitizeBranchSettingsForPatch(existingBranch.settings),
+      ...sanitizeBranchSettingsForPatch(payload.settings),
       serviceCharge: payload.settings?.serviceCharge,
     };
+  } else if (payload.settings) {
+    nextPayload.settings = sanitizeBranchSettingsForPatch(payload.settings);
   }
 
   const { data } = await api.patch(`/branches/${id}`, nextPayload);

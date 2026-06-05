@@ -9,6 +9,7 @@ import {
   hydrateBranchForEdit,
   normalizeDeliveryConfigForApi,
   normalizeServiceChargeForApi,
+  sanitizeBranchSettingsForPatch,
 } from "@/components/pages/branches/forms/EditBranchForm/edit-branch.mapper";
 
 const validPostalDeliveryConfig = {
@@ -185,6 +186,22 @@ describe("edit branch delivery and settings mapper", () => {
         type: "PERCENTAGE",
         value: 10,
       },
+    });
+  });
+
+  it("removes working-hours-only properties from branch settings patch payloads", () => {
+    const settings = sanitizeBranchSettingsForPatch({
+      allowedOrderTypes: ["DELIVERY"],
+      openingHours: [{ dayOfWeek: "MONDAY" }],
+      openingsHours: [{ dayOfWeek: "TUESDAY" }],
+      holidayRanges: [{ fromDate: "2026-01-01" }],
+      temporaryClosure: { isClosed: true },
+      customSetting: "keep-me",
+    });
+
+    expect(settings).toEqual({
+      allowedOrderTypes: ["DELIVERY"],
+      customSetting: "keep-me",
     });
   });
 

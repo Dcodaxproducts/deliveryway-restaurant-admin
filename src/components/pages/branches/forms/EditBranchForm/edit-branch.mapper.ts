@@ -26,6 +26,21 @@ const DAYS = [
 
 const DELIVERY_MODES: DeliveryMode[] = ["RADIUS", "ZONE", "ZONE_BANDS", "POSTAL_CODE"];
 
+const BRANCH_SETTINGS_PATCH_BLOCKLIST = [
+  "openingHours",
+  "openingsHours",
+  "holidayRanges",
+  "temporaryClosure",
+  "currentTemporaryClosure",
+  "temporaryClosures",
+  "closure",
+  "closures",
+  "holidayOpeningHours",
+  "reservationDateRanges",
+  "tableReservationDateRanges",
+  "reservationBlackoutRanges",
+] as const;
+
 export const DEFAULT_SERVICE_CHARGE: BranchServiceChargeSettings = {
   isEnabled: false,
   type: "PERCENTAGE",
@@ -209,9 +224,19 @@ export const buildServiceChargeSettingsPayload = (
   existingSettings: unknown,
   serviceCharge: unknown
 ): BranchSettings => ({
-  ...toRecord(existingSettings),
+  ...sanitizeBranchSettingsForPatch(existingSettings),
   serviceCharge: normalizeServiceChargeForApi(serviceCharge),
 });
+
+export const sanitizeBranchSettingsForPatch = (settings: unknown): BranchSettings => {
+  const safeSettings: BranchSettings = { ...toRecord(settings) };
+
+  BRANCH_SETTINGS_PATCH_BLOCKLIST.forEach((key) => {
+    delete safeSettings[key];
+  });
+
+  return safeSettings;
+};
 
 const isValidCoordinate = (point: DeliveryPolygonPoint) =>
   Number.isFinite(point.lat) &&
@@ -362,19 +387,7 @@ export const buildSafeBranchSettings = (
   const automation = toRecord(settingsRecord.automation);
   const taxation = toRecord(settingsRecord.taxation);
   const contact = toRecord(settingsRecord.contact);
-  const safeSettings: BranchSettings = { ...settingsRecord };
-
-  delete safeSettings.openingHours;
-  delete safeSettings.holidayRanges;
-  delete safeSettings.temporaryClosure;
-  delete safeSettings.currentTemporaryClosure;
-  delete safeSettings.temporaryClosures;
-  delete safeSettings.closure;
-  delete safeSettings.closures;
-  delete safeSettings.holidayOpeningHours;
-  delete safeSettings.reservationDateRanges;
-  delete safeSettings.tableReservationDateRanges;
-  delete safeSettings.reservationBlackoutRanges;
+  const safeSettings = sanitizeBranchSettingsForPatch(settingsRecord);
 
   return {
     ...safeSettings,
