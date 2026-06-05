@@ -6,6 +6,7 @@ import {
   BulkBranchValues,
   OpeningHoursValues,
 } from "@/validations/branches";
+import type { BranchSettings } from "@/types/branch";
 
 /**
  * ==============================
@@ -38,11 +39,31 @@ export const getBranch = async (id: string) => {
   return data.data;
 };
 
+type BranchUpdatePayload = Omit<Partial<BranchValues>, "settings"> & {
+  settings?: BranchSettings;
+};
+
+const hasServiceChargeSetting = (settings: BranchSettings | undefined) =>
+  Boolean(settings) &&
+  Object.prototype.hasOwnProperty.call(settings, "serviceCharge");
+
 export const updateBranch = async (
   id: string,
-  payload: Partial<BranchValues>
+  payload: BranchUpdatePayload
 ) => {
-  const { data } = await api.patch(`/branches/${id}`, payload);
+  const nextPayload = { ...payload };
+
+  if (hasServiceChargeSetting(payload.settings)) {
+    const existingBranch = (await getBranch(id)) as { settings?: BranchSettings };
+
+    nextPayload.settings = {
+      ...(existingBranch.settings ?? {}),
+      ...(payload.settings ?? {}),
+      serviceCharge: payload.settings?.serviceCharge,
+    };
+  }
+
+  const { data } = await api.patch(`/branches/${id}`, nextPayload);
   return data;
 };
 

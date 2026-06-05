@@ -32,6 +32,33 @@ export const postalCodeRuleSchema = z.object({
   freeDeliveryThreshold: z.coerce.number().min(0),
 });
 
+export const serviceChargeSchema = z
+  .object({
+    isEnabled: z.boolean(),
+    type: z.enum(["PERCENTAGE", "AMOUNT"]).default("PERCENTAGE"),
+    value: z.coerce.number().min(0),
+  })
+  .superRefine((serviceCharge, ctx) => {
+    if (!serviceCharge.isEnabled) return;
+
+    if (serviceCharge.value <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Service charge value must be greater than 0 when enabled",
+        path: ["value"],
+      });
+      return;
+    }
+
+    if (serviceCharge.type === "PERCENTAGE" && serviceCharge.value > 100) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Percentage service charge cannot exceed 100",
+        path: ["value"],
+      });
+    }
+  });
+
 export const deliveryConfigSchema = z.object({
   mode: z.enum(["RADIUS", "ZONE", "ZONE_BANDS", "POSTAL_CODE"]),
   radiusKm: z.coerce.number().min(0),
@@ -77,7 +104,7 @@ export const editBranchSchema = z.object({
   description: z.string().optional(),
   isMain: z.boolean().optional(),
   restaurantId: z.string().optional(),
-  branchAdmin: z.any().optional(),
+  branchAdmin: z.unknown().optional(),
   address: z
     .object({
       street: z.string().optional(),
@@ -85,12 +112,13 @@ export const editBranchSchema = z.object({
       city: z.string().optional(),
       state: z.string().optional(),
       country: z.string().optional(),
-      lat: z.any().optional(),
-      lng: z.any().optional(),
+      lat: z.unknown().optional(),
+      lng: z.unknown().optional(),
     })
     .optional(),
-  settings: z.record(z.string(), z.any()).optional(),
+  settings: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type EditBranchValues = z.infer<typeof editBranchSchema>;
 export type DeliveryConfigValues = z.infer<typeof deliveryConfigSchema>;
+export type ServiceChargeValues = z.infer<typeof serviceChargeSchema>;

@@ -19,6 +19,8 @@ export const PaymentMethodEnum = z.enum([
   "EASYPAISA",
 ]);
 
+export const ServiceChargeTypeEnum = z.enum(["PERCENTAGE", "AMOUNT"]);
+
 export const DayOfWeekEnum = z.enum([
   "MONDAY",
   "TUESDAY",
@@ -107,12 +109,40 @@ export const ContactSchema = z.object({
   phone: z.string().optional(),
 });
 
+export const ServiceChargeSchema = z
+  .object({
+    isEnabled: z.boolean(),
+    type: ServiceChargeTypeEnum.default("PERCENTAGE"),
+    value: z.coerce.number().min(0),
+  })
+  .superRefine((serviceCharge, ctx) => {
+    if (!serviceCharge.isEnabled) return;
+
+    if (serviceCharge.value <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Service charge value must be greater than 0 when enabled",
+        path: ["value"],
+      });
+      return;
+    }
+
+    if (serviceCharge.type === "PERCENTAGE" && serviceCharge.value > 100) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Percentage service charge cannot exceed 100",
+        path: ["value"],
+      });
+    }
+  });
+
 const BranchSettingsBaseSchema = z.object({
   allowedOrderTypes: z.array(OrderTypeEnum),
   allowedPaymentMethods: z.array(PaymentMethodEnum),
   deliveryConfig: DeliveryConfigSchema,
   automation: AutomationSchema,
   taxation: TaxationSchema,
+  serviceCharge: ServiceChargeSchema.optional(),
   tableReservationsEnabled: z.boolean(),
   tableReservationAutoAccept: z.boolean().optional().default(false),
   tableCount: z.coerce.number().int().min(0).optional().default(0),
@@ -233,3 +263,5 @@ export type BranchValues = z.infer<typeof BranchSchema>;
 export type CreateBranchFormValues = z.infer<typeof createBranchSchema>;
 export type BulkBranchValues = z.infer<typeof BulkBranchSchema>;
 export type OpeningHoursValues = z.infer<typeof UpdateOpeningHoursSchema>;
+export type BranchServiceChargeType = z.infer<typeof ServiceChargeTypeEnum>;
+export type BranchServiceChargeSettings = z.infer<typeof ServiceChargeSchema>;

@@ -1,34 +1,66 @@
 "use client";
 
-import Section from "@/components/pages/Promotions/forms/Section";
+import type { Dispatch, SetStateAction } from "react";
+
 import FormInput from "@/components/forms/common/FormInput";
+import Section from "@/components/pages/Promotions/forms/Section";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import type {
+  BranchFormData,
+  BranchServiceChargeType,
+} from "@/components/pages/branches/forms/EditBranchForm/types";
 import { useTranslations } from "next-intl";
 
-export default function EditBranchStepOne({ data, setData }: any) {
+type EditBranchStepOneProps = {
+  data: BranchFormData | null;
+  setData: Dispatch<SetStateAction<BranchFormData | null>>;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
   const t = useTranslations("branches");
   const commonT = useTranslations("common");
 
   if (!data) return null;
 
-  const update = (path: string[], value: any) => {
-    const newData = { ...data };
-    let obj = newData;
+  const serviceCharge = data.settings?.serviceCharge ?? {
+    isEnabled: false,
+    type: "PERCENTAGE" as const,
+    value: 0,
+  };
+  const serviceChargeEnabled = Boolean(serviceCharge.isEnabled);
+  const serviceChargeType = serviceCharge.type ?? "PERCENTAGE";
 
-    for (let i = 0; i < path.length - 1; i++) {
-      obj[path[i]] = obj[path[i]] || {};
-      obj = obj[path[i]];
-    }
+  const update = (path: string[], value: unknown) => {
+    setData((current) => {
+      const newData: BranchFormData = { ...(current ?? data) };
+      let obj = newData as Record<string, unknown>;
 
-    obj[path[path.length - 1]] = value;
-    setData(newData);
+      for (let i = 0; i < path.length - 1; i++) {
+        const key = path[i];
+        const existing = obj[key];
+        const next = isRecord(existing) ? { ...existing } : {};
+        obj[key] = next;
+        obj = next;
+      }
+
+      obj[path[path.length - 1]] = value;
+      return newData;
+    });
   };
 
   return (
     <div className="rounded-[14px] space-y-8">
-
       <Section label={t("addBranchInfo")}>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
             label={t("branchNameRequired")}
@@ -88,114 +120,43 @@ export default function EditBranchStepOne({ data, setData }: any) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
             label={t("latitude")}
-            value={data.address?.lat || ""}
+            value={data.address?.lat === undefined ? "" : String(data.address.lat)}
             onChange={(val) => update(["address", "lat"], val)}
           />
 
           <FormInput
             label={t("longitude")}
-            value={data.address?.lng || ""}
+            value={data.address?.lng === undefined ? "" : String(data.address.lng)}
             onChange={(val) => update(["address", "lng"], val)}
           />
         </div>
       </Section>
-
-      {/* <Section label="Add Branch Logo">
-        <div className="flex flex-col items-center text-center space-y-[12px]">
-          <Label>Branch Cover Image</Label>
-
-          <div className="w-[180px] rounded-[12px] overflow-hidden border">
-            <img
-              src={data.coverImage || "/branch_logo.jpg"}
-              alt="Branch Logo"
-              className="w-full h-[180px] object-cover"
-            />
-          </div>
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e: any) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                update(["coverImage"], reader.result); // base64 for now
-              };
-              reader.readAsDataURL(file);
-            }}
-          />
-
-          <p className="text-sm text-gray-500 max-w-[420px]">
-            Upload a new image to update your branch cover
-          </p>
-        </div>
-      </Section> */}
-
-      {/* <Section label="Branch Admin">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormInput
-            label="First Name"
-            value={data.branchAdmin?.firstName || ""}
-            onChange={(val) =>
-              update(["branchAdmin", "firstName"], val)
-            }
-          />
-
-          <FormInput
-            label="Last Name"
-            value={data.branchAdmin?.lastName || ""}
-            onChange={(val) =>
-              update(["branchAdmin", "lastName"], val)
-            }
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormInput
-            label="Email"
-            value={data.branchAdmin?.email || ""}
-            onChange={(val) =>
-              update(["branchAdmin", "email"], val)
-            }
-          />
-
-          <FormInput
-            label="Phone"
-            value={data.branchAdmin?.phone || ""}
-            onChange={(val) =>
-              update(["branchAdmin", "phone"], val)
-            }
-          />
-        </div>
-      </Section> */}
 
       <Section label={t("contactInfo")}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
             label={commonT("phone")}
             value={data.settings?.contact?.phone || ""}
-            onChange={(val) =>
-              update(["settings", "contact", "phone"], val)
-            }
+            onChange={(val) => update(["settings", "contact", "phone"], val)}
           />
 
           <FormInput
             label="WhatsApp"
             value={data.settings?.contact?.whatsapp || ""}
-            onChange={(val) =>
-              update(["settings", "contact", "whatsapp"], val)
-            }
+            onChange={(val) => update(["settings", "contact", "whatsapp"], val)}
           />
         </div>
       </Section>
 
       <Section label={t("settings")}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4">
           <FormInput
             label={t("estimatedPrepTime")}
-            value={data.settings?.automation?.estimatedPrepTime || ""}
+            value={
+              data.settings?.automation?.estimatedPrepTime === undefined
+                ? ""
+                : String(data.settings.automation.estimatedPrepTime)
+            }
             onChange={(val) =>
               update(
                 ["settings", "automation", "estimatedPrepTime"],
@@ -203,6 +164,82 @@ export default function EditBranchStepOne({ data, setData }: any) {
               )
             }
           />
+
+          <div className="space-y-3 rounded-[12px] border p-4">
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {t("serviceCharge")}
+              </p>
+              <p className="text-xs text-gray-500">
+                {t("serviceChargeDescription")}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between rounded-[12px] border p-4">
+              <div>
+                <p className="text-sm font-medium text-gray-900">
+                  {t("enableServiceCharge")}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {t("serviceChargeDescription")}
+                </p>
+              </div>
+
+              <Switch
+                checked={serviceChargeEnabled}
+                onCheckedChange={(val) => {
+                  update(["settings", "serviceCharge", "isEnabled"], val);
+
+                  if (!val) {
+                    update(["settings", "serviceCharge", "type"], "PERCENTAGE");
+                    update(["settings", "serviceCharge", "value"], 0);
+                  }
+                }}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-900">
+                  {t("chargeType")}
+                </p>
+                <Select
+                  disabled={!serviceChargeEnabled}
+                  value={serviceChargeType}
+                  onValueChange={(value: BranchServiceChargeType) =>
+                    update(["settings", "serviceCharge", "type"], value)
+                  }
+                >
+                  <SelectTrigger className="h-[44px] rounded-[10px] border-gray-300 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PERCENTAGE">{t("percentage")}</SelectItem>
+                    <SelectItem value="AMOUNT">{t("fixedAmount")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <FormInput
+                  label={serviceChargeType === "AMOUNT" ? t("amount") : t("percentage")}
+                  value={String(serviceCharge.value ?? 0)}
+                  disabled={!serviceChargeEnabled}
+                  onChange={(val) =>
+                    update(
+                      ["settings", "serviceCharge", "value"],
+                      val ? Number(val) : 0
+                    )
+                  }
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  {serviceChargeType === "AMOUNT"
+                    ? t("serviceChargeAmountHelper")
+                    : t("serviceChargePercentageHelper")}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </Section>
 
@@ -247,7 +284,7 @@ export default function EditBranchStepOne({ data, setData }: any) {
           <div className="rounded-[12px] border p-4">
             <FormInput
               label={t("tableCount")}
-              value={data.settings?.tableCount ?? 0}
+              value={String(data.settings?.tableCount ?? 0)}
               onChange={(val) =>
                 update(["settings", "tableCount"], val ? Number(val) : 0)
               }
@@ -258,7 +295,8 @@ export default function EditBranchStepOne({ data, setData }: any) {
           </div>
         </div>
       </Section>
-
     </div>
   );
 }
+
+export { EditBranchStepOne as default };

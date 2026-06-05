@@ -2,15 +2,17 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildBranchPatchPayload,
+  buildServiceChargeSettingsPayload,
   buildSafeBranchSettings,
   getBranchSettingsValidationError,
   getDeliveryConfigValidationError,
   hydrateBranchForEdit,
   normalizeDeliveryConfigForApi,
+  normalizeServiceChargeForApi,
 } from "@/components/pages/branches/forms/EditBranchForm/edit-branch.mapper";
 
 const validPostalDeliveryConfig = {
-  mode: "POSTAL_CODE",
+  mode: "POSTAL_CODE" as const,
   radiusKm: 5,
   minOrderAmount: 0,
   deliveryFee: 150,
@@ -138,6 +140,126 @@ describe("edit branch delivery and settings mapper", () => {
     });
   });
 
+  it("preserves existing settings while updating only service charge", () => {
+    const settings = buildServiceChargeSettingsPayload(
+      {
+        allowedOrderTypes: ["DELIVERY", "TAKEAWAY"],
+        allowedPaymentMethods: ["COD"],
+        customSetting: "keep-me",
+        deliveryConfig: validPostalDeliveryConfig,
+        automation: {
+          autoAcceptOrders: true,
+          estimatedPrepTime: 20,
+        },
+        taxation: {
+          taxPercentage: 15,
+        },
+        tableReservationsEnabled: true,
+        tableReservationAutoAccept: true,
+        tableCount: 8,
+      },
+      {
+        isEnabled: true,
+        type: "PERCENTAGE",
+        value: 10,
+      }
+    );
+
+    expect(settings).toMatchObject({
+      allowedOrderTypes: ["DELIVERY", "TAKEAWAY"],
+      allowedPaymentMethods: ["COD"],
+      customSetting: "keep-me",
+      deliveryConfig: validPostalDeliveryConfig,
+      automation: {
+        autoAcceptOrders: true,
+        estimatedPrepTime: 20,
+      },
+      taxation: {
+        taxPercentage: 15,
+      },
+      tableReservationsEnabled: true,
+      tableReservationAutoAccept: true,
+      tableCount: 8,
+      serviceCharge: {
+        isEnabled: true,
+        type: "PERCENTAGE",
+        value: 10,
+      },
+    });
+  });
+
+  it("keeps delivery, table, and tax settings in full settings payload", () => {
+    const deliveryConfig = normalizeDeliveryConfigForApi(validPostalDeliveryConfig);
+    const settings = buildSafeBranchSettings(
+      {
+        allowedOrderTypes: ["DELIVERY"],
+        allowedPaymentMethods: ["COD"],
+        deliveryConfig,
+        tableReservationsEnabled: true,
+        tableReservationAutoAccept: false,
+        tableCount: 5,
+        taxation: {
+          taxPercentage: 7.5,
+        },
+        serviceCharge: {
+          isEnabled: true,
+          type: "AMOUNT",
+          value: 100,
+        },
+      },
+      deliveryConfig
+    );
+
+    expect(settings).toMatchObject({
+      allowedOrderTypes: ["DELIVERY"],
+      allowedPaymentMethods: ["COD"],
+      deliveryConfig,
+      tableReservationsEnabled: true,
+      tableReservationAutoAccept: false,
+      tableCount: 5,
+      taxation: {
+        taxPercentage: 7.5,
+      },
+      serviceCharge: {
+        isEnabled: true,
+        type: "AMOUNT",
+        value: 100,
+      },
+    });
+  });
+
+  it("validates service charge settings during edit", () => {
+    expect(
+      getBranchSettingsValidationError({
+        serviceCharge: {
+          isEnabled: true,
+          type: "PERCENTAGE",
+          value: 101,
+        },
+      })
+    ).toBe("Percentage service charge cannot exceed 100");
+
+    expect(
+      getBranchSettingsValidationError({
+        serviceCharge: {
+          isEnabled: true,
+          type: "AMOUNT",
+          value: 0,
+        },
+      })
+    ).toBe("Service charge value must be greater than 0 when enabled");
+
+    expect(
+      getBranchSettingsValidationError({
+        serviceCharge: {
+          isEnabled: false,
+          type: "PERCENTAGE",
+          value: 0,
+        },
+      })
+    ).toBeNull();
+  });
+
   it("hydrates edit data with safe defaults for missing table settings and postal rule fields", () => {
     const hydrated = hydrateBranchForEdit({
       id: "branch-1",
@@ -150,13 +272,18 @@ describe("edit branch delivery and settings mapper", () => {
               deliveryFee: 250,
             },
           ],
-        },
+        } as unknown as typeof validPostalDeliveryConfig,
       },
     });
 
     expect(hydrated.settings?.tableReservationsEnabled).toBe(false);
     expect(hydrated.settings?.tableReservationAutoAccept).toBe(false);
     expect(hydrated.settings?.tableCount).toBe(0);
+    expect(hydrated.settings?.serviceCharge).toEqual({
+      isEnabled: false,
+      type: "PERCENTAGE",
+      value: 0,
+    });
     expect(hydrated.settings?.deliveryConfig?.postalCodeRules).toEqual([
       {
         postalCode: "54000",
@@ -165,5 +292,25 @@ describe("edit branch delivery and settings mapper", () => {
         freeDeliveryThreshold: 0,
       },
     ]);
+  });
+
+  it("normalizes missing and disabled service charge defaults", () => {
+    expect(normalizeServiceChargeForApi(undefined)).toEqual({
+      isEnabled: false,
+      type: "PERCENTAGE",
+      value: 0,
+    });
+
+    expect(
+      normalizeServiceChargeForApi({
+        isEnabled: false,
+        type: "AMOUNT",
+        value: 100,
+      })
+    ).toEqual({
+      isEnabled: false,
+      type: "PERCENTAGE",
+      value: 0,
+    });
   });
 });

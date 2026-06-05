@@ -14,6 +14,13 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { CARD_PANEL_CLASS, FIELD_ERROR_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
@@ -66,6 +73,11 @@ const defaultCreateBranchSettings: NonNullable<BranchValues["settings"]> = {
     taxation: {
       taxPercentage: 0,
     },
+    serviceCharge: {
+      isEnabled: false,
+      type: "PERCENTAGE",
+      value: 0,
+    },
     tableReservationsEnabled: false,
     tableReservationAutoAccept: false,
     tableCount: 0,
@@ -112,6 +124,13 @@ const buildCreateBranchSettings = (
   taxation: {
     ...defaultCreateBranchSettings.taxation,
     ...(settings?.taxation ?? {}),
+  },
+  serviceCharge: {
+    isEnabled: settings?.serviceCharge?.isEnabled ?? false,
+    type: settings?.serviceCharge?.type ?? "PERCENTAGE",
+    value: settings?.serviceCharge?.isEnabled
+      ? Number(settings?.serviceCharge?.value ?? 0)
+      : 0,
   },
   contact: {
     ...defaultCreateBranchSettings.contact,
@@ -656,10 +675,14 @@ export function CreateBranchModal({
     register,
     reset,
     setValue,
+    watch,
   } = useForm<CreateBranchFormValues>({
     resolver: zodResolver(createBranchSchema),
     defaultValues,
   });
+  const serviceCharge = watch("settings.serviceCharge");
+  const serviceChargeEnabled = Boolean(serviceCharge?.isEnabled);
+  const serviceChargeType = serviceCharge?.type ?? "PERCENTAGE";
 
   useEffect(() => {
     if (!open) {
@@ -785,6 +808,112 @@ export function CreateBranchModal({
                 />
               </div>
             ) : null}
+
+            <hr className="border-gray-200 my-2" />
+
+            <div className="space-y-3">
+              <div>
+                <h4 className="text-sm font-medium text-gray-900">
+                  {t("serviceCharge")}
+                </h4>
+                <p className="text-xs text-gray-500">
+                  {t("serviceChargeDescription")}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between rounded-[12px] border p-4">
+                <div>
+                  <Label htmlFor="create-branch-service-charge-enabled" className="text-sm">
+                    {t("enableServiceCharge")}
+                  </Label>
+                  <p className="text-xs text-gray-500">
+                    {t("serviceChargeDescription")}
+                  </p>
+                </div>
+                <Controller
+                  control={control}
+                  name="settings.serviceCharge.isEnabled"
+                  render={({ field }) => (
+                    <Switch
+                      id="create-branch-service-charge-enabled"
+                      checked={field.value ?? false}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked);
+
+                        if (!checked) {
+                          setValue("settings.serviceCharge.type", "PERCENTAGE", {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          });
+                          setValue("settings.serviceCharge.value", 0, {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          });
+                        }
+                      }}
+                      className="data-[state=checked]:bg-primary"
+                    />
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-1">
+                  <Label htmlFor="create-branch-service-charge-type" className="text-sm">
+                    {t("chargeType")}
+                  </Label>
+                  <Controller
+                    control={control}
+                    name="settings.serviceCharge.type"
+                    render={({ field }) => (
+                      <Select
+                        disabled={!serviceChargeEnabled}
+                        value={field.value ?? "PERCENTAGE"}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger
+                          id="create-branch-service-charge-type"
+                          className="h-[44px] rounded-[10px] border-gray-300 text-sm"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="PERCENTAGE">{t("percentage")}</SelectItem>
+                          <SelectItem value="AMOUNT">{t("fixedAmount")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="create-branch-service-charge-value" className="text-sm">
+                    {serviceChargeType === "AMOUNT" ? t("amount") : t("percentage")}
+                  </Label>
+                  <Input
+                    id="create-branch-service-charge-value"
+                    type="number"
+                    min={0}
+                    max={serviceChargeType === "PERCENTAGE" ? 100 : undefined}
+                    step="0.01"
+                    disabled={!serviceChargeEnabled}
+                    className={INPUT_CLASS}
+                    aria-invalid={Boolean(errors.settings?.serviceCharge?.value?.message)}
+                    {...register("settings.serviceCharge.value", { valueAsNumber: true })}
+                  />
+                  <p className="text-xs text-gray-500">
+                    {serviceChargeType === "AMOUNT"
+                      ? t("serviceChargeAmountHelper")
+                      : t("serviceChargePercentageHelper")}
+                  </p>
+                  {errors.settings?.serviceCharge?.value?.message ? (
+                    <p className={FIELD_ERROR_CLASS}>
+                      {errors.settings.serviceCharge.value.message}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
 
             <hr className="border-gray-200 my-2" />
 

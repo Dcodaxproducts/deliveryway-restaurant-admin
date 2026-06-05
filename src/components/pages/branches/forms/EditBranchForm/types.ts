@@ -45,4 +45,65 @@ export type DeliveryConfig = {
   postalCodeRules: PostalCodeRule[];
 };
 
-export type BranchFormData = Record<string, any>;
+export type BranchServiceChargeType = "PERCENTAGE" | "AMOUNT";
+
+export type BranchServiceChargeSettings = {
+  isEnabled: boolean;
+  type: BranchServiceChargeType;
+  value: number;
+};
+
+export type BranchSettings = {
+  allowedOrderTypes?: string[];
+  allowedPaymentMethods?: string[];
+  deliveryConfig?: DeliveryConfig;
+  automation?: {
+    autoAcceptOrders?: boolean;
+    estimatedPrepTime?: number;
+  };
+  taxation?: {
+    taxPercentage?: number;
+  };
+  serviceCharge?: BranchServiceChargeSettings;
+  tableReservationsEnabled?: boolean;
+  tableReservationAutoAccept?: boolean;
+  tableCount?: number;
+  contact?: {
+    phone?: string;
+    whatsapp?: string;
+  };
+  [key: string]: unknown;
+};
+
+export type BranchAddress = {
+  street?: string;
+  area?: string;
+  postalCode?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  lat?: string | number;
+  lng?: string | number;
+};
+
+export type BranchFormData = {
+  id?: string;
+  restaurantId?: string;
+  name?: string;
+  description?: string;
+  isMain?: boolean;
+  branchAdmin?: unknown;
+  address?: BranchAddress;
+  street?: string;
+  area?: string;
+  postalCode?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  lat?: string | number;
+  lng?: string | number;
+  logoUrl?: string;
+  coverImage?: string;
+  settings?: BranchSettings;
+  [key: string]: unknown;
+};

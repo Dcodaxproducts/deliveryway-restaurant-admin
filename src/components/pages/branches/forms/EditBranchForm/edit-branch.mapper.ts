@@ -4,6 +4,8 @@ import {
 } from "./edit-branch.defaults";
 import type {
   BranchFormData,
+  BranchServiceChargeSettings,
+  BranchSettings,
   DeliveryConfig,
   DeliveryMode,
   DeliveryPolygonPoint,
@@ -24,56 +26,82 @@ const DAYS = [
 
 const DELIVERY_MODES: DeliveryMode[] = ["RADIUS", "ZONE", "ZONE_BANDS", "POSTAL_CODE"];
 
+export const DEFAULT_SERVICE_CHARGE: BranchServiceChargeSettings = {
+  isEnabled: false,
+  type: "PERCENTAGE",
+  value: 0,
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+const toRecord = (value: unknown): Record<string, unknown> =>
+  isRecord(value) ? value : {};
+
+const toStringValue = (value: unknown, fallback = "") =>
+  typeof value === "string" ? value : fallback;
+
 export const toNumber = (value: unknown, fallback = 0) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
-export const normalizeBreakTimesForApi = (breakTimes: any) => {
+export const normalizeBreakTimesForApi = (breakTimes: unknown) => {
   if (!Array.isArray(breakTimes)) return [];
 
   return breakTimes
-    .map((item) => ({
-      startTime: String(item?.startTime || ""),
-      endTime: String(item?.endTime || ""),
-      note: String(item?.note || ""),
-    }))
+    .map((item) => {
+      const record = toRecord(item);
+
+      return {
+        startTime: String(record.startTime || ""),
+        endTime: String(record.endTime || ""),
+        note: String(record.note || ""),
+      };
+    })
     .filter((item) => item.startTime && item.endTime);
 };
 
-export const normalizeOpeningHoursForApi = (openingHours: any) => {
+export const normalizeOpeningHoursForApi = (openingHours: unknown) => {
   const rawHours = Array.isArray(openingHours) ? openingHours : [];
 
   return DAYS.map((dayOfWeek) => {
-    const existing = rawHours.find((item: any) => item?.dayOfWeek === dayOfWeek);
+    const existing = toRecord(
+      rawHours.find((item) => toRecord(item).dayOfWeek === dayOfWeek)
+    );
 
     return {
       dayOfWeek,
-      isClosed: Boolean(existing?.isClosed ?? dayOfWeek === "SUNDAY"),
-      openTime: existing?.openTime || "09:00",
-      closeTime: existing?.closeTime || "18:00",
-      breakTimes: normalizeBreakTimesForApi(existing?.breakTimes),
-      note: String(existing?.note || ""),
+      isClosed: Boolean(existing.isClosed ?? dayOfWeek === "SUNDAY"),
+      openTime: toStringValue(existing.openTime, "09:00"),
+      closeTime: toStringValue(existing.closeTime, "18:00"),
+      breakTimes: normalizeBreakTimesForApi(existing.breakTimes),
+      note: String(existing.note || ""),
     };
   });
 };
 
-export const normalizeHolidayRangesForApi = (holidayRanges: any) => {
+export const normalizeHolidayRangesForApi = (holidayRanges: unknown) => {
   if (!Array.isArray(holidayRanges)) return [];
 
   return holidayRanges
-    .map((item) => ({
-      fromDate: String(item?.fromDate || item?.startDate || item?.date || ""),
-      toDate: String(item?.toDate || item?.endDate || item?.date || ""),
-      isClosed: Boolean(item?.isClosed ?? true),
-      openTime: item?.isClosed ? undefined : item?.openTime || "09:00",
-      closeTime: item?.isClosed ? undefined : item?.closeTime || "18:00",
-      note: String(item?.note || ""),
-    }))
+    .map((item) => {
+      const record = toRecord(item);
+      const isClosed = Boolean(record.isClosed ?? true);
+
+      return {
+        fromDate: String(record.fromDate || record.startDate || record.date || ""),
+        toDate: String(record.toDate || record.endDate || record.date || ""),
+        isClosed,
+        openTime: isClosed ? undefined : toStringValue(record.openTime, "09:00"),
+        closeTime: isClosed ? undefined : toStringValue(record.closeTime, "18:00"),
+        note: String(record.note || ""),
+      };
+    })
     .filter((item) => item.fromDate && item.toDate);
 };
 
-const normalizeDeliveryMode = (mode: any): DeliveryMode => {
+const normalizeDeliveryMode = (mode: unknown): DeliveryMode => {
   const normalized = String(mode || "").toUpperCase();
 
   return DELIVERY_MODES.includes(normalized as DeliveryMode)
@@ -81,69 +109,108 @@ const normalizeDeliveryMode = (mode: any): DeliveryMode => {
     : "RADIUS";
 };
 
-const normalizePolygonPoint = (point: any): DeliveryPolygonPoint | null => {
-  const lat = toNumber(point?.lat, Number.NaN);
-  const lng = toNumber(point?.lng, Number.NaN);
+const normalizePolygonPoint = (point: unknown): DeliveryPolygonPoint | null => {
+  const record = toRecord(point);
+  const lat = toNumber(record.lat, Number.NaN);
+  const lng = toNumber(record.lng, Number.NaN);
 
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
 
   return { lat, lng };
 };
 
-const normalizeDeliveryZonesForApi = (zones: any): DeliveryZone[] => {
+const normalizeDeliveryZonesForApi = (zones: unknown): DeliveryZone[] => {
   if (!Array.isArray(zones)) return [];
 
-  return zones.map((zone) => ({
-    ...(zone?.id ? { id: String(zone.id) } : {}),
-    name: String(zone?.name || "").trim(),
-    deliveryFee: toNumber(zone?.deliveryFee, 0),
-    minOrderAmount: toNumber(zone?.minOrderAmount, 0),
-    freeDeliveryThreshold: toNumber(zone?.freeDeliveryThreshold, 0),
-    polygon: Array.isArray(zone?.polygon)
-      ? zone.polygon
-          .map((point: any) => normalizePolygonPoint(point))
+  return zones.map((zone) => {
+    const record = toRecord(zone);
+
+    return {
+      ...(record.id ? { id: String(record.id) } : {}),
+      name: String(record.name || "").trim(),
+      deliveryFee: toNumber(record.deliveryFee, 0),
+      minOrderAmount: toNumber(record.minOrderAmount, 0),
+      freeDeliveryThreshold: toNumber(record.freeDeliveryThreshold, 0),
+      polygon: Array.isArray(record.polygon)
+        ? record.polygon
+          .map((point) => normalizePolygonPoint(point))
           .filter((point: DeliveryPolygonPoint | null): point is DeliveryPolygonPoint =>
             Boolean(point)
           )
-      : [],
-  }));
+        : [],
+    };
+  });
 };
 
-const normalizeZoneBandsForApi = (bands: any): ZoneBand[] => {
+const normalizeZoneBandsForApi = (bands: unknown): ZoneBand[] => {
   if (!Array.isArray(bands)) return [];
 
-  return bands.map((band) => ({
-    ...(band?.id ? { id: String(band.id) } : {}),
-    fromKm: toNumber(band?.fromKm, 0),
-    toKm: toNumber(band?.toKm, 0),
-    deliveryFee: toNumber(band?.deliveryFee, 0),
-    minOrderAmount: toNumber(band?.minOrderAmount, 0),
-    freeDeliveryThreshold: toNumber(band?.freeDeliveryThreshold, 0),
-  }));
+  return bands.map((band) => {
+    const record = toRecord(band);
+
+    return {
+      ...(record.id ? { id: String(record.id) } : {}),
+      fromKm: toNumber(record.fromKm, 0),
+      toKm: toNumber(record.toKm, 0),
+      deliveryFee: toNumber(record.deliveryFee, 0),
+      minOrderAmount: toNumber(record.minOrderAmount, 0),
+      freeDeliveryThreshold: toNumber(record.freeDeliveryThreshold, 0),
+    };
+  });
 };
 
-const normalizePostalCodeRulesForApi = (rules: any): PostalCodeRule[] => {
+const normalizePostalCodeRulesForApi = (rules: unknown): PostalCodeRule[] => {
   if (!Array.isArray(rules)) return [];
 
-  return rules.map((rule) => ({
-    ...(rule?.id ? { id: String(rule.id) } : {}),
-    postalCode: String(rule?.postalCode || "").trim(),
-    deliveryFee: toNumber(rule?.deliveryFee, 0),
-    minOrderAmount: toNumber(rule?.minOrderAmount, 0),
-    freeDeliveryThreshold: toNumber(rule?.freeDeliveryThreshold, 0),
-  }));
+  return rules.map((rule) => {
+    const record = toRecord(rule);
+
+    return {
+      ...(record.id ? { id: String(record.id) } : {}),
+      postalCode: String(record.postalCode || "").trim(),
+      deliveryFee: toNumber(record.deliveryFee, 0),
+      minOrderAmount: toNumber(record.minOrderAmount, 0),
+      freeDeliveryThreshold: toNumber(record.freeDeliveryThreshold, 0),
+    };
+  });
 };
 
-export const normalizeDeliveryConfigForApi = (deliveryConfig: any): DeliveryConfig => ({
-  mode: normalizeDeliveryMode(deliveryConfig?.mode),
-  radiusKm: toNumber(deliveryConfig?.radiusKm, 0),
-  minOrderAmount: toNumber(deliveryConfig?.minOrderAmount, 0),
-  deliveryFee: toNumber(deliveryConfig?.deliveryFee, 0),
-  isFreeDelivery: Boolean(deliveryConfig?.isFreeDelivery ?? false),
-  freeDeliveryThreshold: toNumber(deliveryConfig?.freeDeliveryThreshold, 0),
-  zones: normalizeDeliveryZonesForApi(deliveryConfig?.zones),
-  zoneBands: normalizeZoneBandsForApi(deliveryConfig?.zoneBands),
-  postalCodeRules: normalizePostalCodeRulesForApi(deliveryConfig?.postalCodeRules),
+export const normalizeDeliveryConfigForApi = (deliveryConfig: unknown): DeliveryConfig => {
+  const record = toRecord(deliveryConfig);
+
+  return {
+    mode: normalizeDeliveryMode(record.mode),
+    radiusKm: toNumber(record.radiusKm, 0),
+    minOrderAmount: toNumber(record.minOrderAmount, 0),
+    deliveryFee: toNumber(record.deliveryFee, 0),
+    isFreeDelivery: Boolean(record.isFreeDelivery ?? false),
+    freeDeliveryThreshold: toNumber(record.freeDeliveryThreshold, 0),
+    zones: normalizeDeliveryZonesForApi(record.zones),
+    zoneBands: normalizeZoneBandsForApi(record.zoneBands),
+    postalCodeRules: normalizePostalCodeRulesForApi(record.postalCodeRules),
+  };
+};
+
+export const normalizeServiceChargeForApi = (
+  serviceCharge: unknown
+): BranchServiceChargeSettings => {
+  const record = toRecord(serviceCharge);
+  const type = record.type === "AMOUNT" ? "AMOUNT" : "PERCENTAGE";
+  const isEnabled = Boolean(record.isEnabled ?? false);
+
+  return {
+    isEnabled,
+    type: isEnabled ? type : "PERCENTAGE",
+    value: isEnabled ? toNumber(record.value, 0) : 0,
+  };
+};
+
+export const buildServiceChargeSettingsPayload = (
+  existingSettings: unknown,
+  serviceCharge: unknown
+): BranchSettings => ({
+  ...toRecord(existingSettings),
+  serviceCharge: normalizeServiceChargeForApi(serviceCharge),
 });
 
 const isValidCoordinate = (point: DeliveryPolygonPoint) =>
@@ -230,25 +297,45 @@ export const getDeliveryConfigValidationError = (deliveryConfig: DeliveryConfig)
 };
 
 export const getBranchSettingsValidationError = (settings: unknown) => {
-  const branchSettings = settings as {
-    tableReservationsEnabled?: unknown;
-    tableCount?: unknown;
-  } | null;
+  const branchSettings = toRecord(settings);
   const tableReservationsEnabled = Boolean(
-    branchSettings?.tableReservationsEnabled ?? false
+    branchSettings.tableReservationsEnabled ?? false
   );
-  const tableCount = toNumber(branchSettings?.tableCount, 0);
+  const tableCount = toNumber(branchSettings.tableCount, 0);
+  const serviceChargeError = getServiceChargeValidationError(
+    normalizeServiceChargeForApi(branchSettings.serviceCharge)
+  );
 
   if (tableCount < 0) return "Table count cannot be negative";
   if (!Number.isInteger(tableCount)) return "Table count must be a whole number";
   if (tableReservationsEnabled && tableCount < 1) {
     return "Table count must be at least 1 when table reservations are enabled";
   }
+  if (serviceChargeError) return serviceChargeError;
 
   return null;
 };
 
-export const buildBranchPatchPayload = (branchData: BranchFormData, settings: any) => ({
+export const getServiceChargeValidationError = (
+  serviceCharge: BranchServiceChargeSettings
+) => {
+  if (!serviceCharge.isEnabled) return null;
+
+  if (serviceCharge.value <= 0) {
+    return "Service charge value must be greater than 0 when enabled";
+  }
+
+  if (serviceCharge.type === "PERCENTAGE" && serviceCharge.value > 100) {
+    return "Percentage service charge cannot exceed 100";
+  }
+
+  return null;
+};
+
+export const buildBranchPatchPayload = (
+  branchData: BranchFormData,
+  settings: BranchSettings
+) => ({
   restaurantId: branchData.restaurantId,
   name: branchData.name,
   isMain: branchData.isMain,
@@ -267,8 +354,15 @@ export const buildBranchPatchPayload = (branchData: BranchFormData, settings: an
   settings,
 });
 
-export const buildSafeBranchSettings = (settings: any, deliveryConfig: DeliveryConfig) => {
-  const safeSettings = { ...(settings || {}) };
+export const buildSafeBranchSettings = (
+  settings: unknown,
+  deliveryConfig: DeliveryConfig
+): BranchSettings => {
+  const settingsRecord = toRecord(settings);
+  const automation = toRecord(settingsRecord.automation);
+  const taxation = toRecord(settingsRecord.taxation);
+  const contact = toRecord(settingsRecord.contact);
+  const safeSettings: BranchSettings = { ...settingsRecord };
 
   delete safeSettings.openingHours;
   delete safeSettings.holidayRanges;
@@ -284,34 +378,35 @@ export const buildSafeBranchSettings = (settings: any, deliveryConfig: DeliveryC
 
   return {
     ...safeSettings,
-    allowedOrderTypes: Array.isArray(settings?.allowedOrderTypes)
-      ? settings.allowedOrderTypes
+    allowedOrderTypes: Array.isArray(settingsRecord.allowedOrderTypes)
+      ? settingsRecord.allowedOrderTypes.map(String)
       : DEFAULT_ALLOWED_ORDER_TYPES,
-    allowedPaymentMethods: Array.isArray(settings?.allowedPaymentMethods)
-      ? settings.allowedPaymentMethods
+    allowedPaymentMethods: Array.isArray(settingsRecord.allowedPaymentMethods)
+      ? settingsRecord.allowedPaymentMethods.map(String)
       : DEFAULT_ALLOWED_PAYMENT_METHODS,
-    tableReservationsEnabled: settings?.tableReservationsEnabled ?? false,
-    tableReservationAutoAccept: settings?.tableReservationAutoAccept ?? false,
-    tableCount: Math.max(0, Math.trunc(toNumber(settings?.tableCount, 0))),
+    tableReservationsEnabled: Boolean(settingsRecord.tableReservationsEnabled ?? false),
+    tableReservationAutoAccept: Boolean(settingsRecord.tableReservationAutoAccept ?? false),
+    tableCount: Math.max(0, Math.trunc(toNumber(settingsRecord.tableCount, 0))),
     deliveryTime:
-      settings?.deliveryTime === "" ||
-      settings?.deliveryTime === undefined ||
-      settings?.deliveryTime === null
+      settingsRecord.deliveryTime === "" ||
+      settingsRecord.deliveryTime === undefined ||
+      settingsRecord.deliveryTime === null
         ? null
-        : toNumber(settings?.deliveryTime, 0),
+        : toNumber(settingsRecord.deliveryTime, 0),
     automation: {
-      ...(settings?.automation || {}),
-      autoAcceptOrders: Boolean(settings?.automation?.autoAcceptOrders ?? false),
-      estimatedPrepTime: toNumber(settings?.automation?.estimatedPrepTime, 30),
+      ...automation,
+      autoAcceptOrders: Boolean(automation.autoAcceptOrders ?? false),
+      estimatedPrepTime: toNumber(automation.estimatedPrepTime, 30),
     },
     taxation: {
-      ...(settings?.taxation || {}),
-      taxPercentage: toNumber(settings?.taxation?.taxPercentage, 0),
+      ...taxation,
+      taxPercentage: toNumber(taxation.taxPercentage, 0),
     },
+    serviceCharge: normalizeServiceChargeForApi(settingsRecord.serviceCharge),
     contact: {
-      ...(settings?.contact || {}),
-      phone: settings?.contact?.phone || "",
-      whatsapp: settings?.contact?.whatsapp || "",
+      ...contact,
+      phone: toStringValue(contact.phone),
+      whatsapp: toStringValue(contact.whatsapp),
     },
     deliveryConfig,
   };
@@ -328,6 +423,7 @@ export const hydrateBranchForEdit = (branchData: BranchFormData): BranchFormData
       tableReservationsEnabled: Boolean(settings?.tableReservationsEnabled ?? false),
       tableReservationAutoAccept: Boolean(settings?.tableReservationAutoAccept ?? false),
       tableCount: Math.max(0, Math.trunc(toNumber(settings?.tableCount, 0))),
+      serviceCharge: normalizeServiceChargeForApi(settings.serviceCharge),
       deliveryConfig,
     },
   };

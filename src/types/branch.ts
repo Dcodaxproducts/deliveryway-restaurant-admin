@@ -52,9 +52,28 @@ export type BranchDeliveryConfig = {
   postalCodeRules?: PostalCodeDeliveryRule[];
 };
 
+export type BranchServiceChargeType = "PERCENTAGE" | "AMOUNT";
+
+export type BranchServiceChargeSettings = {
+  isEnabled: boolean;
+  type: BranchServiceChargeType;
+  value: number;
+};
+
 export type BranchSettings = {
+  allowedOrderTypes?: string[];
+  allowedPaymentMethods?: string[];
   deliveryConfig?: BranchDeliveryConfig;
+  automation?: {
+    autoAcceptOrders?: boolean;
+    estimatedPrepTime?: number;
+  };
+  taxation?: {
+    taxPercentage?: number;
+  };
+  serviceCharge?: BranchServiceChargeSettings;
   tableReservationsEnabled?: boolean;
   tableReservationAutoAccept?: boolean;
   tableCount?: number;
+  [key: string]: unknown;
 };
