@@ -3,6 +3,10 @@
 import type { Dispatch, SetStateAction } from "react";
 
 import FormInput from "@/components/forms/common/FormInput";
+import {
+  BranchLocationPicker,
+  type BranchLocationAddressFields,
+} from "@/components/pages/Branches/components/BranchLocationPicker";
 import Section from "@/components/pages/Promotions/forms/Section";
 import {
   Select,
@@ -26,6 +30,11 @@ type EditBranchStepOneProps = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
+const toCoordinate = (value: unknown) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
   const t = useTranslations("branches");
   const commonT = useTranslations("common");
@@ -39,6 +48,12 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
   };
   const serviceChargeEnabled = Boolean(serviceCharge.isEnabled);
   const serviceChargeType = serviceCharge.type ?? "PERCENTAGE";
+  const addressLatitude = toCoordinate(data.address?.lat ?? data.lat);
+  const addressLongitude = toCoordinate(data.address?.lng ?? data.lng);
+  const initialMapPoint =
+    addressLatitude !== null && addressLongitude !== null
+      ? { lat: addressLatitude, lng: addressLongitude }
+      : null;
 
   const update = (path: string[], value: unknown) => {
     setData((current) => {
@@ -58,6 +73,12 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
     });
   };
 
+  const handleLocationFieldsChange = (fields: BranchLocationAddressFields) => {
+    Object.entries(fields).forEach(([fieldName, value]) => {
+      update(["address", fieldName], value);
+    });
+  };
+
   return (
     <div className="rounded-[14px] space-y-8">
       <Section label={t("addBranchInfo")}>
@@ -72,6 +93,23 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
             label={commonT("description")}
             value={data.description || ""}
             onChange={(val) => update(["description"], val)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <div>
+            <h4 className="text-sm font-medium text-gray-900">
+              {t("createBranchLocation")}
+            </h4>
+            <p className="mt-1 text-xs text-gray-500">
+              {t("createBranchLocationDescription")}
+            </p>
+          </div>
+          <BranchLocationPicker
+            initialPoint={initialMapPoint}
+            inputId="edit-branch-map-search"
+            markerTitle={t("createBranchLocation")}
+            onAddressFieldsChange={handleLocationFieldsChange}
           />
         </div>
 
