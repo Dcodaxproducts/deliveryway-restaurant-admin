@@ -253,111 +253,113 @@ export function BranchDetailsModal({
             updatedAt={branch.updatedAt}
           />
 
-          {branchInfo.length ? <BranchInfoCard title={commonT("branch")} info={branchInfo} /> : null}
-          {managerInfo.length ? <BranchInfoCard title={t("manager")} info={managerInfo} /> : null}
-          {addressInfo.length ? <BranchInfoCard title={commonT("address")} info={addressInfo} /> : null}
-          {availabilityInfo.length ? <BranchInfoCard title={t("availability")} info={availabilityInfo} /> : null}
-          {statsInfo.length ? <BranchInfoCard title={t("stats")} info={statsInfo} /> : null}
-          {auditInfo.length ? <BranchInfoCard title={t("audit")} info={auditInfo} /> : null}
+          <div className="grid gap-5 lg:grid-cols-2">
+            {branchInfo.length ? <BranchInfoCard title={commonT("branch")} info={branchInfo} /> : null}
+            {managerInfo.length ? <BranchInfoCard title={t("manager")} info={managerInfo} /> : null}
+            {addressInfo.length ? <BranchInfoCard title={commonT("address")} info={addressInfo} /> : null}
+            {availabilityInfo.length ? <BranchInfoCard title={t("availability")} info={availabilityInfo} /> : null}
+            {statsInfo.length ? <BranchInfoCard title={t("stats")} info={statsInfo} /> : null}
+            {auditInfo.length ? <BranchInfoCard title={t("audit")} info={auditInfo} /> : null}
 
-          <Card className="rounded-lg border-none bg-[#F5F5F5] p-4">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold text-black">
-                {t("holidayOpeningHours")}
-              </h3>
-              {fetchingHolidayHours ? (
-                <Loader2 size={16} className="animate-spin text-primary" />
-              ) : (
-                <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-600">
-                  {t("entries")}: {holidayOpeningHours.length}
-                </span>
-              )}
-            </div>
-
-            {fetchingHolidayHours ? (
-              <div className="mt-4 space-y-3">
-                {Array.from({ length: 2 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="h-16 animate-pulse rounded-xl bg-white"
-                  />
-                ))}
+            <Card className="rounded-lg border-none bg-[#F5F5F5] p-4">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold text-black">
+                  {t("holidayOpeningHours")}
+                </h3>
+                {fetchingHolidayHours ? (
+                  <Loader2 size={16} className="animate-spin text-primary" />
+                ) : (
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-600">
+                    {t("entries")}: {holidayOpeningHours.length}
+                  </span>
+                )}
               </div>
-            ) : holidayOpeningHours.length ? (
-              <div className="mt-4 space-y-3">
-                {holidayOpeningHours.map((holiday, index) => {
-                  const timeRange = formatHolidayTimeRange(
-                    holiday,
-                    t("closedForHoliday")
-                  );
 
-                  return (
+              {fetchingHolidayHours ? (
+                <div className="mt-4 space-y-3">
+                  {Array.from({ length: 2 }).map((_, index) => (
                     <div
-                      key={`${holiday.date || "holiday"}-${holiday.id || index}`}
-                      className="rounded-xl bg-white p-4 ring-1 ring-gray-100"
-                    >
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                            <CalendarDays size={16} className="text-primary" />
-                            <span>{formatHolidayDate(holiday.date) || t("holidayDate")}</span>
+                      key={index}
+                      className="h-16 animate-pulse rounded-xl bg-white"
+                    />
+                  ))}
+                </div>
+              ) : holidayOpeningHours.length ? (
+                <div className="mt-4 space-y-3">
+                  {holidayOpeningHours.map((holiday, index) => {
+                    const timeRange = formatHolidayTimeRange(
+                      holiday,
+                      t("closedForHoliday")
+                    );
+
+                    return (
+                      <div
+                        key={`${holiday.date || "holiday"}-${holiday.id || index}`}
+                        className="rounded-xl bg-white p-4 ring-1 ring-gray-100"
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                              <CalendarDays size={16} className="text-primary" />
+                              <span>{formatHolidayDate(holiday.date) || t("holidayDate")}</span>
+                            </div>
+
+                            {timeRange ? (
+                              <div className="mt-2 flex items-center gap-2 text-xs font-medium text-gray-600">
+                                <Clock3 size={14} className="text-gray-400" />
+                                <span>{timeRange}</span>
+                              </div>
+                            ) : null}
                           </div>
 
-                          {timeRange ? (
-                            <div className="mt-2 flex items-center gap-2 text-xs font-medium text-gray-600">
-                              <Clock3 size={14} className="text-gray-400" />
-                              <span>{timeRange}</span>
-                            </div>
-                          ) : null}
+                          <span
+                            className={
+                              holiday.isClosed
+                                ? "inline-flex w-fit rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600"
+                                : "inline-flex w-fit rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600"
+                            }
+                          >
+                            {holiday.isClosed ? t("closed") : t("open")}
+                          </span>
                         </div>
 
-                        <span
-                          className={
-                            holiday.isClosed
-                              ? "inline-flex w-fit rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600"
-                              : "inline-flex w-fit rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600"
-                          }
-                        >
-                          {holiday.isClosed ? t("closed") : t("open")}
-                        </span>
+                        {holiday.note ? (
+                          <p className="mt-3 rounded-lg bg-gray-50 px-3 py-2 text-xs leading-5 text-gray-600">
+                            {holiday.note}
+                          </p>
+                        ) : null}
                       </div>
-
-                      {holiday.note ? (
-                        <p className="mt-3 rounded-lg bg-gray-50 px-3 py-2 text-xs leading-5 text-gray-600">
-                          {holiday.note}
-                        </p>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-white p-5 text-center">
-                <CalendarDays className="mx-auto mb-3 text-gray-300" size={24} />
-                <p className="text-sm font-medium text-gray-700">
-                  {t("noHolidayHours")}
-                </p>
-                <p className="mt-1 text-xs leading-5 text-gray-400">
-                  {t("noHolidayHoursDescription")}
-                </p>
-              </div>
-            )}
-          </Card>
-
-          {hasLocation ? (
-            <Card className="rounded-lg border-none bg-[#F5F5F5] p-4">
-              <h3 className="text-center text-sm font-semibold text-black">{t("location")}</h3>
-              <div className="mt-2 overflow-hidden rounded-lg">
-                <iframe
-                  width="100%"
-                  height="150"
-                  loading="lazy"
-                  title={t("branchLocation")}
-                  src={`https://maps.google.com/maps?q=${latitude},${longitude}&z=15&output=embed`}
-                />
-              </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-white p-5 text-center">
+                  <CalendarDays className="mx-auto mb-3 text-gray-300" size={24} />
+                  <p className="text-sm font-medium text-gray-700">
+                    {t("noHolidayHours")}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-gray-400">
+                    {t("noHolidayHoursDescription")}
+                  </p>
+                </div>
+              )}
             </Card>
-          ) : null}
+
+            {hasLocation ? (
+              <Card className="rounded-lg border-none bg-[#F5F5F5] p-4">
+                <h3 className="text-center text-sm font-semibold text-black">{t("location")}</h3>
+                <div className="mt-2 overflow-hidden rounded-lg">
+                  <iframe
+                    width="100%"
+                    height="150"
+                    loading="lazy"
+                    title={t("branchLocation")}
+                    src={`https://maps.google.com/maps?q=${latitude},${longitude}&z=15&output=embed`}
+                  />
+                </div>
+              </Card>
+            ) : null}
+          </div>
         </div>
 
         <DialogFooterComponent closeDialog={closeDialog} branchId={branch.id} />
