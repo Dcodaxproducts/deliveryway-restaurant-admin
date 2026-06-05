@@ -11,6 +11,13 @@ vi.mock("@/lib/axios", () => ({
 }));
 
 const mockedApi = vi.mocked(api);
+const allPaymentMethods = [
+  "COD",
+  "STRIPE",
+  "EASYPAISA",
+  "JAZZCASH",
+  "BANK_TRANSFER",
+];
 
 describe("branches service", () => {
   beforeEach(() => {
@@ -46,6 +53,7 @@ describe("branches service", () => {
     expect(mockedApi.patch).toHaveBeenCalledWith("/branches/branch-1", {
       settings: {
         allowedOrderTypes: ["DELIVERY"],
+        allowedPaymentMethods: allPaymentMethods,
         customSetting: "keep-me",
         serviceCharge: {
           isEnabled: true,

@@ -11,6 +11,7 @@ import {
   normalizeServiceChargeForApi,
   sanitizeBranchSettingsForPatch,
 } from "@/components/pages/branches/forms/EditBranchForm/edit-branch.mapper";
+import { DEFAULT_ALLOWED_PAYMENT_METHODS } from "@/components/pages/branches/forms/EditBranchForm/edit-branch.defaults";
 
 const validPostalDeliveryConfig = {
   mode: "POSTAL_CODE" as const,
@@ -125,6 +126,7 @@ describe("edit branch delivery and settings mapper", () => {
 
     expect(payload.settings).toMatchObject({
       customSetting: "keep-me",
+      allowedPaymentMethods: DEFAULT_ALLOWED_PAYMENT_METHODS,
       tableReservationsEnabled: true,
       tableReservationAutoAccept: true,
       tableCount: 12,
@@ -168,7 +170,7 @@ describe("edit branch delivery and settings mapper", () => {
 
     expect(settings).toMatchObject({
       allowedOrderTypes: ["DELIVERY", "TAKEAWAY"],
-      allowedPaymentMethods: ["COD"],
+      allowedPaymentMethods: DEFAULT_ALLOWED_PAYMENT_METHODS,
       customSetting: "keep-me",
       deliveryConfig: validPostalDeliveryConfig,
       automation: {
@@ -229,7 +231,7 @@ describe("edit branch delivery and settings mapper", () => {
 
     expect(settings).toMatchObject({
       allowedOrderTypes: ["DELIVERY"],
-      allowedPaymentMethods: ["COD"],
+      allowedPaymentMethods: DEFAULT_ALLOWED_PAYMENT_METHODS,
       deliveryConfig,
       tableReservationsEnabled: true,
       tableReservationAutoAccept: false,

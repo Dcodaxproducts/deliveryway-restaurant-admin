@@ -225,6 +225,7 @@ export const buildServiceChargeSettingsPayload = (
   serviceCharge: unknown
 ): BranchSettings => ({
   ...sanitizeBranchSettingsForPatch(existingSettings),
+  allowedPaymentMethods: DEFAULT_ALLOWED_PAYMENT_METHODS,
   serviceCharge: normalizeServiceChargeForApi(serviceCharge),
 });
 
@@ -394,9 +395,7 @@ export const buildSafeBranchSettings = (
     allowedOrderTypes: Array.isArray(settingsRecord.allowedOrderTypes)
       ? settingsRecord.allowedOrderTypes.map(String)
       : DEFAULT_ALLOWED_ORDER_TYPES,
-    allowedPaymentMethods: Array.isArray(settingsRecord.allowedPaymentMethods)
-      ? settingsRecord.allowedPaymentMethods.map(String)
-      : DEFAULT_ALLOWED_PAYMENT_METHODS,
+    allowedPaymentMethods: DEFAULT_ALLOWED_PAYMENT_METHODS,
     tableReservationsEnabled: Boolean(settingsRecord.tableReservationsEnabled ?? false),
     tableReservationAutoAccept: Boolean(settingsRecord.tableReservationAutoAccept ?? false),
     tableCount: Math.max(0, Math.trunc(toNumber(settingsRecord.tableCount, 0))),

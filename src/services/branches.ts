@@ -47,6 +47,14 @@ const hasServiceChargeSetting = (settings: BranchSettings | undefined) =>
   Boolean(settings) &&
   Object.prototype.hasOwnProperty.call(settings, "serviceCharge");
 
+const defaultAllowedPaymentMethods = [
+  "COD",
+  "STRIPE",
+  "EASYPAISA",
+  "JAZZCASH",
+  "BANK_TRANSFER",
+];
+
 const branchSettingsPatchBlocklist = [
   "openingHours",
   "openingsHours",
@@ -86,10 +94,14 @@ export const updateBranch = async (
     nextPayload.settings = {
       ...sanitizeBranchSettingsForPatch(existingBranch.settings),
       ...sanitizeBranchSettingsForPatch(payload.settings),
+      allowedPaymentMethods: defaultAllowedPaymentMethods,
       serviceCharge: payload.settings?.serviceCharge,
     };
   } else if (payload.settings) {
-    nextPayload.settings = sanitizeBranchSettingsForPatch(payload.settings);
+    nextPayload.settings = {
+      ...sanitizeBranchSettingsForPatch(payload.settings),
+      allowedPaymentMethods: defaultAllowedPaymentMethods,
+    };
   }
 
   const { data } = await api.patch(`/branches/${id}`, nextPayload);

@@ -33,6 +33,7 @@ import {
   type BranchValues,
   type CreateBranchFormValues,
 } from "@/validations/branches";
+import { DEFAULT_ALLOWED_PAYMENT_METHODS } from "@/components/pages/branches/forms/EditBranchForm/edit-branch.defaults";
 import { useTranslations } from "next-intl";
 
 interface CreateBranchModalProps {
@@ -59,7 +60,7 @@ const defaultCreateBranchSettings: NonNullable<BranchValues["settings"]> = {
       postalCodeRules: [],
     },
     allowedOrderTypes: ["DELIVERY"],
-    allowedPaymentMethods: ["COD"],
+    allowedPaymentMethods: DEFAULT_ALLOWED_PAYMENT_METHODS,
     automation: {
       autoAcceptOrders: false,
       estimatedPrepTime: 30,
@@ -133,6 +134,7 @@ const buildCreateBranchSettings = (
   tableReservationsEnabled: settings?.tableReservationsEnabled ?? false,
   tableReservationAutoAccept: settings?.tableReservationAutoAccept ?? false,
   tableCount: settings?.tableCount ?? 0,
+  allowedPaymentMethods: DEFAULT_ALLOWED_PAYMENT_METHODS,
 });
 
 type FieldConfig = {

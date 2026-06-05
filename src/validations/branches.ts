@@ -14,6 +14,7 @@ export const OrderTypeEnum = z.enum([
 
 export const PaymentMethodEnum = z.enum([
   "COD",
+  "STRIPE",
   "BANK_TRANSFER",
   "JAZZCASH",
   "EASYPAISA",

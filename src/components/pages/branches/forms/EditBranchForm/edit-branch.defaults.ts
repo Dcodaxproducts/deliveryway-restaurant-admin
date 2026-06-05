@@ -13,4 +13,17 @@ export const DEFAULT_DELIVERY_CONFIG: DeliveryConfig = {
 };
 
 export const DEFAULT_ALLOWED_ORDER_TYPES = ["DELIVERY"];
-export const DEFAULT_ALLOWED_PAYMENT_METHODS = ["COD"];
+export type DefaultAllowedPaymentMethod =
+  | "COD"
+  | "STRIPE"
+  | "EASYPAISA"
+  | "JAZZCASH"
+  | "BANK_TRANSFER";
+
+export const DEFAULT_ALLOWED_PAYMENT_METHODS: DefaultAllowedPaymentMethod[] = [
+  "COD",
+  "STRIPE",
+  "EASYPAISA",
+  "JAZZCASH",
+  "BANK_TRANSFER",
+];
