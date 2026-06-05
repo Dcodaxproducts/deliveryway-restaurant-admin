@@ -1483,6 +1483,7 @@
     "chargeType": "Gebührentyp",
     "fixedAmount": "Festbetrag",
     "amount": "Betrag",
+    "percentage": "Prozent",
     "serviceChargePercentageHelper": "Beispiel: 10 bedeutet 10 % des Zwischensumme.",
     "serviceChargeAmountHelper": "Feste Servicegebühr, die zur Bestellung hinzugefügt wird.",
     "enableTableReservations": "Tischreservierungen aktivieren",

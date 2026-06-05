@@ -1483,6 +1483,7 @@
     "chargeType": "Charge Type",
     "fixedAmount": "Fixed Amount",
     "amount": "Amount",
+    "percentage": "Percentage",
     "serviceChargePercentageHelper": "Example: 10 means 10% of subtotal.",
     "serviceChargeAmountHelper": "Fixed service charge added to the order.",
     "enableTableReservations": "Enable Table Reservations",
