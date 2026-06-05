@@ -180,7 +180,10 @@ const handleSubmit = async () => {
        * POST /menu/modifiers requires restaurantId.
        */
       await createModifier({
-        ...basePayload,
+        categoryId: basePayload.categoryId,
+        name: basePayload.name,
+        priceDelta: basePayload.priceDelta,
+        sortOrder: basePayload.sortOrder,
         restaurantId: String(restaurantId),
       });
     }

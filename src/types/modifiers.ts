@@ -36,7 +36,6 @@ export type ModifierCreatePayload = {
   name: string;
   priceDelta?: number;
   sortOrder?: number;
-  isActive?: boolean;
 };
 
 export type ModifierUpdatePayload = {

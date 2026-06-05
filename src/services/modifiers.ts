@@ -165,8 +165,17 @@ export const getModifiers = async (
   return normalizeModifiersResponse(response, params);
 };
 
-export const createModifier = (payload: ModifierCreatePayload) =>
-  httpClient.post<unknown, ModifierCreatePayload>(MODIFIERS_ENDPOINT, payload);
+export const createModifier = (payload: ModifierCreatePayload) => {
+  const createPayload = {
+    ...payload,
+  } as ModifierCreatePayload & { isActive?: boolean };
+  delete createPayload.isActive;
+
+  return httpClient.post<unknown, ModifierCreatePayload>(
+    MODIFIERS_ENDPOINT,
+    createPayload
+  );
+};
 
 export const updateModifier = (id: string, payload: ModifierUpdatePayload) =>
   httpClient.patch<unknown, ModifierUpdatePayload>(

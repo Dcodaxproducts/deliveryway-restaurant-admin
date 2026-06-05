@@ -60,7 +60,7 @@ describe("modifiers service", () => {
     expect(response.data[0]?.categoryId).toBe("modifier-category-1");
   });
 
-  it("creates and updates modifiers with categoryId without api prefix duplication", async () => {
+  it("creates modifiers without isActive and updates modifiers with isActive", async () => {
     mockedPost.mockResolvedValueOnce({ success: true });
     mockedPatch.mockResolvedValueOnce({ success: true });
 
@@ -70,7 +70,8 @@ describe("modifiers service", () => {
       name: "Garlic Sauce",
       priceDelta: 0.5,
       sortOrder: 1,
-    });
+      isActive: true,
+    } as Parameters<typeof createModifier>[0] & { isActive: boolean });
     await updateModifier("modifier-1", {
       categoryId: "modifier-category-2",
       name: "Extra Garlic Sauce",
