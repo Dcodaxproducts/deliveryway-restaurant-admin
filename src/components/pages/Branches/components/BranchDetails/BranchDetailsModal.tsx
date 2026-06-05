@@ -1,12 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import { CalendarDays, Clock3, Loader2 } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import BranchInfoCard from "./BranchInfoCard";
 import DialogFooterComponent from "./DialogFooterComponent";
 import DialogHeaderComponent from "./DialogHeaderComponent";
+import { useGetBranchHolidayOpeningHours } from "@/hooks/useBranches";
 import { useTranslations } from "next-intl";
 
 type BranchDetails = {
@@ -57,6 +59,51 @@ type InfoItem = {
   value?: string | number | boolean | null;
 };
 
+type HolidayOpeningHour = {
+  id?: string | number | null;
+  date?: string | null;
+  isClosed?: boolean | null;
+  openTime?: string | null;
+  closeTime?: string | null;
+  note?: string | null;
+};
+
+type ObjectRecord = Record<string, unknown>;
+
+const isObjectRecord = (value: unknown): value is ObjectRecord =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+const getObjectValue = (value: unknown, key: string) =>
+  isObjectRecord(value) ? value[key] : undefined;
+
+const extractHolidayOpeningHours = (response: unknown): HolidayOpeningHour[] => {
+  const data = getObjectValue(response, "data");
+  const nestedData = getObjectValue(data, "data");
+  const candidates = [
+    getObjectValue(data, "holidayOpeningHours"),
+    getObjectValue(nestedData, "holidayOpeningHours"),
+    getObjectValue(response, "holidayOpeningHours"),
+    data,
+    response,
+  ];
+
+  const raw = candidates.find((candidate) => Array.isArray(candidate));
+
+  if (!Array.isArray(raw)) return [];
+
+  return raw.filter(isObjectRecord).map((item) => ({
+    id:
+      typeof item.id === "string" || typeof item.id === "number"
+        ? item.id
+        : undefined,
+    date: typeof item.date === "string" ? item.date : "",
+    isClosed: Boolean(item.isClosed),
+    openTime: typeof item.openTime === "string" ? item.openTime : "",
+    closeTime: typeof item.closeTime === "string" ? item.closeTime : "",
+    note: typeof item.note === "string" ? item.note : "",
+  }));
+};
+
 const formatBoolean = (value: boolean | null | undefined, yes: string, no: string) => {
   if (typeof value !== "boolean") return undefined;
   return value ? yes : no;
@@ -86,7 +133,30 @@ const getManagerName = (branch: BranchDetails) => {
   return `${firstName} ${lastName}`.trim() || undefined;
 };
 
-export default function BranchDetailsModal({
+const formatHolidayDate = (value?: string | null) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const formatHolidayTimeRange = (
+  holiday: HolidayOpeningHour,
+  closedLabel: string
+) => {
+  if (holiday.isClosed) return closedLabel;
+  if (!holiday.openTime || !holiday.closeTime) return "";
+
+  return `${holiday.openTime} - ${holiday.closeTime}`;
+};
+
+export function BranchDetailsModal({
   isOpen,
   closeDialog,
   branch,
@@ -98,12 +168,21 @@ export default function BranchDetailsModal({
   const t = useTranslations("branches");
   const commonT = useTranslations("common");
 
+  const branchId = branch?.id || "";
+  const {
+    data: holidayHoursResponse,
+    isFetching: isFetchingHolidayHours,
+    isLoading: isLoadingHolidayHours,
+  } = useGetBranchHolidayOpeningHours(isOpen && branchId ? branchId : undefined);
+
   if (!branch) return null;
 
   const { address, availability, deletionState, restaurant, manager, _count } = branch;
   const latitude = address?.lat;
   const longitude = address?.lng;
   const hasLocation = latitude !== undefined && latitude !== null && longitude !== undefined && longitude !== null;
+  const holidayOpeningHours = extractHolidayOpeningHours(holidayHoursResponse);
+  const fetchingHolidayHours = isLoadingHolidayHours || isFetchingHolidayHours;
 
   const branchInfo = compactInfo([
     { label: t("branchName"), value: branch.name },
@@ -144,8 +223,8 @@ export default function BranchDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={closeDialog}>
-      <DialogContent className="max-h-[95vh] max-w-lg overflow-auto overflow-hidden rounded-[18px] p-0">
-        <div className="relative h-40 bg-gray-200">
+      <DialogContent className="flex max-h-[92vh] w-[calc(100vw-24px)] max-w-[680px] flex-col overflow-hidden rounded-[20px] p-0 sm:w-[calc(100vw-48px)]">
+        <div className="relative h-44 shrink-0 bg-gray-200">
           {branch.coverImage ? (
             <Image src={branch.coverImage} alt="Branch cover" fill className="object-cover" />
           ) : null}
@@ -165,7 +244,7 @@ export default function BranchDetailsModal({
           </div>
         </div>
 
-        <div className="space-y-5 px-6 pb-6 pt-14">
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 pb-6 pt-14 sm:px-6">
           <DialogHeaderComponent
             title={branch.name || commonT("branch")}
             badgeText={branch.isMain ? t("mainBranch") : commonT("branch")}
@@ -180,6 +259,90 @@ export default function BranchDetailsModal({
           {availabilityInfo.length ? <BranchInfoCard title={t("availability")} info={availabilityInfo} /> : null}
           {statsInfo.length ? <BranchInfoCard title={t("stats")} info={statsInfo} /> : null}
           {auditInfo.length ? <BranchInfoCard title={t("audit")} info={auditInfo} /> : null}
+
+          <Card className="rounded-lg border-none bg-[#F5F5F5] p-4">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-black">
+                {t("holidayOpeningHours")}
+              </h3>
+              {fetchingHolidayHours ? (
+                <Loader2 size={16} className="animate-spin text-primary" />
+              ) : (
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-600">
+                  {t("entries")}: {holidayOpeningHours.length}
+                </span>
+              )}
+            </div>
+
+            {fetchingHolidayHours ? (
+              <div className="mt-4 space-y-3">
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="h-16 animate-pulse rounded-xl bg-white"
+                  />
+                ))}
+              </div>
+            ) : holidayOpeningHours.length ? (
+              <div className="mt-4 space-y-3">
+                {holidayOpeningHours.map((holiday, index) => {
+                  const timeRange = formatHolidayTimeRange(
+                    holiday,
+                    t("closedForHoliday")
+                  );
+
+                  return (
+                    <div
+                      key={`${holiday.date || "holiday"}-${holiday.id || index}`}
+                      className="rounded-xl bg-white p-4 ring-1 ring-gray-100"
+                    >
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                            <CalendarDays size={16} className="text-primary" />
+                            <span>{formatHolidayDate(holiday.date) || t("holidayDate")}</span>
+                          </div>
+
+                          {timeRange ? (
+                            <div className="mt-2 flex items-center gap-2 text-xs font-medium text-gray-600">
+                              <Clock3 size={14} className="text-gray-400" />
+                              <span>{timeRange}</span>
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <span
+                          className={
+                            holiday.isClosed
+                              ? "inline-flex w-fit rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600"
+                              : "inline-flex w-fit rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600"
+                          }
+                        >
+                          {holiday.isClosed ? t("closed") : t("open")}
+                        </span>
+                      </div>
+
+                      {holiday.note ? (
+                        <p className="mt-3 rounded-lg bg-gray-50 px-3 py-2 text-xs leading-5 text-gray-600">
+                          {holiday.note}
+                        </p>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-white p-5 text-center">
+                <CalendarDays className="mx-auto mb-3 text-gray-300" size={24} />
+                <p className="text-sm font-medium text-gray-700">
+                  {t("noHolidayHours")}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-gray-400">
+                  {t("noHolidayHoursDescription")}
+                </p>
+              </div>
+            )}
+          </Card>
 
           {hasLocation ? (
             <Card className="rounded-lg border-none bg-[#F5F5F5] p-4">
@@ -202,3 +365,5 @@ export default function BranchDetailsModal({
     </Dialog>
   );
 }
+
+export { BranchDetailsModal as default };
