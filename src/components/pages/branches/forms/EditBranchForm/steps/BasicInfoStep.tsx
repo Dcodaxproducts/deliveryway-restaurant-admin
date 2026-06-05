@@ -8,6 +8,7 @@ import {
   type BranchLocationAddressFields,
 } from "@/components/pages/Branches/components/BranchLocationPicker";
 import Section from "@/components/pages/Promotions/forms/Section";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -237,10 +238,13 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-900">
+              <div className="space-y-2">
+                <label
+                  htmlFor="edit-branch-service-charge-type"
+                  className="block text-sm font-medium text-gray-900"
+                >
                   {t("chargeType")}
-                </p>
+                </label>
                 <Select
                   disabled={!serviceChargeEnabled}
                   value={serviceChargeType}
@@ -248,7 +252,10 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
                     update(["settings", "serviceCharge", "type"], value)
                   }
                 >
-                  <SelectTrigger className="h-[44px] rounded-[10px] border-gray-300 text-sm">
+                  <SelectTrigger
+                    id="edit-branch-service-charge-type"
+                    className="h-[44px] rounded-[10px] border-gray-300 text-sm"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -258,19 +265,30 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
                 </Select>
               </div>
 
-              <div>
-                <FormInput
-                  label={serviceChargeType === "AMOUNT" ? t("amount") : t("percentage")}
+              <div className="space-y-2">
+                <label
+                  htmlFor="edit-branch-service-charge-value"
+                  className="block text-sm font-medium text-gray-900"
+                >
+                  {serviceChargeType === "AMOUNT" ? t("amount") : t("percentage")}
+                </label>
+                <Input
+                  id="edit-branch-service-charge-value"
+                  type="number"
+                  min={0}
+                  max={serviceChargeType === "PERCENTAGE" ? 100 : undefined}
+                  step="0.01"
                   value={String(serviceCharge.value ?? 0)}
                   disabled={!serviceChargeEnabled}
-                  onChange={(val) =>
+                  className="h-[44px] rounded-[10px] border-gray-300 text-sm"
+                  onChange={(event) =>
                     update(
                       ["settings", "serviceCharge", "value"],
-                      val ? Number(val) : 0
+                      event.target.value ? Number(event.target.value) : 0
                     )
                   }
                 />
-                <p className="mt-2 text-xs text-gray-500">
+                <p className="text-xs text-gray-500">
                   {serviceChargeType === "AMOUNT"
                     ? t("serviceChargeAmountHelper")
                     : t("serviceChargePercentageHelper")}
