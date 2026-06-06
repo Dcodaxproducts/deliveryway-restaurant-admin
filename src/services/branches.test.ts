@@ -69,6 +69,28 @@ describe("branches service", () => {
     });
   });
 
+  it("updates branch admin through the branch patch endpoint", async () => {
+    mockedApi.patch.mockResolvedValueOnce({ data: { success: true } });
+
+    const payload = {
+      name: "Blue Area",
+      branchAdmin: {
+        email: "manager@example.com",
+        firstName: "Ali",
+        lastName: "Khan",
+        phone: "+923001234567",
+      },
+    };
+
+    await updateBranch("branch-1", payload);
+
+    expect(mockedApi.patch).toHaveBeenCalledWith("/branches/branch-1", payload);
+    expect(mockedApi.patch).not.toHaveBeenCalledWith(
+      "/api/v1/branches/branch-1",
+      payload
+    );
+  });
+
   it("updates holiday opening hours without duplicating api version prefix", async () => {
     const payload = {
       holidayOpeningHours: [

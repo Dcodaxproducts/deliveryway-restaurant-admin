@@ -99,12 +99,41 @@ export const deliveryConfigSchema = z.object({
   });
 });
 
+const optionalTrimmedStringSchema = z.string().trim().optional();
+
+const optionalEditEmailSchema = z.preprocess(
+  (value) => (typeof value === "string" && !value.trim() ? undefined : value),
+  z.string().trim().email(validationMessages.email).optional()
+);
+
+const optionalEditPasswordSchema = z
+  .string()
+  .optional()
+  .superRefine((password, ctx) => {
+    const trimmedPassword = password?.trim() ?? "";
+
+    if (!trimmedPassword || trimmedPassword.length >= 8) return;
+
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: validationMessages.passwordMin,
+    });
+  });
+
+export const editBranchAdminSchema = z.object({
+  email: optionalEditEmailSchema,
+  firstName: optionalTrimmedStringSchema,
+  lastName: optionalTrimmedStringSchema,
+  phone: optionalTrimmedStringSchema,
+  password: optionalEditPasswordSchema,
+});
+
 export const editBranchSchema = z.object({
   name: z.string().trim().min(1, validationMessages.required),
   description: z.string().optional(),
   isMain: z.boolean().optional(),
   restaurantId: z.string().optional(),
-  branchAdmin: z.unknown().optional(),
+  branchAdmin: editBranchAdminSchema.optional(),
   address: z
     .object({
       street: z.string().optional(),

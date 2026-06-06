@@ -12,6 +12,7 @@ import { useGetBranchForEdit, useUpdateBranchForEdit, useUpdateOpeningHours } fr
 import {
   buildBranchPatchPayload,
   buildSafeBranchSettings,
+  editBranchSchema,
   EditBranchBasicInfoStep,
   EditBranchDeliveryStep,
   EditBranchSectionHeader,
@@ -22,6 +23,7 @@ import {
   normalizeDeliveryConfigForApi,
   normalizeOpeningHoursForApi,
   type BranchFormData,
+  type BranchSettings,
   type EditTab,
 } from "@/components/pages/branches/forms/EditBranchForm";
 import { useTranslations } from "next-intl";
@@ -65,7 +67,14 @@ export default function BranchesEditPage() {
     });
   }, [activeTab]);
 
-  const saveBasicInfo = async (fullSettings: any) => {
+  const saveBasicInfo = async (fullSettings: BranchSettings) => {
+    const parsed = editBranchSchema.safeParse(branchData);
+
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? t("somethingWentWrong"));
+      return false;
+    }
+
     await updateBranchMutation.mutateAsync({
       id: branchId as string,
       data: buildBranchPatchPayload(branchData as BranchFormData, fullSettings),
@@ -75,7 +84,7 @@ export default function BranchesEditPage() {
     return true;
   };
 
-  const saveDeliveryConfig = async (fullSettings: any) => {
+  const saveDeliveryConfig = async (fullSettings: BranchSettings) => {
     await updateBranchMutation.mutateAsync({
       id: branchId as string,
       data: { settings: fullSettings },
@@ -85,7 +94,7 @@ export default function BranchesEditPage() {
     return true;
   };
 
-  const saveWorkingHours = async (fullSettings: any) => {
+  const saveWorkingHours = async (fullSettings: BranchSettings) => {
     const settings = branchData?.settings || {};
 
     await updateOpeningHoursMutation.mutateAsync({

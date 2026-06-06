@@ -186,6 +186,11 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
               key={field.name}
               label={t(field.labelKey)}
               type={field.type}
+              placeholder={
+                field.type === "password"
+                  ? t("branchAdminPasswordEditPlaceholder")
+                  : undefined
+              }
               value={data.branchAdmin?.[field.name] || ""}
               onChange={(val) => update(["branchAdmin", field.name], val)}
               showPasswordToggle={field.type === "password"}

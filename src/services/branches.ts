@@ -40,7 +40,7 @@ export const getBranch = async (id: string) => {
   return data.data;
 };
 
-type BranchUpdateAdmin = {
+export type BranchAdminUpdateInput = {
   email?: string;
   password?: string;
   firstName?: string;
@@ -55,15 +55,16 @@ export type BranchUpdatePayload = {
   city?: string;
   state?: string;
   country?: string;
-  lat?: string | number;
-  lng?: string | number;
+  lat?: string | number | null;
+  lng?: string | number | null;
   isMain?: boolean;
   area?: string;
   postalCode?: string;
   logoUrl?: string;
   coverImage?: string;
   description?: string;
-  branchAdmin?: BranchUpdateAdmin;
+  isActive?: boolean;
+  branchAdmin?: BranchAdminUpdateInput;
   settings?: BranchSettings;
 };
 

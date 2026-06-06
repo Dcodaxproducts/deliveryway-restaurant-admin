@@ -12,6 +12,7 @@ import {
   sanitizeBranchSettingsForPatch,
 } from "@/components/pages/branches/forms/EditBranchForm/edit-branch.mapper";
 import { DEFAULT_ALLOWED_PAYMENT_METHODS } from "@/components/pages/branches/forms/EditBranchForm/edit-branch.defaults";
+import type { BranchFormData } from "@/components/pages/branches/forms/EditBranchForm/types";
 
 const validPostalDeliveryConfig = {
   mode: "POSTAL_CODE" as const,
@@ -349,6 +350,150 @@ describe("edit branch delivery and settings mapper", () => {
       firstName: "Wajih ul",
       lastName: "Hassan",
       phone: "12345678",
+    });
+  });
+
+  it("includes edited branch admin password only when provided", () => {
+    const payload = buildBranchPatchPayload(
+      {
+        restaurantId: "restaurant-1",
+        name: "Blue Area",
+        branchAdmin: {
+          email: " branch@yopmail.com ",
+          password: " new-password ",
+          firstName: " Wajih ul ",
+          lastName: " Hassan ",
+          phone: " 12345678 ",
+        },
+      },
+      {}
+    );
+
+    expect(payload.branchAdmin).toEqual({
+      email: "branch@yopmail.com",
+      password: "new-password",
+      firstName: "Wajih ul",
+      lastName: "Hassan",
+      phone: "12345678",
+    });
+  });
+
+  it("omits branch admin object when every branch admin field is empty", () => {
+    const payload = buildBranchPatchPayload(
+      {
+        restaurantId: "restaurant-1",
+        name: "Blue Area",
+        branchAdmin: {
+          email: " ",
+          password: "",
+          firstName: "",
+          lastName: "",
+          phone: "",
+        },
+      },
+      {}
+    );
+
+    expect(payload).not.toHaveProperty("branchAdmin");
+  });
+
+  it("preserves settings while adding branch admin to the patch payload", () => {
+    const settings = {
+      contact: {
+        phone: "111",
+        whatsapp: "222",
+      },
+      tableReservationsEnabled: true,
+      tableCount: 4,
+    };
+
+    const payload = buildBranchPatchPayload(
+      {
+        restaurantId: "restaurant-1",
+        name: "Blue Area",
+        branchAdmin: {
+          email: "branch@yopmail.com",
+          firstName: "Wajih",
+          lastName: "Hassan",
+          phone: "12345678",
+        },
+      },
+      settings
+    );
+
+    expect(payload.branchAdmin).toEqual({
+      email: "branch@yopmail.com",
+      firstName: "Wajih",
+      lastName: "Hassan",
+      phone: "12345678",
+    });
+    expect(payload.settings).toBe(settings);
+  });
+
+  it("hydrates branch admin info from branchAdmin profile fallback", () => {
+    const hydrated = hydrateBranchForEdit({
+      name: "Blue Area",
+      branchAdmin: {
+        email: "admin@example.com",
+        profile: {
+          firstName: "Ali",
+          lastName: "Khan",
+          phone: "+923001234567",
+        },
+      } as unknown as BranchFormData["branchAdmin"],
+    });
+
+    expect(hydrated.branchAdmin).toEqual({
+      email: "admin@example.com",
+      password: "",
+      firstName: "Ali",
+      lastName: "Khan",
+      phone: "+923001234567",
+    });
+  });
+
+  it("hydrates branch admin info from assignedManager or users fallback", () => {
+    const assignedHydrated = hydrateBranchForEdit({
+      name: "Blue Area",
+      assignedManager: {
+        email: "assigned@example.com",
+        profile: {
+          firstName: "Assigned",
+          lastName: "Manager",
+          phone: "111",
+        },
+      },
+    });
+    const usersHydrated = hydrateBranchForEdit({
+      name: "Blue Area",
+      users: [
+        {
+          email: "staff@example.com",
+          role: "STAFF",
+          profile: {
+            firstName: "Staff",
+          },
+        },
+        {
+          email: "branch-admin@example.com",
+          role: "BRANCH_ADMIN",
+          profile: {
+            firstName: "Branch",
+            lastName: "Admin",
+            phone: "222",
+          },
+        },
+      ],
+    });
+
+    expect(assignedHydrated.branchAdmin?.email).toBe("assigned@example.com");
+    expect(assignedHydrated.branchAdmin?.firstName).toBe("Assigned");
+    expect(usersHydrated.branchAdmin).toEqual({
+      email: "branch-admin@example.com",
+      password: "",
+      firstName: "Branch",
+      lastName: "Admin",
+      phone: "222",
     });
   });
 

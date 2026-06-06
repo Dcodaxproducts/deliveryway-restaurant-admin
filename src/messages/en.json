@@ -1407,6 +1407,7 @@
     "lastName": "Last Name",
     "email": "Email",
     "password": "Password",
+    "branchAdminPasswordEditPlaceholder": "Leave blank to keep current password.",
     "phone": "Phone",
     "mainBranch": "Main Branch",
     "main": "main",

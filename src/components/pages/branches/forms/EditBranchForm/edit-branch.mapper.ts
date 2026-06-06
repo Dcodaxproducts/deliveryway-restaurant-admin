@@ -62,6 +62,7 @@ const normalizeBranchAdminForEdit = (
   manager: unknown
 ): BranchAdmin => {
   const adminRecord = toRecord(branchAdmin);
+  const adminProfileRecord = toRecord(adminRecord.profile);
   const managerRecord = toRecord(manager);
   const profileRecord = toRecord(managerRecord.profile);
 
@@ -70,13 +71,16 @@ const normalizeBranchAdminForEdit = (
     password: toStringValue(adminRecord.password),
     firstName: toStringValue(
       adminRecord.firstName,
-      toStringValue(profileRecord.firstName)
+      toStringValue(adminProfileRecord.firstName, toStringValue(profileRecord.firstName))
     ),
     lastName: toStringValue(
       adminRecord.lastName,
-      toStringValue(profileRecord.lastName)
+      toStringValue(adminProfileRecord.lastName, toStringValue(profileRecord.lastName))
     ),
-    phone: toStringValue(adminRecord.phone, toStringValue(profileRecord.phone)),
+    phone: toStringValue(
+      adminRecord.phone,
+      toStringValue(adminProfileRecord.phone, toStringValue(profileRecord.phone))
+    ),
   };
 };
 
@@ -404,24 +408,28 @@ export const getServiceChargeValidationError = (
 export const buildBranchPatchPayload = (
   branchData: BranchFormData,
   settings: BranchSettings
-) => ({
-  restaurantId: branchData.restaurantId,
-  name: branchData.name,
-  isMain: branchData.isMain,
-  branchAdmin: normalizeBranchAdminForPatch(branchData.branchAdmin),
-  street: branchData.address?.street ?? branchData.street,
-  area: branchData.address?.area ?? branchData.area,
-  postalCode: branchData.address?.postalCode ?? branchData.postalCode,
-  city: branchData.address?.city ?? branchData.city,
-  state: branchData.address?.state ?? branchData.state,
-  country: branchData.address?.country ?? branchData.country,
-  lat: branchData.address?.lat ?? branchData.lat,
-  lng: branchData.address?.lng ?? branchData.lng,
-  logoUrl: branchData.logoUrl,
-  coverImage: branchData.coverImage,
-  description: branchData.description,
-  settings,
-});
+): BranchFormData => {
+  const branchAdmin = normalizeBranchAdminForPatch(branchData.branchAdmin);
+
+  return {
+    restaurantId: branchData.restaurantId,
+    name: branchData.name,
+    isMain: branchData.isMain,
+    ...(branchAdmin ? { branchAdmin } : {}),
+    street: branchData.address?.street ?? branchData.street,
+    area: branchData.address?.area ?? branchData.area,
+    postalCode: branchData.address?.postalCode ?? branchData.postalCode,
+    city: branchData.address?.city ?? branchData.city,
+    state: branchData.address?.state ?? branchData.state,
+    country: branchData.address?.country ?? branchData.country,
+    lat: branchData.address?.lat ?? branchData.lat,
+    lng: branchData.address?.lng ?? branchData.lng,
+    logoUrl: branchData.logoUrl,
+    coverImage: branchData.coverImage,
+    description: branchData.description,
+    settings,
+  };
+};
 
 export const buildSafeBranchSettings = (
   settings: unknown,
@@ -470,12 +478,17 @@ export const buildSafeBranchSettings = (
 export const hydrateBranchForEdit = (branchData: BranchFormData): BranchFormData => {
   const settings = branchData.settings || {};
   const deliveryConfig = normalizeDeliveryConfigForApi(settings.deliveryConfig);
+  const users = Array.isArray(branchData.users) ? branchData.users : [];
+  const branchAdminUser =
+    users.find((user) => toRecord(user).role === "BRANCH_ADMIN") ?? users[0];
+  const manager =
+    branchData.manager ?? branchData.assignedManager ?? branchAdminUser;
 
   return {
     ...branchData,
     branchAdmin: normalizeBranchAdminForEdit(
       branchData.branchAdmin,
-      branchData.manager
+      manager
     ),
     settings: {
       ...settings,
