@@ -217,7 +217,7 @@ export function AddHolidayHoursInfo({
     <Dialog open={open} onOpenChange={handleClose} modal>
       <DialogContent
         className="
-          flex max-h-[92vh] w-[calc(100vw-24px)] max-w-[760px] flex-col
+          flex max-h-[92vh] w-[calc(100vw-24px)] max-w-[960px] flex-col
           overflow-hidden rounded-[24px] border-0 bg-white p-0 shadow-2xl
           sm:w-[calc(100vw-48px)]
         "
@@ -466,7 +466,7 @@ function HolidayHourItem({
   };
 
   return (
-    <div className="overflow-hidden rounded-[22px] border border-gray-100 bg-white shadow-sm">
+    <div className="overflow-visible rounded-[22px] border border-gray-100 bg-white shadow-sm">
       <div className="flex flex-col gap-3 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-primary/10 text-sm font-semibold text-primary">
@@ -509,9 +509,9 @@ function HolidayHourItem({
         </div>
       </div>
 
-      <div className="grid gap-4 p-4 md:grid-cols-[180px_1fr]">
+      <div className="grid gap-4 p-4 lg:grid-cols-2">
         <FieldGroup label={labels.holidayDateOrRange} required>
-          <div className="relative">
+          <div className={`relative ${calendarOpen ? "z-30" : ""}`}>
             <button
               type="button"
               disabled={isSaving}
@@ -528,7 +528,7 @@ function HolidayHourItem({
             </button>
 
             {calendarOpen ? (
-              <div className="absolute left-0 top-[50px] z-20 rounded-[16px] border border-gray-200 bg-white p-3 shadow-xl">
+              <div className="absolute left-0 top-[50px] z-50 w-max max-w-[calc(100vw-48px)] overflow-x-auto rounded-[16px] border border-gray-200 bg-white p-3 shadow-xl">
                 <DayPicker
                   mode="range"
                   selected={selectedRange}
@@ -565,7 +565,7 @@ function HolidayHourItem({
 
         <div
           className={`grid gap-4 ${
-            row.isClosed ? "md:grid-cols-1" : "md:grid-cols-2"
+            row.isClosed ? "sm:grid-cols-1" : "sm:grid-cols-2"
           }`}
         >
           {row.isClosed ? (
@@ -623,7 +623,7 @@ function HolidayHourItem({
           )}
         </div>
 
-        <div className="md:col-span-2">
+        <div className="lg:col-span-2">
           <FieldGroup label={labels.note}>
             <input
               type="text"
