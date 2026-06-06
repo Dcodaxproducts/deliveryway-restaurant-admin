@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { useGetBranches } from "@/hooks/useBranches";
 import { useGetCustomersList } from "@/hooks/useCustomers";
 import { useCreateTableReservation } from "@/hooks/useReservations";
+import { getLocalTodayInputValue } from "@/lib/date-input";
 
 export default function MakeReservationModal({
   open,
@@ -41,6 +42,7 @@ export default function MakeReservationModal({
   const { user } = useAuthContext();
   const createReservationMutation = useCreateTableReservation();
   const loading = createReservationMutation.isPending;
+  const todayDate = useMemo(() => getLocalTodayInputValue(), []);
 
   const restaurantId = user?.restaurantId ?? undefined;
 
@@ -169,6 +171,7 @@ export default function MakeReservationModal({
           <CollapsibleContent className="mt-4 space-y-4 px-1">
             <Input
               type="date"
+              min={todayDate}
               value={reservationDate}
               onChange={(e) => setReservationDate(e.target.value)}
             />

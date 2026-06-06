@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Radio } from "@/components/ui/radioBtn";
 import FormInput from "@/components/forms/common/FormInput";
+import { getLocalTodayInputValue } from "@/lib/date-input";
 
 type FilterModalProps = {
   open: boolean;
@@ -31,6 +32,7 @@ export default function FilterModal({
 
   const [creationDate, setCreationDate] = useState("");
   const [modifiedDate, setModifiedDate] = useState("");
+  const todayDate = useMemo(() => getLocalTodayInputValue(), []);
 
 
   useEffect(() => {
@@ -138,6 +140,7 @@ export default function FilterModal({
          <FormInput
   label="Creation Date"
   type="date"
+  min={todayDate}
   value={creationDate}
   onChange={setCreationDate}
 />
@@ -147,6 +150,7 @@ export default function FilterModal({
        <FormInput
   label="Modified Date"
   type="date"
+  min={todayDate}
   value={modifiedDate}
   onChange={setModifiedDate}
 />

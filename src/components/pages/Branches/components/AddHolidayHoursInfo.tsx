@@ -40,6 +40,7 @@ import type {
   HolidayOpeningHoursFormEntry,
   HolidayOpeningHoursPayload,
 } from "@/types/opening-hours";
+import { getLocalTodayInputValue } from "@/lib/date-input";
 
 type AddHolidayHoursInfoProps = {
   open: boolean;
@@ -63,13 +64,6 @@ const createEmptyHolidayRow = (): HolidayHourRow => ({
   closeTime: "18:00",
   note: "",
 });
-
-const getLocalTodayInputValue = () => {
-  const today = new Date();
-  const timezoneOffsetMs = today.getTimezoneOffset() * 60_000;
-
-  return new Date(today.getTime() - timezoneOffsetMs).toISOString().slice(0, 10);
-};
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value);
