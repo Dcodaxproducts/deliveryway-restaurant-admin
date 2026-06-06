@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { DayPicker, type DateRange } from "react-day-picker";
 import {
   AlertCircle,
   CalendarDays,
@@ -27,6 +28,18 @@ import {
   useGetBranchHolidayOpeningHours,
   useUpdateBranchHolidayOpeningHours,
 } from "@/hooks/useBranches";
+import {
+  buildHolidayOpeningHoursPayload,
+  formatDateToYmd,
+  formatHolidayDateLabel,
+  hydrateHolidayOpeningHoursEntry,
+  parseYmdDate,
+} from "@/components/pages/Branches/components/opening-hours/holiday-opening-hours-utils";
+import type {
+  HolidayOpeningHoursEntry,
+  HolidayOpeningHoursFormEntry,
+  HolidayOpeningHoursPayload,
+} from "@/types/opening-hours";
 
 type AddHolidayHoursInfoProps = {
   open: boolean;
@@ -35,21 +48,16 @@ type AddHolidayHoursInfoProps = {
   branchName?: string;
 };
 
-type HolidayHourRow = {
-  id: string;
-  date: string;
-  isClosed: boolean;
-  openTime: string;
-  closeTime: string;
-  note: string;
-};
+type HolidayHourRow = HolidayOpeningHoursFormEntry;
+
+type RawHolidayOpeningHoursEntry = HolidayOpeningHoursEntry & { id?: string };
 
 const createRowId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 const createEmptyHolidayRow = (): HolidayHourRow => ({
   id: createRowId(),
-  date: "",
+  mode: "single",
   isClosed: false,
   openTime: "10:00",
   closeTime: "18:00",
@@ -63,30 +71,53 @@ const getLocalTodayInputValue = () => {
   return new Date(today.getTime() - timezoneOffsetMs).toISOString().slice(0, 10);
 };
 
-const extractHolidayOpeningHours = (response: any): any[] => {
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+const toOptionalString = (value: unknown) =>
+  typeof value === "string" ? value : undefined;
+
+const normalizeApiHolidayEntry = (
+  value: unknown
+): RawHolidayOpeningHoursEntry | null => {
+  if (!isRecord(value)) return null;
+
+  return {
+    id: toOptionalString(value.id),
+    date: toOptionalString(value.date),
+    fromDate: toOptionalString(value.fromDate),
+    toDate: toOptionalString(value.toDate),
+    isClosed: Boolean(value.isClosed),
+    openTime: toOptionalString(value.openTime),
+    closeTime: toOptionalString(value.closeTime),
+    note: toOptionalString(value.note),
+  };
+};
+
+const extractHolidayOpeningHours = (
+  response: unknown
+): RawHolidayOpeningHoursEntry[] => {
+  const responseRecord = isRecord(response) ? response : {};
+  const dataRecord = isRecord(responseRecord.data) ? responseRecord.data : {};
+  const nestedDataRecord = isRecord(dataRecord.data) ? dataRecord.data : {};
   const candidates = [
-    response?.data?.holidayOpeningHours,
-    response?.data?.data?.holidayOpeningHours,
-    response?.holidayOpeningHours,
-    response?.data,
+    dataRecord.holidayOpeningHours,
+    nestedDataRecord.holidayOpeningHours,
+    responseRecord.holidayOpeningHours,
+    responseRecord.data,
     response,
   ];
 
   const raw = candidates.find((candidate) => Array.isArray(candidate));
 
-  return Array.isArray(raw) ? raw : [];
+  return Array.isArray(raw)
+    ? raw
+        .map((item) => normalizeApiHolidayEntry(item))
+        .filter((item): item is RawHolidayOpeningHoursEntry => Boolean(item))
+    : [];
 };
 
-const normalizeHolidayRow = (item: any): HolidayHourRow => ({
-  id: String(item?.id || createRowId()),
-  date: item?.date || "",
-  isClosed: Boolean(item?.isClosed),
-  openTime: item?.openTime || "",
-  closeTime: item?.closeTime || "",
-  note: item?.note || "",
-});
-
-export default function AddHolidayHoursInfo({
+export function AddHolidayHoursInfo({
   open,
   onOpenChange,
   branchId,
@@ -122,7 +153,9 @@ export default function AddHolidayHoursInfo({
     const apiRows = extractHolidayOpeningHours(holidayHoursResponse);
 
     if (apiRows.length > 0) {
-      setRows(apiRows.map(normalizeHolidayRow));
+      setRows(
+        apiRows.map((row) => hydrateHolidayOpeningHoursEntry(row, createRowId()))
+      );
       return;
     }
 
@@ -156,48 +189,22 @@ export default function AddHolidayHoursInfo({
     );
   };
 
-  const validateRows = () => {
-    const usedDates = new Set<string>();
-
-    for (const row of rows) {
-      if (!row.date) {
-        toast.error(t("holidayDateRequired"));
-        return false;
-      }
-
-      if (usedDates.has(row.date)) {
-        toast.error(t("duplicateHolidayDates"));
-        return false;
-      }
-
-      usedDates.add(row.date);
-
-      if (!row.isClosed && (!row.openTime || !row.closeTime)) {
-        toast.error(t("holidayTimesRequired"));
-        return false;
-      }
-    }
-
-    return true;
-  };
-
   const handleSubmit = () => {
     if (!branchId || isSaving) return;
 
-    if (!validateRows()) return;
+    let payload: HolidayOpeningHoursPayload;
+
+    try {
+      payload = buildHolidayOpeningHoursPayload(rows);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("somethingWentWrong"));
+      return;
+    }
 
     updateHolidayHours(
       {
         branchId,
-        payload: {
-          holidayOpeningHours: rows.map((row) => ({
-            date: row.date,
-            isClosed: row.isClosed,
-            openTime: row.openTime || null,
-            closeTime: row.closeTime || null,
-            note: row.note?.trim() || null,
-          })),
-        },
+        payload,
       },
       {
         onSuccess: () => {
@@ -319,9 +326,9 @@ export default function AddHolidayHoursInfo({
                   labels={{
                     holidaySchedule: t("holidaySchedule"),
                     selectHolidayDate: t("selectHolidayDate"),
+                    holidayDateOrRange: t("holidayDateOrRange"),
                     closed: t("closed"),
                     removeHolidayRow: t("removeHolidayRow"),
-                    holidayDate: t("holidayDate"),
                     closedForHoliday: t("closedForHoliday"),
                     closedForHolidayDescription: t("closedForHolidayDescription"),
                     openTime: t("openTime"),
@@ -412,9 +419,9 @@ function HolidayHourItem({
   labels: {
     holidaySchedule: string;
     selectHolidayDate: string;
+    holidayDateOrRange: string;
     closed: string;
     removeHolidayRow: string;
-    holidayDate: string;
     closedForHoliday: string;
     closedForHolidayDescription: string;
     openTime: string;
@@ -423,6 +430,47 @@ function HolidayHourItem({
     notePlaceholder: string;
   };
 }) {
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const selectedRange = getSelectedRange(row);
+  const selectedLabel = formatHolidayDateLabel(row);
+  const calendarStartDate = parseYmdDate(minDate);
+
+  const handleDateSelect = (range: DateRange | undefined) => {
+    if (!range?.from) {
+      onChange(row.id, "mode", "single");
+      onChange(row.id, "date", "");
+      onChange(row.id, "fromDate", "");
+      onChange(row.id, "toDate", "");
+      return;
+    }
+
+    const fromDate = formatDateToYmd(range.from);
+    const toDate = range.to ? formatDateToYmd(range.to) : undefined;
+
+    if (!toDate) {
+      onChange(row.id, "mode", "single");
+      onChange(row.id, "date", fromDate);
+      onChange(row.id, "fromDate", "");
+      onChange(row.id, "toDate", "");
+      return;
+    }
+
+    if (toDate === fromDate) {
+      onChange(row.id, "mode", "single");
+      onChange(row.id, "date", fromDate);
+      onChange(row.id, "fromDate", "");
+      onChange(row.id, "toDate", "");
+      setCalendarOpen(false);
+      return;
+    }
+
+    onChange(row.id, "mode", "range");
+    onChange(row.id, "date", "");
+    onChange(row.id, "fromDate", fromDate);
+    onChange(row.id, "toDate", toDate);
+    setCalendarOpen(false);
+  };
+
   return (
     <div className="overflow-hidden rounded-[22px] border border-gray-100 bg-white shadow-sm">
       <div className="flex flex-col gap-3 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -437,7 +485,7 @@ function HolidayHourItem({
             </h4>
 
             <p className="truncate text-xs text-gray-500">
-              {row.date || labels.selectHolidayDate}
+              {selectedLabel || labels.selectHolidayDate}
             </p>
           </div>
         </div>
@@ -468,23 +516,56 @@ function HolidayHourItem({
       </div>
 
       <div className="grid gap-4 p-4 md:grid-cols-[180px_1fr]">
-        <FieldGroup label={labels.holidayDate} required>
+        <FieldGroup label={labels.holidayDateOrRange} required>
           <div className="relative">
-            <CalendarDays
-              size={17}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-
-            <input
-              type="date"
-              value={row.date}
-              min={minDate}
+            <button
+              type="button"
               disabled={isSaving}
-              onChange={(event) =>
-                onChange(row.id, "date", event.target.value)
-              }
-              className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
-            />
+              onClick={() => setCalendarOpen((current) => !current)}
+              className="flex h-[44px] w-full items-center rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-left text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <CalendarDays
+                size={17}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              />
+              <span className={selectedLabel ? "truncate" : "truncate text-gray-400"}>
+                {selectedLabel || labels.selectHolidayDate}
+              </span>
+            </button>
+
+            {calendarOpen ? (
+              <div className="absolute left-0 top-[50px] z-20 rounded-[16px] border border-gray-200 bg-white p-3 shadow-xl">
+                <DayPicker
+                  mode="range"
+                  selected={selectedRange}
+                  onSelect={handleDateSelect}
+                  disabled={calendarStartDate ? { before: calendarStartDate } : undefined}
+                  className="text-sm"
+                  classNames={{
+                    months: "flex",
+                    month: "space-y-3",
+                    month_caption: "flex justify-center pb-2 text-sm font-semibold text-gray-900",
+                    nav: "absolute left-3 right-3 top-3 flex items-center justify-between",
+                    button_previous:
+                      "rounded-full p-1 text-gray-500 hover:bg-gray-100",
+                    button_next: "rounded-full p-1 text-gray-500 hover:bg-gray-100",
+                    weekdays: "grid grid-cols-7 gap-1 text-xs text-gray-400",
+                    week: "grid grid-cols-7 gap-1",
+                    day: "h-8 w-8 text-center text-sm",
+                    day_button:
+                      "h-8 w-8 rounded-full text-sm hover:bg-primary/10",
+                    selected:
+                      "[&>button]:bg-primary [&>button]:text-white [&>button]:hover:bg-primary",
+                    range_middle:
+                      "[&>button]:rounded-none [&>button]:bg-primary/10 [&>button]:text-primary",
+                    today: "[&>button]:ring-1 [&>button]:ring-primary",
+                    disabled:
+                      "pointer-events-none text-gray-300 opacity-50",
+                    outside: "text-gray-300",
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
         </FieldGroup>
 
@@ -567,6 +648,24 @@ function HolidayHourItem({
   );
 }
 
+const getSelectedRange = (row: HolidayHourRow): DateRange | undefined => {
+  if (row.mode === "range") {
+    if (!row.fromDate) return undefined;
+
+    return {
+      from: parseYmdDate(row.fromDate),
+      to: row.toDate ? parseYmdDate(row.toDate) : undefined,
+    };
+  }
+
+  if (!row.date) return undefined;
+
+  return {
+    from: parseYmdDate(row.date),
+    to: undefined,
+  };
+};
+
 function FieldGroup({
   label,
   required,
@@ -574,16 +673,16 @@ function FieldGroup({
 }: {
   label: string;
   required?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <label className="block">
+    <div className="block">
       <span className="mb-1.5 block text-xs font-semibold text-gray-600">
         {label}
         {required ? <span className="ml-1 text-primary">*</span> : null}
       </span>
       {children}
-    </label>
+    </div>
   );
 }
 

@@ -16,9 +16,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BranchProps } from "@/types/branch";
-import ActionDropdown from "../common/ActionDropdown";
+import ActionDropdown, { type ActionDropdownItem } from "../common/ActionDropdown";
 import OpeningHoursModal from "@/components/pages/Branches/components/OpeningHoursModal";
-import AddHolidayHoursInfo from "@/components/pages/Branches/components/AddHolidayHoursInfo";
+import { AddHolidayHoursInfo } from "@/components/pages/Branches/components/AddHolidayHoursInfo";
 
 import {
   useDeleteBranch,
@@ -33,8 +33,9 @@ import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import BranchCoverModal from "@/components/pages/Branches/components/BranchCoverModal";
 import TemporaryBranchClosureModal from "./TemporaryBranchClosureModal";
 import { useTranslations } from "next-intl";
+import { getApiErrorMessage } from "@/lib/errors";
 
-export default function BranchCard({
+export function BranchCard({
   id,
   name,
   isDefault,
@@ -100,9 +101,8 @@ export default function BranchCard({
       }
 
       setDeleteDialogOpen(false);
-    } catch (err: any) {
-      void err;
-      toast.error(err.message || t("failedToDelete"));
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, t("failedToDelete")));
     } finally {
       setIsDeleting(false);
     }
@@ -130,8 +130,8 @@ export default function BranchCard({
 
     try {
       await activateMutation.mutateAsync(id);
-    } catch (err: any) {
-      void err;
+    } catch (error) {
+      void error;
     }
   };
 
@@ -140,12 +140,13 @@ export default function BranchCard({
 
     try {
       await suspendMutation.mutateAsync(id);
-    } catch (err: any) {
-      void err;
+    } catch (error) {
+      void error;
     }
   };
 
-  const dropdownItems = [
+  const dropdownItems = (
+    [
     isBranchEntity
       ? {
           label: t("editBranch"),
@@ -232,7 +233,8 @@ export default function BranchCard({
           },
         ]
       : []),
-  ].filter(Boolean);
+    ] as Array<ActionDropdownItem | null>
+  ).filter((item): item is ActionDropdownItem => Boolean(item));
 
   if (loading) {
     return (
@@ -316,7 +318,7 @@ export default function BranchCard({
             )}
           </div>
 
-          {dropdownItems.length > 0 ? <ActionDropdown items={dropdownItems as any} /> : null}
+          {dropdownItems.length > 0 ? <ActionDropdown items={dropdownItems} /> : null}
         </div>
       </div>
 
@@ -385,7 +387,7 @@ export default function BranchCard({
             </>
           )}
 
-          {dropdownItems.length > 0 ? <ActionDropdown items={dropdownItems as any} /> : null}
+          {dropdownItems.length > 0 ? <ActionDropdown items={dropdownItems} /> : null}
         </div>
       </div>
 

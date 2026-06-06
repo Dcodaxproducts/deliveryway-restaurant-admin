@@ -7,6 +7,7 @@ import {
   OpeningHoursValues,
 } from "@/validations/branches";
 import type { BranchSettings } from "@/types/branch";
+import type { HolidayOpeningHoursPayload } from "@/types/opening-hours";
 
 /**
  * ==============================
@@ -39,7 +40,30 @@ export const getBranch = async (id: string) => {
   return data.data;
 };
 
-type BranchUpdatePayload = Omit<Partial<BranchValues>, "settings"> & {
+type BranchUpdateAdmin = {
+  email?: string;
+  password?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+};
+
+export type BranchUpdatePayload = {
+  restaurantId?: string;
+  name?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  lat?: string | number;
+  lng?: string | number;
+  isMain?: boolean;
+  area?: string;
+  postalCode?: string;
+  logoUrl?: string;
+  coverImage?: string;
+  description?: string;
+  branchAdmin?: BranchUpdateAdmin;
   settings?: BranchSettings;
 };
 
@@ -233,17 +257,7 @@ export const updateBranchTemporaryClosure = async (
 
 
 
-export type BranchHolidayOpeningHour = {
-  date: string;
-  isClosed: boolean;
-  openTime?: string | null;
-  closeTime?: string | null;
-  note?: string | null;
-};
-
-export type UpdateBranchHolidayOpeningHoursPayload = {
-  holidayOpeningHours: BranchHolidayOpeningHour[];
-};
+export type UpdateBranchHolidayOpeningHoursPayload = HolidayOpeningHoursPayload;
 
 export const getBranchHolidayOpeningHours = async (branchId: string) => {
   const { data } = await api.get(

@@ -14,7 +14,7 @@ import {
 import Container from "@/components/common/Container";
 import Header from "@/components/common/PageHeader";
 import BranchAdminScopeBanner from "@/components/pages/BranchWorkspace/components/branch-admin/BranchAdminScopeBanner";
-import BranchCard from "@/components/cards/BranchCard";
+import { BranchCard } from "@/components/cards/BranchCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetBranch } from "@/hooks/useBranches";

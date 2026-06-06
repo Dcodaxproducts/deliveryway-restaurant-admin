@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import BranchCard from "@/components/cards/BranchCard";
+import { BranchCard } from "@/components/cards/BranchCard";
 import EmptyState from "@/components/common/EmptyState";
 import { useRouter } from "next/navigation";
 import CreateMenuModal from "./CreateMenuModal";

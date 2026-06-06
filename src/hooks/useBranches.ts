@@ -20,7 +20,9 @@ import {
   updateBranchHolidayOpeningHours,
 } from "@/services/branches/branches.api";
 import type { OpeningHoursValues } from "@/validations/branches";
-import { useRouter } from "next/navigation";
+import { getApiErrorMessage } from "@/lib/errors";
+
+type BranchUpdateData = Parameters<typeof updateBranch>[1];
 
 /**
  * ==============================
@@ -42,8 +44,8 @@ export const useCreateBranch = () => {
       toast.success("Branch created successfully!");
     },
 
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to create branch");
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, "Failed to create branch"));
     },
   });
 };
@@ -93,7 +95,7 @@ export const useUpdateBranch = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
+    mutationFn: ({ id, data }: { id: string; data: BranchUpdateData }) =>
       updateBranch(id, data),
 
     onSuccess: (_, variables) => {
@@ -104,8 +106,8 @@ export const useUpdateBranch = () => {
       toast.success("Branch updated successfully!");
     },
 
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to update branch");
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, "Failed to update branch"));
     },
   });
 };
@@ -124,8 +126,8 @@ export const useDeleteBranch = () => {
       toast.success("Branch deleted successfully!");
     },
 
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to delete branch");
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, "Failed to delete branch"));
     },
   });
 };
@@ -144,9 +146,9 @@ export const useForceDeleteBranch = () => {
       toast.success("Branch permanently deleted!");
     },
 
-    onError: (err: any) => {
+    onError: (error: unknown) => {
       toast.error(
-        err?.response?.data?.message || "Failed to force delete branch"
+        getApiErrorMessage(error, "Failed to force delete branch")
       );
     },
   });
@@ -166,9 +168,9 @@ export const useCreateBranchesBulk = () => {
       toast.success("Branches created successfully!");
     },
 
-    onError: (err: any) => {
+    onError: (error: unknown) => {
       toast.error(
-        err?.response?.data?.message || "Failed to create branches"
+        getApiErrorMessage(error, "Failed to create branches")
       );
     },
   });
@@ -207,10 +209,9 @@ export const useUpdateOpeningHours = () => {
       toast.success("Opening hours updated successfully!");
     },
 
-    onError: (err: any) => {
+    onError: (error: unknown) => {
       toast.error(
-        err?.response?.data?.message ||
-          "Failed to update opening hours"
+        getApiErrorMessage(error, "Failed to update opening hours")
       );
     },
   });
@@ -233,9 +234,9 @@ export const useSuspendBranch = () => {
       toast.success("Branch suspended successfully!");
     },
 
-    onError: (err: any) => {
+    onError: (error: unknown) => {
       toast.error(
-        err?.response?.data?.message || "Failed to suspend branch"
+        getApiErrorMessage(error, "Failed to suspend branch")
       );
     },
   });
@@ -252,9 +253,9 @@ export const useActivateBranch = () => {
       toast.success("Branch activated successfully!");
     },
 
-    onError: (err: any) => {
+    onError: (error: unknown) => {
       toast.error(
-        err?.response?.data?.message || "Failed to activate branch"
+        getApiErrorMessage(error, "Failed to activate branch")
       );
     },
   });
@@ -288,9 +289,9 @@ export const useUpdateBranchImages = () => {
       toast.success("Branch images updated!");
     },
 
-    onError: (err: any) => {
+    onError: (error: unknown) => {
       toast.error(
-        err?.response?.data?.message || "Failed to update images"
+        getApiErrorMessage(error, "Failed to update images")
       );
     },
   });
@@ -321,9 +322,9 @@ export const useUpdateBranchTemporaryClosure = () => {
       );
     },
 
-    onError: (err: any) => {
+    onError: (error: unknown) => {
       toast.error(
-        err?.response?.data?.message || "Failed to update branch closure status"
+        getApiErrorMessage(error, "Failed to update branch closure status")
       );
     },
   });
@@ -372,10 +373,9 @@ export const useUpdateBranchHolidayOpeningHours = () => {
       toast.success("Holiday opening hours updated successfully");
     },
 
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(
-        error?.response?.data?.message ||
-          "Failed to update holiday opening hours"
+        getApiErrorMessage(error, "Failed to update holiday opening hours")
       );
     },
   });
@@ -393,14 +393,15 @@ export const useUpdateBranchForEdit = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => updateBranch(id, data),
+    mutationFn: ({ id, data }: { id: string; data: BranchUpdateData }) =>
+      updateBranch(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["branches"] });
       queryClient.invalidateQueries({ queryKey: ["branches", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["branches", "edit", variables.id] });
     },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to update branch");
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, "Failed to update branch"));
     },
   });
 };
