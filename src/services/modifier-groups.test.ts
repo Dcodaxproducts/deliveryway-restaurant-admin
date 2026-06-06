@@ -64,14 +64,41 @@ describe("modifier groups service", () => {
   });
 
   it("detaches a modifier through the group modifier endpoint", async () => {
-    mockedDelete.mockResolvedValueOnce({ success: true });
+    mockedDelete.mockResolvedValueOnce({
+      data: {
+        modifierGroupId: "group-1",
+        modifierId: "modifier-1",
+      },
+      message: "Modifier detached from group successfully",
+    });
 
-    await detachModifierFromGroup("group-1", "modifier-1");
+    const response = await detachModifierFromGroup("group-1", "modifier-1");
 
     expect(mockedDelete).toHaveBeenCalledWith(
       "/menu/modifier-groups/group-1/modifiers/modifier-1"
     );
     expect(mockedDelete.mock.calls[0]?.[0]).not.toContain("/api/v1");
+    expect(response).toEqual({
+      modifierGroupId: "group-1",
+      modifierId: "modifier-1",
+    });
+  });
+
+  it("falls back to input ids when detach response data is missing", async () => {
+    mockedDelete.mockResolvedValueOnce({
+      message: "Modifier detached from group successfully",
+    });
+
+    const response = await detachModifierFromGroup("group-1", "modifier-1");
+
+    expect(mockedDelete).toHaveBeenCalledWith(
+      "/menu/modifier-groups/group-1/modifiers/modifier-1"
+    );
+    expect(mockedDelete.mock.calls[0]?.[0]).not.toContain("/api/v1");
+    expect(response).toEqual({
+      modifierGroupId: "group-1",
+      modifierId: "modifier-1",
+    });
   });
 
   it("normalizes modifier arrays from list responses", async () => {

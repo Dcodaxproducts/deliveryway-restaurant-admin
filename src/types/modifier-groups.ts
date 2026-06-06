@@ -57,6 +57,11 @@ export type AttachModifierToGroupPayload = {
   sortOrder?: number;
 };
 
+export type DetachModifierFromGroupResponse = {
+  modifierGroupId: string;
+  modifierId: string;
+};
+
 export type ModifierGroupsMeta = ApiMeta & {
   page: number;
   limit: number;

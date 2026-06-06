@@ -810,6 +810,11 @@
         "attaching": "Wird hinzugefuegt",
         "detach": "Entfernen",
         "detaching": "Wird entfernt",
+        "detachAria": "Modifier aus Gruppe entfernen",
+        "detachTitle": "Modifier entfernen",
+        "detachDescription": "Dies entfernt den Modifier nur aus dieser Gruppe. Der Modifier selbst wird nicht geloescht.",
+        "confirmDetach": "Entfernen",
+        "cancelDetach": "Abbrechen",
         "invalidModifier": "Ungueltiger Modifier.",
         "attachFailed": "Modifier konnte nicht hinzugefuegt werden.",
         "detachFailed": "Modifier konnte nicht entfernt werden."

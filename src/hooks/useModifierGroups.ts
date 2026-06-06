@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getApiErrorMessage } from "@/lib/errors";
+import { modifierKeys } from "@/hooks/useModifiers";
 import {
   attachModifierToGroup,
   createModifierGroup,
@@ -156,6 +157,7 @@ export const useDetachModifierFromGroup = () => {
     }) => detachModifierFromGroup(groupId, modifierId),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: modifierGroupKeys.all });
+      queryClient.invalidateQueries({ queryKey: modifierKeys.all });
       queryClient.invalidateQueries({
         queryKey: [
           "modifier-groups",
@@ -169,7 +171,7 @@ export const useDetachModifierFromGroup = () => {
           variables.restaurantId
         ),
       });
-      toast.success("Modifier detached from group successfully!");
+      toast.success("Modifier detached from group");
     },
     onError: (error: unknown) => {
       toast.error(getApiErrorMessage(error, "Failed to detach modifier"));

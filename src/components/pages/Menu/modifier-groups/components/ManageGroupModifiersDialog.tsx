@@ -8,6 +8,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import PaginationSection from "@/components/common/pagination";
 import ModifierCategoryInfiniteSelect from "@/components/pages/Menu/modifiers/components/ModifierCategoryInfiniteSelect";
@@ -23,6 +32,8 @@ import {
   sanitizeNonNegativeNumber,
 } from "@/lib/number-input";
 import { getApiErrorMessage } from "@/lib/errors";
+import { ADMIN_ROLES } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 import type {
   ModifierGroup,
   ModifierGroupModifier,
@@ -38,8 +49,6 @@ type ManageGroupModifiersDialogProps = {
   group: ModifierGroup | null;
   restaurantId?: string;
 };
-
-const SHOW_DETACH_ACTION = false;
 
 const formatPrice = (priceDelta?: string | number | null) => {
   const numeric = Number(priceDelta ?? 0);
@@ -65,6 +74,8 @@ export function ManageGroupModifiersDialog({
   const [sortOrders, setSortOrders] = useState<Record<string, string>>({});
   const [attachingModifierId, setAttachingModifierId] = useState<string | null>(null);
   const [detachingModifierId, setDetachingModifierId] = useState<string | null>(null);
+  const [modifierToDetach, setModifierToDetach] =
+    useState<ModifierGroupModifier | null>(null);
   const [localAttachedModifiers, setLocalAttachedModifiers] = useState<
     ModifierGroupModifier[]
   >([]);
@@ -77,7 +88,10 @@ export function ManageGroupModifiersDialog({
     isFetching: isGroupFetching,
     refetch: refetchGroup,
   } = useModifierGroup(groupId, { restaurantId });
+  const { role } = useAuth();
   const activeGroup = groupDetail ?? group;
+  const canDetachModifier =
+    role === "SUPER_ADMIN" || role === ADMIN_ROLES.BUSINESS_ADMIN;
   const initialGroupModifiers = useMemo(
     () => group?.modifiers ?? [],
     [group?.modifiers]
@@ -114,6 +128,7 @@ export function ManageGroupModifiersDialog({
       setSortOrders({});
       setAttachingModifierId(null);
       setDetachingModifierId(null);
+      setModifierToDetach(null);
       setLocalAttachedModifiers([]);
       setHasLocalAttachmentChanges(false);
     }
@@ -229,25 +244,26 @@ export function ManageGroupModifiersDialog({
     }
   };
 
-  const handleDetach = async (modifier: ModifierGroupModifier) => {
-    if (!groupId) return;
+  const handleDetach = async () => {
+    if (!groupId || !modifierToDetach) return;
 
     try {
-      setDetachingModifierId(modifier.id);
+      setDetachingModifierId(modifierToDetach.id);
       await detachModifier({
         groupId,
-        modifierId: modifier.id,
+        modifierId: modifierToDetach.id,
         restaurantId,
       });
       setHasLocalAttachmentChanges(true);
       setLocalAttachedModifiers((previous) =>
         previous.filter(
-          (attachedModifier) => attachedModifier.id !== modifier.id
+          (attachedModifier) => attachedModifier.id !== modifierToDetach.id
         )
       );
+      setModifierToDetach(null);
       void refetchGroup();
-    } catch (error: unknown) {
-      toast.error(getApiErrorMessage(error, t("detachFailed")));
+    } catch {
+      // Error toast is handled by the mutation hook.
     } finally {
       setDetachingModifierId(null);
     }
@@ -291,7 +307,8 @@ export function ManageGroupModifiersDialog({
                     isDetaching={
                       isDetaching && detachingModifierId === modifier.id
                     }
-                    onDetach={() => void handleDetach(modifier)}
+                    canDetach={canDetachModifier}
+                    onDetach={() => setModifierToDetach(modifier)}
                   />
                 ))
               )}
@@ -376,6 +393,37 @@ export function ManageGroupModifiersDialog({
           </section>
         </div>
       </DialogContent>
+
+      <AlertDialog
+        open={Boolean(modifierToDetach)}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen && !isDetaching) {
+            setModifierToDetach(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("detachTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("detachDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDetaching}>
+              {t("cancelDetach")}
+            </AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDetaching}
+              onClick={() => void handleDetach()}
+            >
+              {isDetaching ? t("detaching") : t("confirmDetach")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
@@ -383,10 +431,12 @@ export function ManageGroupModifiersDialog({
 function AttachedModifierCard({
   modifier,
   isDetaching,
+  canDetach,
   onDetach,
 }: {
   modifier: ModifierGroupModifier;
   isDetaching: boolean;
+  canDetach: boolean;
   onDetach: () => void;
 }) {
   const t = useTranslations("menu.modifierGroupsTable.manage");
@@ -407,13 +457,14 @@ function AttachedModifierCard({
           </p>
         </div>
 
-        {SHOW_DETACH_ACTION ? (
+        {canDetach ? (
           <Button
             type="button"
-            variant="outline"
+            variant="destructive"
             disabled={isDetaching}
             onClick={onDetach}
-            className="h-[34px] rounded-[10px] border-gray-200 px-3 text-xs text-gray-700"
+            className="h-[34px] rounded-[10px] px-3 text-xs"
+            aria-label={t("detachAria")}
           >
             {isDetaching ? t("detaching") : t("detach")}
           </Button>

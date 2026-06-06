@@ -3,6 +3,7 @@ import { cleanParams } from "@/lib/params";
 import { extractResponseItems, extractResponseMeta } from "@/lib/response";
 import type {
   AttachModifierToGroupPayload,
+  DetachModifierFromGroupResponse,
   ModifierGroup,
   ModifierGroupCreatePayload,
   ModifierGroupListParams,
@@ -274,10 +275,30 @@ export const attachModifierToGroup = (
     payload
   );
 
-export const detachModifierFromGroup = (
+export const normalizeDetachModifierFromGroupResponse = (
+  response: unknown,
   groupId: string,
   modifierId: string
-) =>
-  httpClient.delete<unknown>(
+): DetachModifierFromGroupResponse => {
+  const data = isRecord(response) && isRecord(response.data)
+    ? response.data
+    : isRecord(response)
+    ? response
+    : {};
+
+  return {
+    modifierGroupId: getString(data, "modifierGroupId") || groupId,
+    modifierId: getString(data, "modifierId") || modifierId,
+  };
+};
+
+export const detachModifierFromGroup = async (
+  groupId: string,
+  modifierId: string
+): Promise<DetachModifierFromGroupResponse> => {
+  const response = await httpClient.delete<unknown>(
     `${MODIFIER_GROUPS_ENDPOINT}/${groupId}/modifiers/${modifierId}`
   );
+
+  return normalizeDetachModifierFromGroupResponse(response, groupId, modifierId);
+};

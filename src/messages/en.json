@@ -810,6 +810,11 @@
         "attaching": "Attaching",
         "detach": "Detach",
         "detaching": "Detaching",
+        "detachAria": "Detach modifier from group",
+        "detachTitle": "Detach modifier",
+        "detachDescription": "This will remove the modifier from this group only. The modifier itself will not be deleted.",
+        "confirmDetach": "Detach",
+        "cancelDetach": "Cancel",
         "invalidModifier": "Invalid modifier.",
         "attachFailed": "Unable to attach modifier.",
         "detachFailed": "Unable to detach modifier."
