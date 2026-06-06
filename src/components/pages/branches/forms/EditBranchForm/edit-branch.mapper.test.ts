@@ -282,6 +282,14 @@ describe("edit branch delivery and settings mapper", () => {
   it("hydrates edit data with safe defaults for missing table settings and postal rule fields", () => {
     const hydrated = hydrateBranchForEdit({
       id: "branch-1",
+      manager: {
+        email: "branch@yopmail.com",
+        profile: {
+          firstName: "Wajih ul",
+          lastName: "Hassan",
+          phone: "12345678",
+        },
+      },
       settings: {
         deliveryConfig: {
           mode: "POSTAL_CODE",
@@ -311,6 +319,37 @@ describe("edit branch delivery and settings mapper", () => {
         freeDeliveryThreshold: 0,
       },
     ]);
+    expect(hydrated.branchAdmin).toEqual({
+      email: "branch@yopmail.com",
+      password: "",
+      firstName: "Wajih ul",
+      lastName: "Hassan",
+      phone: "12345678",
+    });
+  });
+
+  it("includes edited branch admin info without sending a blank password", () => {
+    const payload = buildBranchPatchPayload(
+      {
+        restaurantId: "restaurant-1",
+        name: "Blue Area",
+        branchAdmin: {
+          email: "branch@yopmail.com",
+          password: "",
+          firstName: "Wajih ul",
+          lastName: "Hassan",
+          phone: "12345678",
+        },
+      },
+      {}
+    );
+
+    expect(payload.branchAdmin).toEqual({
+      email: "branch@yopmail.com",
+      firstName: "Wajih ul",
+      lastName: "Hassan",
+      phone: "12345678",
+    });
   });
 
   it("normalizes missing and disabled service charge defaults", () => {

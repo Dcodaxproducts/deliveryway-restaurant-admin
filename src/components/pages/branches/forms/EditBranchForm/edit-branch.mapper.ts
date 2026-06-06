@@ -4,6 +4,7 @@ import {
 } from "./edit-branch.defaults";
 import type {
   BranchFormData,
+  BranchAdmin,
   BranchServiceChargeSettings,
   BranchSettings,
   DeliveryConfig,
@@ -55,6 +56,48 @@ const toRecord = (value: unknown): Record<string, unknown> =>
 
 const toStringValue = (value: unknown, fallback = "") =>
   typeof value === "string" ? value : fallback;
+
+const normalizeBranchAdminForEdit = (
+  branchAdmin: unknown,
+  manager: unknown
+): BranchAdmin => {
+  const adminRecord = toRecord(branchAdmin);
+  const managerRecord = toRecord(manager);
+  const profileRecord = toRecord(managerRecord.profile);
+
+  return {
+    email: toStringValue(adminRecord.email, toStringValue(managerRecord.email)),
+    password: toStringValue(adminRecord.password),
+    firstName: toStringValue(
+      adminRecord.firstName,
+      toStringValue(profileRecord.firstName)
+    ),
+    lastName: toStringValue(
+      adminRecord.lastName,
+      toStringValue(profileRecord.lastName)
+    ),
+    phone: toStringValue(adminRecord.phone, toStringValue(profileRecord.phone)),
+  };
+};
+
+export const normalizeBranchAdminForPatch = (
+  branchAdmin: unknown
+): BranchAdmin | undefined => {
+  const adminRecord = toRecord(branchAdmin);
+  const admin: BranchAdmin = {
+    email: toStringValue(adminRecord.email).trim(),
+    firstName: toStringValue(adminRecord.firstName).trim(),
+    lastName: toStringValue(adminRecord.lastName).trim(),
+    phone: toStringValue(adminRecord.phone).trim(),
+  };
+  const password = toStringValue(adminRecord.password).trim();
+
+  if (password) {
+    admin.password = password;
+  }
+
+  return Object.values(admin).some(Boolean) ? admin : undefined;
+};
 
 export const toNumber = (value: unknown, fallback = 0) => {
   const parsed = Number(value);
@@ -365,7 +408,7 @@ export const buildBranchPatchPayload = (
   restaurantId: branchData.restaurantId,
   name: branchData.name,
   isMain: branchData.isMain,
-  branchAdmin: branchData.branchAdmin,
+  branchAdmin: normalizeBranchAdminForPatch(branchData.branchAdmin),
   street: branchData.address?.street ?? branchData.street,
   area: branchData.address?.area ?? branchData.area,
   postalCode: branchData.address?.postalCode ?? branchData.postalCode,
@@ -430,6 +473,10 @@ export const hydrateBranchForEdit = (branchData: BranchFormData): BranchFormData
 
   return {
     ...branchData,
+    branchAdmin: normalizeBranchAdminForEdit(
+      branchData.branchAdmin,
+      branchData.manager
+    ),
     settings: {
       ...settings,
       tableReservationsEnabled: Boolean(settings?.tableReservationsEnabled ?? false),

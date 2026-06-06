@@ -36,6 +36,14 @@ const toCoordinate = (value: unknown) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+const adminFieldConfigs = [
+  { name: "firstName", labelKey: "firstName", type: "text" },
+  { name: "lastName", labelKey: "lastName", type: "text" },
+  { name: "email", labelKey: "email", type: "email" },
+  { name: "phone", labelKey: "phone", type: "text" },
+  { name: "password", labelKey: "password", type: "password" },
+] as const;
+
 function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
   const t = useTranslations("branches");
   const commonT = useTranslations("common");
@@ -168,6 +176,21 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
             value={data.address?.lng === undefined ? "" : String(data.address.lng)}
             onChange={(val) => update(["address", "lng"], val)}
           />
+        </div>
+      </Section>
+
+      <Section label={t("branchAdminInfo")}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {adminFieldConfigs.map((field) => (
+            <FormInput
+              key={field.name}
+              label={t(field.labelKey)}
+              type={field.type}
+              value={data.branchAdmin?.[field.name] || ""}
+              onChange={(val) => update(["branchAdmin", field.name], val)}
+              showPasswordToggle={field.type === "password"}
+            />
+          ))}
         </div>
       </Section>
 

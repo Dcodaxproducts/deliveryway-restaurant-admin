@@ -75,6 +75,25 @@ export type BranchSettings = {
   [key: string]: unknown;
 };
 
+export type BranchAdmin = {
+  email?: string;
+  password?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+};
+
+export type BranchManager = {
+  id?: string;
+  email?: string;
+  profile?: {
+    firstName?: string | null;
+    lastName?: string | null;
+    phone?: string | null;
+    avatarUrl?: string | null;
+  } | null;
+};
+
 export type BranchAddress = {
   street?: string;
   area?: string;
@@ -92,7 +111,8 @@ export type BranchFormData = {
   name?: string;
   description?: string;
   isMain?: boolean;
-  branchAdmin?: unknown;
+  branchAdmin?: BranchAdmin;
+  manager?: BranchManager;
   address?: BranchAddress;
   street?: string;
   area?: string;
