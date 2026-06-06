@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { CalendarDays, Clock3, Loader2 } from "lucide-react";
+import { CalendarDays, Clock3, ImageIcon, Loader2, Store } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -62,6 +62,8 @@ type InfoItem = {
 type HolidayOpeningHour = {
   id?: string | number | null;
   date?: string | null;
+  fromDate?: string | null;
+  toDate?: string | null;
   isClosed?: boolean | null;
   openTime?: string | null;
   closeTime?: string | null;
@@ -97,6 +99,8 @@ const extractHolidayOpeningHours = (response: unknown): HolidayOpeningHour[] => 
         ? item.id
         : undefined,
     date: typeof item.date === "string" ? item.date : "",
+    fromDate: typeof item.fromDate === "string" ? item.fromDate : "",
+    toDate: typeof item.toDate === "string" ? item.toDate : "",
     isClosed: Boolean(item.isClosed),
     openTime: typeof item.openTime === "string" ? item.openTime : "",
     closeTime: typeof item.closeTime === "string" ? item.closeTime : "",
@@ -136,7 +140,11 @@ const getManagerName = (branch: BranchDetails) => {
 const formatHolidayDate = (value?: string | null) => {
   if (!value) return "";
 
-  const date = new Date(value);
+  const ymdMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  const date = ymdMatch
+    ? new Date(Number(ymdMatch[1]), Number(ymdMatch[2]) - 1, Number(ymdMatch[3]))
+    : new Date(value);
+
   if (Number.isNaN(date.getTime())) return value;
 
   return date.toLocaleDateString(undefined, {
@@ -144,6 +152,20 @@ const formatHolidayDate = (value?: string | null) => {
     month: "short",
     year: "numeric",
   });
+};
+
+const formatHolidayDateRange = (holiday: HolidayOpeningHour) => {
+  if (holiday.fromDate && holiday.toDate) {
+    const fromLabel = formatHolidayDate(holiday.fromDate);
+    const toLabel = formatHolidayDate(holiday.toDate);
+
+    if (!fromLabel || !toLabel) return fromLabel || toLabel;
+    if (holiday.fromDate === holiday.toDate) return fromLabel;
+
+    return `${fromLabel} - ${toLabel}`;
+  }
+
+  return formatHolidayDate(holiday.date);
 };
 
 const formatHolidayTimeRange = (
@@ -227,17 +249,28 @@ export function BranchDetailsModal({
         <div className="relative h-44 shrink-0 bg-gray-200">
           {branch.coverImage ? (
             <Image src={branch.coverImage} alt="Branch cover" fill className="object-cover" />
-          ) : null}
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 via-orange-50 to-gray-100">
+              <div className="flex flex-col items-center gap-2 text-primary/70">
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-white/80 shadow-sm">
+                  <ImageIcon size={24} />
+                </div>
+                <span className="max-w-[260px] truncate px-4 text-sm font-semibold text-gray-500">
+                  {branch.name || commonT("branch")}
+                </span>
+              </div>
+            </div>
+          )}
 
-          <div className="absolute inset-0 bg-black/20" />
+          {branch.coverImage ? <div className="absolute inset-0 bg-black/20" /> : null}
 
           <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
-            <div className="relative size-20 overflow-hidden rounded-full border-4 border-white bg-white">
+            <div className="relative size-20 overflow-hidden rounded-full border-4 border-white bg-white shadow-lg">
               {branch.logoUrl ? (
                 <Image src={branch.logoUrl} alt="Branch logo" fill className="object-contain" />
               ) : (
-                <div className="flex h-full items-center justify-center text-xs text-gray-400">
-                  {t("noLogo")}
+                <div className="flex h-full items-center justify-center bg-primary/10 text-primary">
+                  <Store size={30} aria-label={t("noLogo")} />
                 </div>
               )}
             </div>
@@ -291,17 +324,18 @@ export function BranchDetailsModal({
                       holiday,
                       t("closedForHoliday")
                     );
+                    const dateLabel = formatHolidayDateRange(holiday);
 
                     return (
                       <div
-                        key={`${holiday.date || "holiday"}-${holiday.id || index}`}
+                        key={`${holiday.date || holiday.fromDate || "holiday"}-${holiday.id || index}`}
                         className="rounded-xl bg-white p-4 ring-1 ring-gray-100"
                       >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
                               <CalendarDays size={16} className="text-primary" />
-                              <span>{formatHolidayDate(holiday.date) || t("holidayDate")}</span>
+                              <span>{dateLabel || t("holidayDate")}</span>
                             </div>
 
                             {timeRange ? (
