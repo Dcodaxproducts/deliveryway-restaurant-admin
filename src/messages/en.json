@@ -974,7 +974,8 @@
         "basicDetails": "Basic details",
         "mediaExtraInfo": "Media & extra info",
         "variations": "Variations",
-        "modifiers": "Modifiers"
+        "modifiers": "Modifiers",
+        "variationModifierPrices": "Variation modifier prices"
       },
       "stepOne": {
         "selectedCategory": "Selected category",

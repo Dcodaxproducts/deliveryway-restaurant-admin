@@ -11,6 +11,17 @@ export type ModifierGroupAssignmentGroup = {
   id: string;
   name: string;
   description?: string | null;
+  modifiers?: Array<{
+    id: string;
+    name: string;
+    priceDelta?: string | number | null;
+    sortOrder?: number;
+    category?: {
+      id: string;
+      name: string;
+      slug?: string;
+    } | null;
+  }>;
 };
 
 export type MenuItemModifierGroupAssignment = ModifierGroupAssignmentRules & {

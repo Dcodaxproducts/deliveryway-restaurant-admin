@@ -94,6 +94,19 @@ describe("menu item modifier required payload", () => {
           id: "group-bread",
           name: "Choose Bread",
           description: "Pick one bread",
+          modifiers: [
+            {
+              id: "modifier-white-bread",
+              name: "White Bread",
+              priceDelta: 0,
+              sortOrder: 1,
+              category: {
+                id: "modifier-category-bread",
+                name: "Bread",
+                slug: "bread",
+              },
+            },
+          ],
         },
         id: "group-bread",
         itemId: undefined,
@@ -198,5 +211,102 @@ describe("menu item modifier required payload", () => {
     expect(
       payload.variationPriceOverrides[0]?.modifierPriceOverrides[0]
     ).toEqual({ modifierId: "modifier-1", priceDelta: 3 });
+  });
+
+  it("saves variation modifier prices only inside variationPriceOverrides", () => {
+    const payload = buildMenuItemPayload({
+      form: {
+        ...baseForm,
+        modifierIds: [],
+        modifierPriceOverrides: [],
+        variationIds: ["variation-1"],
+        variationPriceOverrides: [
+          {
+            variationId: "variation-1",
+            price: "12",
+            pickupPrice: "10",
+            displayText: "Small",
+            modifierPriceOverrides: [
+              { modifierId: "modifier-1", priceDelta: "0" },
+              { modifierId: "modifier-2", priceDelta: "50" },
+            ],
+          },
+        ],
+      },
+      restaurantId: "restaurant-1",
+    });
+
+    expect(payload.modifierPriceOverrides).toEqual([]);
+    expect(payload.variationPriceOverrides).toEqual([
+      {
+        variationId: "variation-1",
+        price: 12,
+        pickupPrice: 10,
+        displayText: "Small",
+        modifierPriceOverrides: [
+          { modifierId: "modifier-1", priceDelta: 0 },
+          { modifierId: "modifier-2", priceDelta: 50 },
+        ],
+      },
+    ]);
+    expect(payload.variationPriceOverrides[0]?.modifierPriceOverrides[0]).not.toHaveProperty("groupId");
+    expect(payload.variationPriceOverrides[0]?.modifierPriceOverrides[0]).not.toHaveProperty("isRequired");
+  });
+
+  it("does not send empty variation modifier price cells", () => {
+    const payload = buildMenuItemPayload({
+      form: {
+        ...baseForm,
+        modifierIds: [],
+        modifierPriceOverrides: [],
+        variationIds: ["variation-1"],
+        variationPriceOverrides: [
+          {
+            variationId: "variation-1",
+            price: "12",
+            pickupPrice: "10",
+            displayText: "Small",
+            modifierPriceOverrides: [
+              { modifierId: "modifier-1", priceDelta: "" },
+            ],
+          },
+        ],
+      },
+      restaurantId: "restaurant-1",
+    });
+
+    expect(payload.variationPriceOverrides[0]?.modifierPriceOverrides).toEqual(
+      []
+    );
+  });
+
+  it("hydrates existing nested modifier overrides for edit mode", () => {
+    const form = getInitialForm("restaurant-1", {
+      id: "item-1",
+      name: "Pizza",
+      variationPriceOverrides: [
+        {
+          variationId: "variation-1",
+          price: 12,
+          pickupPrice: 10,
+          displayText: "Small",
+          modifierPriceOverrides: [
+            { modifierId: "modifier-1", priceDelta: 0 },
+          ],
+        },
+      ],
+    });
+
+    expect(form.variationPriceOverrides).toEqual([
+      {
+        variationId: "variation-1",
+        price: "12",
+        pickupPrice: "10",
+        displayText: "Small",
+        modifierPriceOverrides: [
+          { modifierId: "modifier-1", priceDelta: "0" },
+        ],
+      },
+    ]);
   });
 });

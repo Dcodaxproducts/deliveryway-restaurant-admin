@@ -77,12 +77,27 @@ const normalizeGroupSummary = (
 
   if (!id || !name) return undefined;
 
+  const rawModifiers = Array.isArray(groupSource.modifiers)
+    ? groupSource.modifiers
+    : Array.isArray(groupSource.groupModifiers)
+    ? groupSource.groupModifiers
+    : Array.isArray(source.modifiers)
+    ? source.modifiers
+    : Array.isArray(source.groupModifiers)
+    ? source.groupModifiers
+    : [];
+
   return {
     id,
     name,
     description:
       getNullableString(groupSource, "description") ??
       getNullableString(source, "description"),
+    modifiers: rawModifiers
+      .map(normalizeGroupModifier)
+      .filter((modifier): modifier is ModifierGroupModifier =>
+        Boolean(modifier)
+      ),
   };
 };
 

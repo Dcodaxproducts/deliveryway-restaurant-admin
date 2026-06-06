@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import type {
   MenuCategoryModifierGroupAssignment,
   MenuItemModifierGroupAssignment,
+  ModifierGroupAssignmentGroup,
   ModifierGroupAssignmentRules,
   ModifierGroupSelectionType,
 } from "@/types/modifier-group-assignments";
@@ -32,11 +33,7 @@ type AssignmentMode = "item" | "category";
 
 type AssignmentDraft = ModifierGroupAssignmentRules & {
   groupId: string;
-  group?: {
-    id: string;
-    name: string;
-    description?: string | null;
-  };
+  group?: ModifierGroupAssignmentGroup;
 };
 
 type ModifierGroupAssignmentFormProps = {
@@ -245,6 +242,7 @@ export function ModifierGroupAssignmentForm({
             id: selectedGroup.id,
             name: selectedGroup.name,
             description: selectedGroup.description,
+            modifiers: selectedGroup.modifiers,
           }
         : undefined,
       selectionType: parsed.data.selectionType,

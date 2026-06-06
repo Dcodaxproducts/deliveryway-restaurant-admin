@@ -27,3 +27,22 @@ export type MenuItemModifierGroup = ModifierGroupAssignmentRules & {
   isRequired?: boolean;
   modifiers?: ModifierGroupModifier[];
 };
+
+export type MenuItemVariationModifierPriceOverrideInput = {
+  modifierId: string;
+  priceDelta: number;
+};
+
+export type MenuItemVariationPriceOverrideInput = {
+  variationId: string;
+  price?: number | null;
+  pickupPrice?: number | null;
+  displayText?: string;
+  modifierPriceOverrides?: MenuItemVariationModifierPriceOverrideInput[];
+};
+
+export type VariationModifierPriceMatrixCell = {
+  variationId: string;
+  modifierId: string;
+  priceDelta: number | null;
+};

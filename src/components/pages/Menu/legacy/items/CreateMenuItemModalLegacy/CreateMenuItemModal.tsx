@@ -14,12 +14,14 @@ import StepOne from "./StepOne";
 import StepTwo from "./StepTwo";
 import StepThree from "./StepThree";
 import StepFour from "./stepFour";
+import StepFive from "./StepFive";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useAssignModifierGroupToItem } from "@/hooks/useModifierGroupAssignments";
 import { useCreateMenuItem, useUpdateMenuItem } from "@/hooks/useMenus";
 import {
   extractEntityId,
+  normalizeMenuItemModifierGroups,
   normalizeMenuItemModifierGroupAssignments,
 } from "@/lib/modifier-group-assignment-utils";
 import { getApiErrorMessage } from "@/lib/errors";
@@ -706,6 +708,8 @@ export const getInitialForm = (restaurantId?: string, initialData?: any) => {
 
     variationPriceOverrides: normalizedVariationOverrides,
 
+    modifierGroups: normalizeMenuItemModifierGroups(initialData?.modifierGroups),
+
     modifierGroupAssignments: normalizeMenuItemModifierGroupAssignments(
       initialData?.modifierGroups
     ),
@@ -759,9 +763,6 @@ export const buildMenuItemPayload = ({
     "variation"
   );
 
-  const nestedModifierOverrides = getNestedModifierOverridesFromVariations(
-    normalizeArray(form.variationPriceOverrides)
-  );
   const selectedModifierIds = normalizeIds(
     [
       form.modifierIds,
@@ -769,7 +770,6 @@ export const buildMenuItemPayload = ({
       form.itemModifiers,
       form.modifierLinks,
       form.modifierPriceOverrides,
-      nestedModifierOverrides,
     ],
     "modifier"
   );
@@ -805,12 +805,6 @@ export const buildMenuItemPayload = ({
     isRequired: item.isRequired === true,
   }));
 
-  const topLevelModifierMap = new Map<string, number>();
-
-  finalModifierPriceOverrides.forEach((item) => {
-    topLevelModifierMap.set(String(item.modifierId), item.priceDelta);
-  });
-
   const variationOverrideMap = new Map<string, VariationPriceOverride>();
 
   selectedVariationPriceOverrides.forEach((item) => {
@@ -840,21 +834,19 @@ export const buildMenuItemPayload = ({
 
         displayText: existing?.displayText || "",
 
-        modifierPriceOverrides: selectedModifierIds.map((modifierId) => {
-          const nestedExisting = existing?.modifierPriceOverrides?.find(
-            (entry) => String(entry.modifierId) === String(modifierId)
-          );
-
-          return {
-            modifierId: String(modifierId),
-            priceDelta:
-              nestedExisting?.priceDelta !== undefined &&
-              nestedExisting?.priceDelta !== null &&
-              nestedExisting.priceDelta !== ""
-                ? toNumberOrZero(nestedExisting.priceDelta)
-                : topLevelModifierMap.get(String(modifierId)) ?? 0,
-          };
-        }),
+        modifierPriceOverrides: normalizeNestedModifierPriceOverrides(
+          existing?.modifierPriceOverrides || []
+        )
+          .filter(
+            (entry) =>
+              entry.priceDelta !== undefined &&
+              entry.priceDelta !== null &&
+              entry.priceDelta !== ""
+          )
+          .map((entry) => ({
+            modifierId: String(entry.modifierId),
+            priceDelta: toNumberOrZero(entry.priceDelta),
+          })),
       };
     }
   );
@@ -969,7 +961,7 @@ export default function CreateMenuItemModal({
       if (!valid) return;
     }
 
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep((prev) => prev + 1);
     }
   };
@@ -1164,6 +1156,10 @@ export default function CreateMenuItemModal({
             {currentStep === 4 && (
               <StepFour ref={stepRef} form={form} setForm={setForm} />
             )}
+
+            {currentStep === 5 && (
+              <StepFive ref={stepRef} form={form} setForm={setForm} />
+            )}
           </div>
 
           <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1190,10 +1186,10 @@ export default function CreateMenuItemModal({
 
               <Button
                 className="h-[44px] rounded-[12px] bg-primary px-10 text-white hover:bg-primary/90"
-                onClick={currentStep < 4 ? nextStep : () => void handleSubmit()}
+                onClick={currentStep < 5 ? nextStep : () => void handleSubmit()}
                 disabled={isSubmitting}
               >
-                {currentStep < 4
+                {currentStep < 5
                   ? commonT("next")
                   : isSubmitting
                   ? isEditMode
@@ -1218,6 +1214,7 @@ function StepProgress({ currentStep }: { currentStep: number }) {
     t("mediaExtraInfo"),
     t("variations"),
     t("modifiers"),
+    t("variationModifierPrices"),
   ];
   const totalSteps = steps.length;
 
@@ -1233,7 +1230,7 @@ function StepProgress({ currentStep }: { currentStep: number }) {
         style={{ width: `${activeWidth}%` }}
       />
 
-      <div className="relative z-10 grid grid-cols-4 gap-2">
+      <div className="relative z-10 grid grid-cols-5 gap-2">
         {steps.map((label, index) => {
           const step = index + 1;
           const isActive = currentStep >= step;

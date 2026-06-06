@@ -83,4 +83,51 @@ describe("menu item modifier required validation", () => {
       result.variationPriceOverrides[0]?.modifierPriceOverrides[0]
     ).toEqual({ modifierId: "modifier-1", priceDelta: 2 });
   });
+
+  it("accepts an empty variation modifier price matrix", () => {
+    const result = menuItemSchema.parse({
+      ...baseMenuItem,
+      variationPriceOverrides: [
+        {
+          variationId: "variation-1",
+          price: 10,
+          modifierPriceOverrides: [],
+        },
+      ],
+    });
+
+    expect(result.variationPriceOverrides[0]?.modifierPriceOverrides).toEqual(
+      []
+    );
+  });
+
+  it("rejects negative nested variation modifier prices", () => {
+    const result = menuItemSchema.safeParse({
+      ...baseMenuItem,
+      variationPriceOverrides: [
+        {
+          variationId: "variation-1",
+          modifierPriceOverrides: [
+            { modifierId: "modifier-1", priceDelta: -1 },
+          ],
+        },
+      ],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects nested variation modifier prices without modifier id", () => {
+    const result = menuItemSchema.safeParse({
+      ...baseMenuItem,
+      variationPriceOverrides: [
+        {
+          variationId: "variation-1",
+          modifierPriceOverrides: [{ priceDelta: 1 }],
+        },
+      ],
+    });
+
+    expect(result.success).toBe(false);
+  });
 });
