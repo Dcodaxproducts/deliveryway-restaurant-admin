@@ -217,6 +217,31 @@ const mergeEntitySnapshots = (
   return Array.from(map.values());
 };
 
+const filterVariationSnapshotsByIds = (
+  entries: any[],
+  selectedIds: string[]
+): SelectableEntity[] => {
+  const selectedIdSet = new Set(selectedIds.map((id) => String(id)));
+
+  return normalizeArray(entries)
+    .map(getVariationSnapshot)
+    .filter(
+      (variation): variation is SelectableEntity =>
+        variation !== null && selectedIdSet.has(String(variation.id))
+    );
+};
+
+const filterVariationOverridesByIds = (
+  entries: any[],
+  selectedIds: string[]
+): VariationPriceOverride[] => {
+  const selectedIdSet = new Set(selectedIds.map((id) => String(id)));
+
+  return normalizeVariationPriceOverrides(entries).filter((entry) =>
+    selectedIdSet.has(String(entry.variationId))
+  );
+};
+
 const setVariationSnapshot = (
   map: Map<string, SelectableEntity>,
   entry: any,
@@ -859,14 +884,23 @@ const StepThree = forwardRef(({ form, setForm }: StepThreeProps, ref: any) => {
         variationMap.get(String(id)) ||
         variationOptions.find((item) => String(item?.id || "") === String(id));
 
+      const mergedSelectedVariationOptions = selectedVariation
+        ? mergeEntitySnapshots(prev?.selectedVariationOptions, [
+            selectedVariation,
+          ])
+        : normalizeArray(prev?.selectedVariationOptions);
+
       return {
         ...prev,
         variationIds: nextIds,
-        selectedVariationOptions: selectedVariation
-          ? mergeEntitySnapshots(prev?.selectedVariationOptions, [
-              selectedVariation,
-            ])
-          : normalizeArray(prev?.selectedVariationOptions),
+        selectedVariationOptions: filterVariationSnapshotsByIds(
+          mergedSelectedVariationOptions,
+          nextIds
+        ),
+        variationPriceOverrides: filterVariationOverridesByIds(
+          prev?.variationPriceOverrides,
+          nextIds
+        ),
       };
     });
   };
@@ -875,6 +909,7 @@ const StepThree = forwardRef(({ form, setForm }: StepThreeProps, ref: any) => {
     setForm((prev: any) => ({
       ...prev,
       variationIds: [],
+      selectedVariationOptions: [],
       variationPriceOverrides: [],
     }));
   };

@@ -11,6 +11,11 @@ export const assignModifierGroupToItem = (
     payload
   );
 
+export const detachModifierGroupFromItem = (itemId: string, groupId: string) =>
+  httpClient.delete<unknown>(
+    `/menu/items/${itemId}/modifier-groups/${groupId}`
+  );
+
 export const assignModifierGroupToCategory = (
   categoryId: string,
   groupId: string,

@@ -4,6 +4,7 @@ import {
   buildMenuItemPayload,
   getInitialForm,
 } from "@/components/pages/Menu/legacy/items/CreateMenuItemModalLegacy/CreateMenuItemModal";
+import { getSelectedVariations } from "@/components/pages/Menu/legacy/items/CreateMenuItemModalLegacy/StepFive";
 import { normalizeMenuItemModifierGroups } from "@/lib/modifier-group-assignment-utils";
 
 const baseForm = {
@@ -251,6 +252,73 @@ describe("menu item modifier required payload", () => {
     ]);
     expect(payload.variationPriceOverrides[0]?.modifierPriceOverrides[0]).not.toHaveProperty("groupId");
     expect(payload.variationPriceOverrides[0]?.modifierPriceOverrides[0]).not.toHaveProperty("isRequired");
+  });
+
+  it("uses variationIds as source of truth when stale variation overrides exist", () => {
+    const payload = buildMenuItemPayload({
+      form: {
+        ...baseForm,
+        modifierIds: [],
+        modifierPriceOverrides: [],
+        variationIds: ["variation-large"],
+        variationPriceOverrides: [
+          {
+            variationId: "variation-small",
+            price: "8",
+            pickupPrice: "7",
+            displayText: "Small",
+            modifierPriceOverrides: [
+              { modifierId: "modifier-1", priceDelta: "2" },
+            ],
+          },
+          {
+            variationId: "variation-large",
+            price: "12",
+            pickupPrice: "10",
+            displayText: "Large",
+            modifierPriceOverrides: [
+              { modifierId: "modifier-1", priceDelta: "3" },
+            ],
+          },
+        ],
+      },
+      restaurantId: "restaurant-1",
+    });
+
+    expect(payload.variationPriceOverrides).toEqual([
+      {
+        variationId: "variation-large",
+        price: 12,
+        pickupPrice: 10,
+        displayText: "Large",
+        modifierPriceOverrides: [{ modifierId: "modifier-1", priceDelta: 3 }],
+      },
+    ]);
+  });
+
+  it("uses variationIds as source of truth for Step 5 matrix variations", () => {
+    const variations = getSelectedVariations({
+      selectedVariationOptions: [
+        { id: "variation-small", name: "Small" },
+        { id: "variation-large", name: "Large" },
+      ],
+      variationIds: ["variation-large"],
+      variationPriceOverrides: [
+        {
+          variationId: "variation-small",
+          displayText: "Small",
+          price: "8",
+        },
+      ],
+    });
+
+    expect(variations).toHaveLength(1);
+    expect(variations[0]).toEqual(
+      expect.objectContaining({
+        id: "variation-large",
+        name: "Large",
+      })
+    );
   });
 
   it("does not send empty variation modifier price cells", () => {

@@ -92,7 +92,7 @@ const getVariationPriceOverrides = (
         })),
     }));
 
-const getSelectedVariations = (
+export const getSelectedVariations = (
   form: MenuItemFormRecord
 ): VariationModifierPriceMatrixVariation[] => {
   const map = new Map<string, VariationModifierPriceMatrixVariation>();
@@ -122,6 +122,28 @@ const getSelectedVariations = (
       const variation = getVariationFromRecord(entry);
       if (variation) addVariation(variation);
     });
+
+  const selectedVariationIds = normalizeArray(form.variationIds)
+    .map(getString)
+    .filter(Boolean);
+
+  selectedVariationIds.forEach((variationId) => {
+    const existing = map.get(variationId);
+
+    addVariation({
+      id: variationId,
+      name: existing?.name,
+      displayText: existing?.displayText,
+      price: existing?.price,
+    });
+  });
+
+  if (Array.isArray(form.variationIds)) {
+    return selectedVariationIds.map((variationId) => ({
+      id: variationId,
+      ...map.get(variationId),
+    }));
+  }
 
   normalizeArray(form.variationIds).forEach((id) => {
     const variationId = getString(id);
