@@ -509,8 +509,9 @@ function HolidayHourItem({
         </div>
       </div>
 
-      <div className="grid gap-4 p-4 lg:grid-cols-2">
-        <FieldGroup label={labels.holidayDateOrRange} required>
+      <div className="grid gap-4 p-4 md:grid-cols-12">
+        <div className="md:col-span-5">
+          <FieldGroup label={labels.holidayDateOrRange} required>
           <div className={`relative ${calendarOpen ? "z-30" : ""}`}>
             <button
               type="button"
@@ -561,11 +562,12 @@ function HolidayHourItem({
               </div>
             ) : null}
           </div>
-        </FieldGroup>
+          </FieldGroup>
+        </div>
 
         <div
-          className={`grid gap-4 ${
-            row.isClosed ? "sm:grid-cols-1" : "sm:grid-cols-2"
+          className={`grid gap-4 md:col-span-7 ${
+            row.isClosed ? "grid-cols-1" : "sm:grid-cols-2"
           }`}
         >
           {row.isClosed ? (
@@ -596,7 +598,7 @@ function HolidayHourItem({
                     onChange={(event) =>
                       onChange(row.id, "openTime", event.target.value)
                     }
-                    className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="h-[44px] w-full min-w-[150px] rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                   />
                 </div>
               </FieldGroup>
@@ -615,7 +617,7 @@ function HolidayHourItem({
                     onChange={(event) =>
                       onChange(row.id, "closeTime", event.target.value)
                     }
-                    className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="h-[44px] w-full min-w-[150px] rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                   />
                 </div>
               </FieldGroup>
@@ -623,7 +625,7 @@ function HolidayHourItem({
           )}
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="md:col-span-12">
           <FieldGroup label={labels.note}>
             <input
               type="text"
