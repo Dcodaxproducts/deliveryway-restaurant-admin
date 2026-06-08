@@ -173,6 +173,25 @@ describe("menu item modifier required payload", () => {
     ]);
   });
 
+  it("does not send modifierGroupIds in menu item payloads", () => {
+    const payload = buildMenuItemPayload({
+      form: {
+        ...baseForm,
+        modifierGroupAssignments: [
+          {
+            groupId: "group-bread",
+            selectionType: "SINGLE",
+            minSelect: 1,
+            maxSelect: 1,
+          },
+        ],
+      },
+      restaurantId: "restaurant-1",
+    });
+
+    expect(payload).not.toHaveProperty("modifierGroupIds");
+  });
+
   it("does not send item-level isRequired in menu item payloads", () => {
     const payload = buildMenuItemPayload({
       form: {

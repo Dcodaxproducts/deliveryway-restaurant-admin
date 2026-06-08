@@ -792,9 +792,6 @@ export const buildMenuItemPayload = ({
     rawFlatModifierOverrides: [],
     menuItemId: initialDataId,
   });
-  const modifierGroupAssignments =
-    normalizeMenuItemModifierGroupAssignments(form.modifierGroupAssignments);
-
   const modifierPriceOverrideMap = new Map<string, ModifierPriceOverride>();
 
   selectedModifierPriceOverrides.forEach((item) => {
@@ -907,9 +904,6 @@ export const buildMenuItemPayload = ({
         : false,
 
     modifiers: finalModifiers,
-    modifierGroupIds: modifierGroupAssignments.map(
-      (assignment) => assignment.groupId
-    ),
     modifierPriceOverrides: finalModifierPriceOverrides,
     variationPriceOverrides: finalVariationPriceOverrides,
   };
