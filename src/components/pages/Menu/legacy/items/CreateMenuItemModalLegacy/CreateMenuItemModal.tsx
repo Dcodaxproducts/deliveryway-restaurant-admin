@@ -782,6 +782,8 @@ export const buildMenuItemPayload = ({
     rawFlatModifierOverrides: [],
     menuItemId: initialDataId,
   });
+  const modifierGroupAssignments =
+    normalizeMenuItemModifierGroupAssignments(form.modifierGroupAssignments);
 
   const modifierPriceOverrideMap = new Map<string, ModifierPriceOverride>();
 
@@ -895,6 +897,9 @@ export const buildMenuItemPayload = ({
         : false,
 
     modifiers: finalModifiers,
+    modifierGroupIds: modifierGroupAssignments.map(
+      (assignment) => assignment.groupId
+    ),
     modifierPriceOverrides: finalModifierPriceOverrides,
     variationPriceOverrides: finalVariationPriceOverrides,
   };
@@ -1024,22 +1029,8 @@ export default function CreateMenuItemModal({
     return true;
   };
 
-  const getAssignmentsToAttach = () => {
-    const assignments = normalizeMenuItemModifierGroupAssignments(
-      form?.modifierGroupAssignments
-    );
-    const existingGroupIds = new Set(
-      normalizeMenuItemModifierGroupAssignments(
-        initialData?.modifierGroups
-      ).map((assignment) => assignment.groupId)
-    );
-
-    return isEditMode
-      ? assignments.filter(
-          (assignment) => !existingGroupIds.has(assignment.groupId)
-        )
-      : assignments;
-  };
+  const getModifierGroupAssignments = () =>
+    normalizeMenuItemModifierGroupAssignments(form?.modifierGroupAssignments);
 
   const attachModifierGroupAssignments = async (
     itemId: string,
@@ -1065,7 +1056,7 @@ export default function CreateMenuItemModal({
     if (!validateBeforeSubmit()) return;
 
     const payload = buildPayload();
-    const assignmentsToAttach = getAssignmentsToAttach();
+    const modifierGroupAssignments = getModifierGroupAssignments();
 
     if (isEditMode) {
       const { restaurantId: _restaurantId, ...updatePayload } = payload;
@@ -1078,7 +1069,7 @@ export default function CreateMenuItemModal({
 
         await attachModifierGroupAssignments(
           initialData.id,
-          assignmentsToAttach
+          modifierGroupAssignments
         );
         onSuccess?.();
         closeOnly();
@@ -1096,8 +1087,8 @@ export default function CreateMenuItemModal({
       const itemId = extractEntityId(response);
 
       if (itemId) {
-        await attachModifierGroupAssignments(itemId, assignmentsToAttach);
-      } else if (assignmentsToAttach.length > 0) {
+        await attachModifierGroupAssignments(itemId, modifierGroupAssignments);
+      } else if (modifierGroupAssignments.length > 0) {
         toast.error("Menu item created but no item id was returned.");
         return;
       }

@@ -1237,6 +1237,7 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
           setForm((prev: Record<string, unknown>) => ({
             ...prev,
             modifierGroupAssignments: assignments,
+            modifierGroupIds: assignments.map((assignment) => assignment.groupId),
           }));
         }}
       />
