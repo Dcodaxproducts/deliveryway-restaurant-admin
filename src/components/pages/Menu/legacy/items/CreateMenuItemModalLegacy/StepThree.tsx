@@ -472,14 +472,7 @@ const StepThree = forwardRef(({ form, setForm }: StepThreeProps, ref: any) => {
         );
 
     return rawIds.filter((id) => !invalidVariationIds.has(String(id)));
-  }, [
-    form?.variationIds,
-    form?.variations,
-    form?.itemVariations,
-    form?.variationLinks,
-    form?.variationPriceOverrides,
-    form?.modifierPriceOverrides,
-  ]);
+  }, [form]);
 
   const {
     data: variationsResponse,
@@ -582,6 +575,7 @@ const StepThree = forwardRef(({ form, setForm }: StepThreeProps, ref: any) => {
     () => normalizeVariationPriceOverrides(form?.variationPriceOverrides),
     [form?.variationPriceOverrides]
   );
+  const selectedVariationKey = selectedVariationIds.join("|");
 
   useEffect(() => {
     setForm((prev: any) => {
@@ -662,7 +656,13 @@ const StepThree = forwardRef(({ form, setForm }: StepThreeProps, ref: any) => {
 
       return didChange ? nextState : prev;
     });
-  }, [selectedVariationIds.join("|"), variationMap, form?.basePrice, setForm]);
+  }, [
+    selectedVariationKey,
+    selectedVariationIds,
+    variationMap,
+    form?.basePrice,
+    setForm,
+  ]);
 
   const validateStep = () => {
     if (!restaurantId) {
@@ -1116,7 +1116,7 @@ function VariationSelectionSection({
     });
 
     return [...pinnedSelectedItems, ...unselectedItems];
-  }, [items, selectedIds, selectedMap]);
+  }, [items, selectedIds, selectedMap, t]);
 
   const handleScroll = (event: UIEvent<HTMLDivElement>) => {
     const el = event.currentTarget;
@@ -1361,6 +1361,10 @@ function VariationSelectionSection({
             placeholder={commonT("optional")}
             className="h-[42px] w-full rounded-[12px] border-gray-200 bg-white text-sm focus:border-primary focus:ring-primary/15"
           />
+
+          <p className="text-[11px] leading-4 text-gray-500">
+            {t("pickupPriceHelp")}
+          </p>
         </div>
       </div>
     </div>

@@ -46,8 +46,6 @@ const schema = z.object({
   prepTimeMinutes: z.string().optional(),
   ingredients: z.string().optional(),
   nutritionalInformation: z.string().optional(),
-  deliveryPriceAdjustment: z.string().optional(),
-  takeawayPriceAdjustment: z.string().optional(),
   depositAmount: z.string().optional(),
   sortOrder: z.string().optional(),
 
@@ -416,8 +414,6 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
       if (
         [
           "prepTimeMinutes",
-          "deliveryPriceAdjustment",
-          "takeawayPriceAdjustment",
           "depositAmount",
           "sortOrder",
           "minSelect",
@@ -1039,70 +1035,6 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
 
           {errors.sortOrder && (
             <p className="text-xs text-red-500">{errors.sortOrder}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label>{t("deliveryPriceAdjustment")}</Label>
-
-          <Input
-            type="number"
-            min={0}
-            value={form.deliveryPriceAdjustment || ""}
-            onKeyDown={blockInvalidNumberKeys}
-            onPaste={blockNegativeNumberPaste}
-            onChange={(e) =>
-              update(
-                "deliveryPriceAdjustment",
-                sanitizeNonNegativeNumber(e.target.value)
-              )
-            }
-            onBlur={(e) =>
-              validateField(
-                "deliveryPriceAdjustment",
-                sanitizeNonNegativeNumber(e.target.value)
-              )
-            }
-            placeholder="0"
-            className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
-          />
-
-          {errors.deliveryPriceAdjustment && (
-            <p className="text-xs text-red-500">
-              {errors.deliveryPriceAdjustment}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label>{t("takeawayPriceAdjustment")}</Label>
-
-          <Input
-            type="number"
-            min={0}
-            value={form.takeawayPriceAdjustment || ""}
-            onKeyDown={blockInvalidNumberKeys}
-            onPaste={blockNegativeNumberPaste}
-            onChange={(e) =>
-              update(
-                "takeawayPriceAdjustment",
-                sanitizeNonNegativeNumber(e.target.value)
-              )
-            }
-            onBlur={(e) =>
-              validateField(
-                "takeawayPriceAdjustment",
-                sanitizeNonNegativeNumber(e.target.value)
-              )
-            }
-            placeholder="0"
-            className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
-          />
-
-          {errors.takeawayPriceAdjustment && (
-            <p className="text-xs text-red-500">
-              {errors.takeawayPriceAdjustment}
-            </p>
           )}
         </div>
 

@@ -761,6 +761,7 @@ export const buildMenuItemPayload = ({
       ? form.slug.trim()
       : buildSlug(String(form.name || ""));
   const basePrice = toNumberOrZero(form.basePrice);
+  const pricingMode = form.pricingMode === "MULTIPLE" ? "MULTIPLE" : "SINGLE";
 
   const minSelect = Math.max(0, toNumberOrZero(form.minSelect));
   const maxSelect = toOptionalNumber(form.maxSelect);
@@ -823,8 +824,14 @@ export const buildMenuItemPayload = ({
   const finalVariationPriceOverrides = selectedVariationIds.map(
     (variationId) => {
       const existing = variationOverrideMap.get(String(variationId));
+      const pickupPrice =
+        existing?.pickupPrice !== undefined &&
+        existing?.pickupPrice !== null &&
+        existing.pickupPrice !== ""
+          ? toNumberOrZero(existing.pickupPrice)
+          : undefined;
 
-      return {
+      const override = {
         variationId: String(variationId),
 
         price:
@@ -833,13 +840,6 @@ export const buildMenuItemPayload = ({
           existing.price !== ""
             ? toNumberOrZero(existing.price)
             : basePrice,
-
-        pickupPrice:
-          existing?.pickupPrice !== undefined &&
-          existing?.pickupPrice !== null &&
-          existing.pickupPrice !== ""
-            ? toNumberOrZero(existing.pickupPrice)
-            : 0,
 
         displayText: existing?.displayText || "",
 
@@ -857,6 +857,13 @@ export const buildMenuItemPayload = ({
             priceDelta: toNumberOrZero(entry.priceDelta),
           })),
       };
+
+      return pickupPrice === undefined
+        ? override
+        : {
+            ...override,
+            pickupPrice,
+          };
     }
   );
 
@@ -876,11 +883,17 @@ export const buildMenuItemPayload = ({
     sku: form.sku || "",
     sortOrder: toNumberOrZero(form.sortOrder),
 
-    pricingMode: form.pricingMode || "SINGLE",
+    pricingMode,
 
     basePrice,
-    deliveryPriceAdjustment: toNumberOrZero(form.deliveryPriceAdjustment),
-    takeawayPriceAdjustment: toNumberOrZero(form.takeawayPriceAdjustment),
+    deliveryPriceAdjustment:
+      pricingMode === "MULTIPLE"
+        ? toNumberOrZero(form.deliveryPriceAdjustment)
+        : 0,
+    takeawayPriceAdjustment:
+      pricingMode === "MULTIPLE"
+        ? toNumberOrZero(form.takeawayPriceAdjustment)
+        : 0,
     prepTimeMinutes: toNumberOrZero(form.prepTimeMinutes),
 
     dietaryFlags: normalizeTextArray(form.dietaryFlags),
@@ -1102,7 +1115,8 @@ export default function CreateMenuItemModal({
     );
 
     if (isEditMode) {
-      const { restaurantId: _restaurantId, ...updatePayload } = payload;
+      const updatePayload = { ...payload };
+      delete updatePayload.restaurantId;
 
       try {
         await updateMenuItem({

@@ -63,6 +63,34 @@ describe("menu item modifier required validation", () => {
     expect(result).not.toHaveProperty("isRequired");
   });
 
+  it("accepts multiple pricing mode with delivery and takeaway adjustments", () => {
+    const result = menuItemSchema.parse({
+      ...baseMenuItem,
+      basePrice: 500,
+      pricingMode: "MULTIPLE",
+      deliveryPriceAdjustment: 80,
+      takeawayPriceAdjustment: 40,
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        pricingMode: "MULTIPLE",
+        basePrice: 500,
+        deliveryPriceAdjustment: 80,
+        takeawayPriceAdjustment: 40,
+      })
+    );
+  });
+
+  it("rejects unsupported pricing modes", () => {
+    const result = menuItemSchema.safeParse({
+      ...baseMenuItem,
+      pricingMode: "SEPARATE",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it("keeps nested variation modifier overrides price-only", () => {
     const result = menuItemSchema.parse({
       ...baseMenuItem,

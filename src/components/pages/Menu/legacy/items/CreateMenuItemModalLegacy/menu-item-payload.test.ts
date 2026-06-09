@@ -204,6 +204,48 @@ describe("menu item modifier required payload", () => {
     expect(payload).not.toHaveProperty("isRequired");
   });
 
+  it("sends multiple pricing adjustments for delivery and takeaway", () => {
+    const payload = buildMenuItemPayload({
+      form: {
+        ...baseForm,
+        basePrice: "500",
+        pricingMode: "MULTIPLE",
+        deliveryPriceAdjustment: "80",
+        takeawayPriceAdjustment: "40",
+      },
+      restaurantId: "restaurant-1",
+    });
+
+    expect(payload).toEqual(
+      expect.objectContaining({
+        pricingMode: "MULTIPLE",
+        basePrice: 500,
+        deliveryPriceAdjustment: 80,
+        takeawayPriceAdjustment: 40,
+      })
+    );
+  });
+
+  it("resets order-type adjustments when single pricing is selected", () => {
+    const payload = buildMenuItemPayload({
+      form: {
+        ...baseForm,
+        pricingMode: "SINGLE",
+        deliveryPriceAdjustment: "80",
+        takeawayPriceAdjustment: "40",
+      },
+      restaurantId: "restaurant-1",
+    });
+
+    expect(payload).toEqual(
+      expect.objectContaining({
+        pricingMode: "SINGLE",
+        deliveryPriceAdjustment: 0,
+        takeawayPriceAdjustment: 0,
+      })
+    );
+  });
+
   it("does not add isRequired to nested variation modifier overrides", () => {
     const payload = buildMenuItemPayload({
       form: {
@@ -271,6 +313,36 @@ describe("menu item modifier required payload", () => {
     ]);
     expect(payload.variationPriceOverrides[0]?.modifierPriceOverrides[0]).not.toHaveProperty("groupId");
     expect(payload.variationPriceOverrides[0]?.modifierPriceOverrides[0]).not.toHaveProperty("isRequired");
+  });
+
+  it("omits blank variation pickup price so backend can use item pickup adjustment", () => {
+    const payload = buildMenuItemPayload({
+      form: {
+        ...baseForm,
+        pricingMode: "MULTIPLE",
+        takeawayPriceAdjustment: "40",
+        modifierIds: [],
+        modifierPriceOverrides: [],
+        variationIds: ["variation-1"],
+        variationPriceOverrides: [
+          {
+            variationId: "variation-1",
+            price: "700",
+            pickupPrice: "",
+            displayText: "Small",
+            modifierPriceOverrides: [],
+          },
+        ],
+      },
+      restaurantId: "restaurant-1",
+    });
+
+    expect(payload.variationPriceOverrides[0]).toEqual({
+      variationId: "variation-1",
+      price: 700,
+      displayText: "Small",
+      modifierPriceOverrides: [],
+    });
   });
 
   it("uses variationIds as source of truth when stale variation overrides exist", () => {

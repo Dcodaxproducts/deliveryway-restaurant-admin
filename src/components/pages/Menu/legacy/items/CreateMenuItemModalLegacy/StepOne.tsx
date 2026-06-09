@@ -25,6 +25,7 @@ import { useTranslations } from "next-intl";
 const schema = z.object({
   name: z.string().trim().min(1, "Item name is required"),
   categoryId: z.string().trim().min(1, "Category is required"),
+  pricingMode: z.enum(["SINGLE", "MULTIPLE"]).default("SINGLE"),
 
   basePrice: z
     .string()
@@ -39,6 +40,36 @@ const schema = z.object({
       },
       {
         message: "Base price must be a valid non-negative number",
+      }
+    ),
+  deliveryPriceAdjustment: z
+    .string()
+    .trim()
+    .optional()
+    .refine(
+      (value) => {
+        if (!value) return true;
+
+        const numeric = Number(value);
+        return !Number.isNaN(numeric) && numeric >= 0;
+      },
+      {
+        message: "Delivery price adjustment must be a valid non-negative number",
+      }
+    ),
+  takeawayPriceAdjustment: z
+    .string()
+    .trim()
+    .optional()
+    .refine(
+      (value) => {
+        if (!value) return true;
+
+        const numeric = Number(value);
+        return !Number.isNaN(numeric) && numeric >= 0;
+      },
+      {
+        message: "Pickup price adjustment must be a valid non-negative number",
       }
     ),
 });
@@ -80,6 +111,10 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
     if (field === "name") return t("itemNameRequired");
     if (field === "categoryId") return t("categoryRequired");
     if (field === "basePrice") return t("basePriceInvalid");
+    if (field === "deliveryPriceAdjustment")
+      return t("deliveryPriceAdjustmentInvalid");
+    if (field === "takeawayPriceAdjustment")
+      return t("takeawayPriceAdjustmentInvalid");
     return fallback || t("invalidValue");
   };
 
@@ -104,7 +139,10 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
     const result = parseSchema(schema, {
       name: form?.name || "",
       categoryId: form?.categoryId || "",
+      pricingMode: form?.pricingMode || "SINGLE",
       basePrice: form?.basePrice ?? "",
+      deliveryPriceAdjustment: form?.deliveryPriceAdjustment ?? "",
+      takeawayPriceAdjustment: form?.takeawayPriceAdjustment ?? "",
     });
 
     if (!result.success) {
@@ -235,6 +273,13 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
     }));
   };
 
+  const pricingMode = form?.pricingMode === "MULTIPLE" ? "MULTIPLE" : "SINGLE";
+  const basePrice = Number(form?.basePrice || 0);
+  const deliveryAdjustment = Number(form?.deliveryPriceAdjustment || 0);
+  const pickupAdjustment = Number(form?.takeawayPriceAdjustment || 0);
+  const deliveryPreview = basePrice + deliveryAdjustment;
+  const pickupPreview = basePrice + pickupAdjustment;
+
   return (
     <div className="space-y-5">
       <div className="space-y-2">
@@ -292,36 +337,163 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
         />
       </div>
 
-      <div className="space-y-2">
-        <Label>{t("basePrice")}</Label>
+      <div className="rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">
+              {t("pricingTitle")}
+            </h3>
 
-        <Input
-          type="number"
-          min={0}
-          value={form.basePrice || ""}
-          placeholder=""
-          onKeyDown={blockInvalidNumberKeys}
-          onPaste={blockNegativeNumberPaste}
-          onChange={(e) => {
-            const value = sanitizeNonNegativeNumber(e.target.value);
-            updateForm("basePrice", value);
-          }}
-          onBlur={(e) =>
-            validateField(
-              "basePrice",
-              sanitizeNonNegativeNumber(e.target.value)
-            )
-          }
-          className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
-        />
+            <p className="mt-1 text-xs leading-5 text-gray-500">
+              {t("pricingDescription")}
+            </p>
+          </div>
 
-        {errors.basePrice ? (
-          <p className="text-xs text-red-500">{errors.basePrice}</p>
-        ) : null}
+          <div className="grid grid-cols-2 rounded-[14px] bg-gray-100 p-1 text-xs font-semibold text-gray-600">
+            {(["SINGLE", "MULTIPLE"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => {
+                  updateForm("pricingMode", mode);
+
+                  if (mode === "SINGLE") {
+                    updateForm("deliveryPriceAdjustment", "");
+                    updateForm("takeawayPriceAdjustment", "");
+                  }
+                }}
+                className={`rounded-[11px] px-3 py-2 transition ${
+                  pricingMode === mode
+                    ? "bg-white text-gray-950 shadow-sm"
+                    : "text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                {mode === "SINGLE" ? t("singlePricing") : t("multiplePricing")}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
+          <div className="space-y-2">
+            <Label>{t("basePrice")}</Label>
+
+            <Input
+              type="number"
+              min={0}
+              value={form.basePrice || ""}
+              placeholder="0"
+              onKeyDown={blockInvalidNumberKeys}
+              onPaste={blockNegativeNumberPaste}
+              onChange={(e) => {
+                const value = sanitizeNonNegativeNumber(e.target.value);
+                updateForm("basePrice", value);
+              }}
+              onBlur={(e) =>
+                validateField(
+                  "basePrice",
+                  sanitizeNonNegativeNumber(e.target.value)
+                )
+              }
+              className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
+            />
+
+            {errors.basePrice ? (
+              <p className="text-xs text-red-500">{errors.basePrice}</p>
+            ) : null}
+          </div>
+
+          {pricingMode === "MULTIPLE" ? (
+            <>
+              <div className="space-y-2">
+                <Label>{t("deliveryPriceAdjustment")}</Label>
+
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.deliveryPriceAdjustment || ""}
+                  placeholder="0"
+                  onKeyDown={blockInvalidNumberKeys}
+                  onPaste={blockNegativeNumberPaste}
+                  onChange={(e) =>
+                    updateForm(
+                      "deliveryPriceAdjustment",
+                      sanitizeNonNegativeNumber(e.target.value)
+                    )
+                  }
+                  onBlur={(e) =>
+                    validateField(
+                      "deliveryPriceAdjustment",
+                      sanitizeNonNegativeNumber(e.target.value)
+                    )
+                  }
+                  className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
+                />
+
+                {errors.deliveryPriceAdjustment ? (
+                  <p className="text-xs text-red-500">
+                    {errors.deliveryPriceAdjustment}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t("takeawayPriceAdjustment")}</Label>
+
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.takeawayPriceAdjustment || ""}
+                  placeholder="0"
+                  onKeyDown={blockInvalidNumberKeys}
+                  onPaste={blockNegativeNumberPaste}
+                  onChange={(e) =>
+                    updateForm(
+                      "takeawayPriceAdjustment",
+                      sanitizeNonNegativeNumber(e.target.value)
+                    )
+                  }
+                  onBlur={(e) =>
+                    validateField(
+                      "takeawayPriceAdjustment",
+                      sanitizeNonNegativeNumber(e.target.value)
+                    )
+                  }
+                  className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
+                />
+
+                {errors.takeawayPriceAdjustment ? (
+                  <p className="text-xs text-red-500">
+                    {errors.takeawayPriceAdjustment}
+                  </p>
+                ) : null}
+              </div>
+            </>
+          ) : null}
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-[14px] border border-emerald-100 bg-emerald-50 px-4 py-3">
+            <p className="text-xs font-medium text-emerald-700">
+              {t("deliveryPricePreview")}
+            </p>
+            <p className="mt-1 text-lg font-semibold text-emerald-950">
+              {deliveryPreview.toLocaleString()}
+            </p>
+          </div>
+
+          <div className="rounded-[14px] border border-sky-100 bg-sky-50 px-4 py-3">
+            <p className="text-xs font-medium text-sky-700">
+              {t("pickupPricePreview")}
+            </p>
+            <p className="mt-1 text-lg font-semibold text-sky-950">
+              {pickupPreview.toLocaleString()}
+            </p>
+          </div>
+        </div>
       </div>
 
-     
-
+      {shouldShowSplitPizzaOption ? (
         <label className="flex items-center gap-2 rounded-[12px] border border-gray-200 bg-white p-3 text-sm">
           <input
             type="checkbox"
@@ -332,7 +504,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
 
           <span>{t("supportsSplitPizza")}</span>
         </label>
-    
+      ) : null}
     </div>
   );
 });
