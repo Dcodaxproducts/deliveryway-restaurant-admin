@@ -1582,6 +1582,8 @@
     "weeklyBusinessHours": "Weekly business hours",
     "weeklyBusinessHoursDescription": "Configure regular opening hours and daily break times.",
     "loadingOpeningHours": "Loading opening hours...",
+    "openingHoursNotConfigured": "Opening hours not configured for this day",
+    "openingHoursRequired": "opening time and closing time are required",
     "weeklyDeliveryHours": "Weekly delivery hours",
     "weeklyDeliveryHoursDescription": "Configure when this branch can accept delivery orders and delivery break times.",
     "loadingDeliveryHours": "Loading delivery hours...",

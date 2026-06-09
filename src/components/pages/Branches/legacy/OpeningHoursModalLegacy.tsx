@@ -59,9 +59,9 @@ const DEFAULT_CLOSE_TIME = "18:00";
 
 const createDefaultOpeningHour = (dayOfWeek: DayOfWeek): OpeningHour => ({
   dayOfWeek,
-  isClosed: dayOfWeek === "SUNDAY",
-  openTime: DEFAULT_OPEN_TIME,
-  closeTime: DEFAULT_CLOSE_TIME,
+  isClosed: true,
+  openTime: "",
+  closeTime: "",
   breakTimes: [],
   note: "",
 });
@@ -93,8 +93,8 @@ const normalizeOpeningHours = (value: any): OpeningHour[] => {
     return {
       dayOfWeek,
       isClosed: Boolean(existing?.isClosed),
-      openTime: String(existing?.openTime || DEFAULT_OPEN_TIME),
-      closeTime: String(existing?.closeTime || DEFAULT_CLOSE_TIME),
+      openTime: String(existing?.openTime || ""),
+      closeTime: String(existing?.closeTime || ""),
       breakTimes: normalizeBreakTimes(existing?.breakTimes),
       note: String(existing?.note || ""),
     };
@@ -111,6 +111,9 @@ const isTimeRangeInvalid = (startTime?: string, endTime?: string) => {
   if (!startTime || !endTime) return false;
   return startTime >= endTime;
 };
+
+const hasOpeningWindow = (day: OpeningHour) =>
+  Boolean(day.openTime && day.closeTime);
 
 const getResponseOpeningHours = (payload: any) => {
   if (Array.isArray(payload?.data)) return payload.data;
@@ -156,6 +159,12 @@ export default function OpeningHoursModal({
           ? {
               ...day,
               [field]: value,
+              ...(field === "isClosed" && value === false
+                ? {
+                    openTime: day.openTime || DEFAULT_OPEN_TIME,
+                    closeTime: day.closeTime || DEFAULT_CLOSE_TIME,
+                  }
+                : {}),
             }
           : day
       )
@@ -224,6 +233,11 @@ export default function OpeningHoursModal({
 
   const validateOpeningHours = () => {
     for (const day of hours) {
+      if (!day.isClosed && !hasOpeningWindow(day)) {
+        toast.error(`${formatDayLabel(day.dayOfWeek)} ${t("openingHoursRequired")}`);
+        return false;
+      }
+
       if (!day.isClosed && isTimeRangeInvalid(day.openTime, day.closeTime)) {
         toast.error(`${formatDayLabel(day.dayOfWeek)} close time must be after open time`);
         return false;
@@ -354,9 +368,9 @@ export default function OpeningHoursModal({
                       <p className="mt-0.5 text-xs text-gray-400">
                         {day.isClosed
                           ? t("closedFullDay")
-                          : `${day.openTime || "--:--"} - ${
-                              day.closeTime || "--:--"
-                            }`}
+                          : hasOpeningWindow(day)
+                            ? `${day.openTime} - ${day.closeTime}`
+                            : t("openingHoursNotConfigured")}
                       </p>
                     </div>
 

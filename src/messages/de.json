@@ -1582,6 +1582,8 @@
     "weeklyBusinessHours": "Wöchentliche Geschäftszeiten",
     "weeklyBusinessHoursDescription": "Regelmäßige Öffnungszeiten und tägliche Pausenzeiten konfigurieren.",
     "loadingOpeningHours": "Öffnungszeiten werden geladen...",
+    "openingHoursNotConfigured": "Öffnungszeiten sind für diesen Tag nicht konfiguriert",
+    "openingHoursRequired": "Öffnungs- und Schließzeit sind erforderlich",
     "weeklyDeliveryHours": "Wöchentliche Lieferzeiten",
     "weeklyDeliveryHoursDescription": "Konfigurieren Sie, wann diese Filiale Lieferbestellungen annimmt und Lieferpausen hat.",
     "loadingDeliveryHours": "Lieferzeiten werden geladen...",
