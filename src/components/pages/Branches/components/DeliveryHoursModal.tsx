@@ -61,9 +61,9 @@ const DEFAULT_CLOSE_TIME = "22:00";
 
 const createDefaultDeliveryHour = (dayOfWeek: DayOfWeek): DeliveryHour => ({
   dayOfWeek,
-  isClosed: dayOfWeek === "SUNDAY",
-  openTime: DEFAULT_OPEN_TIME,
-  closeTime: DEFAULT_CLOSE_TIME,
+  isClosed: true,
+  openTime: "",
+  closeTime: "",
   breakTimes: [],
 });
 
@@ -102,8 +102,8 @@ const normalizeDeliveryHours = (value: unknown): DeliveryHour[] => {
     return {
       dayOfWeek,
       isClosed: Boolean(existing.isClosed),
-      openTime: String(existing.openTime || DEFAULT_OPEN_TIME),
-      closeTime: String(existing.closeTime || DEFAULT_CLOSE_TIME),
+      openTime: String(existing.openTime || ""),
+      closeTime: String(existing.closeTime || ""),
       breakTimes: normalizeBreakTimes(existing.breakTimes),
     };
   });
@@ -127,6 +127,9 @@ const isTimeRangeInvalid = (startTime?: string, endTime?: string) => {
   if (!startTime || !endTime) return false;
   return startTime >= endTime;
 };
+
+const hasDeliveryWindow = (day: DeliveryHour) =>
+  Boolean(day.openTime && day.closeTime);
 
 export default function DeliveryHoursModal({
   open,
@@ -175,6 +178,12 @@ export default function DeliveryHoursModal({
           ? {
               ...day,
               [field]: value,
+              ...(field === "isClosed" && value === false
+                ? {
+                    openTime: day.openTime || DEFAULT_OPEN_TIME,
+                    closeTime: day.closeTime || DEFAULT_CLOSE_TIME,
+                  }
+                : {}),
             }
           : day
       )
@@ -236,6 +245,11 @@ export default function DeliveryHoursModal({
 
   const validateDeliveryHours = () => {
     for (const day of hours) {
+      if (!day.isClosed && !hasDeliveryWindow(day)) {
+        toast.error(`${formatDayLabel(day.dayOfWeek)} ${t("deliveryHoursRequired")}`);
+        return false;
+      }
+
       if (!day.isClosed && isTimeRangeInvalid(day.openTime, day.closeTime)) {
         toast.error(`${formatDayLabel(day.dayOfWeek)} ${t("closeAfterOpenTime")}`);
         return false;
@@ -334,13 +348,17 @@ export default function DeliveryHoursModal({
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded-full bg-green-50 px-3 py-1.5 font-semibold text-green-700">
-                  {t("open")}: {openCount}
-                </div>
-                <div className="rounded-full bg-gray-100 px-3 py-1.5 font-semibold text-gray-600">
-                  {t("closed")}: {closedCount}
-                </div>
+              <div className="grid min-w-[180px] grid-cols-2 gap-2">
+                <DeliveryHoursSummaryCard
+                  label={t("open")}
+                  value={openCount}
+                  tone="open"
+                />
+                <DeliveryHoursSummaryCard
+                  label={t("closed")}
+                  value={closedCount}
+                  tone="closed"
+                />
               </div>
             </div>
 
@@ -364,7 +382,9 @@ export default function DeliveryHoursModal({
                         <p className="mt-0.5 text-xs text-gray-400">
                           {day.isClosed
                             ? t("closedFullDay")
-                            : `${day.openTime || "--:--"} - ${day.closeTime || "--:--"}`}
+                            : hasDeliveryWindow(day)
+                              ? `${day.openTime} - ${day.closeTime}`
+                              : t("deliveryHoursNotConfigured")}
                         </p>
                       </div>
 
@@ -492,6 +512,33 @@ export default function DeliveryHoursModal({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function DeliveryHoursSummaryCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "open" | "closed";
+}) {
+  const isOpen = tone === "open";
+
+  return (
+    <div
+      className={`rounded-[14px] border px-3 py-2 shadow-sm ${
+        isOpen
+          ? "border-emerald-100 bg-emerald-50 text-emerald-700"
+          : "border-slate-200 bg-slate-50 text-slate-700"
+      }`}
+    >
+      <p className="text-[11px] font-semibold uppercase tracking-wide opacity-75">
+        {label}
+      </p>
+      <p className="mt-0.5 text-xl font-semibold leading-none">{value}</p>
+    </div>
   );
 }
 

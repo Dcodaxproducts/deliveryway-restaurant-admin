@@ -1585,6 +1585,8 @@
     "weeklyDeliveryHours": "Wöchentliche Lieferzeiten",
     "weeklyDeliveryHoursDescription": "Konfigurieren Sie, wann diese Filiale Lieferbestellungen annimmt und Lieferpausen hat.",
     "loadingDeliveryHours": "Lieferzeiten werden geladen...",
+    "deliveryHoursNotConfigured": "Lieferzeiten sind für diesen Tag nicht konfiguriert",
+    "deliveryHoursRequired": "Liefer-Öffnungszeit und -Schließzeit sind erforderlich",
     "closedFullDay": "Den ganzen Tag geschlossen",
     "breakTimes": "Pausenzeiten",
     "addBreak": "Pause hinzufügen",

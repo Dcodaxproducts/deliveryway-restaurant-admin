@@ -1585,6 +1585,8 @@
     "weeklyDeliveryHours": "Weekly delivery hours",
     "weeklyDeliveryHoursDescription": "Configure when this branch can accept delivery orders and delivery break times.",
     "loadingDeliveryHours": "Loading delivery hours...",
+    "deliveryHoursNotConfigured": "Delivery hours not configured for this day",
+    "deliveryHoursRequired": "delivery open time and close time are required",
     "closedFullDay": "Closed for the full day",
     "breakTimes": "Break times",
     "addBreak": "Add break",
