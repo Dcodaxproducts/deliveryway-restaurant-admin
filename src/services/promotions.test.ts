@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  createCoupon,
   createAdminPromotionCampaign,
   getAdminPromotionCampaignDetail,
   getAdminPromotionCampaigns,
   updateAdminPromotionCampaign,
+  updateCoupon,
 } from "@/services/promotions";
 import api from "@/lib/axios";
 
@@ -75,6 +77,35 @@ describe("promotions service", () => {
     );
     expect(mockedPost.mock.calls[0]?.[0]).not.toContain("/api/v1");
     expect(mockedPatch.mock.calls[0]?.[0]).not.toContain("/api/v1");
+  });
+
+  it("creates coupons with restaurantId and strips restaurantId from coupon updates", async () => {
+    mockedPost.mockResolvedValue({ data: { id: "coupon-1" } });
+    mockedPatch.mockResolvedValue({ data: { id: "coupon-1" } });
+
+    await createCoupon({
+      code: "SAVE10",
+      title: "Save 10",
+      restaurantId: "restaurant-1",
+      discountType: "FLAT",
+      discountValue: 10,
+    });
+    await updateCoupon("coupon-1", {
+      code: "SAVE10",
+      title: "Save 10",
+      restaurantId: "restaurant-1",
+      discountType: "FLAT",
+      discountValue: 10,
+    });
+
+    expect(mockedPost).toHaveBeenCalledWith(
+      "/coupons",
+      expect.objectContaining({ restaurantId: "restaurant-1" })
+    );
+    expect(mockedPatch).toHaveBeenCalledWith(
+      "/coupons/coupon-1",
+      expect.not.objectContaining({ restaurantId: "restaurant-1" })
+    );
   });
 
 });

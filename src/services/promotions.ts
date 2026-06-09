@@ -241,7 +241,10 @@ export const createCoupon = async (payload: Partial<CouponPayload>) => {
 };
 
 export const updateCoupon = async (id: string, payload: Partial<CouponPayload>) => {
-  const response = await api.patch(`/coupons/${id}`, payload);
+  const body = { ...payload };
+  delete body.restaurantId;
+
+  const response = await api.patch(`/coupons/${id}`, body);
   return response.data;
 };
 

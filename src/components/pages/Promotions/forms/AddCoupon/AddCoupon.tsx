@@ -72,6 +72,7 @@ export default function AddNewCoupon() {
   const [saving, setSaving] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [couponId, setCouponId] = useState("");
+  const [loadedValues, setLoadedValues] = useState<CouponFormValues>(defaultValues);
 
 
   const { control, handleSubmit, reset, setValue } = useForm<CouponFormValues>({
@@ -123,8 +124,7 @@ export default function AddNewCoupon() {
     if (!coupon) return;
 
     const nextCouponId = getString(coupon, "id") ?? "";
-    setCouponId(nextCouponId);
-    reset({
+    const nextValues: CouponFormValues = {
       code: getString(coupon, "code") ?? "",
       title: getString(coupon, "title") ?? "",
       discountType: coupon.discountType === "PERCENTAGE" ? "PERCENTAGE" : "FLAT",
@@ -139,13 +139,21 @@ export default function AddNewCoupon() {
       maxUsesPerCustomer: String(coupon.maxUsesPerCustomer ?? ""),
       scopeMenuItemId: getString(coupon, "scopeMenuItemId") ?? "",
       scopeCategoryId: getString(coupon, "scopeCategoryId") ?? "",
-    });
+    };
+
+    setCouponId(nextCouponId);
+    setLoadedValues(nextValues);
+    reset(nextValues);
   }, [couponCode, couponResponse, reset]);
 
   const handleItemSelect = (id: string) => {
     const item = items.find((currentItem) => currentItem.id === id);
     setValue("scopeMenuItemId", id);
     setValue("scopeCategoryId", item?.categoryId || "");
+  };
+
+  const resetCouponForm = () => {
+    reset(isEdit ? loadedValues : defaultValues);
   };
 
   const onSubmit = async (values: CouponFormValues) => {
@@ -165,7 +173,7 @@ export default function AddNewCoupon() {
 
     const payload = cleanPayload({
       ...values,
-      restaurantId,
+      ...(isEdit ? {} : { restaurantId }),
       code: values.code.trim(),
       title: values.title.trim(),
       description: values.description?.trim() || undefined,
@@ -370,7 +378,7 @@ export default function AddNewCoupon() {
         <div className="flex justify-end gap-3">
           <button
             type="button"
-            onClick={() => reset(defaultValues)}
+            onClick={resetCouponForm}
             disabled={saving}
             className="h-[44px] rounded-lg border px-6 text-sm font-medium text-gray-600 disabled:opacity-60"
           >
