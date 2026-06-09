@@ -1,248 +1,335 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
-  AlignCenter,
-  AlignLeft,
-  AlignRight,
-  ArrowRight,
-  Bold,
-  Image as ImageIcon,
-  Italic,
-  Link as LinkIcon,
-  List,
-  RotateCcw,
-  Underline,
+  CheckCircle2,
+  Code2,
+  Copy,
+  Eye,
+  FileText,
+  Globe2,
+  Loader2,
+  RefreshCw,
+  Save,
+  ShieldCheck,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import Header from "@/components/common/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  useCustomerAppContent,
+  usePublicPrivacyPolicy,
+  useUpdateCustomerAppPrivacyPolicy,
+} from "@/hooks/useCustomerAppContent";
+import { buildPublicPrivacyPolicyLink } from "@/services/customer-app-content";
+import { cn } from "@/lib/utils";
 
-const toolbarActions = [
-  { label: "Bold", Icon: Bold },
-  { label: "Italic", Icon: Italic },
-  { label: "Underline", Icon: Underline },
-  { label: "Align left", Icon: AlignLeft },
-  { label: "Align center", Icon: AlignCenter },
-  { label: "Align right", Icon: AlignRight },
-  { label: "List", Icon: List },
-  { label: "Link", Icon: LinkIcon },
-  { label: "Image", Icon: ImageIcon },
-];
+const emptyPolicyTemplate = `<h2>Privacy Policy</h2>
+<p>Explain how your restaurant collects, uses, stores, and protects customer data.</p>
 
-const policySections = [
-  {
-    title: "1. Information We Collect",
-    body: "We collect information that you provide directly to us, such as when you create an account, update your restaurant profile, or contact customer support. This may include:",
-    items: [
-      "Business name and contact details",
-      "Account credentials (username and password)",
-      "Financial information for billing and payments",
-      "Content you upload to the portal",
-    ],
-  },
-  {
-    title: "2. How We Use Information",
-    body: "We use the information we collect to provide, maintain, and improve our services, to process your transactions, and to communicate with you about updates and promotions.",
-  },
-  {
-    title: "3. Data Security",
-    body: "We implement appropriate technical and organizational measures to protect your personal data against unauthorized or unlawful processing and against accidental loss, destruction, or damage.",
-  },
-];
+<h3>Information we collect</h3>
+<p>Describe account, order, delivery, payment, and support information collected through the customer app.</p>
 
-const versionHistoryItems = [
-  {
-    author: "Sarah Chen",
-    avatar: "S",
-    avatarClassName: "bg-[#1F2937] text-sm text-white",
-    time: "Today, 2:45 PM",
-    summary: "Updated data security section to comply with new GDPR mandates.",
-    current: true,
-  },
-  {
-    author: "System Bot",
-    avatar: "🤖",
-    avatarClassName: "bg-[#F2F4F7] text-xs text-[#667085]",
-    time: "Aug 01, 12:00 AM",
-    summary: "Automated archival of previous year&apos;s policy.",
-    current: false,
-  },
-];
+<h3>How we use information</h3>
+<p>Explain order fulfillment, customer support, service improvement, and legal compliance uses.</p>
 
-const iconButtonClassName =
-  "inline-flex size-8 items-center justify-center rounded-lg text-[#667085] transition hover:bg-[#F9FAFB] hover:text-[#344054]";
-const editorCardClassName =
-  "overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]";
-const historyCardClassName = "rounded-3xl border border-[#EAECF0] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]";
-const actionButtonClassName =
-  "inline-flex h-10 items-center justify-center rounded-full px-5 text-sm font-semibold transition";
+<h3>Contact</h3>
+<p>Tell customers how to contact your restaurant about privacy questions.</p>`;
+
+const buildPreviewDocument = (content: string) => {
+  const safeContent = content.trim() || "<p>No privacy policy content has been published yet.</p>";
+
+  return `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root { color-scheme: light; }
+      body {
+        margin: 0;
+        color: #1d2939;
+        background: #ffffff;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      main { padding: 24px; }
+      h1, h2, h3 { color: #101828; line-height: 1.25; margin: 0 0 12px; }
+      h1 { font-size: 28px; }
+      h2 { font-size: 22px; margin-top: 24px; }
+      h3 { font-size: 18px; margin-top: 22px; }
+      p, li { font-size: 14px; line-height: 1.75; color: #475467; }
+      p { margin: 0 0 14px; }
+      ul, ol { padding-left: 22px; margin: 0 0 16px; }
+      a { color: #c1121f; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <main>${safeContent}</main>
+  </body>
+</html>`;
+};
+
+const countWords = (value: string) => value.trim().split(/\s+/).filter(Boolean).length;
 
 export default function PrivacyPolicyPage() {
+  const t = useTranslations("privacyPolicy");
+  const commonT = useTranslations("common");
+  const { restaurantId, loading: authLoading } = useAuth();
+  const [draftPolicy, setDraftPolicy] = useState("");
+  const [hasLoadedInitialPolicy, setHasLoadedInitialPolicy] = useState(false);
+
+  const { data: content, isLoading, isFetching, refetch } = useCustomerAppContent(restaurantId);
+  const { data: publicPolicy, isFetching: isFetchingPublicPolicy } =
+    usePublicPrivacyPolicy(restaurantId);
+  const { mutateAsync: updatePrivacyPolicy, isPending: isSaving } =
+    useUpdateCustomerAppPrivacyPolicy();
+
+  const savedPolicy = content?.privacyPolicy ?? "";
+  const publicContent = publicPolicy?.privacyPolicy ?? "";
+  const publicLink = restaurantId ? buildPublicPrivacyPolicyLink(restaurantId) : "";
+  const isDirty = draftPolicy !== savedPolicy;
+  const loading = authLoading || isLoading;
+  const previewDocument = useMemo(() => buildPreviewDocument(draftPolicy), [draftPolicy]);
+  const wordCount = useMemo(() => countWords(draftPolicy), [draftPolicy]);
+  const characterCount = draftPolicy.length;
+  const hasPublishedContent = publicContent.trim().length > 0;
+
+  useEffect(() => {
+    if (hasLoadedInitialPolicy || isLoading) return;
+
+    setDraftPolicy(savedPolicy || emptyPolicyTemplate);
+    setHasLoadedInitialPolicy(true);
+  }, [hasLoadedInitialPolicy, isLoading, savedPolicy]);
+
+  const handleReset = () => {
+    setDraftPolicy(savedPolicy || emptyPolicyTemplate);
+  };
+
+  const handleSave = async () => {
+    if (!restaurantId) {
+      toast.error(t("missingRestaurant"));
+      return;
+    }
+
+    const nextContent = await updatePrivacyPolicy({
+      restaurantId,
+      privacyPolicy: draftPolicy.trim(),
+    });
+    setDraftPolicy(nextContent.privacyPolicy);
+    setHasLoadedInitialPolicy(true);
+  };
+
+  const handleCopyPublicLink = async () => {
+    if (!publicLink) return;
+
+    await navigator.clipboard.writeText(publicLink);
+    toast.success(t("linkCopied"));
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FB] px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1440px]">
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.9fr_0.8fr]">
-          <div className="space-y-4">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-              <Header
-                title="Privacy Policy"
-                description="Last modified by Sarah Chen, 2 days ago"
-                titleClassName="text-[24px] sm:text-[28px] font-semibold text-[#101828] leading-tight"
-                descriptionClassName="mt-1 text-sm text-[#667085] leading-6"
-              />
+      <div className="mx-auto max-w-[1440px] space-y-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <Header
+            title={t("title")}
+            description={t("description")}
+            titleClassName="text-[24px] sm:text-[30px] font-semibold text-[#101828] leading-tight"
+            descriptionClassName="mt-1 max-w-3xl text-sm text-[#667085] leading-6"
+          />
 
-              <div className="inline-flex h-8 items-center rounded-full bg-[#E6F4FA] px-3 text-xs font-semibold text-[#1D7FA8]">
-                Draft Mode
-              </div>
-            </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => refetch()}
+              disabled={loading || isFetching}
+              className="h-10 rounded-full border-[#D0D5DD] bg-white text-[#344054]"
+            >
+              {isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+              {commonT("refresh")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleReset}
+              disabled={loading || isSaving || !isDirty}
+              className="h-10 rounded-full border-[#D0D5DD] bg-white text-[#344054]"
+            >
+              {commonT("reset")}
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSave}
+              disabled={loading || isSaving || !restaurantId || !isDirty}
+              className="h-10 rounded-full bg-[#C1121F] px-5 text-white hover:bg-[#A30F1A]"
+            >
+              {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
+              {isSaving ? commonT("saving") : commonT("save")}
+            </Button>
+          </div>
+        </div>
 
-            <div className={editorCardClassName}>
-              <div className="flex flex-wrap items-center gap-1 border-b border-[#EAECF0] px-4 py-3">
-                {toolbarActions.map(({ label, Icon }) => (
-                  <button key={label} type="button" aria-label={label} className={iconButtonClassName}>
-                    <Icon size={15} />
-                  </button>
-                ))}
-
-                <div className="ml-2 h-5 w-px bg-[#E4E7EC]" />
-
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm text-[#667085] transition hover:bg-[#F9FAFB] hover:text-[#344054]"
-                >
-                  <span>Heading 1</span>
-                  <span className="text-xs">▼</span>
-                </button>
-              </div>
-
-              <div className="px-6 py-7 sm:px-8">
-                <div className="max-w-[760px] space-y-6 text-[#344054]">
-                  <div>
-                    <h2 className="text-[18px] font-semibold text-[#101828]">
-                      Culinary Curator Privacy Policy
-                    </h2>
-                    <p className="mt-3 text-sm text-[#667085]">
-                      Effective Date: October 24, 2023
-                    </p>
-                  </div>
-
-                  <p className="text-[15px] leading-7">
-                    At Culinary Curator, we value the trust you place in us when sharing your
-                    personal data. This Privacy Policy describes how we collect, use, and share
-                    your information when you use our restaurant portal and related services.
-                  </p>
-
-                  {policySections.map(({ title, body, items }) => (
-                    <div key={title}>
-                      <h3 className="text-[16px] font-semibold text-[#101828]">{title}</h3>
-                      <p className="mt-3 text-[15px] leading-7">{body}</p>
-
-                      {items ? (
-                        <ul className="mt-4 space-y-2 pl-6 text-[15px] leading-7 text-[#344054]">
-                          {items.map((item) => (
-                            <li key={item}>{item}</li>
-                          ))}
-                        </ul>
-                      ) : null}
-
-                      {title === "2. How We Use Information" ? (
-                        <div className="mt-6 rounded-2xl border-l-4 border-[#F0A7A1] bg-[#FFF7F7] px-5 py-4">
-                          <p className="text-[15px] italic leading-7 text-[#475467]">
-                            “Our commitment to privacy means we never sell your restaurant&apos;s
-                            proprietary data to third-party marketing firms.”
-                          </p>
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 rounded-2xl border border-[#EAECF0] bg-white px-4 py-3 shadow-[0_1px_2px_rgba(16,24,40,0.04)] sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex -space-x-2">
-                  <div className="flex size-8 items-center justify-center rounded-full border-2 border-white bg-[#101828] text-xs font-semibold text-white">
-                    S
-                  </div>
-                  <div className="flex size-8 items-center justify-center rounded-full border-2 border-white bg-[#F2F4F7] text-[10px] font-semibold text-[#344054]">
-                    +2
-                  </div>
-                </div>
-
-                <p className="text-sm text-[#667085]">
-                  Currently viewing: <span className="font-semibold text-[#344054]">Sarah Chen</span>{" "}
-                  and 2 others
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase text-[#98A2B3]">
+                  {t("status")}
+                </p>
+                <p className="mt-2 text-xl font-semibold text-[#101828]">
+                  {isDirty ? t("unsaved") : t("synced")}
                 </p>
               </div>
+              <ShieldCheck className={cn("size-5", isDirty ? "text-[#F79009]" : "text-[#12B76A]")} />
+            </div>
+          </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  className={`${actionButtonClassName} bg-[#F2F4F7] text-[#344054] hover:bg-[#E4E7EC]`}
-                >
-                  Save as Draft
-                </button>
+          <div className="rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+            <p className="text-[11px] font-semibold uppercase text-[#98A2B3]">
+              {t("coverage")}
+            </p>
+            <p className="mt-2 text-xl font-semibold text-[#101828]">
+              {wordCount.toLocaleString()} {t("words")}
+            </p>
+            <p className="mt-1 text-xs text-[#667085]">
+              {characterCount.toLocaleString()} {t("characters")}
+            </p>
+          </div>
 
-                <button
-                  type="button"
-                  className={`${actionButtonClassName} bg-[#D92D20] text-white shadow-sm hover:bg-[#b42318]`}
-                >
-                  Publish Changes
-                </button>
+          <div className="rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase text-[#98A2B3]">
+                  {t("publicPopup")}
+                </p>
+                <p className="mt-2 text-xl font-semibold text-[#101828]">
+                  {hasPublishedContent ? t("available") : t("notPublished")}
+                </p>
+              </div>
+              <Globe2 className="size-5 text-[#1D7FA8]" />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+          <section className="overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+            <div className="border-b border-[#EAECF0] px-5 py-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Code2 className="size-4 text-[#C1121F]" />
+                    <h2 className="text-base font-semibold text-[#101828]">
+                      {t("editorTitle")}
+                    </h2>
+                  </div>
+                  <p className="mt-1 text-sm leading-6 text-[#667085]">
+                    {t("editorDescription")}
+                  </p>
+                </div>
+
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#F8F9FB] px-3 py-1 text-xs font-semibold text-[#475467]">
+                  <FileText className="size-3.5" />
+                  HTML
+                </span>
               </div>
             </div>
-          </div>
 
-          <div className={historyCardClassName}>
-            <div className="flex items-center gap-2">
-              <RotateCcw size={16} className="text-[#98A2B3]" />
-              <h3 className="text-sm font-semibold text-[#101828]">Version History</h3>
-            </div>
-
-            <div className="mt-5 space-y-4">
-              {versionHistoryItems.map(({ author, avatar, avatarClassName, time, summary, current }) => (
-                <div
-                  key={`${author}-${time}`}
-                  className={current ? "rounded-2xl border border-[#F3D6D8] bg-[#FFF7F7] p-4" : "rounded-2xl p-2"}
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`flex size-9 items-center justify-center rounded-full font-semibold ${avatarClassName}`}
-                    >
-                      {avatar}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-semibold text-[#101828]">{author}</p>
-                          <p className="text-xs text-[#98A2B3]">{time}</p>
-                        </div>
-
-                        {current ? (
-                          <span className="inline-flex rounded-full bg-[#D92D20] px-2 py-0.5 text-[9px] font-bold uppercase text-white">
-                            Current
-                          </span>
-                        ) : null}
-                      </div>
-
-                      <p className="mt-2 text-sm leading-6 text-[#667085]">{summary}</p>
-                    </div>
-                  </div>
+            <div className="p-5">
+              {loading ? (
+                <div className="flex min-h-[520px] items-center justify-center rounded-2xl border border-dashed border-[#D0D5DD] bg-[#FCFCFD]">
+                  <Loader2 className="size-6 animate-spin text-[#98A2B3]" />
                 </div>
-              ))}
+              ) : (
+                <Textarea
+                  value={draftPolicy}
+                  onChange={(event) => setDraftPolicy(event.target.value)}
+                  placeholder={t("placeholder")}
+                  className="min-h-[560px] resize-y rounded-2xl border-[#D0D5DD] bg-[#FCFCFD] p-5 font-mono text-sm leading-7 text-[#344054] shadow-none focus-visible:ring-[#C1121F]/20"
+                />
+              )}
             </div>
+          </section>
 
-            <div className="mt-8 flex min-h-[420px] items-end justify-center">
-              <button
+          <aside className="space-y-5">
+            <section className="overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+              <div className="border-b border-[#EAECF0] px-5 py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Eye className="size-4 text-[#1D7FA8]" />
+                      <h2 className="text-base font-semibold text-[#101828]">
+                        {t("previewTitle")}
+                      </h2>
+                    </div>
+                    <p className="mt-1 text-sm text-[#667085]">{t("previewDescription")}</p>
+                  </div>
+
+                  {isDirty ? (
+                    <span className="rounded-full bg-[#FFF7E6] px-3 py-1 text-xs font-semibold text-[#B54708]">
+                      {t("draft")}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF3] px-3 py-1 text-xs font-semibold text-[#027A48]">
+                      <CheckCircle2 className="size-3.5" />
+                      {t("live")}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-[#F8F9FB] p-4">
+                <div className="overflow-hidden rounded-[24px] border border-[#EAECF0] bg-white shadow-sm">
+                  <div className="border-b border-[#EAECF0] px-5 py-4">
+                    <p className="text-sm font-semibold text-[#101828]">{t("modalTitle")}</p>
+                    <p className="mt-1 text-xs text-[#667085]">{t("modalSubtitle")}</p>
+                  </div>
+                  <iframe
+                    title={t("previewTitle")}
+                    sandbox=""
+                    srcDoc={previewDocument}
+                    className="h-[460px] w-full bg-white"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-[#EAECF0] bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-semibold text-[#101828]">
+                    {t("publicEndpointTitle")}
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-[#667085]">
+                    {t("publicEndpointDescription")}
+                  </p>
+                </div>
+                {isFetchingPublicPolicy ? (
+                  <Loader2 className="size-4 animate-spin text-[#98A2B3]" />
+                ) : null}
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-[#EAECF0] bg-[#F8F9FB] p-3">
+                <code className="block break-all text-xs leading-5 text-[#475467]">
+                  {publicLink || t("missingRestaurant")}
+                </code>
+              </div>
+
+              <Button
                 type="button"
-                className="inline-flex items-center gap-2 text-sm font-medium text-[#667085] transition hover:text-[#344054]"
+                variant="outline"
+                onClick={handleCopyPublicLink}
+                disabled={!publicLink}
+                className="mt-4 h-10 w-full rounded-full border-[#D0D5DD] bg-white text-[#344054]"
               >
-                <span>View All History</span>
-                <ArrowRight size={15} />
-              </button>
-            </div>
-          </div>
+                <Copy />
+                {t("copyLink")}
+              </Button>
+            </section>
+          </aside>
         </div>
       </div>
     </div>
