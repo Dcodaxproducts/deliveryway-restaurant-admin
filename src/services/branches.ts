@@ -83,6 +83,7 @@ const defaultAllowedPaymentMethods = [
 const branchSettingsPatchBlocklist = [
   "openingHours",
   "openingsHours",
+  "deliveryHours",
   "holidayRanges",
   "temporaryClosure",
   "currentTemporaryClosure",
@@ -175,6 +176,26 @@ export const updateOpeningHours = async (
 ) => {
   const { data } = await api.put(
     `/branches/${branchId}/opening-hours`,
+    payload
+  );
+  return data;
+};
+
+export type DeliveryHoursValues = {
+  deliveryHours: OpeningHoursValues["openingHours"];
+};
+
+export const getDeliveryHours = async (branchId: string) => {
+  const { data } = await api.get(`/branches/${branchId}/delivery-hours`);
+  return data;
+};
+
+export const updateDeliveryHours = async (
+  branchId: string,
+  payload: DeliveryHoursValues
+) => {
+  const { data } = await api.put(
+    `/branches/${branchId}/delivery-hours`,
     payload
   );
   return data;

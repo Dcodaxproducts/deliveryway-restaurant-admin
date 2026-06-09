@@ -7,7 +7,9 @@ import {
   updateBranch,
   deleteBranch,
   createBranchesBulk,
+  getDeliveryHours,
   getOpeningHours,
+  updateDeliveryHours,
   updateOpeningHours,
   suspendBranch,
   activateBranch,
@@ -20,6 +22,7 @@ import {
   updateBranchHolidayOpeningHours,
 } from "@/services/branches/branches.api";
 import type { OpeningHoursValues } from "@/validations/branches";
+import type { DeliveryHoursValues } from "@/services/branches/branches.api";
 import { getApiErrorMessage } from "@/lib/errors";
 
 type BranchUpdateData = Parameters<typeof updateBranch>[1];
@@ -212,6 +215,43 @@ export const useUpdateOpeningHours = () => {
     onError: (error: unknown) => {
       toast.error(
         getApiErrorMessage(error, "Failed to update opening hours")
+      );
+    },
+  });
+};
+
+export const useGetDeliveryHours = (branchId: string) => {
+  return useQuery({
+    queryKey: ["branch-delivery-hours", branchId],
+    queryFn: () => getDeliveryHours(branchId),
+    enabled: !!branchId,
+  });
+};
+
+export const useUpdateDeliveryHours = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      branchId,
+      data,
+    }: {
+      branchId: string;
+      data: DeliveryHoursValues;
+    }) => updateDeliveryHours(branchId, data),
+
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["branch-delivery-hours", variables.branchId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["branches"] });
+      queryClient.invalidateQueries({ queryKey: ["branches", variables.branchId] });
+      toast.success("Delivery hours updated successfully!");
+    },
+
+    onError: (error: unknown) => {
+      toast.error(
+        getApiErrorMessage(error, "Failed to update delivery hours")
       );
     },
   });

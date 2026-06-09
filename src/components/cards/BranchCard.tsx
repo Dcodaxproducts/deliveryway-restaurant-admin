@@ -13,12 +13,14 @@ import {
   Loader2,
   Power,
   PauseCircle,
+  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BranchProps } from "@/types/branch";
 import ActionDropdown, { type ActionDropdownItem } from "../common/ActionDropdown";
 import OpeningHoursModal from "@/components/pages/Branches/components/OpeningHoursModal";
 import { AddHolidayHoursInfo } from "@/components/pages/Branches/components/AddHolidayHoursInfo";
+import DeliveryHoursModal from "@/components/pages/Branches/components/DeliveryHoursModal";
 
 import {
   useDeleteBranch,
@@ -56,6 +58,7 @@ export function BranchCard({
   const t = useTranslations("branches");
   const commonT = useTranslations("common");
   const [openingHoursOpen, setOpeningHoursOpen] = useState(false);
+  const [deliveryHoursOpen, setDeliveryHoursOpen] = useState(false);
   const [holidayHoursOpen, setHolidayHoursOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [coverModalOpen, setCoverModalOpen] = useState(false);
@@ -173,6 +176,11 @@ export function BranchCard({
             label: t("openingHours"),
             onClick: () => setOpeningHoursOpen(true),
             icon: <Store size={16} />,
+          },
+          {
+            label: t("deliveryHours"),
+            onClick: () => setDeliveryHoursOpen(true),
+            icon: <Truck size={16} />,
           },
           {
             label: t("holidayHours"),
@@ -394,6 +402,13 @@ export function BranchCard({
       <OpeningHoursModal
         open={openingHoursOpen}
         onOpenChange={setOpeningHoursOpen}
+        branchId={id}
+        branchName={name}
+      />
+
+      <DeliveryHoursModal
+        open={deliveryHoursOpen}
+        onOpenChange={setDeliveryHoursOpen}
         branchId={id}
         branchName={name}
       />

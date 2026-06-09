@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import api from "@/lib/axios";
 import {
+  getDeliveryHours,
   updateBranch,
+  updateDeliveryHours,
   updateBranchHolidayOpeningHours,
 } from "@/services/branches";
 
@@ -37,6 +39,7 @@ describe("branches service", () => {
           settings: {
             allowedOrderTypes: ["DELIVERY"],
             openingHours: [{ dayOfWeek: "MONDAY" }],
+            deliveryHours: [{ dayOfWeek: "TUESDAY" }],
             holidayRanges: [{ fromDate: "2026-01-01" }],
             customSetting: "keep-me",
           },
@@ -116,6 +119,38 @@ describe("branches service", () => {
     );
     expect(mockedApi.put).not.toHaveBeenCalledWith(
       "/api/v1/branches/branch-1/holiday-opening-hours",
+      payload
+    );
+  });
+
+  it("gets and updates delivery hours without duplicating api version prefix", async () => {
+    const payload = {
+      deliveryHours: [
+        {
+          dayOfWeek: "MONDAY" as const,
+          isClosed: false,
+          openTime: "10:00",
+          closeTime: "22:00",
+          breakTimes: [{ startTime: "14:00", endTime: "15:00" }],
+        },
+      ],
+    };
+
+    mockedApi.get.mockResolvedValueOnce({ data: { data: payload } });
+    mockedApi.put.mockResolvedValueOnce({ data: { success: true } });
+
+    await getDeliveryHours("branch-1");
+    await updateDeliveryHours("branch-1", payload);
+
+    expect(mockedApi.get).toHaveBeenCalledWith(
+      "/branches/branch-1/delivery-hours"
+    );
+    expect(mockedApi.put).toHaveBeenCalledWith(
+      "/branches/branch-1/delivery-hours",
+      payload
+    );
+    expect(mockedApi.put).not.toHaveBeenCalledWith(
+      "/api/v1/branches/branch-1/delivery-hours",
       payload
     );
   });

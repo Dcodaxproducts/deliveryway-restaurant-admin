@@ -197,6 +197,7 @@ describe("edit branch delivery and settings mapper", () => {
       allowedOrderTypes: ["DELIVERY"],
       openingHours: [{ dayOfWeek: "MONDAY" }],
       openingsHours: [{ dayOfWeek: "TUESDAY" }],
+      deliveryHours: [{ dayOfWeek: "WEDNESDAY" }],
       holidayRanges: [{ fromDate: "2026-01-01" }],
       temporaryClosure: { isClosed: true },
       customSetting: "keep-me",

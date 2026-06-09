@@ -30,6 +30,7 @@ const DELIVERY_MODES: DeliveryMode[] = ["RADIUS", "ZONE", "ZONE_BANDS", "POSTAL_
 const BRANCH_SETTINGS_PATCH_BLOCKLIST = [
   "openingHours",
   "openingsHours",
+  "deliveryHours",
   "holidayRanges",
   "temporaryClosure",
   "currentTemporaryClosure",
