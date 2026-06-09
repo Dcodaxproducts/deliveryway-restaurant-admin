@@ -24,13 +24,18 @@ import {
   useUpdateCartItemQuantity,
 } from "@/hooks/usePos";
 import { useTranslations } from "next-intl";
+import {
+  formatPosCartBilling,
+  formatPosCartItems,
+  type PosCartLineItem,
+} from "@/components/pages/Pos/components/pos/pos-cart-pricing";
 
 export default function PosCart() {
   const t = useTranslations("pos");
   const commonT = useTranslations("common");
   const { branchId, isBranchAdmin } = useAuth();
 
-  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [cartItems, setCartItems] = useState<PosCartLineItem[]>([]);
   const [placingOrder, setPlacingOrder] = useState(false);
 
   const [orderType, setOrderType] = useState<"TAKEAWAY" | "DELIVERY">("TAKEAWAY");
@@ -56,16 +61,7 @@ useEffect(() => {
   const loadingAddresses = addressesQuery.isLoading;
 
 useEffect(() => {
-  const items = cartQuery.data?.data?.items || [];
-  const formatted = items.map((i: any) => ({
-    id: i.id,
-    menuItemId: i.menuItemId,
-    name: i.menuItem.name,
-    price: Number(i.menuItem.unitPrice),
-    quantity: i.quantity,
-    img: i.menuItem.imageUrl,
-  }));
-  setCartItems(formatted);
+  setCartItems(formatPosCartItems(cartQuery.data));
 }, [cartQuery.data]);
 
 useEffect(() => {
@@ -88,7 +84,9 @@ useEffect(() => {
 
       setCartItems((prev) =>
         prev.map((i) =>
-          i.id === id ? { ...i, quantity: newQty } : i
+          i.id === id
+            ? { ...i, quantity: newQty, lineTotal: i.unitPrice * newQty }
+            : i
         )
       );
     } catch {
@@ -196,10 +194,8 @@ setSelectedAddress(null);
     }
   };
 
-  const total = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
+  const billing = formatPosCartBilling(cartQuery.data, cartItems);
+  const formatMoney = (amount: number) => `$${amount.toFixed(2)}`;
 
   return (
     <div className="w-full bg-white rounded-xl border p-4 flex flex-col gap-4">
@@ -239,8 +235,21 @@ setSelectedAddress(null);
                   <div className="flex-1">
                     <p className="text-sm font-medium">{item.name}</p>
                     <p className="text-xs text-gray-500">
-                      ${item.price} × {item.quantity}
+                      {formatMoney(item.unitPrice)} × {item.quantity}
                     </p>
+                    {item.modifiers.length > 0 ? (
+                      <div className="mt-1 space-y-0.5">
+                        {item.modifiers.map((modifier, modifierIndex) => (
+                          <p
+                            key={`${item.id}-${modifier.id || modifierIndex}`}
+                            className="text-[11px] leading-4 text-gray-400"
+                          >
+                            {modifier.name} + {formatMoney(modifier.unitPrice)} ×{" "}
+                            {modifier.quantity}
+                          </p>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -349,14 +358,49 @@ setSelectedAddress(null);
         <CollapsibleContent className="space-y-3 text-sm">
           <div className="flex justify-between text-gray-500">
             <span>{t("subtotal")}</span>
-            <span>${total.toFixed(2)}</span>
+            <span>{formatMoney(billing.subtotal)}</span>
           </div>
+
+          {billing.deliveryFee > 0 ? (
+            <div className="flex justify-between text-gray-500">
+              <span>{t("deliveryFee")}</span>
+              <span>{formatMoney(billing.deliveryFee)}</span>
+            </div>
+          ) : null}
+
+          {billing.taxAmount > 0 ? (
+            <div className="flex justify-between text-gray-500">
+              <span>{t("tax")}</span>
+              <span>{formatMoney(billing.taxAmount)}</span>
+            </div>
+          ) : null}
+
+          {billing.serviceChargeAmount > 0 ? (
+            <div className="flex justify-between text-gray-500">
+              <span>{t("serviceCharge")}</span>
+              <span>{formatMoney(billing.serviceChargeAmount)}</span>
+            </div>
+          ) : null}
+
+          {billing.tipAmount > 0 ? (
+            <div className="flex justify-between text-gray-500">
+              <span>{t("tip")}</span>
+              <span>{formatMoney(billing.tipAmount)}</span>
+            </div>
+          ) : null}
+
+          {billing.discountAmount > 0 ? (
+            <div className="flex justify-between text-emerald-600">
+              <span>{t("discount")}</span>
+              <span>-{formatMoney(billing.discountAmount)}</span>
+            </div>
+          ) : null}
 
           <Separator />
 
           <div className="flex justify-between font-semibold">
             <span>{t("total")}</span>
-            <span>${total.toFixed(2)}</span>
+            <span>{formatMoney(billing.totalAmount)}</span>
           </div>
         </CollapsibleContent>
       </Collapsible>
