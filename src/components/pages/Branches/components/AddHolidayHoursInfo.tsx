@@ -510,7 +510,7 @@ function HolidayHourItem({
       </div>
 
       <div className="grid gap-4 p-4 md:grid-cols-12">
-        <div className="md:col-span-5">
+        <div className="md:col-span-12">
           <FieldGroup label={labels.holidayDateOrRange} required>
           <div className={`relative ${calendarOpen ? "z-30" : ""}`}>
             <button
@@ -566,7 +566,7 @@ function HolidayHourItem({
         </div>
 
         <div
-          className={`grid gap-4 md:col-span-7 ${
+          className={`grid gap-4 md:col-span-12 ${
             row.isClosed ? "grid-cols-1" : "sm:grid-cols-2"
           }`}
         >
@@ -598,7 +598,7 @@ function HolidayHourItem({
                     onChange={(event) =>
                       onChange(row.id, "openTime", event.target.value)
                     }
-                    className="h-[44px] w-full min-w-[150px] rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                   />
                 </div>
               </FieldGroup>
@@ -617,7 +617,7 @@ function HolidayHourItem({
                     onChange={(event) =>
                       onChange(row.id, "closeTime", event.target.value)
                     }
-                    className="h-[44px] w-full min-w-[150px] rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                   />
                 </div>
               </FieldGroup>
