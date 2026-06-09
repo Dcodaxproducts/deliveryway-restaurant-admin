@@ -85,6 +85,7 @@ export const normalizeOrder = (value: unknown): Order | null => {
     status: getString(value, "status"),
     totalAmount: getNumber(value, "totalAmount"),
     createdAt: getString(value, "createdAt"),
+    orderTime: getOptionalString(value, "orderTime"),
     branchId: getNullableString(value, "branchId"),
     branch: normalizeOrderBranch(value.branch),
     customer: normalizeOrderCustomer(value.customer),
@@ -143,6 +144,7 @@ export const updateOrderStatus = async (
     cleanParams({
       status: payload.status,
       deliveryOtp: payload.deliveryOtp?.trim(),
+      orderTime: payload.orderTime?.trim(),
     })
   );
 

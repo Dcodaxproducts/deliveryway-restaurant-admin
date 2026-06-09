@@ -5,6 +5,7 @@ export type Order = {
   status: string;
   totalAmount?: number;
   createdAt: string;
+  orderTime?: string;
   branchId?: string | null;
   branch?: { id?: string; name?: string } | null;
   customer?: { fullName?: string; name?: string } | null;
@@ -14,6 +15,7 @@ export type Order = {
 export type OrderStatusUpdatePayload = {
   status: string;
   deliveryOtp?: string;
+  orderTime?: string;
 };
 
 export type OrderStatusOption = {

@@ -16,4 +16,14 @@ describe("order status validation", () => {
       }).success
     ).toBe(true);
   });
+
+  it("allows optional acceptance date and time fields", () => {
+    expect(
+      orderStatusUpdateSchema.safeParse({
+        status: "CONFIRMED",
+        orderDate: "2026-06-09",
+        orderTimeClock: "12:30",
+      }).success
+    ).toBe(true);
+  });
 });

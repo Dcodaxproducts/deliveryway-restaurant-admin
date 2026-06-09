@@ -67,4 +67,18 @@ describe("orders service", () => {
       deliveryOtp: "1234",
     });
   });
+
+  it("sends orderTime when accepting an order", async () => {
+    mockedPatch.mockResolvedValue(orderResponse);
+
+    await updateOrderStatus("order-1", {
+      status: "CONFIRMED",
+      orderTime: "2026-06-09T12:30:00.000Z",
+    });
+
+    expect(mockedPatch).toHaveBeenCalledWith("/orders/order-1/status", {
+      status: "CONFIRMED",
+      orderTime: "2026-06-09T12:30:00.000Z",
+    });
+  });
 });
