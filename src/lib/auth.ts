@@ -66,6 +66,32 @@ const getBooleanValue = (
   return typeof value === "boolean" ? value : undefined;
 };
 
+const normalizeRoleName = (role?: string | null) => {
+  return role?.trim().replace(/[\s-]+/g, "_").toUpperCase() || "";
+};
+
+const getRoleValue = (
+  source: Record<string, unknown> | null | undefined,
+  fallback?: Partial<AuthUser> | null
+) => {
+  const role = source?.role;
+
+  if (typeof role === "string") {
+    return normalizeRoleName(role);
+  }
+
+  if (isRecord(role)) {
+    return normalizeRoleName(
+      getStringValue(role, "name") ??
+        getStringValue(role, "key") ??
+        getStringValue(role, "code") ??
+        getStringValue(role, "value")
+    );
+  }
+
+  return normalizeRoleName(fallback?.role);
+};
+
 const getProfile = (
   source: Record<string, unknown>,
   fallback?: Partial<AuthUser> | null
@@ -87,11 +113,15 @@ const getProfile = (
 };
 
 export const isBranchAdminRole = (role?: string | null) => {
-  return role === ADMIN_ROLES.BRANCH_ADMIN;
+  return normalizeRoleName(role) === ADMIN_ROLES.BRANCH_ADMIN;
 };
 
 export const isRestaurantAdminRole = (role?: string | null) => {
-  return role === ADMIN_ROLES.BUSINESS_ADMIN || role === ADMIN_ROLES.RESTAURANT_ADMIN;
+  const normalizedRole = normalizeRoleName(role);
+  return (
+    normalizedRole === ADMIN_ROLES.BUSINESS_ADMIN ||
+    normalizedRole === ADMIN_ROLES.RESTAURANT_ADMIN
+  );
 };
 
 export const isAllowedAdminRole = (role?: string | null) => {
@@ -152,7 +182,7 @@ export const normalizeUser = (
     ...(rawRecord ?? {}),
     id: String(source.id ?? fallback?.id ?? ""),
     email: getStringValue(source, "email") ?? fallback?.email ?? "",
-    role: getStringValue(source, "role") ?? fallback?.role ?? "",
+    role: getRoleValue(source, fallback),
     tenantId,
     restaurantId,
     branchId,
@@ -237,9 +267,10 @@ export const getAvatarUrl = (user?: AuthUser | null) => {
 };
 
 export const getRoleLabel = (role?: string | null) => {
-  if (role === ADMIN_ROLES.BRANCH_ADMIN) return "Branch Admin";
-  if (role === ADMIN_ROLES.RESTAURANT_ADMIN) return "Restaurant Admin";
-  if (role === ADMIN_ROLES.BUSINESS_ADMIN) return "Business Admin";
+  const normalizedRole = normalizeRoleName(role);
+  if (normalizedRole === ADMIN_ROLES.BRANCH_ADMIN) return "Branch Admin";
+  if (normalizedRole === ADMIN_ROLES.RESTAURANT_ADMIN) return "Restaurant Admin";
+  if (normalizedRole === ADMIN_ROLES.BUSINESS_ADMIN) return "Business Admin";
   return role || "Admin";
 };
 

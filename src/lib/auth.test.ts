@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeUser } from "@/lib/auth";
+import { isBranchAdminRole, normalizeUser } from "@/lib/auth";
 
 describe("auth helpers", () => {
   it("normalizes restaurant id from a branch admin branch relationship", () => {
@@ -38,5 +38,29 @@ describe("auth helpers", () => {
 
     expect(user?.restaurantId).toBe("restaurant-2");
     expect(user?.branchId).toBe("branch-2");
+  });
+
+  it("normalizes branch admin role casing from auth payloads", () => {
+    const user = normalizeUser({
+      id: "branch-admin-3",
+      email: "role@example.com",
+      role: "branch-admin",
+    });
+
+    expect(user?.role).toBe("BRANCH_ADMIN");
+    expect(isBranchAdminRole(user?.role)).toBe(true);
+  });
+
+  it("normalizes branch admin role from nested role objects", () => {
+    const user = normalizeUser({
+      id: "branch-admin-4",
+      email: "role-object@example.com",
+      role: {
+        name: "branch admin",
+      },
+    });
+
+    expect(user?.role).toBe("BRANCH_ADMIN");
+    expect(isBranchAdminRole(user?.role)).toBe(true);
   });
 });

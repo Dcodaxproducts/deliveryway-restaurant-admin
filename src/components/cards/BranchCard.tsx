@@ -68,7 +68,7 @@ export function BranchCard({
   const temporaryClosureMutation = useUpdateBranchTemporaryClosure();
   const deleteMenuMutation = useDeleteRestaurantMenu();
 
-  const { isBranchAdmin } = useAuth();
+  const { isBranchAdmin, loading: authLoading } = useAuth();
 
   const isTemporarilyClosed = Boolean(
     availability?.isTemporarilyClosed ||
@@ -85,8 +85,8 @@ export function BranchCard({
     Store;
 
   const isBranchEntity = Boolean(openDialog) || branchAdminMode;
-  const canDelete = allowDelete && !isBranchAdmin;
-  const canUseLifecycleActions = allowLifecycleActions && !isBranchAdmin;
+  const canDelete = allowDelete && !authLoading && !isBranchAdmin;
+  const canUseLifecycleActions = allowLifecycleActions && !authLoading && !isBranchAdmin;
   const canUseMediaActions = isBranchEntity && showMediaActions;
 
   const handleDelete = async () => {
