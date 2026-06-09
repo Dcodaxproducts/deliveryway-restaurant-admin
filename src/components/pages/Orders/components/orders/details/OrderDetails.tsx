@@ -1,7 +1,14 @@
 "use client";
 
-import { X } from "lucide-react";
+import { CreditCard, MapPin, Navigation, ReceiptText, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+
+import {
+  formatDeliveryAddress,
+  formatPaymentMethod,
+  getMapsUrl,
+  getSelectedPaymentMethod,
+} from "@/components/pages/Orders/components/orders/details/order-details-utils";
 
 const formatDate = (date?: string) => {
   if (!date) return "-";
@@ -11,6 +18,13 @@ const formatDate = (date?: string) => {
 const OrderDetailsMain = ({ order }: { order: any }) => {
   const t = useTranslations("orders");
   const items = order?.items || [];
+  const selectedPaymentMethod = getSelectedPaymentMethod(order);
+  const paymentLabel = formatPaymentMethod(selectedPaymentMethod);
+  const deliveryAddress = formatDeliveryAddress(order?.deliveryAddress);
+  const mapsUrl = getMapsUrl(order?.deliveryAddress);
+  const latestTransaction = Array.isArray(order?.transactions)
+    ? order.transactions[0]
+    : null;
 
   const history = [
     {
@@ -70,6 +84,7 @@ const OrderDetailsMain = ({ order }: { order: any }) => {
                   <div className="flex gap-3 sm:gap-4 min-w-0">
                     <img
                       src={item?.menuItem?.imageUrl}
+                      alt={item?.menuItemName || t("itemFallback")}
                       className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover flex-shrink-0"
                     />
 
@@ -110,52 +125,121 @@ const OrderDetailsMain = ({ order }: { order: any }) => {
           </div>
         </div>
 
-        {/* HISTORY */}
-        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm">
-          <h3 className="text-base sm:text-lg font-semibold mb-4 sm:mb-6">
-            {t("history")}
-          </h3>
+        <div className="space-y-6">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm">
+            <div className="flex items-center justify-between gap-3 mb-5">
+              <div>
+                <h3 className="text-base sm:text-lg font-semibold">
+                  {t("fulfillmentDetails")}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t("fulfillmentDetailsDescription")}
+                </p>
+              </div>
+              <ReceiptText className="w-5 h-5 text-red-500" />
+            </div>
 
-          <div className="space-y-0">
-            {history.map((h, i, arr) => {
-              const nextIsActive = arr[i + 1]?.active;
-
-              return (
-                <div key={i} className="relative flex gap-3 sm:gap-4 items-start">
-                  
-                  {/* TIMELINE */}
-                  <div className="flex flex-col items-center pt-[4px] sm:pt-[6px]">
-                    
-                    <span
-                      className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${
-                        h.active ? "bg-red-500" : "bg-gray-300"
-                      }`}
-                    />
-
-                    {i !== arr.length - 1 && (
-                      <span
-                        className={`w-px h-full ${
-                          h.active && nextIsActive
-                            ? "bg-red-500"
-                            : "bg-gray-200"
-                        }`}
-                        style={{ minHeight: "24px" }}
-                      />
-                    )}
-                  </div>
-
-                  {/* CONTENT */}
-                  <div className="pb-5 sm:pb-6">
-                    <p className="font-medium text-gray-900 text-sm sm:text-base leading-tight">
-                      {h.label}
+            <div className="space-y-4">
+              <div className="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
+                <div className="flex items-start gap-3">
+                  <span className="rounded-lg bg-red-50 p-2 text-red-600">
+                    <CreditCard className="w-4 h-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase text-muted-foreground">
+                      {t("selectedPaymentMethod")}
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-500 mt-[2px] leading-tight">
-                      {h.date}
+                    <p className="mt-1 font-semibold text-gray-950">
+                      {paymentLabel || t("notAvailable")}
                     </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {t("paymentStatus")}: {order?.paymentStatus || t("notAvailable")}
+                    </p>
+                    {latestTransaction?.note ? (
+                      <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                        {latestTransaction.note}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
-              );
-            })}
+              </div>
+
+              <div className="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
+                <div className="flex items-start gap-3">
+                  <span className="rounded-lg bg-red-50 p-2 text-red-600">
+                    <MapPin className="w-4 h-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase text-muted-foreground">
+                      {t("deliveryAddress")}
+                    </p>
+                    <p className="mt-1 whitespace-pre-line text-sm font-medium leading-relaxed text-gray-950">
+                      {deliveryAddress || t("takeawayOrder")}
+                    </p>
+                    {mapsUrl ? (
+                      <a
+                        href={mapsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-red-600 hover:text-red-700"
+                      >
+                        <Navigation className="w-3.5 h-3.5" />
+                        {t("openInMaps")}
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* HISTORY */}
+          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm">
+            <h3 className="text-base sm:text-lg font-semibold mb-4 sm:mb-6">
+              {t("history")}
+            </h3>
+
+            <div className="space-y-0">
+              {history.map((h, i, arr) => {
+                const nextIsActive = arr[i + 1]?.active;
+
+                return (
+                  <div key={i} className="relative flex gap-3 sm:gap-4 items-start">
+                    
+                    {/* TIMELINE */}
+                    <div className="flex flex-col items-center pt-[4px] sm:pt-[6px]">
+                      
+                      <span
+                        className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${
+                          h.active ? "bg-red-500" : "bg-gray-300"
+                        }`}
+                      />
+
+                      {i !== arr.length - 1 && (
+                        <span
+                          className={`w-px h-full ${
+                            h.active && nextIsActive
+                              ? "bg-red-500"
+                              : "bg-gray-200"
+                          }`}
+                          style={{ minHeight: "24px" }}
+                        />
+                      )}
+                    </div>
+
+                    {/* CONTENT */}
+                    <div className="pb-5 sm:pb-6">
+                      <p className="font-medium text-gray-900 text-sm sm:text-base leading-tight">
+                        {h.label}
+                      </p>
+                      <p className="text-xs sm:text-sm text-gray-500 mt-[2px] leading-tight">
+                        {h.date}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 

@@ -4,32 +4,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Phone, MapPin } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { formatDeliveryAddress } from "@/components/pages/Orders/components/orders/details/order-details-utils";
+
 type Props = {
   order: any;
 };
 
 export default function OrderTrackingSection({ order }: Props) {
   const t = useTranslations("orders");
-  // =========================
-  // STATUS → PROGRESS MAPPING
-  // =========================
-  const getProgressIndex = () => {
-    switch (order?.status) {
-      case "PLACED":
-        return 1;
-      case "PREPARING":
-        return 2;
-      case "ON_DELIVERY":
-        return 3;
-      case "DELIVERED":
-        return 4;
-      default:
-        return 2; // fallback so UI never looks broken
-    }
-  };
-
-  const progress = getProgressIndex();
-
+  const deliveryAddress = formatDeliveryAddress(order?.deliveryAddress);
   // =========================
   // ESTIMATED TIME
   // =========================
@@ -99,7 +82,7 @@ export default function OrderTrackingSection({ order }: Props) {
             <div className="flex items-center gap-4">
               <img
                 src={order?.customer?.avatarUrl || "/dummy-user.jpg"}
-                alt=""
+                alt={order?.customer?.fullName || t("customer")}
                 className="w-14 h-14 rounded-xl object-cover"
               />
 
@@ -123,7 +106,9 @@ export default function OrderTrackingSection({ order }: Props) {
 
             <div className="flex items-center gap-3 text-sm text-muted-foreground max-w-[260px]">
               <MapPin size={16} />
-              {order?.deliveryAddress?.address || t("takeawayOrder")}
+              <span className="whitespace-pre-line">
+                {deliveryAddress || t("takeawayOrder")}
+              </span>
             </div>
           </div>
         </div>

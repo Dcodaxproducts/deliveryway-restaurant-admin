@@ -3,9 +3,12 @@
 import { Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { formatDeliveryAddress } from "@/components/pages/Orders/components/orders/details/order-details-utils";
+
 const UserProfile = ({ order }: { order: any }) => {
   const t = useTranslations("orders");
   const customer = order?.customer;
+  const deliveryAddress = formatDeliveryAddress(order?.deliveryAddress);
 
   return (
     <div className="pt-9 min-w-[320px] mx-auto bg-white rounded-lg shadow-lg relative h-full">
@@ -42,8 +45,8 @@ const UserProfile = ({ order }: { order: any }) => {
           <Truck className="w-5 h-5" />
         </div>
 
-        <p className="text-sm">
-          {order?.deliveryAddress?.address || t("takeawayOrder")}
+        <p className="text-sm whitespace-pre-line">
+          {deliveryAddress || t("takeawayOrder")}
         </p>
       </div>
     </div>
