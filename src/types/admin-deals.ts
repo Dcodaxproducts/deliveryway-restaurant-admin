@@ -44,8 +44,8 @@ export type AdminDeal = {
   minOrderAmount?: number | null;
   maxUses?: number | null;
   maxUsesPerCustomer?: number | null;
-  startsAt: string;
-  expiresAt: string;
+  startsAt?: string | null;
+  expiresAt?: string | null;
   dealSelectionMode: AdminDealSelectionMode;
   dealRequiredQuantity?: number | null;
   scopeMenuItemIds: string[];
@@ -94,8 +94,8 @@ export type AdminDealFormValues = {
   thumbnailUrl?: string;
   imageUrl?: string;
   discountValue: number;
-  startsAt: string;
-  expiresAt: string;
+  startsAt?: string;
+  expiresAt?: string;
   dealSelectionMode: AdminDealSelectionMode;
   dealSourceType: AdminDealSourceType;
   dealRequiredQuantity?: number | null;
@@ -112,8 +112,8 @@ export type AdminDealCreatePayload = {
   restaurantId?: string;
   branchId?: string;
   discountValue: number;
-  startsAt: string;
-  expiresAt: string;
+  startsAt?: string;
+  expiresAt?: string;
   dealSelectionMode: AdminDealSelectionMode;
   dealRequiredQuantity?: number;
   scopeMenuItemIds?: string[];

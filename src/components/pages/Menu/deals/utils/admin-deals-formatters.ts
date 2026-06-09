@@ -111,7 +111,7 @@ export const toDateTimeLocalValue = (iso: string | null | undefined) => {
   return localDate.toISOString().slice(0, 16);
 };
 
-export const fromDateTimeLocalValue = (value: string) => {
+export const fromDateTimeLocalValue = (value?: string | null) => {
   if (!value) return "";
 
   const date = new Date(value);

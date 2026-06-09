@@ -31,6 +31,19 @@ const getTrimmedUrl = (value: string | null | undefined) => {
   return getOptionalThumbnailUrl(value);
 };
 
+const optionalDateTimeLocalSchema = z
+  .string()
+  .trim()
+  .optional()
+  .transform((value) => (value ? value : undefined));
+
+const getDateFromOptionalDateTime = (value: string | undefined) => {
+  if (!value) return null;
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 export const adminDealFormSchema = z
   .object({
     title: z.string().trim().min(1, "Title is required."),
@@ -43,8 +56,8 @@ export const adminDealFormSchema = z
       (value) => Number(value),
       z.number().positive("Fixed Deal Price must be greater than 0.")
     ),
-    startsAt: z.string().trim().min(1, "Starts At is required."),
-    expiresAt: z.string().trim().min(1, "Expires At is required."),
+    startsAt: optionalDateTimeLocalSchema,
+    expiresAt: optionalDateTimeLocalSchema,
     dealSelectionMode: z.enum(["FIXED_ITEMS", "FLEXIBLE_ITEMS"]),
     dealSourceType: z.enum(["ITEMS", "CATEGORIES"]),
     dealRequiredQuantity: requiredQuantitySchema,
@@ -53,14 +66,26 @@ export const adminDealFormSchema = z
     isActive: z.boolean().default(true),
   })
   .superRefine((values, context) => {
-    const startsAt = new Date(values.startsAt);
-    const expiresAt = new Date(values.expiresAt);
+    const startsAt = getDateFromOptionalDateTime(values.startsAt);
+    const expiresAt = getDateFromOptionalDateTime(values.expiresAt);
 
-    if (
-      !Number.isNaN(startsAt.getTime()) &&
-      !Number.isNaN(expiresAt.getTime()) &&
-      expiresAt <= startsAt
-    ) {
+    if (values.startsAt && !startsAt) {
+      context.addIssue({
+        code: "custom",
+        path: ["startsAt"],
+        message: "Starts At must be a valid date and time.",
+      });
+    }
+
+    if (values.expiresAt && !expiresAt) {
+      context.addIssue({
+        code: "custom",
+        path: ["expiresAt"],
+        message: "Expires At must be a valid date and time.",
+      });
+    }
+
+    if (startsAt && expiresAt && expiresAt <= startsAt) {
       context.addIssue({
         code: "custom",
         path: ["expiresAt"],
@@ -148,11 +173,14 @@ const buildBasePayload = (values: AdminDealFormValues): AdminDealCreatePayload =
   const payload: AdminDealCreatePayload = {
     title: values.title.trim(),
     discountValue: values.discountValue,
-    startsAt: fromDateTimeLocalValue(values.startsAt),
-    expiresAt: fromDateTimeLocalValue(values.expiresAt),
     dealSelectionMode: values.dealSelectionMode,
     isActive: values.isActive,
   };
+
+  const startsAt = fromDateTimeLocalValue(values.startsAt);
+  const expiresAt = fromDateTimeLocalValue(values.expiresAt);
+  if (startsAt) payload.startsAt = startsAt;
+  if (expiresAt) payload.expiresAt = expiresAt;
 
   if (values.description?.trim()) payload.description = values.description.trim();
   if (values.restaurantId?.trim()) payload.restaurantId = values.restaurantId.trim();

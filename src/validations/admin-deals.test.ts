@@ -50,6 +50,26 @@ describe("admin deal validation", () => {
     expect(result.success).toBe(false);
   });
 
+  it("allows empty start and expiry dates", () => {
+    const result = adminDealFormSchema.safeParse({
+      ...validValues,
+      startsAt: "",
+      expiresAt: "",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid start and expiry dates when provided", () => {
+    const result = adminDealFormSchema.safeParse({
+      ...validValues,
+      startsAt: "invalid",
+      expiresAt: "also-invalid",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it("fixed item deal requires at least 2 items", () => {
     const result = adminDealFormSchema.safeParse({
       ...validValues,
@@ -143,6 +163,17 @@ describe("admin deal validation", () => {
     const payload = buildAdminDealCreatePayload(validValues);
 
     expect(payload.dealSelectionMode).toBe("FIXED_ITEMS");
+  });
+
+  it("payload omits start and expiry dates when blank", () => {
+    const payload = buildAdminDealCreatePayload({
+      ...validValues,
+      startsAt: "",
+      expiresAt: "",
+    });
+
+    expect(payload).not.toHaveProperty("startsAt");
+    expect(payload).not.toHaveProperty("expiresAt");
   });
 
   it("payload includes dealRequiredQuantity only for flexible deals", () => {

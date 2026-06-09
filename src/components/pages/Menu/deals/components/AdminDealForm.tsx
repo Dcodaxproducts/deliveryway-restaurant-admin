@@ -116,8 +116,11 @@ export default function AdminDealForm({
   });
   const dealSelectionMode = useWatch({ control, name: "dealSelectionMode" });
   const dealSourceType = useWatch({ control, name: "dealSourceType" });
+  const startsAt = useWatch({ control, name: "startsAt" });
+  const expiresAt = useWatch({ control, name: "expiresAt" });
   const isFlexibleDeal = dealSelectionMode === "FLEXIBLE_ITEMS";
   const isCategorySource = isFlexibleDeal && dealSourceType === "CATEGORIES";
+  const hasCustomDealWindow = Boolean(startsAt || expiresAt);
 
   const handleDealTypeChange = (value: AdminDealFormValues["dealSelectionMode"]) => {
     setValue("dealSelectionMode", value, { shouldValidate: true });
@@ -333,7 +336,7 @@ export default function AdminDealForm({
               name="startsAt"
               render={({ field, fieldState }) => (
                 <DateField
-                  label={t("startsAt")}
+                  label={t("startsAtOptional")}
                   value={field.value}
                   error={fieldState.error?.message}
                   onChange={field.onChange}
@@ -347,7 +350,7 @@ export default function AdminDealForm({
               name="expiresAt"
               render={({ field, fieldState }) => (
                 <DateField
-                  label={t("expiresAt")}
+                  label={t("expiresAtOptional")}
                   value={field.value}
                   error={fieldState.error?.message}
                   onChange={field.onChange}
@@ -355,6 +358,12 @@ export default function AdminDealForm({
                 />
               )}
             />
+          </div>
+
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-800">
+            {hasCustomDealWindow
+              ? t("optionalDateWindowHelp")
+              : t("permanentDealHelp")}
           </div>
 
           <Controller
@@ -516,7 +525,7 @@ function SelectField({
 
 type DateFieldProps = {
   label: string;
-  value: string;
+  value?: string;
   error?: string;
   onChange: (value: string) => void;
   onBlur: () => void;
@@ -528,7 +537,7 @@ function DateField({ label, value, error, onChange, onBlur }: DateFieldProps) {
       <Label>{label}</Label>
       <Input
         type="datetime-local"
-        value={value}
+        value={value ?? ""}
         onChange={(event) => onChange(event.target.value)}
         onBlur={onBlur}
         className={INPUT_BASE_CLASS}
