@@ -293,7 +293,29 @@ export interface CreateMenuPayload {
   sortOrder?: number;
   itemIds?: string[];
   isActive?: boolean;
+  isTimed?: boolean;
+  timingConfig?: MenuTimingConfig;
 }
+
+export type MenuTimingDay =
+  | "SUNDAY"
+  | "MONDAY"
+  | "TUESDAY"
+  | "WEDNESDAY"
+  | "THURSDAY"
+  | "FRIDAY"
+  | "SATURDAY";
+
+export type MenuTimingWindow = {
+  day: MenuTimingDay;
+  start: string;
+  end: string;
+};
+
+export type MenuTimingConfig = {
+  timezone?: string;
+  windows: MenuTimingWindow[];
+};
 
 export const createMenu = async (payload: CreateMenuPayload) => {
   const { data } = await api.post("/menus", payload);
@@ -307,6 +329,8 @@ export interface UpdateMenuPayload {
   sortOrder?: number;
   itemIds?: string[];
   isActive?: boolean;
+  isTimed?: boolean;
+  timingConfig?: MenuTimingConfig;
 }
 
 export const updateMenu = async ({

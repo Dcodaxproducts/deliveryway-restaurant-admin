@@ -41,6 +41,7 @@ export function BranchCard({
   id,
   name,
   isDefault,
+  isTimed,
   itemsCount,
   isActive,
   availability,
@@ -294,6 +295,12 @@ export function BranchCard({
                 </span>
               )}
 
+              {isTimed && (
+                <span className="text-[11px] font-medium text-primary bg-primary/10 px-2 py-[2px] rounded-full">
+                  {t("timedMenu")}
+                </span>
+              )}
+
               {isTemporarilyClosed && (
                 <span className="text-[11px] font-medium text-primary bg-primary/10 px-2 py-[2px] rounded-full">
                   {t("temporarilyClosed")}
@@ -352,6 +359,12 @@ export function BranchCard({
                     {t("main")}
                   </span>
                 </div>
+              )}
+
+              {isTimed && (
+                <span className="text-[11px] font-medium text-primary bg-primary/10 px-2 py-[2px] rounded-full">
+                  {t("timedMenu")}
+                </span>
               )}
 
               {isTemporarilyClosed && (

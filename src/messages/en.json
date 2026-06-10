@@ -1038,7 +1038,29 @@
       "created": "Menu created successfully.",
       "requestFailed": "Menu request failed.",
       "creating": "Creating...",
-      "update": "Update menu"
+      "update": "Update menu",
+      "timedMenu": "Timed menu",
+      "timedMenuDescription": "Only show this menu during selected days and hours. Overnight windows like 22:00 to 02:00 are supported.",
+      "timezone": "Timezone",
+      "timezoneDescription": "Optional. Backend falls back to Asia/Karachi when empty.",
+      "scheduleWindows": "Schedule windows",
+      "scheduleWindowsDescription": "Days are sent uppercase and times are sent in 24-hour HH:mm format.",
+      "addWindow": "Add window",
+      "removeWindow": "Remove window",
+      "day": "Day",
+      "startTime": "Start",
+      "endTime": "End",
+      "noWindowsTitle": "No active windows",
+      "noWindowsDescription": "Saving an empty timed schedule makes this menu unavailable until windows are added.",
+      "days": {
+        "SUNDAY": "Sunday",
+        "MONDAY": "Monday",
+        "TUESDAY": "Tuesday",
+        "WEDNESDAY": "Wednesday",
+        "THURSDAY": "Thursday",
+        "FRIDAY": "Friday",
+        "SATURDAY": "Saturday"
+      }
     },
     "itemModal": {
       "createTitle": "Create menu item",
@@ -1511,6 +1533,7 @@
     "phone": "Phone",
     "mainBranch": "Main Branch",
     "main": "main",
+    "timedMenu": "Timed",
     "items": "Items",
     "itemsCount": "{count} Items",
     "id": "ID",

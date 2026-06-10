@@ -9,7 +9,7 @@ import CreateMenuModal from "./CreateMenuModal";
 interface Menu {
   id: string;
   name: string;
- 
+  isTimed?: boolean;
   isDefault?: boolean;
   _count?: {
     items: number;
@@ -50,6 +50,7 @@ if (!menus || menus.length === 0) {
           name={menu.name}
           itemsCount={menu._count?.items || 0}
           isDefault={menu.isDefault}
+          isTimed={menu.isTimed}
           openMenuDetails={() => router.push(`/menu/listing?id=${menu.id}`)}
           editMenu={(id) => {
     setEditingMenuId(id);

@@ -1038,7 +1038,29 @@
       "created": "Menue erfolgreich erstellt.",
       "requestFailed": "Menueanfrage fehlgeschlagen.",
       "creating": "Wird erstellt...",
-      "update": "Menue aktualisieren"
+      "update": "Menue aktualisieren",
+      "timedMenu": "Zeitgesteuertes Menue",
+      "timedMenuDescription": "Dieses Menue nur an ausgewaehlten Tagen und Uhrzeiten anzeigen. Zeitfenster ueber Nacht wie 22:00 bis 02:00 werden unterstuetzt.",
+      "timezone": "Zeitzone",
+      "timezoneDescription": "Optional. Das Backend nutzt Asia/Karachi, wenn das Feld leer ist.",
+      "scheduleWindows": "Zeitfenster",
+      "scheduleWindowsDescription": "Tage werden in Grossbuchstaben und Zeiten im 24-Stunden-Format HH:mm gesendet.",
+      "addWindow": "Zeitfenster hinzufuegen",
+      "removeWindow": "Zeitfenster entfernen",
+      "day": "Tag",
+      "startTime": "Start",
+      "endTime": "Ende",
+      "noWindowsTitle": "Keine aktiven Zeitfenster",
+      "noWindowsDescription": "Ein leeres zeitgesteuertes Menue ist nicht verfuegbar, bis Zeitfenster hinzugefuegt werden.",
+      "days": {
+        "SUNDAY": "Sonntag",
+        "MONDAY": "Montag",
+        "TUESDAY": "Dienstag",
+        "WEDNESDAY": "Mittwoch",
+        "THURSDAY": "Donnerstag",
+        "FRIDAY": "Freitag",
+        "SATURDAY": "Samstag"
+      }
     },
     "itemModal": {
       "createTitle": "Menueartikel erstellen",
@@ -1511,6 +1533,7 @@
     "phone": "Telefon",
     "mainBranch": "Hauptfiliale",
     "main": "Hauptfiliale",
+    "timedMenu": "Zeitgesteuert",
     "items": "Artikel",
     "itemsCount": "{count} Artikel",
     "id": "ID",

@@ -2,6 +2,7 @@ export interface BranchProps {
   id: string;
   name: string;
   isDefault?: boolean;
+  isTimed?: boolean;
     isActive?: boolean;
   itemsCount?: number;
   openDialog?: (branchId: string) => void;
