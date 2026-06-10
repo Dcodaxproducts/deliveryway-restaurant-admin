@@ -1,28 +1,41 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  CircleDollarSign,
+  ListChecks,
+  Loader2,
+  Phone,
+  Search,
+  ShoppingBag,
+  Store,
+  User,
+  XCircle,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useOrders } from "@/hooks/useOrders";
-import { useAssignOrderToDeliveryman } from "@/hooks/useDeliverymen";
 import {
-  Search,
-  ShoppingBag,
-  CalendarDays,
-  CircleDollarSign,
-  CheckCircle2,
-  AlertTriangle,
-  Phone,
-  User,
-  Store,
-} from "lucide-react";
-import { useTranslations } from "next-intl";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuth } from "@/hooks/useAuth";
+import { useGetBranches } from "@/hooks/useBranches";
+import { useAssignOrdersToDeliveryman, useDeliveryman } from "@/hooks/useDeliverymen";
+import { useOrders } from "@/hooks/useOrders";
+import type { Order } from "@/types/orders";
 
 interface AssignOrderModalProps {
   open: boolean;
@@ -31,6 +44,25 @@ interface AssignOrderModalProps {
   onSuccess?: () => void;
 }
 
+type AssignmentResult = {
+  orderId: string;
+  success: boolean;
+  message?: string;
+};
+
+const ASSIGNABLE_STATUSES = [
+  "PLACED",
+  "CONFIRMED",
+  "PREPARING",
+  "READY_FOR_PICKUP",
+];
+
+const KIND_OPTIONS = ["all", "order", "group-orders"];
+
+const getOrderDisplayId = (order: Order) => order.orderNumber || order.id.slice(0, 8);
+
+const getBranchId = (order: Order) => order.branchId || order.branch?.id || null;
+
 export default function AssignOrderModal({
   open,
   onOpenChange,
@@ -38,484 +70,539 @@ export default function AssignOrderModal({
   onSuccess,
 }: AssignOrderModalProps) {
   const t = useTranslations("deliverymen");
+  const { user, isBranchAdmin } = useAuth();
   const [search, setSearch] = useState("");
-  const [selectedOrderId, setSelectedOrderId] = useState("");
+  const [branchId, setBranchId] = useState("all");
+  const [status, setStatus] = useState("READY_FOR_PICKUP");
+  const [kind, setKind] = useState("all");
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [assignmentResults, setAssignmentResults] = useState<AssignmentResult[]>([]);
 
-  const assignMutation = useAssignOrderToDeliveryman({
+  const deliverymanBranchId =
+    deliveryman?.branchId || deliveryman?.branch?.id || null;
+
+  const { data: deliverymanDetail, isFetching: isFetchingDeliveryman } =
+    useDeliveryman(open ? deliveryman?.id : undefined);
+
+  const assignMutation = useAssignOrdersToDeliveryman({
     messages: {
-      success: t("messages.orderAssigned"),
-      error: t("messages.failedAssignOrder"),
+      success: t("messages.ordersAssigned"),
+      error: t("messages.failedAssignOrders"),
     },
   });
+
+  const { data: branchesResponse } = useGetBranches({
+    restaurantId: user?.restaurantId ?? undefined,
+    includeInactive: true,
+  });
+
+  const branches = Array.isArray(branchesResponse?.data)
+    ? branchesResponse.data
+    : [];
+
+  const selectedBranchId =
+    branchId === "all" ? undefined : branchId || undefined;
 
   const { orders, loading, isFetching } = useOrders({
     page: 1,
     limit: 100,
     search,
+    restaurantId: user?.restaurantId ?? undefined,
+    branchId: selectedBranchId,
+    status,
+    orderType: "DELIVERY",
+    sortBy: "createdAt",
+    sortOrder: "DESC",
+    kind: kind === "all" ? undefined : kind,
     enabled: open,
   });
 
   useEffect(() => {
     if (!open) {
       setSearch("");
-      setSelectedOrderId("");
+      setStatus("READY_FOR_PICKUP");
+      setKind("all");
+      setSelectedOrderIds([]);
+      setAssignmentResults([]);
+      return;
     }
-  }, [open]);
 
-  const deliverymanBranchId =
-    deliveryman?.branchId || deliveryman?.branch?.id || null;
+    setBranchId(deliverymanBranchId || (isBranchAdmin ? user?.branchId || "all" : "all"));
+  }, [deliverymanBranchId, isBranchAdmin, open, user?.branchId]);
+
+  const activeDeliveryOrders = useMemo(() => {
+    const activeOrders = deliverymanDetail?.orders;
+    if (!Array.isArray(activeOrders)) return [];
+
+    return activeOrders.filter((order: any) => order?.status === "OUT_FOR_DELIVERY");
+  }, [deliverymanDetail]);
+
+  const driverCanReceiveOrders =
+    deliveryman?.status === "AVAILABLE" || deliveryman?.status === "BUSY";
+
+  const isBlockedByActiveDelivery = activeDeliveryOrders.length > 0;
+  const isDriverBlocked = !driverCanReceiveOrders || isBlockedByActiveDelivery;
 
   const filteredOrders = useMemo(() => {
-    return (orders || []).filter((order: any) => {
-      const query = search.trim().toLowerCase();
+    return (orders || []).filter((order: Order) => {
+      const isAlreadyAssigned = Boolean(order.deliverymanId);
+      const isDelivery = order.orderType === "DELIVERY";
+      const isAllowedStatus = ASSIGNABLE_STATUSES.includes(order.status);
 
-      if (!query) return true;
-
-      return (
-        order?.orderNumber?.toLowerCase().includes(query) ||
-        order?.id?.toLowerCase().includes(query) ||
-        order?.status?.toLowerCase().includes(query) ||
-        order?.orderType?.toLowerCase().includes(query) ||
-        order?.branch?.name?.toLowerCase().includes(query) ||
-        order?.customer?.fullName?.toLowerCase().includes(query)
-      );
+      return !isAlreadyAssigned && isDelivery && isAllowedStatus;
     });
-  }, [orders, search]);
+  }, [orders]);
 
-  const selectedOrder = filteredOrders.find(
-    (order: any) => order.id === selectedOrderId,
+  const selectedOrders = useMemo(
+    () => filteredOrders.filter((order: Order) => selectedOrderIds.includes(order.id)),
+    [filteredOrders, selectedOrderIds],
   );
 
-  const isBranchMatched = (order: any) => {
-    const orderBranchId = order?.branchId || order?.branch?.id || null;
+  const isBranchMatched = (order: Order) => {
+    const orderBranchId = getBranchId(order);
     return (
-      !!deliverymanBranchId &&
-      !!orderBranchId &&
+      Boolean(deliverymanBranchId) &&
+      Boolean(orderBranchId) &&
       deliverymanBranchId === orderBranchId
     );
   };
 
-  const canAssignSelectedOrder = selectedOrder
-    ? isBranchMatched(selectedOrder)
-    : false;
+  const assignableSelectedOrders = selectedOrders.filter(isBranchMatched);
+  const hasBlockedSelection = selectedOrders.length !== assignableSelectedOrders.length;
+
+  const toggleOrder = (order: Order) => {
+    if (!isBranchMatched(order) || isDriverBlocked) return;
+
+    setSelectedOrderIds((current) =>
+      current.includes(order.id)
+        ? current.filter((id) => id !== order.id)
+        : [...current, order.id],
+    );
+    setAssignmentResults([]);
+  };
 
   const handleAssign = async () => {
-    if (!deliveryman?.id || !selectedOrderId || !canAssignSelectedOrder) return;
+    if (!deliveryman?.id || assignableSelectedOrders.length === 0 || isDriverBlocked) {
+      return;
+    }
 
-    try {
-      await assignMutation.mutateAsync({
-        id: deliveryman.id,
-        orderId: selectedOrderId,
-      });
+    const results = await assignMutation.mutateAsync({
+      id: deliveryman.id,
+      orderIds: assignableSelectedOrders.map((order) => order.id),
+    });
 
+    setAssignmentResults(results);
+
+    if (results.some((result) => result.success)) {
+      setSelectedOrderIds((current) =>
+        current.filter(
+          (orderId) =>
+            !results.some((result) => result.orderId === orderId && result.success),
+        ),
+      );
       onSuccess?.();
-    } catch (error) {
-      void error;
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[96vw] max-w-5xl overflow-hidden border-0 p-0 shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div
-          className="px-6 py-5 text-white"
-          style={{
-            background: "linear-gradient(135deg, var(--primary), #9f1114)",
-          }}
-        >
-          <DialogHeader className="space-y-2">
-            <DialogTitle className="text-xl font-semibold tracking-tight text-white">
-              {t("assignOrder.title")}
-            </DialogTitle>
-            <DialogDescription className="text-sm text-white/80">
-              {t("assignOrder.description")}
-            </DialogDescription>
-          </DialogHeader>
+      <DialogContent className="max-h-[92vh] w-[98vw] max-w-[1500px] overflow-hidden border-0 p-0 shadow-2xl">
+        <div className="flex max-h-[92vh] flex-col overflow-hidden">
+          <div
+            className="px-6 py-5 text-white"
+            style={{
+              background: "linear-gradient(135deg, var(--primary), #9f1114)",
+            }}
+          >
+            <DialogHeader className="space-y-2">
+              <DialogTitle className="text-xl font-semibold tracking-tight text-white">
+                {t("assignOrder.title")}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-white/80">
+                {t("assignOrder.description")}
+              </DialogDescription>
+            </DialogHeader>
 
-          <div className="mt-4 grid gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur sm:grid-cols-3">
-            <div className="rounded-xl bg-white/10 p-3">
-              <p className="text-xs uppercase tracking-wide text-white/70">
-                {t("assignOrder.deliveryman")}
-              </p>
-              <p className="mt-1 text-sm font-semibold text-white">
-                {deliveryman
-                  ? `${deliveryman.firstName || ""} ${deliveryman.lastName || ""}`
-                  : "-"}
-              </p>
-            </div>
-
-            <div className="rounded-xl bg-white/10 p-3">
-              <p className="text-xs uppercase tracking-wide text-white/70">
-                {t("assignOrder.phone")}
-              </p>
-              <p className="mt-1 text-sm font-medium text-white">
-                {deliveryman?.phone || "-"}
-              </p>
-            </div>
-
-            <div className="rounded-xl bg-white/10 p-3">
-              <p className="text-xs uppercase tracking-wide text-white/70">
-                {t("assignOrder.branch")}
-              </p>
-              <p className="mt-1 text-sm font-medium text-white">
-                {deliveryman?.branch?.name || t("noBranch")}
-              </p>
+            <div className="mt-4 grid gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur md:grid-cols-4">
+              <SummaryTile label={t("assignOrder.deliveryman")} value={deliveryman ? `${deliveryman.firstName || ""} ${deliveryman.lastName || ""}` : "-"} />
+              <SummaryTile label={t("assignOrder.phone")} value={deliveryman?.phone || "-"} />
+              <SummaryTile label={t("assignOrder.branch")} value={deliveryman?.branch?.name || t("noBranch")} />
+              <SummaryTile label={t("assignOrder.status")} value={deliveryman?.status || "-"} />
             </div>
           </div>
-        </div>
 
-        <div className="bg-slate-50 p-6">
-          <div className="relative mb-5">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder={t("assignOrder.searchPlaceholder")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-red-100"
-            />
-          </div>
-
-          <div className="grid gap-5 lg:grid-cols-1">
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 px-4 py-3">
-                <h3 className="text-sm font-semibold text-slate-900">
-                  {t("assignOrder.availableOrders")}
-                </h3>
-                <p className="mt-1 text-xs text-slate-500">
-                  {t("assignOrder.availableOrdersDescription")}
-                </p>
+          <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-6">
+            <div className="mb-5 grid gap-3 xl:grid-cols-[1.4fr_220px_220px_180px]">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder={t("assignOrder.searchPlaceholder")}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-red-100"
+                />
               </div>
 
-              <div className="max-h-[460px] overflow-y-auto">
-                {loading || isFetching ? (
-                  <div className="flex min-h-[220px] items-center justify-center p-6 text-sm text-slate-500">
-                    {t("assignOrder.loadingOrders")}
-                  </div>
-                ) : filteredOrders.length === 0 ? (
-                  <div className="flex min-h-[220px] items-center justify-center p-6 text-sm text-slate-500">
-                    {t("assignOrder.noOrdersFound")}
-                  </div>
-                ) : (
-                  <div className="space-y-3 p-3">
-                    {filteredOrders.map((order: any) => {
-                      const isSelected = selectedOrderId === order.id;
-                      const isMatched = isBranchMatched(order);
-                      const isDisabled = !isMatched;
+              <Select
+                value={branchId}
+                onValueChange={(value) => {
+                  setBranchId(value);
+                  setSelectedOrderIds([]);
+                  setAssignmentResults([]);
+                }}
+              >
+                <SelectTrigger className="h-12 rounded-xl border-slate-200 bg-white">
+                  <SelectValue placeholder={t("assignOrder.branchFilter")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {!isBranchAdmin && (
+                    <SelectItem value="all">{t("assignOrder.allBranches")}</SelectItem>
+                  )}
+                  {branches.map((branch: any) => (
+                    <SelectItem key={branch.id} value={branch.id}>
+                      {branch.name || branch.id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-                      return (
-                        <label
-                          key={order.id}
-                          className={`block rounded-2xl border p-4 transition-all ${
-                            isDisabled
-                              ? "cursor-not-allowed border-slate-200 bg-slate-100/80 opacity-70"
-                              : isSelected
-                                ? "cursor-pointer border-[var(--primary)] bg-[var(--primary)] text-white shadow-lg"
-                                : "cursor-pointer border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
-                          }`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <input
-                              type="radio"
-                              name="selectedOrder"
-                              value={order.id}
-                              checked={isSelected}
-                              disabled={isDisabled}
-                              onChange={() => setSelectedOrderId(order.id)}
-                              className="mt-1 h-4 w-4 accent-[var(--primary)]"
-                            />
+              <Select
+                value={status}
+                onValueChange={(value) => {
+                  setStatus(value);
+                  setSelectedOrderIds([]);
+                  setAssignmentResults([]);
+                }}
+              >
+                <SelectTrigger className="h-12 rounded-xl border-slate-200 bg-white">
+                  <SelectValue placeholder={t("assignOrder.statusFilter")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {ASSIGNABLE_STATUSES.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option.replaceAll("_", " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center justify-between gap-2">
+              <Select
+                value={kind}
+                onValueChange={(value) => {
+                  setKind(value);
+                  setSelectedOrderIds([]);
+                  setAssignmentResults([]);
+                }}
+              >
+                <SelectTrigger className="h-12 rounded-xl border-slate-200 bg-white">
+                  <SelectValue placeholder={t("assignOrder.kindFilter")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {KIND_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {t(`assignOrder.kind.${option}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {isDriverBlocked && (
+              <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+                  <div>
+                    <p className="font-semibold">{t("assignOrder.driverBlockedTitle")}</p>
+                    <p className="mt-1 text-xs leading-5">
+                      {isBlockedByActiveDelivery
+                        ? t("assignOrder.driverActiveDeliveryDescription")
+                        : t("assignOrder.driverStatusDescription")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900">
+                      {t("assignOrder.availableOrders")}
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {t("assignOrder.availableOrdersDescription")}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                    {t("assignOrder.selectedCount", {
+                      count: assignableSelectedOrders.length,
+                    })}
+                  </span>
+                </div>
+
+                <div className="max-h-[560px] overflow-y-auto">
+                  {loading || isFetching || isFetchingDeliveryman ? (
+                    <div className="flex min-h-[260px] items-center justify-center gap-2 p-6 text-sm text-slate-500">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {t("assignOrder.loadingOrders")}
+                    </div>
+                  ) : filteredOrders.length === 0 ? (
+                    <div className="flex min-h-[260px] items-center justify-center p-6 text-sm text-slate-500">
+                      {t("assignOrder.noOrdersFound")}
+                    </div>
+                  ) : (
+                    <div className="grid gap-3 p-3 md:grid-cols-2 2xl:grid-cols-3">
+                      {filteredOrders.map((order: Order) => {
+                        const isSelected = selectedOrderIds.includes(order.id);
+                        const isMatched = isBranchMatched(order);
+                        const isDisabled = !isMatched || isDriverBlocked;
+
+                        return (
+                          <button
+                            key={order.id}
+                            type="button"
+                            onClick={() => toggleOrder(order)}
+                            disabled={isDisabled}
+                            className={`min-h-[230px] rounded-2xl border p-4 text-left transition-all ${
+                              isDisabled
+                                ? "cursor-not-allowed border-slate-200 bg-slate-100/80 opacity-70"
+                                : isSelected
+                                  ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-lg"
+                                  : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
                                 <p
-                                  className={`text-sm font-semibold ${
+                                  className={`truncate text-sm font-semibold ${
                                     isSelected ? "text-white" : "text-slate-900"
                                   }`}
                                 >
                                   {t("assignOrder.orderNumber", {
-                                    id:
-                                      order.orderNumber || order.id.slice(0, 8),
+                                    id: getOrderDisplayId(order),
                                   })}
                                 </p>
-
-                                <div className="flex flex-wrap items-center gap-2">
-                                  {isDisabled && (
-                                    <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-medium text-amber-700">
-                                      {t("assignOrder.branchMismatch")}
-                                    </span>
-                                  )}
-
-                                  <span
-                                    className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                                      isSelected
-                                        ? "bg-white/15 text-white"
-                                        : "bg-slate-100 text-slate-700"
-                                    }`}
-                                  >
-                                    {order.status}
-                                  </span>
-                                </div>
+                                <p
+                                  className={`mt-1 text-xs ${
+                                    isSelected ? "text-white/75" : "text-slate-500"
+                                  }`}
+                                >
+                                  {order.createdAt
+                                    ? new Date(order.createdAt).toLocaleString()
+                                    : "-"}
+                                </p>
                               </div>
-
-                              <div
-                                className={`mt-3 grid gap-3 sm:grid-cols-2 ${
+                              <span
+                                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                                   isSelected
-                                    ? "text-white/90"
-                                    : "text-slate-600"
+                                    ? "bg-white/15 text-white"
+                                    : "bg-slate-100 text-slate-700"
                                 }`}
                               >
-                                <div
-                                  className={`rounded-xl p-3 ${
-                                    isSelected ? "bg-white/10" : "bg-slate-50"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2 text-xs font-medium">
-                                    <Store size={14} />
-                                    <span>{t("assignOrder.branch")}</span>
-                                  </div>
-                                  <p className="mt-1 text-sm font-semibold">
-                                    {order?.branch?.name || t("noBranch")}
-                                  </p>
-                                </div>
-
-                                <div
-                                  className={`rounded-xl p-3 ${
-                                    isSelected ? "bg-white/10" : "bg-slate-50"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2 text-xs font-medium">
-                                    <ShoppingBag size={14} />
-                                    <span>{t("assignOrder.orderType")}</span>
-                                  </div>
-                                  <p className="mt-1 text-sm font-semibold">
-                                    {order?.orderType || "-"}
-                                  </p>
-                                </div>
-
-                                <div
-                                  className={`rounded-xl p-3 ${
-                                    isSelected ? "bg-white/10" : "bg-slate-50"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2 text-xs font-medium">
-                                    <CircleDollarSign size={14} />
-                                    <span>{t("assignOrder.totalAmount")}</span>
-                                  </div>
-                                  <p className="mt-1 text-sm font-semibold">
-                                    {order?.totalAmount ??
-                                      order?.payableAmount ??
-                                      0}
-                                  </p>
-                                </div>
-
-                                <div
-                                  className={`rounded-xl p-3 ${
-                                    isSelected ? "bg-white/10" : "bg-slate-50"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2 text-xs font-medium">
-                                    <CalendarDays size={14} />
-                                    <span>{t("assignOrder.createdAt")}</span>
-                                  </div>
-                                  <p className="mt-1 text-sm font-semibold">
-                                    {order?.createdAt
-                                      ? new Date(
-                                          order.createdAt,
-                                        ).toLocaleString()
-                                      : "-"}
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                                <div
-                                  className={`rounded-xl px-3 py-3 text-xs ${
-                                    isSelected
-                                      ? "bg-white/10 text-white"
-                                      : "bg-slate-50 text-slate-600"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <User size={14} />
-                                    <span className="font-medium">
-                                      {t("assignOrder.customer")}
-                                    </span>
-                                  </div>
-                                  <p className="mt-1 text-sm font-semibold">
-                                    {order?.customer?.fullName || "-"}
-                                  </p>
-                                </div>
-
-                                <div
-                                  className={`rounded-xl px-3 py-3 text-xs ${
-                                    isSelected
-                                      ? "bg-white/10 text-white"
-                                      : "bg-slate-50 text-slate-600"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <Phone size={14} />
-                                    <span className="font-medium">
-                                      {t("assignOrder.phone")}
-                                    </span>
-                                  </div>
-                                  <p className="mt-1 text-sm font-semibold">
-                                    {order?.customer?.phone || "-"}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {isDisabled && (
-                                <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                                  {t("assignOrder.mismatchDescription", {
-                                    orderBranch:
-                                      order?.branch?.name ||
-                                      t("assignOrder.otherBranchFallback"),
-                                    deliverymanBranch:
-                                      deliveryman?.branch?.name ||
-                                      t("assignOrder.otherBranchFallback"),
-                                  })}
-                                </div>
-                              )}
+                                {order.status.replaceAll("_", " ")}
+                              </span>
                             </div>
-                          </div>
-                        </label>
-                      );
-                    })}
+
+                            <div
+                              className={`mt-4 grid gap-2 ${
+                                isSelected ? "text-white/90" : "text-slate-600"
+                              }`}
+                            >
+                              <CardLine icon={<Store size={14} />} label={t("assignOrder.branch")} value={order.branch?.name || t("noBranch")} selected={isSelected} />
+                              <CardLine icon={<ShoppingBag size={14} />} label={t("assignOrder.orderType")} value={order.orderType || "-"} selected={isSelected} />
+                              <CardLine icon={<CircleDollarSign size={14} />} label={t("assignOrder.totalAmount")} value={String(order.totalAmount ?? 0)} selected={isSelected} />
+                              <CardLine icon={<User size={14} />} label={t("assignOrder.customer")} value={order.customer?.fullName || order.customer?.name || "-"} selected={isSelected} />
+                              <CardLine icon={<Phone size={14} />} label={t("assignOrder.phone")} value={order.customer?.phone || "-"} selected={isSelected} />
+                            </div>
+
+                            {!isMatched && (
+                              <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                                {t("assignOrder.branchMismatch")}
+                              </div>
+                            )}
+
+                            {isSelected && (
+                              <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-white">
+                                <CheckCircle2 className="h-4 w-4" />
+                                {t("assignOrder.selected")}
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-2xl bg-red-50 p-3 text-[var(--primary)]">
+                      <ListChecks className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900">
+                        {t("assignOrder.orderSummary")}
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {t("assignOrder.orderSummaryDescription")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid gap-3">
+                    <InfoTile label={t("assignOrder.deliverymanBranch")} value={deliveryman?.branch?.name || t("noBranch")} />
+                    <InfoTile label={t("assignOrder.selectedOrders")} value={String(assignableSelectedOrders.length)} />
+                    <InfoTile label={t("assignOrder.matchStatus")} value={hasBlockedSelection ? t("assignOrder.branchMismatch") : t("assignOrder.branchMatched")} tone={hasBlockedSelection ? "warning" : "success"} />
+                  </div>
+
+                  {assignableSelectedOrders.length > 0 && !isDriverBlocked && (
+                    <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600" />
+                        <div>
+                          <p className="text-sm font-semibold text-emerald-800">
+                            {t("assignOrder.readyToAssign")}
+                          </p>
+                          <p className="mt-1 text-xs text-emerald-700">
+                            {t("assignOrder.multiReadyDescription", {
+                              count: assignableSelectedOrders.length,
+                              deliveryman:
+                                deliveryman?.firstName ||
+                                t("assignOrder.selectedDeliverymanFallback"),
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-6 flex flex-col gap-2">
+                    <Button
+                      type="button"
+                      onClick={handleAssign}
+                      disabled={
+                        assignableSelectedOrders.length === 0 ||
+                        isDriverBlocked ||
+                        assignMutation.isPending
+                      }
+                      className="h-11 rounded-xl px-6 text-white hover:text-white"
+                    >
+                      {assignMutation.isPending
+                        ? t("actions.assigning")
+                        : t("actions.assignOrder")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => onOpenChange(false)}
+                      disabled={assignMutation.isPending}
+                      className="h-11 rounded-xl"
+                    >
+                      {t("actions.cancel")}
+                    </Button>
+                  </div>
+                </div>
+
+                {assignmentResults.length > 0 && (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <h3 className="text-sm font-semibold text-slate-900">
+                      {t("assignOrder.assignmentResults")}
+                    </h3>
+                    <div className="mt-3 space-y-2">
+                      {assignmentResults.map((result) => (
+                        <div
+                          key={result.orderId}
+                          className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-xs ${
+                            result.success
+                              ? "border-emerald-100 bg-emerald-50 text-emerald-800"
+                              : "border-red-100 bg-red-50 text-red-800"
+                          }`}
+                        >
+                          {result.success ? (
+                            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                          ) : (
+                            <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                          )}
+                          <span>
+                            {result.orderId.slice(0, 8)} ·{" "}
+                            {result.success
+                              ? t("assignOrder.assigned")
+                              : result.message || t("messages.failedAssignOrder")}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-slate-900">
-                {t("assignOrder.orderSummary")}
-              </h3>
-              <p className="mt-1 text-xs text-slate-500">
-                {t("assignOrder.orderSummaryDescription")}
-              </p>
-
-              <div className="mt-5 grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-1">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    {t("assignOrder.deliverymanBranch")}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-slate-900">
-                    {deliveryman?.branch?.name || t("noBranch")}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    {t("assignOrder.selectedOrderBranch")}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-slate-900">
-                    {selectedOrder?.branch?.name || t("noOrderSelected")}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    {t("assignOrder.selectedOrder")}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-slate-900">
-                    {selectedOrder
-                      ? `#${selectedOrder.orderNumber || selectedOrder.id.slice(0, 8)}`
-                      : t("noOrderSelected")}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    {t("assignOrder.matchStatus")}
-                  </p>
-                  <p
-                    className={`mt-1 text-sm font-semibold ${
-                      selectedOrder
-                        ? canAssignSelectedOrder
-                          ? "text-emerald-600"
-                          : "text-amber-600"
-                        : "text-slate-900"
-                    }`}
-                  >
-                    {!selectedOrder
-                      ? t("noOrderSelected")
-                      : canAssignSelectedOrder
-                        ? t("assignOrder.branchMatched")
-                        : t("assignOrder.branchMismatch")}
-                  </p>
-                </div>
-              </div>
-
-              {selectedOrder && canAssignSelectedOrder && (
-                <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600" />
-                    <div>
-                      <p className="text-sm font-semibold text-emerald-800">
-                        {t("assignOrder.readyToAssign")}
-                      </p>
-                      <p className="mt-1 text-xs text-emerald-700">
-                        {t("assignOrder.readyDescription", {
-                          deliveryman:
-                            deliveryman?.firstName ||
-                            t("assignOrder.selectedDeliverymanFallback"),
-                          branch:
-                            deliveryman?.branch?.name ||
-                            t("assignOrder.sameBranchFallback"),
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {selectedOrder && !canAssignSelectedOrder && (
-                <div className="mt-5 rounded-2xl border border-amber-100 bg-amber-50 p-4">
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-600" />
-                    <div>
-                      <p className="text-sm font-semibold text-amber-800">
-                        {t("assignOrder.cannotAssignTitle")}
-                      </p>
-                      <p className="mt-1 text-xs text-amber-700">
-                        {t("assignOrder.cannotAssignDescription")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={assignMutation.isPending}
-                  className="h-11 rounded-xl"
-                >
-                  {t("actions.cancel")}
-                </Button>
-
-                <Button
-                  type="button"
-                  onClick={handleAssign}
-                  disabled={
-                    !selectedOrderId ||
-                    !canAssignSelectedOrder ||
-                    assignMutation.isPending
-                  }
-                  className="h-11 rounded-xl px-6 text-white hover:text-white"
-                >
-                  {assignMutation.isPending
-                    ? t("actions.assigning")
-                    : t("actions.assignOrder")}
-                </Button>
               </div>
             </div>
           </div>
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function SummaryTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-white/10 p-3">
+      <p className="text-xs uppercase tracking-wide text-white/70">{label}</p>
+      <p className="mt-1 truncate text-sm font-semibold text-white">{value}</p>
+    </div>
+  );
+}
+
+function CardLine({
+  icon,
+  label,
+  value,
+  selected,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  selected: boolean;
+}) {
+  return (
+    <div className={`rounded-xl p-2.5 ${selected ? "bg-white/10" : "bg-slate-50"}`}>
+      <div className="flex items-center gap-2 text-xs font-medium">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <p className="mt-1 truncate text-sm font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function InfoTile({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: "success" | "warning";
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+      <p
+        className={`mt-1 text-sm font-semibold ${
+          tone === "success"
+            ? "text-emerald-600"
+            : tone === "warning"
+              ? "text-amber-600"
+              : "text-slate-900"
+        }`}
+      >
+        {value}
+      </p>
+    </div>
   );
 }

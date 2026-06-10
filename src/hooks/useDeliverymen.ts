@@ -10,6 +10,7 @@ import {
   assignOrderToDeliveryman,
 } from "@/services/deliverymen/deliverymen.api";
 import { useRouter } from "next/navigation";
+import { getApiErrorMessage } from "@/lib/errors";
 
 type DeliverymanMutationMessages = {
   success?: string;
@@ -216,6 +217,70 @@ export const useAssignOrderToDeliveryman = (
         err?.response?.data?.message ||
           options?.messages?.error ||
           "Failed to assign order",
+      );
+    },
+  });
+};
+
+export const useAssignOrdersToDeliveryman = (
+  options?: DeliverymanMutationOptions,
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      orderIds,
+    }: {
+      id: string;
+      orderIds: string[];
+    }) => {
+      const results = [];
+
+      for (const orderId of orderIds) {
+        try {
+          const data = await assignOrderToDeliveryman(id, { orderId });
+          results.push({ orderId, success: true, data });
+        } catch (error) {
+          results.push({
+            orderId,
+            success: false,
+            message: getApiErrorMessage(error, "Assignment failed"),
+          });
+        }
+      }
+
+      return results;
+    },
+
+    onSuccess: (results, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["deliverymen"] });
+      queryClient.invalidateQueries({ queryKey: ["deliveryman", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+
+      const successCount = results.filter((result) => result.success).length;
+      const failedCount = results.length - successCount;
+
+      if (successCount > 0 && failedCount === 0) {
+        toast.success(
+          options?.messages?.success || "Orders assigned successfully!",
+        );
+        return;
+      }
+
+      if (successCount > 0) {
+        toast.warning(`${successCount} assigned, ${failedCount} failed`);
+        return;
+      }
+
+      toast.error(options?.messages?.error || "Failed to assign orders");
+    },
+
+    onError: (err: any) => {
+      toast.error(
+        err?.response?.data?.message ||
+          options?.messages?.error ||
+          "Failed to assign orders",
       );
     },
   });

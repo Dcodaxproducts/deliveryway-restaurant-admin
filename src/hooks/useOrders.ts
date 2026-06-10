@@ -13,6 +13,7 @@ interface UseOrdersParams {
   search?: string;
   status?: string;
   orderType?: string;
+  sortBy?: string;
   sortOrder?: string;
   kind?: string;
   restaurantId?: string;
@@ -45,6 +46,7 @@ export function useOrders(params?: UseOrdersParams) {
       params?.search,
       params?.status,
       params?.orderType,
+      params?.sortBy,
       params?.sortOrder,
       params?.kind,
     ],
@@ -56,6 +58,7 @@ export function useOrders(params?: UseOrdersParams) {
         search: params?.search,
         status: params?.status,
         orderType: params?.orderType,
+        sortBy: params?.sortBy,
         sortOrder: params?.sortOrder,
         kind: params?.kind,
         branchId,

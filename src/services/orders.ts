@@ -10,6 +10,7 @@ export interface GetOrdersParams {
   search?: string;
   status?: string;
   orderType?: string;
+  sortBy?: string;
   sortOrder?: string;
   kind?: string;
 }
@@ -60,6 +61,7 @@ const normalizeOrderCustomer = (value: unknown): Order["customer"] => {
   return {
     fullName: getOptionalString(value, "fullName"),
     name: getOptionalString(value, "name"),
+    phone: getOptionalString(value, "phone"),
   };
 };
 
@@ -87,6 +89,7 @@ export const normalizeOrder = (value: unknown): Order | null => {
     createdAt: getString(value, "createdAt"),
     orderTime: getOptionalString(value, "orderTime"),
     deliveryOtp: getOptionalString(value, "deliveryOtp"),
+    deliverymanId: getNullableString(value, "deliverymanId"),
     branchId: getNullableString(value, "branchId"),
     branch: normalizeOrderBranch(value.branch),
     customer: normalizeOrderCustomer(value.customer),
@@ -118,6 +121,7 @@ export const getOrders = async (
       ...(params.search ? { search: params.search } : {}),
       ...(params.status ? { status: params.status } : {}),
       ...(params.orderType ? { orderType: params.orderType } : {}),
+      ...(params.sortBy ? { sortBy: params.sortBy } : {}),
       ...(params.sortOrder ? { sortOrder: params.sortOrder } : {}),
       ...(params.kind ? { kind: params.kind } : {}),
     },
