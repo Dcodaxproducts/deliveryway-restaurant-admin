@@ -1,9 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarCheck2, CalendarDays, Clock3 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { DayPicker } from "react-day-picker";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Clock3,
+  Loader2,
+  TimerReset,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +32,7 @@ import {
 import { useUpdateOrderStatus } from "@/hooks/useOrders";
 import { ORDER_STATUS_OPTIONS } from "@/types/orders";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
+import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import {
   orderStatusUpdateSchema,
@@ -42,63 +48,27 @@ type OrderStatusUpdateDialogProps = {
 const defaultValues: OrderStatusUpdateValues = {
   status: "",
   deliveryOtp: "",
-  orderDate: "",
-  orderTimeClock: "",
 };
 
-const formatDateInput = (date: Date) => {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, "0");
-  const day = `${date.getDate()}`.padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+type DeliveryDurationOption = {
+  key: "20min" | "40min" | "60min" | "custom";
+  labelKey: string;
+  minutes?: number;
 };
 
-const parseDateInput = (value?: string) => {
-  if (!value) return undefined;
+const deliveryDurationOptions: DeliveryDurationOption[] = [
+  { key: "20min", labelKey: "deliveryDuration20Min", minutes: 20 },
+  { key: "40min", labelKey: "deliveryDuration40Min", minutes: 40 },
+  { key: "60min", labelKey: "deliveryDuration60Min", minutes: 60 },
+  { key: "custom", labelKey: "deliveryDurationCustom" },
+];
 
-  const [year, month, day] = value.split("-").map(Number);
-  if (!year || !month || !day) return undefined;
+const getFutureOrderTimeIso = (minutes: number) => {
+  const orderTime = new Date();
+  orderTime.setMinutes(orderTime.getMinutes() + Math.max(minutes, 1));
+  orderTime.setSeconds(0, 0);
 
-  return new Date(year, month - 1, day);
-};
-
-const formatClockInput = (date: Date) => {
-  const hours = `${date.getHours()}`.padStart(2, "0");
-  const minutes = `${date.getMinutes()}`.padStart(2, "0");
-
-  return `${hours}:${minutes}`;
-};
-
-const getMinimumOrderTime = () => {
-  const nextMinute = new Date();
-  nextMinute.setMinutes(nextMinute.getMinutes() + 1);
-  nextMinute.setSeconds(0, 0);
-
-  return nextMinute;
-};
-
-const isSameDay = (first?: Date, second?: Date) => {
-  return (
-    Boolean(first && second) &&
-    first?.getFullYear() === second?.getFullYear() &&
-    first?.getMonth() === second?.getMonth() &&
-    first?.getDate() === second?.getDate()
-  );
-};
-
-const buildOrderTimeIso = (dateValue?: string, timeValue?: string) => {
-  const selectedDate = parseDateInput(dateValue);
-  const [hours, minutes] = timeValue?.split(":").map(Number) ?? [];
-
-  if (!selectedDate || hours === undefined || minutes === undefined) {
-    return null;
-  }
-
-  const orderTime = new Date(selectedDate);
-  orderTime.setHours(hours, minutes, 0, 0);
-
-  return Number.isNaN(orderTime.getTime()) ? null : orderTime.toISOString();
+  return orderTime.toISOString();
 };
 
 export function OrderStatusUpdateDialog({
@@ -109,54 +79,73 @@ export function OrderStatusUpdateDialog({
   const updateStatusMutation = useUpdateOrderStatus();
   const common = useTranslations("common");
   const t = useTranslations("orders");
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const [clockReference, setClockReference] = useState(getMinimumOrderTime);
-  const today = new Date(clockReference);
-  today.setHours(0, 0, 0, 0);
-  const minimumOrderTime = clockReference;
+  const [durationKey, setDurationKey] =
+    useState<DeliveryDurationOption["key"]>("20min");
+  const [customHours, setCustomHours] = useState("0");
+  const [customMinutes, setCustomMinutes] = useState("20");
+  const [mode, setMode] = useState<"main" | "custom">("main");
   const {
-    clearErrors,
     control,
     formState: { errors },
     handleSubmit,
     register,
     reset,
-    setError,
-    setValue,
   } = useForm<OrderStatusUpdateValues>({
     resolver: zodResolver(orderStatusUpdateSchema),
     defaultValues,
     values: {
       status: order?.status || "",
       deliveryOtp: "",
-      orderDate: "",
-      orderTimeClock: "",
     },
   });
   const selectedStatus = useWatch({ control, name: "status" });
-  const selectedOrderDateValue = useWatch({ control, name: "orderDate" });
-  const selectedOrderDate = parseDateInput(selectedOrderDateValue);
   const isAcceptingPlacedOrder =
     order?.status === "PLACED" && selectedStatus === "CONFIRMED";
-  const selectedDateLabel = selectedOrderDate
-    ? selectedOrderDate.toLocaleDateString(undefined, {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : t("selectOrderDate");
-  const minTimeForSelectedDate = isSameDay(selectedOrderDate, minimumOrderTime)
-    ? formatClockInput(minimumOrderTime)
-    : undefined;
+  const isLoading = updateStatusMutation.isPending;
+  const selectedMinutes = useMemo(() => {
+    if (durationKey === "custom") {
+      return Number(customHours || 0) * 60 + Number(customMinutes || 0);
+    }
 
-  useEffect(() => {
-    if (open) setClockReference(getMinimumOrderTime());
-  }, [open]);
+    return (
+      deliveryDurationOptions.find((item) => item.key === durationKey)
+        ?.minutes ?? 20
+    );
+  }, [customHours, customMinutes, durationKey]);
+  const deliveryTimePreview = useMemo(() => {
+    const deliveryTime = new Date(getFutureOrderTimeIso(selectedMinutes));
+
+    return deliveryTime.toLocaleString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }, [selectedMinutes]);
+  const durationText = useMemo(() => {
+    const hours = Math.floor(selectedMinutes / 60);
+    const minutes = selectedMinutes % 60;
+    const parts: string[] = [];
+
+    if (hours > 0) parts.push(t("durationHours", { count: hours }));
+    if (minutes > 0) {
+      parts.push(t("durationMinutes", { count: minutes }));
+    }
+
+    return parts.length ? parts.join(` ${t("and")} `) : t("durationOneMinute");
+  }, [selectedMinutes, t]);
+
+  const resetDurationState = () => {
+    setDurationKey("20min");
+    setCustomHours("0");
+    setCustomMinutes("20");
+    setMode("main");
+  };
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      setCalendarOpen(false);
+      resetDurationState();
       reset(defaultValues);
     }
     onOpenChange(nextOpen);
@@ -166,24 +155,8 @@ export function OrderStatusUpdateDialog({
     if (!order) return;
 
     const orderTimeIso = isAcceptingPlacedOrder
-      ? buildOrderTimeIso(values.orderDate, values.orderTimeClock)
+      ? getFutureOrderTimeIso(selectedMinutes)
       : null;
-
-    if (isAcceptingPlacedOrder && !orderTimeIso) {
-      setError("orderDate", {
-        message: t("orderTimeRequired"),
-        type: "manual",
-      });
-      return;
-    }
-
-    if (orderTimeIso && new Date(orderTimeIso).getTime() <= getMinimumOrderTime().getTime()) {
-      setError("orderTimeClock", {
-        message: t("orderTimeFutureRequired"),
-        type: "manual",
-      });
-      return;
-    }
 
     await updateStatusMutation.mutateAsync({
       orderId: order.id,
@@ -198,179 +171,263 @@ export function OrderStatusUpdateDialog({
     handleOpenChange(false);
   };
 
+  const handleDurationClick = (key: DeliveryDurationOption["key"]) => {
+    setDurationKey(key);
+
+    if (key === "custom") {
+      setMode("custom");
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-[520px] overflow-y-auto rounded-[20px] p-6">
-        <DialogHeader className="space-y-1">
-          <DialogTitle className="text-xl font-semibold">
-            {isAcceptingPlacedOrder ? t("acceptOrderTitle") : t("updateStatusTitle")}
-          </DialogTitle>
-          <DialogDescription>
-            {isAcceptingPlacedOrder
-              ? t("acceptOrderDescription")
-              : t("updateStatusDescription")}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-h-[92vh] max-w-[520px] overflow-y-auto rounded-[28px] border-0 bg-white p-0">
+        {mode === "main" ? (
+          <form
+            className="p-5 sm:p-7"
+            noValidate
+            onSubmit={handleSubmit(onSubmit)}
+          >
+            <DialogHeader className="space-y-1">
+              <DialogTitle className="text-[24px] font-bold text-gray-950">
+                {isAcceptingPlacedOrder
+                  ? t("acceptOrderTitle")
+                  : t("updateStatusTitle")}
+              </DialogTitle>
+              <DialogDescription className="text-sm leading-6 text-gray-500">
+                {isAcceptingPlacedOrder
+                  ? t("acceptOrderDescription")
+                  : t("updateStatusDescription")}
+              </DialogDescription>
+            </DialogHeader>
 
-        <form className="mt-5 space-y-4" noValidate onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-2">
-            <Label htmlFor="order-status">{common("status")}</Label>
-            <Controller
-              control={control}
-              name="status"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id="order-status">
-                    <SelectValue placeholder={common("selectStatus")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ORDER_STATUS_OPTIONS.map((status) => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {ORDER_STATUS_LABEL_KEYS[status.value]
-                          ? t(ORDER_STATUS_LABEL_KEYS[status.value])
-                          : status.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors.status?.message ? (
-              <p className="text-sm text-red-500">{errors.status.message}</p>
-            ) : null}
-          </div>
-
-          {isAcceptingPlacedOrder ? (
-            <div className="rounded-[18px] border border-primary/15 bg-gradient-to-br from-primary/5 via-white to-amber-50/70 p-4 shadow-sm">
-              <div className="mb-4 flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary text-white shadow-sm">
-                  <CalendarCheck2 size={19} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-950">
-                    {t("deliveryScheduleTitle")}
-                  </h3>
-                  <p className="mt-1 text-xs leading-5 text-gray-500">
-                    {t("deliveryScheduleDescription")}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
-                <div className="space-y-2">
-                  <Label htmlFor="order-date-picker">{t("orderDate")}</Label>
-                  <button
-                    id="order-date-picker"
-                    type="button"
-                    className="flex h-[52px] w-full items-center gap-3 rounded-[14px] border border-gray-200 bg-white px-3 text-left text-sm text-gray-900 shadow-xs outline-none transition hover:border-primary/35 focus-visible:border-primary/40 focus-visible:ring-3 focus-visible:ring-primary/15"
-                    onClick={() => setCalendarOpen((current) => !current)}
+            <div className="mt-6 space-y-2">
+              <Label htmlFor="order-status">{common("status")}</Label>
+              <Controller
+                control={control}
+                name="status"
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={isLoading}
                   >
-                    <CalendarDays size={18} className="text-primary" />
-                    <span
-                      className={
-                        selectedOrderDate ? "truncate" : "truncate text-gray-400"
-                      }
+                    <SelectTrigger
+                      id="order-status"
+                      className="h-[52px] rounded-[14px]"
                     >
-                      {selectedDateLabel}
-                    </span>
-                  </button>
+                      <SelectValue placeholder={common("selectStatus")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ORDER_STATUS_OPTIONS.map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
+                          {ORDER_STATUS_LABEL_KEYS[status.value]
+                            ? t(ORDER_STATUS_LABEL_KEYS[status.value])
+                            : status.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.status?.message ? (
+                <p className="text-sm text-red-500">{errors.status.message}</p>
+              ) : null}
+            </div>
+
+            {isAcceptingPlacedOrder ? (
+              <div className="mt-4 rounded-[20px] bg-gray-50 p-4">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-[14px] bg-white text-primary shadow-sm">
+                    <TimerReset size={19} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-950">
+                      {t("deliveryScheduleTitle")}
+                    </h3>
+                    <p className="mt-1 text-xs leading-5 text-gray-500">
+                      {t("deliveryScheduleDescription")}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="order-time-clock">{t("orderTime")}</Label>
-                  <div className="relative">
-                    <Clock3
-                      size={17}
-                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-primary"
-                    />
-                    <Input
-                      id="order-time-clock"
-                      type="time"
-                      min={minTimeForSelectedDate}
-                      className="bg-white pl-10 text-sm"
-                      {...register("orderTimeClock", {
-                        onChange: () => clearErrors(["orderDate", "orderTimeClock"]),
+                <div className="grid grid-cols-2 gap-3">
+                  {deliveryDurationOptions.map((item) => {
+                    const active = durationKey === item.key;
+
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => handleDurationClick(item.key)}
+                        disabled={isLoading}
+                        className={cn(
+                          "flex h-[82px] flex-col items-center justify-center gap-2 rounded-[16px] border bg-white transition hover:border-primary/40",
+                          active
+                            ? "border-primary shadow-sm"
+                            : "border-transparent",
+                        )}
+                      >
+                        <Clock3
+                          size={19}
+                          className={active ? "text-primary" : "text-gray-400"}
+                        />
+                        <span className="text-sm font-semibold text-gray-950">
+                          {t(item.labelKey)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4 flex gap-3 rounded-[16px] border-l-4 border-primary bg-white p-4">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Clock3 size={17} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {t("deliveryTimeWillBe")}{" "}
+                      <span className="text-primary">
+                        {deliveryTimePreview}
+                      </span>
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {t("deliveryTimeDurationNote", {
+                        duration: durationText,
                       })}
-                    />
+                    </p>
                   </div>
                 </div>
               </div>
+            ) : null}
 
-              {calendarOpen ? (
-                <div className="mt-3 rounded-[16px] border border-gray-200 bg-white p-3 shadow-xl">
-                  <DayPicker
-                    mode="single"
-                    selected={selectedOrderDate}
-                    onSelect={(date) => {
-                      if (!date) return;
-                      setValue("orderDate", formatDateInput(date), {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      });
-                      clearErrors(["orderDate", "orderTimeClock"]);
-                      setCalendarOpen(false);
-                    }}
-                    disabled={{ before: today }}
-                    className="text-sm"
-                    classNames={{
-                      months: "flex",
-                      month: "space-y-3",
-                      month_caption:
-                        "flex justify-center pb-2 text-sm font-semibold text-gray-900",
-                      nav: "absolute left-3 right-3 top-3 flex items-center justify-between",
-                      button_previous:
-                        "rounded-full p-1 text-gray-500 hover:bg-gray-100",
-                      button_next:
-                        "rounded-full p-1 text-gray-500 hover:bg-gray-100",
-                      weekdays: "grid grid-cols-7 gap-1 text-xs text-gray-400",
-                      week: "grid grid-cols-7 gap-1",
-                      day: "h-9 w-9 text-center text-sm",
-                      day_button:
-                        "h-9 w-9 rounded-full text-sm transition hover:bg-primary/10",
-                      selected:
-                        "[&>button]:bg-primary [&>button]:text-white [&>button]:hover:bg-primary",
-                      today: "[&>button]:ring-1 [&>button]:ring-primary",
-                      disabled:
-                        "pointer-events-none text-gray-300 opacity-50",
-                      outside: "text-gray-300",
-                    }}
-                  />
-                </div>
-              ) : null}
-
-              {errors.orderDate?.message || errors.orderTimeClock?.message ? (
-                <p className="mt-3 text-sm text-red-500">
-                  {errors.orderDate?.message || errors.orderTimeClock?.message}
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="order-delivery-otp">{t("deliveryOtp")}</Label>
+              <Input
+                id="order-delivery-otp"
+                placeholder={common("optional")}
+                disabled={isLoading}
+                {...register("deliveryOtp")}
+              />
+              {errors.deliveryOtp?.message ? (
+                <p className="text-sm text-red-500">
+                  {errors.deliveryOtp.message}
                 </p>
               ) : null}
             </div>
-          ) : null}
 
-          <div className="space-y-2">
-            <Label htmlFor="order-delivery-otp">{t("deliveryOtp")}</Label>
-            <Input
-              id="order-delivery-otp"
-              placeholder={common("optional")}
-              {...register("deliveryOtp")}
-            />
-            {errors.deliveryOtp?.message ? (
-              <p className="text-sm text-red-500">{errors.deliveryOtp.message}</p>
-            ) : null}
+            <DialogFooter className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:space-x-0">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isLoading}
+                onClick={() => handleOpenChange(false)}
+                className="h-[48px] flex-1 rounded-full border-primary text-primary hover:bg-primary/5"
+              >
+                {common("cancel")}
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="h-[48px] flex-1 rounded-full bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90"
+              >
+                {isLoading ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  common("updateStatus")
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        ) : (
+          <div className="p-5 sm:p-7">
+            <DialogHeader>
+              <DialogTitle className="text-[24px] font-bold text-gray-950">
+                {t("setCustomDeliveryTime")}
+              </DialogTitle>
+              <DialogDescription className="text-sm leading-6 text-gray-500">
+                {t("customDeliveryTimeDescription")}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="custom-delivery-hours">{t("hours")}</Label>
+                <select
+                  id="custom-delivery-hours"
+                  value={customHours}
+                  onChange={(event) => setCustomHours(event.target.value)}
+                  disabled={isLoading}
+                  className="mt-2 h-[52px] w-full rounded-full bg-gray-100 px-5 text-sm font-semibold outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  {Array.from({ length: 13 }).map((_, index) => (
+                    <option key={index} value={String(index)}>
+                      {String(index).padStart(2, "0")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <Label htmlFor="custom-delivery-minutes">{t("minutes")}</Label>
+                <select
+                  id="custom-delivery-minutes"
+                  value={customMinutes}
+                  onChange={(event) => setCustomMinutes(event.target.value)}
+                  disabled={isLoading}
+                  className="mt-2 h-[52px] w-full rounded-full bg-gray-100 px-5 text-sm font-semibold outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  {[0, 5, 10, 15, 20, 30, 40, 45, 50].map((minute) => (
+                    <option key={minute} value={String(minute)}>
+                      {String(minute).padStart(2, "0")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3 rounded-[16px] border-l-4 border-primary bg-gray-50 p-4">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white">
+                <Clock3 size={17} className="text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  {t("deliveryTimeWillBe")}{" "}
+                  <span className="text-primary">{deliveryTimePreview}</span>
+                </p>
+                <p className="mt-1 text-xs text-gray-500">
+                  {t("deliveryTimeDurationNote", { duration: durationText })}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row">
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={isLoading}
+                onClick={() => {
+                  setMode("main");
+                  setDurationKey("20min");
+                }}
+                className="h-[48px] flex-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200"
+              >
+                <ArrowLeft size={17} />
+                {t("back")}
+              </Button>
+
+              <Button
+                type="button"
+                disabled={isLoading}
+                onClick={() => setMode("main")}
+                className="h-[48px] flex-1 rounded-full bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90"
+              >
+                {t("confirmSetTime")}
+                <CheckCircle2 size={17} />
+              </Button>
+            </div>
           </div>
-
-          <DialogFooter className="pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-            >
-              {common("cancel")}
-            </Button>
-            <Button type="submit" disabled={updateStatusMutation.isPending}>
-              {updateStatusMutation.isPending ? common("updating") : common("updateStatus")}
-            </Button>
-          </DialogFooter>
-        </form>
+        )}
       </DialogContent>
     </Dialog>
   );
