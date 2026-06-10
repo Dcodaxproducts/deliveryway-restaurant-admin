@@ -206,8 +206,8 @@ export default function AssignOrderModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] w-[98vw] max-w-[1500px] overflow-hidden border-0 p-0 shadow-2xl">
-        <div className="flex max-h-[92vh] flex-col overflow-hidden">
+      <DialogContent className="max-h-[92vh] w-[calc(100vw-24px)] max-w-none overflow-hidden border-0 p-0 shadow-2xl sm:w-[calc(100vw-48px)] sm:max-w-[calc(100vw-48px)] 2xl:max-w-[1500px]">
+        <div className="flex max-h-[92vh] min-w-0 flex-col overflow-hidden">
           <div
             className="px-6 py-5 text-white"
             style={{
@@ -223,7 +223,7 @@ export default function AssignOrderModal({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="mt-4 grid gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur md:grid-cols-4">
+            <div className="mt-4 grid min-w-0 gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur sm:grid-cols-2 xl:grid-cols-4">
               <SummaryTile label={t("assignOrder.deliveryman")} value={deliveryman ? `${deliveryman.firstName || ""} ${deliveryman.lastName || ""}` : "-"} />
               <SummaryTile label={t("assignOrder.phone")} value={deliveryman?.phone || "-"} />
               <SummaryTile label={t("assignOrder.branch")} value={deliveryman?.branch?.name || t("noBranch")} />
@@ -231,8 +231,8 @@ export default function AssignOrderModal({
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-6">
-            <div className="mb-5 grid gap-3 xl:grid-cols-[1.4fr_220px_220px_180px]">
+          <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 p-4 sm:p-6">
+            <div className="mb-5 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(260px,1.4fr)_minmax(180px,220px)_minmax(180px,220px)_minmax(150px,180px)]">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
@@ -324,8 +324,8 @@ export default function AssignOrderModal({
               </div>
             )}
 
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
+              <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900">
@@ -353,7 +353,7 @@ export default function AssignOrderModal({
                       {t("assignOrder.noOrdersFound")}
                     </div>
                   ) : (
-                    <div className="grid gap-3 p-3 md:grid-cols-2 2xl:grid-cols-3">
+                    <div className="grid min-w-0 gap-3 p-3 md:grid-cols-2 2xl:grid-cols-3">
                       {filteredOrders.map((order: Order) => {
                         const isSelected = selectedOrderIds.includes(order.id);
                         const isMatched = isBranchMatched(order);
@@ -365,7 +365,7 @@ export default function AssignOrderModal({
                             type="button"
                             onClick={() => toggleOrder(order)}
                             disabled={isDisabled}
-                            className={`min-h-[230px] rounded-2xl border p-4 text-left transition-all ${
+                            className={`min-w-0 rounded-2xl border p-4 text-left transition-all ${
                               isDisabled
                                 ? "cursor-not-allowed border-slate-200 bg-slate-100/80 opacity-70"
                                 : isSelected
@@ -395,7 +395,7 @@ export default function AssignOrderModal({
                                 </p>
                               </div>
                               <span
-                                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                                className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                                   isSelected
                                     ? "bg-white/15 text-white"
                                     : "bg-slate-100 text-slate-700"
@@ -437,7 +437,7 @@ export default function AssignOrderModal({
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="min-w-0 space-y-4">
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                   <div className="flex items-start gap-3">
                     <div className="rounded-2xl bg-red-50 p-3 text-[var(--primary)]">
