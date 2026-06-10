@@ -20,9 +20,7 @@ const mockedApi = vi.mocked(api);
 const allPaymentMethods = [
   "COD",
   "STRIPE",
-  "EASYPAISA",
-  "JAZZCASH",
-  "BANK_TRANSFER",
+  "PAYPAL",
 ];
 
 describe("branches service", () => {

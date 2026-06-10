@@ -23,6 +23,7 @@ import {
   BadgePercent,
   Coins,
   CreditCard,
+  ReceiptText,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { IconType } from "react-icons";
@@ -257,7 +258,7 @@ export const menuItems: MenuItem[] = [
     href: "/content-management",
     icon: FileText,
     section: "main",
-    roles: restaurantAdminRoles,
+    roles: allAdminRoles,
     children: [
       {
         title: "Faqs",
@@ -266,6 +267,14 @@ export const menuItems: MenuItem[] = [
         icon: FileText,
         section: "main",
         roles: restaurantAdminRoles,
+      },
+      {
+        title: "Legal & Tax Profile",
+        labelKey: "legalProfile",
+        href: "/legal-profile",
+        icon: ReceiptText,
+        section: "main",
+        roles: allAdminRoles,
       },
       {
         title: "Privacy Policy",

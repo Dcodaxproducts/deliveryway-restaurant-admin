@@ -12,14 +12,14 @@ describe("order details utils", () => {
     expect(
       getSelectedPaymentMethod({
         paymentMethod: "COD",
-        paymentOptions: { selected: "WALLET" },
+        paymentOptions: { selected: "PAYPAL" },
       })
-    ).toBe("WALLET");
+    ).toBe("PAYPAL");
   });
 
   it("formats known and unknown payment methods", () => {
-    expect(formatPaymentMethod("WALLET")).toBe("Wallet");
-    expect(formatPaymentMethod("BANK_TRANSFER")).toBe("Bank transfer");
+    expect(formatPaymentMethod("PAYPAL")).toBe("PayPal");
+    expect(formatPaymentMethod("STRIPE")).toBe("Online card");
     expect(formatPaymentMethod("CUSTOM_GATEWAY")).toBe("Custom Gateway");
   });
 

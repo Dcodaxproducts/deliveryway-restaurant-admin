@@ -20,13 +20,9 @@ type OrderPaymentSource = {
 };
 
 const paymentMethodLabels: Record<string, string> = {
-  BANK_TRANSFER: "Bank transfer",
   COD: "Cash on delivery",
-  EASYPAISA: "Easypaisa",
-  JAZZCASH: "JazzCash",
   PAYPAL: "PayPal",
-  STRIPE: "Card via Stripe",
-  WALLET: "Wallet",
+  STRIPE: "Online card",
 };
 
 const cleanParts = (parts: Array<string | null | undefined>) =>

@@ -41,7 +41,7 @@ describe("payment methods service", () => {
     const result = normalizePaymentMethodsResponse({
       data: [
         { code: "COD", label: "Cash on delivery", isActive: true },
-        { code: "WALLET", label: "Wallet", isActive: false },
+        { code: "PAYPAL", label: "PayPal", isActive: false },
       ],
       message: "Payment methods fetched successfully",
     });
@@ -49,7 +49,7 @@ describe("payment methods service", () => {
     expect(result).toEqual({
       paymentMethods: [
         { code: "COD", label: "Cash on delivery", isActive: true },
-        { code: "WALLET", label: "Wallet", isActive: false },
+        { code: "PAYPAL", label: "PayPal", isActive: false },
       ],
       message: "Payment methods fetched successfully",
     });
@@ -70,28 +70,30 @@ describe("payment methods service", () => {
     const result = normalizePaymentMethodsResponse({
       data: [
         { code: "COD", label: "Cash on delivery", isActive: true },
-        { code: "PAYPAL", label: "Paypal", isActive: true },
+        { code: "PAYPAL", label: "PayPal", isActive: true },
         { code: "STRIPE", label: "Stripe", isActive: false },
+        { code: "UNSUPPORTED_GATEWAY", label: "Unsupported gateway", isActive: true },
       ],
     });
 
     expect(result.paymentMethods).toEqual([
       { code: "COD", label: "Cash on delivery", isActive: true },
-      { code: "STRIPE", label: "Stripe", isActive: false },
+      { code: "PAYPAL", label: "PayPal", isActive: true },
+      { code: "STRIPE", label: "Online card", isActive: false },
     ]);
   });
 
   it("preserves active and inactive status", () => {
     const result = normalizePaymentMethodsResponse({
       data: [
-        { code: "EASYPAISA", label: "Easypaisa", isActive: false },
-        { code: "JAZZCASH", label: "JazzCash", isActive: true },
+        { code: "PAYPAL", label: "PayPal", isActive: false },
+        { code: "STRIPE", label: "Online card", isActive: true },
       ],
     });
 
     expect(result.paymentMethods).toEqual([
-      { code: "EASYPAISA", label: "Easypaisa", isActive: false },
-      { code: "JAZZCASH", label: "JazzCash", isActive: true },
+      { code: "PAYPAL", label: "PayPal", isActive: false },
+      { code: "STRIPE", label: "Online card", isActive: true },
     ]);
   });
 });

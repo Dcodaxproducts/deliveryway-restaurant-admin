@@ -75,9 +75,7 @@ const hasServiceChargeSetting = (settings: BranchSettings | undefined) =>
 const defaultAllowedPaymentMethods = [
   "COD",
   "STRIPE",
-  "EASYPAISA",
-  "JAZZCASH",
-  "BANK_TRANSFER",
+  "PAYPAL",
 ];
 
 const branchSettingsPatchBlocklist = [

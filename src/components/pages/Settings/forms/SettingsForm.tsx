@@ -69,6 +69,12 @@ const dateFormats = [
   { label: "YYYY-MM-DD", value: "yyyy-mm-dd" },
 ];
 
+const paymentMethodLabels: Record<string, string> = {
+  COD: "Cash on delivery",
+  PAYPAL: "PayPal",
+  STRIPE: "Online card",
+};
+
 const formGroupClassName = "space-y-[6px]";
 const textInputClassName = "border-[#BBBBBB] focus:border-primary";
 const selectTriggerClassName = "h-[52px] border-[#BBBBBB] focus:border-primary";
@@ -358,10 +364,12 @@ function PaymentMethodsSection({
 }
 
 function PaymentMethodItem({ method }: { method: PaymentMethod }) {
+  const label = paymentMethodLabels[method.code] ?? method.label;
+
   return (
     <div className="flex items-center justify-between gap-4 rounded-[10px] border border-[#E8E8E8] px-4 py-3">
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-dark">{method.label}</p>
+        <p className="truncate text-sm font-semibold text-dark">{label}</p>
         <p className="mt-1 text-xs font-medium text-gray">{method.code}</p>
       </div>
       <span

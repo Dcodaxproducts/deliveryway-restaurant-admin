@@ -16,14 +16,10 @@ export const DEFAULT_ALLOWED_ORDER_TYPES = ["DELIVERY"];
 export type DefaultAllowedPaymentMethod =
   | "COD"
   | "STRIPE"
-  | "EASYPAISA"
-  | "JAZZCASH"
-  | "BANK_TRANSFER";
+  | "PAYPAL";
 
 export const DEFAULT_ALLOWED_PAYMENT_METHODS: DefaultAllowedPaymentMethod[] = [
   "COD",
   "STRIPE",
-  "EASYPAISA",
-  "JAZZCASH",
-  "BANK_TRANSFER",
+  "PAYPAL",
 ];
