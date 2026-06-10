@@ -6,10 +6,13 @@ import {
   AlertTriangle,
   CheckCircle2,
   CircleDollarSign,
+  ClipboardList,
   ListChecks,
   Loader2,
+  MapPin,
   Phone,
   Search,
+  ShieldCheck,
   ShoppingBag,
   Store,
   User,
@@ -62,6 +65,12 @@ const KIND_OPTIONS = ["all", "order", "group-orders"];
 const getOrderDisplayId = (order: Order) => order.orderNumber || order.id.slice(0, 8);
 
 const getBranchId = (order: Order) => order.branchId || order.branch?.id || null;
+
+const getInitials = (firstName?: string | null, lastName?: string | null) => {
+  const firstInitial = firstName?.trim().charAt(0) || "";
+  const lastInitial = lastName?.trim().charAt(0) || "";
+  return `${firstInitial}${lastInitial}`.toUpperCase() || "DW";
+};
 
 export default function AssignOrderModal({
   open,
@@ -142,6 +151,9 @@ export default function AssignOrderModal({
 
   const isBlockedByActiveDelivery = activeDeliveryOrders.length > 0;
   const isDriverBlocked = !driverCanReceiveOrders || isBlockedByActiveDelivery;
+  const deliverymanName = deliveryman
+    ? `${deliveryman.firstName || ""} ${deliveryman.lastName || ""}`.trim()
+    : "";
 
   const filteredOrders = useMemo(() => {
     return (orders || []).filter((order: Order) => {
@@ -207,27 +219,72 @@ export default function AssignOrderModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] w-[calc(100vw-24px)] max-w-none overflow-hidden border-0 p-0 shadow-2xl sm:w-[calc(100vw-48px)] sm:max-w-[calc(100vw-48px)] 2xl:max-w-[1500px]">
-        <div className="flex max-h-[92vh] min-w-0 flex-col overflow-hidden">
-          <div
-            className="px-6 py-5 text-white"
-            style={{
-              background: "linear-gradient(135deg, var(--primary), #9f1114)",
-            }}
-          >
-            <DialogHeader className="space-y-2">
-              <DialogTitle className="text-xl font-semibold tracking-tight text-white">
-                {t("assignOrder.title")}
-              </DialogTitle>
-              <DialogDescription className="text-sm text-white/80">
-                {t("assignOrder.description")}
-              </DialogDescription>
-            </DialogHeader>
+        <div className="flex max-h-[92vh] min-w-0 flex-col overflow-hidden bg-slate-50">
+          <div className="border-b border-slate-200 bg-white px-5 py-5 sm:px-6">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+              <DialogHeader className="space-y-2">
+                <DialogTitle className="text-2xl font-semibold tracking-tight text-slate-950">
+                  {t("assignOrder.title")}
+                </DialogTitle>
+                <DialogDescription className="max-w-2xl text-sm leading-6 text-slate-500">
+                  {t("assignOrder.description")}
+                </DialogDescription>
+              </DialogHeader>
 
-            <div className="mt-4 grid min-w-0 gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur sm:grid-cols-2 xl:grid-cols-4">
-              <SummaryTile label={t("assignOrder.deliveryman")} value={deliveryman ? `${deliveryman.firstName || ""} ${deliveryman.lastName || ""}` : "-"} />
-              <SummaryTile label={t("assignOrder.phone")} value={deliveryman?.phone || "-"} />
-              <SummaryTile label={t("assignOrder.branch")} value={deliveryman?.branch?.name || t("noBranch")} />
-              <SummaryTile label={t("assignOrder.status")} value={deliveryman?.status || "-"} />
+              <span
+                className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                  isDriverBlocked
+                    ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+                    : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                }`}
+              >
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    isDriverBlocked ? "bg-amber-500" : "bg-emerald-500"
+                  }`}
+                />
+                {deliveryman?.status || "-"}
+              </span>
+            </div>
+
+            <div className="mt-5 overflow-hidden rounded-[22px] border border-slate-200 bg-slate-950 shadow-sm">
+              <div className="grid min-w-0 gap-0 lg:grid-cols-[minmax(260px,0.9fr)_minmax(0,1.8fr)]">
+                <div className="flex min-w-0 items-center gap-4 bg-[var(--primary)] p-5 text-white">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-lg font-bold text-[var(--primary)] shadow-sm">
+                    {getInitials(deliveryman?.firstName, deliveryman?.lastName)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
+                      {t("assignOrder.deliveryman")}
+                    </p>
+                    <p className="mt-1 truncate text-lg font-semibold">
+                      {deliverymanName || "-"}
+                    </p>
+                    <p className="mt-1 flex min-w-0 items-center gap-2 truncate text-sm text-white/80">
+                      <Phone className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{deliveryman?.phone || "-"}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid min-w-0 gap-px bg-white/10 p-px sm:grid-cols-3">
+                  <SummaryTile
+                    icon={<MapPin className="h-4 w-4" />}
+                    label={t("assignOrder.branch")}
+                    value={deliveryman?.branch?.name || t("noBranch")}
+                  />
+                  <SummaryTile
+                    icon={<ShieldCheck className="h-4 w-4" />}
+                    label={t("assignOrder.status")}
+                    value={deliveryman?.status || "-"}
+                  />
+                  <SummaryTile
+                    icon={<ClipboardList className="h-4 w-4" />}
+                    label={t("assignOrder.activeDeliveries")}
+                    value={String(activeDeliveryOrders.length)}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -547,11 +604,22 @@ export default function AssignOrderModal({
   );
 }
 
-function SummaryTile({ label, value }: { label: string; value: string }) {
+function SummaryTile({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
   return (
-    <div className="rounded-xl bg-white/10 p-3">
-      <p className="text-xs uppercase tracking-wide text-white/70">{label}</p>
-      <p className="mt-1 truncate text-sm font-semibold text-white">{value}</p>
+    <div className="min-w-0 bg-slate-900 p-4 text-white">
+      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-white/55">
+        {icon}
+        <span className="truncate">{label}</span>
+      </div>
+      <p className="mt-2 truncate text-sm font-semibold text-white">{value}</p>
     </div>
   );
 }

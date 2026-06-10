@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { FieldPath } from "react-hook-form";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Globe2, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 
 import Container from "@/components/common/Container";
@@ -68,12 +69,6 @@ const profileFields: TextFieldConfig[] = [
     label: "Tagline",
     name: "restaurant.tagline",
     placeholder: "Fast, reliable restaurant delivery",
-  },
-  {
-    id: "restaurant-custom-domain",
-    label: "Custom Domain",
-    name: "restaurant.customDomain",
-    placeholder: "restaurant.example.com",
   },
 ];
 
@@ -147,6 +142,7 @@ export default function StorefrontSettingsPage() {
     isBrandingSaving,
     brandingError,
   } = useBranding();
+  const [browserOrigin, setBrowserOrigin] = useState("");
 
   const {
     register,
@@ -169,11 +165,21 @@ export default function StorefrontSettingsPage() {
     reset(savedBranding);
   }, [reset, savedBranding]);
 
+  useEffect(() => {
+    setBrowserOrigin(window.location.origin);
+  }, []);
+
   const getError = useCallback(
     (name: FieldPath<BrandingFormValues>) => getFieldState(name, formState).error?.message,
     [formState, getFieldState]
   );
   const isBrandingBusy = isBrandingLoading || isBrandingSaving;
+  const restaurantSlug = watchedValues?.restaurant?.slug?.trim();
+  const customDomain = watchedValues?.restaurant?.customDomain?.trim();
+  const fallbackStorefrontAddress = restaurantSlug
+    ? `${browserOrigin || "https://app.deliveryway.co"}/${restaurantSlug}`
+    : browserOrigin || "https://app.deliveryway.co";
+  const storefrontAddress = customDomain || fallbackStorefrontAddress;
 
   const onSubmit = async (values: BrandingFormValues) => {
     try {
@@ -286,6 +292,43 @@ export default function StorefrontSettingsPage() {
           <h3 className={BRANDING_SECTION_TITLE_CLASS}>{t("restaurantProfile")}</h3>
           <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
             {profileFields.map(renderTextField)}
+            <div className="md:col-span-2">
+              <div className="rounded-[18px] border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-5 shadow-sm">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex min-w-0 gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
+                      <Globe2 className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold text-[#030401]">
+                          {t("customDomain")}
+                        </p>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600">
+                          <LockKeyhole className="h-3 w-3" />
+                          {t("displayOnly")}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-5 text-gray-500">
+                        {customDomain
+                          ? t("customDomainManaged")
+                          : t("customDomainFallbackDescription")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 rounded-[14px] border border-gray-200 bg-white px-4 py-3">
+                  <p className="break-all text-sm font-semibold text-[#030401]">
+                    {storefrontAddress}
+                  </p>
+                  {!customDomain ? (
+                    <p className="mt-1 text-xs text-gray-500">
+                      {t("customDomainFallbackHint")}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
             {profileTextAreas.map(renderTextAreaField)}
           </div>
         </div>
