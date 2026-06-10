@@ -8,6 +8,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CalendarClock, Loader2, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -53,6 +60,28 @@ const defaultTimingWindow: MenuTimingWindow = {
   start: "08:00",
   end: "11:30",
 };
+
+const timezoneOptions = [
+  { value: "Asia/Karachi", label: "Pakistan - Asia/Karachi" },
+  { value: "Europe/Berlin", label: "Germany - Europe/Berlin" },
+  { value: "UTC", label: "UTC" },
+  { value: "Europe/London", label: "United Kingdom - Europe/London" },
+  { value: "Europe/Paris", label: "France - Europe/Paris" },
+  { value: "Europe/Madrid", label: "Spain - Europe/Madrid" },
+  { value: "Europe/Rome", label: "Italy - Europe/Rome" },
+  { value: "Europe/Amsterdam", label: "Netherlands - Europe/Amsterdam" },
+  { value: "Europe/Zurich", label: "Switzerland - Europe/Zurich" },
+  { value: "Asia/Dubai", label: "UAE - Asia/Dubai" },
+  { value: "Asia/Riyadh", label: "Saudi Arabia - Asia/Riyadh" },
+  { value: "Asia/Kolkata", label: "India - Asia/Kolkata" },
+  { value: "Asia/Dhaka", label: "Bangladesh - Asia/Dhaka" },
+  { value: "Asia/Singapore", label: "Singapore - Asia/Singapore" },
+  { value: "Asia/Tokyo", label: "Japan - Asia/Tokyo" },
+  { value: "America/New_York", label: "US Eastern - America/New_York" },
+  { value: "America/Chicago", label: "US Central - America/Chicago" },
+  { value: "America/Los_Angeles", label: "US Pacific - America/Los_Angeles" },
+  { value: "Australia/Sydney", label: "Australia - Australia/Sydney" },
+];
 
 export default function CreateMenuModal({
   open,
@@ -322,7 +351,7 @@ export default function CreateMenuModal({
         onOpenChange(nextOpen);
       }}
     >
-      <DialogContent className="max-w-[680px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
+      <DialogContent className="max-w-[680px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">
             {isEdit ? t("editTitle") : t("createTitle")}
@@ -413,12 +442,21 @@ export default function CreateMenuModal({
                       <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                         {t("timezone")}
                       </label>
-                      <input
+                      <Select
                         value={form.timezone}
-                        onChange={(event) => updateForm("timezone", event.target.value)}
-                        placeholder="Asia/Karachi"
-                        className="mt-2 h-[44px] w-full rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-medium outline-none transition focus:border-primary"
-                      />
+                        onValueChange={(value) => updateForm("timezone", value)}
+                      >
+                        <SelectTrigger className="mt-2 h-[44px] min-w-0 rounded-[12px] border-gray-200 bg-white text-left text-sm font-semibold text-gray-900 shadow-none">
+                          <SelectValue placeholder="Asia/Karachi" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[280px] min-w-[var(--radix-select-trigger-width)]">
+                          {timezoneOptions.map((timezone) => (
+                            <SelectItem key={timezone.value} value={timezone.value}>
+                              {timezone.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <p className="mt-1 text-xs leading-5 text-gray-500">
                         {t("timezoneDescription")}
                       </p>
@@ -449,58 +487,62 @@ export default function CreateMenuModal({
                         form.timingWindows.map((window, index) => (
                           <div
                             key={`${window.day}-${index}`}
-                            className="grid gap-3 rounded-[14px] border border-gray-100 bg-white p-3 sm:grid-cols-[1.1fr_1fr_1fr_auto]"
+                            className="min-w-0 rounded-[14px] border border-gray-100 bg-white p-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
                           >
-                            <div>
-                              <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                                {t("day")}
-                              </label>
-                              <select
-                                value={window.day}
-                                onChange={(event) => updateTimingWindow(index, "day", event.target.value)}
-                                className="mt-1 h-[42px] w-full rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-semibold outline-none focus:border-primary"
+                            <div className="flex min-w-0 items-end gap-3">
+                              <div className="min-w-0 flex-1">
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                                  {t("day")}
+                                </label>
+                                <select
+                                  value={window.day}
+                                  onChange={(event) => updateTimingWindow(index, "day", event.target.value)}
+                                  className="mt-1 h-[42px] w-full min-w-0 rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-semibold outline-none focus:border-primary"
+                                >
+                                  {timingDays.map((day) => (
+                                    <option key={day} value={day}>
+                                      {t(`days.${day}`)}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => removeTimingWindow(index)}
+                                className="h-[42px] shrink-0 rounded-[12px] px-3 text-gray-400 hover:bg-red-50 hover:text-primary"
+                                aria-label={t("removeWindow")}
                               >
-                                {timingDays.map((day) => (
-                                  <option key={day} value={day}>
-                                    {t(`days.${day}`)}
-                                  </option>
-                                ))}
-                              </select>
+                                <Trash2 size={17} />
+                              </Button>
                             </div>
 
-                            <div>
-                              <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                                {t("startTime")}
-                              </label>
-                              <input
-                                type="time"
-                                value={window.start}
-                                onChange={(event) => updateTimingWindow(index, "start", event.target.value)}
-                                className="mt-1 h-[42px] w-full rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-semibold outline-none focus:border-primary"
-                              />
-                            </div>
+                            <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
+                              <div className="min-w-0">
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                                  {t("startTime")}
+                                </label>
+                                <input
+                                  type="time"
+                                  value={window.start}
+                                  onChange={(event) => updateTimingWindow(index, "start", event.target.value)}
+                                  className="mt-1 h-[42px] w-full min-w-0 rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-semibold outline-none focus:border-primary"
+                                />
+                              </div>
 
-                            <div>
-                              <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                                {t("endTime")}
-                              </label>
-                              <input
-                                type="time"
-                                value={window.end}
-                                onChange={(event) => updateTimingWindow(index, "end", event.target.value)}
-                                className="mt-1 h-[42px] w-full rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-semibold outline-none focus:border-primary"
-                              />
+                              <div className="min-w-0">
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                                  {t("endTime")}
+                                </label>
+                                <input
+                                  type="time"
+                                  value={window.end}
+                                  onChange={(event) => updateTimingWindow(index, "end", event.target.value)}
+                                  className="mt-1 h-[42px] w-full min-w-0 rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-semibold outline-none focus:border-primary"
+                                />
+                              </div>
                             </div>
-
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              onClick={() => removeTimingWindow(index)}
-                              className="h-[42px] self-end rounded-[12px] px-3 text-gray-400 hover:bg-red-50 hover:text-primary"
-                              aria-label={t("removeWindow")}
-                            >
-                              <Trash2 size={17} />
-                            </Button>
                           </div>
                         ))
                       ) : (
