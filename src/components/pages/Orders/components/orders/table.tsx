@@ -31,6 +31,8 @@ export type OrdersTableRow = {
   status?: string;
   totalAmount?: number;
   createdAt?: string;
+  orderTime?: string;
+  deliveryOtp?: string;
   isGroupOrder?: boolean;
   customerName?: string;
   guestCount?: number;

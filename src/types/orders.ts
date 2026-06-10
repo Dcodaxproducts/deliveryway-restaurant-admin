@@ -6,6 +6,7 @@ export type Order = {
   totalAmount?: number;
   createdAt: string;
   orderTime?: string;
+  deliveryOtp?: string;
   branchId?: string | null;
   branch?: { id?: string; name?: string } | null;
   customer?: { fullName?: string; name?: string } | null;

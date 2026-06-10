@@ -8,6 +8,8 @@ export interface Order {
   status?: string;
   totalAmount?: number;
   createdAt?: string;
+  orderTime?: string;
+  deliveryOtp?: string;
   isReservation?: boolean;
   guestCount?: number;
   reservationDate?: string;
