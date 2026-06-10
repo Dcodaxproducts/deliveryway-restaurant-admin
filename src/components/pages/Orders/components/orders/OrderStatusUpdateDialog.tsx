@@ -249,12 +249,14 @@ export function OrderStatusUpdateDialog({
                       <CalendarCheck2 size={20} />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-primary">
                         {t("selectedDeliveryTime")}
                       </p>
-                      <p className="mt-1 text-lg font-bold text-gray-950">
-                        {formatDateTime(savedDeliveryTime)}
-                      </p>
+                      <div className="mt-2 inline-flex max-w-full rounded-full bg-white px-3.5 py-2 shadow-sm ring-1 ring-primary/10">
+                        <p className="truncate text-[15px] font-bold leading-none text-gray-950 sm:text-base">
+                          {formatDateTime(savedDeliveryTime)}
+                        </p>
+                      </div>
                       <p className="mt-1 text-xs leading-5 text-gray-500">
                         {t("selectedDeliveryTimeDescription")}
                       </p>
@@ -265,7 +267,7 @@ export function OrderStatusUpdateDialog({
                     variant="outline"
                     disabled={isLoading}
                     onClick={() => setDeliveryTimeEditing(true)}
-                    className="mt-4 h-[44px] w-full rounded-full border-primary text-primary hover:bg-primary/5"
+                    className="mt-4 h-[44px] w-full rounded-full border-primary bg-white text-primary hover:bg-primary/5 hover:text-primary"
                   >
                     <TimerReset size={17} />
                     {t("updateDeliveryTime")}

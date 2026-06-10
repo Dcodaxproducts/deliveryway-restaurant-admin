@@ -196,8 +196,10 @@ function SectionTitle({
 function InfoRow({ label, value }: { label: string; value?: React.ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-gray-100 py-3 last:border-b-0">
-      <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{label}</span>
-      <span className="max-w-[65%] text-right text-sm font-semibold text-gray-900">{value || "-"}</span>
+      <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-gray-400">{label}</span>
+      <span className="min-w-0 max-w-[65%] break-words text-right text-sm font-semibold text-gray-900 [overflow-wrap:anywhere]">
+        {value || "-"}
+      </span>
     </div>
   );
 }
