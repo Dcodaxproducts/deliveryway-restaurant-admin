@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import api from "@/lib/axios";
 import {
-  buildPublicPrivacyPolicyLink,
+  buildPrivacyPolicyPageLink,
   getCustomerAppContent,
   getPublicPrivacyPolicy,
   normalizeCustomerAppContent,
@@ -86,9 +86,7 @@ describe("customer app content service", () => {
     );
   });
 
-  it("builds the public popup link with encoded restaurant id", () => {
-    expect(buildPublicPrivacyPolicyLink("restaurant 1")).toBe(
-      "/api/v1/public-content/privacy-policy?restaurantId=restaurant%201"
-    );
+  it("builds the public privacy policy page link", () => {
+    expect(buildPrivacyPolicyPageLink()).toBe("/privacy-policy");
   });
 });

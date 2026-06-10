@@ -55,8 +55,7 @@ export const normalizeCustomerAppContent = (
   };
 };
 
-export const buildPublicPrivacyPolicyLink = (restaurantId: string) =>
-  `/api/v1/public-content/privacy-policy?restaurantId=${encodeURIComponent(restaurantId)}`;
+export const buildPrivacyPolicyPageLink = () => "/privacy-policy";
 
 export const getCustomerAppContent = async (restaurantId: string) => {
   const { data } = await api.get(`/restaurants/${restaurantId}/customer-app-content`);

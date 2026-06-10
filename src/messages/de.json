@@ -2791,10 +2791,10 @@
     "live": "Live",
     "modalTitle": "Datenschutzerklaerung",
     "modalSubtitle": "Popup-Vorschau der Kunden-App",
-    "publicEndpointTitle": "Oeffentlicher Lese-Endpunkt",
-    "publicEndpointDescription": "Kunden-Apps koennen die veroeffentlichte Richtlinie ueber diesen Endpunkt lesen.",
-    "copyLink": "Oeffentlichen Link kopieren",
-    "linkCopied": "Oeffentlicher Datenschutzerklaerungs-Link kopiert.",
+    "publicPageTitle": "Datenschutzerklaerungsseite",
+    "publicPageDescription": "Teilen oder oeffnen Sie die veroeffentlichte Datenschutzerklaerungsseite fuer Kunden.",
+    "copyLink": "Datenschutzerklaerungs-Link kopieren",
+    "linkCopied": "Link zur Datenschutzerklaerungsseite kopiert.",
     "missingRestaurant": "Restaurant-ID fehlt."
   },
   "printing": {

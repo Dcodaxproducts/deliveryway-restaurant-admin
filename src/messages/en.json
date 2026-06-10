@@ -2791,10 +2791,10 @@
     "live": "Live",
     "modalTitle": "Privacy Policy",
     "modalSubtitle": "Customer app popup preview",
-    "publicEndpointTitle": "Public read endpoint",
-    "publicEndpointDescription": "Customer apps can read the published policy from this endpoint.",
-    "copyLink": "Copy public link",
-    "linkCopied": "Public privacy policy link copied.",
+    "publicPageTitle": "Privacy policy page",
+    "publicPageDescription": "Share or open the published privacy policy page customers can read.",
+    "copyLink": "Copy privacy policy link",
+    "linkCopied": "Privacy policy page link copied.",
     "missingRestaurant": "Restaurant ID is missing."
   },
   "printing": {

@@ -40,7 +40,7 @@ import {
   usePublicPrivacyPolicy,
   useUpdateCustomerAppPrivacyPolicy,
 } from "@/hooks/useCustomerAppContent";
-import { buildPublicPrivacyPolicyLink } from "@/services/customer-app-content";
+import { buildPrivacyPolicyPageLink } from "@/services/customer-app-content";
 import { cn } from "@/lib/utils";
 
 const emptyPolicyTemplate = `<h2>Privacy Policy</h2>
@@ -299,14 +299,13 @@ export default function PrivacyPolicyPage() {
   const [hasLoadedInitialPolicy, setHasLoadedInitialPolicy] = useState(false);
 
   const { data: content, isLoading, isFetching, refetch } = useCustomerAppContent(restaurantId);
-  const { data: publicPolicy, isFetching: isFetchingPublicPolicy } =
-    usePublicPrivacyPolicy(restaurantId);
+  const { data: publicPolicy } = usePublicPrivacyPolicy(restaurantId);
   const { mutateAsync: updatePrivacyPolicy, isPending: isSaving } =
     useUpdateCustomerAppPrivacyPolicy();
 
   const savedPolicy = content?.privacyPolicy ?? "";
   const publicContent = publicPolicy?.privacyPolicy ?? "";
-  const publicLink = restaurantId ? buildPublicPrivacyPolicyLink(restaurantId) : "";
+  const publicLink = restaurantId ? buildPrivacyPolicyPageLink() : "";
   const isDirty = draftPolicy !== savedPolicy;
   const loading = authLoading || isLoading;
   const previewDocument = useMemo(() => buildPreviewDocument(draftPolicy), [draftPolicy]);
@@ -516,15 +515,12 @@ export default function PrivacyPolicyPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="text-base font-semibold text-[#101828]">
-                    {t("publicEndpointTitle")}
+                    {t("publicPageTitle")}
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-[#667085]">
-                    {t("publicEndpointDescription")}
+                    {t("publicPageDescription")}
                   </p>
                 </div>
-                {isFetchingPublicPolicy ? (
-                  <Loader2 className="size-4 animate-spin text-[#98A2B3]" />
-                ) : null}
               </div>
 
               <div className="mt-4 rounded-2xl border border-[#EAECF0] bg-[#F8F9FB] p-3">
