@@ -20,16 +20,15 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import FormInput from "@/components/forms/common/FormInput";
-import AsyncMultiSelect from "@/components/ui/AsyncMultiSelect";
+import AdminDealCategorySelector from "@/components/pages/Menu/deals/components/AdminDealCategorySelector";
+import AdminDealMenuItemSelector from "@/components/pages/Menu/deals/components/AdminDealMenuItemSelector";
 import type { MenuTimingDay, MenuTimingWindow } from "@/services/menus";
+import type {
+  AdminDealCategorySummary,
+  AdminDealMenuItemSummary,
+} from "@/types/admin-deals";
 
-// update these imports according to your actual paths
-import {
-  useCreateMenu,
-  useGetMenuById,
-  useUpdateMenu,
-} from "@/hooks/useMenus";
-import { getMenuItems } from "@/services/menu/menu.api";
+import { useCreateMenu, useGetMenuById, useUpdateMenu } from "@/hooks/useMenus";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslations } from "next-intl";
 
@@ -37,12 +36,6 @@ interface CreateMenuModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   menuId?: string;
-}
-
-interface MenuItemOption {
-  id: string;
-  name: string;
-  [key: string]: any;
 }
 
 const timingDays: MenuTimingDay[] = [
@@ -94,6 +87,7 @@ export default function CreateMenuModal({
 
   const { user } = useAuth();
   const restaurantId = user?.restaurantId ?? undefined;
+  const branchId = user?.branchId ?? undefined;
   const [submitted, setSubmitted] = useState(false);
 
   const [form, setForm] = useState({
@@ -102,25 +96,27 @@ export default function CreateMenuModal({
     description: "",
     sortOrder: "",
     menuItemsIds: [] as string[],
+    categoryIds: [] as string[],
     isTimed: false,
     timezone: "Asia/Karachi",
     timingWindows: [{ ...defaultTimingWindow }] as MenuTimingWindow[],
   });
 
-  const [selectedMenuItems, setSelectedMenuItems] = useState<MenuItemOption[]>(
-    []
-  );
+  const [selectedMenuItems, setSelectedMenuItems] = useState<
+    AdminDealMenuItemSummary[]
+  >([]);
+  const [selectedCategories, setSelectedCategories] = useState<
+    AdminDealCategorySummary[]
+  >([]);
 
   const { data: menuDetails, isLoading: loadingMenuDetails } = useGetMenuById(
-    open && menuId ? menuId : undefined
+    open && menuId ? menuId : undefined,
   );
 
   const createMenuMutation = useCreateMenu();
   const updateMenuMutation = useUpdateMenu();
 
-  const creating =
-    createMenuMutation.isPending || updateMenuMutation.isPending;
-
+  const creating = createMenuMutation.isPending || updateMenuMutation.isPending;
 
   useEffect(() => {
     if (!open) return;
@@ -133,7 +129,7 @@ export default function CreateMenuModal({
     const menu = menuDetails?.data;
     if (!menu) return;
 
-    const mappedSelectedItems: MenuItemOption[] =
+    const mappedSelectedItems: AdminDealMenuItemSummary[] =
       menu?.items
         ?.map((entry: any) => {
           const item = entry?.menuItem || entry;
@@ -144,10 +140,42 @@ export default function CreateMenuModal({
           return {
             id: itemId,
             name: item?.name || t("unnamedItem"),
-            ...item,
+            imageUrl: item?.imageUrl ?? null,
+            basePrice: item?.basePrice ?? null,
+            category: item?.category
+              ? {
+                  id: item.category.id,
+                  name: item.category.name,
+                }
+              : null,
           };
         })
-        .filter(Boolean) || [];
+        .filter(
+          (
+            item: AdminDealMenuItemSummary | null,
+          ): item is AdminDealMenuItemSummary => item !== null,
+        ) || [];
+
+    const mappedSelectedCategories: AdminDealCategorySummary[] =
+      menu?.categories
+        ?.map((entry: any) => {
+          const category = entry?.menuCategory || entry;
+          const categoryId = entry?.menuCategoryId || category?.id;
+
+          if (!categoryId) return null;
+
+          return {
+            id: categoryId,
+            name: category?.name || t("unnamedCategory"),
+            imageUrl: category?.imageUrl ?? null,
+            slug: category?.slug ?? null,
+          };
+        })
+        .filter(
+          (
+            category: AdminDealCategorySummary | null,
+          ): category is AdminDealCategorySummary => category !== null,
+        ) || [];
 
     setForm({
       name: menu?.name || "",
@@ -155,22 +183,27 @@ export default function CreateMenuModal({
       description: menu?.description || "",
       sortOrder: String(menu?.sortOrder ?? ""),
       menuItemsIds: mappedSelectedItems.map((item) => item.id),
+      categoryIds: mappedSelectedCategories.map((category) => category.id),
       isTimed: Boolean(menu?.isTimed),
       timezone: menu?.timingConfig?.timezone || "Asia/Karachi",
-      timingWindows: Array.isArray(menu?.timingConfig?.windows) && menu.timingConfig.windows.length
-        ? menu.timingConfig.windows.map((window: Partial<MenuTimingWindow>) => ({
-            day: timingDays.includes(window.day as MenuTimingDay)
-              ? window.day as MenuTimingDay
-              : "MONDAY",
-            start: window.start || "08:00",
-            end: window.end || "11:30",
-          }))
-        : [{ ...defaultTimingWindow }],
+      timingWindows:
+        Array.isArray(menu?.timingConfig?.windows) &&
+        menu.timingConfig.windows.length
+          ? menu.timingConfig.windows.map(
+              (window: Partial<MenuTimingWindow>) => ({
+                day: timingDays.includes(window.day as MenuTimingDay)
+                  ? (window.day as MenuTimingDay)
+                  : "MONDAY",
+                start: window.start || "08:00",
+                end: window.end || "11:30",
+              }),
+            )
+          : [{ ...defaultTimingWindow }],
     });
 
     setSelectedMenuItems(mappedSelectedItems);
+    setSelectedCategories(mappedSelectedCategories);
   }, [open, isEdit, menuDetails, t]);
-
 
   const updateForm = (key: string, value: string) => {
     if (key === "name") {
@@ -204,15 +237,18 @@ export default function CreateMenuModal({
   const updateTimingWindow = (
     index: number,
     key: keyof MenuTimingWindow,
-    value: string
+    value: string,
   ) => {
     setForm((prev) => ({
       ...prev,
-      timingWindows: prev.timingWindows.map((window, windowIndex) => (
+      timingWindows: prev.timingWindows.map((window, windowIndex) =>
         windowIndex === index
-          ? { ...window, [key]: key === "day" ? value as MenuTimingDay : value }
-          : window
-      )),
+          ? {
+              ...window,
+              [key]: key === "day" ? (value as MenuTimingDay) : value,
+            }
+          : window,
+      ),
     }));
   };
 
@@ -226,48 +262,25 @@ export default function CreateMenuModal({
   const removeTimingWindow = (index: number) => {
     setForm((prev) => ({
       ...prev,
-      timingWindows: prev.timingWindows.filter((_, windowIndex) => windowIndex !== index),
+      timingWindows: prev.timingWindows.filter(
+        (_, windowIndex) => windowIndex !== index,
+      ),
     }));
   };
 
-
-  const fetchMenuItemOptions = async ({
-    search,
-    page,
-  }: {
-    search: string;
-    page: number;
-  }) => {
-    if (!restaurantId) {
-      return { data: [], meta: undefined };
-    }
-
-    try {
-     const res = await getMenuItems({
-  page,
-  limit: 10,
-  search: search || undefined,
-  restaurantId,
-});
-      return {
-        data: Array.isArray(res?.data) ? res.data : [],
-        meta: res?.meta,
-      };
-    } catch {
-      toast.error(t("loadMenuItemsError"));
-      return { data: [], meta: undefined };
-    }
-  };
-
-
-  const handleMenuItemsChange = (items: MenuItemOption[]) => {
-    setSelectedMenuItems(items);
+  const handleMenuItemsChange = (itemIds: string[]) => {
     setForm((prev) => ({
       ...prev,
-      menuItemsIds: items.map((item) => item.id),
+      menuItemsIds: itemIds,
     }));
   };
 
+  const handleCategoriesChange = (categoryIds: string[]) => {
+    setForm((prev) => ({
+      ...prev,
+      categoryIds,
+    }));
+  };
 
   const handleSubmit = async () => {
     setSubmitted(true);
@@ -283,6 +296,7 @@ export default function CreateMenuModal({
       description: form.description.trim(),
       sortOrder: Number(form.sortOrder) || 0,
       itemIds: form.menuItemsIds,
+      categoryIds: form.categoryIds,
       isTimed: form.isTimed,
     };
 
@@ -321,7 +335,6 @@ export default function CreateMenuModal({
     }
   };
 
-
   const handleReset = () => {
     setForm({
       name: "",
@@ -329,11 +342,13 @@ export default function CreateMenuModal({
       description: "",
       sortOrder: "",
       menuItemsIds: [],
+      categoryIds: [],
       isTimed: false,
       timezone: "Asia/Karachi",
       timingWindows: [{ ...defaultTimingWindow }],
     });
     setSelectedMenuItems([]);
+    setSelectedCategories([]);
     setSubmitted(false);
   };
 
@@ -376,45 +391,48 @@ export default function CreateMenuModal({
               />
 
               <FormInput
-                label={commonT("slug")}
-                placeholder={t("slugPlaceholder")}
-                value={form.slug}
-                onChange={(v) => updateForm("slug", v)}
-              />
-
-              <FormInput
                 label={commonT("description")}
                 placeholder={t("descriptionPlaceholder")}
                 value={form.description}
                 onChange={(v) => updateForm("description", v)}
               />
 
-              <FormInput
-                label={t("sortOrder")}
-                placeholder={t("sortOrderPlaceholder")}
-                value={form.sortOrder}
-                onChange={(v) => updateForm("sortOrder", v)}
-              />
-
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-[16px] font-medium">{t("menuItems")}</p>
-                  {!!selectedMenuItems.length && (
+                  {!!form.menuItemsIds.length && (
                     <span className="text-xs font-medium text-primary bg-red-50 px-2 py-1 rounded-full">
-                      {t("selectedCount", { count: selectedMenuItems.length })}
+                      {t("selectedCount", { count: form.menuItemsIds.length })}
                     </span>
                   )}
                 </div>
 
-                <AsyncMultiSelect
-                  value={selectedMenuItems}
+                <AdminDealMenuItemSelector
+                  value={form.menuItemsIds}
                   onChange={handleMenuItemsChange}
-                  placeholder={t("selectMenuItemsPlaceholder")}
-                  fetchOptions={fetchMenuItemOptions}
-                  labelKey="name"
-                  valueKey="id"
-                  maxSelectedLabelCount={2}
-                  closeOnSelect={false}
+                  restaurantId={restaurantId}
+                  initialItems={selectedMenuItems}
+                  helpText={t("menuItemsHelp")}
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[16px] font-medium">{t("categories")}</p>
+                  {!!form.categoryIds.length && (
+                    <span className="text-xs font-medium text-primary bg-red-50 px-2 py-1 rounded-full">
+                      {t("selectedCount", { count: form.categoryIds.length })}
+                    </span>
+                  )}
+                </div>
+
+                <AdminDealCategorySelector
+                  value={form.categoryIds}
+                  onChange={handleCategoriesChange}
+                  restaurantId={restaurantId}
+                  branchId={branchId}
+                  initialCategories={selectedCategories}
+                  helpText={t("categoriesHelp")}
                 />
               </div>
 
@@ -433,7 +451,10 @@ export default function CreateMenuModal({
                       </p>
                     </div>
                   </div>
-                  <Switch checked={form.isTimed} onCheckedChange={updateTimedMenu} />
+                  <Switch
+                    checked={form.isTimed}
+                    onCheckedChange={updateTimedMenu}
+                  />
                 </div>
 
                 {form.isTimed ? (
@@ -451,7 +472,10 @@ export default function CreateMenuModal({
                         </SelectTrigger>
                         <SelectContent className="max-h-[280px] min-w-[var(--radix-select-trigger-width)]">
                           {timezoneOptions.map((timezone) => (
-                            <SelectItem key={timezone.value} value={timezone.value}>
+                            <SelectItem
+                              key={timezone.value}
+                              value={timezone.value}
+                            >
                               {timezone.label}
                             </SelectItem>
                           ))}
@@ -496,7 +520,13 @@ export default function CreateMenuModal({
                                 </label>
                                 <select
                                   value={window.day}
-                                  onChange={(event) => updateTimingWindow(index, "day", event.target.value)}
+                                  onChange={(event) =>
+                                    updateTimingWindow(
+                                      index,
+                                      "day",
+                                      event.target.value,
+                                    )
+                                  }
                                   className="mt-1 h-[42px] w-full min-w-0 rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-semibold outline-none focus:border-primary"
                                 >
                                   {timingDays.map((day) => (
@@ -526,7 +556,13 @@ export default function CreateMenuModal({
                                 <input
                                   type="time"
                                   value={window.start}
-                                  onChange={(event) => updateTimingWindow(index, "start", event.target.value)}
+                                  onChange={(event) =>
+                                    updateTimingWindow(
+                                      index,
+                                      "start",
+                                      event.target.value,
+                                    )
+                                  }
                                   className="mt-1 h-[42px] w-full min-w-0 rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-semibold outline-none focus:border-primary"
                                 />
                               </div>
@@ -538,7 +574,13 @@ export default function CreateMenuModal({
                                 <input
                                   type="time"
                                   value={window.end}
-                                  onChange={(event) => updateTimingWindow(index, "end", event.target.value)}
+                                  onChange={(event) =>
+                                    updateTimingWindow(
+                                      index,
+                                      "end",
+                                      event.target.value,
+                                    )
+                                  }
                                   className="mt-1 h-[42px] w-full min-w-0 rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-semibold outline-none focus:border-primary"
                                 />
                               </div>

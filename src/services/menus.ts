@@ -45,7 +45,6 @@ export const getMenuItems = async (params?: MenuItemsListParams) => {
   return data;
 };
 
-
 export const bulkCreateMenuItems = async (payload: BulkMenuItemsValues) => {
   const { data } = await api.post("/menu/items/bulk", payload);
   return data;
@@ -53,7 +52,7 @@ export const bulkCreateMenuItems = async (payload: BulkMenuItemsValues) => {
 
 export const updateMenuItem = async (
   id: string,
-  payload: Partial<UpdateMenuItemValues>
+  payload: Partial<UpdateMenuItemValues>,
 ) => {
   const { data } = await api.patch(`/menu/items/${id}`, payload);
   return data;
@@ -74,9 +73,7 @@ export const createMenuVariation = async (payload: MenuVariationValues) => {
   return data;
 };
 
-export const getMenuVariations = async (
-  params?: GetMenuVariationsParams
-) => {
+export const getMenuVariations = async (params?: GetMenuVariationsParams) => {
   const response = await api.get("/menu/variations", {
     params: cleanParams(params),
   });
@@ -86,7 +83,7 @@ export const getMenuVariations = async (
 
 export const updateMenuVariation = async (
   id: string,
-  payload: UpdateMenuVariationValues
+  payload: UpdateMenuVariationValues,
 ) => {
   const { data } = await api.patch(`/menu/variations/${id}`, payload);
   return data;
@@ -120,7 +117,7 @@ export const getModifierGroups = async (params?: {
 
 export const getCategoryModifierGroups = async (categoryId: string) => {
   const { data } = await api.get(
-    `/menu/categories/${categoryId}/modifier-groups`
+    `/menu/categories/${categoryId}/modifier-groups`,
   );
 
   return data;
@@ -128,7 +125,7 @@ export const getCategoryModifierGroups = async (categoryId: string) => {
 
 export const updateModifierGroup = async (
   id: string,
-  payload: Partial<UpdateModifierGroupValues>
+  payload: Partial<UpdateModifierGroupValues>,
 ) => {
   const { data } = await api.patch(`/menu/modifier-groups/${id}`, payload);
   return data;
@@ -159,7 +156,7 @@ export const getModifiers = async (params?: ModifierListParams) => {
 
 export const updateModifier = async (
   id: string,
-  payload: ModifierUpdatePayload
+  payload: ModifierUpdatePayload,
 ) => {
   const { data } = await api.patch(`/menu/modifiers/${id}`, payload);
   return data;
@@ -173,11 +170,11 @@ export const deleteModifier = async (id: string) => {
 export const attachModifierGroupToItem = async (
   itemId: string,
   groupId: string,
-  payload?: { sortOrder?: number }
+  payload?: { sortOrder?: number },
 ) => {
   const { data } = await api.post(
     `/menu/items/${itemId}/modifier-groups/${groupId}`,
-    payload
+    payload,
   );
   return data;
 };
@@ -217,7 +214,7 @@ export const getRestaurantMenu = async (id: string) => {
 
 export const updateRestaurantMenu = async (
   id: string,
-  payload: Partial<UpdateRestaurantMenuValues>
+  payload: Partial<UpdateRestaurantMenuValues>,
 ) => {
   const { data } = await api.patch(`/menus/${id}`, payload);
   return data;
@@ -234,7 +231,10 @@ export const deleteRestaurantMenu = async (id: string) => {
  * ==============================
  */
 
-export const addItemToMenu = async (menuId: string, payload: LinkMenuItemValues) => {
+export const addItemToMenu = async (
+  menuId: string,
+  payload: LinkMenuItemValues,
+) => {
   const { data } = await api.post(`/menus/${menuId}/items`, payload);
   return data;
 };
@@ -246,7 +246,7 @@ export const getMenuItemsByMenu = async (
     limit?: number;
     search?: string;
     isAvailable?: boolean;
-  }
+  },
 ) => {
   const { data } = await api.get(`/menus/${menuId}/items`, { params });
   return data;
@@ -255,7 +255,7 @@ export const getMenuItemsByMenu = async (
 export const updateMenuItemLink = async (
   menuId: string,
   linkId: string,
-  payload: Partial<UpdateLinkedMenuItemValues>
+  payload: Partial<UpdateLinkedMenuItemValues>,
 ) => {
   const { data } = await api.patch(`/menus/${menuId}/items/${linkId}`, payload);
   return data;
@@ -266,19 +266,17 @@ export const deleteMenuItemLink = async (menuId: string, linkId: string) => {
   return data;
 };
 
-
 export const attachModifierGroupToCategory = async (
   categoryId: string,
   groupId: string,
-  body: { sortOrder: number }
+  body: { sortOrder: number },
 ) => {
   const { data } = await api.post(
     `/menu/categories/${categoryId}/modifier-groups/${groupId}`,
-    body
+    body,
   );
   return data;
 };
-
 
 export const getMenuById = async (menuId: string) => {
   const { data } = await api.get(`/menus/${menuId}`);
@@ -292,6 +290,7 @@ export interface CreateMenuPayload {
   description?: string;
   sortOrder?: number;
   itemIds?: string[];
+  categoryIds?: string[];
   isActive?: boolean;
   isTimed?: boolean;
   timingConfig?: MenuTimingConfig;
@@ -328,6 +327,7 @@ export interface UpdateMenuPayload {
   description?: string;
   sortOrder?: number;
   itemIds?: string[];
+  categoryIds?: string[];
   isActive?: boolean;
   isTimed?: boolean;
   timingConfig?: MenuTimingConfig;
@@ -364,7 +364,6 @@ export const reorderMenuItems = async (payload: {
   return data;
 };
 
-
 export type MenuItemBranchOverridePayload = {
   branchId: string;
   menuItemId: string;
@@ -374,7 +373,7 @@ export type MenuItemBranchOverridePayload = {
 };
 
 export const upsertMenuItemBranchOverride = async (
-  payload: MenuItemBranchOverridePayload
+  payload: MenuItemBranchOverridePayload,
 ) => {
   const { data } = await api.post("/menu/branch-overrides/items", payload);
   return data;
