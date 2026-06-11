@@ -1,7 +1,7 @@
 "use client";
 
 import type { UIEvent } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import MenuEntitySelector from "@/components/pages/Menu/shared/MenuEntitySelector";
 import { useInfiniteCategories } from "@/hooks/useMenuCategories";
@@ -15,6 +15,7 @@ type AdminDealCategorySelectorProps = {
   restaurantId?: string;
   branchId?: string;
   initialCategories?: AdminDealCategorySummary[];
+  onSelectionOptionsChange?: (categories: AdminDealCategorySummary[]) => void;
   error?: string;
   helpText?: string;
 };
@@ -48,6 +49,7 @@ export default function AdminDealCategorySelector({
   restaurantId,
   branchId,
   initialCategories = [],
+  onSelectionOptionsChange,
   error,
   helpText,
 }: AdminDealCategorySelectorProps) {
@@ -77,6 +79,10 @@ export default function AdminDealCategorySelector({
         Boolean(category),
       );
   }, [options, value]);
+
+  useEffect(() => {
+    onSelectionOptionsChange?.(selectedCategories);
+  }, [onSelectionOptionsChange, selectedCategories]);
 
   const toggleCategory = (category: AdminDealCategorySummary) => {
     if (value.includes(category.id)) {

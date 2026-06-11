@@ -1,7 +1,9 @@
 import type {
   AdminDeal,
   AdminDealCategorySummary,
+  AdminDealCategoryRule,
   AdminDealSelectionMode,
+  AdminDealVariationSummary,
   AdminDealMenuItemSummary,
   AdminDealsListParams,
   AdminDealsListResponse,
@@ -88,10 +90,17 @@ const normalizeScopeMenuItemIds = (
 
 const normalizeScopeCategoryIds = (
   value: unknown,
-  scopeCategories?: AdminDealCategorySummary[]
+  scopeCategories?: AdminDealCategorySummary[],
+  scopeCategoryRules?: AdminDealCategoryRule[]
 ) => {
   const explicitIds = normalizeStringArray(value);
   if (explicitIds.length > 0) return explicitIds;
+
+  const ruleIds =
+    scopeCategoryRules
+      ?.map((rule) => rule.menuCategoryId)
+      .filter((id) => typeof id === "string" && id.length > 0) ?? [];
+  if (ruleIds.length > 0) return ruleIds;
 
   return scopeCategories?.map((category) => category.id).filter(Boolean) ?? [];
 };
@@ -145,6 +154,35 @@ export const normalizeAdminDealCategory = (
   };
 };
 
+const normalizeAdminDealVariation = (
+  value: unknown
+): AdminDealVariationSummary | null => {
+  if (!isRecord(value)) return null;
+
+  return {
+    id: getString(value, "id"),
+    name: getString(value, "name", "Unnamed variation"),
+  };
+};
+
+const normalizeAdminDealCategoryRule = (
+  value: unknown
+): AdminDealCategoryRule | null => {
+  if (!isRecord(value)) return null;
+
+  const menuCategoryId = getString(value, "menuCategoryId");
+  if (!menuCategoryId) return null;
+
+  const variation = normalizeAdminDealVariation(value.variation);
+
+  return {
+    menuCategoryId,
+    itemLimit: getNumber(value, "itemLimit", 1),
+    variationId: getNullableString(value, "variationId"),
+    ...(variation ? { variation } : {}),
+  };
+};
+
 export const normalizeAdminDeal = (value: unknown): AdminDeal | null => {
   if (!isRecord(value)) return null;
 
@@ -157,6 +195,11 @@ export const normalizeAdminDeal = (value: unknown): AdminDeal | null => {
     ? value.scopeCategories
         .map((category) => normalizeAdminDealCategory(category))
         .filter((category): category is AdminDealCategorySummary => category !== null)
+    : undefined;
+  const scopeCategoryRules = Array.isArray(value.scopeCategoryRules)
+    ? value.scopeCategoryRules
+        .map((rule) => normalizeAdminDealCategoryRule(rule))
+        .filter((rule): rule is AdminDealCategoryRule => rule !== null)
     : undefined;
 
   return {
@@ -178,9 +221,14 @@ export const normalizeAdminDeal = (value: unknown): AdminDeal | null => {
     dealSelectionMode: normalizeDealSelectionMode(value.dealSelectionMode),
     dealRequiredQuantity: getNullableNumber(value, "dealRequiredQuantity"),
     scopeMenuItemIds: normalizeScopeMenuItemIds(value.scopeMenuItemIds, scopeMenuItems),
-    scopeCategoryIds: normalizeScopeCategoryIds(value.scopeCategoryIds, scopeCategories),
+    scopeCategoryIds: normalizeScopeCategoryIds(
+      value.scopeCategoryIds,
+      scopeCategories,
+      scopeCategoryRules
+    ),
     ...(scopeMenuItems ? { scopeMenuItems } : {}),
     ...(scopeCategories ? { scopeCategories } : {}),
+    ...(scopeCategoryRules ? { scopeCategoryRules } : {}),
     autoApply: getBoolean(value, "autoApply", true),
     isActive: getBoolean(value, "isActive"),
     lifecycle: getOptionalString(value, "lifecycle"),

@@ -30,6 +30,24 @@ export type AdminDealCategorySummary = {
   slug?: string | null;
 };
 
+export type AdminDealVariationSummary = {
+  id: string;
+  name: string;
+};
+
+export type AdminDealCategoryRule = {
+  menuCategoryId: string;
+  itemLimit: number;
+  variationId?: string | null;
+  variation?: AdminDealVariationSummary | null;
+};
+
+export type AdminDealCategoryRuleFormValues = {
+  menuCategoryId: string;
+  itemLimit: number | null;
+  variationId?: string;
+};
+
 export type AdminDeal = {
   id: string;
   code?: string | null;
@@ -52,6 +70,7 @@ export type AdminDeal = {
   scopeCategoryIds: string[];
   scopeMenuItems?: AdminDealMenuItemSummary[];
   scopeCategories?: AdminDealCategorySummary[];
+  scopeCategoryRules?: AdminDealCategoryRule[];
   autoApply?: boolean;
   isActive: boolean;
   lifecycle?: AdminDealLifecycle;
@@ -101,7 +120,14 @@ export type AdminDealFormValues = {
   dealRequiredQuantity?: number | null;
   scopeMenuItemIds: string[];
   scopeCategoryIds: string[];
+  scopeCategoryRules: AdminDealCategoryRuleFormValues[];
   isActive: boolean;
+};
+
+export type AdminDealCategoryRulePayload = {
+  menuCategoryId: string;
+  itemLimit: number;
+  variationId?: string;
 };
 
 export type AdminDealCreatePayload = {
@@ -118,12 +144,14 @@ export type AdminDealCreatePayload = {
   dealRequiredQuantity?: number;
   scopeMenuItemIds?: string[];
   scopeCategoryIds?: string[];
+  scopeCategories?: AdminDealCategoryRulePayload[];
   isActive: boolean;
 };
 
 export type AdminDealUpdatePayload = Partial<AdminDealCreatePayload> & {
   scopeMenuItemIds?: string[];
   scopeCategoryIds?: string[];
+  scopeCategories?: AdminDealCategoryRulePayload[];
 };
 
 export type AdminDealStats = {

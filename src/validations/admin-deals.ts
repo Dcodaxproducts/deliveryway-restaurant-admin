@@ -25,6 +25,18 @@ const requiredQuantitySchema = z.preprocess(
   z.number().int().min(1).nullable().optional()
 );
 
+const categoryRuleSchema = z.object({
+  menuCategoryId: z.string().trim().min(1, "Category is required."),
+  itemLimit: z.preprocess(
+    (value) => {
+      if (value === "" || value === null || value === undefined) return null;
+      return Number(value);
+    },
+    z.number().int().min(1, "Item limit must be at least 1.")
+  ),
+  variationId: optionalText,
+});
+
 const optionalImageUrlSchema = thumbnailUrlSchema.optional().default("");
 
 const getTrimmedUrl = (value: string | null | undefined) => {
@@ -63,6 +75,7 @@ export const adminDealFormSchema = z
     dealRequiredQuantity: requiredQuantitySchema,
     scopeMenuItemIds: z.array(z.string()).default([]),
     scopeCategoryIds: z.array(z.string()).default([]),
+    scopeCategoryRules: z.array(categoryRuleSchema).default([]),
     isActive: z.boolean().default(true),
   })
   .superRefine((values, context) => {
@@ -121,15 +134,15 @@ export const adminDealFormSchema = z
       return;
     }
 
-    if (!values.dealRequiredQuantity) {
-      context.addIssue({
-        code: "custom",
-        path: ["dealRequiredQuantity"],
-        message: "Required quantity is required for flexible deals.",
-      });
-    }
-
     if (values.dealSourceType === "ITEMS") {
+      if (!values.dealRequiredQuantity) {
+        context.addIssue({
+          code: "custom",
+          path: ["dealRequiredQuantity"],
+          message: "Required quantity is required for flexible item deals.",
+        });
+      }
+
       if (
         values.dealRequiredQuantity &&
         values.scopeMenuItemIds.length < values.dealRequiredQuantity
@@ -157,6 +170,19 @@ export const adminDealFormSchema = z
         code: "custom",
         path: ["scopeCategoryIds"],
         message: "Select at least 1 category for a flexible category deal.",
+      });
+    }
+
+    const selectedCategoryIds = new Set(values.scopeCategoryIds);
+    const selectedRules = values.scopeCategoryRules.filter((rule) =>
+      selectedCategoryIds.has(rule.menuCategoryId)
+    );
+
+    if (selectedRules.length !== values.scopeCategoryIds.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["scopeCategoryRules"],
+        message: "Each selected category needs an item limit rule.",
       });
     }
 
@@ -197,13 +223,27 @@ const buildBasePayload = (values: AdminDealFormValues): AdminDealCreatePayload =
     return payload;
   }
 
-  if (typeof values.dealRequiredQuantity === "number") {
-    payload.dealRequiredQuantity = values.dealRequiredQuantity;
+  if (values.dealSourceType === "CATEGORIES") {
+    const selectedCategoryIds = new Set(values.scopeCategoryIds);
+    const scopeCategories = values.scopeCategoryRules
+      .filter((rule) => selectedCategoryIds.has(rule.menuCategoryId))
+      .map((rule) => ({
+        menuCategoryId: rule.menuCategoryId,
+        itemLimit: Number(rule.itemLimit ?? 1),
+        ...(rule.variationId ? { variationId: rule.variationId } : {}),
+      }));
+    const dealRequiredQuantity = scopeCategories.reduce(
+      (total, rule) => total + rule.itemLimit,
+      0
+    );
+
+    payload.dealRequiredQuantity = dealRequiredQuantity;
+    payload.scopeCategories = scopeCategories;
+    return payload;
   }
 
-  if (values.dealSourceType === "CATEGORIES") {
-    payload.scopeCategoryIds = values.scopeCategoryIds;
-    return payload;
+  if (typeof values.dealRequiredQuantity === "number") {
+    payload.dealRequiredQuantity = values.dealRequiredQuantity;
   }
 
   payload.scopeMenuItemIds = values.scopeMenuItemIds;
@@ -222,6 +262,7 @@ export const buildAdminDealUpdatePayload = (
 
   if (values.dealSelectionMode === "FIXED_ITEMS" || values.dealSourceType === "ITEMS") {
     payload.scopeCategoryIds = [];
+    payload.scopeCategories = [];
   } else {
     payload.scopeMenuItemIds = [];
   }

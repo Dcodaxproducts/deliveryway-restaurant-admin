@@ -22,6 +22,7 @@ const validValues: AdminDealFormValues = {
   dealRequiredQuantity: null,
   scopeMenuItemIds: ["item-1", "item-2"],
   scopeCategoryIds: [],
+  scopeCategoryRules: [],
   isActive: true,
 };
 
@@ -118,6 +119,7 @@ describe("admin deal validation", () => {
       dealRequiredQuantity: 2,
       scopeMenuItemIds: [],
       scopeCategoryIds: [],
+      scopeCategoryRules: [],
     });
 
     expect(result.success).toBe(false);
@@ -131,6 +133,27 @@ describe("admin deal validation", () => {
       dealRequiredQuantity: null,
       scopeMenuItemIds: [],
       scopeCategoryIds: ["category-1"],
+      scopeCategoryRules: [],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("flexible category deal requires one rule per selected category", () => {
+    const result = adminDealFormSchema.safeParse({
+      ...validValues,
+      dealSelectionMode: "FLEXIBLE_ITEMS",
+      dealSourceType: "CATEGORIES",
+      dealRequiredQuantity: null,
+      scopeMenuItemIds: [],
+      scopeCategoryIds: ["category-1", "category-2"],
+      scopeCategoryRules: [
+        {
+          menuCategoryId: "category-1",
+          itemLimit: 2,
+          variationId: "variation-1",
+        },
+      ],
     });
 
     expect(result.success).toBe(false);
@@ -202,12 +225,26 @@ describe("admin deal validation", () => {
       ...validValues,
       dealSelectionMode: "FLEXIBLE_ITEMS",
       dealSourceType: "CATEGORIES",
-      dealRequiredQuantity: 3,
+      dealRequiredQuantity: null,
       scopeMenuItemIds: [],
       scopeCategoryIds: ["category-1"],
+      scopeCategoryRules: [
+        {
+          menuCategoryId: "category-1",
+          itemLimit: 3,
+          variationId: "variation-1",
+        },
+      ],
     });
 
-    expect(payload.scopeCategoryIds).toEqual(["category-1"]);
+    expect(payload.scopeCategories).toEqual([
+      {
+        menuCategoryId: "category-1",
+        itemLimit: 3,
+        variationId: "variation-1",
+      },
+    ]);
+    expect(payload.dealRequiredQuantity).toBe(3);
     expect(payload.scopeMenuItemIds).toEqual([]);
   });
 });
