@@ -86,8 +86,8 @@ export default function AssignOrderModal({
 
   const assignMutation = useAssignOrdersToDeliveryman({
     messages: {
-      success: t("messages.ordersAssigned"),
-      error: t("messages.failedAssignOrders"),
+      success: t("messages.orderAssigned"),
+      error: t("messages.failedAssignOrder"),
     },
   });
 
@@ -176,7 +176,7 @@ export default function AssignOrderModal({
     setSelectedOrderIds((current) =>
       current.includes(order.id)
         ? current.filter((id) => id !== order.id)
-        : [...current, order.id],
+        : [order.id],
     );
     setAssignmentResults([]);
   };
@@ -469,7 +469,6 @@ export default function AssignOrderModal({
                           </p>
                           <p className="mt-1 text-xs text-emerald-700">
                             {t("assignOrder.multiReadyDescription", {
-                              count: assignableSelectedOrders.length,
                               deliveryman:
                                 deliveryman?.firstName ||
                                 t("assignOrder.selectedDeliverymanFallback"),
