@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import {
   Dialog,
@@ -10,7 +10,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import FormInput from "@/components/forms/common/FormInput";
 
 import {
@@ -37,7 +36,6 @@ type VariationForm = {
   name: string;
   description: string;
   price: string;
-  sortOrder: number;
   isDefault: boolean;
   isActive: boolean;
 };
@@ -75,39 +73,13 @@ const PREDEFINED_VARIATIONS = [
   },
 ];
 
-const SORT_ORDER_OPTIONS = [
-  { labelKey: "topPriority", value: 0 },
-  { labelKey: "highPriority", value: 10 },
-  { labelKey: "mediumPriority", value: 50 },
-  { labelKey: "lowPriority", value: 100 },
-];
-
 const getEmptyForm = (): VariationForm => ({
   name: "",
   description: "",
   price: "",
-  sortOrder: 0,
   isDefault: false,
   isActive: true,
 });
-
-const getSortOrderLabel = (
-  labelKey: string,
-  t: ReturnType<typeof useTranslations>
-) => {
-  switch (labelKey) {
-    case "topPriority":
-      return t("topPriority");
-    case "highPriority":
-      return t("highPriority");
-    case "mediumPriority":
-      return t("mediumPriority");
-    case "lowPriority":
-      return t("lowPriority");
-    default:
-      return labelKey;
-  }
-};
 
 export default function VariationModal({
   open,
@@ -118,7 +90,7 @@ export default function VariationModal({
   const t = useTranslations("menu.variationModal");
   const commonT = useTranslations("common");
   const isEditMode = Boolean(initialData?.id);
-const { restaurantId } = useAuth();
+  const { restaurantId } = useAuth();
   const [form, setForm] = useState<VariationForm>(getEmptyForm());
 
   const { mutate: createVariation, isPending: isCreating } =
@@ -148,7 +120,6 @@ const { restaurantId } = useAuth();
       name: data?.name || "",
       description: data?.description || "",
       price: String(data?.price ?? ""),
-      sortOrder: Number(data?.sortOrder ?? 0),
       isDefault: Boolean(data?.isDefault),
       isActive: data?.isActive === false ? false : true,
     });
@@ -195,7 +166,6 @@ const { restaurantId } = useAuth();
       name: form.name.trim(),
       description: form.description.trim(),
       price,
-      sortOrder: Number(form.sortOrder),
       isDefault: Boolean(form.isDefault),
       isActive: Boolean(form.isActive),
     };
@@ -257,16 +227,6 @@ const { restaurantId } = useAuth();
     },
   });
 };
-
-  const getSortOrderHelperText = () => {
-    const selected = SORT_ORDER_OPTIONS.find(
-      (option) => option.value === Number(form.sortOrder)
-    );
-
-    if (!selected) return t("lowerNumberFirst");
-
-    return t("priorityHelper", { label: getSortOrderLabel(selected.labelKey, t) });
-  };
 
   return (
     <Dialog
@@ -345,32 +305,6 @@ const { restaurantId } = useAuth();
             min={0}
             required
           />
-
-          <div className="space-y-2">
-            <Label>{t("displayPriority")}</Label>
-
-            <div className="relative">
-              <select
-                value={String(form.sortOrder)}
-                onChange={(e) =>
-                  handleChange("sortOrder", Number(e.target.value))
-                }
-                className="h-11 w-full appearance-none rounded-[10px] border border-[#BBBBBB] bg-white px-4 pr-12 text-sm text-gray-600 outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
-              >
-                {SORT_ORDER_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {getSortOrderLabel(option.labelKey, t)}
-                  </option>
-                ))}
-              </select>
-
-              <div className="pointer-events-none absolute right-0 top-0 flex h-full w-10 items-center justify-center rounded-r-[10px] bg-primary">
-                <ChevronDown size={16} className="text-white" />
-              </div>
-            </div>
-
-            <p className="text-xs text-gray-500">{getSortOrderHelperText()}</p>
-          </div>
 
           <div className="grid gap-3 pt-2 sm:grid-cols-2">
             <label className="flex cursor-pointer items-center justify-between rounded-[12px] border border-gray-100 bg-[#FAFAFA] px-4 py-3">

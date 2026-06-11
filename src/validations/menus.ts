@@ -292,12 +292,6 @@ const menuVariationShape = {
     message: "Variation price is required",
   }),
 
-  sortOrder: optionalNumberFromInput({
-    min: 0,
-    integer: true,
-    nonnegative: true,
-  }).default(0),
-
   isDefault: optionalBoolean(false),
   isActive: optionalBoolean(true),
 };
