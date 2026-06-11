@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useGetRestaurants } from "@/hooks/useRestaurants";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { cn } from "@/lib/utils";
 import {
   canSwitchRestaurant,
   getRecordValue,
@@ -25,7 +26,11 @@ type RestaurantOption = {
   logoUrl?: string | null;
 };
 
-export default function RestaurantPicker() {
+type RestaurantPickerProps = {
+  className?: string;
+};
+
+export default function RestaurantPicker({ className }: RestaurantPickerProps) {
   const t = useTranslations("common");
   const navigation = useTranslations("navigation");
   const { token, user, setUser, isBranchAdmin, branchId, logout } = useAuth();
@@ -151,7 +156,10 @@ export default function RestaurantPicker() {
         type="button"
         onClick={() => router.push("/branch-workspace")}
         title={branchId ? `Branch ID: ${branchId}` : branchLabel}
-        className="hidden h-[56px] max-w-[340px] items-center gap-3 rounded-xl bg-primary/10 px-4 text-left text-sm text-primary ring-1 ring-primary/20 transition hover:bg-primary/15 md:flex"
+        className={cn(
+          "flex h-[52px] w-full items-center gap-3 rounded-xl bg-primary/10 px-3 text-left text-sm text-primary ring-1 ring-primary/20 transition hover:bg-primary/15 md:h-[56px] md:max-w-[340px] md:px-4",
+          className
+        )}
       >
         <BrandLogo
           className="shrink-0 gap-0"
@@ -172,10 +180,11 @@ export default function RestaurantPicker() {
   }
 
   return (
-    <div ref={containerRef} className="relative w-[280px]">
+    <div ref={containerRef} className={cn("relative w-[280px]", className)}>
       <button
+        type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex h-[56px] w-full items-center justify-between gap-2 rounded-xl bg-muted px-4 text-sm transition-all hover:bg-primary/10"
+        className="flex h-[52px] w-full items-center justify-between gap-2 rounded-xl bg-muted px-3 text-sm transition-all hover:bg-primary/10 md:h-[56px] md:px-4"
       >
         <span className="flex min-w-0 items-center gap-3">
           <BrandLogo

@@ -47,7 +47,7 @@ export default function ProfileSection() {
       <div className="relative">
         <Button
           variant={null}
-          className="flex justify-between items-center lg:pl-[25px] gap-[24px] py-2 rounded-lg h-auto"
+          className="flex h-auto items-center justify-between gap-0 rounded-lg p-0 lg:gap-[24px] lg:py-2 lg:pl-[25px]"
         >
           <div className="flex flex-col items-start justify-center">
             {/* Hide 'Hello' and 'User Name' on mobile */}

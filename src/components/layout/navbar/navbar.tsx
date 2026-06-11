@@ -16,27 +16,27 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="relative z-30 w-full bg-white px-[20px] pl-[2px]">
-        <div className="h-[76px] flex items-center justify-between gap-3">
-          
+      <nav className="relative z-30 w-full bg-white px-3 py-2 md:px-[20px] md:py-0 md:pl-[2px]">
+        <div className="flex min-h-[64px] flex-wrap items-center justify-between gap-x-3 gap-y-2 md:h-[76px] md:flex-nowrap">
           {/* LEFT */}
-          <div className="flex items-center gap-3">
+          <div className="order-1 flex items-center gap-3">
             <button
               type="button"
               aria-label={t("openSidebar")}
-              className="ml-4 inline-flex size-10 items-center justify-center rounded-[var(--brand-button-radius)] bg-primary/10 text-primary xl:hidden"
+              className="inline-flex size-10 items-center justify-center rounded-[var(--brand-button-radius)] bg-primary/10 text-primary md:ml-4 xl:hidden"
               onClick={() => setIsSidebarOpen(true)}
             >
               <Menu size={20} />
             </button>
-
           </div>
 
           {/* CENTER */}
           <SearchBar />
-          <RestaurantPicker />
+          <div className="order-3 w-full min-w-0 md:order-none md:w-auto md:shrink-0">
+            <RestaurantPicker className="w-full md:w-[280px]" />
+          </div>
           {/* RIGHT */}
-          <div className="flex items-center gap-0 lg:gap-2">
+          <div className="order-2 ml-auto flex shrink-0 items-center gap-1 lg:gap-2 md:order-none">
             <LanguageSelector />
             <NotificationBell />
             <div className="hidden h-12 w-px bg-primary lg:block" />
