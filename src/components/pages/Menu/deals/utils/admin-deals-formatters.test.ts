@@ -33,21 +33,39 @@ describe("admin deal formatters", () => {
 
   it("does not prefill backend default current startsAt on edit", () => {
     expect(
-      toDealStartsAtInputValue({
-        startsAt: "2026-06-02T06:17:30.000Z",
-        createdAt: "2026-06-02T06:17:00.000Z",
-        expiresAt: null,
-      })
+      toDealStartsAtInputValue(
+        {
+          startsAt: "2026-06-02T06:17:30.000Z",
+          createdAt: "2026-06-02T06:17:00.000Z",
+          expiresAt: null,
+        },
+        new Date("2026-06-10T00:00:00.000Z")
+      )
+    ).toBe("");
+  });
+
+  it("does not prefill current or past startsAt when there is no expiry", () => {
+    expect(
+      toDealStartsAtInputValue(
+        {
+          startsAt: "2026-06-02T06:17:00.000Z",
+          expiresAt: null,
+        },
+        new Date("2026-06-02T06:18:00.000Z")
+      )
     ).toBe("");
   });
 
   it("keeps explicit scheduled startsAt values on edit", () => {
     expect(
-      toDealStartsAtInputValue({
-        startsAt: "2026-06-03T06:17:00.000Z",
-        createdAt: "2026-06-02T06:17:00.000Z",
-        expiresAt: null,
-      })
+      toDealStartsAtInputValue(
+        {
+          startsAt: "2026-06-03T06:17:00.000Z",
+          createdAt: "2026-06-02T06:17:00.000Z",
+          expiresAt: null,
+        },
+        new Date("2026-06-02T00:00:00.000Z")
+      )
     ).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
   });
 

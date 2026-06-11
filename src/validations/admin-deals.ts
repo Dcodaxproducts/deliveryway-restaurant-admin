@@ -46,13 +46,15 @@ const getTrimmedUrl = (value: string | null | undefined) => {
 const optionalDateTimeLocalSchema = z.preprocess(
   (value) => {
     if (value === null || value === undefined) return undefined;
-    return value;
+    if (typeof value !== "string") return undefined;
+
+    const trimmedValue = value.trim();
+    if (!trimmedValue) return undefined;
+
+    const date = new Date(trimmedValue);
+    return Number.isNaN(date.getTime()) ? undefined : trimmedValue;
   },
-  z
-    .string()
-    .trim()
-    .optional()
-    .transform((value) => (value ? value : undefined))
+  z.string().optional()
 );
 
 const getDateFromOptionalDateTime = (value: string | undefined) => {
@@ -87,22 +89,6 @@ export const adminDealFormSchema = z
   .superRefine((values, context) => {
     const startsAt = getDateFromOptionalDateTime(values.startsAt);
     const expiresAt = getDateFromOptionalDateTime(values.expiresAt);
-
-    if (values.startsAt && !startsAt) {
-      context.addIssue({
-        code: "custom",
-        path: ["startsAt"],
-        message: "Starts At must be a valid date and time.",
-      });
-    }
-
-    if (values.expiresAt && !expiresAt) {
-      context.addIssue({
-        code: "custom",
-        path: ["expiresAt"],
-        message: "Expires At must be a valid date and time.",
-      });
-    }
 
     if (startsAt && expiresAt && expiresAt <= startsAt) {
       context.addIssue({

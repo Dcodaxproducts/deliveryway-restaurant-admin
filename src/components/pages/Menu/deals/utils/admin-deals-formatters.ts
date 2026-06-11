@@ -112,12 +112,13 @@ export const toDateTimeLocalValue = (iso: string | null | undefined) => {
 };
 
 const DEFAULT_START_TOLERANCE_MS = 2 * 60 * 1000;
+const CURRENT_START_TOLERANCE_MS = 60 * 1000;
 
 export const toDealStartsAtInputValue = (deal: {
   startsAt?: string | null;
   expiresAt?: string | null;
   createdAt?: string | null;
-}) => {
+}, now = new Date()) => {
   if (!deal.startsAt) return "";
 
   const startsAt = new Date(deal.startsAt);
@@ -131,8 +132,11 @@ export const toDealStartsAtInputValue = (deal: {
     createdAt !== null &&
     !Number.isNaN(createdAt.getTime()) &&
     Math.abs(startsAt.getTime() - createdAt.getTime()) <= DEFAULT_START_TOLERANCE_MS;
+  const isCurrentOrPastStartWithoutExpiry =
+    !hasValidExpiry &&
+    startsAt.getTime() <= now.getTime() + CURRENT_START_TOLERANCE_MS;
 
-  if (isBackendDefaultStart) return "";
+  if (isBackendDefaultStart || isCurrentOrPastStartWithoutExpiry) return "";
 
   return toDateTimeLocalValue(deal.startsAt);
 };

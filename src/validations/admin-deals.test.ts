@@ -71,14 +71,14 @@ describe("admin deal validation", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects invalid start and expiry dates when provided", () => {
+  it("ignores invalid optional start and expiry dates", () => {
     const result = adminDealFormSchema.safeParse({
       ...validValues,
       startsAt: "invalid",
       expiresAt: "also-invalid",
     });
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it("fixed item deal requires at least 2 items", () => {
@@ -204,6 +204,22 @@ describe("admin deal validation", () => {
       startsAt: "",
       expiresAt: "",
     });
+
+    expect(payload).not.toHaveProperty("startsAt");
+    expect(payload).not.toHaveProperty("expiresAt");
+  });
+
+  it("payload omits start and expiry dates when optional values are invalid", () => {
+    const result = adminDealFormSchema.safeParse({
+      ...validValues,
+      startsAt: "invalid",
+      expiresAt: "also-invalid",
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    const payload = buildAdminDealCreatePayload(result.data);
 
     expect(payload).not.toHaveProperty("startsAt");
     expect(payload).not.toHaveProperty("expiresAt");
