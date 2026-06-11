@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch, type FieldErrors } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -158,10 +158,12 @@ export default function AdminDealForm({
       .filter((rule) => scopeCategoryIds.includes(rule.menuCategoryId))
       .reduce((total, rule) => total + Number(rule.itemLimit ?? 0), 0);
   }, [scopeCategoryIds, scopeCategoryRules]);
-  const fetchVariationOptions = async ({
+  const fetchVariationOptions = useCallback(async ({
+    categoryId,
     search,
     page,
   }: {
+    categoryId: string;
     search: string;
     page: number;
   }) => {
@@ -169,9 +171,10 @@ export default function AdminDealForm({
 
     const response = await getMenuVariations({
       restaurantId,
+      categoryId,
       search,
       page,
-      limit: 20,
+      limit: 50,
       sortBy: "name",
       sortOrder: "ASC",
       isActive: true,
@@ -185,7 +188,7 @@ export default function AdminDealForm({
           name: String(variation.name),
         })),
     };
-  };
+  }, [restaurantId]);
 
   useEffect(() => {
     setSelectedCategoryOptions(initialCategories);
@@ -599,6 +602,7 @@ type CategoryRulesEditorProps = {
   rules: AdminDealCategoryRuleFormValues[];
   initialVariationOptions: VariationOption[];
   fetchVariationOptions: (params: {
+    categoryId: string;
     search: string;
     page: number;
   }) => Promise<{ data: VariationOption[] }>;
@@ -625,13 +629,6 @@ function CategoryRulesEditor({
   labels,
   onChange,
 }: CategoryRulesEditorProps) {
-  const [selectedVariationOptions, setSelectedVariationOptions] =
-    useState<VariationOption[]>(initialVariationOptions);
-
-  useEffect(() => {
-    setSelectedVariationOptions(initialVariationOptions);
-  }, [initialVariationOptions]);
-
   if (categoryIds.length === 0) return null;
 
   const getCategoryName = (categoryId: string) => {
@@ -649,24 +646,6 @@ function CategoryRulesEditor({
       rule.menuCategoryId === categoryId ? { ...rule, ...patch } : rule
     );
     onChange(nextRules);
-  };
-  const getVariationOption = (variationId?: string) => {
-    if (!variationId) return null;
-
-    return (
-      selectedVariationOptions.find(
-        (variation) => variation.id === variationId
-      ) ?? { id: variationId, name: variationId }
-    );
-  };
-  const rememberVariationOption = (variation: VariationOption) => {
-    setSelectedVariationOptions((currentOptions) => {
-      if (currentOptions.some((option) => option.id === variation.id)) {
-        return currentOptions;
-      }
-
-      return [...currentOptions, variation];
-    });
   };
 
   return (
@@ -721,21 +700,20 @@ function CategoryRulesEditor({
 
               <div className="space-y-1.5">
                 <Label className="text-xs">{labels.forcedVariation}</Label>
-                <AsyncSelect
-                  value={getVariationOption(rule.variationId)}
-                  placeholder={labels.noForcedVariation}
-                  searchPlaceholder={labels.forcedVariation}
-                  noResultsText={labels.noForcedVariation}
-                  fetchOptions={fetchVariationOptions}
-                  onChange={(variation: VariationOption | null) => {
-                    if (variation?.id) {
-                      rememberVariationOption(variation);
-                    }
-
-                    updateRule(categoryId, {
-                      variationId: variation?.id ?? "",
-                    });
+                <CategoryVariationSelect
+                  categoryId={categoryId}
+                  value={rule.variationId ?? ""}
+                  initialVariationOptions={initialVariationOptions}
+                  fetchVariationOptions={fetchVariationOptions}
+                  labels={{
+                    forcedVariation: labels.forcedVariation,
+                    noForcedVariation: labels.noForcedVariation,
                   }}
+                  onChange={(variationId) =>
+                    updateRule(categoryId, {
+                      variationId,
+                    })
+                  }
                 />
                 {rule.variationId ? (
                   <button
@@ -758,6 +736,120 @@ function CategoryRulesEditor({
 
       {error ? <p className={FIELD_ERROR_CLASS}>{error}</p> : null}
     </div>
+  );
+}
+
+type CategoryVariationSelectProps = {
+  categoryId: string;
+  value: string;
+  initialVariationOptions: VariationOption[];
+  fetchVariationOptions: (params: {
+    categoryId: string;
+    search: string;
+    page: number;
+  }) => Promise<{ data: VariationOption[] }>;
+  labels: {
+    forcedVariation: string;
+    noForcedVariation: string;
+  };
+  onChange: (variationId: string) => void;
+};
+
+function CategoryVariationSelect({
+  categoryId,
+  value,
+  initialVariationOptions,
+  fetchVariationOptions,
+  labels,
+  onChange,
+}: CategoryVariationSelectProps) {
+  const onChangeRef = useRef(onChange);
+  const [selectedVariationOption, setSelectedVariationOption] =
+    useState<VariationOption | null>(() => {
+      if (!value) return null;
+
+      return (
+        initialVariationOptions.find((variation) => variation.id === value) ?? {
+          id: value,
+          name: value,
+        }
+      );
+    });
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    if (!value) {
+      setSelectedVariationOption(null);
+      return;
+    }
+
+    const initialOption = initialVariationOptions.find(
+      (variation) => variation.id === value
+    );
+    if (initialOption) {
+      setSelectedVariationOption(initialOption);
+    }
+  }, [initialVariationOptions, value]);
+
+  useEffect(() => {
+    if (!value) return;
+
+    let cancelled = false;
+
+    const validateSelectedVariation = async () => {
+      let response: { data: VariationOption[] };
+      try {
+        response = await fetchVariationOptions({
+          categoryId,
+          search: "",
+          page: 1,
+        });
+      } catch {
+        return;
+      }
+
+      if (cancelled) return;
+      const categoryVariation = response.data.find(
+        (variation) => variation.id === value
+      );
+
+      if (categoryVariation) {
+        setSelectedVariationOption(categoryVariation);
+        return;
+      }
+
+      setSelectedVariationOption(null);
+      onChangeRef.current("");
+    };
+
+    validateSelectedVariation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [categoryId, fetchVariationOptions, value]);
+
+  return (
+    <AsyncSelect
+      value={selectedVariationOption}
+      placeholder={labels.noForcedVariation}
+      searchPlaceholder={labels.forcedVariation}
+      noResultsText={labels.noForcedVariation}
+      fetchOptions={({ search, page }) =>
+        fetchVariationOptions({
+          categoryId,
+          search,
+          page,
+        })
+      }
+      onChange={(variation: VariationOption | null) => {
+        setSelectedVariationOption(variation);
+        onChange(variation?.id ?? "");
+      }}
+    />
   );
 }
 
