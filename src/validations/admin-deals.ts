@@ -252,6 +252,9 @@ export const buildAdminDealUpdatePayload = (
 ): AdminDealUpdatePayload => {
   const payload: AdminDealUpdatePayload = buildBasePayload(values);
 
+  payload.startsAt = payload.startsAt ?? null;
+  payload.expiresAt = payload.expiresAt ?? null;
+
   if (values.dealSelectionMode === "FIXED_ITEMS" || values.dealSourceType === "ITEMS") {
     payload.scopeCategoryIds = [];
     payload.scopeCategories = [];

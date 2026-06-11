@@ -148,7 +148,12 @@ export type AdminDealCreatePayload = {
   isActive: boolean;
 };
 
-export type AdminDealUpdatePayload = Partial<AdminDealCreatePayload> & {
+export type AdminDealUpdatePayload = Omit<
+  Partial<AdminDealCreatePayload>,
+  "startsAt" | "expiresAt"
+> & {
+  startsAt?: string | null;
+  expiresAt?: string | null;
   scopeMenuItemIds?: string[];
   scopeCategoryIds?: string[];
   scopeCategories?: AdminDealCategoryRulePayload[];

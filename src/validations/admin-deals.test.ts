@@ -209,6 +209,17 @@ describe("admin deal validation", () => {
     expect(payload).not.toHaveProperty("expiresAt");
   });
 
+  it("update payload clears start and expiry dates when blank", () => {
+    const payload = buildAdminDealUpdatePayload({
+      ...validValues,
+      startsAt: "",
+      expiresAt: "",
+    });
+
+    expect(payload.startsAt).toBeNull();
+    expect(payload.expiresAt).toBeNull();
+  });
+
   it("payload omits start and expiry dates when optional values are invalid", () => {
     const result = adminDealFormSchema.safeParse({
       ...validValues,
@@ -223,6 +234,22 @@ describe("admin deal validation", () => {
 
     expect(payload).not.toHaveProperty("startsAt");
     expect(payload).not.toHaveProperty("expiresAt");
+  });
+
+  it("update payload clears start and expiry dates when optional values are invalid", () => {
+    const result = adminDealFormSchema.safeParse({
+      ...validValues,
+      startsAt: "invalid",
+      expiresAt: "also-invalid",
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    const payload = buildAdminDealUpdatePayload(result.data);
+
+    expect(payload.startsAt).toBeNull();
+    expect(payload.expiresAt).toBeNull();
   });
 
   it("payload includes dealRequiredQuantity only for flexible deals", () => {
