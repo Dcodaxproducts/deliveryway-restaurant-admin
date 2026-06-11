@@ -9,6 +9,7 @@ import {
   getDealSelectedCountLabel,
   getDealLifecycleLabel,
   getDealTypeLabel,
+  toDealStartsAtInputValue,
   toDateTimeLocalValue,
 } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
 
@@ -28,6 +29,26 @@ describe("admin deal formatters", () => {
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
     );
     expect(toDateTimeLocalValue("invalid")).toBe("");
+  });
+
+  it("does not prefill backend default current startsAt on edit", () => {
+    expect(
+      toDealStartsAtInputValue({
+        startsAt: "2026-06-02T06:17:30.000Z",
+        createdAt: "2026-06-02T06:17:00.000Z",
+        expiresAt: null,
+      })
+    ).toBe("");
+  });
+
+  it("keeps explicit scheduled startsAt values on edit", () => {
+    expect(
+      toDealStartsAtInputValue({
+        startsAt: "2026-06-03T06:17:00.000Z",
+        createdAt: "2026-06-02T06:17:00.000Z",
+        expiresAt: null,
+      })
+    ).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
   });
 
   it("converts datetime-local value to ISO", () => {

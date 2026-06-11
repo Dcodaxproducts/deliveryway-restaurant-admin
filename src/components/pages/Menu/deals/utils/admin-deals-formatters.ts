@@ -111,6 +111,32 @@ export const toDateTimeLocalValue = (iso: string | null | undefined) => {
   return localDate.toISOString().slice(0, 16);
 };
 
+const DEFAULT_START_TOLERANCE_MS = 2 * 60 * 1000;
+
+export const toDealStartsAtInputValue = (deal: {
+  startsAt?: string | null;
+  expiresAt?: string | null;
+  createdAt?: string | null;
+}) => {
+  if (!deal.startsAt) return "";
+
+  const startsAt = new Date(deal.startsAt);
+  if (Number.isNaN(startsAt.getTime())) return "";
+
+  const createdAt = deal.createdAt ? new Date(deal.createdAt) : null;
+  const expiresAt = deal.expiresAt ? new Date(deal.expiresAt) : null;
+  const hasValidExpiry = expiresAt !== null && !Number.isNaN(expiresAt.getTime());
+  const isBackendDefaultStart =
+    !hasValidExpiry &&
+    createdAt !== null &&
+    !Number.isNaN(createdAt.getTime()) &&
+    Math.abs(startsAt.getTime() - createdAt.getTime()) <= DEFAULT_START_TOLERANCE_MS;
+
+  if (isBackendDefaultStart) return "";
+
+  return toDateTimeLocalValue(deal.startsAt);
+};
+
 export const fromDateTimeLocalValue = (value?: string | null) => {
   if (!value) return "";
 

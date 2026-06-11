@@ -30,6 +30,14 @@ const getNullableString = (source: Record<string, unknown>, key: string) => {
   return typeof value === "string" ? value : null;
 };
 
+const getNullableDateString = (source: Record<string, unknown>, key: string) => {
+  const value = getNullableString(source, key);
+  if (!value) return null;
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : value;
+};
+
 const getNestedNullableString = (
   source: Record<string, unknown>,
   key: string,
@@ -216,8 +224,8 @@ export const normalizeAdminDeal = (value: unknown): AdminDeal | null => {
     minOrderAmount: getNullableNumber(value, "minOrderAmount"),
     maxUses: getNullableNumber(value, "maxUses"),
     maxUsesPerCustomer: getNullableNumber(value, "maxUsesPerCustomer"),
-    startsAt: getString(value, "startsAt"),
-    expiresAt: getString(value, "expiresAt"),
+    startsAt: getNullableDateString(value, "startsAt"),
+    expiresAt: getNullableDateString(value, "expiresAt"),
     dealSelectionMode: normalizeDealSelectionMode(value.dealSelectionMode),
     dealRequiredQuantity: getNullableNumber(value, "dealRequiredQuantity"),
     scopeMenuItemIds: normalizeScopeMenuItemIds(value.scopeMenuItemIds, scopeMenuItems),

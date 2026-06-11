@@ -11,7 +11,10 @@ import FormInput from "@/components/forms/common/FormInput";
 import { ImageUploadField } from "@/components/forms/common/ImageUploadField";
 import AdminDealCategorySelector from "@/components/pages/Menu/deals/components/AdminDealCategorySelector";
 import AdminDealMenuItemSelector from "@/components/pages/Menu/deals/components/AdminDealMenuItemSelector";
-import { toDateTimeLocalValue } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
+import {
+  toDateTimeLocalValue,
+  toDealStartsAtInputValue,
+} from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
 import PageWrapper from "@/components/pages/Promotions/forms/PageWrapper";
 import Section from "@/components/pages/Promotions/forms/Section";
 import AsyncSelect from "@/components/ui/AsyncSelect";
@@ -68,7 +71,7 @@ const getDefaultValues = ({
   restaurantId: initialDeal?.restaurantId ?? restaurantId ?? "",
   branchId: initialDeal?.branchId ?? (isBranchAdmin ? branchId ?? "" : ""),
   discountValue: initialDeal?.discountValue ?? 0,
-  startsAt: toDateTimeLocalValue(initialDeal?.startsAt),
+  startsAt: initialDeal ? toDealStartsAtInputValue(initialDeal) : "",
   expiresAt: toDateTimeLocalValue(initialDeal?.expiresAt),
   dealSelectionMode: initialDeal?.dealSelectionMode ?? "FIXED_ITEMS",
   dealSourceType:

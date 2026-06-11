@@ -61,6 +61,16 @@ describe("admin deal validation", () => {
     expect(result.success).toBe(true);
   });
 
+  it("allows null start and expiry dates", () => {
+    const result = adminDealFormSchema.safeParse({
+      ...validValues,
+      startsAt: null,
+      expiresAt: null,
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("rejects invalid start and expiry dates when provided", () => {
     const result = adminDealFormSchema.safeParse({
       ...validValues,

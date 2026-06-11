@@ -186,6 +186,25 @@ describe("admin deals service", () => {
     expect(result.scopeCategoryIds).toEqual(["category-1"]);
   });
 
+  it("normalizes invalid optional deal dates to null", async () => {
+    mockedGet.mockResolvedValue({
+      success: true,
+      data: {
+        id: "deal-1",
+        title: "Open Deal",
+        discountValue: 100,
+        startsAt: "invalid-date",
+        expiresAt: "also-invalid",
+        isActive: true,
+      },
+    });
+
+    const result = await getAdminDeal("deal-1");
+
+    expect(result.startsAt).toBeNull();
+    expect(result.expiresAt).toBeNull();
+  });
+
   it("detail calls /admin/deals/:id", async () => {
     mockedGet.mockResolvedValue(dealResponse);
 

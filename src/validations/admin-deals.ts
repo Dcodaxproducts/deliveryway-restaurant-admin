@@ -43,11 +43,17 @@ const getTrimmedUrl = (value: string | null | undefined) => {
   return getOptionalThumbnailUrl(value);
 };
 
-const optionalDateTimeLocalSchema = z
-  .string()
-  .trim()
-  .optional()
-  .transform((value) => (value ? value : undefined));
+const optionalDateTimeLocalSchema = z.preprocess(
+  (value) => {
+    if (value === null || value === undefined) return undefined;
+    return value;
+  },
+  z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => (value ? value : undefined))
+);
 
 const getDateFromOptionalDateTime = (value: string | undefined) => {
   if (!value) return null;
