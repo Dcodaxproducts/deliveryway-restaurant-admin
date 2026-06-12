@@ -1,7 +1,9 @@
-import AddNewPromotion from "@/components/pages/Promotions/forms/AddNewPromotion/AddNewPromotion";
+import { AddNewPromotion } from "@/components/pages/Promotions/forms/AddNewPromotion/AddNewPromotion";
 
-const page = () => {
-  return <AddNewPromotion />;
+type AddPromotionPageProps = {
+  promotionId?: string | null;
 };
 
-export default page;
+export function AddPromotionPage({ promotionId }: AddPromotionPageProps) {
+  return <AddNewPromotion promotionId={promotionId} />;
+}

@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo } from "react";
 import { Controller, useForm, useWatch, type FieldErrors } from "react-hook-form";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -88,12 +88,15 @@ const toNumber = (value: string) => {
   return Number.isFinite(number) ? number : 0;
 };
 
-export default function AddNewPromotion() {
+type AddNewPromotionProps = {
+  promotionId?: string | null;
+};
+
+export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
   const t = useTranslations("promotions");
   const router = useRouter();
-  const searchParams = useSearchParams();
   const minimumDateTime = useMemo(() => getLocalTodayDateTimeInputValue(), []);
-  const id = searchParams.get("id");
+  const id = promotionId ?? null;
   const isEditMode = Boolean(id);
 
   const { user, restaurantId, isBranchAdmin } = useAuth();
@@ -230,11 +233,12 @@ export default function AddNewPromotion() {
     const scopeCategoryIds = values.applyMode === "SCOPED_ITEMS" ? getIds(values.selectedCategories) : [];
     const trimmedCode = values.code.trim();
     const thumbnailUrl = getOptionalThumbnailUrl(values.thumbnailUrl);
+    const shouldAutoApply = values.autoApply || !trimmedCode;
 
     return {
       ...(isEditMode
-        ? { code: values.autoApply ? "" : trimmedCode }
-        : values.autoApply || !trimmedCode
+        ? { code: shouldAutoApply ? "" : trimmedCode }
+        : shouldAutoApply
           ? {}
           : { code: trimmedCode }),
       title: values.title.trim(),
@@ -255,7 +259,7 @@ export default function AddNewPromotion() {
       scopeMenuItemIds,
       scopeCategoryIds,
       applyMode: values.applyMode,
-      autoApply: values.autoApply,
+      autoApply: shouldAutoApply,
       isActive: values.isActive,
     };
   }, [isEditMode, restaurantId, selectedBranchId, values]);
