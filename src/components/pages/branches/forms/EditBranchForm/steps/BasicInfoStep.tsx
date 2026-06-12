@@ -8,20 +8,9 @@ import {
   type BranchLocationAddressFields,
 } from "@/components/pages/Branches/components/BranchLocationPicker";
 import Section from "@/components/pages/Promotions/forms/Section";
-import { Input } from "@/components/ui/input";
 import ImageDropzoneUpload from "@/components/ui/ImageDropzoneUpload";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import type {
-  BranchFormData,
-  BranchServiceChargeType,
-} from "@/components/pages/branches/forms/EditBranchForm/types";
+import type { BranchFormData } from "@/components/pages/branches/forms/EditBranchForm/types";
 import { useTranslations } from "next-intl";
 
 type EditBranchStepOneProps = {
@@ -51,13 +40,6 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
 
   if (!data) return null;
 
-  const serviceCharge = data.settings?.serviceCharge ?? {
-    isEnabled: false,
-    type: "PERCENTAGE" as const,
-    value: 0,
-  };
-  const serviceChargeEnabled = Boolean(serviceCharge.isEnabled);
-  const serviceChargeType = serviceCharge.type ?? "PERCENTAGE";
   const addressLatitude = toCoordinate(data.lat);
   const addressLongitude = toCoordinate(data.lng);
   const initialMapPoint =
@@ -242,118 +224,6 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
             value={data.settings?.contact?.whatsapp || ""}
             onChange={(val) => update(["settings", "contact", "whatsapp"], val)}
           />
-        </div>
-      </Section>
-
-      <Section label={t("settings")}>
-        <div className="space-y-4">
-          <FormInput
-            label={t("estimatedPrepTime")}
-            value={
-              data.settings?.automation?.estimatedPrepTime === undefined
-                ? ""
-                : String(data.settings.automation.estimatedPrepTime)
-            }
-            onChange={(val) =>
-              update(
-                ["settings", "automation", "estimatedPrepTime"],
-                Number(val)
-              )
-            }
-          />
-
-          <div className="space-y-3 rounded-[12px] border p-4">
-            <div>
-              <p className="text-sm font-medium text-gray-900">
-                {t("serviceCharge")}
-              </p>
-              <p className="text-xs text-gray-500">
-                {t("serviceChargeDescription")}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between rounded-[12px] border p-4">
-              <div>
-                <p className="text-sm font-medium text-gray-900">
-                  {t("enableServiceCharge")}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {t("serviceChargeDescription")}
-                </p>
-              </div>
-
-              <Switch
-                checked={serviceChargeEnabled}
-                onCheckedChange={(val) => {
-                  update(["settings", "serviceCharge", "isEnabled"], val);
-
-                  if (!val) {
-                    update(["settings", "serviceCharge", "type"], "PERCENTAGE");
-                    update(["settings", "serviceCharge", "value"], 0);
-                  }
-                }}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label
-                  htmlFor="edit-branch-service-charge-type"
-                  className="block text-sm font-medium text-gray-900"
-                >
-                  {t("chargeType")}
-                </label>
-                <Select
-                  disabled={!serviceChargeEnabled}
-                  value={serviceChargeType}
-                  onValueChange={(value: BranchServiceChargeType) =>
-                    update(["settings", "serviceCharge", "type"], value)
-                  }
-                >
-                  <SelectTrigger
-                    id="edit-branch-service-charge-type"
-                    className="h-[44px] rounded-[10px] border-gray-300 text-sm"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PERCENTAGE">{t("percentage")}</SelectItem>
-                    <SelectItem value="AMOUNT">{t("fixedAmount")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="edit-branch-service-charge-value"
-                  className="block text-sm font-medium text-gray-900"
-                >
-                  {serviceChargeType === "AMOUNT" ? t("amount") : t("percentage")}
-                </label>
-                <Input
-                  id="edit-branch-service-charge-value"
-                  type="number"
-                  min={0}
-                  max={serviceChargeType === "PERCENTAGE" ? 100 : undefined}
-                  step="0.01"
-                  value={String(serviceCharge.value ?? 0)}
-                  disabled={!serviceChargeEnabled}
-                  className="h-[44px] rounded-[10px] border-gray-300 text-sm"
-                  onChange={(event) =>
-                    update(
-                      ["settings", "serviceCharge", "value"],
-                      event.target.value ? Number(event.target.value) : 0
-                    )
-                  }
-                />
-                <p className="text-xs text-gray-500">
-                  {serviceChargeType === "AMOUNT"
-                    ? t("serviceChargeAmountHelper")
-                    : t("serviceChargePercentageHelper")}
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </Section>
 
