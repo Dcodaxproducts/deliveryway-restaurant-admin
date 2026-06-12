@@ -52,6 +52,7 @@ export type BranchUpdatePayload = {
   restaurantId?: string;
   name?: string;
   street?: string;
+  shopNumber?: string;
   city?: string;
   state?: string;
   country?: string;

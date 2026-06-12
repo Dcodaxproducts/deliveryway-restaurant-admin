@@ -354,6 +354,49 @@ describe("edit branch delivery and settings mapper", () => {
     });
   });
 
+  it("sends editable branch identity fields as flat backend patch fields", () => {
+    const payload = buildBranchPatchPayload(
+      {
+        restaurantId: "restaurant-1",
+        name: "Blue Area",
+        street: "Main Road",
+        shopNumber: "Shop 42",
+        postalCode: "54000",
+        city: "Lahore",
+        area: "DHA",
+        state: "Punjab",
+        country: "Pakistan",
+        lat: "31.5204",
+        lng: "74.3587",
+        logoUrl: "https://cdn.example.com/logo.png",
+        coverImage: "https://cdn.example.com/cover.png",
+        description: "Branch description",
+        address: {
+          street: "Old nested street",
+          postalCode: "00000",
+          lat: "0",
+          lng: "0",
+        },
+      },
+      {}
+    );
+
+    expect(payload).toMatchObject({
+      street: "Main Road",
+      shopNumber: "Shop 42",
+      postalCode: "54000",
+      city: "Lahore",
+      area: "DHA",
+      state: "Punjab",
+      country: "Pakistan",
+      lat: "31.5204",
+      lng: "74.3587",
+      logoUrl: "https://cdn.example.com/logo.png",
+      coverImage: "https://cdn.example.com/cover.png",
+      description: "Branch description",
+    });
+  });
+
   it("includes edited branch admin password only when provided", () => {
     const payload = buildBranchPatchPayload(
       {

@@ -9,6 +9,7 @@ import {
 } from "@/components/pages/Branches/components/BranchLocationPicker";
 import Section from "@/components/pages/Promotions/forms/Section";
 import { Input } from "@/components/ui/input";
+import ImageDropzoneUpload from "@/components/ui/ImageDropzoneUpload";
 import {
   Select,
   SelectContent,
@@ -57,8 +58,8 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
   };
   const serviceChargeEnabled = Boolean(serviceCharge.isEnabled);
   const serviceChargeType = serviceCharge.type ?? "PERCENTAGE";
-  const addressLatitude = toCoordinate(data.address?.lat ?? data.lat);
-  const addressLongitude = toCoordinate(data.address?.lng ?? data.lng);
+  const addressLatitude = toCoordinate(data.lat);
+  const addressLongitude = toCoordinate(data.lng);
   const initialMapPoint =
     addressLatitude !== null && addressLongitude !== null
       ? { lat: addressLatitude, lng: addressLongitude }
@@ -84,7 +85,7 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
 
   const handleLocationFieldsChange = (fields: BranchLocationAddressFields) => {
     Object.entries(fields).forEach(([fieldName, value]) => {
-      update(["address", fieldName], value);
+      update([fieldName], value);
     });
   };
 
@@ -125,56 +126,85 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
             label={t("street")}
-            value={data.address?.street || ""}
-            onChange={(val) => update(["address", "street"], val)}
+            value={data.street || ""}
+            onChange={(val) => update(["street"], val)}
+          />
+
+          <FormInput
+            label={t("shopNumber")}
+            value={data.shopNumber || ""}
+            onChange={(val) => update(["shopNumber"], val)}
           />
 
           <FormInput
             label={t("area")}
-            value={data.address?.area || ""}
-            onChange={(val) => update(["address", "area"], val)}
+            value={data.area || ""}
+            onChange={(val) => update(["area"], val)}
           />
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
             label={t("city")}
-            value={data.address?.city || ""}
-            onChange={(val) => update(["address", "city"], val)}
+            value={data.city || ""}
+            onChange={(val) => update(["city"], val)}
           />
 
           <FormInput
             label={t("state")}
-            value={data.address?.state || ""}
-            onChange={(val) => update(["address", "state"], val)}
+            value={data.state || ""}
+            onChange={(val) => update(["state"], val)}
           />
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
             label={t("country")}
-            value={data.address?.country || ""}
-            onChange={(val) => update(["address", "country"], val)}
+            value={data.country || ""}
+            onChange={(val) => update(["country"], val)}
           />
 
           <FormInput
             label={t("postalCode")}
-            value={data.address?.postalCode || data.postalCode || ""}
-            onChange={(val) => update(["address", "postalCode"], val)}
+            value={data.postalCode || ""}
+            onChange={(val) => update(["postalCode"], val)}
           />
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
             label={t("latitude")}
-            value={data.address?.lat === undefined ? "" : String(data.address.lat)}
-            onChange={(val) => update(["address", "lat"], val)}
+            value={data.lat === undefined ? "" : String(data.lat)}
+            onChange={(val) => update(["lat"], val)}
           />
 
           <FormInput
             label={t("longitude")}
-            value={data.address?.lng === undefined ? "" : String(data.address.lng)}
-            onChange={(val) => update(["address", "lng"], val)}
+            value={data.lng === undefined ? "" : String(data.lng)}
+            onChange={(val) => update(["lng"], val)}
+          />
+        </div>
+      </Section>
+
+      <Section label={t("branchMedia")}>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <ImageDropzoneUpload
+            label={t("logo")}
+            value={data.logoUrl || ""}
+            previewAlt={t("logo")}
+            onChange={(fileUrl) => update(["logoUrl"], fileUrl)}
+            onClear={() => update(["logoUrl"], "")}
+            emptyTitle={t("uploadLogo")}
+            helperText={t("squareImageRecommended")}
+            uploadedTitle={t("logo")}
+            replaceHint={t("replaceLogo")}
+            previewHeightClassName="h-40"
+          />
+
+          <ImageDropzoneUpload
+            label={t("coverImage")}
+            value={data.coverImage || ""}
+            previewAlt={t("coverImage")}
+            onChange={(fileUrl) => update(["coverImage"], fileUrl)}
+            onClear={() => update(["coverImage"], "")}
+            emptyTitle={t("uploadCover")}
+            uploadedTitle={t("coverImage")}
+            replaceHint={t("changeCover")}
+            previewHeightClassName="h-40"
           />
         </div>
       </Section>

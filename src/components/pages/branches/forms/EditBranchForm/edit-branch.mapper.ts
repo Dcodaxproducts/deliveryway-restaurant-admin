@@ -58,6 +58,9 @@ const toRecord = (value: unknown): Record<string, unknown> =>
 const toStringValue = (value: unknown, fallback = "") =>
   typeof value === "string" ? value : fallback;
 
+const toCoordinateValue = (value: unknown): string | number | undefined =>
+  typeof value === "string" || typeof value === "number" ? value : undefined;
+
 const normalizeBranchAdminForEdit = (
   branchAdmin: unknown,
   manager: unknown
@@ -417,14 +420,15 @@ export const buildBranchPatchPayload = (
     name: branchData.name,
     isMain: branchData.isMain,
     ...(branchAdmin ? { branchAdmin } : {}),
-    street: branchData.address?.street ?? branchData.street,
-    area: branchData.address?.area ?? branchData.area,
-    postalCode: branchData.address?.postalCode ?? branchData.postalCode,
-    city: branchData.address?.city ?? branchData.city,
-    state: branchData.address?.state ?? branchData.state,
-    country: branchData.address?.country ?? branchData.country,
-    lat: branchData.address?.lat ?? branchData.lat,
-    lng: branchData.address?.lng ?? branchData.lng,
+    street: branchData.street,
+    shopNumber: branchData.shopNumber,
+    area: branchData.area,
+    postalCode: branchData.postalCode,
+    city: branchData.city,
+    state: branchData.state,
+    country: branchData.country,
+    lat: branchData.lat,
+    lng: branchData.lng,
     logoUrl: branchData.logoUrl,
     coverImage: branchData.coverImage,
     description: branchData.description,
@@ -479,6 +483,7 @@ export const buildSafeBranchSettings = (
 export const hydrateBranchForEdit = (branchData: BranchFormData): BranchFormData => {
   const settings = branchData.settings || {};
   const deliveryConfig = normalizeDeliveryConfigForApi(settings.deliveryConfig);
+  const address = toRecord(branchData.address);
   const users = Array.isArray(branchData.users) ? branchData.users : [];
   const branchAdminUser =
     users.find((user) => toRecord(user).role === "BRANCH_ADMIN") ?? users[0];
@@ -487,6 +492,15 @@ export const hydrateBranchForEdit = (branchData: BranchFormData): BranchFormData
 
   return {
     ...branchData,
+    street: toStringValue(branchData.street, toStringValue(address.street)),
+    shopNumber: toStringValue(branchData.shopNumber, toStringValue(address.shopNumber)),
+    area: toStringValue(branchData.area, toStringValue(address.area)),
+    postalCode: toStringValue(branchData.postalCode, toStringValue(address.postalCode)),
+    city: toStringValue(branchData.city, toStringValue(address.city)),
+    state: toStringValue(branchData.state, toStringValue(address.state)),
+    country: toStringValue(branchData.country, toStringValue(address.country)),
+    lat: branchData.lat ?? toCoordinateValue(address.lat),
+    lng: branchData.lng ?? toCoordinateValue(address.lng),
     branchAdmin: normalizeBranchAdminForEdit(
       branchData.branchAdmin,
       manager

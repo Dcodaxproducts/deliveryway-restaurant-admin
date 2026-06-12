@@ -1589,6 +1589,8 @@
     "branchNamePlaceholder": "eg. Main Branch",
     "street": "Street",
     "streetPlaceholder": "Street 12",
+    "shopNumber": "Shop Number",
+    "branchMedia": "Branch Media",
     "city": "City",
     "cityPlaceholder": "eg. Lahore",
     "state": "State",

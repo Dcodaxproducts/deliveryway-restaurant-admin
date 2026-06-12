@@ -96,6 +96,7 @@ export type BranchManager = {
 
 export type BranchAddress = {
   street?: string;
+  shopNumber?: string;
   area?: string;
   postalCode?: string;
   city?: string;
@@ -115,6 +116,7 @@ export type BranchFormData = {
   manager?: BranchManager;
   address?: BranchAddress;
   street?: string;
+  shopNumber?: string;
   area?: string;
   postalCode?: string;
   city?: string;
