@@ -164,7 +164,7 @@ export default function AddNewPromotion() {
       applyMode: detailApplyMode,
       autoApply: detailAutoApply,
       isActive: Boolean(detail.isActive),
-      assignPermanently: !detail.expiresAt,
+      assignPermanently: false,
       branchId,
       selectedBranch:
         normalizeSelectedOptions({
@@ -230,7 +230,11 @@ export default function AddNewPromotion() {
     const thumbnailUrl = getOptionalThumbnailUrl(values.thumbnailUrl);
 
     return {
-      ...(values.autoApply || !trimmedCode ? {} : { code: trimmedCode }),
+      ...(isEditMode
+        ? { code: values.autoApply ? "" : trimmedCode }
+        : values.autoApply || !trimmedCode
+          ? {}
+          : { code: trimmedCode }),
       title: values.title.trim(),
       description: values.description.trim(),
       ...(thumbnailUrl ? { thumbnailUrl } : {}),
@@ -243,7 +247,7 @@ export default function AddNewPromotion() {
       maxUses: toNumber(values.maxUses),
       maxUsesPerCustomer: toNumber(values.maxUsesPerCustomer),
       startsAt: toISOStringOrNull(values.startsAt),
-      expiresAt: values.assignPermanently ? null : toISOStringOrNull(values.expiresAt),
+      expiresAt: toISOStringOrNull(values.expiresAt),
       scopeMenuItemId: scopeMenuItemIds[0] ?? null,
       scopeCategoryId: scopeCategoryIds[0] ?? null,
       scopeMenuItemIds,
@@ -252,7 +256,7 @@ export default function AddNewPromotion() {
       autoApply: values.autoApply,
       isActive: values.isActive,
     };
-  }, [restaurantId, selectedBranchId, values]);
+  }, [isEditMode, restaurantId, selectedBranchId, values]);
 
   const onSubmit = async () => {
     if (!restaurantId) {
@@ -545,27 +549,15 @@ export default function AddNewPromotion() {
                   <Input
                     type="datetime-local"
                     value={field.value}
-                    disabled={values.assignPermanently}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
-                    className={`${INPUT_BASE_CLASS} disabled:cursor-not-allowed disabled:bg-gray-100`}
+                    className={INPUT_BASE_CLASS}
                   />
                   {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
                 </div>
               )}
             />
           </div>
-
-          <Controller
-            control={control}
-            name="assignPermanently"
-            render={({ field }) => (
-              <label className="flex items-center gap-2 text-sm text-gray-600">
-                <Checkbox checked={field.value} onCheckedChange={(checked) => field.onChange(Boolean(checked))} />
-                {t("forms.assignPermanently")}
-              </label>
-            )}
-          />
 
           <Controller
             control={control}

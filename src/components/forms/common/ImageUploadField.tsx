@@ -2,15 +2,27 @@
 
 import { ImagePlus, Loader2, Trash2, UploadCloud } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useId, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+} from "react";
 import type {
   FieldPath,
   FieldValues,
   PathValue,
   UseFormSetValue,
 } from "react-hook-form";
+import { toast } from "sonner";
 
-import { FIELD_ERROR_CLASS, INPUT_BASE_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
+import {
+  FIELD_ERROR_CLASS,
+  INPUT_BASE_CLASS,
+  MUTED_TEXT_SM_CLASS,
+} from "@/components/common/common-classes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,6 +63,7 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const previewObjectUrlRef = useRef<string | null>(null);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const { uploadFile, uploading } = useFileUpload();
   const currentValue = value?.trim() ?? "";
   const isDisabled = disabled || uploading;
@@ -84,19 +97,29 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (previewObjectUrlRef.current) {
-        URL.revokeObjectURL(previewObjectUrlRef.current);
-      }
+  const uploadSelectedFile = async (file?: File) => {
+    if (!file || isDisabled) return;
 
-      const objectUrl = URL.createObjectURL(file);
-      previewObjectUrlRef.current = objectUrl;
-      setLocalPreviewUrl(objectUrl);
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload a valid image file.");
+      return;
     }
 
-    const result = await uploadFile(event);
+    if (previewObjectUrlRef.current) {
+      URL.revokeObjectURL(previewObjectUrlRef.current);
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    previewObjectUrlRef.current = objectUrl;
+    setLocalPreviewUrl(objectUrl);
+
+    const syntheticEvent = {
+      target: {
+        files: [file],
+      },
+    } as unknown as ChangeEvent<HTMLInputElement>;
+
+    const result = await uploadFile(syntheticEvent);
     if (result?.fileUrl) {
       setValue(name, toFieldValue<TFieldValues>(result.fileUrl), {
         shouldDirty: true,
@@ -115,39 +138,101 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
     }
   };
 
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    await uploadSelectedFile(event.target.files?.[0]);
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    if (!isDisabled) setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+    await uploadSelectedFile(event.dataTransfer.files?.[0]);
+  };
+
+  const dropzoneClassName = `group relative overflow-hidden rounded-xl border border-dashed bg-white transition-all duration-200 ${
+    isDisabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"
+  } ${
+    isDragging
+      ? "border-primary bg-primary/5 shadow-[0_0_0_4px_rgba(232,62,73,0.10)]"
+      : "border-gray-300 hover:border-primary/50 hover:bg-gray-50"
+  }`;
+
   return (
     <div className="space-y-3">
       <Label htmlFor={inputId}>{label}</Label>
 
-      {previewSrc ? (
-        <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-          <Image
-            src={previewSrc}
-            alt={previewAlt}
-            width={640}
-            height={160}
-            unoptimized
-            className="h-40 w-full object-cover"
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => updateValue("")}
-            disabled={isDisabled}
-            aria-label={`Clear ${label}`}
-            className="absolute right-2 top-2 h-8 w-8 rounded-full bg-white/90 p-0 text-red-500 shadow hover:bg-white"
-          >
-            <Trash2 size={15} />
-          </Button>
-        </div>
-      ) : (
-        <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50">
-          <div className="text-center">
-            <ImagePlus className="mx-auto h-6 w-6 text-gray-400" />
-            <p className="mt-2 text-sm font-medium text-gray-700">No thumbnail selected</p>
+      <div
+        onClick={openFilePicker}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={dropzoneClassName}
+      >
+        {previewSrc ? (
+          <div className="relative">
+            <Image
+              src={previewSrc}
+              alt={previewAlt}
+              width={640}
+              height={160}
+              unoptimized
+              className="h-44 w-full object-cover"
+            />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent px-4 py-3">
+              <div className="pr-12">
+                <p className="text-sm font-semibold text-white">Image uploaded</p>
+                <p className="text-xs text-white/80">
+                  Drop another image here to replace it.
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={(event) => {
+                event.stopPropagation();
+                updateValue("");
+              }}
+              disabled={isDisabled}
+              aria-label={`Clear ${label}`}
+              className="absolute right-3 top-3 h-8 w-8 rounded-full bg-white/90 p-0 text-red-500 shadow hover:bg-white"
+            >
+              <Trash2 size={15} />
+            </Button>
+            {uploading ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
+                <Loader2 className="animate-spin text-primary" size={24} />
+              </div>
+            ) : null}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="flex min-h-40 flex-col items-center justify-center px-5 py-7 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/5 text-primary shadow-sm">
+              {uploading ? (
+                <Loader2 className="animate-spin" size={24} />
+              ) : isDragging ? (
+                <UploadCloud size={24} />
+              ) : (
+                <ImagePlus size={24} />
+              )}
+            </div>
+            <p className="mt-4 text-sm font-semibold text-gray-900">Drag & drop image here</p>
+            <p className="mt-1 text-xs text-gray-500">
+              or <span className="font-medium text-primary">click to browse</span>
+            </p>
+            <p className="mt-1 text-[11px] text-gray-400">PNG, JPG, WEBP</p>
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input

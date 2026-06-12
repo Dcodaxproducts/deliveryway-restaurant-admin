@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Upload, Loader2, Image as ImageIcon } from "lucide-react";
-import Image from "next/image";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { useFileUpload } from "@/hooks/useFileUpload";
+import ImageDropzoneUpload from "@/components/ui/ImageDropzoneUpload";
 import { useUpdateBranchImages } from "@/hooks/useBranches";
+import { getApiErrorMessage } from "@/lib/errors";
 import { useTranslations } from "next-intl";
 
 interface Props {
@@ -29,8 +29,6 @@ export default function BranchCoverModal({
   logoUrl,
 }: Props) {
   const t = useTranslations("branches");
-  const commonT = useTranslations("common");
-  const { uploadFile, uploading } = useFileUpload();
   const updateMutation = useUpdateBranchImages();
 
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
@@ -49,33 +47,6 @@ export default function BranchCoverModal({
     }
   }, [open, coverImage, logoUrl]);
 
-  // ================= HANDLERS =================
-  const handleCoverChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const blob = URL.createObjectURL(file);
-    setCoverPreview(blob);
-
-    const res = await uploadFile(e);
-    if (res?.fileUrl) setCoverUrl(res.fileUrl);
-  };
-
-  const handleLogoChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const blob = URL.createObjectURL(file);
-    setLogoPreview(blob);
-
-    const res = await uploadFile(e);
-    if (res?.fileUrl) setLogoUploadedUrl(res.fileUrl);
-  };
-
   // ================= SAVE =================
   const handleSave = async () => {
     if (!coverUrl && !logoUploadedUrl) {
@@ -93,7 +64,9 @@ export default function BranchCoverModal({
       });
 
       onOpenChange(false);
-    } catch (err) {}
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Unable to update branch images."));
+    }
   };
 
   // ================= UI =================
@@ -111,111 +84,46 @@ export default function BranchCoverModal({
 
         {/* BODY */}
         <div className="p-6 space-y-6">
-          <div>
-            <p className="text-sm font-medium mb-2">{t("coverImage")}</p>
+          <ImageDropzoneUpload
+            label={t("coverImage")}
+            value={coverUrl || coverPreview}
+            previewUrl={coverPreview}
+            previewAlt={t("coverImage")}
+            onPreviewChange={setCoverPreview}
+            onChange={(fileUrl) => {
+              setCoverUrl(fileUrl);
+              setCoverPreview(fileUrl);
+            }}
+            onClear={() => {
+              setCoverUrl(null);
+              setCoverPreview(null);
+            }}
+            emptyTitle={t("uploadCover")}
+            uploadedTitle={t("coverImage")}
+            replaceHint={t("changeCover")}
+            previewHeightClassName="h-[180px]"
+          />
 
-            <div className="relative group w-full h-[180px] rounded-xl overflow-hidden border bg-gray-50">
-              {coverPreview ? (
-                <>
-                  <Image
-                    src={coverPreview}
-                    fill
-                    alt={t("coverImage")}
-                    className="object-cover"
-                  />
-
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
-                    <span className="opacity-0 group-hover:opacity-100 text-white text-xs font-medium transition">
-                      {t("changeCover")}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                  <ImageIcon size={28} className="mb-2 opacity-70" />
-                  <span className="text-xs">{t("noCoverImage")}</span>
-                </div>
-              )}
-            </div>
-
-            <label className="mt-3 block">
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={handleCoverChange}
-              />
-
-              <Button
-                variant="outline"
-                className="w-full h-[40px] rounded-lg border-dashed text-sm flex items-center justify-center gap-2"
-                asChild
-              >
-                <span>
-                  {uploading ? (
-                    <Loader2 size={15} className="animate-spin" />
-                  ) : (
-                    <Upload size={15} />
-                  )}
-                  {coverPreview ? t("replaceCover") : t("uploadCover")}
-                </span>
-              </Button>
-            </label>
-          </div>
-
-          <div className="flex items-center gap-5">
-            <div className="relative size-[90px] rounded-full overflow-hidden border bg-gray-50 flex items-center justify-center group">
-              {logoPreview ? (
-                <>
-                  <Image
-                    src={logoPreview}
-                    fill
-                    alt={t("logo")}
-                    className="object-contain"
-                  />
-
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition">
-                    <span className="opacity-0 group-hover:opacity-100 text-white text-[10px]">
-                      {commonT("edit")}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <Upload size={20} className="text-gray-400" />
-              )}
-            </div>
-
-            <div className="flex-1">
-              <p className="text-sm font-medium">{t("logo")}</p>
-              <p className="text-xs text-gray-400 mb-2">
-                {t("squareImageRecommended")}
-              </p>
-
-              <label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={handleLogoChange}
-                />
-
-                <Button
-                  variant="outline"
-                  className="h-[38px] rounded-lg text-sm flex items-center gap-2"
-                  asChild
-                >
-                  <span>
-                    {uploading ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <Upload size={14} />
-                    )}
-                    {logoPreview ? t("replaceLogo") : t("uploadLogo")}
-                  </span>
-                </Button>
-              </label>
-            </div>
-          </div>
+          <ImageDropzoneUpload
+            label={t("logo")}
+            value={logoUploadedUrl || logoPreview}
+            previewUrl={logoPreview}
+            previewAlt={t("logo")}
+            onPreviewChange={setLogoPreview}
+            onChange={(fileUrl) => {
+              setLogoUploadedUrl(fileUrl);
+              setLogoPreview(fileUrl);
+            }}
+            onClear={() => {
+              setLogoUploadedUrl(null);
+              setLogoPreview(null);
+            }}
+            emptyTitle={t("uploadLogo")}
+            helperText={t("squareImageRecommended")}
+            uploadedTitle={t("logo")}
+            replaceHint={t("replaceLogo")}
+            previewHeightClassName="h-32"
+          />
 
           {/* SAVE */}
           <Button

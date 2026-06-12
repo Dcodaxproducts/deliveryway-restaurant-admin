@@ -6,6 +6,7 @@ import { Controller, useForm, type Control } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import ImageDropzoneUpload from "@/components/ui/ImageDropzoneUpload";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +22,6 @@ import {
   useGetStaffRoles,
   useUpdateStaff,
 } from "@/hooks/useEmployees";
-import { useFileUpload } from "@/hooks/useFileUpload";
 import {
   FIELD_ERROR_CLASS,
   MUTED_TEXT_SM_CLASS,
@@ -41,6 +41,10 @@ type StaffRoleOption = {
 
 type EmployeeInitialData = Partial<StaffModalValues> & {
   id?: string;
+};
+
+type StaffMutationPayload = StaffValues & {
+  avatarUrl?: string;
 };
 
 type EmployeeInvitationModalProps = {
@@ -69,7 +73,6 @@ export default function EmployeeInvitationModal({
   onSuccess,
 }: EmployeeInvitationModalProps) {
   const t = useTranslations("employees");
-  const { uploadFile, uploading } = useFileUpload();
   const { restaurantId, branchId, isBranchAdmin } = useAuth();
   const isEdit = Boolean(initialData?.id);
 
@@ -152,20 +155,16 @@ export default function EmployeeInvitationModal({
     );
   }, [initialData, open, reset]);
 
-  const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const result = await uploadFile(event);
-    if (result?.fileUrl) setValue("avatarUrl", result.fileUrl);
-  };
-
   const onSubmit = async (values: StaffModalValues) => {
     try {
-      const payload: StaffValues = {
+      const payload: StaffMutationPayload = {
         email: values.email,
         password: values.password ?? "",
         firstName: values.firstName,
         lastName: values.lastName,
         staffRoleId: values.staffRoleId,
         phone: values.phone,
+        avatarUrl: values.avatarUrl,
         bio: values.bio,
         isActive: values.isActive,
         ...(isBranchAdmin
@@ -287,22 +286,36 @@ export default function EmployeeInvitationModal({
             ) : null}
           </div>
 
-          <div>
-            <Label htmlFor="employee-avatar" className="text-sm font-medium">
-              {t("employeeModal.avatar")}
-            </Label>
-            <Input
-              id="employee-avatar"
-              type="file"
-              onChange={handleFile}
-              className="mt-1 h-[40px] rounded-lg border border-gray-300 pt-1"
-            />
-            {uploading ? (
-              <p className="mt-1 text-xs text-gray-400">
-                {t("employeeModal.uploading")}
-              </p>
-            ) : null}
-          </div>
+          <Controller
+            control={control}
+            name="avatarUrl"
+            render={({ field }) => (
+              <ImageDropzoneUpload
+                label={t("employeeModal.avatar")}
+                value={field.value}
+                previewAlt={t("employeeModal.avatar")}
+                emptyTitle={t("employeeModal.avatar")}
+                uploadingText={t("employeeModal.uploading")}
+                previewHeightClassName="h-36"
+                onChange={(fileUrl) => {
+                  field.onChange(fileUrl);
+                  setValue("avatarUrl", fileUrl, {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                    shouldValidate: true,
+                  });
+                }}
+                onClear={() => {
+                  field.onChange("");
+                  setValue("avatarUrl", "", {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                    shouldValidate: true,
+                  });
+                }}
+              />
+            )}
+          />
 
           <EmployeeField
             control={control}
