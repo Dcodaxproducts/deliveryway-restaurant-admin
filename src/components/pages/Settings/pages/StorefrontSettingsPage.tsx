@@ -107,6 +107,13 @@ const supportFields: TextFieldConfig[] = [
 
 const socialFields: TextFieldConfig[] = [
   {
+    id: "website-url",
+    label: "Website",
+    name: "restaurant.socialMedia.website",
+    placeholder: "https://restaurant.example.com",
+    inputMode: "url",
+  },
+  {
     id: "facebook-url",
     label: "Facebook",
     name: "restaurant.socialMedia.facebook",
@@ -121,6 +128,13 @@ const socialFields: TextFieldConfig[] = [
     inputMode: "url",
   },
   {
+    id: "x-url",
+    label: "X",
+    name: "restaurant.socialMedia.x",
+    placeholder: "https://x.com/restaurant",
+    inputMode: "url",
+  },
+  {
     id: "tiktok-url",
     label: "TikTok",
     name: "restaurant.socialMedia.tiktok",
@@ -129,7 +143,7 @@ const socialFields: TextFieldConfig[] = [
   },
 ];
 
-export default function StorefrontSettingsPage() {
+export function StorefrontSettingsPage() {
   const common = useTranslations("common");
   const t = useTranslations("settings");
   const {
