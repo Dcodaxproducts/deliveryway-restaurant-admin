@@ -3,23 +3,8 @@
 import { Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Header from "@/components/common/PageHeader"
-import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-
-interface Order {
-  id: string
-  orderType?: string
-  status?: string
-  totalAmount?: number
-  createdAt?: string
-  paymentMethod?: string
-  paymentStatus?: string
-  customer?: {
-    fullName?: string
-    phone?: string
-    email?: string
-  }
-}
+import type { Order } from "@/types/orders"
 
 interface HeaderProps {
   title: string
@@ -27,12 +12,11 @@ interface HeaderProps {
   orders: Order[]
 }
 
-export default function OrdersHeader({
+export function OrdersHeader({
   title,
   description,
   orders,
 }: HeaderProps) {
-  const router = useRouter()
   const common = useTranslations("common")
   const ordersT = useTranslations("orders")
 

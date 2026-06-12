@@ -1,14 +1,4 @@
-type DeliveryAddress = {
-  address?: string | null;
-  street?: string | null;
-  area?: string | null;
-  postalCode?: string | null;
-  city?: string | null;
-  state?: string | null;
-  country?: string | null;
-  lat?: number | null;
-  lng?: number | null;
-};
+import type { DeliveryAddress } from "@/types/orders";
 
 type PaymentOptions = {
   selected?: string | null;

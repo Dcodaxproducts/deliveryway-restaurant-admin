@@ -4,10 +4,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, type FormEvent } from "react";
+import { Suspense, useEffect, type FormEvent } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { Building2, Store } from "lucide-react";
 
 import FormInput from "@/components/forms/common/FormInput";
 import AuthPageShell from "@/components/pages/Auth/components/AuthPageShell";
@@ -21,8 +22,29 @@ import {
   loginSchema,
   type LoginFormValues,
 } from "@/validations/auth";
+import { cn } from "@/lib/utils";
 
-const LoginForm = () => {
+const loginRoles: Array<{
+  value: NonNullable<LoginFormValues["role"]>;
+  icon: typeof Building2;
+  labelKey: "businessAdminRole" | "branchAdminRole";
+  descriptionKey: "businessAdminRoleDescription" | "branchAdminRoleDescription";
+}> = [
+  {
+    value: "BUSINESS_ADMIN",
+    icon: Building2,
+    labelKey: "businessAdminRole",
+    descriptionKey: "businessAdminRoleDescription",
+  },
+  {
+    value: "BRANCH_ADMIN",
+    icon: Store,
+    labelKey: "branchAdminRole",
+    descriptionKey: "branchAdminRoleDescription",
+  },
+];
+
+function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuthContext();
@@ -38,6 +60,7 @@ const LoginForm = () => {
     defaultValues: {
       email: "",
       password: "",
+      role: "BUSINESS_ADMIN",
     },
   });
 
@@ -137,6 +160,61 @@ const LoginForm = () => {
             )}
           />
 
+          <Controller
+            control={control}
+            name="role"
+            render={({ field }) => (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-gray-900">
+                    {t("loginAs")}
+                  </p>
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                    {t("roleRequired")}
+                  </span>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {loginRoles.map(({ value, icon: Icon, labelKey, descriptionKey }) => {
+                    const selected = field.value === value;
+
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => field.onChange(value)}
+                        className={cn(
+                          "group flex min-h-[92px] flex-col items-start gap-3 rounded-2xl border p-4 text-left transition",
+                          selected
+                            ? "border-primary bg-primary/5 shadow-[0_10px_28px_rgba(193,18,31,0.12)]"
+                            : "border-gray-200 bg-white hover:border-primary/40 hover:bg-gray-50"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "inline-flex size-9 items-center justify-center rounded-full transition",
+                            selected
+                              ? "bg-primary text-white"
+                              : "bg-gray-100 text-gray-500 group-hover:text-primary"
+                          )}
+                        >
+                          <Icon className="size-4" />
+                        </span>
+                        <span>
+                          <span className="block text-sm font-semibold text-gray-900">
+                            {t(labelKey)}
+                          </span>
+                          <span className="mt-1 block text-xs leading-5 text-gray-500">
+                            {t(descriptionKey)}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          />
+
           <div className="flex items-center justify-between text-sm">
             <label className="flex cursor-pointer items-center gap-2 text-gray-500">
               <Checkbox checked />
@@ -174,6 +252,12 @@ const LoginForm = () => {
       </div>
     </AuthPageShell>
   );
-};
+}
 
-export default LoginForm;
+export function LoginForm() {
+  return (
+    <Suspense fallback={<div className="py-10 text-center">Loading login...</div>}>
+      <LoginFormContent />
+    </Suspense>
+  );
+}

@@ -17,7 +17,7 @@ interface Props {
   onStatusChange: (value: string) => void;
 }
 
-export default function OrdersFilters({
+export function OrdersFilters({
   onSearch,
   onSortChange,
   onStatusChange,
@@ -39,6 +39,8 @@ export default function OrdersFilters({
     { label: t("status.PREPARING"), value: "PREPARING" },
     { label: t("status.READY"), value: "READY_FOR_PICKUP" },
     { label: t("status.PICKED_UP"), value: "PICKED_UP" },
+    { label: t("status.READY_TO_SERVE"), value: "READY_TO_SERVE" },
+    { label: t("status.SERVED"), value: "SERVED" },
     { label: t("status.OUT_FOR_DELIVERY"), value: "OUT_FOR_DELIVERY" },
     { label: t("status.DELIVERED"), value: "DELIVERED" },
     { label: t("status.CANCELLED"), value: "CANCELLED" },

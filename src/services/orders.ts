@@ -55,13 +55,23 @@ const getNumber = (source: Record<string, unknown>, key: string) => {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 };
 
+const getNullableNumber = (source: Record<string, unknown>, key: string) => {
+  const value = source[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+};
+
 const normalizeOrderCustomer = (value: unknown): Order["customer"] => {
   if (!isRecord(value)) return null;
 
   return {
+    id: getOptionalString(value, "id"),
     fullName: getOptionalString(value, "fullName"),
     name: getOptionalString(value, "name"),
+    firstName: getOptionalString(value, "firstName"),
+    lastName: getOptionalString(value, "lastName"),
+    email: getOptionalString(value, "email"),
     phone: getOptionalString(value, "phone"),
+    avatarUrl: getOptionalString(value, "avatarUrl"),
   };
 };
 
@@ -71,6 +81,22 @@ const normalizeOrderBranch = (value: unknown): Order["branch"] => {
   return {
     id: getOptionalString(value, "id"),
     name: getOptionalString(value, "name"),
+  };
+};
+
+const normalizeDeliveryAddress = (value: unknown): Order["deliveryAddress"] => {
+  if (!isRecord(value)) return null;
+
+  return {
+    address: getNullableString(value, "address"),
+    street: getNullableString(value, "street"),
+    area: getNullableString(value, "area"),
+    postalCode: getNullableString(value, "postalCode"),
+    city: getNullableString(value, "city"),
+    state: getNullableString(value, "state"),
+    country: getNullableString(value, "country"),
+    lat: getNullableNumber(value, "lat"),
+    lng: getNullableNumber(value, "lng"),
   };
 };
 
@@ -85,6 +111,8 @@ export const normalizeOrder = (value: unknown): Order | null => {
     orderNumber: getOptionalString(value, "orderNumber"),
     orderType: getString(value, "orderType"),
     status: getString(value, "status"),
+    paymentMethod: getOptionalString(value, "paymentMethod"),
+    paymentStatus: getOptionalString(value, "paymentStatus"),
     totalAmount: getNumber(value, "totalAmount"),
     createdAt: getString(value, "createdAt"),
     orderTime: getOptionalString(value, "orderTime"),
@@ -93,6 +121,7 @@ export const normalizeOrder = (value: unknown): Order | null => {
     branchId: getNullableString(value, "branchId"),
     branch: normalizeOrderBranch(value.branch),
     customer: normalizeOrderCustomer(value.customer),
+    deliveryAddress: normalizeDeliveryAddress(value.deliveryAddress),
     isGroupOrder:
       typeof value.isGroupOrder === "boolean" ? value.isGroupOrder : undefined,
   };

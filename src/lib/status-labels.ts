@@ -5,7 +5,7 @@ export const ORDER_STATUS_LABEL_KEYS: Record<string, string> = {
   READY: "status.READY",
   READY_FOR_PICKUP: "status.READY",
   PICKED_UP: "status.PICKED_UP",
-  READY_TO_SERVE: "status.READY",
+  READY_TO_SERVE: "status.READY_TO_SERVE",
   SERVED: "status.SERVED",
   OUT_FOR_DELIVERY: "status.OUT_FOR_DELIVERY",
   ON_DELIVERY: "status.OUT_FOR_DELIVERY",

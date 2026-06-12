@@ -21,19 +21,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import TableSkeleton from "@/components/common/TableSkeleton";
 import SortHeader from "@/components/common/sort-header";
+import { formatDeliveryAddress } from "@/components/pages/Orders/components/orders/details/order-details-utils";
 import { OrderStatusUpdateDialog } from "@/components/pages/Orders/components/orders/OrderStatusUpdateDialog";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
+import type { Order } from "@/types/orders";
 import { useTranslations } from "next-intl";
 
-export type OrdersTableRow = {
-  id: string;
-  orderType?: string;
-  status?: string;
-  totalAmount?: number;
-  createdAt?: string;
-  orderTime?: string;
-  deliveryOtp?: string;
-  isGroupOrder?: boolean;
+export type OrdersTableRow = Order & {
   customerName?: string;
   guestCount?: number;
   reservationDate?: string;
@@ -64,6 +58,33 @@ export function OrdersTable({
     status && ORDER_STATUS_LABEL_KEYS[status]
       ? t(ORDER_STATUS_LABEL_KEYS[status])
       : status;
+  const getCustomerName = (order: OrdersTableRow) => {
+    const customer = order.customer;
+    const fullName =
+      customer?.fullName ||
+      customer?.name ||
+      `${customer?.firstName ?? ""} ${customer?.lastName ?? ""}`.trim();
+
+    return fullName || order.customerName || t("unknownUser");
+  };
+  const getCustomerDetail = (order: OrdersTableRow) =>
+    order.customer?.email || order.customer?.phone || order.customer?.id || "-";
+  const getAddressPreview = (order: OrdersTableRow) => {
+    if (order.orderType !== "DELIVERY") {
+      return {
+        primary: t("takeawayOrder"),
+        secondary: order.branch?.name || t("noBranch"),
+      };
+    }
+
+    const formattedAddress = formatDeliveryAddress(order.deliveryAddress);
+    const [primaryAddress, ...secondaryAddress] = formattedAddress?.split("\n") ?? [];
+
+    return {
+      primary: primaryAddress || t("addressPending"),
+      secondary: secondaryAddress.join(", ") || order.branch?.name || t("noBranch"),
+    };
+  };
 
   if (loading) {
     return (
@@ -73,7 +94,14 @@ export function OrdersTable({
         </div>
 
         <TableSkeleton
-          headers={[t("orderId"), t("date"), t("orderType"), t("amount"), t("statusLabel")]}
+          headers={[
+            t("orderId"),
+            t("date"),
+            t("customerInfo"),
+            t("address"),
+            t("amount"),
+            t("statusLabel"),
+          ]}
           rows={6}
           showCheckbox
           showActions
@@ -119,7 +147,8 @@ export function OrdersTable({
       <>
         <SortHeader label={t("orderId")} sortKey="id" activeKey={sortKey} direction={sortDir} onSort={onSort} />
         <SortHeader label={t("date")} sortKey="createdAt" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label={t("orderType")} sortKey="orderType" activeKey={sortKey} direction={sortDir} onSort={onSort} />
+        <SortHeader label={t("customerInfo")} sortKey="customerName" activeKey={sortKey} direction={sortDir} onSort={onSort} />
+        <TableHead>{t("address")}</TableHead>
         <SortHeader label={t("amount")} sortKey="totalAmount" activeKey={sortKey} direction={sortDir} onSort={onSort} />
         <SortHeader label={t("statusLabel")} sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} />
       </>
@@ -138,9 +167,11 @@ export function OrdersTable({
       reservationDate,
       status,
       createdAt,
-      orderType,
       totalAmount,
     } = order;
+    const customerNameValue = getCustomerName(order);
+    const customerDetail = getCustomerDetail(order);
+    const addressPreview = getAddressPreview(order);
 
     return (
     <TableRow key={id} className="border-none h-[70px]">
@@ -182,8 +213,18 @@ export function OrdersTable({
               : "-"}
           </TableCell>
 
-          <TableCell className="px-4 text-gray-600">
-            {orderType ?? "-"}
+          <TableCell className="px-4">
+            <p className="font-medium text-gray-700">{customerNameValue}</p>
+            <p className="text-sm text-gray-500">{customerDetail}</p>
+          </TableCell>
+
+          <TableCell className="max-w-[260px] px-4">
+            <p className="truncate font-medium text-gray-700">
+              {addressPreview.primary}
+            </p>
+            <p className="truncate text-sm text-gray-500">
+              {addressPreview.secondary}
+            </p>
           </TableCell>
 
           <TableCell className="px-4 font-medium text-green-600">

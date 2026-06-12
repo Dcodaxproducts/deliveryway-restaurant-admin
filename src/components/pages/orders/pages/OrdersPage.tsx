@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import StatsSection from "@/components/common/stats-section";
-import Header from "@/components/pages/Orders/components/orders/header";
+import { OrdersHeader } from "@/components/pages/Orders/components/orders/header";
 import Container from "@/components/common/Container";
 import {
   OrdersTable,
   type OrdersTableRow,
 } from "@/components/pages/Orders/components/orders/table";
 import { Button } from "@/components/ui/button";
-import OrdersFilters from "@/components/pages/Orders/components/orders/OrdersFilters";
+import { OrdersFilters } from "@/components/pages/Orders/components/orders/OrdersFilters";
 import { useAuth } from "@/hooks/useAuth";
 import PaginationSection from "@/components/common/pagination";
 import { sortData } from "@/lib/sort-data";
@@ -18,10 +18,19 @@ import { useOrders } from "@/hooks/useOrders";
 import {
   buildOrderStats,
   getOrdersHeaderContent,
-  type Order,
   type OrderTab,
 } from "@/components/pages/orders/utils/orders-page.helpers";
 import { useTranslations } from "next-intl";
+import type { Order } from "@/types/orders";
+
+const getOrderCustomerName = (order: Order) => {
+  const customer = order.customer;
+  return (
+    customer?.fullName ||
+    customer?.name ||
+    `${customer?.firstName ?? ""} ${customer?.lastName ?? ""}`.trim()
+  );
+};
 
 export function OrdersPage() {
   const t = useTranslations("orders");
@@ -94,13 +103,19 @@ export function OrdersPage() {
     }
   };
 
-  const sortedOrders = sortKey ? sortData(orders, sortKey as keyof Order, sortDir) : orders;
+  const ordersWithCustomerName: OrdersTableRow[] = orders.map((order) => ({
+    ...order,
+    customerName: getOrderCustomerName(order),
+  }));
+  const sortedOrders = sortKey
+    ? sortData<OrdersTableRow>(ordersWithCustomerName, sortKey, sortDir)
+    : ordersWithCustomerName;
 
   const { title, description } = getOrdersHeaderContent(activeTab, isBranchAdmin, t);
 
   return (
     <Container>
-      <Header title={title} description={description} orders={sortedOrders} />
+      <OrdersHeader title={title} description={description} orders={sortedOrders} />
 
       <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6">
         <StatsSection

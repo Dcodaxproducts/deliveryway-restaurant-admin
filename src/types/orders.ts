@@ -1,8 +1,22 @@
+export type DeliveryAddress = {
+  address?: string | null;
+  street?: string | null;
+  area?: string | null;
+  postalCode?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+};
+
 export type Order = {
   id: string;
   orderNumber?: string;
   orderType: string;
   status: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
   totalAmount?: number;
   createdAt: string;
   orderTime?: string;
@@ -10,7 +24,17 @@ export type Order = {
   deliverymanId?: string | null;
   branchId?: string | null;
   branch?: { id?: string; name?: string } | null;
-  customer?: { fullName?: string; name?: string; phone?: string } | null;
+  customer?: {
+    id?: string;
+    fullName?: string;
+    name?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    avatarUrl?: string;
+  } | null;
+  deliveryAddress?: DeliveryAddress | null;
   isGroupOrder?: boolean;
 };
 

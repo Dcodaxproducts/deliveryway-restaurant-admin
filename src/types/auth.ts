@@ -3,6 +3,7 @@ import type { AuthStorage, AuthUser } from "@/lib/auth";
 export type LoginPayload = {
   email: string;
   password: string;
+  role?: "BUSINESS_ADMIN" | "BRANCH_ADMIN";
 };
 
 export type ForgotPasswordPayload = {

@@ -4,6 +4,7 @@ import { validationMessages } from "@/lib/validation";
 export const loginSchema = z.object({
   email: z.string().min(1, validationMessages.required).email(validationMessages.email),
   password: z.string().min(1, validationMessages.required),
+  role: z.enum(["BUSINESS_ADMIN", "BRANCH_ADMIN"]).optional(),
 });
 
 export const forgotPasswordSchema = z.object({
