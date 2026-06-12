@@ -119,15 +119,21 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
           />
 
           <FormInput
-            label={t("area")}
-            value={data.area || ""}
-            onChange={(val) => update(["area"], val)}
+            label={t("postalCode")}
+            value={data.postalCode || ""}
+            onChange={(val) => update(["postalCode"], val)}
           />
 
           <FormInput
             label={t("city")}
             value={data.city || ""}
             onChange={(val) => update(["city"], val)}
+          />
+
+          <FormInput
+            label={t("area")}
+            value={data.area || ""}
+            onChange={(val) => update(["area"], val)}
           />
 
           <FormInput
@@ -140,12 +146,6 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
             label={t("country")}
             value={data.country || ""}
             onChange={(val) => update(["country"], val)}
-          />
-
-          <FormInput
-            label={t("postalCode")}
-            value={data.postalCode || ""}
-            onChange={(val) => update(["postalCode"], val)}
           />
 
           <FormInput
