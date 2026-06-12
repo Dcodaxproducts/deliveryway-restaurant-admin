@@ -13,6 +13,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
+import DateTimePickerField from "@/components/forms/common/DateTimePickerField";
 import {
   Dialog,
   DialogContent,
@@ -99,8 +100,9 @@ export function OrderStatusUpdateDialog({
   const common = useTranslations("common");
   const t = useTranslations("orders");
   const [durationKey, setDurationKey] = useState<DurationOption["key"]>("20min");
-  const [customHours, setCustomHours] = useState("0");
-  const [customMinutes, setCustomMinutes] = useState("20");
+  const [customDateTime, setCustomDateTime] = useState(() =>
+    buildFutureOrderTime(20)
+  );
   const [mode, setMode] = useState<"main" | "custom">("main");
   const [deliveryTimeEditing, setDeliveryTimeEditing] = useState(false);
 
@@ -127,24 +129,22 @@ export function OrderStatusUpdateDialog({
   useEffect(() => {
     if (open) {
       setDurationKey("20min");
-      setCustomHours("0");
-      setCustomMinutes("20");
+      setCustomDateTime(buildFutureOrderTime(20));
       setMode("main");
       setDeliveryTimeEditing(order?.status === "PLACED");
     }
   }, [open, order?.status]);
 
   const durationMinutes = useMemo(() => {
-    if (durationKey === "custom") {
-      return Number(customHours || 0) * 60 + Number(customMinutes || 0);
-    }
-
     return durationOptions.find((item) => item.key === durationKey)?.minutes ?? 20;
-  }, [durationKey, customHours, customMinutes]);
+  }, [durationKey]);
 
   const computedDeliveryTime = useMemo(
-    () => buildFutureOrderTime(durationMinutes),
-    [durationMinutes]
+    () =>
+      durationKey === "custom"
+        ? customDateTime
+        : buildFutureOrderTime(durationMinutes),
+    [customDateTime, durationKey, durationMinutes]
   );
 
   const durationText = useMemo(() => {
@@ -152,15 +152,8 @@ export function OrderStatusUpdateDialog({
     if (durationKey === "40min") return t("duration40Minutes");
     if (durationKey === "60min") return t("duration60Minutes");
 
-    const hours = Number(customHours || 0);
-    const minutes = Number(customMinutes || 0);
-    const parts: string[] = [];
-
-    if (hours > 0) parts.push(t("durationHours", { count: hours }));
-    if (minutes > 0) parts.push(t("durationMinutes", { count: minutes }));
-
-    return parts.length ? parts.join(` ${t("and")} `) : t("durationOneMinute");
-  }, [durationKey, customHours, customMinutes, t]);
+    return formatDateTime(customDateTime) ?? t("durationCustom");
+  }, [durationKey, customDateTime, t]);
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -173,7 +166,10 @@ export function OrderStatusUpdateDialog({
 
   const handleDurationClick = (key: DurationOption["key"]) => {
     setDurationKey(key);
-    if (key === "custom") setMode("custom");
+    if (key === "custom") {
+      setCustomDateTime(savedDeliveryTime ?? buildFutureOrderTime(20));
+      setMode("custom");
+    }
   };
 
   const onSubmit = async (values: OrderStatusUpdateValues) => {
@@ -380,38 +376,15 @@ export function OrderStatusUpdateDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-semibold text-gray-950">{t("hours")}</Label>
-                <select
-                  value={customHours}
-                  onChange={(event) => setCustomHours(event.target.value)}
-                  disabled={isLoading}
-                  className="mt-2 h-[52px] w-full rounded-full bg-gray-100 px-5 text-sm font-semibold outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  {Array.from({ length: 13 }).map((_, index) => (
-                    <option key={index} value={String(index)}>
-                      {String(index).padStart(2, "0")}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <Label className="text-sm font-semibold text-gray-950">{t("minutes")}</Label>
-                <select
-                  value={customMinutes}
-                  onChange={(event) => setCustomMinutes(event.target.value)}
-                  disabled={isLoading}
-                  className="mt-2 h-[52px] w-full rounded-full bg-gray-100 px-5 text-sm font-semibold outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  {[0, 5, 10, 15, 20, 30, 40, 45, 50].map((minute) => (
-                    <option key={minute} value={String(minute)}>
-                      {String(minute).padStart(2, "0")}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="mt-6">
+              <DateTimePickerField
+                label={t("selectDateAndTime")}
+                value={customDateTime}
+                minDate={new Date()}
+                disabled={isLoading}
+                helperText={t("customDeliveryTimeDescription")}
+                onChange={setCustomDateTime}
+              />
             </div>
 
             <div className="mt-6 flex gap-3 rounded-[16px] border-l-4 border-primary bg-gray-50 p-4">
@@ -420,7 +393,8 @@ export function OrderStatusUpdateDialog({
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-900">
-                  {t("deliveryInDuration", { duration: durationText })}
+                  {t("deliveryTimeWillBe")}{" "}
+                  <span className="text-primary">{durationText}</span>
                 </p>
                 <p className="mt-1 text-xs text-gray-500">
                   {formatDateTime(computedDeliveryTime)}

@@ -18,6 +18,7 @@ import {
   Bike,
   MoreHorizontal,
 } from "lucide-react";
+import DateTimePickerField from "@/components/forms/common/DateTimePickerField";
 import { cn } from "@/lib/utils";
 import { useUpdateBranchTemporaryClosure } from "@/hooks/useBranches";
 import { useTranslations } from "next-intl";
@@ -76,6 +77,23 @@ const reasonOptions: ReasonOption[] = [
   },
 ];
 
+const buildFutureDate = (minutes: number) => {
+  const date = new Date();
+  date.setMinutes(date.getMinutes() + Math.max(minutes, 1));
+  date.setSeconds(0, 0);
+  return date;
+};
+
+const formatDateTime = (date: Date) => {
+  return date.toLocaleString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
 export default function TemporaryBranchClosureModal({
   open,
   onOpenChange,
@@ -86,8 +104,9 @@ export default function TemporaryBranchClosureModal({
   const [durationKey, setDurationKey] =
     useState<DurationOption["key"]>("20min");
   const [reasonKey, setReasonKey] = useState<ReasonOption["key"]>("busy");
-  const [customHours, setCustomHours] = useState("2");
-  const [customMinutes, setCustomMinutes] = useState("0");
+  const [customDateTime, setCustomDateTime] = useState(() =>
+    buildFutureDate(120)
+  );
   const [mode, setMode] = useState<"main" | "custom">("main");
 
   const mutation = useUpdateBranchTemporaryClosure();
@@ -115,12 +134,7 @@ export default function TemporaryBranchClosureModal({
     }
 
     if (durationKey === "custom") {
-      const totalMinutes =
-        Number(customHours || 0) * 60 + Number(customMinutes || 0);
-
-      const customDate = new Date(now);
-      customDate.setMinutes(customDate.getMinutes() + Math.max(totalMinutes, 1));
-      return customDate;
+      return customDateTime;
     }
 
     const selectedDuration = durationOptions.find(
@@ -137,18 +151,8 @@ export default function TemporaryBranchClosureModal({
     if (durationKey === "60min") return t("duration60Minutes");
     if (durationKey === "tomorrow") return t("durationUntilTomorrowLower");
 
-    const hours = Number(customHours || 0);
-    const minutes = Number(customMinutes || 0);
-
-    const parts: string[] = [];
-
-    if (hours > 0) parts.push(t("durationHours", { count: hours }));
-    if (minutes > 0) {
-      parts.push(t("durationMinutes", { count: minutes }));
-    }
-
-    return parts.length ? parts.join(` ${t("and")} `) : t("durationOneMinute");
-  }, [durationKey, customHours, customMinutes, t]);
+    return formatDateTime(customDateTime);
+  }, [durationKey, customDateTime, t]);
 
   const handlePause = async () => {
     await mutation.mutateAsync({
@@ -168,6 +172,7 @@ export default function TemporaryBranchClosureModal({
     setDurationKey(key);
 
     if (key === "custom") {
+      setCustomDateTime(buildFutureDate(120));
       setMode("custom");
     }
   };
@@ -340,44 +345,15 @@ export default function TemporaryBranchClosureModal({
               </p>
             </DialogHeader>
 
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-semibold text-gray-950">
-                  {t("hours")}
-                </label>
-
-                <select
-                  value={customHours}
-                  onChange={(e) => setCustomHours(e.target.value)}
-                  disabled={isLoading}
-                  className="mt-2 h-[52px] w-full rounded-full bg-gray-100 px-5 text-sm font-semibold outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  {Array.from({ length: 25 }).map((_, index) => (
-                    <option key={index} value={String(index)}>
-                      {String(index).padStart(2, "0")}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-gray-950">
-                  {t("minutes")}
-                </label>
-
-                <select
-                  value={customMinutes}
-                  onChange={(e) => setCustomMinutes(e.target.value)}
-                  disabled={isLoading}
-                  className="mt-2 h-[52px] w-full rounded-full bg-gray-100 px-5 text-sm font-semibold outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  {[0, 5, 10, 15, 20, 30, 45].map((minute) => (
-                    <option key={minute} value={String(minute)}>
-                      {String(minute).padStart(2, "0")}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="mt-6">
+              <DateTimePickerField
+                label={t("selectDateAndTime")}
+                value={customDateTime}
+                minDate={new Date()}
+                disabled={isLoading}
+                helperText={t("customPauseTimeDescription")}
+                onChange={setCustomDateTime}
+              />
             </div>
 
             <div className="mt-6 flex gap-3 rounded-[16px] border-l-4 border-primary bg-gray-50 p-4">
@@ -387,7 +363,7 @@ export default function TemporaryBranchClosureModal({
 
               <div>
                 <p className="text-sm font-semibold text-gray-900">
-                  {t("branchClosedFor")}{" "}
+                  {t("branchClosedUntil")}{" "}
                   <span className="text-primary">{durationText}</span>
                 </p>
                 <p className="mt-1 text-xs text-gray-500">
