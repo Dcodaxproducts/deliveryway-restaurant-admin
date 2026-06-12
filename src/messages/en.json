@@ -2761,6 +2761,8 @@
     "branchReadOnlyNotice": "Branch admins can view this legal profile, but updates are restricted to business admins.",
     "businessSectionTitle": "Business identity",
     "businessSectionDescription": "This is the legal identity customers and public legal pages can reference.",
+    "ownerName": "Owner name",
+    "authProfileOwner": "Auth profile owner",
     "legalBusinessName": "Legal business name",
     "legalBusinessNamePlaceholder": "DeliveryWays Kitchen LLC",
     "taxNumber": "Tax/VAT number",

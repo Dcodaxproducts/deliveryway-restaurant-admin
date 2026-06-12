@@ -2761,6 +2761,8 @@
     "branchReadOnlyNotice": "Filial-Admins koennen dieses Rechtsprofil ansehen, Aktualisierungen sind jedoch Business-Admins vorbehalten.",
     "businessSectionTitle": "Geschaeftsidentitaet",
     "businessSectionDescription": "Dies ist die rechtliche Identitaet, die Kunden und oeffentliche Rechtsseiten referenzieren koennen.",
+    "ownerName": "Inhabername",
+    "authProfileOwner": "Inhaber aus Auth-Profil",
     "legalBusinessName": "Rechtlicher Firmenname",
     "legalBusinessNamePlaceholder": "DeliveryWays Kitchen LLC",
     "taxNumber": "Steuer-/USt-Nummer",
