@@ -27,6 +27,7 @@ import {
 import { getMenuItems } from "@/services/menu/menu.api";
 import { getMenuCategories } from "@/services/menu/categories/menu-categories.api";
 import { getApiErrorMessage } from "@/lib/errors";
+import { getLocalTodayDateTimeInputValue } from "@/lib/date-input";
 import {
   getOptionId,
   getString,
@@ -86,6 +87,7 @@ export default function AddHappyHour() {
   const t = useTranslations("promotions");
   const router = useRouter();
   const searchParams = useSearchParams();
+  const minimumDateTime = useMemo(() => getLocalTodayDateTimeInputValue(), []);
   const id = searchParams.get("id");
   const isEditMode = Boolean(id);
 
@@ -336,6 +338,7 @@ export default function AddHappyHour() {
                   <Label>{t("forms.startsAt")}</Label>
                   <Input
                     type="datetime-local"
+                    min={minimumDateTime}
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
@@ -354,6 +357,7 @@ export default function AddHappyHour() {
                   <Label>{t("forms.expiresAt")}</Label>
                   <Input
                     type="datetime-local"
+                    min={minimumDateTime}
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}

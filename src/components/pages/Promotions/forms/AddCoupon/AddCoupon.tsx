@@ -29,6 +29,7 @@ import { couponSchema, type CouponFormValues } from "@/validations/promotions";
 import { useGetBranches } from "@/hooks/useBranches";
 import { useGetMenuItems } from "@/hooks/useMenus";
 import { useCreateCoupon, useGetCoupons, useUpdateCoupon } from "@/hooks/usePromotions";
+import { getLocalTodayDateTimeInputValue } from "@/lib/date-input";
 
 const defaultValues: CouponFormValues = {
   code: "",
@@ -68,6 +69,7 @@ export default function AddNewCoupon() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const couponCode = searchParams.get("coupon");
+  const minimumDateTime = useMemo(() => getLocalTodayDateTimeInputValue(), []);
 
   const [saving, setSaving] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -276,7 +278,7 @@ export default function AddNewCoupon() {
             control={control}
             name="startsAt"
             render={({ field }) => (
-              <FormInput label={t("forms.startsAt")} type="datetime-local" value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
+              <FormInput label={t("forms.startsAt")} type="datetime-local" min={minimumDateTime} value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
             )}
           />
 
@@ -284,7 +286,7 @@ export default function AddNewCoupon() {
             control={control}
             name="expiresAt"
             render={({ field }) => (
-              <FormInput label={t("forms.expiresAt")} type="datetime-local" value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
+              <FormInput label={t("forms.expiresAt")} type="datetime-local" min={minimumDateTime} value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
             )}
           />
         </Section>

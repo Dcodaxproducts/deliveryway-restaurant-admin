@@ -5,6 +5,7 @@ import { DayPicker } from "react-day-picker";
 import { CalendarDays, Clock3 } from "lucide-react";
 
 import { Label } from "@/components/ui/label";
+import { getStartOfToday } from "@/lib/date-input";
 import { cn } from "@/lib/utils";
 
 type DateTimePickerFieldProps = {
@@ -43,7 +44,7 @@ const clampToMinDate = (date: Date, minDate?: Date) => {
   return new Date(minDate);
 };
 
-export default function DateTimePickerField({
+export function DateTimePickerField({
   label,
   value,
   onChange,
@@ -52,14 +53,15 @@ export default function DateTimePickerField({
   helperText,
 }: DateTimePickerFieldProps) {
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const minimumDay = minDate ? startOfDay(minDate) : undefined;
+  const minimumDate = minDate ?? getStartOfToday();
+  const minimumDay = startOfDay(minimumDate);
 
   const handleDateSelect = (date?: Date) => {
     if (!date) return;
 
     const nextDate = new Date(date);
     nextDate.setHours(value.getHours(), value.getMinutes(), 0, 0);
-    onChange(clampToMinDate(nextDate, minDate));
+    onChange(clampToMinDate(nextDate, minimumDate));
     setCalendarOpen(false);
   };
 
@@ -67,7 +69,7 @@ export default function DateTimePickerField({
     const [hours = "0", minutes = "0"] = timeValue.split(":");
     const nextDate = new Date(value);
     nextDate.setHours(Number(hours), Number(minutes), 0, 0);
-    onChange(clampToMinDate(nextDate, minDate));
+    onChange(clampToMinDate(nextDate, minimumDate));
   };
 
   return (
@@ -94,7 +96,7 @@ export default function DateTimePickerField({
               mode="single"
               selected={value}
               onSelect={handleDateSelect}
-              disabled={minimumDay ? { before: minimumDay } : undefined}
+              disabled={{ before: minimumDay }}
               className="text-sm"
               classNames={{
                 months: "flex",

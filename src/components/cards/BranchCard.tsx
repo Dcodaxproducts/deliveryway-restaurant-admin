@@ -33,7 +33,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import BranchCoverModal from "@/components/pages/Branches/components/BranchCoverModal";
-import TemporaryBranchClosureModal from "./TemporaryBranchClosureModal";
+import { TemporaryBranchClosureModal } from "./TemporaryBranchClosureModal";
 import { useTranslations } from "next-intl";
 import { getApiErrorMessage } from "@/lib/errors";
 

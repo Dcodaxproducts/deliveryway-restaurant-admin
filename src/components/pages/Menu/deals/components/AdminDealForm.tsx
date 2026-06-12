@@ -23,6 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getMenuVariations } from "@/services/menus";
+import { getLocalTodayDateTimeInputValue } from "@/lib/date-input";
 import { extractResponseItems } from "@/lib/response";
 import type {
   AdminDeal,
@@ -943,6 +944,7 @@ function DateField({ label, value, error, onChange, onBlur }: DateFieldProps) {
       <Label>{label}</Label>
       <Input
         type="datetime-local"
+        min={getLocalTodayDateTimeInputValue()}
         value={value ?? ""}
         onChange={(event) => onChange(event.target.value)}
         onBlur={onBlur}

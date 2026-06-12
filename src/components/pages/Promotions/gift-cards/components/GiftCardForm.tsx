@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getLocalTodayDateTimeInputValue } from "@/lib/date-input";
 import type { GiftCard, GiftCardFormValues } from "@/types/gift-cards";
 import { giftCardFormSchema } from "@/validations/gift-cards";
 
@@ -379,6 +380,7 @@ function DateField({ label, value, error, onChange, onBlur }: DateFieldProps) {
       <Label>{label}</Label>
       <Input
         type="datetime-local"
+        min={getLocalTodayDateTimeInputValue()}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onBlur={onBlur}

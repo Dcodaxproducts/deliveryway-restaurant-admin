@@ -18,7 +18,7 @@ import {
   Bike,
   MoreHorizontal,
 } from "lucide-react";
-import DateTimePickerField from "@/components/forms/common/DateTimePickerField";
+import { DateTimePickerField } from "@/components/forms/common/DateTimePickerField";
 import { cn } from "@/lib/utils";
 import { useUpdateBranchTemporaryClosure } from "@/hooks/useBranches";
 import { useTranslations } from "next-intl";
@@ -94,7 +94,7 @@ const formatDateTime = (date: Date) => {
   });
 };
 
-export default function TemporaryBranchClosureModal({
+export function TemporaryBranchClosureModal({
   open,
   onOpenChange,
   branchId,

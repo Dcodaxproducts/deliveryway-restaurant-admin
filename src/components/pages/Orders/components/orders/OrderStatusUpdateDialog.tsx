@@ -13,7 +13,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import DateTimePickerField from "@/components/forms/common/DateTimePickerField";
+import { DateTimePickerField } from "@/components/forms/common/DateTimePickerField";
 import {
   Dialog,
   DialogContent,
