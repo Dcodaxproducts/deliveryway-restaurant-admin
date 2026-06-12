@@ -213,9 +213,15 @@ export function OrdersTable({
               : "-"}
           </TableCell>
 
-          <TableCell className="px-4">
-            <p className="font-medium text-gray-700">{customerNameValue}</p>
-            <p className="text-sm text-gray-500">{customerDetail}</p>
+          <TableCell className="max-w-[260px] px-4 whitespace-normal">
+            <div className="min-w-0 space-y-1">
+              <p className="truncate font-medium text-gray-700" title={customerNameValue}>
+                {customerNameValue}
+              </p>
+              <p className="break-all text-sm leading-5 text-gray-500" title={customerDetail}>
+                {customerDetail}
+              </p>
+            </div>
           </TableCell>
 
           <TableCell className="max-w-[260px] px-4">
