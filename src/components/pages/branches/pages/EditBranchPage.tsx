@@ -1,14 +1,14 @@
 "use client";
 
 import { JSX, useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import Header from "@/components/pages/Branches/components/header";
 import Container from "@/components/common/Container";
 import TabButton from "@/components/ui/TabButton";
 import { useAuth } from "@/hooks/useAuth";
-import { useGetBranchForEdit, useUpdateBranchForEdit, useUpdateOpeningHours } from "@/hooks/useBranches";
+import { useGetBranchForEdit, useUpdateBranchForEdit } from "@/hooks/useBranches";
 import {
   buildBranchPatchPayload,
   buildSafeBranchSettings,
@@ -21,7 +21,6 @@ import {
   getDeliveryConfigValidationError,
   hydrateBranchForEdit,
   normalizeDeliveryConfigForApi,
-  normalizeOpeningHoursForApi,
   type BranchFormData,
   type BranchSettings,
   type EditTab,
@@ -36,17 +35,18 @@ type StepConfig = {
   component: JSX.Element;
 };
 
-export default function BranchesEditPage() {
+type BranchesEditPageProps = {
+  requestedBranchId: string | null;
+};
+
+export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
   const t = useTranslations("branches");
   const [activeTab, setActiveTab] = useState<EditTab>("basicInfo");
   const [branchData, setBranchData] = useState<BranchFormData | null>(null);
 
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const requestedBranchId = searchParams.get("branchId");
   const { isBranchAdmin, branchId: authBranchId } = useAuth();
   const updateBranchMutation = useUpdateBranchForEdit();
-  const updateOpeningHoursMutation = useUpdateOpeningHours();
   const branchId = isBranchAdmin ? authBranchId || requestedBranchId : requestedBranchId;
 
   const branchQuery = useGetBranchForEdit(branchId);
@@ -59,7 +59,7 @@ export default function BranchesEditPage() {
     }
 
     if (branchQuery.data) setBranchData(hydrateBranchForEdit(branchQuery.data));
-  }, [authBranchId, branchQuery.data, isBranchAdmin, requestedBranchId, router]);
+  }, [authBranchId, branchQuery.data, isBranchAdmin, requestedBranchId, router, t]);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -95,15 +95,6 @@ export default function BranchesEditPage() {
   };
 
   const saveWorkingHours = async (fullSettings: BranchSettings) => {
-    const settings = branchData?.settings || {};
-
-    await updateOpeningHoursMutation.mutateAsync({
-      branchId: branchId as string,
-      data: {
-        openingHours: normalizeOpeningHoursForApi(settings.openingHours),
-      },
-    });
-
     await updateBranchMutation.mutateAsync({
       id: branchId as string,
       data: buildBranchPatchPayload(branchData as BranchFormData, fullSettings),

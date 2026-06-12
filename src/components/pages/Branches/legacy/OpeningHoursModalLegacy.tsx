@@ -29,6 +29,8 @@ type DayOfWeek =
   | "SATURDAY"
   | "SUNDAY";
 
+type WorkingHourMode = "same" | "specific";
+
 interface BreakTime {
   startTime: string;
   endTime: string;
@@ -66,21 +68,32 @@ const createDefaultOpeningHour = (dayOfWeek: DayOfWeek): OpeningHour => ({
   note: "",
 });
 
-const normalizeBreakTimes = (breakTimes: any): BreakTime[] => {
+const toRecord = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+
+const normalizeBreakTimes = (breakTimes: unknown): BreakTime[] => {
   if (!Array.isArray(breakTimes)) return [];
 
-  return breakTimes.map((breakTime) => ({
-    startTime: String(breakTime?.startTime || ""),
-    endTime: String(breakTime?.endTime || ""),
-    note: String(breakTime?.note || ""),
-  }));
+  return breakTimes.map((breakTime) => {
+    const record = toRecord(breakTime);
+
+    return {
+      startTime: String(record.startTime || ""),
+      endTime: String(record.endTime || ""),
+      note: String(record.note || ""),
+    };
+  });
 };
 
-const normalizeOpeningHours = (value: any): OpeningHour[] => {
+const normalizeOpeningHours = (value: unknown): OpeningHour[] => {
   const rawHours = Array.isArray(value) ? value : [];
 
-  const byDay = new Map<string, any>(
-    rawHours.map((item) => [String(item?.dayOfWeek || "").toUpperCase(), item])
+  const byDay = new Map<string, Record<string, unknown>>(
+    rawHours.map((item) => {
+      const record = toRecord(item);
+
+      return [String(record.dayOfWeek || "").toUpperCase(), record];
+    })
   );
 
   return DAYS.map((dayOfWeek) => {
@@ -115,15 +128,27 @@ const isTimeRangeInvalid = (startTime?: string, endTime?: string) => {
 const hasOpeningWindow = (day: OpeningHour) =>
   Boolean(day.openTime && day.closeTime);
 
-const getResponseOpeningHours = (payload: any) => {
-  if (Array.isArray(payload?.data)) return payload.data;
-  if (Array.isArray(payload?.data?.openingHours)) return payload.data.openingHours;
-  if (Array.isArray(payload?.openingHours)) return payload.openingHours;
+const getResponseOpeningHours = (payload: unknown) => {
+  const record = toRecord(payload);
+  const dataRecord = toRecord(record.data);
+
+  if (Array.isArray(record.data)) return record.data;
+  if (Array.isArray(dataRecord.openingHours)) return dataRecord.openingHours;
+  if (Array.isArray(record.openingHours)) return record.openingHours;
 
   return [];
 };
 
-export default function OpeningHoursModal({
+const getDefaultTimesFromHours = (hours: OpeningHour[]) => {
+  const firstOpenDay = hours.find((day) => !day.isClosed && day.openTime && day.closeTime);
+
+  return {
+    openTime: firstOpenDay?.openTime || DEFAULT_OPEN_TIME,
+    closeTime: firstOpenDay?.closeTime || DEFAULT_CLOSE_TIME,
+  };
+};
+
+export function OpeningHoursModalLegacy({
   open,
   onOpenChange,
   branchId,
@@ -134,6 +159,12 @@ export default function OpeningHoursModal({
   const [hours, setHours] = useState<OpeningHour[]>(
     DAYS.map(createDefaultOpeningHour)
   );
+  const [workingHourMode, setWorkingHourMode] =
+    useState<WorkingHourMode>("specific");
+  const [defaultTimes, setDefaultTimes] = useState({
+    openTime: DEFAULT_OPEN_TIME,
+    closeTime: DEFAULT_CLOSE_TIME,
+  });
   const {
     data: openingHoursResponse,
     isLoading: fetching,
@@ -145,13 +176,51 @@ export default function OpeningHoursModal({
   useEffect(() => {
     if (!open || !openingHoursResponse) return;
 
-    setHours(normalizeOpeningHours(getResponseOpeningHours(openingHoursResponse)));
+    const normalizedHours = normalizeOpeningHours(
+      getResponseOpeningHours(openingHoursResponse)
+    );
+
+    setHours(normalizedHours);
+    setWorkingHourMode("specific");
+    setDefaultTimes(getDefaultTimesFromHours(normalizedHours));
   }, [open, openingHoursResponse]);
+
+  const applyDefaultWorkingHours = (openTime: string, closeTime: string) => {
+    setHours((prev) =>
+      prev.map((day) => ({
+        ...day,
+        isClosed: false,
+        openTime,
+        closeTime,
+      }))
+    );
+  };
+
+  const handleWorkingHourModeChange = (mode: WorkingHourMode) => {
+    setWorkingHourMode(mode);
+
+    if (mode === "same") {
+      applyDefaultWorkingHours(defaultTimes.openTime, defaultTimes.closeTime);
+    }
+  };
+
+  const handleDefaultTimeChange = (
+    field: keyof typeof defaultTimes,
+    value: string
+  ) => {
+    const nextTimes = { ...defaultTimes, [field]: value };
+
+    setDefaultTimes(nextTimes);
+
+    if (workingHourMode === "same") {
+      applyDefaultWorkingHours(nextTimes.openTime, nextTimes.closeTime);
+    }
+  };
 
   const handleHourChange = (
     index: number,
     field: keyof OpeningHour,
-    value: any
+    value: boolean | string | BreakTime[]
   ) => {
     setHours((prev) =>
       prev.map((day, dayIndex) =>
@@ -336,6 +405,115 @@ export default function OpeningHoursModal({
       </DialogHeader>
 
       <div className="mt-5 w-full min-w-0 space-y-5">
+        <section className="w-full min-w-0 overflow-hidden rounded-[16px] bg-white p-4 shadow-sm sm:p-5">
+          <div className="mb-4 flex flex-col gap-1">
+            <h3 className="text-base font-semibold text-gray-900">
+              {t("defaultWorkingHour")}
+            </h3>
+            <p className="text-xs leading-5 text-gray-500">
+              {t("defaultWorkingHourDescription")}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => handleWorkingHourModeChange("same")}
+              className={`rounded-[14px] border p-4 text-left transition ${
+                workingHourMode === "same"
+                  ? "border-primary bg-primary/5 shadow-sm"
+                  : "border-gray-100 bg-gray-50 hover:border-primary/30 hover:bg-white"
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                    workingHourMode === "same"
+                      ? "border-primary"
+                      : "border-gray-300"
+                  }`}
+                >
+                  {workingHourMode === "same" ? (
+                    <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                  ) : null}
+                </span>
+                <span className="text-sm font-semibold text-gray-900">
+                  {t("sameTimeEveryDay")}
+                </span>
+              </span>
+              <span className="mt-2 block text-xs leading-5 text-gray-500">
+                {t("sameTimeEveryDayDescription")}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleWorkingHourModeChange("specific")}
+              className={`rounded-[14px] border p-4 text-left transition ${
+                workingHourMode === "specific"
+                  ? "border-primary bg-primary/5 shadow-sm"
+                  : "border-gray-100 bg-gray-50 hover:border-primary/30 hover:bg-white"
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                    workingHourMode === "specific"
+                      ? "border-primary"
+                      : "border-gray-300"
+                  }`}
+                >
+                  {workingHourMode === "specific" ? (
+                    <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                  ) : null}
+                </span>
+                <span className="text-sm font-semibold text-gray-900">
+                  {t("setSpecificTime")}
+                </span>
+              </span>
+              <span className="mt-2 block text-xs leading-5 text-gray-500">
+                {t("setSpecificTimeDescription")}
+              </span>
+            </button>
+          </div>
+
+          {workingHourMode === "same" ? (
+            <div className="mt-4 grid grid-cols-1 gap-3 rounded-[14px] border border-dashed border-primary/20 bg-primary/5 p-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+              <label className="min-w-0 space-y-1.5">
+                <span className="text-xs font-medium text-gray-600">
+                  {t("openTime")}
+                </span>
+                <input
+                  type="time"
+                  value={defaultTimes.openTime}
+                  onChange={(event) =>
+                    handleDefaultTimeChange("openTime", event.target.value)
+                  }
+                  className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+              </label>
+
+              <label className="min-w-0 space-y-1.5">
+                <span className="text-xs font-medium text-gray-600">
+                  {t("closeTime")}
+                </span>
+                <input
+                  type="time"
+                  value={defaultTimes.closeTime}
+                  onChange={(event) =>
+                    handleDefaultTimeChange("closeTime", event.target.value)
+                  }
+                  className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+              </label>
+
+              <div className="rounded-[10px] bg-white px-3 py-2 text-xs font-medium text-primary shadow-sm">
+                {t("appliesEveryDay")}
+              </div>
+            </div>
+          ) : null}
+        </section>
+
         <section className="w-full min-w-0 overflow-hidden rounded-[16px] bg-white p-4 sm:p-5">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="min-w-0">

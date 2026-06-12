@@ -1,1 +1,1 @@
-export { default } from "@/components/pages/Branches/legacy/OpeningHoursModalLegacy";
+export { OpeningHoursModalLegacy as default } from "@/components/pages/Branches/legacy/OpeningHoursModalLegacy";
