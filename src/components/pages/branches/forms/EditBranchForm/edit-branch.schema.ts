@@ -99,16 +99,30 @@ export const deliveryConfigSchema = z.object({
   });
 });
 
-const optionalTrimmedStringSchema = z.string().trim().optional();
+const nullToUndefined = (value: unknown) => (value === null ? undefined : value);
+
+const optionalTrimmedStringSchema = z.preprocess(
+  nullToUndefined,
+  z.string().trim().optional()
+);
+
+const requiredTrimmedStringSchema = z.preprocess(
+  (value) => (value === null ? "" : value),
+  z.string().trim().min(1, validationMessages.required)
+);
 
 const optionalEditEmailSchema = z.preprocess(
-  (value) => (typeof value === "string" && !value.trim() ? undefined : value),
+  (value) =>
+    value === null || (typeof value === "string" && !value.trim())
+      ? undefined
+      : value,
   z.string().trim().email(validationMessages.email).optional()
 );
 
-const optionalEditPasswordSchema = z
-  .string()
-  .optional()
+const optionalEditPasswordSchema = z.preprocess(
+  nullToUndefined,
+  z.string().optional()
+)
   .superRefine((password, ctx) => {
     const trimmedPassword = password?.trim() ?? "";
 
@@ -129,31 +143,31 @@ export const editBranchAdminSchema = z.object({
 });
 
 export const editBranchSchema = z.object({
-  name: z.string().trim().min(1, validationMessages.required),
-  description: z.string().optional(),
+  name: requiredTrimmedStringSchema,
+  description: optionalTrimmedStringSchema,
   isMain: z.boolean().optional(),
-  restaurantId: z.string().optional(),
-  street: z.string().optional(),
-  shopNumber: z.string().optional(),
-  area: z.string().optional(),
-  postalCode: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  country: z.string().optional(),
+  restaurantId: optionalTrimmedStringSchema,
+  street: optionalTrimmedStringSchema,
+  shopNumber: optionalTrimmedStringSchema,
+  area: optionalTrimmedStringSchema,
+  postalCode: optionalTrimmedStringSchema,
+  city: optionalTrimmedStringSchema,
+  state: optionalTrimmedStringSchema,
+  country: optionalTrimmedStringSchema,
   lat: z.unknown().optional(),
   lng: z.unknown().optional(),
-  logoUrl: z.string().optional(),
-  coverImage: z.string().optional(),
+  logoUrl: optionalTrimmedStringSchema,
+  coverImage: optionalTrimmedStringSchema,
   branchAdmin: editBranchAdminSchema.optional(),
   address: z
     .object({
-      street: z.string().optional(),
-      shopNumber: z.string().optional(),
-      area: z.string().optional(),
-      postalCode: z.string().optional(),
-      city: z.string().optional(),
-      state: z.string().optional(),
-      country: z.string().optional(),
+      street: optionalTrimmedStringSchema,
+      shopNumber: optionalTrimmedStringSchema,
+      area: optionalTrimmedStringSchema,
+      postalCode: optionalTrimmedStringSchema,
+      city: optionalTrimmedStringSchema,
+      state: optionalTrimmedStringSchema,
+      country: optionalTrimmedStringSchema,
       lat: z.unknown().optional(),
       lng: z.unknown().optional(),
     })

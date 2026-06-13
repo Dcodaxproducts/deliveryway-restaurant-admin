@@ -56,6 +56,41 @@ describe("edit branch schema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts backend nulls for optional edit strings", () => {
+    const result = editBranchSchema.safeParse({
+      ...validEditBranchPayload,
+      description: null,
+      restaurantId: null,
+      street: null,
+      shopNumber: null,
+      area: null,
+      postalCode: null,
+      city: null,
+      state: null,
+      country: null,
+      logoUrl: null,
+      coverImage: null,
+      address: {
+        street: null,
+        shopNumber: null,
+        area: null,
+        postalCode: null,
+        city: null,
+        state: null,
+        country: null,
+      },
+      branchAdmin: {
+        email: null,
+        firstName: null,
+        lastName: null,
+        phone: null,
+        password: null,
+      },
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("rejects a short password when a new password is entered", () => {
     const result = editBranchSchema.safeParse({
       ...validEditBranchPayload,

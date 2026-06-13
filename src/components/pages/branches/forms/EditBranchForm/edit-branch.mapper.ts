@@ -492,6 +492,9 @@ export const hydrateBranchForEdit = (branchData: BranchFormData): BranchFormData
 
   return {
     ...branchData,
+    restaurantId: toStringValue(branchData.restaurantId),
+    name: toStringValue(branchData.name),
+    description: toStringValue(branchData.description),
     street: toStringValue(branchData.street, toStringValue(address.street)),
     shopNumber: toStringValue(branchData.shopNumber, toStringValue(address.shopNumber)),
     area: toStringValue(branchData.area, toStringValue(address.area)),
@@ -501,6 +504,20 @@ export const hydrateBranchForEdit = (branchData: BranchFormData): BranchFormData
     country: toStringValue(branchData.country, toStringValue(address.country)),
     lat: branchData.lat ?? toCoordinateValue(address.lat),
     lng: branchData.lng ?? toCoordinateValue(address.lng),
+    logoUrl: toStringValue(branchData.logoUrl),
+    coverImage: toStringValue(branchData.coverImage),
+    address: {
+      ...address,
+      street: toStringValue(address.street),
+      shopNumber: toStringValue(address.shopNumber),
+      area: toStringValue(address.area),
+      postalCode: toStringValue(address.postalCode),
+      city: toStringValue(address.city),
+      state: toStringValue(address.state),
+      country: toStringValue(address.country),
+      lat: toCoordinateValue(address.lat),
+      lng: toCoordinateValue(address.lng),
+    },
     branchAdmin: normalizeBranchAdminForEdit(
       branchData.branchAdmin,
       manager
