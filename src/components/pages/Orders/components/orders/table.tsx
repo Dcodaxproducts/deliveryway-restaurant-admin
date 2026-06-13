@@ -19,6 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ClickTooltip } from "@/components/common/ClickTooltip";
 import TableSkeleton from "@/components/common/TableSkeleton";
 import SortHeader from "@/components/common/sort-header";
 import { formatDeliveryAddress } from "@/components/pages/Orders/components/orders/details/order-details-utils";
@@ -74,6 +75,7 @@ export function OrdersTable({
       return {
         primary: t("takeawayOrder"),
         secondary: order.branch?.name || t("noBranch"),
+        full: order.branch?.name || t("noBranch"),
       };
     }
 
@@ -83,6 +85,7 @@ export function OrdersTable({
     return {
       primary: primaryAddress || t("addressPending"),
       secondary: secondaryAddress.join(", ") || order.branch?.name || t("noBranch"),
+      full: formattedAddress || t("addressPending"),
     };
   };
 
@@ -225,12 +228,31 @@ export function OrdersTable({
           </TableCell>
 
           <TableCell className="max-w-[260px] px-4">
-            <p className="truncate font-medium text-gray-700">
-              {addressPreview.primary}
-            </p>
-            <p className="truncate text-sm text-gray-500">
-              {addressPreview.secondary}
-            </p>
+            <ClickTooltip
+              content={
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    {t("address")}
+                  </p>
+                  <p className="whitespace-pre-line break-words font-medium leading-6 text-gray-800">
+                    {addressPreview.full}
+                  </p>
+                </div>
+              }
+            >
+              <button
+                type="button"
+                className="block w-full min-w-0 cursor-pointer rounded-md text-left outline-none transition-colors hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-primary/40"
+                aria-label={addressPreview.full}
+              >
+                <span className="block truncate font-medium text-gray-700">
+                  {addressPreview.primary}
+                </span>
+                <span className="block truncate text-sm text-gray-500">
+                  {addressPreview.secondary}
+                </span>
+              </button>
+            </ClickTooltip>
           </TableCell>
 
           <TableCell className="px-4 font-medium text-green-600">
