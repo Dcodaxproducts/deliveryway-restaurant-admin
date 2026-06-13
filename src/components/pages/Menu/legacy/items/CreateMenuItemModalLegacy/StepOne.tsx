@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import AsyncSelect from "@/components/ui/AsyncSelect";
 import { useHttpClient } from "@/hooks/useHttpClient";
 import { useAuth } from "@/hooks/useAuth";
-import { useTaxTypes } from "@/hooks/useTaxTypes";
+import { useMenuItemTaxTypes } from "@/hooks/useTaxTypes";
 import {
   blockInvalidNumberKeys,
   blockNegativeNumberPaste,
@@ -105,7 +105,8 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
   const commonT = useTranslations("common");
   const { token, user, restaurantId: authRestaurantId } = useAuth();
   const { get } = useHttpClient(token);
-  const { data: taxTypesResponse, isLoading: taxTypesLoading } = useTaxTypes();
+  const { data: taxTypesResponse, isLoading: taxTypesLoading } =
+    useMenuItemTaxTypes();
 
   const restaurantId =
     authRestaurantId ?? user?.restaurantId ?? getStoredRestaurantId();

@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { httpClient } from "@/lib/axios";
-import { getTaxTypes, TAX_TYPES_ENDPOINT } from "@/services/tax-types";
+import {
+  getMenuItemTaxTypes,
+  MENU_ITEM_TAX_TYPES_ENDPOINT,
+} from "@/services/tax-types";
 import { normalizeTaxTypesResponse } from "@/types/tax-types";
 
 vi.mock("@/lib/axios", () => ({
@@ -17,7 +20,7 @@ describe("tax types service", () => {
     mockedGet.mockReset();
   });
 
-  it("GET calls global tax types endpoint without api prefix duplication", async () => {
+  it("GET calls menu item tax types endpoint without api prefix duplication", async () => {
     mockedGet.mockResolvedValueOnce({
       data: [
         {
@@ -30,11 +33,11 @@ describe("tax types service", () => {
       ],
     });
 
-    await getTaxTypes();
+    await getMenuItemTaxTypes();
 
-    expect(mockedGet).toHaveBeenCalledWith(TAX_TYPES_ENDPOINT);
-    expect(TAX_TYPES_ENDPOINT).toBe("/admin/global-settings/tax-types");
-    expect(TAX_TYPES_ENDPOINT).not.toContain("/api/v1");
+    expect(mockedGet).toHaveBeenCalledWith(MENU_ITEM_TAX_TYPES_ENDPOINT);
+    expect(MENU_ITEM_TAX_TYPES_ENDPOINT).toBe("/menu/items/tax-types");
+    expect(MENU_ITEM_TAX_TYPES_ENDPOINT).not.toContain("/api/v1");
   });
 
   it("normalizes valid tax types and uppercases codes", () => {

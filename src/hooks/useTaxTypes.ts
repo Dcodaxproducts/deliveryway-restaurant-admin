@@ -2,15 +2,15 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { getTaxTypes } from "@/services/tax-types";
+import { getMenuItemTaxTypes } from "@/services/tax-types";
 
 export const taxTypesQueryKeys = {
-  global: ["tax-types", "global"] as const,
+  menuItems: ["menu-items", "tax-types"] as const,
 };
 
-export const useTaxTypes = (enabled = true) =>
+export const useMenuItemTaxTypes = (enabled = true) =>
   useQuery({
-    queryKey: taxTypesQueryKeys.global,
-    queryFn: getTaxTypes,
+    queryKey: taxTypesQueryKeys.menuItems,
+    queryFn: getMenuItemTaxTypes,
     enabled,
   });
