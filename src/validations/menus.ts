@@ -213,6 +213,7 @@ const menuItemShape = {
   restaurantId: optionalString(),
 
   basePrice: optionalNumberFromInput({ min: 0 }),
+  taxTypeCode: optionalString(100),
   pricingMode: z.enum(["SINGLE", "MULTIPLE"]).optional().default("SINGLE"),
   deliveryPriceAdjustment: optionalNumberFromInput({ min: 0 }).default(0),
   takeawayPriceAdjustment: optionalNumberFromInput({ min: 0 }).default(0),

@@ -226,6 +226,30 @@ describe("menu item modifier required payload", () => {
     );
   });
 
+  it("hydrates existing tax type code for edit mode", () => {
+    const form = getInitialForm("restaurant-1", {
+      id: "item-1",
+      name: "Salad",
+      taxTypeCode: "reduced",
+    });
+
+    expect(form.taxTypeCode).toBe("REDUCED");
+  });
+
+  it("sends selected tax type code without manual tax percentage", () => {
+    const payload = buildMenuItemPayload({
+      form: {
+        ...baseForm,
+        taxTypeCode: "reduced",
+        taxPercentage: 19,
+      },
+      restaurantId: "restaurant-1",
+    });
+
+    expect(payload).toEqual(expect.objectContaining({ taxTypeCode: "REDUCED" }));
+    expect(payload).not.toHaveProperty("taxPercentage");
+  });
+
   it("resets order-type adjustments when single pricing is selected", () => {
     const payload = buildMenuItemPayload({
       form: {

@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import AsyncSelect from "@/components/ui/AsyncSelect";
 import { useHttpClient } from "@/hooks/useHttpClient";
 import { useAuth } from "@/hooks/useAuth";
+import { useTaxTypes } from "@/hooks/useTaxTypes";
 import {
   blockInvalidNumberKeys,
   blockNegativeNumberPaste,
@@ -26,6 +27,7 @@ const schema = z.object({
   name: z.string().trim().min(1, "Item name is required"),
   categoryId: z.string().trim().min(1, "Category is required"),
   pricingMode: z.enum(["SINGLE", "MULTIPLE"]).default("SINGLE"),
+  taxTypeCode: z.string().trim().optional(),
 
   basePrice: z
     .string()
@@ -95,17 +97,25 @@ const getStoredRestaurantId = () => {
   }
 };
 
+const formatTaxPercentage = (value: number) =>
+  Number.isInteger(value) ? String(value) : String(Number(value.toFixed(2)));
+
 const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
   const t = useTranslations("menu.itemModal.stepOne");
   const commonT = useTranslations("common");
   const { token, user, restaurantId: authRestaurantId } = useAuth();
   const { get } = useHttpClient(token);
+  const { data: taxTypesResponse, isLoading: taxTypesLoading } = useTaxTypes();
 
   const restaurantId =
     authRestaurantId ?? user?.restaurantId ?? getStoredRestaurantId();
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const activeTaxTypes = useMemo(
+    () => (taxTypesResponse?.taxTypes ?? []).filter((taxType) => taxType.isActive),
+    [taxTypesResponse?.taxTypes]
+  );
 
   const getFieldError = (field: string, fallback?: string) => {
     if (field === "name") return t("itemNameRequired");
@@ -140,6 +150,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
       name: form?.name || "",
       categoryId: form?.categoryId || "",
       pricingMode: form?.pricingMode || "SINGLE",
+      taxTypeCode: form?.taxTypeCode || "",
       basePrice: form?.basePrice ?? "",
       deliveryPriceAdjustment: form?.deliveryPriceAdjustment ?? "",
       takeawayPriceAdjustment: form?.takeawayPriceAdjustment ?? "",
@@ -259,6 +270,18 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form?.categoryId]);
 
+  useEffect(() => {
+    if (form?.taxTypeCode || !activeTaxTypes.length) return;
+
+    const defaultTaxType =
+      activeTaxTypes.find((taxType) => taxType.isDefault) ?? activeTaxTypes[0];
+
+    if (!defaultTaxType?.code) return;
+
+    updateForm("taxTypeCode", defaultTaxType.code);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTaxTypes, form?.taxTypeCode]);
+
   const shouldShowSplitPizzaOption = useMemo(() => {
     const itemName = String(form?.name || "").toLowerCase();
     const categoryName = String(selectedCategory?.name || "").toLowerCase();
@@ -374,7 +397,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div className="space-y-2">
             <Label>{t("basePrice")}</Label>
 
@@ -401,6 +424,27 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
             {errors.basePrice ? (
               <p className="text-xs text-red-500">{errors.basePrice}</p>
             ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="menu-item-tax-type">{t("taxType")}</Label>
+
+            <select
+              id="menu-item-tax-type"
+              value={form.taxTypeCode || ""}
+              onChange={(event) => updateForm("taxTypeCode", event.target.value)}
+              disabled={taxTypesLoading || activeTaxTypes.length === 0}
+              className="h-[44px] w-full rounded-[12px] border border-gray-300 bg-white px-3 text-sm text-gray-800 outline-none transition focus:border-gray-400 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
+            >
+              <option value="">
+                {taxTypesLoading ? t("taxTypesLoading") : t("selectTaxType")}
+              </option>
+              {activeTaxTypes.map((taxType) => (
+                <option key={taxType.code} value={taxType.code}>
+                  {taxType.label} ({formatTaxPercentage(taxType.percentage)}%)
+                </option>
+              ))}
+            </select>
           </div>
 
           {pricingMode === "MULTIPLE" ? (

@@ -607,6 +607,12 @@ export const getInitialForm = (restaurantId?: string, initialData?: any) => {
         : "0",
 
     pricingMode: initialData?.pricingMode || "SINGLE",
+    taxTypeCode:
+      typeof initialData?.taxTypeCode === "string"
+        ? initialData.taxTypeCode.toUpperCase()
+        : typeof initialData?.taxType?.code === "string"
+        ? initialData.taxType.code.toUpperCase()
+        : "",
 
     basePrice:
       initialData?.basePrice !== undefined && initialData?.basePrice !== null
@@ -762,6 +768,8 @@ export const buildMenuItemPayload = ({
       : buildSlug(String(form.name || ""));
   const basePrice = toNumberOrZero(form.basePrice);
   const pricingMode = form.pricingMode === "MULTIPLE" ? "MULTIPLE" : "SINGLE";
+  const taxTypeCode =
+    typeof form.taxTypeCode === "string" ? form.taxTypeCode.trim().toUpperCase() : "";
 
   const minSelect = Math.max(0, toNumberOrZero(form.minSelect));
   const maxSelect = toOptionalNumber(form.maxSelect);
@@ -884,6 +892,7 @@ export const buildMenuItemPayload = ({
     sortOrder: toNumberOrZero(form.sortOrder),
 
     pricingMode,
+    ...(taxTypeCode ? { taxTypeCode } : {}),
 
     basePrice,
     deliveryPriceAdjustment:
