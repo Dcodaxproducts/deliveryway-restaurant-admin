@@ -28,19 +28,16 @@ const loginRoles: Array<{
   value: NonNullable<LoginFormValues["role"]>;
   icon: typeof Building2;
   labelKey: "businessAdminRole" | "branchAdminRole";
-  descriptionKey: "businessAdminRoleDescription" | "branchAdminRoleDescription";
 }> = [
   {
     value: "BUSINESS_ADMIN",
     icon: Building2,
     labelKey: "businessAdminRole",
-    descriptionKey: "businessAdminRoleDescription",
   },
   {
     value: "BRANCH_ADMIN",
     icon: Store,
     labelKey: "branchAdminRole",
-    descriptionKey: "branchAdminRoleDescription",
   },
 ];
 
@@ -174,7 +171,7 @@ function LoginFormContent() {
                   </span>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {loginRoles.map(({ value, icon: Icon, labelKey, descriptionKey }) => {
+                  {loginRoles.map(({ value, icon: Icon, labelKey }) => {
                     const selected = field.value === value;
 
                     return (
@@ -183,7 +180,7 @@ function LoginFormContent() {
                         type="button"
                         onClick={() => field.onChange(value)}
                         className={cn(
-                          "group flex min-h-[92px] flex-col items-start gap-3 rounded-2xl border p-4 text-left transition",
+                          "group flex min-h-[58px] items-center gap-3 rounded-2xl border px-4 py-3 text-left transition",
                           selected
                             ? "border-primary bg-primary/5 shadow-[0_10px_28px_rgba(193,18,31,0.12)]"
                             : "border-gray-200 bg-white hover:border-primary/40 hover:bg-gray-50"
@@ -199,13 +196,8 @@ function LoginFormContent() {
                         >
                           <Icon className="size-4" />
                         </span>
-                        <span>
-                          <span className="block text-sm font-semibold text-gray-900">
-                            {t(labelKey)}
-                          </span>
-                          <span className="mt-1 block text-xs leading-5 text-gray-500">
-                            {t(descriptionKey)}
-                          </span>
+                        <span className="min-w-0 text-sm font-semibold text-gray-900">
+                          {t(labelKey)}
                         </span>
                       </button>
                     );
