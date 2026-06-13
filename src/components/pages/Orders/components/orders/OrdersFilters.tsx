@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +17,8 @@ interface Props {
   onStatusChange: (value: string) => void;
 }
 
+const SEARCH_DEBOUNCE_MS = 350;
+
 export function OrdersFilters({
   onSearch,
   onSortChange,
@@ -28,8 +30,16 @@ export function OrdersFilters({
   const common = useTranslations("common");
   const t = useTranslations("orders");
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      onSearch(searchValue.trim());
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [onSearch, searchValue]);
+
   const handleSearch = () => {
-    onSearch(searchValue);
+    onSearch(searchValue.trim());
   };
 
   const statuses = [
@@ -60,6 +70,11 @@ export function OrdersFilters({
           <input
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
             type="text"
             placeholder={t("searchPlaceholder")}
             className="w-full h-[49px] pl-12 pr-[150px] border border-gray-200 rounded-[16px]"
