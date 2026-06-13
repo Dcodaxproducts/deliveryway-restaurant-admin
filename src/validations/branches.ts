@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PAYMENT_METHOD_CODES } from "@/types/payment-methods";
 
 /**
  * ==============================
@@ -12,11 +13,7 @@ export const OrderTypeEnum = z.enum([
   "DELIVERY",
 ]);
 
-export const PaymentMethodEnum = z.enum([
-  "COD",
-  "STRIPE",
-  "PAYPAL",
-]);
+export const PaymentMethodEnum = z.enum(PAYMENT_METHOD_CODES);
 
 export const ServiceChargeTypeEnum = z.enum(["PERCENTAGE", "AMOUNT"]);
 

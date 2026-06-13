@@ -19,7 +19,9 @@ describe("order details utils", () => {
 
   it("formats known and unknown payment methods", () => {
     expect(formatPaymentMethod("PAYPAL")).toBe("PayPal");
-    expect(formatPaymentMethod("STRIPE")).toBe("Online card");
+    expect(formatPaymentMethod("STRIPE")).toBe("Stripe online payment");
+    expect(formatPaymentMethod("CARD_ON_DELIVERY")).toBe("Card on delivery");
+    expect(formatPaymentMethod("BANK_TRANSFER")).toBe("Bank transfer");
     expect(formatPaymentMethod("CUSTOM_GATEWAY")).toBe("Custom Gateway");
   });
 

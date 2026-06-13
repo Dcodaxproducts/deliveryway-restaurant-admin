@@ -70,16 +70,26 @@ describe("payment methods service", () => {
     const result = normalizePaymentMethodsResponse({
       data: [
         { code: "COD", label: "Cash on delivery", isActive: true },
+        { code: "CARD_ON_DELIVERY", label: "Card on delivery", isActive: true },
         { code: "PAYPAL", label: "PayPal", isActive: true },
         { code: "STRIPE", label: "Stripe", isActive: false },
+        { code: "EASYPAISA", label: "Easypaisa", isActive: true },
+        { code: "JAZZCASH", label: "JazzCash", isActive: true },
+        { code: "BANK_TRANSFER", label: "Bank transfer", isActive: false },
+        { code: "WALLET", label: "Customer wallet", isActive: true },
         { code: "UNSUPPORTED_GATEWAY", label: "Unsupported gateway", isActive: true },
       ],
     });
 
     expect(result.paymentMethods).toEqual([
       { code: "COD", label: "Cash on delivery", isActive: true },
+      { code: "CARD_ON_DELIVERY", label: "Card on delivery", isActive: true },
       { code: "PAYPAL", label: "PayPal", isActive: true },
-      { code: "STRIPE", label: "Online card", isActive: false },
+      { code: "STRIPE", label: "Stripe online payment", isActive: false },
+      { code: "EASYPAISA", label: "Easypaisa", isActive: true },
+      { code: "JAZZCASH", label: "JazzCash", isActive: true },
+      { code: "BANK_TRANSFER", label: "Bank transfer", isActive: false },
+      { code: "WALLET", label: "Customer wallet", isActive: true },
     ]);
   });
 
@@ -93,7 +103,7 @@ describe("payment methods service", () => {
 
     expect(result.paymentMethods).toEqual([
       { code: "PAYPAL", label: "PayPal", isActive: false },
-      { code: "STRIPE", label: "Online card", isActive: true },
+      { code: "STRIPE", label: "Stripe online payment", isActive: true },
     ]);
   });
 });

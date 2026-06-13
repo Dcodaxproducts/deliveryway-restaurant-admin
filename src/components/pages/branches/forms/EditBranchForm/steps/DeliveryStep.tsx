@@ -17,13 +17,13 @@ import {
   Undo2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import {
+  PAYMENT_METHOD_CODES,
+  PAYMENT_METHOD_LABELS,
+} from "@/types/payment-methods";
 
 const ORDER_TYPES = ["DELIVERY", "TAKEAWAY", "DINE_IN"];
-const PAYMENT_METHODS = [
-  "COD",
-  "STRIPE",
-  "PAYPAL",
-];
+const PAYMENT_METHODS = [...PAYMENT_METHOD_CODES];
 const SHOW_ALLOWED_PAYMENT_METHODS = false;
 
 type DeliveryMode = "RADIUS" | "ZONE" | "ZONE_BANDS" | "POSTAL_CODE";
@@ -1251,7 +1251,9 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                     toggleArrayValue("allowedPaymentMethods", method)
                   }
                 />
-                <span className="text-sm">{formatLabel(method)}</span>
+                <span className="text-sm">
+                  {PAYMENT_METHOD_LABELS[method] ?? formatLabel(method)}
+                </span>
               </label>
             ))}
           </div>

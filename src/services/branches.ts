@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 import { parseSchema } from "@/lib/zod-errors";
+import { PAYMENT_METHOD_CODES } from "@/types/payment-methods";
 import {
   BranchValues,
   BulkBranchSchema,
@@ -73,11 +74,7 @@ const hasServiceChargeSetting = (settings: BranchSettings | undefined) =>
   Boolean(settings) &&
   Object.prototype.hasOwnProperty.call(settings, "serviceCharge");
 
-const defaultAllowedPaymentMethods = [
-  "COD",
-  "STRIPE",
-  "PAYPAL",
-];
+const defaultAllowedPaymentMethods = [...PAYMENT_METHOD_CODES];
 
 const branchSettingsPatchBlocklist = [
   "openingHours",

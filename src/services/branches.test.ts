@@ -19,8 +19,13 @@ vi.mock("@/lib/axios", () => ({
 const mockedApi = vi.mocked(api);
 const allPaymentMethods = [
   "COD",
+  "CARD_ON_DELIVERY",
   "STRIPE",
   "PAYPAL",
+  "EASYPAISA",
+  "JAZZCASH",
+  "BANK_TRANSFER",
+  "WALLET",
 ];
 
 describe("branches service", () => {

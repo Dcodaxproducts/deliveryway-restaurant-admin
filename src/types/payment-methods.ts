@@ -1,7 +1,15 @@
-export type PaymentMethodCode =
-  | "COD"
-  | "STRIPE"
-  | "PAYPAL";
+export const PAYMENT_METHOD_CODES = [
+  "COD",
+  "CARD_ON_DELIVERY",
+  "STRIPE",
+  "PAYPAL",
+  "EASYPAISA",
+  "JAZZCASH",
+  "BANK_TRANSFER",
+  "WALLET",
+] as const;
+
+export type PaymentMethodCode = (typeof PAYMENT_METHOD_CODES)[number];
 
 export type PaymentMethod = {
   code: PaymentMethodCode;
@@ -14,17 +22,17 @@ export type PaymentMethodsResponse = {
   message?: string;
 };
 
-const paymentMethodCodes: readonly PaymentMethodCode[] = [
-  "COD",
-  "STRIPE",
-  "PAYPAL",
-];
+const paymentMethodCodeSet = new Set<string>(PAYMENT_METHOD_CODES);
 
-const paymentMethodCodeSet = new Set<string>(paymentMethodCodes);
-const paymentMethodLabels: Record<PaymentMethodCode, string> = {
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethodCode, string> = {
   COD: "Cash on delivery",
+  CARD_ON_DELIVERY: "Card on delivery",
   PAYPAL: "PayPal",
-  STRIPE: "Online card",
+  STRIPE: "Stripe online payment",
+  EASYPAISA: "Easypaisa",
+  JAZZCASH: "JazzCash",
+  BANK_TRANSFER: "Bank transfer",
+  WALLET: "Customer wallet",
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -51,7 +59,7 @@ const normalizePaymentMethod = (value: unknown): PaymentMethod | null => {
 
   return {
     code,
-    label: paymentMethodLabels[code] ?? label,
+    label: PAYMENT_METHOD_LABELS[code] ?? label,
     isActive: typeof isActive === "boolean" ? isActive : false,
   };
 };

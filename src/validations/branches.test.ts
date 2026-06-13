@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { PAYMENT_METHOD_CODES } from "@/types/payment-methods";
 import { createBranchSchema } from "@/validations/branches";
 
 const createBranchPayload = {
@@ -9,6 +10,17 @@ const createBranchPayload = {
 };
 
 describe("branch service charge validation", () => {
+  it("accepts all backend-supported branch payment methods", () => {
+    const result = createBranchSchema.safeParse({
+      ...createBranchPayload,
+      settings: {
+        allowedPaymentMethods: [...PAYMENT_METHOD_CODES],
+      },
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("accepts percentage service charge", () => {
     const result = createBranchSchema.safeParse({
       ...createBranchPayload,
