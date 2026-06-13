@@ -20,7 +20,7 @@ describe("tax types service", () => {
     mockedGet.mockReset();
   });
 
-  it("GET calls menu item tax types endpoint without api prefix duplication", async () => {
+  it("GET calls configured tax types endpoint without api prefix duplication", async () => {
     mockedGet.mockResolvedValueOnce({
       data: [
         {
@@ -36,7 +36,7 @@ describe("tax types service", () => {
     await getMenuItemTaxTypes();
 
     expect(mockedGet).toHaveBeenCalledWith(MENU_ITEM_TAX_TYPES_ENDPOINT);
-    expect(MENU_ITEM_TAX_TYPES_ENDPOINT).toBe("/menu/items/tax-types");
+    expect(MENU_ITEM_TAX_TYPES_ENDPOINT).toBe("/admin/global-settings/tax-types");
     expect(MENU_ITEM_TAX_TYPES_ENDPOINT).not.toContain("/api/v1");
   });
 
