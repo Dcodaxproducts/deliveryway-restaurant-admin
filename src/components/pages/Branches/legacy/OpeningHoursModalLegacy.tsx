@@ -478,7 +478,11 @@ export function OpeningHoursModalLegacy({
           </div>
 
           {workingHourMode === "same" ? (
-            <div className="mt-4 grid grid-cols-1 gap-3 rounded-[14px] border border-dashed border-primary/20 bg-primary/5 p-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+            <div className="mt-4 grid grid-cols-1 gap-3 rounded-[14px] border border-dashed border-primary/20 bg-primary/5 p-3 sm:grid-cols-2">
+              <div className="rounded-[10px] bg-white px-3 py-2 text-xs font-medium text-primary shadow-sm sm:col-span-2">
+                {t("appliesEveryDay")}
+              </div>
+
               <label className="min-w-0 space-y-1.5">
                 <span className="text-xs font-medium text-gray-600">
                   {t("openTime")}
@@ -489,7 +493,7 @@ export function OpeningHoursModalLegacy({
                   onChange={(event) =>
                     handleDefaultTimeChange("openTime", event.target.value)
                   }
-                  className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  className="h-12 w-full min-w-0 rounded-[10px] border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
                 />
               </label>
 
@@ -503,13 +507,9 @@ export function OpeningHoursModalLegacy({
                   onChange={(event) =>
                     handleDefaultTimeChange("closeTime", event.target.value)
                   }
-                  className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  className="h-12 w-full min-w-0 rounded-[10px] border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
                 />
               </label>
-
-              <div className="rounded-[10px] bg-white px-3 py-2 text-xs font-medium text-primary shadow-sm">
-                {t("appliesEveryDay")}
-              </div>
             </div>
           ) : null}
         </section>
