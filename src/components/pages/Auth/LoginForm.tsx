@@ -110,7 +110,7 @@ function LoginFormContent() {
 
   return (
     <AuthPageShell>
-      <div className="w-full max-w-[420px]">
+      <div className="w-full max-w-[420px] py-8 sm:py-10">
         <h1 className="text-center text-[26px] font-semibold">
           {t("try")} <br />
           <span className="text-primary">{t("saasTitle")}</span>
@@ -122,7 +122,7 @@ function LoginFormContent() {
           {t("loginSubtitle")}
         </p>
 
-        <form className="mt-10 space-y-6" noValidate onSubmit={handleFormSubmit}>
+        <form className="mt-8 space-y-5" noValidate onSubmit={handleFormSubmit}>
           <Controller
             control={control}
             name="email"
@@ -218,28 +218,30 @@ function LoginFormContent() {
             </Link>
           </div>
 
-          <Button
-            type="button"
-            disabled={isSubmitting}
-            onClick={handleLoginClick}
-            className="h-[48px] w-full rounded-[12px] text-base"
-          >
-            {isSubmitting ? t("signingIn") : t("signIn")}
-          </Button>
+          <div className="space-y-3 pt-1">
+            <Button
+              type="button"
+              disabled={isSubmitting}
+              onClick={handleLoginClick}
+              className="h-[48px] w-full rounded-[12px] text-base"
+            >
+              {isSubmitting ? t("signingIn") : t("signIn")}
+            </Button>
 
-          <div className="my-6 flex items-center gap-4">
-            <div className="h-px flex-1 bg-gray-200" />
-            <span className="text-xs text-gray-900">{t("or")}</span>
-            <div className="h-px flex-1 bg-gray-200" />
+            <div className="flex items-center gap-4">
+              <div className="h-px flex-1 bg-gray-200" />
+              <span className="text-xs text-gray-900">{t("or")}</span>
+              <div className="h-px flex-1 bg-gray-200" />
+            </div>
+
+            <button
+              type="button"
+              className="flex h-[48px] w-full items-center justify-center gap-3 rounded-[12px] border border-[#BBBBBB] text-sm font-medium transition hover:bg-gray-50"
+            >
+              <Image src="/google_icon.png" alt={t("googleAlt")} width={18} height={18} />
+              {t("signInWithGoogle")}
+            </button>
           </div>
-
-          <button
-            type="button"
-            className="flex h-[48px] w-full items-center justify-center gap-3 rounded-[12px] border border-[#BBBBBB] text-sm font-medium transition hover:bg-gray-50"
-          >
-            <Image src="/google_icon.png" alt={t("googleAlt")} width={18} height={18} />
-            {t("signInWithGoogle")}
-          </button>
         </form>
       </div>
     </AuthPageShell>
