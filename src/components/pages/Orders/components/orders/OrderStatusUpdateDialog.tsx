@@ -332,7 +332,7 @@ export function OrderStatusUpdateDialog({
                 </div>
               ) : null}
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="order-delivery-otp">{t("deliveryOtp")}</Label>
                 <Input
                   id="order-delivery-otp"
@@ -343,7 +343,7 @@ export function OrderStatusUpdateDialog({
                 {errors.deliveryOtp?.message ? (
                   <p className="text-sm text-red-500">{errors.deliveryOtp.message}</p>
                 ) : null}
-              </div>
+              </div> */}
             </div>
 
             <DialogFooter className="mt-6 flex-col-reverse gap-3 sm:flex-row">
