@@ -363,8 +363,12 @@
       "PICKED_UP": "Als abgeholt markieren",
       "READY_TO_SERVE": "Als servierbereit markieren",
       "SERVED": "Als serviert markieren",
-      "DELIVERED": "Als geliefert markieren"
+      "DELIVERED": "Als geliefert markieren",
+      "CANCELLED": "Bestellung stornieren",
+      "REJECTED": "Bestellung ablehnen"
     },
+    "statusProgressTitle": "Bestellfortschritt aktualisiert",
+    "statusProgressDescription": "Diese Statusschritte sind jetzt für diese Bestellung abgedeckt.",
     "acceptOrderTitle": "Bestellung annehmen",
     "acceptOrderDescription": "Bestätigen Sie die Bestellung und legen Sie die Lieferzeit der Filiale ab jetzt fest.",
     "deliveryScheduleTitle": "Lieferzeitplan",

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   canDirectlyUpdateOrderStatus,
+  canTerminateOrderStatus,
+  getOrderStatusProgressSteps,
   getNextOrderStatus,
   requiresDeliveryOtpForStatusTransition,
   requiresOrderTimeForStatusTransition,
@@ -89,5 +91,27 @@ describe("order status transitions", () => {
         deliveryOtp: "1234",
       })
     ).toBe(true);
+  });
+
+  it("allows cancel and reject actions only before terminal statuses", () => {
+    expect(canTerminateOrderStatus({ status: "PREPARING" })).toBe(true);
+    expect(canTerminateOrderStatus({ status: "DELIVERED" })).toBe(false);
+    expect(canTerminateOrderStatus({ status: "REJECTED" })).toBe(false);
+  });
+
+  it("builds covered progress steps for normal and terminal updates", () => {
+    expect(
+      getOrderStatusProgressSteps({
+        orderType: "DELIVERY",
+        status: "OUT_FOR_DELIVERY",
+      })
+    ).toEqual(["PLACED", "CONFIRMED", "PREPARING", "OUT_FOR_DELIVERY"]);
+    expect(
+      getOrderStatusProgressSteps({
+        orderType: "TAKEAWAY",
+        previousStatus: "PREPARING",
+        status: "CANCELLED",
+      })
+    ).toEqual(["PLACED", "CONFIRMED", "PREPARING", "CANCELLED"]);
   });
 });

@@ -363,8 +363,12 @@
       "PICKED_UP": "Mark picked up",
       "READY_TO_SERVE": "Mark ready to serve",
       "SERVED": "Mark served",
-      "DELIVERED": "Mark delivered"
+      "DELIVERED": "Mark delivered",
+      "CANCELLED": "Cancel order",
+      "REJECTED": "Reject order"
     },
+    "statusProgressTitle": "Order progress updated",
+    "statusProgressDescription": "These status steps are now covered for this order.",
     "acceptOrderTitle": "Accept Order",
     "acceptOrderDescription": "Confirm the order and set the branch delivery time from now.",
     "deliveryScheduleTitle": "Delivery schedule",

@@ -48,6 +48,11 @@ export const ORDER_STATUS_ACTION_LABEL_KEYS: Record<string, string> = {
   DELIVERED: "statusAction.DELIVERED",
 };
 
+export const ORDER_TERMINAL_ACTION_LABEL_KEYS: Record<string, string> = {
+  CANCELLED: "statusAction.CANCELLED",
+  REJECTED: "statusAction.REJECTED",
+};
+
 const normalizeValue = (value?: string | null) => value?.trim().toUpperCase();
 
 export const getNextOrderStatus = (
@@ -110,4 +115,62 @@ export const canDirectlyUpdateOrderStatus = (
   }
 
   return true;
+};
+
+export const canTerminateOrderStatus = (
+  order: OrderTransitionInput | null | undefined
+) => {
+  const status = normalizeValue(order?.status);
+
+  return Boolean(status && !ORDER_TERMINAL_STATUSES.has(status));
+};
+
+export const getOrderStatusProgressSteps = ({
+  orderType,
+  previousStatus,
+  status,
+}: {
+  orderType?: string | null;
+  previousStatus?: string | null;
+  status?: string | null;
+}) => {
+  const normalizedOrderType = normalizeValue(orderType);
+  const normalizedPreviousStatus = normalizeValue(previousStatus);
+  const normalizedStatus = normalizeValue(status);
+
+  if (!normalizedStatus) {
+    return [];
+  }
+
+  if (
+    normalizedOrderType !== "DELIVERY" &&
+    normalizedOrderType !== "TAKEAWAY" &&
+    normalizedOrderType !== "DINE_IN"
+  ) {
+    return [normalizedStatus];
+  }
+
+  const flow = Object.keys(NEXT_STATUS_BY_ORDER_TYPE[normalizedOrderType]);
+  const lastFlowStatus = flow[flow.length - 1] ?? "";
+  const finalStatus = NEXT_STATUS_BY_ORDER_TYPE[normalizedOrderType][lastFlowStatus];
+  const fullFlow = finalStatus ? [...flow, finalStatus] : flow;
+
+  if (normalizedStatus === "CANCELLED" || normalizedStatus === "REJECTED") {
+    const previousIndex = normalizedPreviousStatus
+      ? fullFlow.indexOf(normalizedPreviousStatus)
+      : -1;
+    const coveredSteps = previousIndex >= 0
+      ? fullFlow.slice(0, previousIndex + 1)
+      : ["PLACED"];
+
+    return [...coveredSteps, normalizedStatus];
+  }
+
+  const statusIndex = fullFlow.indexOf(normalizedStatus);
+
+  if (statusIndex === -1) {
+    return [normalizedStatus];
+  }
+
+  return fullFlow.slice(0, statusIndex + 1);
 };

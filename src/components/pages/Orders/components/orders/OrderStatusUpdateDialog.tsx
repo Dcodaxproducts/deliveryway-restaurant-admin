@@ -55,6 +55,11 @@ type OrderStatusUpdateDialogProps = {
     deliveryOtp?: string;
   } | null;
   onOpenChange: (open: boolean) => void;
+  onStatusUpdated?: (order: {
+    orderType?: string | null;
+    previousStatus?: string | null;
+    status?: string | null;
+  }) => void;
 };
 
 type DurationOption = {
@@ -105,6 +110,7 @@ export function OrderStatusUpdateDialog({
   open,
   order,
   onOpenChange,
+  onStatusUpdated,
 }: OrderStatusUpdateDialogProps) {
   const updateStatusMutation = useUpdateOrderStatus();
   const common = useTranslations("common");
@@ -211,13 +217,18 @@ export function OrderStatusUpdateDialog({
       ? computedDeliveryTime.toISOString()
       : undefined;
 
-    await updateStatusMutation.mutateAsync({
+    const updatedOrder = await updateStatusMutation.mutateAsync({
       orderId: order.id,
       payload: {
         status: values.status,
         ...(deliveryOtp ? { deliveryOtp } : {}),
         ...(orderTimeIso ? { orderTime: orderTimeIso } : {}),
       },
+    });
+    onStatusUpdated?.({
+      orderType: updatedOrder.orderType ?? order.orderType,
+      previousStatus: order.status,
+      status: updatedOrder.status ?? values.status,
     });
     handleOpenChange(false);
   };
