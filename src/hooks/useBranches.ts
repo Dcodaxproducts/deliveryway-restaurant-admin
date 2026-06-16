@@ -7,8 +7,10 @@ import {
   updateBranch,
   deleteBranch,
   createBranchesBulk,
+  getBranchDeliveryTime,
   getDeliveryHours,
   getOpeningHours,
+  updateBranchDeliveryTime,
   updateDeliveryHours,
   updateOpeningHours,
   suspendBranch,
@@ -22,7 +24,10 @@ import {
   updateBranchHolidayOpeningHours,
 } from "@/services/branches/branches.api";
 import type { OpeningHoursValues } from "@/validations/branches";
-import type { DeliveryHoursValues } from "@/services/branches/branches.api";
+import type {
+  BranchDeliveryTimePayload,
+  DeliveryHoursValues,
+} from "@/services/branches/branches.api";
 import { getApiErrorMessage } from "@/lib/errors";
 
 type BranchUpdateData = Parameters<typeof updateBranch>[1];
@@ -252,6 +257,42 @@ export const useUpdateDeliveryHours = () => {
     onError: (error: unknown) => {
       toast.error(
         getApiErrorMessage(error, "Failed to update delivery hours")
+      );
+    },
+  });
+};
+
+export const useGetBranchDeliveryTime = (branchId?: string | null) => {
+  return useQuery({
+    queryKey: ["branch-delivery-time", branchId],
+    queryFn: () => getBranchDeliveryTime(branchId as string),
+    enabled: Boolean(branchId),
+  });
+};
+
+export const useUpdateBranchDeliveryTime = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      branchId,
+      data,
+    }: {
+      branchId: string;
+      data: BranchDeliveryTimePayload;
+    }) => updateBranchDeliveryTime(branchId, data),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["branch-delivery-time", variables.branchId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["branches"] });
+      queryClient.invalidateQueries({ queryKey: ["branches", variables.branchId] });
+      queryClient.invalidateQueries({ queryKey: ["branches", "edit", variables.branchId] });
+      toast.success("Branch delivery time updated successfully!");
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        getApiErrorMessage(error, "Failed to update branch delivery time")
       );
     },
   });

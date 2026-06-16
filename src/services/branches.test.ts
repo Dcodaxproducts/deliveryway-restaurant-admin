@@ -2,8 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import api from "@/lib/axios";
 import {
+  getBranchDeliveryTime,
   getDeliveryHours,
+  normalizeBranchDeliveryTime,
   updateBranch,
+  updateBranchDeliveryTime,
   updateDeliveryHours,
   updateBranchHolidayOpeningHours,
 } from "@/services/branches";
@@ -156,5 +159,49 @@ describe("branches service", () => {
       "/api/v1/branches/branch-1/delivery-hours",
       payload
     );
+  });
+
+  it("gets and updates branch delivery time without duplicating api version prefix", async () => {
+    const payload = {
+      deliveryTime: 45,
+      deliveryIntervalMinutes: 15,
+      pickupIntervalMinutes: 10,
+    };
+
+    mockedApi.get.mockResolvedValueOnce({ data: { data: payload } });
+    mockedApi.put.mockResolvedValueOnce({ data: { data: payload } });
+
+    await expect(getBranchDeliveryTime("branch-1")).resolves.toEqual(payload);
+    await expect(updateBranchDeliveryTime("branch-1", payload)).resolves.toEqual(
+      payload
+    );
+
+    expect(mockedApi.get).toHaveBeenCalledWith(
+      "/branches/branch-1/delivery-time"
+    );
+    expect(mockedApi.put).toHaveBeenCalledWith(
+      "/branches/branch-1/delivery-time",
+      payload
+    );
+    expect(mockedApi.put).not.toHaveBeenCalledWith(
+      "/api/v1/branches/branch-1/delivery-time",
+      payload
+    );
+  });
+
+  it("normalizes missing and invalid branch delivery time fields", () => {
+    expect(
+      normalizeBranchDeliveryTime({
+        data: {
+          deliveryTime: "50",
+          deliveryIntervalMinutes: -1,
+          pickupIntervalMinutes: "abc",
+        },
+      })
+    ).toEqual({
+      deliveryTime: 50,
+      deliveryIntervalMinutes: 0,
+      pickupIntervalMinutes: 0,
+    });
   });
 });

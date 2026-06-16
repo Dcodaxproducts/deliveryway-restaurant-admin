@@ -8,7 +8,12 @@ import Header from "@/components/pages/Branches/components/header";
 import Container from "@/components/common/Container";
 import TabButton from "@/components/ui/TabButton";
 import { useAuth } from "@/hooks/useAuth";
-import { useGetBranchForEdit, useUpdateBranchForEdit } from "@/hooks/useBranches";
+import {
+  useGetBranchDeliveryTime,
+  useGetBranchForEdit,
+  useUpdateBranchDeliveryTime,
+  useUpdateBranchForEdit,
+} from "@/hooks/useBranches";
 import {
   buildBranchPatchPayload,
   buildSafeBranchSettings,
@@ -47,9 +52,11 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
   const router = useRouter();
   const { isBranchAdmin, branchId: authBranchId } = useAuth();
   const updateBranchMutation = useUpdateBranchForEdit();
+  const updateDeliveryTimeMutation = useUpdateBranchDeliveryTime();
   const branchId = isBranchAdmin ? authBranchId || requestedBranchId : requestedBranchId;
 
   const branchQuery = useGetBranchForEdit(branchId);
+  const deliveryTimeQuery = useGetBranchDeliveryTime(branchId);
 
   useEffect(() => {
     if (isBranchAdmin && requestedBranchId && authBranchId && requestedBranchId !== authBranchId) {
@@ -58,8 +65,35 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
       return;
     }
 
-    if (branchQuery.data) setBranchData(hydrateBranchForEdit(branchQuery.data));
-  }, [authBranchId, branchQuery.data, isBranchAdmin, requestedBranchId, router, t]);
+    if (branchQuery.data) {
+      const hydratedBranch = hydrateBranchForEdit(branchQuery.data);
+      const deliveryTimeSettings = deliveryTimeQuery.data
+        ? {
+            deliveryTime: deliveryTimeQuery.data.deliveryTime,
+            deliveryIntervalMinutes:
+              deliveryTimeQuery.data.deliveryIntervalMinutes,
+            pickupIntervalMinutes:
+              deliveryTimeQuery.data.pickupIntervalMinutes,
+          }
+        : {};
+
+      setBranchData({
+        ...hydratedBranch,
+        settings: {
+          ...(hydratedBranch.settings || {}),
+          ...deliveryTimeSettings,
+        },
+      });
+    }
+  }, [
+    authBranchId,
+    branchQuery.data,
+    deliveryTimeQuery.data,
+    isBranchAdmin,
+    requestedBranchId,
+    router,
+    t,
+  ]);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -94,13 +128,28 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
     return true;
   };
 
+  const toNonNegativeInteger = (value: unknown) => {
+    const parsed = Number(value);
+
+    if (!Number.isFinite(parsed) || parsed < 0) return 0;
+
+    return Math.trunc(parsed);
+  };
+
   const saveWorkingHours = async (fullSettings: BranchSettings) => {
-    await updateBranchMutation.mutateAsync({
-      id: branchId as string,
-      data: buildBranchPatchPayload(branchData as BranchFormData, fullSettings),
+    await updateDeliveryTimeMutation.mutateAsync({
+      branchId: branchId as string,
+      data: {
+        deliveryTime: toNonNegativeInteger(fullSettings.deliveryTime),
+        deliveryIntervalMinutes: toNonNegativeInteger(
+          fullSettings.deliveryIntervalMinutes
+        ),
+        pickupIntervalMinutes: toNonNegativeInteger(
+          fullSettings.pickupIntervalMinutes
+        ),
+      },
     });
 
-    toast.success(t("workingHoursUpdated"));
     return true;
   };
 
@@ -163,10 +212,16 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
         tabLabel: t("workingHours"),
         title: t("setupWorkingHour"),
         description: t("workingHoursDescription"),
-        component: <EditBranchWorkingHoursStep data={branchData} setData={setBranchData} />,
+        component: (
+          <EditBranchWorkingHoursStep
+            data={branchData}
+            setData={setBranchData}
+            loadingDeliveryTime={deliveryTimeQuery.isLoading}
+          />
+        ),
       },
     ],
-    [branchData, t]
+    [branchData, deliveryTimeQuery.isLoading, t]
   );
 
   const currentStep = steps.find((step) => step.key === activeTab) ?? steps[0];

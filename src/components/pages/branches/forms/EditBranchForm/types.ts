@@ -56,6 +56,9 @@ export type BranchServiceChargeSettings = {
 export type BranchSettings = {
   allowedOrderTypes?: string[];
   allowedPaymentMethods?: string[];
+  deliveryTime?: number | null;
+  deliveryIntervalMinutes?: number | null;
+  pickupIntervalMinutes?: number | null;
   deliveryConfig?: DeliveryConfig;
   automation?: {
     autoAcceptOrders?: boolean;

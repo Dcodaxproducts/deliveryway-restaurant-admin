@@ -103,6 +103,9 @@ describe("edit branch delivery and settings mapper", () => {
         allowedOrderTypes: ["DELIVERY"],
         allowedPaymentMethods: ["COD"],
         customSetting: "keep-me",
+        deliveryTime: 45,
+        deliveryIntervalMinutes: 15,
+        pickupIntervalMinutes: 10,
         tableReservationsEnabled: true,
         tableReservationAutoAccept: true,
         tableCount: 12,
@@ -127,6 +130,9 @@ describe("edit branch delivery and settings mapper", () => {
 
     expect(payload.settings).toMatchObject({
       customSetting: "keep-me",
+      deliveryTime: 45,
+      deliveryIntervalMinutes: 15,
+      pickupIntervalMinutes: 10,
       allowedPaymentMethods: DEFAULT_ALLOWED_PAYMENT_METHODS,
       tableReservationsEnabled: true,
       tableReservationAutoAccept: true,

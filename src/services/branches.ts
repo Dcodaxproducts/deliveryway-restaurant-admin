@@ -181,6 +181,60 @@ export type DeliveryHoursValues = {
   deliveryHours: OpeningHoursValues["openingHours"];
 };
 
+export type BranchDeliveryTimePayload = {
+  deliveryTime: number;
+  deliveryIntervalMinutes: number;
+  pickupIntervalMinutes: number;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+const unwrapDataRecord = (response: unknown) => {
+  if (!isRecord(response)) return {};
+
+  const data = response.data;
+  return isRecord(data) ? data : response;
+};
+
+const toNonNegativeNumber = (value: unknown, fallback = 0) => {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed) || parsed < 0) return fallback;
+
+  return Math.trunc(parsed);
+};
+
+export const normalizeBranchDeliveryTime = (
+  response: unknown
+): BranchDeliveryTimePayload => {
+  const data = unwrapDataRecord(response);
+
+  return {
+    deliveryTime: toNonNegativeNumber(data.deliveryTime),
+    deliveryIntervalMinutes: toNonNegativeNumber(data.deliveryIntervalMinutes),
+    pickupIntervalMinutes: toNonNegativeNumber(data.pickupIntervalMinutes),
+  };
+};
+
+export const getBranchDeliveryTime = async (branchId: string) => {
+  const { data } = await api.get(`/branches/${branchId}/delivery-time`);
+
+  return normalizeBranchDeliveryTime(data);
+};
+
+export const updateBranchDeliveryTime = async (
+  branchId: string,
+  payload: BranchDeliveryTimePayload
+) => {
+  const { data } = await api.put(
+    `/branches/${branchId}/delivery-time`,
+    payload
+  );
+
+  return normalizeBranchDeliveryTime(data);
+};
+
 export const getDeliveryHours = async (branchId: string) => {
   const { data } = await api.get(`/branches/${branchId}/delivery-hours`);
   return data;
