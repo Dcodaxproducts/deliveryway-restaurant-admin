@@ -223,6 +223,13 @@ export type CouponPayload = {
   restaurantId?: string;
 };
 
+export type CouponStatus = "ACTIVE" | "SUSPENDED";
+
+export type CouponStatusPayload = {
+  restaurantId: string;
+  status: CouponStatus;
+};
+
 export type CouponQueryParams = {
   restaurantId?: string;
   search?: string;
@@ -248,12 +255,10 @@ export const updateCoupon = async (id: string, payload: Partial<CouponPayload>) 
   return response.data;
 };
 
-export const suspendCoupon = async (code: string) => {
-  const response = await api.post(`/coupons/${code}/suspend`, {});
-  return response.data;
-};
-
-export const activateCoupon = async (code: string) => {
-  const response = await api.post(`/coupons/${code}/activate`, {});
+export const updateCouponStatus = async (
+  code: string,
+  payload: CouponStatusPayload
+) => {
+  const response = await api.patch(`/coupons/${code}/status`, payload);
   return response.data;
 };

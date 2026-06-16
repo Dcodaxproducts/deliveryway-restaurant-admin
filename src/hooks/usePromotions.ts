@@ -10,10 +10,9 @@ import {
   getAdminPromotionCampaigns,
   getAdminPromotionsOverview,
   getAdminPromotionStats,
-  activateCoupon,
   createCoupon,
   getCoupons,
-  suspendCoupon,
+  updateCouponStatus,
   updateCoupon,
   HappyHourPayload,
   PromotionCampaignPayload,
@@ -311,8 +310,19 @@ export const useUpdateCoupon = () => {
 export const useToggleCouponStatus = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ code, isActive }: { code: string; isActive?: boolean }) =>
-      isActive ? suspendCoupon(code) : activateCoupon(code),
+    mutationFn: ({
+      code,
+      isActive,
+      restaurantId,
+    }: {
+      code: string;
+      isActive?: boolean;
+      restaurantId: string;
+    }) =>
+      updateCouponStatus(code, {
+        restaurantId,
+        status: isActive ? "SUSPENDED" : "ACTIVE",
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: couponQueryKeys.all });
     },

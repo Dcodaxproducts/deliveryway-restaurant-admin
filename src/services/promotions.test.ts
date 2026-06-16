@@ -7,6 +7,7 @@ import {
   getAdminPromotionCampaigns,
   updateAdminPromotionCampaign,
   updateCoupon,
+  updateCouponStatus,
 } from "@/services/promotions";
 import api from "@/lib/axios";
 
@@ -106,6 +107,29 @@ describe("promotions service", () => {
       "/coupons/coupon-1",
       expect.not.objectContaining({ restaurantId: "restaurant-1" })
     );
+  });
+
+  it("updates coupon status with restaurantId through the status endpoint", async () => {
+    mockedPatch.mockResolvedValue({ data: { code: "SAVE10", status: "ACTIVE" } });
+
+    await updateCouponStatus("SAVE10", {
+      restaurantId: "restaurant-1",
+      status: "ACTIVE",
+    });
+    await updateCouponStatus("SAVE10", {
+      restaurantId: "restaurant-1",
+      status: "SUSPENDED",
+    });
+
+    expect(mockedPatch).toHaveBeenNthCalledWith(1, "/coupons/SAVE10/status", {
+      restaurantId: "restaurant-1",
+      status: "ACTIVE",
+    });
+    expect(mockedPatch).toHaveBeenNthCalledWith(2, "/coupons/SAVE10/status", {
+      restaurantId: "restaurant-1",
+      status: "SUSPENDED",
+    });
+    expect(mockedPatch.mock.calls[0]?.[0]).not.toContain("/api/v1");
   });
 
 });

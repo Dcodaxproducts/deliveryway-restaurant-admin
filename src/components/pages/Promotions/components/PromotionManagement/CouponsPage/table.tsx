@@ -101,7 +101,13 @@ const CouponsTable = () => {
 
 
   const toggleStatus = async (coupon: Coupon) => {
-    await toggleCouponStatusMutation.mutateAsync({ code: coupon.code, isActive: coupon.isActive });
+    if (!restaurantId) return;
+
+    await toggleCouponStatusMutation.mutateAsync({
+      code: coupon.code,
+      isActive: coupon.isActive,
+      restaurantId,
+    });
     refetch();
   };
 
@@ -171,6 +177,7 @@ const CouponsTable = () => {
                 <TableCell>
                   <Switch
                     checked={c.isActive}
+                    disabled={!restaurantId || toggleCouponStatusMutation.isPending}
                     onCheckedChange={() => toggleStatus(c)}
                   />
                 </TableCell>
