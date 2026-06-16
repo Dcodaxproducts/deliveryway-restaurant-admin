@@ -5,6 +5,7 @@ type StatusTransitionMap = Record<SupportedOrderType, Record<string, string>>;
 type OrderTransitionInput = {
   orderType?: string | null;
   status?: string | null;
+  deliveryOtp?: string | null;
 };
 
 export const ORDER_TERMINAL_STATUSES = new Set([
@@ -79,4 +80,34 @@ export const requiresDeliveryOtpForStatusTransition = (
     normalizeValue(order?.status) === "OUT_FOR_DELIVERY" &&
     normalizeValue(nextStatus) === "DELIVERED"
   );
+};
+
+export const requiresOrderTimeForStatusTransition = (
+  order: OrderTransitionInput | null | undefined,
+  nextStatus?: string
+) => {
+  return (
+    normalizeValue(order?.status) === "PLACED" &&
+    normalizeValue(nextStatus) === "CONFIRMED"
+  );
+};
+
+export const canDirectlyUpdateOrderStatus = (
+  order: OrderTransitionInput | null | undefined
+) => {
+  const nextStatus = getNextOrderStatus(order);
+
+  if (!nextStatus) {
+    return false;
+  }
+
+  if (requiresOrderTimeForStatusTransition(order, nextStatus)) {
+    return false;
+  }
+
+  if (requiresDeliveryOtpForStatusTransition(order, nextStatus)) {
+    return Boolean(order?.deliveryOtp?.trim());
+  }
+
+  return true;
 };

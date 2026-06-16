@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  canDirectlyUpdateOrderStatus,
   getNextOrderStatus,
   requiresDeliveryOtpForStatusTransition,
+  requiresOrderTimeForStatusTransition,
 } from "@/lib/order-status-transitions";
 
 describe("order status transitions", () => {
@@ -43,5 +45,49 @@ describe("order status transitions", () => {
         "PICKED_UP"
       )
     ).toBe(false);
+  });
+
+  it("requires the popup when accepting an order because order time is needed", () => {
+    const order = { orderType: "DELIVERY", status: "PLACED" };
+
+    expect(requiresOrderTimeForStatusTransition(order, "CONFIRMED")).toBe(true);
+    expect(canDirectlyUpdateOrderStatus(order)).toBe(false);
+  });
+
+  it("allows direct updates after confirmation when no extra input is needed", () => {
+    expect(
+      canDirectlyUpdateOrderStatus({
+        orderType: "DELIVERY",
+        status: "CONFIRMED",
+      })
+    ).toBe(true);
+    expect(
+      canDirectlyUpdateOrderStatus({
+        orderType: "TAKEAWAY",
+        status: "PREPARING",
+      })
+    ).toBe(true);
+    expect(
+      canDirectlyUpdateOrderStatus({
+        orderType: "DINE_IN",
+        status: "PREPARING",
+      })
+    ).toBe(true);
+  });
+
+  it("keeps delivery completion in the popup until an OTP is available", () => {
+    expect(
+      canDirectlyUpdateOrderStatus({
+        orderType: "DELIVERY",
+        status: "OUT_FOR_DELIVERY",
+      })
+    ).toBe(false);
+    expect(
+      canDirectlyUpdateOrderStatus({
+        orderType: "DELIVERY",
+        status: "OUT_FOR_DELIVERY",
+        deliveryOtp: "1234",
+      })
+    ).toBe(true);
   });
 });

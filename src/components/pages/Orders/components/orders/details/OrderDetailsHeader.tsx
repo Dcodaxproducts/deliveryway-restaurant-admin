@@ -5,7 +5,12 @@ import { RefreshCw, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
-import { getNextOrderStatus } from "@/lib/order-status-transitions";
+import { useUpdateOrderStatus } from "@/hooks/useOrders";
+import {
+  canDirectlyUpdateOrderStatus,
+  getNextOrderStatus,
+  ORDER_STATUS_ACTION_LABEL_KEYS,
+} from "@/lib/order-status-transitions";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
 import { OrderStatusUpdateDialog } from "@/components/pages/Orders/components/orders/OrderStatusUpdateDialog";
 
@@ -22,15 +27,41 @@ type OrderDetailsHeaderProps = {
 const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
   const t = useTranslations("orders");
   const common = useTranslations("common");
+  const updateStatusMutation = useUpdateOrderStatus();
 
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
 
+  const nextStatus = getNextOrderStatus(order);
   const statusLabel = ORDER_STATUS_LABEL_KEYS[order.status]
     ? t(ORDER_STATUS_LABEL_KEYS[order.status])
     : order.status;
-  const canUpdateStatus = Boolean(getNextOrderStatus(order));
+  const canUpdateStatus = Boolean(nextStatus);
+  const actionLabel = nextStatus && ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus]
+    ? t(ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus])
+    : common("updateStatus");
 
   const breadcrumbParts = t("breadcrumbDetails").split(" / ");
+
+  const handleStatusAction = async () => {
+    if (!nextStatus) {
+      return;
+    }
+
+    if (!canDirectlyUpdateOrderStatus(order)) {
+      setStatusDialogOpen(true);
+      return;
+    }
+
+    await updateStatusMutation.mutateAsync({
+      orderId: order.id,
+      payload: {
+        status: nextStatus,
+        ...(order.deliveryOtp?.trim()
+          ? { deliveryOtp: order.deliveryOtp.trim() }
+          : {}),
+      },
+    });
+  };
 
   return (
     <>
@@ -63,11 +94,14 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setStatusDialogOpen(true)}
+              disabled={updateStatusMutation.isPending}
+              onClick={() => {
+                void handleStatusAction();
+              }}
               className="w-full sm:w-auto justify-center rounded-[10px] h-10 text-xs sm:text-sm font-medium px-4 flex items-center gap-2"
             >
               <RefreshCw size={16} />
-              {common("updateStatus")}
+              {actionLabel}
             </Button>
           ) : null}
         </div>

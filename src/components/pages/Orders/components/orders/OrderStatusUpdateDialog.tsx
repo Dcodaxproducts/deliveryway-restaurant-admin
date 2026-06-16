@@ -366,18 +366,20 @@ export function OrderStatusUpdateDialog({
                 </div>
               ) : null}
 
-              {/* <div className="space-y-2">
-                <Label htmlFor="order-delivery-otp">{t("deliveryOtp")}</Label>
-                <Input
-                  id="order-delivery-otp"
-                  placeholder={requiresDeliveryOtp ? t("deliveryOtp") : common("optional")}
-                  className="h-[48px] rounded-[14px]"
-                  {...register("deliveryOtp")}
-                />
-                {errors.deliveryOtp?.message ? (
-                  <p className="text-sm text-red-500">{errors.deliveryOtp.message}</p>
-                ) : null}
-              </div> */}
+              {requiresDeliveryOtp ? (
+                <div className="space-y-2">
+                  <Label htmlFor="order-delivery-otp">{t("deliveryOtp")}</Label>
+                  <Input
+                    id="order-delivery-otp"
+                    placeholder={t("deliveryOtp")}
+                    className="h-[48px] rounded-[14px]"
+                    {...register("deliveryOtp")}
+                  />
+                  {errors.deliveryOtp?.message ? (
+                    <p className="text-sm text-red-500">{errors.deliveryOtp.message}</p>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
 
             <DialogFooter className="mt-6 flex-col-reverse gap-3 sm:flex-row">

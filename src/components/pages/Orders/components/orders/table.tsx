@@ -24,7 +24,12 @@ import TableSkeleton from "@/components/common/TableSkeleton";
 import SortHeader from "@/components/common/sort-header";
 import { formatDeliveryAddress } from "@/components/pages/Orders/components/orders/details/order-details-utils";
 import { OrderStatusUpdateDialog } from "@/components/pages/Orders/components/orders/OrderStatusUpdateDialog";
-import { getNextOrderStatus } from "@/lib/order-status-transitions";
+import { useUpdateOrderStatus } from "@/hooks/useOrders";
+import {
+  canDirectlyUpdateOrderStatus,
+  getNextOrderStatus,
+  ORDER_STATUS_ACTION_LABEL_KEYS,
+} from "@/lib/order-status-transitions";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
 import type { Order } from "@/types/orders";
 import { useTranslations } from "next-intl";
@@ -56,6 +61,7 @@ export function OrdersTable({
   const common = useTranslations("common");
   const t = useTranslations("orders");
   const [statusOrder, setStatusOrder] = useState<OrdersTableRow | null>(null);
+  const updateStatusMutation = useUpdateOrderStatus();
   const getStatusLabel = (status?: string) =>
     status && ORDER_STATUS_LABEL_KEYS[status]
       ? t(ORDER_STATUS_LABEL_KEYS[status])
@@ -88,6 +94,35 @@ export function OrdersTable({
       secondary: secondaryAddress.join(", ") || order.branch?.name || t("noBranch"),
       full: formattedAddress || t("addressPending"),
     };
+  };
+  const getStatusActionLabel = (order: OrdersTableRow) => {
+    const nextStatus = getNextOrderStatus(order);
+
+    return nextStatus && ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus]
+      ? t(ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus])
+      : common("updateStatus");
+  };
+  const handleStatusAction = async (order: OrdersTableRow) => {
+    const nextStatus = getNextOrderStatus(order);
+
+    if (!nextStatus) {
+      return;
+    }
+
+    if (!canDirectlyUpdateOrderStatus(order)) {
+      setStatusOrder(order);
+      return;
+    }
+
+    await updateStatusMutation.mutateAsync({
+      orderId: order.id,
+      payload: {
+        status: nextStatus,
+        ...(order.deliveryOtp?.trim()
+          ? { deliveryOtp: order.deliveryOtp.trim() }
+          : {}),
+      },
+    });
   };
 
   if (loading) {
@@ -291,9 +326,14 @@ export function OrdersTable({
                 {common("viewDetails")}
               </DropdownMenuItem>
               {canUpdateStatus ? (
-                <DropdownMenuItem onClick={() => setStatusOrder(order)}>
+                <DropdownMenuItem
+                  disabled={updateStatusMutation.isPending}
+                  onClick={() => {
+                    void handleStatusAction(order);
+                  }}
+                >
                   <RefreshCw size={16} />
-                  {common("updateStatus")}
+                  {getStatusActionLabel(order)}
                 </DropdownMenuItem>
               ) : null}
             </DropdownMenuContent>
