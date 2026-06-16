@@ -100,7 +100,7 @@ describe("branches service", () => {
     );
   });
 
-  it("does not send delivery interval settings through the generic branch patch endpoint", async () => {
+  it("does not send unsupported settings through the generic branch patch endpoint", async () => {
     mockedApi.patch.mockResolvedValueOnce({ data: { success: true } });
 
     await updateBranch("branch-1", {
@@ -108,6 +108,9 @@ describe("branches service", () => {
         deliveryTime: 45,
         deliveryIntervalMinutes: 0,
         pickupIntervalMinutes: 0,
+        printing: {
+          printKitchenTickets: true,
+        },
         customSetting: "keep-me",
       },
     });
