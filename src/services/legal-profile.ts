@@ -2,9 +2,17 @@ import { httpClient } from "@/lib/axios";
 
 export type LegalBusinessAddress = {
   street: string;
+  shopNumber: string;
   city: string;
   state: string;
   country: string;
+};
+
+export type LegalBusinessAddressPayload = Omit<
+  LegalBusinessAddress,
+  "shopNumber"
+> & {
+  shopNumber: string | null;
 };
 
 export type LegalProfile = {
@@ -15,10 +23,16 @@ export type LegalProfile = {
   contractText: string;
 };
 
-export type LegalProfilePayload = Omit<LegalProfile, "restaurantId">;
+export type LegalProfilePayload = Omit<
+  LegalProfile,
+  "restaurantId" | "businessAddress"
+> & {
+  businessAddress: LegalBusinessAddressPayload;
+};
 
 const emptyAddress: LegalBusinessAddress = {
   street: "",
+  shopNumber: "",
   city: "",
   state: "",
   country: "",
@@ -44,6 +58,7 @@ const normalizeBusinessAddress = (
 
   return {
     street: getString(address, "street"),
+    shopNumber: getString(address, "shopNumber"),
     city: getString(address, "city"),
     state: getString(address, "state"),
     country: getString(address, "country"),

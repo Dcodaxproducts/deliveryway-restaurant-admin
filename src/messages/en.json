@@ -2803,6 +2803,8 @@
     "addressSectionDescription": "Use the registered office or tax address for legal display.",
     "street": "Street",
     "streetPlaceholder": "Street 12",
+    "shopNumber": "Shop number",
+    "shopNumberPlaceholder": "Shop 12",
     "city": "City",
     "cityPlaceholder": "Lahore",
     "state": "State / Province",

@@ -38,6 +38,7 @@ const toPayload = (profile: LegalProfile): LegalProfilePayload => ({
   taxNumber: profile.taxNumber.trim(),
   businessAddress: {
     street: profile.businessAddress.street.trim(),
+    shopNumber: profile.businessAddress.shopNumber.trim() || null,
     city: profile.businessAddress.city.trim(),
     state: profile.businessAddress.state.trim(),
     country: profile.businessAddress.country.trim(),
@@ -48,6 +49,7 @@ const toPayload = (profile: LegalProfile): LegalProfilePayload => ({
 const formatAddressPreview = (profile: LegalProfile) =>
   [
     profile.businessAddress.street,
+    profile.businessAddress.shopNumber,
     profile.businessAddress.city,
     profile.businessAddress.state,
     profile.businessAddress.country,
@@ -274,6 +276,14 @@ export function LegalProfilePage() {
                   placeholder={t("streetPlaceholder")}
                   disabled={!canEdit || loading}
                   onChange={(value) => updateAddressField("street", value)}
+                />
+                <Field
+                  id="business-shop-number"
+                  label={t("shopNumber")}
+                  value={draftProfile.businessAddress.shopNumber}
+                  placeholder={t("shopNumberPlaceholder")}
+                  disabled={!canEdit || loading}
+                  onChange={(value) => updateAddressField("shopNumber", value)}
                 />
                 <Field
                   id="business-city"

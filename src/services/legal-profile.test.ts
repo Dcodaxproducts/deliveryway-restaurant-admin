@@ -32,6 +32,7 @@ describe("legal profile service", () => {
             taxNumber: "VAT-123",
             businessAddress: {
               street: "Street 12",
+              shopNumber: "Shop 7",
               city: "Lahore",
               state: "Punjab",
               country: "Pakistan",
@@ -46,6 +47,7 @@ describe("legal profile service", () => {
       taxNumber: "VAT-123",
       businessAddress: {
         street: "Street 12",
+        shopNumber: "Shop 7",
         city: "Lahore",
         state: "Punjab",
         country: "Pakistan",
@@ -70,6 +72,7 @@ describe("legal profile service", () => {
       taxNumber: "VAT-123",
       businessAddress: {
         street: "Street 12",
+        shopNumber: null,
         city: "Lahore",
         state: "Punjab",
         country: "Pakistan",
