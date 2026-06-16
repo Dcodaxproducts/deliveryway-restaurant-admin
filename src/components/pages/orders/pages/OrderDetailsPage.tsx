@@ -1,17 +1,18 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import OrderDetailsMain from "@/components/pages/Orders/components/orders/details/OrderDetails";
 import OrderDetailsHeader from "@/components/pages/Orders/components/orders/details/OrderDetailsHeader";
 import OrderTrackingSection from "@/components/pages/Orders/components/orders/details/OrderTrackingSection";
 import UserProfile from "@/components/pages/Orders/components/orders/details/UserProfile";
 import { useGetOrderById } from "@/hooks/useOrders";
-import { useTranslations } from "next-intl";
 
 export default function OrderDetails() {
   const t = useTranslations("orders");
   const { orderId } = useParams();
+
   const { data: order, isLoading: loading } = useGetOrderById(orderId as string);
 
   if (loading || !order) {
