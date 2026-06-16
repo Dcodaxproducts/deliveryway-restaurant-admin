@@ -225,12 +225,25 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
   );
 
   const currentStep = steps.find((step) => step.key === activeTab) ?? steps[0];
+  const currentStepIndex = Math.max(
+    steps.findIndex((step) => step.key === currentStep.key),
+    0
+  );
+  const branchName = branchData?.name?.trim();
+  const headerTitle = branchName
+    ? t("editBranchTitle", { name: branchName })
+    : t("editBranch");
+  const headerDescription = t("editBranchDescription", {
+    step: currentStepIndex + 1,
+    total: steps.length,
+    section: currentStep.tabLabel,
+  });
 
   return (
     <Container>
       <Header
-        title={isBranchAdmin ? t("myBranch") : t("defaultBranch")}
-        description={isBranchAdmin ? t("myBranchDescription") : t("defaultBranchDescription")}
+        title={headerTitle}
+        description={headerDescription}
       />
 
       <div className="space-y-8 rounded-[14px] bg-white shadow-sm lg:p-8">
