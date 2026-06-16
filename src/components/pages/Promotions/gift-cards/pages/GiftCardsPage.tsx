@@ -14,6 +14,11 @@ import GiftCardsTable from "@/components/pages/Promotions/gift-cards/components/
 import { useAuth } from "@/hooks/useAuth";
 import { useGetBranches } from "@/hooks/useBranches";
 import { useDeleteGiftCard, useGiftCards } from "@/hooks/useGiftCards";
+import {
+  useRestaurantGiftCardsVisibility,
+  useUpdateRestaurantGiftCardsVisibility,
+} from "@/hooks/useRestaurants";
+import { ADMIN_ROLES } from "@/lib/auth";
 import type { GiftCard, GiftCardsListParams } from "@/types/gift-cards";
 
 const defaultFilters: GiftCardsFilterState = {
@@ -43,11 +48,14 @@ const getBranchOptions = (payload: unknown): GiftCardBranchOption[] => {
 };
 
 export default function GiftCardsPage() {
-  const { user, restaurantId, branchId, isBranchAdmin } = useAuth();
+  const { user, restaurantId, branchId, role, isBranchAdmin } = useAuth();
   const [filters, setFilters] = useState(defaultFilters);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [giftCardToDelete, setGiftCardToDelete] = useState<GiftCard | null>(null);
+  const canManageVisibility =
+    Boolean(restaurantId) &&
+    (role === ADMIN_ROLES.BUSINESS_ADMIN || role === "SUPER_ADMIN");
 
   const branchesQuery = useGetBranches(
     restaurantId
@@ -81,6 +89,10 @@ export default function GiftCardsPage() {
   );
 
   const giftCardsQuery = useGiftCards(params);
+  const giftCardsVisibilityQuery = useRestaurantGiftCardsVisibility(
+    canManageVisibility ? restaurantId : undefined
+  );
+  const updateVisibilityMutation = useUpdateRestaurantGiftCardsVisibility();
   const deleteMutation = useDeleteGiftCard();
   const giftCards = giftCardsQuery.data?.giftCards ?? [];
   const meta = giftCardsQuery.data?.meta ?? {
@@ -116,12 +128,26 @@ export default function GiftCardsPage() {
     setGiftCardToDelete(null);
   };
 
+  const handleVisibilityChange = (isEnabled: boolean) => {
+    if (!restaurantId) return;
+
+    updateVisibilityMutation.mutate({
+      restaurantId,
+      isEnabled,
+    });
+  };
+
   return (
     <Container>
       <GiftCardsHeader
         total={meta.total}
         isRefreshing={giftCardsQuery.isFetching}
+        canManageVisibility={canManageVisibility}
+        visibilityEnabled={giftCardsVisibilityQuery.data ?? false}
+        visibilityLoading={giftCardsVisibilityQuery.isLoading}
+        visibilityUpdating={updateVisibilityMutation.isPending}
         onRefresh={() => giftCardsQuery.refetch()}
+        onVisibilityChange={handleVisibilityChange}
       />
 
       <div className="mt-6 space-y-6 rounded-lg bg-white p-4 shadow-sm lg:p-6">

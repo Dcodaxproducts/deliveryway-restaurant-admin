@@ -2206,6 +2206,7 @@
       "addGiftCard": "Add Gift Card",
       "createGiftCard": "Create Gift Card",
       "updateGiftCard": "Update Gift Card",
+      "websiteVisibility": "Website visibility",
       "total": "{total} total",
       "filtersTitle": "Gift card filters",
       "filtersDescription": "Filter gift cards by title, lifecycle, and branch.",

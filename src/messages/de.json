@@ -2206,6 +2206,7 @@
       "addGiftCard": "Geschenkkarte hinzufügen",
       "createGiftCard": "Geschenkkarte erstellen",
       "updateGiftCard": "Geschenkkarte aktualisieren",
+      "websiteVisibility": "Website-Sichtbarkeit",
       "total": "{total} gesamt",
       "filtersTitle": "Geschenkkartenfilter",
       "filtersDescription": "Geschenkkarten nach Titel, Lebenszyklus und Filiale filtern.",
