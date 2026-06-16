@@ -100,6 +100,27 @@ describe("branches service", () => {
     );
   });
 
+  it("does not send delivery interval settings through the generic branch patch endpoint", async () => {
+    mockedApi.patch.mockResolvedValueOnce({ data: { success: true } });
+
+    await updateBranch("branch-1", {
+      settings: {
+        deliveryTime: 45,
+        deliveryIntervalMinutes: 0,
+        pickupIntervalMinutes: 0,
+        customSetting: "keep-me",
+      },
+    });
+
+    expect(mockedApi.patch).toHaveBeenCalledWith("/branches/branch-1", {
+      settings: {
+        allowedPaymentMethods: allPaymentMethods,
+        customSetting: "keep-me",
+        deliveryTime: 45,
+      },
+    });
+  });
+
   it("updates holiday opening hours without duplicating api version prefix", async () => {
     const payload = {
       holidayOpeningHours: [
