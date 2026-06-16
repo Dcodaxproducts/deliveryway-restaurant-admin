@@ -24,6 +24,7 @@ import TableSkeleton from "@/components/common/TableSkeleton";
 import SortHeader from "@/components/common/sort-header";
 import { formatDeliveryAddress } from "@/components/pages/Orders/components/orders/details/order-details-utils";
 import { OrderStatusUpdateDialog } from "@/components/pages/Orders/components/orders/OrderStatusUpdateDialog";
+import { getNextOrderStatus } from "@/lib/order-status-transitions";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
 import type { Order } from "@/types/orders";
 import { useTranslations } from "next-intl";
@@ -175,6 +176,7 @@ export function OrdersTable({
     const customerNameValue = getCustomerName(order);
     const customerDetail = getCustomerDetail(order);
     const addressPreview = getAddressPreview(order);
+    const canUpdateStatus = Boolean(getNextOrderStatus(order));
 
     return (
     <TableRow key={id} className="border-none h-[70px]">
@@ -288,10 +290,12 @@ export function OrdersTable({
                 <Eye size={16} />
                 {common("viewDetails")}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusOrder(order)}>
-                <RefreshCw size={16} />
-                {common("updateStatus")}
-              </DropdownMenuItem>
+              {canUpdateStatus ? (
+                <DropdownMenuItem onClick={() => setStatusOrder(order)}>
+                  <RefreshCw size={16} />
+                  {common("updateStatus")}
+                </DropdownMenuItem>
+              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
