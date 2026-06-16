@@ -353,6 +353,18 @@
     "updateStatusTitle": "Bestellstatus aktualisieren",
     "updateStatusDescription": "Wählen Sie den nächsten Status für diese Bestellung aus.",
     "deliveryOtp": "Liefer-OTP",
+    "deliveryOtpRequired": "Die Liefer-OTP ist erforderlich, um diese Lieferbestellung als geliefert zu markieren.",
+    "noStatusTransition": "Für diese Bestellung ist kein weiterer Statusübergang verfügbar.",
+    "statusAction": {
+      "CONFIRMED": "Bestellung annehmen",
+      "PREPARING": "Vorbereitung starten",
+      "OUT_FOR_DELIVERY": "Zur Lieferung senden",
+      "READY_FOR_PICKUP": "Als abholbereit markieren",
+      "PICKED_UP": "Als abgeholt markieren",
+      "READY_TO_SERVE": "Als servierbereit markieren",
+      "SERVED": "Als serviert markieren",
+      "DELIVERED": "Als geliefert markieren"
+    },
     "acceptOrderTitle": "Bestellung annehmen",
     "acceptOrderDescription": "Bestätigen Sie die Bestellung und legen Sie die Lieferzeit der Filiale ab jetzt fest.",
     "deliveryScheduleTitle": "Lieferzeitplan",

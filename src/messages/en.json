@@ -353,6 +353,18 @@
     "updateStatusTitle": "Update Order Status",
     "updateStatusDescription": "Select the next status for this order.",
     "deliveryOtp": "Delivery OTP",
+    "deliveryOtpRequired": "Delivery OTP is required to mark this delivery order as delivered.",
+    "noStatusTransition": "No further status transition is available for this order.",
+    "statusAction": {
+      "CONFIRMED": "Accept order",
+      "PREPARING": "Start preparing",
+      "OUT_FOR_DELIVERY": "Send out for delivery",
+      "READY_FOR_PICKUP": "Mark ready for pickup",
+      "PICKED_UP": "Mark picked up",
+      "READY_TO_SERVE": "Mark ready to serve",
+      "SERVED": "Mark served",
+      "DELIVERED": "Mark delivered"
+    },
     "acceptOrderTitle": "Accept Order",
     "acceptOrderDescription": "Confirm the order and set the branch delivery time from now.",
     "deliveryScheduleTitle": "Delivery schedule",

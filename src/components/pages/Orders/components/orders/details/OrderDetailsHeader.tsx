@@ -5,12 +5,14 @@ import { RefreshCw, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
+import { getNextOrderStatus } from "@/lib/order-status-transitions";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
 import { OrderStatusUpdateDialog } from "@/components/pages/Orders/components/orders/OrderStatusUpdateDialog";
 
 type OrderDetailsHeaderProps = {
   order: {
     id: string;
+    orderType?: string | null;
     status: string;
     orderTime?: string;
     deliveryOtp?: string;
@@ -26,6 +28,7 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
   const statusLabel = ORDER_STATUS_LABEL_KEYS[order.status]
     ? t(ORDER_STATUS_LABEL_KEYS[order.status])
     : order.status;
+  const canUpdateStatus = Boolean(getNextOrderStatus(order));
 
   const breadcrumbParts = t("breadcrumbDetails").split(" / ");
 
@@ -56,16 +59,17 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
             {statusLabel}
           </Button>
 
-          {/* New Update Status Button */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setStatusDialogOpen(true)}
-            className="w-full sm:w-auto justify-center rounded-[10px] h-10 text-xs sm:text-sm font-medium px-4 flex items-center gap-2"
-          >
-            <RefreshCw size={16} />
-            {common("updateStatus")}
-          </Button>
+          {canUpdateStatus ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setStatusDialogOpen(true)}
+              className="w-full sm:w-auto justify-center rounded-[10px] h-10 text-xs sm:text-sm font-medium px-4 flex items-center gap-2"
+            >
+              <RefreshCw size={16} />
+              {common("updateStatus")}
+            </Button>
+          ) : null}
         </div>
       </div>
 
