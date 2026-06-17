@@ -31,6 +31,11 @@ export interface GetOrdersResponse {
   message?: string;
 }
 
+export type RefundPaymentPayload = {
+  amount?: number;
+  note?: string;
+};
+
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
@@ -183,4 +188,16 @@ export const updateOrderStatus = async (
   );
 
   return unwrapOrder(response);
+};
+
+export const refundPaymentTransaction = async (
+  paymentId: string,
+  payload: RefundPaymentPayload = {}
+) => {
+  const response = await httpClient.post<unknown, RefundPaymentPayload>(
+    `/payments/${paymentId}/refund`,
+    cleanParams(payload)
+  );
+
+  return response;
 };

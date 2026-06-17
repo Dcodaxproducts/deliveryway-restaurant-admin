@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { httpClient } from "@/lib/axios";
-import { updateOrderStatus } from "@/services/orders";
+import { refundPaymentTransaction, updateOrderStatus } from "@/services/orders";
 
 vi.mock("@/lib/axios", () => ({
   default: {
@@ -9,10 +9,12 @@ vi.mock("@/lib/axios", () => ({
   },
   httpClient: {
     patch: vi.fn(),
+    post: vi.fn(),
   },
 }));
 
 const mockedPatch = vi.mocked(httpClient.patch);
+const mockedPost = vi.mocked(httpClient.post);
 
 const orderResponse = {
   data: {
@@ -28,6 +30,7 @@ const orderResponse = {
 describe("orders service", () => {
   beforeEach(() => {
     mockedPatch.mockReset();
+    mockedPost.mockReset();
   });
 
   it("updateOrderStatus calls /orders/:id/status without duplicating /api/v1", async () => {
@@ -79,6 +82,16 @@ describe("orders service", () => {
     expect(mockedPatch).toHaveBeenCalledWith("/orders/order-1/status", {
       status: "CONFIRMED",
       orderTime: "2026-06-09T12:30:00.000Z",
+    });
+  });
+
+  it("refundPaymentTransaction calls the payment refund endpoint", async () => {
+    mockedPost.mockResolvedValue({ data: { id: "refund-1" } });
+
+    await refundPaymentTransaction("payment-1", { note: "Customer refund" });
+
+    expect(mockedPost).toHaveBeenCalledWith("/payments/payment-1/refund", {
+      note: "Customer refund",
     });
   });
 });

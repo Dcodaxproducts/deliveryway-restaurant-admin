@@ -4,7 +4,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { getApiErrorMessage } from "@/lib/errors";
-import { getOrderById, getOrders, updateOrderStatus } from "@/services/orders/orders.api";
+import {
+  getOrderById,
+  getOrders,
+  refundPaymentTransaction,
+  updateOrderStatus,
+} from "@/services/orders/orders.api";
 import type { OrderStatusUpdatePayload } from "@/types/orders";
 
 interface UseOrdersParams {
@@ -101,6 +106,25 @@ export const useUpdateOrderStatus = () => {
     },
     onError: (error) => {
       toast.error(getApiErrorMessage(error, "Unable to update order status"));
+    },
+  });
+};
+
+export const useRefundPaymentTransaction = (orderId?: string | null) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ paymentId, note }: { paymentId: string; note?: string }) =>
+      refundPaymentTransaction(paymentId, { note }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      if (orderId) {
+        queryClient.invalidateQueries({ queryKey: ["orders", "detail", orderId] });
+      }
+      toast.success("Payment refunded");
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Unable to refund payment"));
     },
   });
 };

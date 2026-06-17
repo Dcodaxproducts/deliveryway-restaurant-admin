@@ -6,6 +6,7 @@ import {
   CreditCard,
   Navigation,
   ReceiptText,
+  RotateCcw,
   TicketPercent,
   Timer,
   Truck,
@@ -22,6 +23,8 @@ import {
   getSelectedPaymentMethod,
 } from "@/components/pages/Orders/components/orders/details/order-details-utils";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
+import { useAuth } from "@/hooks/useAuth";
+import { useRefundPaymentTransaction } from "@/hooks/useOrders";
 
 type NamedEntity = {
   id?: string | null;
@@ -206,6 +209,8 @@ function InfoRow({ label, value }: { label: string; value?: React.ReactNode }) {
 
 const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   const t = useTranslations("orders");
+  const { role } = useAuth();
+  const refundMutation = useRefundPaymentTransaction(order.id);
   const items = order.items || [];
   const selectedPaymentMethod = getSelectedPaymentMethod(order);
   const paymentLabel = formatPaymentMethod(selectedPaymentMethod);
@@ -213,6 +218,11 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   const mapsUrl = getMapsUrl(order.deliveryAddress);
   const transactions = order.transactions || [];
   const latestTransaction = transactions[0];
+  const refundableTransaction = transactions.find(
+    (transaction) => transaction.type === "CHARGE" && transaction.status === "PAID"
+  );
+  const canRefundRole = role === "BUSINESS_ADMIN" || role === "SUPER_ADMIN";
+  const canRefund = Boolean(canRefundRole && refundableTransaction?.id);
   const statusLabel = order.status && ORDER_STATUS_LABEL_KEYS[order.status]
     ? t(ORDER_STATUS_LABEL_KEYS[order.status])
     : formatStatus(order.status);
@@ -249,6 +259,18 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
     [t("total"), order.totalAmount],
     [t("payableAmount"), order.payableAmount],
   ] satisfies Array<[string, number | null | undefined]>;
+
+  const handleRefund = () => {
+    if (!refundableTransaction?.id || refundMutation.isPending) return;
+
+    const confirmed = window.confirm(t("refundConfirm"));
+    if (!confirmed) return;
+
+    refundMutation.mutate({
+      paymentId: refundableTransaction.id,
+      note: t("refundNote"),
+    });
+  };
 
   return (
     <div className="mt-6 w-full space-y-6">
@@ -415,6 +437,17 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
             <SectionTitle icon={<CreditCard size={19} />} title={t("payment")} />
             <InfoRow label={t("selectedPaymentMethod")} value={paymentLabel || t("notAvailable")} />
             <InfoRow label={t("paymentStatus")} value={formatStatus(order.paymentStatus)} />
+            {canRefund ? (
+              <button
+                type="button"
+                onClick={handleRefund}
+                disabled={refundMutation.isPending}
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 ring-1 ring-red-100 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <RotateCcw className="size-4" />
+                {refundMutation.isPending ? t("refundingPayment") : t("refundPayment")}
+              </button>
+            ) : null}
             <div className="py-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("availablePaymentMethods")}</p>
               <div className="mt-2 flex flex-wrap gap-2">
