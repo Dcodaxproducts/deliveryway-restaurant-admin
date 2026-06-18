@@ -38,6 +38,20 @@ export type Order = {
   } | null;
   deliveryAddress?: DeliveryAddress | null;
   isGroupOrder?: boolean;
+  transactions?: PaymentTransaction[] | null;
+};
+
+export type PaymentTransaction = {
+  id?: string | null;
+  paymentMethod?: string | null;
+  type?: "CHARGE" | "REFUND" | string | null;
+  status?: "PENDING" | "PAID" | "FAILED" | "CANCELLED" | "REFUNDED" | string | null;
+  amount?: number | null;
+  currency?: string | null;
+  providerRef?: string | null;
+  note?: string | null;
+  processedAt?: string | null;
+  createdAt?: string | null;
 };
 
 export type OrderStatusUpdatePayload = {

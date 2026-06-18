@@ -103,6 +103,38 @@ describe("orders service", () => {
     expect(order?.isScheduled).toBe(true);
   });
 
+  it("normalizes payment transactions from list responses", () => {
+    const order = normalizeOrder({
+      ...orderResponse.data,
+      paymentStatus: "PENDING",
+      transactions: [
+        {
+          id: "payment-1",
+          type: "CHARGE",
+          status: "PENDING",
+          amount: 25,
+          currency: "USD",
+        },
+      ],
+    });
+
+    expect(order?.paymentStatus).toBe("PENDING");
+    expect(order?.transactions).toEqual([
+      {
+        id: "payment-1",
+        paymentMethod: null,
+        type: "CHARGE",
+        status: "PENDING",
+        amount: 25,
+        currency: "USD",
+        providerRef: null,
+        note: null,
+        processedAt: null,
+        createdAt: null,
+      },
+    ]);
+  });
+
   it("refundPaymentTransaction calls the payment refund endpoint", async () => {
     mockedPost.mockResolvedValue({ data: { id: "refund-1" } });
 

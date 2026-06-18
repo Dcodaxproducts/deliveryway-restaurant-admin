@@ -1,6 +1,6 @@
 import api, { httpClient } from "@/lib/axios";
 import { cleanParams } from "@/lib/params";
-import type { Order, OrderStatusUpdatePayload } from "@/types/orders";
+import type { Order, OrderStatusUpdatePayload, PaymentTransaction } from "@/types/orders";
 
 export interface GetOrdersParams {
   restaurantId: string;
@@ -110,6 +110,31 @@ const normalizeDeliveryAddress = (value: unknown): Order["deliveryAddress"] => {
   };
 };
 
+const normalizePaymentTransaction = (value: unknown): PaymentTransaction | null => {
+  if (!isRecord(value)) return null;
+
+  return {
+    id: getNullableString(value, "id"),
+    paymentMethod: getNullableString(value, "paymentMethod"),
+    type: getNullableString(value, "type"),
+    status: getNullableString(value, "status"),
+    amount: getNullableNumber(value, "amount"),
+    currency: getNullableString(value, "currency"),
+    providerRef: getNullableString(value, "providerRef"),
+    note: getNullableString(value, "note"),
+    processedAt: getNullableString(value, "processedAt"),
+    createdAt: getNullableString(value, "createdAt"),
+  };
+};
+
+const normalizePaymentTransactions = (value: unknown): PaymentTransaction[] | null => {
+  if (!Array.isArray(value)) return null;
+
+  return value
+    .map(normalizePaymentTransaction)
+    .filter((transaction): transaction is PaymentTransaction => Boolean(transaction));
+};
+
 export const normalizeOrder = (value: unknown): Order | null => {
   if (!isRecord(value)) return null;
 
@@ -136,6 +161,7 @@ export const normalizeOrder = (value: unknown): Order | null => {
     deliveryAddress: normalizeDeliveryAddress(value.deliveryAddress),
     isGroupOrder:
       typeof value.isGroupOrder === "boolean" ? value.isGroupOrder : undefined,
+    transactions: normalizePaymentTransactions(value.transactions),
   };
 };
 
