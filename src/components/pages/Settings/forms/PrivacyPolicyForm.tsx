@@ -37,10 +37,15 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useCustomerAppContent,
+  usePublicAboutUs,
   usePublicPrivacyPolicy,
+  useUpdateCustomerAppAboutUs,
   useUpdateCustomerAppPrivacyPolicy,
 } from "@/hooks/useCustomerAppContent";
-import { buildPrivacyPolicyPageLink } from "@/services/customer-app-content";
+import {
+  buildAboutUsPageLink,
+  buildPrivacyPolicyPageLink,
+} from "@/services/customer-app-content";
 import { cn } from "@/lib/utils";
 
 const emptyPolicyTemplate = `<h2>Privacy Policy</h2>
@@ -54,6 +59,18 @@ const emptyPolicyTemplate = `<h2>Privacy Policy</h2>
 
 <h3>Contact</h3>
 <p>Tell customers how to contact your restaurant about privacy questions.</p>`;
+
+const emptyAboutUsTemplate = `<h2>About Us</h2>
+<p>Share the story behind your restaurant, your cooking style, and what makes the customer experience special.</p>
+
+<h3>Our food</h3>
+<p>Describe your signature dishes, ingredients, sourcing, kitchen standards, or local favorites.</p>
+
+<h3>Our team</h3>
+<p>Introduce the chefs, founders, or service team behind the restaurant.</p>
+
+<h3>Visit us</h3>
+<p>Invite customers to order online, visit the restaurant, or follow your latest updates.</p>`;
 
 type EditorCommand =
   | { type: "command"; command: string; value?: string }
@@ -102,8 +119,8 @@ const editorButtonGroups: EditorButton[][] = [
 
 const editorSwatches = ["#101828", "#475467", "#C1121F", "#1D7FA8", "#027A48", "#B54708"];
 
-const buildPreviewDocument = (content: string) => {
-  const safeContent = content.trim() || "<p>No privacy policy content has been published yet.</p>";
+const buildPreviewDocument = (content: string, emptyPreview: string) => {
+  const safeContent = content.trim() || emptyPreview;
 
   return `<!doctype html>
 <html>
@@ -137,6 +154,16 @@ const buildPreviewDocument = (content: string) => {
 };
 
 const countWords = (value: string) => value.trim().split(/\s+/).filter(Boolean).length;
+
+type ContentField = "privacyPolicy" | "aboutUs";
+
+type CustomerAppContentPageProps = {
+  translationKey: "privacyPolicy" | "aboutUs";
+  contentField: ContentField;
+  emptyTemplate: string;
+  emptyPreview: string;
+  buildPublicLink: () => string;
+};
 
 function RichPolicyEditor({
   value,
@@ -291,37 +318,76 @@ function RichPolicyEditor({
   );
 }
 
+export function AboutUsPage() {
+  return (
+    <CustomerAppContentPage
+      translationKey="aboutUs"
+      contentField="aboutUs"
+      emptyTemplate={emptyAboutUsTemplate}
+      emptyPreview="<p>No About Us content has been published yet.</p>"
+      buildPublicLink={buildAboutUsPageLink}
+    />
+  );
+}
+
 export default function PrivacyPolicyPage() {
-  const t = useTranslations("privacyPolicy");
+  return (
+    <CustomerAppContentPage
+      translationKey="privacyPolicy"
+      contentField="privacyPolicy"
+      emptyTemplate={emptyPolicyTemplate}
+      emptyPreview="<p>No privacy policy content has been published yet.</p>"
+      buildPublicLink={buildPrivacyPolicyPageLink}
+    />
+  );
+}
+
+function CustomerAppContentPage({
+  translationKey,
+  contentField,
+  emptyTemplate,
+  emptyPreview,
+  buildPublicLink,
+}: CustomerAppContentPageProps) {
+  const t = useTranslations(translationKey);
   const commonT = useTranslations("common");
   const { restaurantId, loading: authLoading } = useAuth();
-  const [draftPolicy, setDraftPolicy] = useState("");
-  const [hasLoadedInitialPolicy, setHasLoadedInitialPolicy] = useState(false);
+  const [draftContent, setDraftContent] = useState("");
+  const [hasLoadedInitialContent, setHasLoadedInitialContent] = useState(false);
 
   const { data: content, isLoading, isFetching, refetch } = useCustomerAppContent(restaurantId);
+  const { data: publicAboutUs } = usePublicAboutUs(restaurantId);
   const { data: publicPolicy } = usePublicPrivacyPolicy(restaurantId);
-  const { mutateAsync: updatePrivacyPolicy, isPending: isSaving } =
-    useUpdateCustomerAppPrivacyPolicy();
+  const updateAboutUs = useUpdateCustomerAppAboutUs();
+  const updatePrivacyPolicy = useUpdateCustomerAppPrivacyPolicy();
 
-  const savedPolicy = content?.privacyPolicy ?? "";
-  const publicContent = publicPolicy?.privacyPolicy ?? "";
-  const publicLink = restaurantId ? buildPrivacyPolicyPageLink() : "";
-  const isDirty = draftPolicy !== savedPolicy;
+  const savedContent = content?.[contentField] ?? "";
+  const publishedContent =
+    contentField === "aboutUs"
+      ? publicAboutUs?.aboutUs ?? ""
+      : publicPolicy?.privacyPolicy ?? "";
+  const publicLink = restaurantId ? buildPublicLink() : "";
+  const isDirty = draftContent !== savedContent;
   const loading = authLoading || isLoading;
-  const previewDocument = useMemo(() => buildPreviewDocument(draftPolicy), [draftPolicy]);
-  const wordCount = useMemo(() => countWords(draftPolicy), [draftPolicy]);
-  const characterCount = draftPolicy.length;
-  const hasPublishedContent = publicContent.trim().length > 0;
+  const isSaving =
+    contentField === "aboutUs" ? updateAboutUs.isPending : updatePrivacyPolicy.isPending;
+  const previewDocument = useMemo(
+    () => buildPreviewDocument(draftContent, emptyPreview),
+    [draftContent, emptyPreview],
+  );
+  const wordCount = useMemo(() => countWords(draftContent), [draftContent]);
+  const characterCount = draftContent.length;
+  const hasPublishedContent = publishedContent.trim().length > 0;
 
   useEffect(() => {
-    if (hasLoadedInitialPolicy || isLoading) return;
+    if (hasLoadedInitialContent || isLoading) return;
 
-    setDraftPolicy(savedPolicy || emptyPolicyTemplate);
-    setHasLoadedInitialPolicy(true);
-  }, [hasLoadedInitialPolicy, isLoading, savedPolicy]);
+    setDraftContent(savedContent || emptyTemplate);
+    setHasLoadedInitialContent(true);
+  }, [emptyTemplate, hasLoadedInitialContent, isLoading, savedContent]);
 
   const handleReset = () => {
-    setDraftPolicy(savedPolicy || emptyPolicyTemplate);
+    setDraftContent(savedContent || emptyTemplate);
   };
 
   const handleSave = async () => {
@@ -330,12 +396,19 @@ export default function PrivacyPolicyPage() {
       return;
     }
 
-    const nextContent = await updatePrivacyPolicy({
-      restaurantId,
-      privacyPolicy: draftPolicy.trim(),
-    });
-    setDraftPolicy(nextContent.privacyPolicy);
-    setHasLoadedInitialPolicy(true);
+    const nextContent =
+      contentField === "aboutUs"
+        ? await updateAboutUs.mutateAsync({
+            restaurantId,
+            aboutUs: draftContent.trim(),
+          })
+        : await updatePrivacyPolicy.mutateAsync({
+            restaurantId,
+            privacyPolicy: draftContent.trim(),
+          });
+
+    setDraftContent(nextContent[contentField]);
+    setHasLoadedInitialContent(true);
   };
 
   const handleCopyPublicLink = async () => {
@@ -460,8 +533,8 @@ export default function PrivacyPolicyPage() {
                 </div>
               ) : (
                 <RichPolicyEditor
-                  value={draftPolicy}
-                  onChange={setDraftPolicy}
+                  value={draftContent}
+                  onChange={setDraftContent}
                   placeholder={t("placeholder")}
                 />
               )}

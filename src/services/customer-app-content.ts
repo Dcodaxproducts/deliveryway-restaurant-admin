@@ -3,6 +3,7 @@ import api from "@/lib/axios";
 export type CustomerAppContent = {
   restaurantId: string;
   privacyPolicy: string;
+  aboutUs: string;
   title?: string;
   policyLink?: string;
 };
@@ -41,6 +42,19 @@ export const getPrivacyPolicyContent = (response: unknown) => {
   );
 };
 
+export const getAboutUsContent = (response: unknown) => {
+  const data = unwrapResponseData(response);
+  const settings = getRecord(data, "settings");
+  const customerApp = getRecord(settings, "customerApp") ?? getRecord(data, "customerApp");
+
+  return (
+    getString(data, "aboutUs") ??
+    getString(data, "content") ??
+    getString(customerApp, "aboutUs") ??
+    ""
+  );
+};
+
 export const normalizeCustomerAppContent = (
   response: unknown,
   fallbackRestaurantId = "",
@@ -50,12 +64,14 @@ export const normalizeCustomerAppContent = (
   return {
     restaurantId: getString(data, "restaurantId") ?? fallbackRestaurantId,
     privacyPolicy: getPrivacyPolicyContent(response),
+    aboutUs: getAboutUsContent(response),
     title: getString(data, "title"),
     policyLink: getString(data, "policyLink"),
   };
 };
 
 export const buildPrivacyPolicyPageLink = () => "/privacy-policy";
+export const buildAboutUsPageLink = () => "/about";
 
 export const getCustomerAppContent = async (restaurantId: string) => {
   const { data } = await api.get(`/restaurants/${restaurantId}/customer-app-content`);
@@ -74,8 +90,27 @@ export const updateCustomerAppPrivacyPolicy = async (
   return normalizeCustomerAppContent(data, restaurantId);
 };
 
+export const updateCustomerAppAboutUs = async (
+  restaurantId: string,
+  aboutUs: string,
+) => {
+  const { data } = await api.patch(`/restaurants/${restaurantId}/customer-app-content`, {
+    aboutUs,
+  });
+
+  return normalizeCustomerAppContent(data, restaurantId);
+};
+
 export const getPublicPrivacyPolicy = async (restaurantId: string) => {
   const { data } = await api.get("/public-content/privacy-policy", {
+    params: { restaurantId },
+  });
+
+  return normalizeCustomerAppContent(data, restaurantId);
+};
+
+export const getPublicAboutUs = async (restaurantId: string) => {
+  const { data } = await api.get("/public-content/about-us", {
     params: { restaurantId },
   });
 
