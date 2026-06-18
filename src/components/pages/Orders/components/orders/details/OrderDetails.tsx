@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import {
+  AlertTriangle,
   Banknote,
   CalendarClock,
+  CheckCircle2,
   CreditCard,
   Loader2,
   Navigation,
@@ -34,10 +36,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
 import { useAuth } from "@/hooks/useAuth";
-import { useRefundPaymentTransaction } from "@/hooks/useOrders";
+import {
+  useRefundPaymentTransaction,
+  useUpdatePaymentTransactionStatus,
+} from "@/hooks/useOrders";
 
 type NamedEntity = {
   id?: string | null;
@@ -184,6 +196,15 @@ const getRefundableAmounts = (transactions: Transaction[]) => {
   };
 };
 
+type AdminPaymentStatus = "PENDING" | "PAID" | "FAILED" | "CANCELLED";
+
+const ADMIN_PAYMENT_STATUSES: AdminPaymentStatus[] = [
+  "PAID",
+  "FAILED",
+  "PENDING",
+  "CANCELLED",
+];
+
 const formatStatus = (status?: string | null) =>
   status
     ? status
@@ -244,24 +265,40 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   const t = useTranslations("orders");
   const { role } = useAuth();
   const refundMutation = useRefundPaymentTransaction(order.id);
+  const paymentStatusMutation = useUpdatePaymentTransactionStatus(order.id);
   const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
   const [refundMode, setRefundMode] = useState<"full" | "partial">("full");
   const [refundAmount, setRefundAmount] = useState("");
   const [refundNote, setRefundNote] = useState(t("refundNote"));
   const [isRefundConfirming, setIsRefundConfirming] = useState(false);
+  const [isPaymentStatusDialogOpen, setIsPaymentStatusDialogOpen] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<AdminPaymentStatus>("PAID");
+  const [paymentStatusNote, setPaymentStatusNote] = useState(t("paymentStatusNote"));
+  const [isPaymentStatusConfirming, setIsPaymentStatusConfirming] = useState(false);
   const items = order.items || [];
   const selectedPaymentMethod = getSelectedPaymentMethod(order);
   const paymentLabel = formatPaymentMethod(selectedPaymentMethod);
+  const selectedPaymentMethodKey = selectedPaymentMethod?.toUpperCase();
   const deliveryAddress = formatDeliveryAddress(order.deliveryAddress);
   const mapsUrl = getMapsUrl(order.deliveryAddress);
   const transactions = order.transactions || [];
   const latestTransaction = transactions[0];
+  const paymentStatusTransaction = transactions.find(
+    (transaction) => transaction.type === "CHARGE" && transaction.id
+  );
   const refundableTransaction = transactions.find(
     (transaction) => transaction.type === "CHARGE" && transaction.status === "PAID"
   );
   const { chargeAmount, refundedAmount, remainingRefundableAmount } =
     getRefundableAmounts(transactions);
   const canRefundRole = role === "BUSINESS_ADMIN" || role === "SUPER_ADMIN";
+  const canUpdatePaymentStatusRole =
+    role === "BUSINESS_ADMIN" || role === "SUPER_ADMIN" || role === "BRANCH_ADMIN";
+  const canUpdatePaymentStatus = Boolean(
+    canUpdatePaymentStatusRole &&
+      paymentStatusTransaction?.id &&
+      order.paymentStatus !== "REFUNDED"
+  );
   const canRefund = Boolean(
     canRefundRole && refundableTransaction?.id && remainingRefundableAmount > 0,
   );
@@ -281,6 +318,10 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
     !refundableTransaction?.id ||
     !refundNote.trim() ||
     partialAmountInvalid;
+  const paymentStatusSubmitDisabled =
+    paymentStatusMutation.isPending ||
+    !paymentStatusTransaction?.id ||
+    !paymentStatusNote.trim();
   const metadata: Array<[string, React.ReactNode]> = [
     [t("orderType"), formatStatus(order.orderType)],
     [t("statusLabel"), statusLabel],
@@ -344,6 +385,44 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
         setIsRefundConfirming(false);
       },
     });
+  };
+
+  const openPaymentStatusDialog = () => {
+    if (!paymentStatusTransaction?.id || paymentStatusMutation.isPending) return;
+
+    setPaymentStatus(
+      order.paymentStatus === "FAILED"
+        ? "FAILED"
+        : order.paymentStatus === "CANCELLED"
+          ? "CANCELLED"
+          : "PAID"
+    );
+    setPaymentStatusNote(t("paymentStatusNote"));
+    setIsPaymentStatusConfirming(false);
+    setIsPaymentStatusDialogOpen(true);
+  };
+
+  const handlePaymentStatusSubmit = () => {
+    if (!paymentStatusTransaction?.id || paymentStatusSubmitDisabled) return;
+
+    if (!isPaymentStatusConfirming) {
+      setIsPaymentStatusConfirming(true);
+      return;
+    }
+
+    paymentStatusMutation.mutate(
+      {
+        paymentId: paymentStatusTransaction.id,
+        status: paymentStatus,
+        note: paymentStatusNote.trim(),
+      },
+      {
+        onSuccess: () => {
+          setIsPaymentStatusDialogOpen(false);
+          setIsPaymentStatusConfirming(false);
+        },
+      }
+    );
   };
 
   return (
@@ -511,10 +590,32 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
             <SectionTitle icon={<CreditCard size={19} />} title={t("payment")} />
             <InfoRow label={t("selectedPaymentMethod")} value={paymentLabel || t("notAvailable")} />
             <InfoRow label={t("paymentStatus")} value={formatStatus(order.paymentStatus)} />
+            {paymentStatusTransaction?.id ? (
+              <InfoRow
+                label={t("paymentAttempt")}
+                value={`${formatStatus(paymentStatusTransaction.status)} · ${formatMoney(
+                  paymentStatusTransaction.amount,
+                  paymentStatusTransaction.currency || primaryCurrency
+                )}`}
+              />
+            ) : null}
             <InfoRow
               label={t("refundableAmount")}
               value={formatMoney(remainingRefundableAmount, primaryCurrency)}
             />
+            {canUpdatePaymentStatus ? (
+              <button
+                type="button"
+                onClick={openPaymentStatusDialog}
+                disabled={paymentStatusMutation.isPending}
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary ring-1 ring-primary/15 transition hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <CheckCircle2 className="size-4" />
+                {paymentStatusMutation.isPending
+                  ? t("updatingPaymentStatus")
+                  : t("updatePaymentStatus")}
+              </button>
+            ) : null}
             {canRefund ? (
               <button
                 type="button"
@@ -728,6 +829,140 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                 : isRefundConfirming
                   ? t("confirmRefund")
                   : t("continueRefund")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isPaymentStatusDialogOpen}
+        onOpenChange={setIsPaymentStatusDialogOpen}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl border-gray-100 p-0 sm:max-w-xl">
+          <DialogHeader className="border-b border-gray-100 px-6 py-5">
+            <DialogTitle className="text-xl text-gray-950">
+              {t("paymentStatusDialogTitle")}
+            </DialogTitle>
+            <DialogDescription className="text-sm leading-6 text-gray-500">
+              {t("paymentStatusDialogDescription")}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 px-6 py-5">
+            <div className="rounded-2xl bg-gray-50 p-4">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase text-gray-400">
+                    {t("currentPaymentStatus")}
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-gray-950">
+                    {formatStatus(order.paymentStatus)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase text-gray-400">
+                    {t("transactionStatus")}
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-gray-950">
+                    {formatStatus(paymentStatusTransaction?.status)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase text-gray-400">
+                    {t("amount")}
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-gray-950">
+                    {formatMoney(
+                      paymentStatusTransaction?.amount,
+                      paymentStatusTransaction?.currency || primaryCurrency
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {selectedPaymentMethodKey === "STRIPE" ? (
+              <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                <p>{t("stripePaymentStatusWarning")}</p>
+              </div>
+            ) : null}
+
+            <div className="space-y-2">
+              <label htmlFor="payment-status" className="text-sm font-semibold text-gray-900">
+                {t("newPaymentStatus")}
+              </label>
+              <Select
+                value={paymentStatus}
+                onValueChange={(value) => {
+                  setPaymentStatus(value as AdminPaymentStatus);
+                  setIsPaymentStatusConfirming(false);
+                }}
+              >
+                <SelectTrigger id="payment-status" className="h-11 rounded-xl border-gray-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ADMIN_PAYMENT_STATUSES.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {formatStatus(status)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="payment-status-note" className="text-sm font-semibold text-gray-900">
+                {t("paymentStatusReason")}
+              </label>
+              <Textarea
+                id="payment-status-note"
+                value={paymentStatusNote}
+                onChange={(event) => {
+                  setPaymentStatusNote(event.target.value);
+                  setIsPaymentStatusConfirming(false);
+                }}
+                rows={4}
+                className="resize-y rounded-xl border-gray-200 text-sm"
+              />
+            </div>
+
+            {isPaymentStatusConfirming ? (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800">
+                {t("paymentStatusFinalConfirm", {
+                  status: formatStatus(paymentStatus),
+                })}
+              </div>
+            ) : null}
+          </div>
+
+          <DialogFooter className="border-t border-gray-100 px-6 py-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsPaymentStatusDialogOpen(false)}
+              disabled={paymentStatusMutation.isPending}
+              className="h-10 rounded-xl border-gray-200"
+            >
+              {t("cancelPaymentStatusUpdate")}
+            </Button>
+            <Button
+              type="button"
+              onClick={handlePaymentStatusSubmit}
+              disabled={paymentStatusSubmitDisabled}
+              className="h-10 rounded-xl bg-primary text-white hover:bg-primary/90"
+            >
+              {paymentStatusMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="size-4" />
+              )}
+              {paymentStatusMutation.isPending
+                ? t("updatingPaymentStatus")
+                : isPaymentStatusConfirming
+                  ? t("confirmPaymentStatusUpdate")
+                  : t("continuePaymentStatusUpdate")}
             </Button>
           </DialogFooter>
         </DialogContent>

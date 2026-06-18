@@ -2,8 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { httpClient } from "@/lib/axios";
 import {
+  failPaymentTransaction,
+  markPaymentTransactionPaid,
   normalizeOrder,
   refundPaymentTransaction,
+  updatePaymentTransactionStatus,
   updateOrderStatus,
 } from "@/services/orders";
 
@@ -111,6 +114,44 @@ describe("orders service", () => {
     expect(mockedPost).toHaveBeenCalledWith("/payments/payment-1/refund", {
       amount: 12.5,
       note: "Customer refund",
+    });
+  });
+
+  it("markPaymentTransactionPaid calls the admin mark-paid endpoint", async () => {
+    mockedPost.mockResolvedValue({ data: { id: "payment-1" } });
+
+    await markPaymentTransactionPaid("payment-1", {
+      note: "Cash collected at counter",
+    });
+
+    expect(mockedPost).toHaveBeenCalledWith("/payments/payment-1/mark-paid", {
+      note: "Cash collected at counter",
+    });
+  });
+
+  it("failPaymentTransaction calls the admin fail endpoint", async () => {
+    mockedPost.mockResolvedValue({ data: { id: "payment-1" } });
+
+    await failPaymentTransaction("payment-1", {
+      note: "Payment could not be collected",
+    });
+
+    expect(mockedPost).toHaveBeenCalledWith("/payments/payment-1/fail", {
+      note: "Payment could not be collected",
+    });
+  });
+
+  it("updatePaymentTransactionStatus calls the admin status endpoint", async () => {
+    mockedPatch.mockResolvedValue({ data: { id: "payment-1" } });
+
+    await updatePaymentTransactionStatus("payment-1", {
+      status: "CANCELLED",
+      note: "Cancelled by admin",
+    });
+
+    expect(mockedPatch).toHaveBeenCalledWith("/payments/payment-1/status", {
+      status: "CANCELLED",
+      note: "Cancelled by admin",
     });
   });
 });

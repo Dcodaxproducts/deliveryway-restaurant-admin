@@ -36,6 +36,11 @@ export type RefundPaymentPayload = {
   note?: string;
 };
 
+export type PaymentStatusUpdatePayload = {
+  status: "PENDING" | "PAID" | "FAILED" | "CANCELLED" | "REFUNDED";
+  note?: string;
+};
+
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
@@ -198,6 +203,42 @@ export const refundPaymentTransaction = async (
 ) => {
   const response = await httpClient.post<unknown, RefundPaymentPayload>(
     `/payments/${paymentId}/refund`,
+    cleanParams(payload)
+  );
+
+  return response;
+};
+
+export const markPaymentTransactionPaid = async (
+  paymentId: string,
+  payload: Pick<PaymentStatusUpdatePayload, "note"> = {}
+) => {
+  const response = await httpClient.post<
+    unknown,
+    Pick<PaymentStatusUpdatePayload, "note">
+  >(`/payments/${paymentId}/mark-paid`, cleanParams(payload));
+
+  return response;
+};
+
+export const failPaymentTransaction = async (
+  paymentId: string,
+  payload: Pick<PaymentStatusUpdatePayload, "note"> = {}
+) => {
+  const response = await httpClient.post<
+    unknown,
+    Pick<PaymentStatusUpdatePayload, "note">
+  >(`/payments/${paymentId}/fail`, cleanParams(payload));
+
+  return response;
+};
+
+export const updatePaymentTransactionStatus = async (
+  paymentId: string,
+  payload: PaymentStatusUpdatePayload
+) => {
+  const response = await httpClient.patch<unknown, Partial<PaymentStatusUpdatePayload>>(
+    `/payments/${paymentId}/status`,
     cleanParams(payload)
   );
 

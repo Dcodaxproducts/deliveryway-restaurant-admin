@@ -224,11 +224,11 @@ export function OrdersTable({
   return (
     <div className="space-y-4">
 
-      <div className="hidden lg:block">
-        <Table>
+      <div className="hidden max-w-full overflow-hidden lg:block">
+        <Table className="table-fixed">
          <TableHeader>
   <TableRow className="border-none">
-    <TableHead className="w-[50px]">
+    <TableHead className="w-10">
       <Checkbox />
     </TableHead>
 
@@ -242,16 +242,16 @@ export function OrdersTable({
       </>
     ) : (
       <>
-        <SortHeader label={t("orderId")} sortKey="id" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label={t("date")} sortKey="createdAt" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label={t("customerInfo")} sortKey="customerName" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <TableHead>{t("address")}</TableHead>
-        <SortHeader label={t("amount")} sortKey="totalAmount" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label={t("statusLabel")} sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} />
+        <SortHeader label={t("orderId")} sortKey="id" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[14%]" />
+        <SortHeader label={t("date")} sortKey="createdAt" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[18%]" />
+        <SortHeader label={t("customerInfo")} sortKey="customerName" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[22%]" />
+        <TableHead className="w-[22%]">{t("address")}</TableHead>
+        <SortHeader label={t("amount")} sortKey="totalAmount" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[10%]" />
+        <SortHeader label={t("statusLabel")} sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[10%]" />
       </>
     )}
 
-    <TableHead className="text-center">{common("actions")}</TableHead>
+    <TableHead className="w-20 text-center">{common("actions")}</TableHead>
   </TableRow>
 </TableHeader>
 
@@ -283,7 +283,11 @@ export function OrdersTable({
 
       {activeTab === "reservations" ? (
         <>
-          <TableCell className="px-4 text-gray-500">{id}</TableCell>
+          <TableCell className="px-4 text-gray-500">
+            <span className="block max-w-full truncate" title={id}>
+              {id}
+            </span>
+          </TableCell>
 
           <TableCell className="px-4 text-gray-600">
             {customerName?.trim() || "-"}
@@ -307,13 +311,17 @@ export function OrdersTable({
         </>
       ) : (
         <>
-          <TableCell className="px-4 text-gray-500">{id}</TableCell>
-
           <TableCell className="px-4 text-gray-500">
+            <span className="block max-w-full truncate" title={id}>
+              {id}
+            </span>
+          </TableCell>
+
+          <TableCell className="px-4 text-gray-500 whitespace-normal">
             <div className="space-y-2">
               <p>{formatShortDate(createdAt)}</p>
               {orderTimeLabel ? (
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                   {isPreorder ? (
                     <Badge className="border-primary/20 bg-primary/10 text-primary">
                       <CalendarClock size={12} />
@@ -321,11 +329,11 @@ export function OrdersTable({
                     </Badge>
                   ) : null}
                   <span
-                    className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
+                    className="inline-flex max-w-full items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
                     title={orderTime?.toLocaleString()}
                   >
                     <CalendarClock size={12} />
-                    {orderTimeLabel}
+                    <span className="truncate">{orderTimeLabel}</span>
                   </span>
                 </div>
               ) : (
@@ -336,7 +344,7 @@ export function OrdersTable({
             </div>
           </TableCell>
 
-          <TableCell className="max-w-[260px] px-4 whitespace-normal">
+          <TableCell className="px-4 whitespace-normal">
             <div className="min-w-0 space-y-1">
               <p className="truncate font-medium text-gray-700" title={customerNameValue}>
                 {customerNameValue}
@@ -347,7 +355,7 @@ export function OrdersTable({
             </div>
           </TableCell>
 
-          <TableCell className="max-w-[260px] px-4">
+          <TableCell className="px-4 whitespace-normal">
             <ClickTooltip
               content={
                 <div className="space-y-2">
@@ -376,11 +384,11 @@ export function OrdersTable({
           </TableCell>
 
           <TableCell className="px-4 font-medium text-green-600">
-            ${totalAmount ?? 0}
+            <span className="block truncate">${totalAmount ?? 0}</span>
           </TableCell>
 
           <TableCell className="px-4">
-            <span className="text-sm font-medium text-yellow-600">
+            <span className="block truncate text-sm font-medium text-yellow-600">
               {getStatusLabel(status)}
             </span>
           </TableCell>

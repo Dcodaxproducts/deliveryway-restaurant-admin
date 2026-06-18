@@ -5,9 +5,13 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
+  failPaymentTransaction,
   getOrderById,
   getOrders,
+  markPaymentTransactionPaid,
+  type PaymentStatusUpdatePayload,
   refundPaymentTransaction,
+  updatePaymentTransactionStatus,
   updateOrderStatus,
 } from "@/services/orders/orders.api";
 import type { OrderStatusUpdatePayload } from "@/types/orders";
@@ -132,6 +136,42 @@ export const useRefundPaymentTransaction = (orderId?: string | null) => {
     },
     onError: (error) => {
       toast.error(getApiErrorMessage(error, "Unable to refund payment"));
+    },
+  });
+};
+
+export const useUpdatePaymentTransactionStatus = (orderId?: string | null) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      paymentId,
+      status,
+      note,
+    }: {
+      paymentId: string;
+      status: PaymentStatusUpdatePayload["status"];
+      note?: string;
+    }) => {
+      if (status === "PAID") {
+        return markPaymentTransactionPaid(paymentId, { note });
+      }
+
+      if (status === "FAILED") {
+        return failPaymentTransaction(paymentId, { note });
+      }
+
+      return updatePaymentTransactionStatus(paymentId, { status, note });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      if (orderId) {
+        queryClient.invalidateQueries({ queryKey: ["orders", "detail", orderId] });
+      }
+      toast.success("Payment status updated");
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Unable to update payment status"));
     },
   });
 };
