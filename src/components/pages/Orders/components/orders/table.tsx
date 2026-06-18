@@ -295,12 +295,12 @@ export function OrdersTable({
       </>
     ) : (
       <>
-        <SortHeader label={t("date")} sortKey="createdAt" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[18%]" />
-        <SortHeader label={t("customerInfo")} sortKey="customerName" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[20%]" />
-        <TableHead className="w-[24%]">{t("address")}</TableHead>
-        <SortHeader label={t("amount")} sortKey="totalAmount" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[10%]" />
-        <SortHeader label={t("statusLabel")} sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[10%]" />
-        <SortHeader label={t("paymentStatus")} sortKey="paymentStatus" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[10%]" />
+        <SortHeader label={t("date")} sortKey="createdAt" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[20%]" />
+        <SortHeader label={t("customerInfo")} sortKey="customerName" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[22%]" />
+        <TableHead className="w-[16%]">{t("address")}</TableHead>
+        <SortHeader label={t("amount")} sortKey="totalAmount" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[11%]" />
+        <SortHeader label={t("statusLabel")} sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[11%]" />
+        <SortHeader label={t("paymentStatus")} sortKey="paymentStatus" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[12%]" />
       </>
     )}
 
