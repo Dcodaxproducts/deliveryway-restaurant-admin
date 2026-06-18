@@ -2856,45 +2856,6 @@
     "publicPageDescription": "Share or open the published About page customers can read.",
     "copyLink": "Copy About page link",
     "linkCopied": "About page link copied.",
-    "sections": {
-      "title": "About page sections",
-      "description": "The customer About page is made from these sections. Current backend support lets this admin screen manage the Our Story body only; the remaining section copy, cards, stats, team, testimonials, and app CTA stay static until backend exposes a structured About page contract.",
-      "backendScope": "Current backend scope",
-      "managed": "Managed here",
-      "static": "Static",
-      "hero": {
-        "title": "Hero / banner",
-        "description": "Image, title, subtitle, and Order Now CTA. Uses existing customer website defaults."
-      },
-      "story": {
-        "title": "Our Story",
-        "description": "Main About body. The rich text saved below is published as restaurant.settings.customerApp.aboutUs."
-      },
-      "mission": {
-        "title": "Mission / Vision / Values",
-        "description": "Three customer-facing cards with static titles, descriptions, and icons."
-      },
-      "whyChoose": {
-        "title": "Why Choose Us",
-        "description": "Feature cards that explain easy ordering, fast delivery, and quality."
-      },
-      "stats": {
-        "title": "Stats bar",
-        "description": "Happy customers, satisfaction, branches, and employees values."
-      },
-      "team": {
-        "title": "Team members",
-        "description": "Static member names, roles, and images."
-      },
-      "testimonials": {
-        "title": "Testimonials",
-        "description": "Static customer quotes, ratings, names, roles, and images."
-      },
-      "cta": {
-        "title": "App CTA + subscribe",
-        "description": "Static app download call-to-action and subscribe block."
-      }
-    },
     "missingRestaurant": "Restaurant ID is missing."
   },
   "privacyPolicy": {

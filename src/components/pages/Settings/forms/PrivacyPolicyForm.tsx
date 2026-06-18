@@ -6,7 +6,6 @@ import {
   AlignCenter,
   AlignLeft,
   AlignRight,
-  BarChart3,
   Bold,
   CheckCircle2,
   Copy,
@@ -21,7 +20,6 @@ import {
   List,
   ListOrdered,
   Loader2,
-  MessageSquareText,
   MousePointerClick,
   Paintbrush,
   Pilcrow,
@@ -30,12 +28,10 @@ import {
   RemoveFormatting,
   Save,
   ShieldCheck,
-  Smartphone,
   Target,
   Type,
   Underline,
   Undo2,
-  UsersRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -75,9 +71,6 @@ const emptyAboutUsTemplate = `<h2>About Us</h2>
 
 <h3>Our food</h3>
 <p>Describe your signature dishes, ingredients, sourcing, kitchen standards, or local favorites.</p>
-
-<h3>Our team</h3>
-<p>Introduce the chefs, founders, or service team behind the restaurant.</p>
 
 <h3>Visit us</h3>
 <p>Invite customers to order online, visit the restaurant, or follow your latest updates.</p>`;
@@ -180,25 +173,6 @@ type AboutCardField = {
   description: string;
 };
 
-type AboutStatField = {
-  value: string;
-  label: string;
-};
-
-type AboutPersonField = {
-  name: string;
-  role: string;
-  imageUrl: string;
-};
-
-type AboutTestimonialField = {
-  name: string;
-  role: string;
-  imageUrl: string;
-  quote: string;
-  rating: string;
-};
-
 type AboutPageDraft = {
   hero: {
     imageUrl: string;
@@ -216,18 +190,6 @@ type AboutPageDraft = {
   };
   missionVisionValues: AboutCardField[];
   whyChooseUs: AboutCardField[];
-  stats: AboutStatField[];
-  team: AboutPersonField[];
-  testimonials: AboutTestimonialField[];
-  cta: {
-    title: string;
-    description: string;
-    imageUrl: string;
-    appStoreUrl: string;
-    playStoreUrl: string;
-    subscribeTitle: string;
-    subscribeDescription: string;
-  };
 };
 
 const aboutPageMarkerPrefix = "deliveryway-about-page:";
@@ -276,42 +238,6 @@ const defaultAboutPageDraft: AboutPageDraft = {
       description: "Fresh ingredients and kitchen standards customers can trust.",
     },
   ],
-  stats: [
-    { value: "10k+", label: "Happy customers" },
-    { value: "98%", label: "Satisfaction" },
-    { value: "3", label: "Branches" },
-    { value: "50+", label: "Employees" },
-  ],
-  team: [
-    { name: "Team Member", role: "Founder", imageUrl: "" },
-    { name: "Team Member", role: "Head Chef", imageUrl: "" },
-    { name: "Team Member", role: "Operations Lead", imageUrl: "" },
-  ],
-  testimonials: [
-    {
-      name: "Customer Name",
-      role: "Regular customer",
-      imageUrl: "",
-      quote: "Great food, quick delivery, and reliable service every time.",
-      rating: "5",
-    },
-    {
-      name: "Customer Name",
-      role: "Local customer",
-      imageUrl: "",
-      quote: "The ordering experience is smooth and the meals always arrive fresh.",
-      rating: "5",
-    },
-  ],
-  cta: {
-    title: "Order from our app",
-    description: "Download the app for faster ordering, offers, and updates.",
-    imageUrl: "",
-    appStoreUrl: "",
-    playStoreUrl: "",
-    subscribeTitle: "Stay updated",
-    subscribeDescription: "Subscribe for new menu items, offers, and restaurant news.",
-  },
 };
 
 const encodeAboutDraft = (draft: AboutPageDraft) =>
@@ -353,41 +279,6 @@ const buildCardsHtml = (items: AboutCardField[]) =>
     )
     .join("\n");
 
-const buildStatsHtml = (items: AboutStatField[]) =>
-  items
-    .filter((item) => item.value.trim() || item.label.trim())
-    .map(
-      (item) =>
-        `<article><strong>${escapeHtml(item.value)}</strong><p>${escapeHtml(item.label)}</p></article>`,
-    )
-    .join("\n");
-
-const buildPeopleHtml = (items: AboutPersonField[]) =>
-  items
-    .filter((item) => item.name.trim() || item.role.trim() || item.imageUrl.trim())
-    .map(
-      (item) => `<article>${
-        item.imageUrl.trim()
-          ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" />`
-          : ""
-      }<h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.role)}</p></article>`,
-    )
-    .join("\n");
-
-const buildTestimonialsHtml = (items: AboutTestimonialField[]) =>
-  items
-    .filter((item) => item.name.trim() || item.quote.trim())
-    .map(
-      (item) => `<article>${
-        item.imageUrl.trim()
-          ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" />`
-          : ""
-      }<blockquote>${paragraphsToHtml(item.quote)}</blockquote><p>${escapeHtml(item.name)}${
-        item.role.trim() ? `, ${escapeHtml(item.role)}` : ""
-      }</p><p>Rating: ${escapeHtml(item.rating)}</p></article>`,
-    )
-    .join("\n");
-
 const buildAboutPageHtml = (draft: AboutPageDraft) => `<!-- ${aboutPageMarkerPrefix}${encodeAboutDraft(draft)} -->
 <section data-about-section="hero">
   ${draft.hero.imageUrl.trim() ? `<img src="${escapeHtml(draft.hero.imageUrl)}" alt="${escapeHtml(draft.hero.title)}" />` : ""}
@@ -412,31 +303,6 @@ const buildAboutPageHtml = (draft: AboutPageDraft) => `<!-- ${aboutPageMarkerPre
 <section data-about-section="why-choose-us">
   <h2>Why Choose Us</h2>
   ${buildCardsHtml(draft.whyChooseUs)}
-</section>
-
-<section data-about-section="stats">
-  <h2>Stats</h2>
-  ${buildStatsHtml(draft.stats)}
-</section>
-
-<section data-about-section="team">
-  <h2>Team members</h2>
-  ${buildPeopleHtml(draft.team)}
-</section>
-
-<section data-about-section="testimonials">
-  <h2>Testimonials</h2>
-  ${buildTestimonialsHtml(draft.testimonials)}
-</section>
-
-<section data-about-section="app-cta">
-  ${draft.cta.imageUrl.trim() ? `<img src="${escapeHtml(draft.cta.imageUrl)}" alt="${escapeHtml(draft.cta.title)}" />` : ""}
-  <h2>${escapeHtml(draft.cta.title)}</h2>
-  ${paragraphsToHtml(draft.cta.description)}
-  ${draft.cta.appStoreUrl.trim() ? `<p><a href="${escapeHtml(draft.cta.appStoreUrl)}">App Store</a></p>` : ""}
-  ${draft.cta.playStoreUrl.trim() ? `<p><a href="${escapeHtml(draft.cta.playStoreUrl)}">Google Play</a></p>` : ""}
-  <h3>${escapeHtml(draft.cta.subscribeTitle)}</h3>
-  ${paragraphsToHtml(draft.cta.subscribeDescription)}
 </section>`;
 
 const stripHtmlToText = (value: string) =>
@@ -681,7 +547,7 @@ function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps
   };
 
   const updateArrayItem = <TItem,>(
-    section: "missionVisionValues" | "whyChooseUs" | "stats" | "team" | "testimonials",
+    section: "missionVisionValues" | "whyChooseUs",
     index: number,
     nextItem: TItem,
   ) => {
@@ -785,98 +651,6 @@ function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps
           ))}
         </div>
       </EditableSectionCard>
-
-      <EditableSectionCard icon={BarChart3} title="Stats bar">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {value.stats.map((item, index) => (
-            <div key={index} className="rounded-2xl border border-[#EAECF0] bg-[#FCFCFD] p-4">
-              <AboutTextInput
-                label={`Value ${index + 1}`}
-                value={item.value}
-                onChange={(nextValue) => updateArrayItem("stats", index, { ...item, value: nextValue })}
-              />
-              <div className="mt-3">
-                <AboutTextInput
-                  label="Label"
-                  value={item.label}
-                  onChange={(label) => updateArrayItem("stats", index, { ...item, label })}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </EditableSectionCard>
-
-      <EditableSectionCard icon={UsersRound} title="Team members">
-        <div className="grid gap-4 lg:grid-cols-3">
-          {value.team.map((item, index) => (
-            <PersonFields
-              key={index}
-              index={index}
-              item={item}
-              onChange={(nextItem) => updateArrayItem("team", index, nextItem)}
-            />
-          ))}
-        </div>
-      </EditableSectionCard>
-
-      <EditableSectionCard icon={MessageSquareText} title="Testimonials">
-        <div className="grid gap-4 lg:grid-cols-2">
-          {value.testimonials.map((item, index) => (
-            <TestimonialFields
-              key={index}
-              index={index}
-              item={item}
-              onChange={(nextItem) => updateArrayItem("testimonials", index, nextItem)}
-            />
-          ))}
-        </div>
-      </EditableSectionCard>
-
-      <EditableSectionCard icon={Smartphone} title="App CTA + subscribe">
-        <div className="grid gap-4 lg:grid-cols-2">
-          <AboutTextInput
-            label="Title"
-            value={value.cta.title}
-            onChange={(title) => updateObjectSection("cta", { ...value.cta, title })}
-          />
-          <AboutTextInput
-            label="Image URL"
-            value={value.cta.imageUrl}
-            onChange={(imageUrl) => updateObjectSection("cta", { ...value.cta, imageUrl })}
-            placeholder="https://..."
-          />
-          <AboutTextInput
-            label="App Store URL"
-            value={value.cta.appStoreUrl}
-            onChange={(appStoreUrl) => updateObjectSection("cta", { ...value.cta, appStoreUrl })}
-          />
-          <AboutTextInput
-            label="Play Store URL"
-            value={value.cta.playStoreUrl}
-            onChange={(playStoreUrl) => updateObjectSection("cta", { ...value.cta, playStoreUrl })}
-          />
-          <AboutTextInput
-            label="Subscribe title"
-            value={value.cta.subscribeTitle}
-            onChange={(subscribeTitle) =>
-              updateObjectSection("cta", { ...value.cta, subscribeTitle })
-            }
-          />
-        </div>
-        <AboutTextArea
-          label="Description"
-          value={value.cta.description}
-          onChange={(description) => updateObjectSection("cta", { ...value.cta, description })}
-        />
-        <AboutTextArea
-          label="Subscribe description"
-          value={value.cta.subscribeDescription}
-          onChange={(subscribeDescription) =>
-            updateObjectSection("cta", { ...value.cta, subscribeDescription })
-          }
-        />
-      </EditableSectionCard>
     </div>
   );
 }
@@ -923,80 +697,6 @@ function CardFields({
         label="Description"
         value={item.description}
         onChange={(description) => onChange({ ...item, description })}
-      />
-    </div>
-  );
-}
-
-function PersonFields({
-  index,
-  item,
-  onChange,
-}: {
-  index: number;
-  item: AboutPersonField;
-  onChange: (value: AboutPersonField) => void;
-}) {
-  return (
-    <div className="space-y-3 rounded-2xl border border-[#EAECF0] bg-white p-4">
-      <AboutTextInput
-        label={`Member ${index + 1} name`}
-        value={item.name}
-        onChange={(name) => onChange({ ...item, name })}
-      />
-      <AboutTextInput
-        label="Role"
-        value={item.role}
-        onChange={(role) => onChange({ ...item, role })}
-      />
-      <AboutTextInput
-        label="Image URL"
-        value={item.imageUrl}
-        onChange={(imageUrl) => onChange({ ...item, imageUrl })}
-        placeholder="https://..."
-      />
-    </div>
-  );
-}
-
-function TestimonialFields({
-  index,
-  item,
-  onChange,
-}: {
-  index: number;
-  item: AboutTestimonialField;
-  onChange: (value: AboutTestimonialField) => void;
-}) {
-  return (
-    <div className="space-y-3 rounded-2xl border border-[#EAECF0] bg-white p-4">
-      <AboutTextInput
-        label={`Testimonial ${index + 1} name`}
-        value={item.name}
-        onChange={(name) => onChange({ ...item, name })}
-      />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <AboutTextInput
-          label="Role"
-          value={item.role}
-          onChange={(role) => onChange({ ...item, role })}
-        />
-        <AboutTextInput
-          label="Rating"
-          value={item.rating}
-          onChange={(rating) => onChange({ ...item, rating })}
-        />
-      </div>
-      <AboutTextInput
-        label="Image URL"
-        value={item.imageUrl}
-        onChange={(imageUrl) => onChange({ ...item, imageUrl })}
-        placeholder="https://..."
-      />
-      <AboutTextArea
-        label="Quote"
-        value={item.quote}
-        onChange={(quote) => onChange({ ...item, quote })}
       />
     </div>
   );
