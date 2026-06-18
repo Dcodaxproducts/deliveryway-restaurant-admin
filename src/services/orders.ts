@@ -100,6 +100,9 @@ const normalizeDeliveryAddress = (value: unknown): Order["deliveryAddress"] => {
   return {
     address: getNullableString(value, "address"),
     street: getNullableString(value, "street"),
+    shopNumber: getNullableString(value, "shopNumber"),
+    shopNo: getNullableString(value, "shopNo"),
+    houseNumber: getNullableString(value, "houseNumber"),
     area: getNullableString(value, "area"),
     postalCode: getNullableString(value, "postalCode"),
     city: getNullableString(value, "city"),

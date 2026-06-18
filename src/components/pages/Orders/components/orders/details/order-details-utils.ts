@@ -59,19 +59,33 @@ export const getSelectedPaymentMethod = (order?: OrderPaymentSource | null) =>
 export const formatDeliveryAddress = (address?: DeliveryAddress | null) => {
   if (!address) return null;
 
-  if (address.address?.trim()) {
+  const shopNumber = address.shopNumber || address.shopNo || address.houseNumber;
+  const hasStructuredAddress = Boolean(
+    cleanParts([
+      address.street,
+      shopNumber,
+      address.postalCode,
+      address.city,
+      address.area,
+      address.state,
+      address.country,
+    ]).length
+  );
+
+  if (!hasStructuredAddress && address.address?.trim()) {
     return address.address.trim();
   }
 
   const orderedParts = getUniqueParts(
     cleanParts([
       address.street,
-      address.houseNumber,
-      address.area,
+      shopNumber,
       address.postalCode,
       address.city,
+      address.area,
       address.state,
       address.country,
+      address.address,
     ])
   );
   const street = orderedParts[0] ?? "";

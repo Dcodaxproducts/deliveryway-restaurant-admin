@@ -1,6 +1,8 @@
 export type DeliveryAddress = {
   address?: string | null;
   street?: string | null;
+  shopNumber?: string | null;
+  shopNo?: string | null;
   houseNumber?: string | null;
   area?: string | null;
   postalCode?: string | null;

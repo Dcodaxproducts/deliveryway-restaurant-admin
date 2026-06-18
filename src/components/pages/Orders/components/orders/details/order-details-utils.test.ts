@@ -55,6 +55,23 @@ describe("order details utils", () => {
     );
   });
 
+  it("orders structured address as street, shop number, postal code, city, then remaining parts", () => {
+    expect(
+      formatDeliveryAddress({
+        address: "Near main gate",
+        street: "Main Boulevard",
+        shopNumber: "Shop 7",
+        postalCode: "54000",
+        city: "Lahore",
+        area: "Gulberg",
+        state: "Punjab",
+        country: "Pakistan",
+      })
+    ).toBe(
+      "Main Boulevard, Shop 7, 54000, Lahore\nGulberg, Punjab, Pakistan, Near main gate"
+    );
+  });
+
   it("uses legacy address text when present", () => {
     expect(formatDeliveryAddress({ address: "Front desk, Mall Road" })).toBe(
       "Front desk, Mall Road"
