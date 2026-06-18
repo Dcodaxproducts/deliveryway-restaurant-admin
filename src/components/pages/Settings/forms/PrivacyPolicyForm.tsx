@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ComponentType,
+  type DragEvent,
+  type ReactNode,
+} from "react";
 import { useTranslations } from "next-intl";
 import {
   AlignCenter,
@@ -32,6 +41,8 @@ import {
   Type,
   Underline,
   Undo2,
+  Trash2,
+  UploadCloud,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -52,6 +63,7 @@ import {
   buildAboutUsPageLink,
   buildPrivacyPolicyPageLink,
 } from "@/services/customer-app-content";
+import { useFileUpload } from "@/hooks/useFileUpload";
 import { cn } from "@/lib/utils";
 
 const emptyPolicyTemplate = `<h2>Privacy Policy</h2>
@@ -538,6 +550,179 @@ function AboutTextArea({
   );
 }
 
+function AboutImageUpload({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const previewObjectUrlRef = useRef<string | null>(null);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const { uploadFile, uploading } = useFileUpload();
+  const previewSrc = localPreviewUrl || value.trim();
+  const previewBackgroundImage = previewSrc ? `url(${JSON.stringify(previewSrc)})` : undefined;
+
+  useEffect(() => {
+    return () => {
+      if (previewObjectUrlRef.current) {
+        URL.revokeObjectURL(previewObjectUrlRef.current);
+      }
+    };
+  }, []);
+
+  const clearLocalPreview = () => {
+    if (previewObjectUrlRef.current) {
+      URL.revokeObjectURL(previewObjectUrlRef.current);
+      previewObjectUrlRef.current = null;
+    }
+
+    setLocalPreviewUrl(null);
+  };
+
+  const clearImage = () => {
+    clearLocalPreview();
+    onChange("");
+  };
+
+  const openFilePicker = () => {
+    if (uploading) return;
+    fileInputRef.current?.click();
+  };
+
+  const uploadSelectedFile = async (file?: File) => {
+    if (!file || uploading) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload a valid image file.");
+      return;
+    }
+
+    clearLocalPreview();
+
+    const objectUrl = URL.createObjectURL(file);
+    previewObjectUrlRef.current = objectUrl;
+    setLocalPreviewUrl(objectUrl);
+
+    const syntheticEvent = {
+      target: {
+        files: [file],
+      },
+    } as unknown as ChangeEvent<HTMLInputElement>;
+
+    const result = await uploadFile(syntheticEvent);
+    if (result?.fileUrl) {
+      onChange(result.fileUrl);
+    } else {
+      clearLocalPreview();
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    if (!uploading) setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+    await uploadSelectedFile(event.dataTransfer.files?.[0]);
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm font-semibold text-[#344054]">{label}</Label>
+      <div
+        onClick={openFilePicker}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={cn(
+          "group relative overflow-hidden rounded-xl border border-dashed bg-white transition-all duration-200",
+          uploading ? "cursor-not-allowed opacity-80" : "cursor-pointer",
+          isDragging
+            ? "border-[#C1121F] bg-[#C1121F]/5 shadow-[0_0_0_4px_rgba(193,18,31,0.10)]"
+            : "border-[#D0D5DD] hover:border-[#C1121F]/50 hover:bg-[#F8F9FB]",
+        )}
+      >
+        {previewSrc ? (
+          <div className="relative">
+            <div
+              role="img"
+              aria-label={`${label} preview`}
+              className="h-44 w-full bg-cover bg-center"
+              style={{ backgroundImage: previewBackgroundImage }}
+            />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent px-4 py-3">
+              <p className="text-sm font-semibold text-white">Image selected</p>
+              <p className="text-xs text-white/80">
+                Drop another image here to replace it.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={(event) => {
+                event.stopPropagation();
+                clearImage();
+              }}
+              disabled={uploading}
+              aria-label={`Clear ${label}`}
+              className="absolute right-3 top-3 h-8 w-8 rounded-full bg-white/90 p-0 text-[#C1121F] shadow hover:bg-white"
+            >
+              <Trash2 className="size-4" />
+            </Button>
+            {uploading ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
+                <Loader2 className="size-6 animate-spin text-[#C1121F]" />
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          <div className="flex min-h-44 flex-col items-center justify-center px-5 py-7 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#C1121F]/5 text-[#C1121F] shadow-sm">
+              {uploading ? (
+                <Loader2 className="size-6 animate-spin" />
+              ) : isDragging ? (
+                <UploadCloud className="size-6" />
+              ) : (
+                <ImageIcon className="size-6" />
+              )}
+            </div>
+            <p className="mt-4 text-sm font-semibold text-[#101828]">
+              Drag & drop image here
+            </p>
+            <p className="mt-1 text-xs text-[#667085]">
+              or <span className="font-medium text-[#C1121F]">click to browse</span>
+            </p>
+            <p className="mt-1 text-[11px] text-[#98A2B3]">PNG, JPG, WEBP</p>
+          </div>
+        )}
+      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={(event) => uploadSelectedFile(event.target.files?.[0])}
+        className="sr-only"
+      />
+    </div>
+  );
+}
+
 function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps) {
   const updateObjectSection = <TSection extends AboutDraftSection,>(
     section: TSection,
@@ -563,11 +748,10 @@ function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps
     <div className="space-y-4">
       <EditableSectionCard icon={ImageIcon} title="Hero / banner">
         <div className="grid gap-4 lg:grid-cols-2">
-          <AboutTextInput
-            label="Image URL"
+          <AboutImageUpload
+            label="Hero image"
             value={value.hero.imageUrl}
             onChange={(imageUrl) => updateObjectSection("hero", { ...value.hero, imageUrl })}
-            placeholder="https://..."
           />
           <AboutTextInput
             label="Title"
@@ -596,11 +780,10 @@ function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps
 
       <EditableSectionCard icon={FileText} title="Our Story">
         <div className="grid gap-4 lg:grid-cols-2">
-          <AboutTextInput
-            label="Image URL"
+          <AboutImageUpload
+            label="Story image"
             value={value.story.imageUrl}
             onChange={(imageUrl) => updateObjectSection("story", { ...value.story, imageUrl })}
-            placeholder="https://..."
           />
           <AboutTextInput
             label="Badge"
