@@ -13,7 +13,7 @@ import {
 import type {
   OrdersScheduleDateRange,
   OrdersScheduleFilter,
-} from "@/components/pages/orders/utils/orders-schedule-filters";
+} from "@/components/pages/Orders/utils/orders-schedule-filters";
 import { useTranslations } from "next-intl";
 
 interface Props {

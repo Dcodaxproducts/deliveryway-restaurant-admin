@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   isFutureOrder,
   matchesOrdersScheduleFilter,
-} from "@/components/pages/orders/utils/orders-schedule-filters";
+} from "@/components/pages/Orders/utils/orders-schedule-filters";
 
 const now = new Date("2026-06-18T09:00:00.000Z");
 

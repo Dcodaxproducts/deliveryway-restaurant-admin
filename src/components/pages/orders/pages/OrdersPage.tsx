@@ -24,7 +24,7 @@ import {
   matchesOrdersScheduleFilter,
   type OrdersScheduleDateRange,
   type OrdersScheduleFilter,
-} from "@/components/pages/orders/utils/orders-schedule-filters";
+} from "@/components/pages/Orders/utils/orders-schedule-filters";
 import { useTranslations } from "next-intl";
 import type { Order } from "@/types/orders";
 

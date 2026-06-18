@@ -32,7 +32,7 @@ import { PaymentStatusUpdateDialog } from "@/components/pages/Orders/components/
 import {
   getOrderTimeDate,
   isFutureOrder,
-} from "@/components/pages/orders/utils/orders-schedule-filters";
+} from "@/components/pages/Orders/utils/orders-schedule-filters";
 import { useAuth } from "@/hooks/useAuth";
 import { useUpdateOrderStatus } from "@/hooks/useOrders";
 import { getOrderById } from "@/services/orders/orders.api";
