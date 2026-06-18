@@ -114,8 +114,15 @@ export const useRefundPaymentTransaction = (orderId?: string | null) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ paymentId, note }: { paymentId: string; note?: string }) =>
-      refundPaymentTransaction(paymentId, { note }),
+    mutationFn: ({
+      paymentId,
+      amount,
+      note,
+    }: {
+      paymentId: string;
+      amount?: number;
+      note?: string;
+    }) => refundPaymentTransaction(paymentId, { amount, note }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       if (orderId) {

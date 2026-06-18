@@ -88,9 +88,13 @@ describe("orders service", () => {
   it("refundPaymentTransaction calls the payment refund endpoint", async () => {
     mockedPost.mockResolvedValue({ data: { id: "refund-1" } });
 
-    await refundPaymentTransaction("payment-1", { note: "Customer refund" });
+    await refundPaymentTransaction("payment-1", {
+      amount: 12.5,
+      note: "Customer refund",
+    });
 
     expect(mockedPost).toHaveBeenCalledWith("/payments/payment-1/refund", {
+      amount: 12.5,
       note: "Customer refund",
     });
   });

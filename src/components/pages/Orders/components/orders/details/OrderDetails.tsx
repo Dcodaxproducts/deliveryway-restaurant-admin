@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import {
   Banknote,
   CalendarClock,
   CreditCard,
+  Loader2,
   Navigation,
   ReceiptText,
   RotateCcw,
@@ -22,6 +24,17 @@ import {
   getMapsUrl,
   getSelectedPaymentMethod,
 } from "@/components/pages/Orders/components/orders/details/order-details-utils";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
 import { useAuth } from "@/hooks/useAuth";
 import { useRefundPaymentTransaction } from "@/hooks/useOrders";
@@ -151,6 +164,26 @@ const formatMoney = (amount?: number | null, currency = "USD") => {
   }).format(amount);
 };
 
+const getTransactionAmount = (transaction: Transaction) => {
+  const amount = Number(transaction.amount || 0);
+  return Number.isFinite(amount) ? amount : 0;
+};
+
+const getRefundableAmounts = (transactions: Transaction[]) => {
+  const chargeAmount = transactions
+    .filter((transaction) => transaction.type === "CHARGE")
+    .reduce((sum, transaction) => sum + getTransactionAmount(transaction), 0);
+  const refundedAmount = transactions
+    .filter((transaction) => transaction.type === "REFUND" && transaction.status === "REFUNDED")
+    .reduce((sum, transaction) => sum + getTransactionAmount(transaction), 0);
+
+  return {
+    chargeAmount,
+    refundedAmount,
+    remainingRefundableAmount: Math.max(chargeAmount - refundedAmount, 0),
+  };
+};
+
 const formatStatus = (status?: string | null) =>
   status
     ? status
@@ -211,6 +244,11 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   const t = useTranslations("orders");
   const { role } = useAuth();
   const refundMutation = useRefundPaymentTransaction(order.id);
+  const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
+  const [refundMode, setRefundMode] = useState<"full" | "partial">("full");
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refundNote, setRefundNote] = useState(t("refundNote"));
+  const [isRefundConfirming, setIsRefundConfirming] = useState(false);
   const items = order.items || [];
   const selectedPaymentMethod = getSelectedPaymentMethod(order);
   const paymentLabel = formatPaymentMethod(selectedPaymentMethod);
@@ -221,13 +259,28 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   const refundableTransaction = transactions.find(
     (transaction) => transaction.type === "CHARGE" && transaction.status === "PAID"
   );
+  const { chargeAmount, refundedAmount, remainingRefundableAmount } =
+    getRefundableAmounts(transactions);
   const canRefundRole = role === "BUSINESS_ADMIN" || role === "SUPER_ADMIN";
-  const canRefund = Boolean(canRefundRole && refundableTransaction?.id);
+  const canRefund = Boolean(
+    canRefundRole && refundableTransaction?.id && remainingRefundableAmount > 0,
+  );
   const statusLabel = order.status && ORDER_STATUS_LABEL_KEYS[order.status]
     ? t(ORDER_STATUS_LABEL_KEYS[order.status])
     : formatStatus(order.status);
   const paymentMethods = order.paymentOptions?.available || order.availablePaymentMethods || [];
   const primaryCurrency = latestTransaction?.currency || "USD";
+  const parsedRefundAmount = Number(refundAmount);
+  const partialAmountInvalid =
+    refundMode === "partial" &&
+    (!Number.isFinite(parsedRefundAmount) ||
+      parsedRefundAmount <= 0 ||
+      parsedRefundAmount > remainingRefundableAmount);
+  const refundSubmitDisabled =
+    refundMutation.isPending ||
+    !refundableTransaction?.id ||
+    !refundNote.trim() ||
+    partialAmountInvalid;
   const metadata: Array<[string, React.ReactNode]> = [
     [t("orderType"), formatStatus(order.orderType)],
     [t("statusLabel"), statusLabel],
@@ -260,15 +313,36 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
     [t("payableAmount"), order.payableAmount],
   ] satisfies Array<[string, number | null | undefined]>;
 
-  const handleRefund = () => {
+  const openRefundDialog = () => {
     if (!refundableTransaction?.id || refundMutation.isPending) return;
 
-    const confirmed = window.confirm(t("refundConfirm"));
-    if (!confirmed) return;
+    setRefundMode("full");
+    setRefundAmount("");
+    setRefundNote(t("refundNote"));
+    setIsRefundConfirming(false);
+    setIsRefundDialogOpen(true);
+  };
+
+  const handleRefundSubmit = () => {
+    if (!refundableTransaction?.id || refundSubmitDisabled) return;
+
+    if (!isRefundConfirming) {
+      setIsRefundConfirming(true);
+      return;
+    }
+
+    const amount =
+      refundMode === "partial" ? Number(refundAmount) : undefined;
 
     refundMutation.mutate({
       paymentId: refundableTransaction.id,
-      note: t("refundNote"),
+      amount,
+      note: refundNote.trim(),
+    }, {
+      onSuccess: () => {
+        setIsRefundDialogOpen(false);
+        setIsRefundConfirming(false);
+      },
     });
   };
 
@@ -437,10 +511,14 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
             <SectionTitle icon={<CreditCard size={19} />} title={t("payment")} />
             <InfoRow label={t("selectedPaymentMethod")} value={paymentLabel || t("notAvailable")} />
             <InfoRow label={t("paymentStatus")} value={formatStatus(order.paymentStatus)} />
+            <InfoRow
+              label={t("refundableAmount")}
+              value={formatMoney(remainingRefundableAmount, primaryCurrency)}
+            />
             {canRefund ? (
               <button
                 type="button"
-                onClick={handleRefund}
+                onClick={openRefundDialog}
                 disabled={refundMutation.isPending}
                 className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 ring-1 ring-red-100 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-70"
               >
@@ -499,6 +577,161 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
           </DetailCard>
         </div>
       </div>
+
+      <Dialog open={isRefundDialogOpen} onOpenChange={setIsRefundDialogOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl border-gray-100 p-0 sm:max-w-xl">
+          <DialogHeader className="border-b border-gray-100 px-6 py-5">
+            <DialogTitle className="text-xl text-gray-950">{t("refundDialogTitle")}</DialogTitle>
+            <DialogDescription className="text-sm leading-6 text-gray-500">
+              {t("refundDialogDescription")}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 px-6 py-5">
+            <div className="grid gap-3 rounded-2xl bg-gray-50 p-4 sm:grid-cols-3">
+              <div>
+                <p className="text-xs font-semibold uppercase text-gray-400">{t("chargedAmount")}</p>
+                <p className="mt-1 text-sm font-bold text-gray-950">
+                  {formatMoney(chargeAmount, primaryCurrency)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase text-gray-400">{t("refundedAmount")}</p>
+                <p className="mt-1 text-sm font-bold text-gray-950">
+                  {formatMoney(refundedAmount, primaryCurrency)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase text-gray-400">{t("remainingRefundable")}</p>
+                <p className="mt-1 text-sm font-bold text-gray-950">
+                  {formatMoney(remainingRefundableAmount, primaryCurrency)}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setRefundMode("full");
+                  setRefundAmount("");
+                  setIsRefundConfirming(false);
+                }}
+                className={`rounded-2xl border p-4 text-left transition ${
+                  refundMode === "full"
+                    ? "border-red-200 bg-red-50 text-red-700"
+                    : "border-gray-100 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <p className="text-sm font-bold">{t("fullRefund")}</p>
+                <p className="mt-1 text-xs leading-5">{t("fullRefundDescription")}</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setRefundMode("partial");
+                  setIsRefundConfirming(false);
+                }}
+                className={`rounded-2xl border p-4 text-left transition ${
+                  refundMode === "partial"
+                    ? "border-red-200 bg-red-50 text-red-700"
+                    : "border-gray-100 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <p className="text-sm font-bold">{t("partialRefund")}</p>
+                <p className="mt-1 text-xs leading-5">{t("partialRefundDescription")}</p>
+              </button>
+            </div>
+
+            {refundMode === "partial" ? (
+              <div className="space-y-2">
+                <label htmlFor="refund-amount" className="text-sm font-semibold text-gray-900">
+                  {t("refundAmount")}
+                </label>
+                <Input
+                  id="refund-amount"
+                  type="number"
+                  min="0.01"
+                  max={remainingRefundableAmount}
+                  step="0.01"
+                  value={refundAmount}
+                  onChange={(event) => {
+                    setRefundAmount(event.target.value);
+                    setIsRefundConfirming(false);
+                  }}
+                  placeholder={remainingRefundableAmount.toFixed(2)}
+                  className="h-11 rounded-xl border-gray-200 text-sm"
+                />
+                {partialAmountInvalid ? (
+                  <p className="text-xs font-medium text-red-600">
+                    {t("refundAmountHelp", {
+                      amount: formatMoney(remainingRefundableAmount, primaryCurrency),
+                    })}
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-500">
+                    {t("refundAmountHelp", {
+                      amount: formatMoney(remainingRefundableAmount, primaryCurrency),
+                    })}
+                  </p>
+                )}
+              </div>
+            ) : null}
+
+            <div className="space-y-2">
+              <label htmlFor="refund-note" className="text-sm font-semibold text-gray-900">
+                {t("refundReason")}
+              </label>
+              <Textarea
+                id="refund-note"
+                value={refundNote}
+                onChange={(event) => {
+                  setRefundNote(event.target.value);
+                  setIsRefundConfirming(false);
+                }}
+                rows={4}
+                className="resize-y rounded-xl border-gray-200 text-sm"
+              />
+            </div>
+
+            {isRefundConfirming ? (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800">
+                {t("refundFinalConfirm", {
+                  amount: formatMoney(
+                    refundMode === "partial" ? parsedRefundAmount : remainingRefundableAmount,
+                    primaryCurrency,
+                  ),
+                })}
+              </div>
+            ) : null}
+          </div>
+
+          <DialogFooter className="border-t border-gray-100 px-6 py-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsRefundDialogOpen(false)}
+              disabled={refundMutation.isPending}
+              className="h-10 rounded-xl border-gray-200"
+            >
+              {t("cancelRefund")}
+            </Button>
+            <Button
+              type="button"
+              onClick={handleRefundSubmit}
+              disabled={refundSubmitDisabled}
+              className="h-10 rounded-xl bg-red-600 text-white hover:bg-red-700"
+            >
+              {refundMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
+              {refundMutation.isPending
+                ? t("refundingPayment")
+                : isRefundConfirming
+                  ? t("confirmRefund")
+                  : t("continueRefund")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
