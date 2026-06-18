@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { httpClient } from "@/lib/axios";
-import { refundPaymentTransaction, updateOrderStatus } from "@/services/orders";
+import {
+  normalizeOrder,
+  refundPaymentTransaction,
+  updateOrderStatus,
+} from "@/services/orders";
 
 vi.mock("@/lib/axios", () => ({
   default: {
@@ -83,6 +87,17 @@ describe("orders service", () => {
       status: "CONFIRMED",
       orderTime: "2026-06-09T12:30:00.000Z",
     });
+  });
+
+  it("normalizes scheduled order fields from list responses", () => {
+    const order = normalizeOrder({
+      ...orderResponse.data,
+      orderTime: "2026-06-20T12:30:00.000Z",
+      isScheduled: true,
+    });
+
+    expect(order?.orderTime).toBe("2026-06-20T12:30:00.000Z");
+    expect(order?.isScheduled).toBe(true);
   });
 
   it("refundPaymentTransaction calls the payment refund endpoint", async () => {

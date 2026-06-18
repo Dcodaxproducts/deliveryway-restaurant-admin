@@ -121,6 +121,8 @@ export const normalizeOrder = (value: unknown): Order | null => {
     totalAmount: getNumber(value, "totalAmount"),
     createdAt: getString(value, "createdAt"),
     orderTime: getOptionalString(value, "orderTime"),
+    isScheduled:
+      typeof value.isScheduled === "boolean" ? value.isScheduled : undefined,
     deliveryOtp: getOptionalString(value, "deliveryOtp"),
     deliverymanId: getNullableString(value, "deliverymanId"),
     branchId: getNullableString(value, "branchId"),

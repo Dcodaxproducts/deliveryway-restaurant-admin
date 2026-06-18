@@ -21,6 +21,7 @@ export type Order = {
   totalAmount?: number;
   createdAt: string;
   orderTime?: string;
+  isScheduled?: boolean;
   deliveryOtp?: string;
   deliverymanId?: string | null;
   branchId?: string | null;

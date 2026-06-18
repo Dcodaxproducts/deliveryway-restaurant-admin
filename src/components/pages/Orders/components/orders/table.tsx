@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Ban, Eye, MoreHorizontal, RefreshCw, XCircle } from "lucide-react";
+import { Ban, CalendarClock, Eye, MoreHorizontal, RefreshCw, XCircle } from "lucide-react";
 import EmptyState from "@/components/common/EmptyState";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -26,6 +27,10 @@ import SortHeader from "@/components/common/sort-header";
 import { formatDeliveryAddress } from "@/components/pages/Orders/components/orders/details/order-details-utils";
 import { OrderStatusUpdateDialog } from "@/components/pages/Orders/components/orders/OrderStatusUpdateDialog";
 import { OrderStatusProgressDialog } from "@/components/pages/Orders/components/orders/OrderStatusProgressDialog";
+import {
+  getOrderTimeDate,
+  isFutureOrder,
+} from "@/components/pages/orders/utils/orders-schedule-filters";
 import { useUpdateOrderStatus } from "@/hooks/useOrders";
 import {
   canDirectlyUpdateOrderStatus,
@@ -48,6 +53,29 @@ type OrderStatusProgressState = {
   orderType?: string | null;
   previousStatus?: string | null;
   status?: string | null;
+};
+
+const formatShortDate = (value?: string) => {
+  if (!value) return "-";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return date.toLocaleDateString();
+};
+
+const formatOrderTime = (value?: string) => {
+  if (!value) return null;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 };
 
 interface OrdersTableProps {
@@ -243,6 +271,9 @@ export function OrdersTable({
     const addressPreview = getAddressPreview(order);
     const canUpdateStatus = Boolean(getNextOrderStatus(order));
     const canUseTerminalActions = canTerminateOrderStatus(order);
+    const orderTime = getOrderTimeDate(order);
+    const orderTimeLabel = formatOrderTime(order.orderTime);
+    const isPreorder = isFutureOrder(order);
 
     return (
     <TableRow key={id} className="border-none h-[70px]">
@@ -279,9 +310,30 @@ export function OrdersTable({
           <TableCell className="px-4 text-gray-500">{id}</TableCell>
 
           <TableCell className="px-4 text-gray-500">
-            {createdAt
-              ? new Date(createdAt).toLocaleDateString()
-              : "-"}
+            <div className="space-y-2">
+              <p>{formatShortDate(createdAt)}</p>
+              {orderTimeLabel ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  {isPreorder ? (
+                    <Badge className="border-primary/20 bg-primary/10 text-primary">
+                      <CalendarClock size={12} />
+                      {t("preorder")}
+                    </Badge>
+                  ) : null}
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
+                    title={orderTime?.toLocaleString()}
+                  >
+                    <CalendarClock size={12} />
+                    {orderTimeLabel}
+                  </span>
+                </div>
+              ) : (
+                <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500">
+                  {t("asap")}
+                </span>
+              )}
+            </div>
           </TableCell>
 
           <TableCell className="max-w-[260px] px-4 whitespace-normal">

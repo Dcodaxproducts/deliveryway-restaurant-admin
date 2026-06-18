@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import StatsSection from "@/components/common/stats-section";
 import { OrdersHeader } from "@/components/pages/Orders/components/orders/header";
 import Container from "@/components/common/Container";
@@ -20,6 +20,11 @@ import {
   getOrdersHeaderContent,
   type OrderTab,
 } from "@/components/pages/orders/utils/orders-page.helpers";
+import {
+  matchesOrdersScheduleFilter,
+  type OrdersScheduleDateRange,
+  type OrdersScheduleFilter,
+} from "@/components/pages/orders/utils/orders-schedule-filters";
 import { useTranslations } from "next-intl";
 import type { Order } from "@/types/orders";
 
@@ -38,6 +43,10 @@ export function OrdersPage() {
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
   const [status, setStatus] = useState("ALL");
+  const [scheduleFilter, setScheduleFilter] =
+    useState<OrdersScheduleFilter>("ALL");
+  const [scheduleRange, setScheduleRange] =
+    useState<OrdersScheduleDateRange>({});
 
   const [sortKey, setSortKey] = useState<keyof OrdersTableRow | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -92,7 +101,7 @@ export function OrdersPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, sortOrder, status, activeTab]);
+  }, [search, sortOrder, status, activeTab, scheduleFilter, scheduleRange]);
 
   const handleSort = (key: keyof OrdersTableRow) => {
     if (sortKey === key) {
@@ -103,13 +112,25 @@ export function OrdersPage() {
     }
   };
 
-  const ordersWithCustomerName: OrdersTableRow[] = orders.map((order) => ({
-    ...order,
-    customerName: getOrderCustomerName(order),
-  }));
+  const ordersWithCustomerName: OrdersTableRow[] = useMemo(
+    () =>
+      orders.map((order) => ({
+        ...order,
+        customerName: getOrderCustomerName(order),
+      })),
+    [orders]
+  );
+  const filteredOrders = useMemo(
+    () =>
+      ordersWithCustomerName.filter((order) =>
+        matchesOrdersScheduleFilter(order, scheduleFilter, scheduleRange)
+      ),
+    [ordersWithCustomerName, scheduleFilter, scheduleRange]
+  );
   const sortedOrders = sortKey
-    ? sortData<OrdersTableRow>(ordersWithCustomerName, sortKey, sortDir)
-    : ordersWithCustomerName;
+    ? sortData<OrdersTableRow>(filteredOrders, sortKey, sortDir)
+    : filteredOrders;
+  const isClientScheduleFilterActive = scheduleFilter !== "ALL";
 
   const { title, description } = getOrdersHeaderContent(activeTab, isBranchAdmin, t);
 
@@ -151,7 +172,20 @@ export function OrdersPage() {
           onSearch={setSearch}
           onSortChange={setSortOrder}
           onStatusChange={setStatus}
+          scheduleFilter={scheduleFilter}
+          scheduleRange={scheduleRange}
+          onScheduleFilterChange={setScheduleFilter}
+          onScheduleRangeChange={setScheduleRange}
         />
+
+        {isClientScheduleFilterActive ? (
+          <div className="rounded-[16px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+            {t("scheduleClientFilterNotice", {
+              shown: sortedOrders.length,
+              loaded: ordersWithCustomerName.length,
+            })}
+          </div>
+        ) : null}
 
         <OrdersTable
           orders={sortedOrders}
