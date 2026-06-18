@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import {
   AlignCenter,
@@ -31,7 +31,6 @@ import {
   Save,
   ShieldCheck,
   Smartphone,
-  Sparkles,
   Target,
   Type,
   Underline,
@@ -42,6 +41,9 @@ import { toast } from "sonner";
 
 import Header from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useCustomerAppContent,
@@ -171,66 +173,293 @@ type CustomerAppContentPageProps = {
   emptyTemplate: string;
   emptyPreview: string;
   buildPublicLink: () => string;
-  sectionGuide?: ContentSectionGuideItem[];
 };
 
-type ContentSectionGuideItem = {
-  titleKey: string;
-  descriptionKey: string;
-  statusKey: string;
-  icon: ComponentType<{ className?: string }>;
+type AboutCardField = {
+  title: string;
+  description: string;
 };
 
-const aboutUsSectionGuide: ContentSectionGuideItem[] = [
-  {
-    titleKey: "sections.hero.title",
-    descriptionKey: "sections.hero.description",
-    statusKey: "sections.static",
-    icon: ImageIcon,
+type AboutStatField = {
+  value: string;
+  label: string;
+};
+
+type AboutPersonField = {
+  name: string;
+  role: string;
+  imageUrl: string;
+};
+
+type AboutTestimonialField = {
+  name: string;
+  role: string;
+  imageUrl: string;
+  quote: string;
+  rating: string;
+};
+
+type AboutPageDraft = {
+  hero: {
+    imageUrl: string;
+    title: string;
+    subtitle: string;
+    ctaLabel: string;
+    ctaHref: string;
+  };
+  story: {
+    imageUrl: string;
+    badge: string;
+    eyebrow: string;
+    title: string;
+    paragraphs: string;
+  };
+  missionVisionValues: AboutCardField[];
+  whyChooseUs: AboutCardField[];
+  stats: AboutStatField[];
+  team: AboutPersonField[];
+  testimonials: AboutTestimonialField[];
+  cta: {
+    title: string;
+    description: string;
+    imageUrl: string;
+    appStoreUrl: string;
+    playStoreUrl: string;
+    subscribeTitle: string;
+    subscribeDescription: string;
+  };
+};
+
+const aboutPageMarkerPrefix = "deliveryway-about-page:";
+
+const defaultAboutPageDraft: AboutPageDraft = {
+  hero: {
+    imageUrl: "",
+    title: "About Us",
+    subtitle: "Fresh food, warm service, and a customer experience built around your table.",
+    ctaLabel: "Order Now",
+    ctaHref: "/",
   },
-  {
-    titleKey: "sections.story.title",
-    descriptionKey: "sections.story.description",
-    statusKey: "sections.managed",
-    icon: FileText,
+  story: {
+    imageUrl: "",
+    badge: "Established with passion",
+    eyebrow: "Our Story",
+    title: "Serving great food with care",
+    paragraphs:
+      "Share the story behind your restaurant, your cooking style, and what makes the customer experience special.\n\nDescribe your signature dishes, ingredients, sourcing, kitchen standards, or local favorites.",
   },
-  {
-    titleKey: "sections.mission.title",
-    descriptionKey: "sections.mission.description",
-    statusKey: "sections.static",
-    icon: Target,
+  missionVisionValues: [
+    {
+      title: "Mission",
+      description: "Make every order simple, fresh, and memorable.",
+    },
+    {
+      title: "Vision",
+      description: "Become the neighborhood favorite for quality food and reliable service.",
+    },
+    {
+      title: "Values",
+      description: "Hospitality, consistency, transparency, and respect for every customer.",
+    },
+  ],
+  whyChooseUs: [
+    {
+      title: "Easy ordering",
+      description: "Customers can browse, customize, and place orders quickly.",
+    },
+    {
+      title: "Fast delivery",
+      description: "Prepared and delivered with speed, accuracy, and care.",
+    },
+    {
+      title: "Quality food",
+      description: "Fresh ingredients and kitchen standards customers can trust.",
+    },
+  ],
+  stats: [
+    { value: "10k+", label: "Happy customers" },
+    { value: "98%", label: "Satisfaction" },
+    { value: "3", label: "Branches" },
+    { value: "50+", label: "Employees" },
+  ],
+  team: [
+    { name: "Team Member", role: "Founder", imageUrl: "" },
+    { name: "Team Member", role: "Head Chef", imageUrl: "" },
+    { name: "Team Member", role: "Operations Lead", imageUrl: "" },
+  ],
+  testimonials: [
+    {
+      name: "Customer Name",
+      role: "Regular customer",
+      imageUrl: "",
+      quote: "Great food, quick delivery, and reliable service every time.",
+      rating: "5",
+    },
+    {
+      name: "Customer Name",
+      role: "Local customer",
+      imageUrl: "",
+      quote: "The ordering experience is smooth and the meals always arrive fresh.",
+      rating: "5",
+    },
+  ],
+  cta: {
+    title: "Order from our app",
+    description: "Download the app for faster ordering, offers, and updates.",
+    imageUrl: "",
+    appStoreUrl: "",
+    playStoreUrl: "",
+    subscribeTitle: "Stay updated",
+    subscribeDescription: "Subscribe for new menu items, offers, and restaurant news.",
   },
-  {
-    titleKey: "sections.whyChoose.title",
-    descriptionKey: "sections.whyChoose.description",
-    statusKey: "sections.static",
-    icon: MousePointerClick,
-  },
-  {
-    titleKey: "sections.stats.title",
-    descriptionKey: "sections.stats.description",
-    statusKey: "sections.static",
-    icon: BarChart3,
-  },
-  {
-    titleKey: "sections.team.title",
-    descriptionKey: "sections.team.description",
-    statusKey: "sections.static",
-    icon: UsersRound,
-  },
-  {
-    titleKey: "sections.testimonials.title",
-    descriptionKey: "sections.testimonials.description",
-    statusKey: "sections.static",
-    icon: MessageSquareText,
-  },
-  {
-    titleKey: "sections.cta.title",
-    descriptionKey: "sections.cta.description",
-    statusKey: "sections.static",
-    icon: Smartphone,
-  },
-];
+};
+
+const encodeAboutDraft = (draft: AboutPageDraft) =>
+  encodeURIComponent(JSON.stringify(draft));
+
+const decodeAboutDraft = (value: string): AboutPageDraft | undefined => {
+  const match = value.match(/<!--\s*deliveryway-about-page:([^]+?)\s*-->/);
+  if (!match?.[1]) return undefined;
+
+  try {
+    return JSON.parse(decodeURIComponent(match[1])) as AboutPageDraft;
+  } catch {
+    return undefined;
+  }
+};
+
+const escapeHtml = (value: string) =>
+  value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+
+const paragraphsToHtml = (value: string) =>
+  value
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p>${escapeHtml(paragraph).replaceAll("\n", "<br />")}</p>`)
+    .join("\n");
+
+const buildCardsHtml = (items: AboutCardField[]) =>
+  items
+    .filter((item) => item.title.trim() || item.description.trim())
+    .map(
+      (item) =>
+        `<article><h3>${escapeHtml(item.title)}</h3>${paragraphsToHtml(item.description)}</article>`,
+    )
+    .join("\n");
+
+const buildStatsHtml = (items: AboutStatField[]) =>
+  items
+    .filter((item) => item.value.trim() || item.label.trim())
+    .map(
+      (item) =>
+        `<article><strong>${escapeHtml(item.value)}</strong><p>${escapeHtml(item.label)}</p></article>`,
+    )
+    .join("\n");
+
+const buildPeopleHtml = (items: AboutPersonField[]) =>
+  items
+    .filter((item) => item.name.trim() || item.role.trim() || item.imageUrl.trim())
+    .map(
+      (item) => `<article>${
+        item.imageUrl.trim()
+          ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" />`
+          : ""
+      }<h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.role)}</p></article>`,
+    )
+    .join("\n");
+
+const buildTestimonialsHtml = (items: AboutTestimonialField[]) =>
+  items
+    .filter((item) => item.name.trim() || item.quote.trim())
+    .map(
+      (item) => `<article>${
+        item.imageUrl.trim()
+          ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" />`
+          : ""
+      }<blockquote>${paragraphsToHtml(item.quote)}</blockquote><p>${escapeHtml(item.name)}${
+        item.role.trim() ? `, ${escapeHtml(item.role)}` : ""
+      }</p><p>Rating: ${escapeHtml(item.rating)}</p></article>`,
+    )
+    .join("\n");
+
+const buildAboutPageHtml = (draft: AboutPageDraft) => `<!-- ${aboutPageMarkerPrefix}${encodeAboutDraft(draft)} -->
+<section data-about-section="hero">
+  ${draft.hero.imageUrl.trim() ? `<img src="${escapeHtml(draft.hero.imageUrl)}" alt="${escapeHtml(draft.hero.title)}" />` : ""}
+  <h1>${escapeHtml(draft.hero.title)}</h1>
+  ${paragraphsToHtml(draft.hero.subtitle)}
+  <p><a href="${escapeHtml(draft.hero.ctaHref)}">${escapeHtml(draft.hero.ctaLabel)}</a></p>
+</section>
+
+<section data-about-section="story">
+  ${draft.story.imageUrl.trim() ? `<img src="${escapeHtml(draft.story.imageUrl)}" alt="${escapeHtml(draft.story.title)}" />` : ""}
+  ${draft.story.badge.trim() ? `<p><strong>${escapeHtml(draft.story.badge)}</strong></p>` : ""}
+  ${draft.story.eyebrow.trim() ? `<p>${escapeHtml(draft.story.eyebrow)}</p>` : ""}
+  <h2>${escapeHtml(draft.story.title)}</h2>
+  ${paragraphsToHtml(draft.story.paragraphs)}
+</section>
+
+<section data-about-section="mission-vision-values">
+  <h2>Mission / Vision / Values</h2>
+  ${buildCardsHtml(draft.missionVisionValues)}
+</section>
+
+<section data-about-section="why-choose-us">
+  <h2>Why Choose Us</h2>
+  ${buildCardsHtml(draft.whyChooseUs)}
+</section>
+
+<section data-about-section="stats">
+  <h2>Stats</h2>
+  ${buildStatsHtml(draft.stats)}
+</section>
+
+<section data-about-section="team">
+  <h2>Team members</h2>
+  ${buildPeopleHtml(draft.team)}
+</section>
+
+<section data-about-section="testimonials">
+  <h2>Testimonials</h2>
+  ${buildTestimonialsHtml(draft.testimonials)}
+</section>
+
+<section data-about-section="app-cta">
+  ${draft.cta.imageUrl.trim() ? `<img src="${escapeHtml(draft.cta.imageUrl)}" alt="${escapeHtml(draft.cta.title)}" />` : ""}
+  <h2>${escapeHtml(draft.cta.title)}</h2>
+  ${paragraphsToHtml(draft.cta.description)}
+  ${draft.cta.appStoreUrl.trim() ? `<p><a href="${escapeHtml(draft.cta.appStoreUrl)}">App Store</a></p>` : ""}
+  ${draft.cta.playStoreUrl.trim() ? `<p><a href="${escapeHtml(draft.cta.playStoreUrl)}">Google Play</a></p>` : ""}
+  <h3>${escapeHtml(draft.cta.subscribeTitle)}</h3>
+  ${paragraphsToHtml(draft.cta.subscribeDescription)}
+</section>`;
+
+const stripHtmlToText = (value: string) =>
+  value
+    .replace(/<!--[^]*?-->/g, "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+const parseAboutPageDraft = (value: string) => {
+  const decoded = decodeAboutDraft(value);
+  if (decoded) return decoded;
+
+  return {
+    ...defaultAboutPageDraft,
+    story: {
+      ...defaultAboutPageDraft.story,
+      paragraphs: stripHtmlToText(value) || defaultAboutPageDraft.story.paragraphs,
+    },
+  };
+};
 
 function RichPolicyEditor({
   value,
@@ -385,6 +614,394 @@ function RichPolicyEditor({
   );
 }
 
+type AboutPageSectionEditorProps = {
+  value: AboutPageDraft;
+  onChange: (value: AboutPageDraft) => void;
+};
+
+type AboutDraftSection = keyof AboutPageDraft;
+
+function AboutTextInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm font-semibold text-[#344054]">{label}</Label>
+      <Input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="h-11 rounded-xl border-[#D0D5DD] bg-white text-sm"
+      />
+    </div>
+  );
+}
+
+function AboutTextArea({
+  label,
+  value,
+  onChange,
+  placeholder,
+  rows = 4,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  rows?: number;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm font-semibold text-[#344054]">{label}</Label>
+      <Textarea
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        rows={rows}
+        className="min-h-0 resize-y rounded-xl border-[#D0D5DD] bg-white text-sm leading-6"
+      />
+    </div>
+  );
+}
+
+function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps) {
+  const updateObjectSection = <TSection extends AboutDraftSection,>(
+    section: TSection,
+    nextValue: AboutPageDraft[TSection],
+  ) => {
+    onChange({ ...value, [section]: nextValue });
+  };
+
+  const updateArrayItem = <TItem,>(
+    section: "missionVisionValues" | "whyChooseUs" | "stats" | "team" | "testimonials",
+    index: number,
+    nextItem: TItem,
+  ) => {
+    onChange({
+      ...value,
+      [section]: value[section].map((item, itemIndex) =>
+        itemIndex === index ? nextItem : item,
+      ),
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <EditableSectionCard icon={ImageIcon} title="Hero / banner">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <AboutTextInput
+            label="Image URL"
+            value={value.hero.imageUrl}
+            onChange={(imageUrl) => updateObjectSection("hero", { ...value.hero, imageUrl })}
+            placeholder="https://..."
+          />
+          <AboutTextInput
+            label="Title"
+            value={value.hero.title}
+            onChange={(title) => updateObjectSection("hero", { ...value.hero, title })}
+          />
+          <AboutTextInput
+            label="Subtitle"
+            value={value.hero.subtitle}
+            onChange={(subtitle) => updateObjectSection("hero", { ...value.hero, subtitle })}
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <AboutTextInput
+              label="CTA label"
+              value={value.hero.ctaLabel}
+              onChange={(ctaLabel) => updateObjectSection("hero", { ...value.hero, ctaLabel })}
+            />
+            <AboutTextInput
+              label="CTA link"
+              value={value.hero.ctaHref}
+              onChange={(ctaHref) => updateObjectSection("hero", { ...value.hero, ctaHref })}
+            />
+          </div>
+        </div>
+      </EditableSectionCard>
+
+      <EditableSectionCard icon={FileText} title="Our Story">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <AboutTextInput
+            label="Image URL"
+            value={value.story.imageUrl}
+            onChange={(imageUrl) => updateObjectSection("story", { ...value.story, imageUrl })}
+            placeholder="https://..."
+          />
+          <AboutTextInput
+            label="Badge"
+            value={value.story.badge}
+            onChange={(badge) => updateObjectSection("story", { ...value.story, badge })}
+          />
+          <AboutTextInput
+            label="Eyebrow"
+            value={value.story.eyebrow}
+            onChange={(eyebrow) => updateObjectSection("story", { ...value.story, eyebrow })}
+          />
+          <AboutTextInput
+            label="Title"
+            value={value.story.title}
+            onChange={(title) => updateObjectSection("story", { ...value.story, title })}
+          />
+        </div>
+        <AboutTextArea
+          label="Paragraphs"
+          value={value.story.paragraphs}
+          onChange={(paragraphs) => updateObjectSection("story", { ...value.story, paragraphs })}
+          rows={6}
+        />
+      </EditableSectionCard>
+
+      <EditableSectionCard icon={Target} title="Mission / Vision / Values">
+        <div className="grid gap-4 lg:grid-cols-3">
+          {value.missionVisionValues.map((item, index) => (
+            <CardFields
+              key={index}
+              index={index}
+              item={item}
+              onChange={(nextItem) => updateArrayItem("missionVisionValues", index, nextItem)}
+            />
+          ))}
+        </div>
+      </EditableSectionCard>
+
+      <EditableSectionCard icon={MousePointerClick} title="Why Choose Us">
+        <div className="grid gap-4 lg:grid-cols-3">
+          {value.whyChooseUs.map((item, index) => (
+            <CardFields
+              key={index}
+              index={index}
+              item={item}
+              onChange={(nextItem) => updateArrayItem("whyChooseUs", index, nextItem)}
+            />
+          ))}
+        </div>
+      </EditableSectionCard>
+
+      <EditableSectionCard icon={BarChart3} title="Stats bar">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {value.stats.map((item, index) => (
+            <div key={index} className="rounded-2xl border border-[#EAECF0] bg-[#FCFCFD] p-4">
+              <AboutTextInput
+                label={`Value ${index + 1}`}
+                value={item.value}
+                onChange={(nextValue) => updateArrayItem("stats", index, { ...item, value: nextValue })}
+              />
+              <div className="mt-3">
+                <AboutTextInput
+                  label="Label"
+                  value={item.label}
+                  onChange={(label) => updateArrayItem("stats", index, { ...item, label })}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </EditableSectionCard>
+
+      <EditableSectionCard icon={UsersRound} title="Team members">
+        <div className="grid gap-4 lg:grid-cols-3">
+          {value.team.map((item, index) => (
+            <PersonFields
+              key={index}
+              index={index}
+              item={item}
+              onChange={(nextItem) => updateArrayItem("team", index, nextItem)}
+            />
+          ))}
+        </div>
+      </EditableSectionCard>
+
+      <EditableSectionCard icon={MessageSquareText} title="Testimonials">
+        <div className="grid gap-4 lg:grid-cols-2">
+          {value.testimonials.map((item, index) => (
+            <TestimonialFields
+              key={index}
+              index={index}
+              item={item}
+              onChange={(nextItem) => updateArrayItem("testimonials", index, nextItem)}
+            />
+          ))}
+        </div>
+      </EditableSectionCard>
+
+      <EditableSectionCard icon={Smartphone} title="App CTA + subscribe">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <AboutTextInput
+            label="Title"
+            value={value.cta.title}
+            onChange={(title) => updateObjectSection("cta", { ...value.cta, title })}
+          />
+          <AboutTextInput
+            label="Image URL"
+            value={value.cta.imageUrl}
+            onChange={(imageUrl) => updateObjectSection("cta", { ...value.cta, imageUrl })}
+            placeholder="https://..."
+          />
+          <AboutTextInput
+            label="App Store URL"
+            value={value.cta.appStoreUrl}
+            onChange={(appStoreUrl) => updateObjectSection("cta", { ...value.cta, appStoreUrl })}
+          />
+          <AboutTextInput
+            label="Play Store URL"
+            value={value.cta.playStoreUrl}
+            onChange={(playStoreUrl) => updateObjectSection("cta", { ...value.cta, playStoreUrl })}
+          />
+          <AboutTextInput
+            label="Subscribe title"
+            value={value.cta.subscribeTitle}
+            onChange={(subscribeTitle) =>
+              updateObjectSection("cta", { ...value.cta, subscribeTitle })
+            }
+          />
+        </div>
+        <AboutTextArea
+          label="Description"
+          value={value.cta.description}
+          onChange={(description) => updateObjectSection("cta", { ...value.cta, description })}
+        />
+        <AboutTextArea
+          label="Subscribe description"
+          value={value.cta.subscribeDescription}
+          onChange={(subscribeDescription) =>
+            updateObjectSection("cta", { ...value.cta, subscribeDescription })
+          }
+        />
+      </EditableSectionCard>
+    </div>
+  );
+}
+
+function EditableSectionCard({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: ComponentType<{ className?: string }>;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border border-[#EAECF0] bg-[#FCFCFD] p-4">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="inline-flex size-9 items-center justify-center rounded-xl bg-white text-[#C1121F] shadow-sm">
+          <Icon className="size-4" />
+        </span>
+        <h3 className="text-sm font-semibold text-[#101828]">{title}</h3>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function CardFields({
+  index,
+  item,
+  onChange,
+}: {
+  index: number;
+  item: AboutCardField;
+  onChange: (value: AboutCardField) => void;
+}) {
+  return (
+    <div className="space-y-3 rounded-2xl border border-[#EAECF0] bg-white p-4">
+      <AboutTextInput
+        label={`Card ${index + 1} title`}
+        value={item.title}
+        onChange={(title) => onChange({ ...item, title })}
+      />
+      <AboutTextArea
+        label="Description"
+        value={item.description}
+        onChange={(description) => onChange({ ...item, description })}
+      />
+    </div>
+  );
+}
+
+function PersonFields({
+  index,
+  item,
+  onChange,
+}: {
+  index: number;
+  item: AboutPersonField;
+  onChange: (value: AboutPersonField) => void;
+}) {
+  return (
+    <div className="space-y-3 rounded-2xl border border-[#EAECF0] bg-white p-4">
+      <AboutTextInput
+        label={`Member ${index + 1} name`}
+        value={item.name}
+        onChange={(name) => onChange({ ...item, name })}
+      />
+      <AboutTextInput
+        label="Role"
+        value={item.role}
+        onChange={(role) => onChange({ ...item, role })}
+      />
+      <AboutTextInput
+        label="Image URL"
+        value={item.imageUrl}
+        onChange={(imageUrl) => onChange({ ...item, imageUrl })}
+        placeholder="https://..."
+      />
+    </div>
+  );
+}
+
+function TestimonialFields({
+  index,
+  item,
+  onChange,
+}: {
+  index: number;
+  item: AboutTestimonialField;
+  onChange: (value: AboutTestimonialField) => void;
+}) {
+  return (
+    <div className="space-y-3 rounded-2xl border border-[#EAECF0] bg-white p-4">
+      <AboutTextInput
+        label={`Testimonial ${index + 1} name`}
+        value={item.name}
+        onChange={(name) => onChange({ ...item, name })}
+      />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <AboutTextInput
+          label="Role"
+          value={item.role}
+          onChange={(role) => onChange({ ...item, role })}
+        />
+        <AboutTextInput
+          label="Rating"
+          value={item.rating}
+          onChange={(rating) => onChange({ ...item, rating })}
+        />
+      </div>
+      <AboutTextInput
+        label="Image URL"
+        value={item.imageUrl}
+        onChange={(imageUrl) => onChange({ ...item, imageUrl })}
+        placeholder="https://..."
+      />
+      <AboutTextArea
+        label="Quote"
+        value={item.quote}
+        onChange={(quote) => onChange({ ...item, quote })}
+      />
+    </div>
+  );
+}
+
 export function AboutUsPage() {
   return (
     <CustomerAppContentPage
@@ -393,7 +1010,6 @@ export function AboutUsPage() {
       emptyTemplate={emptyAboutUsTemplate}
       emptyPreview="<p>No About Us content has been published yet.</p>"
       buildPublicLink={buildAboutUsPageLink}
-      sectionGuide={aboutUsSectionGuide}
     />
   );
 }
@@ -416,12 +1032,12 @@ function CustomerAppContentPage({
   emptyTemplate,
   emptyPreview,
   buildPublicLink,
-  sectionGuide,
 }: CustomerAppContentPageProps) {
   const t = useTranslations(translationKey);
   const commonT = useTranslations("common");
   const { restaurantId, loading: authLoading } = useAuth();
   const [draftContent, setDraftContent] = useState("");
+  const [draftAboutPage, setDraftAboutPage] = useState<AboutPageDraft>(defaultAboutPageDraft);
   const [hasLoadedInitialContent, setHasLoadedInitialContent] = useState(false);
 
   const { data: content, isLoading, isFetching, refetch } = useCustomerAppContent(restaurantId);
@@ -436,26 +1052,40 @@ function CustomerAppContentPage({
       ? publicAboutUs?.aboutUs ?? ""
       : publicPolicy?.privacyPolicy ?? "";
   const publicLink = restaurantId ? buildPublicLink() : "";
-  const isDirty = draftContent !== savedContent;
+  const isAboutUsPage = contentField === "aboutUs";
+  const currentDraftContent = isAboutUsPage
+    ? buildAboutPageHtml(draftAboutPage)
+    : draftContent;
+  const isDirty = currentDraftContent !== savedContent;
   const loading = authLoading || isLoading;
   const isSaving =
     contentField === "aboutUs" ? updateAboutUs.isPending : updatePrivacyPolicy.isPending;
   const previewDocument = useMemo(
-    () => buildPreviewDocument(draftContent, emptyPreview),
-    [draftContent, emptyPreview],
+    () => buildPreviewDocument(currentDraftContent, emptyPreview),
+    [currentDraftContent, emptyPreview],
   );
-  const wordCount = useMemo(() => countWords(draftContent), [draftContent]);
-  const characterCount = draftContent.length;
+  const wordCount = useMemo(() => countWords(stripHtmlToText(currentDraftContent)), [currentDraftContent]);
+  const characterCount = currentDraftContent.length;
   const hasPublishedContent = publishedContent.trim().length > 0;
 
   useEffect(() => {
     if (hasLoadedInitialContent || isLoading) return;
 
-    setDraftContent(savedContent || emptyTemplate);
+    if (contentField === "aboutUs") {
+      setDraftAboutPage(parseAboutPageDraft(savedContent || emptyTemplate));
+    } else {
+      setDraftContent(savedContent || emptyTemplate);
+    }
+
     setHasLoadedInitialContent(true);
-  }, [emptyTemplate, hasLoadedInitialContent, isLoading, savedContent]);
+  }, [contentField, emptyTemplate, hasLoadedInitialContent, isLoading, savedContent]);
 
   const handleReset = () => {
+    if (contentField === "aboutUs") {
+      setDraftAboutPage(parseAboutPageDraft(savedContent || emptyTemplate));
+      return;
+    }
+
     setDraftContent(savedContent || emptyTemplate);
   };
 
@@ -469,14 +1099,19 @@ function CustomerAppContentPage({
       contentField === "aboutUs"
         ? await updateAboutUs.mutateAsync({
             restaurantId,
-            aboutUs: draftContent.trim(),
+            aboutUs: currentDraftContent.trim(),
           })
         : await updatePrivacyPolicy.mutateAsync({
             restaurantId,
-            privacyPolicy: draftContent.trim(),
+            privacyPolicy: currentDraftContent.trim(),
           });
 
-    setDraftContent(nextContent[contentField]);
+    if (contentField === "aboutUs") {
+      setDraftAboutPage(parseAboutPageDraft(nextContent[contentField]));
+    } else {
+      setDraftContent(nextContent[contentField]);
+    }
+
     setHasLoadedInitialContent(true);
   };
 
@@ -572,68 +1207,6 @@ function CustomerAppContentPage({
           </div>
         </div>
 
-        {sectionGuide ? (
-          <section className="overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-            <div className="border-b border-[#EAECF0] px-5 py-4">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="size-4 text-[#C1121F]" />
-                    <h2 className="text-base font-semibold text-[#101828]">
-                      {t("sections.title")}
-                    </h2>
-                  </div>
-                  <p className="mt-1 max-w-4xl text-sm leading-6 text-[#667085]">
-                    {t("sections.description")}
-                  </p>
-                </div>
-
-                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#FFF7E6] px-3 py-1 text-xs font-semibold text-[#B54708]">
-                  <ShieldCheck className="size-3.5" />
-                  {t("sections.backendScope")}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4">
-              {sectionGuide.map((item) => {
-                const Icon = item.icon;
-                const isManaged = item.statusKey === "sections.managed";
-
-                return (
-                  <article
-                    key={item.titleKey}
-                    className="rounded-2xl border border-[#EAECF0] bg-[#FCFCFD] p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#C1121F] shadow-sm">
-                        <Icon className="size-4" />
-                      </span>
-                      <span
-                        className={cn(
-                          "rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                          isManaged
-                            ? "bg-[#ECFDF3] text-[#027A48]"
-                            : "bg-[#F2F4F7] text-[#475467]",
-                        )}
-                      >
-                        {t(item.statusKey)}
-                      </span>
-                    </div>
-
-                    <h3 className="mt-4 text-sm font-semibold text-[#101828]">
-                      {t(item.titleKey)}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-[#667085]">
-                      {t(item.descriptionKey)}
-                    </p>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-        ) : null}
-
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.1fr_0.9fr]">
           <section className="overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
             <div className="border-b border-[#EAECF0] px-5 py-4">
@@ -652,7 +1225,7 @@ function CustomerAppContentPage({
 
                 <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#F8F9FB] px-3 py-1 text-xs font-semibold text-[#475467]">
                   <FileText className="size-3.5" />
-                  {t("richEditor")}
+                  {isAboutUsPage ? t("sectionEditor") : t("richEditor")}
                 </span>
               </div>
             </div>
@@ -662,6 +1235,11 @@ function CustomerAppContentPage({
                 <div className="flex min-h-[520px] items-center justify-center rounded-2xl border border-dashed border-[#D0D5DD] bg-[#FCFCFD]">
                   <Loader2 className="size-6 animate-spin text-[#98A2B3]" />
                 </div>
+              ) : isAboutUsPage ? (
+                <AboutPageSectionEditor
+                  value={draftAboutPage}
+                  onChange={setDraftAboutPage}
+                />
               ) : (
                 <RichPolicyEditor
                   value={draftContent}
