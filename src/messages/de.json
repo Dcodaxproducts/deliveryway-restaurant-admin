@@ -2855,6 +2855,45 @@
     "publicPageDescription": "Teilen oder oeffnen Sie die veroeffentlichte Ueber-uns-Seite fuer Kunden.",
     "copyLink": "Ueber-uns-Link kopieren",
     "linkCopied": "Link zur Ueber-uns-Seite kopiert.",
+    "sections": {
+      "title": "Ueber-uns-Seitenbereiche",
+      "description": "Die Kunden-Ueber-uns-Seite besteht aus diesen Bereichen. Der aktuelle Backend-Support erlaubt in dieser Admin-Ansicht nur die Verwaltung des Our-Story-Texts; die uebrigen Bereichstexte, Karten, Statistiken, Teammitglieder, Testimonials und App-CTA bleiben statisch, bis das Backend einen strukturierten Ueber-uns-Vertrag bereitstellt.",
+      "backendScope": "Aktueller Backend-Umfang",
+      "managed": "Hier verwaltet",
+      "static": "Statisch",
+      "hero": {
+        "title": "Hero / Banner",
+        "description": "Bild, Titel, Untertitel und Order-Now-CTA. Nutzt die bestehenden Defaults der Kundenwebsite."
+      },
+      "story": {
+        "title": "Our Story",
+        "description": "Hauptinhalt der Ueber-uns-Seite. Der unten gespeicherte Rich Text wird als restaurant.settings.customerApp.aboutUs veroeffentlicht."
+      },
+      "mission": {
+        "title": "Mission / Vision / Werte",
+        "description": "Drei kundenorientierte Karten mit statischen Titeln, Beschreibungen und Icons."
+      },
+      "whyChoose": {
+        "title": "Warum wir",
+        "description": "Feature-Karten fuer einfache Bestellung, schnelle Lieferung und Qualitaet."
+      },
+      "stats": {
+        "title": "Statistikleiste",
+        "description": "Werte fuer zufriedene Kunden, Zufriedenheit, Filialen und Mitarbeiter."
+      },
+      "team": {
+        "title": "Teammitglieder",
+        "description": "Statische Namen, Rollen und Bilder der Teammitglieder."
+      },
+      "testimonials": {
+        "title": "Testimonials",
+        "description": "Statische Kundenstimmen, Bewertungen, Namen, Rollen und Bilder."
+      },
+      "cta": {
+        "title": "App-CTA + Subscribe",
+        "description": "Statischer App-Download-CTA und Subscribe-Bereich."
+      }
+    },
     "missingRestaurant": "Restaurant-ID fehlt."
   },
   "privacyPolicy": {

@@ -279,7 +279,7 @@ export const menuItems: MenuItem[] = [
       {
         title: "About Us",
         labelKey: "aboutUs",
-        href: "/about-us",
+        href: "/content-management/about",
         icon: FileText,
         section: "main",
         roles: restaurantAdminRoles,

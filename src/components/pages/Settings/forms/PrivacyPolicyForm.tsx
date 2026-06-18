@@ -6,6 +6,7 @@ import {
   AlignCenter,
   AlignLeft,
   AlignRight,
+  BarChart3,
   Bold,
   CheckCircle2,
   Copy,
@@ -14,11 +15,14 @@ import {
   Globe2,
   Heading2,
   Heading3,
+  ImageIcon,
   Italic,
   Link,
   List,
   ListOrdered,
   Loader2,
+  MessageSquareText,
+  MousePointerClick,
   Paintbrush,
   Pilcrow,
   RefreshCw,
@@ -26,9 +30,13 @@ import {
   RemoveFormatting,
   Save,
   ShieldCheck,
+  Smartphone,
+  Sparkles,
+  Target,
   Type,
   Underline,
   Undo2,
+  UsersRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -163,7 +171,66 @@ type CustomerAppContentPageProps = {
   emptyTemplate: string;
   emptyPreview: string;
   buildPublicLink: () => string;
+  sectionGuide?: ContentSectionGuideItem[];
 };
+
+type ContentSectionGuideItem = {
+  titleKey: string;
+  descriptionKey: string;
+  statusKey: string;
+  icon: ComponentType<{ className?: string }>;
+};
+
+const aboutUsSectionGuide: ContentSectionGuideItem[] = [
+  {
+    titleKey: "sections.hero.title",
+    descriptionKey: "sections.hero.description",
+    statusKey: "sections.static",
+    icon: ImageIcon,
+  },
+  {
+    titleKey: "sections.story.title",
+    descriptionKey: "sections.story.description",
+    statusKey: "sections.managed",
+    icon: FileText,
+  },
+  {
+    titleKey: "sections.mission.title",
+    descriptionKey: "sections.mission.description",
+    statusKey: "sections.static",
+    icon: Target,
+  },
+  {
+    titleKey: "sections.whyChoose.title",
+    descriptionKey: "sections.whyChoose.description",
+    statusKey: "sections.static",
+    icon: MousePointerClick,
+  },
+  {
+    titleKey: "sections.stats.title",
+    descriptionKey: "sections.stats.description",
+    statusKey: "sections.static",
+    icon: BarChart3,
+  },
+  {
+    titleKey: "sections.team.title",
+    descriptionKey: "sections.team.description",
+    statusKey: "sections.static",
+    icon: UsersRound,
+  },
+  {
+    titleKey: "sections.testimonials.title",
+    descriptionKey: "sections.testimonials.description",
+    statusKey: "sections.static",
+    icon: MessageSquareText,
+  },
+  {
+    titleKey: "sections.cta.title",
+    descriptionKey: "sections.cta.description",
+    statusKey: "sections.static",
+    icon: Smartphone,
+  },
+];
 
 function RichPolicyEditor({
   value,
@@ -326,6 +393,7 @@ export function AboutUsPage() {
       emptyTemplate={emptyAboutUsTemplate}
       emptyPreview="<p>No About Us content has been published yet.</p>"
       buildPublicLink={buildAboutUsPageLink}
+      sectionGuide={aboutUsSectionGuide}
     />
   );
 }
@@ -348,6 +416,7 @@ function CustomerAppContentPage({
   emptyTemplate,
   emptyPreview,
   buildPublicLink,
+  sectionGuide,
 }: CustomerAppContentPageProps) {
   const t = useTranslations(translationKey);
   const commonT = useTranslations("common");
@@ -502,6 +571,68 @@ function CustomerAppContentPage({
             </div>
           </div>
         </div>
+
+        {sectionGuide ? (
+          <section className="overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+            <div className="border-b border-[#EAECF0] px-5 py-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="size-4 text-[#C1121F]" />
+                    <h2 className="text-base font-semibold text-[#101828]">
+                      {t("sections.title")}
+                    </h2>
+                  </div>
+                  <p className="mt-1 max-w-4xl text-sm leading-6 text-[#667085]">
+                    {t("sections.description")}
+                  </p>
+                </div>
+
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#FFF7E6] px-3 py-1 text-xs font-semibold text-[#B54708]">
+                  <ShieldCheck className="size-3.5" />
+                  {t("sections.backendScope")}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4">
+              {sectionGuide.map((item) => {
+                const Icon = item.icon;
+                const isManaged = item.statusKey === "sections.managed";
+
+                return (
+                  <article
+                    key={item.titleKey}
+                    className="rounded-2xl border border-[#EAECF0] bg-[#FCFCFD] p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#C1121F] shadow-sm">
+                        <Icon className="size-4" />
+                      </span>
+                      <span
+                        className={cn(
+                          "rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                          isManaged
+                            ? "bg-[#ECFDF3] text-[#027A48]"
+                            : "bg-[#F2F4F7] text-[#475467]",
+                        )}
+                      >
+                        {t(item.statusKey)}
+                      </span>
+                    </div>
+
+                    <h3 className="mt-4 text-sm font-semibold text-[#101828]">
+                      {t(item.titleKey)}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-[#667085]">
+                      {t(item.descriptionKey)}
+                    </p>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
 
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.1fr_0.9fr]">
           <section className="overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
