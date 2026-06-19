@@ -852,8 +852,10 @@ export default function AddToCartModal({
       description: variation.description || null,
     }));
 
-    return [baseOption, ...variationOptions];
+    return variationOptions.length ? variationOptions : [baseOption];
   }, [item, t, variations]);
+
+  const hasVariationOptions = variations.length > 0;
 
   const selectedOption = useMemo(() => {
     return (
@@ -891,7 +893,7 @@ export default function AddToCartModal({
     if (!open) return;
 
     setQuantity(1);
-    setSelectedOptionId("base");
+    setSelectedOptionId(options[0]?.id || "base");
     setSelectedModifiers({});
 
     try {
@@ -908,7 +910,7 @@ export default function AddToCartModal({
     } catch {
       window.localStorage.removeItem(POS_LAST_SELECTION_STORAGE_KEY);
     }
-  }, [open, item?.id]);
+  }, [open, item?.id, options]);
 
   useEffect(() => {
     if (!options.length) return;
@@ -1515,81 +1517,82 @@ export default function AddToCartModal({
             </div>
           </div>
 
-          <div className="mt-6">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div>
+          {hasVariationOptions ? (
+            <div className="mt-6">
+              <div className="mb-3">
                 <p className="text-sm font-semibold text-gray-900">
                   {t("variation")}
                 </p>
-                <p className="mt-0.5 text-xs text-gray-500">
-                  {t("variationDescription")}
-                </p>
               </div>
 
-              <span className="text-sm font-semibold text-primary">
-                {formatMoney(toNumber(selectedOption?.price, 0))}
-              </span>
-            </div>
+              <div className="grid grid-cols-1 gap-3">
+                {options.map((option) => {
+                  const checked = option.id === selectedOptionId;
 
-            <div className="grid grid-cols-1 gap-3">
-              {options.map((option) => {
-                const checked = option.id === selectedOptionId;
-
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => setSelectedOptionId(option.id)}
-                    disabled={isSubmitting}
-                    className={`w-full rounded-xl border px-4 py-3 text-left transition ${
-                      checked
-                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                        : "border-gray-200 bg-white hover:border-primary/40"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-start gap-3">
-                        <span
-                          className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
-                            checked
-                              ? "border-primary"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {checked ? (
-                            <span className="h-2 w-2 rounded-full bg-primary" />
-                          ) : null}
-                        </span>
-
-                        <span className="min-w-0">
-                          <span className="block text-sm font-semibold text-gray-900">
-                            {option.label}
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setSelectedOptionId(option.id)}
+                      disabled={isSubmitting}
+                      className={`w-full rounded-xl border px-4 py-3 text-left transition ${
+                        checked
+                          ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                          : "border-gray-200 bg-white hover:border-primary/40"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-start gap-3">
+                          <span
+                            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                              checked
+                                ? "border-primary"
+                                : "border-gray-300"
+                            }`}
+                          >
+                            {checked ? (
+                              <span className="h-2 w-2 rounded-full bg-primary" />
+                            ) : null}
                           </span>
 
-                          {option.description ? (
-                            <span className="mt-0.5 line-clamp-2 text-xs text-gray-500">
-                              {option.description}
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold text-gray-900">
+                              {option.label}
                             </span>
-                          ) : null}
-                        </span>
-                      </div>
 
-                      <span className="shrink-0 text-sm font-semibold text-primary">
-                        {formatMoney(option.price)}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
+                            {option.description ? (
+                              <span className="mt-0.5 line-clamp-2 text-xs text-gray-500">
+                                {option.description}
+                              </span>
+                            ) : null}
+                          </span>
+                        </div>
+
+                        {option.price > 0 ? (
+                          <span className="shrink-0 text-sm font-semibold text-primary">
+                            {formatMoney(option.price)}
+                          </span>
+                        ) : null}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          ) : null}
 
           {renderModifierGroups()}
 
           <div className="mt-6 flex items-center justify-between rounded-2xl bg-gray-50 p-4">
-            <span className="text-sm font-semibold text-gray-900">
-              {t("quantity")}
-            </span>
+            <div>
+              <span className="text-sm font-semibold text-gray-900">
+                {t("quantity")}
+              </span>
+
+              <p className="mt-1 text-lg font-semibold text-primary">
+                {formatMoney(total)}
+              </p>
+            </div>
 
             <div className="flex items-center rounded-full bg-white shadow-sm ring-1 ring-gray-100">
               <button
@@ -1618,24 +1621,9 @@ export default function AddToCartModal({
             </div>
           </div>
 
-          <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-5">
-            <div>
-              <p className="text-sm font-medium text-gray-500">{t("total")}</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900">
-                {formatMoney(total)}
-              </p>
-
-              {modifiersTotal > 0 ? (
-                <p className="mt-1 text-xs text-gray-500">
-                  {t("includesAddOns", {
-                    amount: formatMoney(modifiersTotal),
-                  })}
-                </p>
-              ) : null}
-            </div>
-
+          <div className="mt-6">
             <Button
-              className="h-12 rounded-full bg-primary px-6 text-white hover:bg-primary/90"
+              className="h-12 w-full rounded-full bg-primary px-6 text-white hover:bg-primary/90"
               onClick={handleAddToCart}
               disabled={isSubmitting}
             >
