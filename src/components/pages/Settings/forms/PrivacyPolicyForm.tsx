@@ -21,6 +21,7 @@ import {
   Eye,
   FileText,
   Globe2,
+  Heading1,
   Heading2,
   Heading3,
   ImageIcon,
@@ -89,7 +90,7 @@ const emptyAboutUsTemplate = `<h2>About Us</h2>
 
 type EditorCommand =
   | { type: "command"; command: string; value?: string }
-  | { type: "block"; value: "p" | "h2" | "h3" };
+  | { type: "block"; value: "p" | "h1" | "h2" | "h3" };
 
 type EditorButton = {
   label: string;
@@ -100,6 +101,7 @@ type EditorButton = {
 const editorButtonGroups: EditorButton[][] = [
   [
     { label: "Paragraph", icon: Pilcrow, action: { type: "block", value: "p" } },
+    { label: "Heading 1", icon: Heading1, action: { type: "block", value: "h1" } },
     { label: "Heading 2", icon: Heading2, action: { type: "block", value: "h2" } },
     { label: "Heading 3", icon: Heading3, action: { type: "block", value: "h3" } },
   ],
@@ -339,14 +341,18 @@ const parseAboutPageDraft = (value: string) => {
   };
 };
 
-function RichPolicyEditor({
+export function RichPolicyEditor({
+  id,
   value,
   onChange,
   placeholder,
+  disabled = false,
 }: {
+  id?: string;
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
+  disabled?: boolean;
 }) {
   const editorRef = useRef<HTMLDivElement>(null);
   const latestExternalValue = useRef("");
@@ -366,6 +372,8 @@ function RichPolicyEditor({
   };
 
   const runCommand = (action: EditorCommand) => {
+    if (disabled) return;
+
     editorRef.current?.focus();
 
     if (action.type === "block") {
@@ -379,7 +387,7 @@ function RichPolicyEditor({
 
   const insertLink = () => {
     const url = linkUrl.trim();
-    if (!url) return;
+    if (!url || disabled) return;
 
     runCommand({ type: "command", command: "createLink", value: url });
     setLinkUrl("");
@@ -401,7 +409,8 @@ function RichPolicyEditor({
                   key={item.label}
                   type="button"
                   onClick={() => runCommand(item.action)}
-                  className="inline-flex size-9 items-center justify-center rounded-full text-[#475467] transition hover:bg-[#F2F4F7] hover:text-[#101828] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C1121F]"
+                  disabled={disabled}
+                  className="inline-flex size-9 items-center justify-center rounded-full text-[#475467] transition hover:bg-[#F2F4F7] hover:text-[#101828] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C1121F] disabled:cursor-not-allowed disabled:opacity-50"
                   title={item.label}
                   aria-label={item.label}
                 >
@@ -418,7 +427,8 @@ function RichPolicyEditor({
               key={color}
               type="button"
               onClick={() => runCommand({ type: "command", command: "foreColor", value: color })}
-              className="size-9 rounded-full p-2 transition hover:bg-[#F2F4F7] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C1121F]"
+              disabled={disabled}
+              className="size-9 rounded-full p-2 transition hover:bg-[#F2F4F7] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C1121F] disabled:cursor-not-allowed disabled:opacity-50"
               title={`Text color ${color}`}
               aria-label={`Text color ${color}`}
             >
@@ -432,6 +442,7 @@ function RichPolicyEditor({
           <input
             type="color"
             className="size-6 cursor-pointer rounded border-0 bg-transparent p-0"
+            disabled={disabled}
             onChange={(event) =>
               runCommand({ type: "command", command: "foreColor", value: event.target.value })
             }
@@ -444,6 +455,7 @@ function RichPolicyEditor({
           <input
             type="color"
             className="size-6 cursor-pointer rounded border-0 bg-transparent p-0"
+            disabled={disabled}
             onChange={(event) =>
               runCommand({ type: "command", command: "hiliteColor", value: event.target.value })
             }
@@ -456,6 +468,7 @@ function RichPolicyEditor({
           <input
             value={linkUrl}
             onChange={(event) => setLinkUrl(event.target.value)}
+            disabled={disabled}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault();
@@ -469,7 +482,7 @@ function RichPolicyEditor({
           <button
             type="button"
             onClick={insertLink}
-            disabled={!linkUrl.trim()}
+            disabled={disabled || !linkUrl.trim()}
             className="inline-flex h-8 items-center rounded-full bg-[#101828] px-3 text-xs font-semibold text-white transition hover:bg-[#344054] disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
           >
             Add
@@ -478,15 +491,19 @@ function RichPolicyEditor({
       </div>
 
       <div
+        id={id}
         ref={editorRef}
-        contentEditable
+        contentEditable={!disabled}
         suppressContentEditableWarning
         role="textbox"
         aria-label={placeholder}
         onInput={syncEditorValue}
         onBlur={syncEditorValue}
         data-placeholder={placeholder}
-        className="prose-editor min-h-[560px] w-full overflow-auto bg-white px-6 py-5 text-sm leading-7 text-[#344054] outline-none empty:before:pointer-events-none empty:before:text-[#98A2B3] empty:before:content-[attr(data-placeholder)] [&_a]:font-semibold [&_a]:text-[#C1121F] [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:text-[#101828] [&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-[#101828] [&_li]:my-1 [&_ol]:my-4 [&_ol]:pl-6 [&_p]:mb-4 [&_strong]:text-[#101828] [&_ul]:my-4 [&_ul]:pl-6"
+        className={cn(
+          "prose-editor min-h-[560px] w-full overflow-auto bg-white px-6 py-5 text-sm leading-7 text-[#344054] outline-none empty:before:pointer-events-none empty:before:text-[#98A2B3] empty:before:content-[attr(data-placeholder)] [&_a]:font-semibold [&_a]:text-[#C1121F] [&_h1]:mb-4 [&_h1]:mt-7 [&_h1]:text-3xl [&_h1]:font-semibold [&_h1]:leading-tight [&_h1]:text-[#101828] [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:text-[#101828] [&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-[#101828] [&_li]:my-1 [&_ol]:my-4 [&_ol]:pl-6 [&_p]:mb-4 [&_strong]:text-[#101828] [&_ul]:my-4 [&_ul]:pl-6",
+          disabled && "cursor-not-allowed bg-[#F9FAFB] opacity-80",
+        )}
       />
     </div>
   );

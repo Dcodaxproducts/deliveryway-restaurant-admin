@@ -16,10 +16,10 @@ import {
 import { toast } from "sonner";
 
 import Header from "@/components/common/PageHeader";
+import { RichPolicyEditor } from "@/components/pages/Settings/forms/PrivacyPolicyForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useLegalProfile,
@@ -316,13 +316,12 @@ export function LegalProfilePage() {
               <Label htmlFor="contract-text" className="text-sm font-semibold text-[#344054]">
                 {t("contractText")}
               </Label>
-              <Textarea
+              <RichPolicyEditor
                 id="contract-text"
                 value={draftProfile.contractText}
                 placeholder={t("contractTextPlaceholder")}
                 disabled={!canEdit || loading}
-                onChange={(event) => updateField("contractText", event.target.value)}
-                className="min-h-[260px] resize-y rounded-2xl border-[#D0D5DD] bg-white p-4 text-sm leading-7 text-[#344054] shadow-none focus-visible:ring-[#C1121F]/20"
+                onChange={(value) => updateField("contractText", value)}
               />
             </div>
           </section>
@@ -344,9 +343,16 @@ export function LegalProfilePage() {
                 <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#98A2B3]">
                   {t("contractText")}
                 </p>
-                <p className="mt-2 max-h-[220px] overflow-auto whitespace-pre-wrap text-sm leading-6 text-[#475467]">
-                  {draftProfile.contractText || t("emptyContract")}
-                </p>
+                {draftProfile.contractText.trim() ? (
+                  <div
+                    className="mt-3 max-h-[360px] overflow-auto text-sm leading-6 text-[#475467] [&_a]:font-semibold [&_a]:text-[#C1121F] [&_h1]:mb-3 [&_h1]:mt-5 [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:leading-tight [&_h1]:text-[#101828] [&_h2]:mb-2 [&_h2]:mt-5 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:text-[#101828] [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-[#101828] [&_li]:my-1 [&_ol]:my-3 [&_ol]:pl-5 [&_p]:mb-3 [&_strong]:text-[#101828] [&_ul]:my-3 [&_ul]:pl-5"
+                    dangerouslySetInnerHTML={{ __html: draftProfile.contractText }}
+                  />
+                ) : (
+                  <p className="mt-2 text-sm leading-6 text-[#475467]">
+                    {t("emptyContract")}
+                  </p>
+                )}
               </div>
             </div>
           </aside>

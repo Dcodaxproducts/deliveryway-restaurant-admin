@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { ChevronDown, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -106,6 +107,7 @@ const toIsoFromDatetimeLocal = (value?: string | null) => {
 export default function PosCart() {
   const t = useTranslations("pos");
   const commonT = useTranslations("common");
+  const router = useRouter();
   const { branchId, isBranchAdmin } = useAuth();
 
   const [cartItems, setCartItems] = useState<PosCartLineItem[]>([]);
@@ -125,28 +127,28 @@ export default function PosCart() {
   const [addresses, setAddresses] = useState<any[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
 
-const [customerId, setCustomerId] = useState<string | null>(null);
-const [selectedCustomer, setSelectedCustomer] = useState<PosCustomer | null>(null);
+  const [customerId, setCustomerId] = useState<string | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<PosCustomer | null>(null);
 
-useEffect(() => {
-  const id = getClientStorageItem("activeCustomerId");
-  setCustomerId(id);
+  useEffect(() => {
+    const id = getClientStorageItem("activeCustomerId");
+    setCustomerId(id);
 
-  const rawSelection = getClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
-  if (!rawSelection) return;
+    const rawSelection = getClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
+    if (!rawSelection) return;
 
-  try {
-    const parsedSelection = JSON.parse(rawSelection);
-    const normalizedCustomer = normalizePosCustomer(parsedSelection?.customer);
+    try {
+      const parsedSelection = JSON.parse(rawSelection);
+      const normalizedCustomer = normalizePosCustomer(parsedSelection?.customer);
 
-    if (normalizedCustomer) {
-      setSelectedCustomer(normalizedCustomer);
-      setCustomerId(normalizedCustomer.id);
+      if (normalizedCustomer) {
+        setSelectedCustomer(normalizedCustomer);
+        setCustomerId(normalizedCustomer.id);
+      }
+    } catch {
+      removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
     }
-  } catch {
-    removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
-  }
-}, []);
+  }, []);
   const cartQuery = useGetCart(customerId);
   const addressesQuery = useGetCustomerAddresses(customerId);
   const customerDetailQuery = useGetCustomer(customerId || "");
@@ -165,46 +167,46 @@ useEffect(() => {
   const loading = cartQuery.isLoading;
   const loadingAddresses = addressesQuery.isLoading;
 
-useEffect(() => {
-  setCartItems(formatPosCartItems(cartQuery.data));
-}, [cartQuery.data]);
+  useEffect(() => {
+    setCartItems(formatPosCartItems(cartQuery.data));
+  }, [cartQuery.data]);
 
-useEffect(() => {
-  const data = getCartData(cartQuery.data);
-  const nextOrderType = getString(data, "orderType");
-  const nextPaymentMethod = getString(data, "paymentMethod");
+  useEffect(() => {
+    const data = getCartData(cartQuery.data);
+    const nextOrderType = getString(data, "orderType");
+    const nextPaymentMethod = getString(data, "paymentMethod");
 
-  if (
-    nextOrderType === "DELIVERY" ||
-    nextOrderType === "TAKEAWAY" ||
-    nextOrderType === "DINE_IN"
-  ) {
-    setOrderType(nextOrderType);
-  }
+    if (
+      nextOrderType === "DELIVERY" ||
+      nextOrderType === "TAKEAWAY" ||
+      nextOrderType === "DINE_IN"
+    ) {
+      setOrderType(nextOrderType);
+    }
 
-  if (nextPaymentMethod) {
-    setPaymentMethod(nextPaymentMethod);
-  }
+    if (nextPaymentMethod) {
+      setPaymentMethod(nextPaymentMethod);
+    }
 
-  setScheduledOrderTime(toDatetimeLocalValue(getString(data, "orderTime")));
-  setCustomerNote(getString(data, "customerNote") || getString(data, "note"));
-  setTipAmount(getNumberString(data, "tipAmount"));
-  setCouponCode(getString(data, "couponCode"));
-}, [cartQuery.data]);
+    setScheduledOrderTime(toDatetimeLocalValue(getString(data, "orderTime")));
+    setCustomerNote(getString(data, "customerNote") || getString(data, "note"));
+    setTipAmount(getNumberString(data, "tipAmount"));
+    setCouponCode(getString(data, "couponCode"));
+  }, [cartQuery.data]);
 
-useEffect(() => {
-  const list = addressesQuery.data?.data || [];
-  setAddresses(list);
-  if (list.length > 0) setSelectedAddress(list[0].id);
-}, [addressesQuery.data]);
+  useEffect(() => {
+    const list = addressesQuery.data?.data || [];
+    setAddresses(list);
+    if (list.length > 0) setSelectedAddress(list[0].id);
+  }, [addressesQuery.data]);
 
-useEffect(() => {
-  const normalizedCustomer = normalizePosCustomer(customerDetailQuery.data);
+  useEffect(() => {
+    const normalizedCustomer = normalizePosCustomer(customerDetailQuery.data);
 
-  if (normalizedCustomer) {
-    setSelectedCustomer(normalizedCustomer);
-  }
-}, [customerDetailQuery.data]);
+    if (normalizedCustomer) {
+      setSelectedCustomer(normalizedCustomer);
+    }
+  }, [customerDetailQuery.data]);
 
   const isGuestCustomer = selectedCustomer?.isGuest === true;
 
@@ -573,7 +575,8 @@ setSelectedAddress(null);
       removeClientStorageItem("activeCustomerId");
       removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
       setAddresses([]);
-setSelectedAddress(null);
+      setSelectedAddress(null);
+      router.push("/orders");
     } catch (err) {
       toast.error(getApiErrorMessage(err, t("toast.orderFailed")));
     } finally {
