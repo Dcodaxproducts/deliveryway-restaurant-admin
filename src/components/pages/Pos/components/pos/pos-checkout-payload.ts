@@ -1,5 +1,16 @@
 export type PosOrderType = "DELIVERY" | "TAKEAWAY" | "DINE_IN";
 
+export type PosPaymentMethod =
+  | "COD"
+  | "CARD_ON_DELIVERY"
+  | "STRIPE"
+  | "PAYPAL"
+  | "EASYPAISA"
+  | "JAZZCASH"
+  | "BANK_TRANSFER"
+  | "WALLET"
+  | string;
+
 export type PosCustomer = {
   id: string;
   firstName?: string;
@@ -28,13 +39,9 @@ export type GuestDeliveryAddress = {
 
 export type PosCheckoutPayload = {
   orderTime?: string | null;
-  paymentMethod:
-    | "COD"
-    | "CARD_ON_DELIVERY"
-    | "STRIPE"
-    | "PAYPAL"
-    | "WALLET"
-    | string;
+  scheduledDeliveryAt?: string | null;
+  paymentMethod: PosPaymentMethod;
+  walletAmount?: number;
   customerNote?: string;
   tipAmount?: number;
   loyaltyPoints?: number;
@@ -45,6 +52,16 @@ export type PosCheckoutPayload = {
     privacyPolicyAccepted: boolean;
   };
   guestDeliveryAddress?: GuestDeliveryAddress;
+};
+
+export type PosCartSettingsPayload = {
+  orderType?: PosOrderType;
+  paymentMethod?: PosPaymentMethod;
+  orderTime?: string;
+  scheduledDeliveryAt?: string;
+  tipAmount?: number;
+  customerNote?: string | null;
+  note?: string | null;
 };
 
 type RawCustomerRecord = Record<string, unknown>;
@@ -153,11 +170,28 @@ export const hasGuestDeliveryAddress = (
   );
 };
 
+export const getOptionalPositiveNumber = (value?: string | null) => {
+  if (!value?.trim()) return undefined;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+};
+
+export const getOptionalNonNegativeNumber = (value?: string | null) => {
+  if (!value?.trim()) return undefined;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+};
+
 export const buildPosCheckoutPayload = ({
   customer,
   orderType,
   paymentMethod,
   orderTime,
+  walletAmount,
+  loyaltyPoints,
+  tipAmount,
   customerNote,
   branchId,
   guestDeliveryAddress,
@@ -166,6 +200,9 @@ export const buildPosCheckoutPayload = ({
   orderType: PosOrderType;
   paymentMethod: string;
   orderTime?: string | null;
+  walletAmount?: number;
+  loyaltyPoints?: number;
+  tipAmount?: number;
   customerNote?: string;
   branchId?: string;
   guestDeliveryAddress?: GuestDeliveryAddress;
@@ -180,6 +217,18 @@ export const buildPosCheckoutPayload = ({
 
   if (customerNote?.trim()) {
     payload.customerNote = customerNote.trim();
+  }
+
+  if (walletAmount !== undefined) {
+    payload.walletAmount = walletAmount;
+  }
+
+  if (loyaltyPoints !== undefined) {
+    payload.loyaltyPoints = loyaltyPoints;
+  }
+
+  if (tipAmount !== undefined) {
+    payload.tipAmount = tipAmount;
   }
 
   if (branchId) {

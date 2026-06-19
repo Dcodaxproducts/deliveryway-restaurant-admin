@@ -10,7 +10,9 @@ export type PosCartModifier = {
 
 export type PosCartLineItem = {
   id: string;
+  type: "ITEM" | "DEAL";
   menuItemId: string;
+  dealId?: string;
   name: string;
   unitPrice: number;
   lineTotal: number;
@@ -92,6 +94,7 @@ export const formatPosCartItems = (payload: unknown): PosCartLineItem[] => {
 
   return rawItems.filter(isRecord).map((item) => {
     const menuItem = isRecord(item.menuItem) ? item.menuItem : {};
+    const deal = isRecord(item.deal) ? item.deal : {};
     const quantity = firstNumber(readNumber(item, "quantity"), 1) ?? 1;
     const modifiers = normalizeModifiers(item);
     const unitPrice =
@@ -106,10 +109,13 @@ export const formatPosCartItems = (payload: unknown): PosCartLineItem[] => {
 
     return {
       id: readString(item, "id") ?? "",
+      type: readString(item, "type") === "DEAL" ? "DEAL" : "ITEM",
       menuItemId: readString(item, "menuItemId") ?? readString(menuItem, "id") ?? "",
+      dealId: readString(item, "dealId") || readString(deal, "id"),
       name:
-        readString(item, "menuItemName") ??
-        readString(menuItem, "name") ??
+        readString(deal, "title") ||
+        readString(item, "menuItemName") ||
+        readString(menuItem, "name") ||
         "Menu item",
       unitPrice,
       lineTotal,

@@ -68,6 +68,7 @@ describe("pos cart pricing", () => {
     const billing = formatPosCartBilling(payload, [
       {
         id: "cart-item-1",
+        type: "ITEM",
         menuItemId: "menu-item-1",
         name: "Lahori Chicken Pizza",
         unitPrice: 41,
@@ -85,10 +86,41 @@ describe("pos cart pricing", () => {
     });
   });
 
+  it("formats grouped fixed deal cart rows", () => {
+    const [item] = formatPosCartItems({
+      data: {
+        items: [
+          {
+            id: "deal:deal-1",
+            type: "DEAL",
+            dealId: "deal-1",
+            quantity: 2,
+            unitPriceWithModifiers: 15,
+            lineTotal: 30,
+            deal: {
+              id: "deal-1",
+              title: "Lunch combo",
+            },
+          },
+        ],
+      },
+    });
+
+    expect(item).toMatchObject({
+      id: "deal:deal-1",
+      type: "DEAL",
+      dealId: "deal-1",
+      name: "Lunch combo",
+      quantity: 2,
+      lineTotal: 30,
+    });
+  });
+
   it("falls back to line totals when no quote is available", () => {
     const billing = formatPosCartBilling({}, [
       {
         id: "cart-item-1",
+        type: "ITEM",
         menuItemId: "menu-item-1",
         name: "Pizza",
         unitPrice: 41,

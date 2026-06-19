@@ -81,6 +81,28 @@ describe("pos checkout payload", () => {
     });
   });
 
+  it("adds backend-supported checkout options when provided", () => {
+    const payload = buildPosCheckoutPayload({
+      customer: { id: "customer-1", isGuest: false },
+      orderType: "DINE_IN",
+      paymentMethod: "wallet",
+      orderTime: "2026-06-19T05:54:29.267Z",
+      walletAmount: 20,
+      loyaltyPoints: 100,
+      tipAmount: 2.5,
+      customerNote: " near window ",
+    });
+
+    expect(payload).toEqual({
+      orderTime: "2026-06-19T05:54:29.267Z",
+      paymentMethod: "WALLET",
+      walletAmount: 20,
+      loyaltyPoints: 100,
+      tipAmount: 2.5,
+      customerNote: "near window",
+    });
+  });
+
   it("normalizes admin customer detail profile fields", () => {
     expect(
       normalizePosCustomer({
