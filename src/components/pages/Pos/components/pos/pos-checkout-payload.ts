@@ -70,6 +70,18 @@ const trimAddress = (address?: GuestDeliveryAddress | null): GuestDeliveryAddres
   lng: String(address?.lng ?? "").trim(),
 });
 
+export const isValidLatitude = (value?: string | null) => {
+  if (!value?.trim()) return false;
+  const latitude = Number(value);
+  return Number.isFinite(latitude) && latitude >= -90 && latitude <= 90;
+};
+
+export const isValidLongitude = (value?: string | null) => {
+  if (!value?.trim()) return false;
+  const longitude = Number(value);
+  return Number.isFinite(longitude) && longitude >= -180 && longitude <= 180;
+};
+
 export const emptyGuestDeliveryAddress = (): GuestDeliveryAddress => ({
   street: "",
   area: "",
@@ -134,7 +146,10 @@ export const hasGuestDeliveryAddress = (
     trimmed.street &&
       trimmed.postalCode &&
       trimmed.city &&
-      trimmed.country,
+      trimmed.state &&
+      trimmed.country &&
+      isValidLatitude(trimmed.lat) &&
+      isValidLongitude(trimmed.lng),
   );
 };
 

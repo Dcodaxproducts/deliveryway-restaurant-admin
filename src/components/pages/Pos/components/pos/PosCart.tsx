@@ -42,6 +42,7 @@ import {
   type PosCustomer,
   type PosOrderType,
 } from "@/components/pages/Pos/components/pos/pos-checkout-payload";
+import { GuestAddressLocationPicker } from "@/components/pages/Pos/components/pos/GuestAddressLocationPicker";
 
 const POS_LAST_SELECTION_STORAGE_KEY = "posAddToCartLastSelection";
 
@@ -541,6 +542,10 @@ setSelectedAddress(null);
                       className="h-10 w-full rounded-md border px-3 text-sm"
                     />
                   </div>
+                  <GuestAddressLocationPicker
+                    address={guestDeliveryAddress}
+                    onChange={updateGuestDeliveryAddress}
+                  />
                 </div>
               ) : loadingAddresses ? (
                 <p className="text-sm text-gray-400">{commonT("loading")}</p>

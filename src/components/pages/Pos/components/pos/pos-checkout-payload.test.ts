@@ -109,13 +109,16 @@ describe("pos checkout payload", () => {
     });
   });
 
-  it("requires guest delivery street, postal code, city, and country", () => {
+  it("requires guest delivery address fields and coordinates", () => {
     expect(
       hasGuestDeliveryAddress({
         street: "Main Street 1",
         postalCode: "12345",
         city: "Berlin",
+        state: "Berlin",
         country: "Germany",
+        lat: "52.5200",
+        lng: "13.4050",
       }),
     ).toBe(true);
 
@@ -124,7 +127,48 @@ describe("pos checkout payload", () => {
         street: "Main Street 1",
         postalCode: "",
         city: "Berlin",
+        state: "Berlin",
         country: "Germany",
+        lat: "52.5200",
+        lng: "13.4050",
+      }),
+    ).toBe(false);
+  });
+
+  it("requires valid guest delivery latitude and longitude", () => {
+    expect(
+      hasGuestDeliveryAddress({
+        street: "Main Street 1",
+        postalCode: "12345",
+        city: "Berlin",
+        state: "Berlin",
+        country: "Germany",
+        lat: "",
+        lng: "13.4050",
+      }),
+    ).toBe(false);
+
+    expect(
+      hasGuestDeliveryAddress({
+        street: "Main Street 1",
+        postalCode: "12345",
+        city: "Berlin",
+        state: "Berlin",
+        country: "Germany",
+        lat: "91",
+        lng: "13.4050",
+      }),
+    ).toBe(false);
+
+    expect(
+      hasGuestDeliveryAddress({
+        street: "Main Street 1",
+        postalCode: "12345",
+        city: "Berlin",
+        state: "Berlin",
+        country: "Germany",
+        lat: "52.5200",
+        lng: "181",
       }),
     ).toBe(false);
   });
