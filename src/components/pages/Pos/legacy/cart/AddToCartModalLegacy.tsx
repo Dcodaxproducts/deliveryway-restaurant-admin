@@ -91,6 +91,7 @@ type ModifierGroup = {
   id: string;
   name: string;
   description?: string;
+  selectionType?: "SINGLE" | "MULTIPLE" | string;
   minSelect?: number;
   maxSelect?: number;
   isRequired?: boolean;
@@ -124,6 +125,8 @@ const toNumber = (value: unknown, fallback = 0) => {
 
 const formatMoney = (value: unknown) => `$${toNumber(value, 0).toFixed(2)}`;
 
+const POS_LAST_SELECTION_STORAGE_KEY = "posAddToCartLastSelection";
+
 const hasText = (value: unknown) => {
   const text = String(value ?? "").trim();
   return text !== "" && text.toLowerCase() !== "null";
@@ -141,6 +144,12 @@ const normalizeApiList = (res: any) => {
   if (Array.isArray(res?.items)) return res.items;
   if (Array.isArray(res)) return res;
   return [];
+};
+
+const getSelectedModifierQuantity = (modifiers: SelectedModifier[]) => {
+  return modifiers.reduce((total, modifier) => {
+    return total + Math.max(1, Math.floor(toNumber(modifier.selectedQuantity, 1)));
+  }, 0);
 };
 
 const sortBySortOrder = <T extends { sortOrder?: number }>(items: T[]) => {
@@ -457,6 +466,7 @@ const normalizeGroup = (group: any): ModifierGroup | null => {
     id: String(group.id),
     name: String(group?.name || ""),
     description: group?.description || "",
+    selectionType: group?.selectionType || "MULTIPLE",
     minSelect: group?.minSelect,
     maxSelect: group?.maxSelect,
     isRequired: Boolean(group?.isRequired),
@@ -768,6 +778,7 @@ const getGroupValidation = (group: ModifierGroup) => {
     minSelect: Math.max(isRequired ? 1 : 0, rawMin),
     maxSelect: rawMax && rawMax > 0 ? rawMax : undefined,
     isRequired,
+    selectionType: group?.selectionType || "MULTIPLE",
   };
 };
 
@@ -865,7 +876,11 @@ export default function AddToCartModal({
     return Object.values(selectedModifiers)
       .flat()
       .reduce((acc, modifier) => {
-        return acc + getModifierEffectivePrice(modifier, item, selectedVariation);
+        return (
+          acc +
+          getModifierEffectivePrice(modifier, item, selectedVariation) *
+            Math.max(1, Math.floor(toNumber(modifier.selectedQuantity, 1)))
+        );
       }, 0);
   }, [selectedModifiers, item, selectedVariation]);
 
@@ -878,7 +893,21 @@ export default function AddToCartModal({
     setQuantity(1);
     setSelectedOptionId("base");
     setSelectedModifiers({});
-    setSelectedCustomer(null);
+
+    try {
+      const rawSelection = window.localStorage.getItem(POS_LAST_SELECTION_STORAGE_KEY);
+      if (!rawSelection) return;
+
+      const parsedSelection = JSON.parse(rawSelection);
+      if (parsedSelection?.branch?.id) {
+        setSelectedBranch(parsedSelection.branch);
+      }
+      if (parsedSelection?.customer?.id) {
+        setSelectedCustomer(parsedSelection.customer);
+      }
+    } catch {
+      window.localStorage.removeItem(POS_LAST_SELECTION_STORAGE_KEY);
+    }
   }, [open, item?.id]);
 
   useEffect(() => {
@@ -955,15 +984,16 @@ export default function AddToCartModal({
 
   const handleModifierToggle = (group: ModifierGroup, modifier: Modifier) => {
     const groupId = String(group.id);
-    const { minSelect, maxSelect, isRequired } = getGroupValidation(group);
+    const { minSelect, maxSelect, isRequired, selectionType } = getGroupValidation(group);
 
     setSelectedModifiers((prev) => {
       const current = prev[groupId] || [];
       const alreadySelected = current.some(
         (selected) => selected.id === modifier.id,
       );
+      const selectedQuantity = getSelectedModifierQuantity(current);
 
-      if (maxSelect === 1) {
+      if (selectionType === "SINGLE" || maxSelect === 1) {
         if (alreadySelected && !isRequired) {
           const next = { ...prev };
           delete next[groupId];
@@ -977,7 +1007,11 @@ export default function AddToCartModal({
       }
 
       if (alreadySelected) {
-        if (minSelect > 0 && current.length <= minSelect) {
+        const modifierQuantity =
+          current.find((selected) => selected.id === modifier.id)
+            ?.selectedQuantity || 1;
+
+        if (minSelect > 0 && selectedQuantity - modifierQuantity < minSelect) {
           toast.error(
             t("toast.requiresAtLeast", {
               group: group?.name || t("thisGroup"),
@@ -1001,7 +1035,7 @@ export default function AddToCartModal({
         return next;
       }
 
-      if (maxSelect && current.length >= maxSelect) {
+      if (maxSelect && selectedQuantity >= maxSelect) {
         toast.error(
           t("toast.selectUpTo", {
             count: maxSelect,
@@ -1018,14 +1052,77 @@ export default function AddToCartModal({
     });
   };
 
+  const handleModifierQuantityChange = (
+    group: ModifierGroup,
+    modifier: Modifier,
+    nextQuantity: number,
+  ) => {
+    const groupId = String(group.id);
+    const { minSelect, maxSelect, selectionType } = getGroupValidation(group);
+
+    if (selectionType === "SINGLE" || maxSelect === 1) return;
+
+    setSelectedModifiers((prev) => {
+      const current = prev[groupId] || [];
+      const currentModifier = current.find(
+        (selected) => selected.id === modifier.id,
+      );
+
+      if (!currentModifier) return prev;
+
+      const normalizedNextQuantity = Math.max(
+        1,
+        Math.floor(Number.isFinite(nextQuantity) ? nextQuantity : 1),
+      );
+      const otherSelectedQuantity = current.reduce((total, selected) => {
+        if (selected.id === modifier.id) return total;
+
+        return (
+          total +
+          Math.max(1, Math.floor(toNumber(selected.selectedQuantity, 1)))
+        );
+      }, 0);
+      const maxAllowedQuantity =
+        maxSelect && maxSelect > 0
+          ? Math.max(1, maxSelect - otherSelectedQuantity)
+          : normalizedNextQuantity;
+
+      if (maxSelect && otherSelectedQuantity + normalizedNextQuantity > maxSelect) {
+        toast.error(
+          t("toast.selectUpTo", {
+            count: maxSelect,
+            group: group?.name || t("thisGroup"),
+          }),
+        );
+      }
+
+      const minAllowedQuantity =
+        minSelect > otherSelectedQuantity ? minSelect - otherSelectedQuantity : 1;
+      const clampedQuantity = Math.max(
+        minAllowedQuantity,
+        Math.min(normalizedNextQuantity, maxAllowedQuantity),
+      );
+
+      return {
+        ...prev,
+        [groupId]: current.map((selected) =>
+          selected.id === modifier.id
+            ? { ...selected, selectedQuantity: clampedQuantity }
+            : selected,
+        ),
+      };
+    });
+  };
+
   const validateSelections = () => {
     for (const link of visibleModifierLinks) {
       const group = link?.modifierGroup;
       const groupId = String(group?.id || "");
       const selected = selectedModifiers[groupId] || [];
+      const selectedQuantity = getSelectedModifierQuantity(selected);
       const { minSelect, maxSelect } = getGroupValidation(group);
 
-      if (minSelect > 0 && selected.length < minSelect) {
+      if (minSelect > 0 && selectedQuantity < minSelect) {
         toast.error(
           t("toast.requiresAtLeast", {
             group: group?.name || t("thisGroup"),
@@ -1035,7 +1132,7 @@ export default function AddToCartModal({
         return false;
       }
 
-      if (maxSelect && selected.length > maxSelect) {
+      if (maxSelect && selectedQuantity > maxSelect) {
         toast.error(
           t("toast.allowsAtMost", {
             group: group?.name || t("thisGroup"),
@@ -1054,7 +1151,7 @@ export default function AddToCartModal({
       .flat()
       .map((modifier) => ({
         modifierId: modifier.id,
-        quantity: 1,
+        quantity: Math.max(1, Math.floor(toNumber(modifier.selectedQuantity, 1))),
       }));
   };
 
@@ -1129,9 +1226,15 @@ export default function AddToCartModal({
       toast.success(t("toast.addedToCart"));
 
       localStorage.setItem("activeCustomerId", selectedCustomer.id);
+      localStorage.setItem(
+        POS_LAST_SELECTION_STORAGE_KEY,
+        JSON.stringify({
+          branch: selectedBranch,
+          customer: selectedCustomer,
+        }),
+      );
 
       setQuantity(1);
-      setSelectedCustomer(null);
       setSelectedModifiers({});
       onOpenChange(false);
       window.location.reload();
@@ -1161,7 +1264,9 @@ export default function AddToCartModal({
           const group = link.modifierGroup;
           const groupId = String(group?.id || "");
           const selectedInGroup = selectedModifiers[groupId] || [];
-          const { minSelect, maxSelect, isRequired } = getGroupValidation(group);
+          const selectedQuantity = getSelectedModifierQuantity(selectedInGroup);
+          const { minSelect, maxSelect, isRequired, selectionType } =
+            getGroupValidation(group);
 
           const groupModifiers = normalizeArray(group?.modifiers).filter(
             (modifier) => modifier?.isActive !== false,
@@ -1184,7 +1289,7 @@ export default function AddToCartModal({
                       : group?.name || t("options")}
                   </p>
                   <p className="mt-0.5 text-xs text-gray-500">
-                    {maxSelect === 1
+                    {selectionType === "SINGLE" || maxSelect === 1
                       ? isRequired || minSelect > 0
                         ? t("selectOneRequired")
                         : t("optionalSelectOne")
@@ -1202,22 +1307,28 @@ export default function AddToCartModal({
                 </div>
 
                 <span className="shrink-0 text-xs font-medium text-gray-500">
-                  {selectedInGroup.length}
+                  {selectedQuantity}
                   {maxSelect ? ` / ${maxSelect}` : ""}
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-2">
                 {groupModifiers.map((modifier: Modifier) => {
-                  const checked = selectedInGroup.some(
+                  const selectedModifier = selectedInGroup.find(
                     (selected) => selected.id === modifier.id,
+                  );
+                  const checked = Boolean(selectedModifier);
+                  const selectedModifierQuantity = Math.max(
+                    1,
+                    Math.floor(toNumber(selectedModifier?.selectedQuantity, 1)),
                   );
 
                   const disableBecauseMaxReached =
+                    selectionType !== "SINGLE" &&
                     maxSelect !== 1 &&
                     !checked &&
                     !!maxSelect &&
-                    selectedInGroup.length >= maxSelect;
+                    selectedQuantity >= maxSelect;
 
                   const effectivePrice = getModifierEffectivePrice(
                     modifier,
@@ -1225,58 +1336,113 @@ export default function AddToCartModal({
                     selectedVariation,
                   );
 
-                  const inputType = maxSelect === 1 ? "radio" : "checkbox";
+                  const inputType =
+                    selectionType === "SINGLE" || maxSelect === 1
+                      ? "radio"
+                      : "checkbox";
+                  const showQuantitySelector = checked && inputType === "checkbox";
+                  const disableIncrement = Boolean(
+                    maxSelect && selectedQuantity >= maxSelect,
+                  );
 
                   return (
-                    <label
+                    <div
                       key={`${groupId}-${modifier.id}`}
-                      className={`flex cursor-pointer items-start justify-between gap-3 rounded-xl px-3 py-3 text-sm transition ${
+                      className={`rounded-xl border px-3 py-3 text-sm transition ${
                         disableBecauseMaxReached
-                          ? "bg-gray-100 opacity-70"
+                          ? "cursor-not-allowed border-gray-100 bg-gray-100 opacity-70"
                           : checked
-                            ? "bg-primary/5 ring-1 ring-primary/20"
-                            : "bg-gray-50 hover:bg-gray-100"
+                            ? "border-primary/25 bg-primary/5 ring-1 ring-primary/20"
+                            : "border-gray-100 bg-gray-50 hover:border-primary/25 hover:bg-white"
                       }`}
                     >
-                      <div className="flex min-w-0 flex-1 items-start gap-2">
-                        <input
-                          type={inputType}
-                          name={`modifier-group-${groupId}`}
-                          checked={checked}
-                          disabled={disableBecauseMaxReached || isSubmitting}
-                          onClick={(event) => {
-                            if (
-                              inputType === "radio" &&
-                              checked &&
-                              !isRequired
-                            ) {
-                              event.preventDefault();
-                              handleModifierToggle(group, modifier);
-                            }
-                          }}
-                          onChange={() => handleModifierToggle(group, modifier)}
-                          className="mt-1 accent-[var(--primary)]"
-                        />
+                      <label className="flex cursor-pointer items-start justify-between gap-3">
+                        <span className="flex min-w-0 flex-1 items-start gap-2 text-gray-800">
+                          <input
+                            type={inputType}
+                            name={`modifier-group-${groupId}`}
+                            checked={checked}
+                            disabled={disableBecauseMaxReached || isSubmitting}
+                            onClick={(event) => {
+                              if (
+                                inputType === "radio" &&
+                                checked &&
+                                !isRequired
+                              ) {
+                                event.preventDefault();
+                                handleModifierToggle(group, modifier);
+                              }
+                            }}
+                            onChange={() => handleModifierToggle(group, modifier)}
+                            className="mt-1 accent-[var(--primary)]"
+                          />
 
-                        <span className="min-w-0">
-                          <span className="block truncate font-medium text-gray-900">
-                            {modifier.name}
+                          <span className="min-w-0">
+                            <span className="block truncate font-medium text-gray-900">
+                              {modifier.name}
+                            </span>
+
+                            {modifier.description ? (
+                              <span className="mt-0.5 line-clamp-2 text-xs text-gray-500">
+                                {modifier.description}
+                              </span>
+                            ) : null}
+                          </span>
+                        </span>
+
+                        {effectivePrice > 0 ? (
+                          <span className="shrink-0 font-semibold text-primary">
+                            +{formatMoney(effectivePrice * selectedModifierQuantity)}
+                          </span>
+                        ) : null}
+                      </label>
+
+                      {showQuantitySelector ? (
+                        <div className="mt-3 flex items-center justify-between gap-3 rounded-full border border-primary/10 bg-white/90 px-2 py-1.5 shadow-sm">
+                          <span className="pl-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                            Qty
                           </span>
 
-                          {modifier.description ? (
-                            <span className="mt-0.5 line-clamp-2 text-xs text-gray-500">
-                              {modifier.description}
-                            </span>
-                          ) : null}
-                        </span>
-                      </div>
+                          <div className="flex items-center rounded-full bg-gray-100 p-0.5">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleModifierQuantityChange(
+                                  group,
+                                  modifier,
+                                  selectedModifierQuantity - 1,
+                                )
+                              }
+                              disabled={selectedModifierQuantity <= 1 || isSubmitting}
+                              className="flex h-7 w-7 items-center justify-center rounded-full text-gray-700 transition hover:bg-white hover:text-primary disabled:cursor-not-allowed disabled:opacity-35"
+                              aria-label={`Decrease ${modifier.name} quantity`}
+                            >
+                              <Minus size={14} />
+                            </button>
 
-                      {effectivePrice > 0 ? (
-                        <span className="shrink-0 font-semibold text-primary">
-                          +{formatMoney(effectivePrice)}
-                        </span>
+                            <span className="min-w-8 text-center text-sm font-bold text-gray-900">
+                              {selectedModifierQuantity}
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleModifierQuantityChange(
+                                  group,
+                                  modifier,
+                                  selectedModifierQuantity + 1,
+                                )
+                              }
+                              disabled={disableIncrement || isSubmitting}
+                              className="flex h-7 w-7 items-center justify-center rounded-full text-gray-700 transition hover:bg-white hover:text-primary disabled:cursor-not-allowed disabled:opacity-35"
+                              aria-label={`Increase ${modifier.name} quantity`}
+                            >
+                              <Plus size={14} />
+                            </button>
+                          </div>
+                        </div>
                       ) : null}
-                    </label>
+                    </div>
                   );
                 })}
               </div>

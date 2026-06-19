@@ -30,6 +30,8 @@ import {
   type PosCartLineItem,
 } from "@/components/pages/Pos/components/pos/pos-cart-pricing";
 
+const POS_LAST_SELECTION_STORAGE_KEY = "posAddToCartLastSelection";
+
 export default function PosCart() {
   const t = useTranslations("pos");
   const commonT = useTranslations("common");
@@ -113,6 +115,7 @@ useEffect(() => {
       await clearCartMutation.mutateAsync(customerId);
       setCartItems([]);
       removeClientStorageItem("activeCustomerId");
+      removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
       setAddresses([]);
 setSelectedAddress(null);
     } catch {
@@ -184,6 +187,7 @@ setSelectedAddress(null);
       toast.success(t("toast.orderPlaced"));
       await clearCart();
       removeClientStorageItem("activeCustomerId");
+      removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
       setAddresses([]);
 setSelectedAddress(null);
     } catch (err) {
