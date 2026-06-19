@@ -13,6 +13,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { getClientStorageItem, removeClientStorageItem } from "@/services/storage";
+import { getApiErrorMessage } from "@/lib/errors";
+import { useGetCustomer } from "@/hooks/useCustomers";
 import {
   useCheckoutCart,
   useClearCart,
@@ -29,6 +31,17 @@ import {
   formatPosCartItems,
   type PosCartLineItem,
 } from "@/components/pages/Pos/components/pos/pos-cart-pricing";
+import {
+  buildPosCheckoutPayload,
+  emptyGuestDeliveryAddress,
+  getPosCustomerName,
+  hasGuestContact,
+  hasGuestDeliveryAddress,
+  normalizePosCustomer,
+  type GuestDeliveryAddress,
+  type PosCustomer,
+  type PosOrderType,
+} from "@/components/pages/Pos/components/pos/pos-checkout-payload";
 
 const POS_LAST_SELECTION_STORAGE_KEY = "posAddToCartLastSelection";
 
@@ -40,19 +53,40 @@ export default function PosCart() {
   const [cartItems, setCartItems] = useState<PosCartLineItem[]>([]);
   const [placingOrder, setPlacingOrder] = useState(false);
 
-  const [orderType, setOrderType] = useState<"TAKEAWAY" | "DELIVERY">("TAKEAWAY");
+  const [orderType, setOrderType] = useState<PosOrderType>("TAKEAWAY");
+  const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [customerNote, setCustomerNote] = useState("");
+  const [guestDeliveryAddress, setGuestDeliveryAddress] =
+    useState<GuestDeliveryAddress>(() => emptyGuestDeliveryAddress());
 
   const [addresses, setAddresses] = useState<any[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
 
 const [customerId, setCustomerId] = useState<string | null>(null);
+const [selectedCustomer, setSelectedCustomer] = useState<PosCustomer | null>(null);
 
 useEffect(() => {
   const id = getClientStorageItem("activeCustomerId");
   setCustomerId(id);
+
+  const rawSelection = getClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
+  if (!rawSelection) return;
+
+  try {
+    const parsedSelection = JSON.parse(rawSelection);
+    const normalizedCustomer = normalizePosCustomer(parsedSelection?.customer);
+
+    if (normalizedCustomer) {
+      setSelectedCustomer(normalizedCustomer);
+      setCustomerId(normalizedCustomer.id);
+    }
+  } catch {
+    removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
+  }
 }, []);
   const cartQuery = useGetCart(customerId);
   const addressesQuery = useGetCustomerAddresses(customerId);
+  const customerDetailQuery = useGetCustomer(customerId || "");
   const updateQuantityMutation = useUpdateCartItemQuantity();
   const deleteCartItemMutation = useDeleteCartItem();
   const clearCartMutation = useClearCart();
@@ -71,6 +105,76 @@ useEffect(() => {
   setAddresses(list);
   if (list.length > 0) setSelectedAddress(list[0].id);
 }, [addressesQuery.data]);
+
+useEffect(() => {
+  const normalizedCustomer = normalizePosCustomer(customerDetailQuery.data);
+
+  if (normalizedCustomer) {
+    setSelectedCustomer(normalizedCustomer);
+  }
+}, [customerDetailQuery.data]);
+
+  const isGuestCustomer = selectedCustomer?.isGuest === true;
+
+  const getResponseMessage = (res: unknown, fallback: string) => {
+    if (!res || typeof res !== "object") return fallback;
+
+    const record = res as {
+      message?: unknown;
+      error?: unknown;
+      data?: { message?: unknown; error?: unknown };
+    };
+    const errorRecord =
+      record.error && typeof record.error === "object"
+        ? (record.error as { message?: unknown })
+        : null;
+    const dataErrorRecord =
+      record.data?.error && typeof record.data.error === "object"
+        ? (record.data.error as { message?: unknown })
+        : null;
+    const candidates = [
+      record.message,
+      errorRecord?.message,
+      typeof record.error === "string" ? record.error : "",
+      record.data?.message,
+      dataErrorRecord?.message,
+      typeof record.data?.error === "string" ? record.data.error : "",
+    ];
+    const message = candidates.find(
+      (entry) => typeof entry === "string" && entry.trim(),
+    );
+
+    return typeof message === "string" ? message : fallback;
+  };
+
+  const updateGuestDeliveryAddress = (
+    field: keyof GuestDeliveryAddress,
+    value: string,
+  ) => {
+    setGuestDeliveryAddress((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  const handleOrderTypeChange = async (nextOrderType: PosOrderType) => {
+    setOrderType(nextOrderType);
+
+    if (!customerId) return;
+
+    try {
+      const res = await setOrderTypeMutation.mutateAsync({
+        customerId,
+        orderType: nextOrderType,
+      });
+
+      if (!res || res.error) {
+        toast.error(getResponseMessage(res, t("toast.failedSetOrderType")));
+      }
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, t("toast.failedSetOrderType")));
+    }
+  };
 
   const updateQuantity = async (id: string, type: "inc" | "dec") => {
     const item = cartItems.find((i) => i.id === id);
@@ -118,6 +222,10 @@ useEffect(() => {
       removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
       setAddresses([]);
 setSelectedAddress(null);
+      setSelectedCustomer(null);
+      setCustomerId(null);
+      setCustomerNote("");
+      setGuestDeliveryAddress(emptyGuestDeliveryAddress());
     } catch {
       toast.error(t("toast.failedClearCart"));
     }
@@ -126,10 +234,16 @@ setSelectedAddress(null);
 
   const setOrderTypeApi = async () => {
     if (!customerId) return false;
-    const res = await setOrderTypeMutation.mutateAsync({ customerId, orderType });
 
-    if (!res || res.error) {
-      toast.error(t("toast.failedSetOrderType"));
+    try {
+      const res = await setOrderTypeMutation.mutateAsync({ customerId, orderType });
+
+      if (!res || res.error) {
+        toast.error(getResponseMessage(res, t("toast.failedSetOrderType")));
+        return false;
+      }
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, t("toast.failedSetOrderType")));
       return false;
     }
 
@@ -138,6 +252,7 @@ setSelectedAddress(null);
 
   const setAddressApi = async () => {
     if (orderType !== "DELIVERY") return true;
+    if (isGuestCustomer) return true;
 
     if (!selectedAddress) {
       toast.error(t("toast.selectAddress"));
@@ -145,10 +260,16 @@ setSelectedAddress(null);
     }
 
     if (!customerId) return false;
-    const res = await setAddressMutation.mutateAsync({ customerId, deliveryAddressId: selectedAddress });
 
-    if (!res || res.error) {
-      toast.error(t("toast.failedSetAddress"));
+    try {
+      const res = await setAddressMutation.mutateAsync({ customerId, deliveryAddressId: selectedAddress });
+
+      if (!res || res.error) {
+        toast.error(getResponseMessage(res, t("toast.failedSetAddress")));
+        return false;
+      }
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, t("toast.failedSetAddress")));
       return false;
     }
 
@@ -162,6 +283,22 @@ setSelectedAddress(null);
       return toast.error(t("toast.cartEmpty"));
     }
 
+    if (!selectedCustomer) {
+      return toast.error(t("toast.customerDetailsRequired"));
+    }
+
+    if (isGuestCustomer && !hasGuestContact(selectedCustomer)) {
+      return toast.error(t("toast.guestContactRequired"));
+    }
+
+    if (
+      isGuestCustomer &&
+      orderType === "DELIVERY" &&
+      !hasGuestDeliveryAddress(guestDeliveryAddress)
+    ) {
+      return toast.error(t("toast.guestDeliveryAddressRequired"));
+    }
+
     try {
       setPlacingOrder(true);
 
@@ -173,15 +310,19 @@ setSelectedAddress(null);
 
       const res = await checkoutMutation.mutateAsync({
         customerId,
-        payload: {
+        payload: buildPosCheckoutPayload({
+          customer: selectedCustomer,
+          orderType,
           orderTime: new Date().toISOString(),
-          paymentMethod: "COD",
+          paymentMethod,
+          customerNote,
+          guestDeliveryAddress,
           ...(isBranchAdmin && branchId ? { branchId } : {}),
-        },
+        }),
       });
 
       if (!res || res.error) {
-        return toast.error(t("toast.checkoutFailed"));
+        return toast.error(getResponseMessage(res, t("toast.checkoutFailed")));
       }
 
       toast.success(t("toast.orderPlaced"));
@@ -191,8 +332,7 @@ setSelectedAddress(null);
       setAddresses([]);
 setSelectedAddress(null);
     } catch (err) {
-      void err;
-      toast.error(t("toast.orderFailed"));
+      toast.error(getApiErrorMessage(err, t("toast.orderFailed")));
     } finally {
       setPlacingOrder(false);
     }
@@ -279,6 +419,30 @@ setSelectedAddress(null);
         <Separator className="my-3" />
 
         <CollapsibleContent className="space-y-4">
+          <div className="rounded-md border bg-gray-50 p-3 text-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-medium text-gray-900">
+                  {selectedCustomer
+                    ? getPosCustomerName(selectedCustomer)
+                    : t("customerNotSelected")}
+                </p>
+                {selectedCustomer ? (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {[selectedCustomer.phone, selectedCustomer.email]
+                      .filter(Boolean)
+                      .join(" · ") || t("customerContactMissing")}
+                  </p>
+                ) : null}
+              </div>
+
+              {isGuestCustomer ? (
+                <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700 ring-1 ring-amber-100">
+                  {t("guestCustomer")}
+                </span>
+              ) : null}
+            </div>
+          </div>
 
           <div>
             <p className="text-xs text-gray-400 mb-2">{t("orderType")}</p>
@@ -288,7 +452,7 @@ setSelectedAddress(null);
                 <input
                   type="checkbox"
                   checked={orderType === "TAKEAWAY"}
-                  onChange={() => setOrderType("TAKEAWAY")}
+                  onChange={() => void handleOrderTypeChange("TAKEAWAY")}
                    className="accent-primary cursor-pointer"
                 />
                 {t("pickup")}
@@ -298,10 +462,20 @@ setSelectedAddress(null);
                 <input
                   type="checkbox"
                   checked={orderType === "DELIVERY"}
-                  onChange={() => setOrderType("DELIVERY")}
+                  onChange={() => void handleOrderTypeChange("DELIVERY")}
                    className="accent-primary cursor-pointer"
                 />
                 {t("delivery")}
+              </label>
+
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={orderType === "DINE_IN"}
+                  onChange={() => void handleOrderTypeChange("DINE_IN")}
+                   className="accent-primary cursor-pointer"
+                />
+                {t("dineIn")}
               </label>
             </div>
           </div>
@@ -310,7 +484,65 @@ setSelectedAddress(null);
             <div>
               <p className="text-xs text-gray-400 mb-2">{t("selectAddress")}</p>
 
-              {loadingAddresses ? (
+              {isGuestCustomer ? (
+                <div className="space-y-2">
+                  <input
+                    value={guestDeliveryAddress.street}
+                    onChange={(event) =>
+                      updateGuestDeliveryAddress("street", event.target.value)
+                    }
+                    placeholder={t("guestAddressStreet")}
+                    className="h-10 w-full rounded-md border px-3 text-sm"
+                  />
+                  <input
+                    value={guestDeliveryAddress.area}
+                    onChange={(event) =>
+                      updateGuestDeliveryAddress("area", event.target.value)
+                    }
+                    placeholder={t("guestAddressArea")}
+                    className="h-10 w-full rounded-md border px-3 text-sm"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      value={guestDeliveryAddress.postalCode}
+                      onChange={(event) =>
+                        updateGuestDeliveryAddress(
+                          "postalCode",
+                          event.target.value,
+                        )
+                      }
+                      placeholder={t("guestAddressPostalCode")}
+                      className="h-10 w-full rounded-md border px-3 text-sm"
+                    />
+                    <input
+                      value={guestDeliveryAddress.city}
+                      onChange={(event) =>
+                        updateGuestDeliveryAddress("city", event.target.value)
+                      }
+                      placeholder={t("guestAddressCity")}
+                      className="h-10 w-full rounded-md border px-3 text-sm"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      value={guestDeliveryAddress.state}
+                      onChange={(event) =>
+                        updateGuestDeliveryAddress("state", event.target.value)
+                      }
+                      placeholder={t("guestAddressState")}
+                      className="h-10 w-full rounded-md border px-3 text-sm"
+                    />
+                    <input
+                      value={guestDeliveryAddress.country}
+                      onChange={(event) =>
+                        updateGuestDeliveryAddress("country", event.target.value)
+                      }
+                      placeholder={t("guestAddressCountry")}
+                      className="h-10 w-full rounded-md border px-3 text-sm"
+                    />
+                  </div>
+                </div>
+              ) : loadingAddresses ? (
                 <p className="text-sm text-gray-400">{commonT("loading")}</p>
               ) : addresses.length === 0 ? (
                 <p className="text-sm text-red-500">{t("noAddressFound")}</p>
@@ -347,6 +579,28 @@ setSelectedAddress(null);
               )}
             </div>
           )}
+
+          <div>
+            <p className="text-xs text-gray-400 mb-2">{t("paymentMethod")}</p>
+            <select
+              value={paymentMethod}
+              onChange={(event) => setPaymentMethod(event.target.value)}
+              className="h-10 w-full rounded-md border bg-white px-3 text-sm"
+            >
+              <option value="COD">{t("paymentCash")}</option>
+              <option value="CARD_ON_DELIVERY">{t("paymentCardOnDelivery")}</option>
+            </select>
+          </div>
+
+          <div>
+            <p className="text-xs text-gray-400 mb-2">{t("customerNote")}</p>
+            <textarea
+              value={customerNote}
+              onChange={(event) => setCustomerNote(event.target.value)}
+              placeholder={t("customerNotePlaceholder")}
+              className="min-h-20 w-full rounded-md border px-3 py-2 text-sm"
+            />
+          </div>
 
         </CollapsibleContent>
       </Collapsible>

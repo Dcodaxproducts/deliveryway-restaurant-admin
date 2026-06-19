@@ -1,4 +1,8 @@
 import api from "@/lib/axios";
+import type {
+  PosCheckoutPayload,
+  PosOrderType,
+} from "@/components/pages/Pos/components/pos/pos-checkout-payload";
 
 export const getCart = async (customerId: string) => {
   const { data } = await api.get("/cart", { params: { customerId } });
@@ -38,7 +42,7 @@ export const setCartOrderType = async ({
   orderType,
 }: {
   customerId: string;
-  orderType: "TAKEAWAY" | "DELIVERY";
+  orderType: PosOrderType;
 }) => {
   const { data } = await api.patch(`/cart/order-type?customerId=${customerId}`, { orderType });
   return data;
@@ -60,11 +64,7 @@ export const checkoutCart = async ({
   payload,
 }: {
   customerId: string;
-  payload: {
-    orderTime: string;
-    paymentMethod: string;
-    branchId?: string;
-  };
+  payload: PosCheckoutPayload;
 }) => {
   const { data } = await api.post(`/cart/checkout?customerId=${customerId}`, payload);
   return data;
