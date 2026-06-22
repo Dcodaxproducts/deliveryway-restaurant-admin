@@ -77,13 +77,14 @@ export const getNextOrderStatus = (
 };
 
 export const requiresDeliveryOtpForStatusTransition = (
-  _order: OrderTransitionInput | null | undefined,
-  _nextStatus?: string
+  order: OrderTransitionInput | null | undefined,
+  nextStatus?: string
 ) => {
-  void _order;
-  void _nextStatus;
-
-  return false;
+  return (
+    normalizeValue(order?.orderType) === "DELIVERY" &&
+    normalizeValue(order?.status) === "OUT_FOR_DELIVERY" &&
+    normalizeValue(nextStatus) === "DELIVERED"
+  );
 };
 
 export const requiresOrderTimeForStatusTransition = (
@@ -107,6 +108,10 @@ export const canDirectlyUpdateOrderStatus = (
 
   if (requiresOrderTimeForStatusTransition(order, nextStatus)) {
     return false;
+  }
+
+  if (requiresDeliveryOtpForStatusTransition(order, nextStatus)) {
+    return Boolean(order?.deliveryOtp?.trim());
   }
 
   return true;
