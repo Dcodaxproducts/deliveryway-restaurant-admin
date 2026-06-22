@@ -548,6 +548,8 @@
     "deliveryInDuration": "Lieferung in {duration}",
     "selectedDeliveryTime": "Ausgewählte Lieferzeit",
     "selectedDeliveryTimeDescription": "Dies ist die bereits gespeicherte Lieferzeit für diese bestätigte Bestellung.",
+    "customerScheduledTime": "Vom Kunden geplante Zeit",
+    "customerScheduledTimeDescription": "Beim Annehmen bleibt das vom Kunden gewählte Zeitfenster erhalten.",
     "updateDeliveryTime": "Lieferzeit aktualisieren",
     "setCustomDeliveryTime": "Benutzerdefinierte Lieferzeit festlegen",
     "customDeliveryTimeDescription": "Wählen Sie das genaue Datum und die Uhrzeit, zu der diese Bestellung geliefert werden soll.",

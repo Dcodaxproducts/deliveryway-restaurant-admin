@@ -23,6 +23,7 @@ type OrderDetailsHeaderProps = {
     orderType?: string | null;
     status: string;
     orderTime?: string;
+    isScheduled?: boolean | null;
     deliveryOtp?: string;
   };
 };

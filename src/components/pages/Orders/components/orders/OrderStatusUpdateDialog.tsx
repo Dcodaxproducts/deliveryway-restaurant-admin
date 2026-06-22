@@ -40,6 +40,11 @@ import {
 import { cn } from "@/lib/utils";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
 import {
+  parseOrderTime,
+  resolveStatusUpdateOrderTime,
+  shouldPreserveScheduledOrderTime,
+} from "@/components/pages/Orders/utils/order-status-update-time";
+import {
   orderStatusUpdateSchema,
   type OrderStatusUpdateValues,
 } from "@/validations/orders";
@@ -52,6 +57,7 @@ type OrderStatusUpdateDialogProps = {
     orderType?: string | null;
     status?: string;
     orderTime?: string;
+    isScheduled?: boolean | null;
     deliveryOtp?: string;
   } | null;
   onOpenChange: (open: boolean) => void;
@@ -90,13 +96,6 @@ const formatDateTime = (date?: Date | null) => {
     hour: "numeric",
     minute: "2-digit",
   });
-};
-
-const parseOrderTime = (value?: string) => {
-  if (!value) return null;
-
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
 };
 
 const buildFutureOrderTime = (minutes: number) => {
@@ -152,16 +151,24 @@ export function OrderStatusUpdateDialog({
     selectedStatus
   );
   const savedDeliveryTime = parseOrderTime(order?.orderTime);
-  const canEditDeliveryTime = isConfirmingPlacedOrder || deliveryTimeEditing;
+  const shouldPreserveScheduledTime = shouldPreserveScheduledOrderTime(
+    order,
+    selectedStatus
+  );
+  const canEditDeliveryTime =
+    (isConfirmingPlacedOrder && !shouldPreserveScheduledTime) ||
+    deliveryTimeEditing;
 
   useEffect(() => {
     if (open) {
       setDurationKey("20min");
       setCustomDateTime(buildFutureOrderTime(20));
       setMode("main");
-      setDeliveryTimeEditing(order?.status === "PLACED");
+      setDeliveryTimeEditing(
+        order?.status === "PLACED" && !order?.isScheduled
+      );
     }
-  }, [open, order?.status]);
+  }, [open, order?.isScheduled, order?.status]);
 
   const durationMinutes = useMemo(() => {
     return durationOptions.find((item) => item.key === durationKey)?.minutes ?? 20;
@@ -213,9 +220,12 @@ export function OrderStatusUpdateDialog({
       return;
     }
 
-    const orderTimeIso = canEditDeliveryTime
-      ? computedDeliveryTime.toISOString()
-      : undefined;
+    const orderTimeIso = resolveStatusUpdateOrderTime({
+      canEditDeliveryTime,
+      deliveryTime: computedDeliveryTime,
+      order,
+      selectedStatus: values.status,
+    });
 
     const updatedOrder = await updateStatusMutation.mutateAsync({
       orderId: order.id,
@@ -282,6 +292,29 @@ export function OrderStatusUpdateDialog({
                   <p className="text-sm text-gray-500">{t("noStatusTransition")}</p>
                 ) : null}
               </div>
+
+              {shouldPreserveScheduledTime && savedDeliveryTime ? (
+                <div className="rounded-[20px] border border-primary/15 bg-gradient-to-br from-primary/5 via-white to-red-50/70 p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-[16px] bg-primary text-white shadow-lg shadow-primary/20">
+                      <CalendarCheck2 size={20} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-primary">
+                        {t("customerScheduledTime")}
+                      </p>
+                      <div className="mt-2 inline-flex max-w-full rounded-full bg-white px-3.5 py-2 shadow-sm ring-1 ring-primary/10">
+                        <p className="truncate text-[15px] font-bold leading-none text-gray-950 sm:text-base">
+                          {formatDateTime(savedDeliveryTime)}
+                        </p>
+                      </div>
+                      <p className="mt-1 text-xs leading-5 text-gray-500">
+                        {t("customerScheduledTimeDescription")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
 
               {isConfirmedOrder && savedDeliveryTime && !deliveryTimeEditing ? (
                 <div className="rounded-[20px] border border-primary/15 bg-gradient-to-br from-primary/5 via-white to-red-50/70 p-4">

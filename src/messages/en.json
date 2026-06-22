@@ -548,6 +548,8 @@
     "deliveryInDuration": "Delivery in {duration}",
     "selectedDeliveryTime": "Selected delivery time",
     "selectedDeliveryTimeDescription": "This is the delivery time already saved for this confirmed order.",
+    "customerScheduledTime": "Customer scheduled time",
+    "customerScheduledTimeDescription": "Accepting this order will keep the customer's selected scheduled slot.",
     "updateDeliveryTime": "Update delivery time",
     "setCustomDeliveryTime": "Set custom delivery time",
     "customDeliveryTimeDescription": "Pick the exact date and time this order should be delivered.",
