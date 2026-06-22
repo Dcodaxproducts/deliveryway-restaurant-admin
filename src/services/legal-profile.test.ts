@@ -33,7 +33,6 @@ describe("legal profile service", () => {
             businessAddress: {
               street: "Street 12",
               shopNumber: "Shop 7",
-              postalCode: "54000",
               state: "Punjab",
               city: "Lahore",
               country: "Pakistan",
@@ -49,7 +48,6 @@ describe("legal profile service", () => {
       businessAddress: {
         street: "Street 12",
         shopNumber: "Shop 7",
-        postalCode: "54000",
         state: "Punjab",
         city: "Lahore",
         country: "Pakistan",
@@ -75,7 +73,6 @@ describe("legal profile service", () => {
       businessAddress: {
         street: "Street 12",
         shopNumber: null,
-        postalCode: "54000",
         state: "Punjab",
         city: "Lahore",
         country: "Pakistan",

@@ -40,7 +40,6 @@ const toPayload = (profile: LegalProfile): LegalProfilePayload => ({
     street: profile.businessAddress.street.trim(),
     shopNumber: profile.businessAddress.shopNumber.trim() || null,
     state: profile.businessAddress.state.trim(),
-    postalCode: profile.businessAddress.postalCode.trim(),
     city: profile.businessAddress.city.trim(),
     country: profile.businessAddress.country.trim(),
   },
@@ -52,7 +51,6 @@ const formatAddressPreview = (profile: LegalProfile) =>
     profile.businessAddress.street,
     profile.businessAddress.shopNumber,
     profile.businessAddress.state,
-    profile.businessAddress.postalCode,
     profile.businessAddress.city,
     profile.businessAddress.country,
   ]
@@ -294,14 +292,6 @@ export function LegalProfilePage() {
                   placeholder={t("statePlaceholder")}
                   disabled={!canEdit || loading}
                   onChange={(value) => updateAddressField("state", value)}
-                />
-                <Field
-                  id="business-postal-code"
-                  label={t("postalCode")}
-                  value={draftProfile.businessAddress.postalCode}
-                  placeholder={t("postalCodePlaceholder")}
-                  disabled={!canEdit || loading}
-                  onChange={(value) => updateAddressField("postalCode", value)}
                 />
                 <Field
                   id="business-city"
