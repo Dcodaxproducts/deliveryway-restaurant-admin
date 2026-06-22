@@ -4,6 +4,7 @@ import { Loader2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { formatDealPrice } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useAdminDealStats } from "@/hooks/useAdminDeals";
 import type { AdminDeal } from "@/types/admin-deals";
 import { useTranslations } from "next-intl";
@@ -22,11 +23,16 @@ export default function AdminDealStatsModal({
   onClose,
 }: AdminDealStatsModalProps) {
   const t = useTranslations("deals.stats");
+  const { resolveCurrency } = useCurrency(restaurantId);
   const statsQuery = useAdminDealStats(
     deal?.id ?? null,
     deal ? { restaurantId, branchId } : undefined
   );
   const stats = statsQuery.data ?? {};
+  const currency = resolveCurrency(
+    typeof stats.currency === "string" ? stats.currency : undefined,
+    deal?.currency
+  );
 
   if (!deal) return null;
 
@@ -60,9 +66,9 @@ export default function AdminDealStatsModal({
             <Stat label={t("customers")} value={formatStatNumber(stats.customerCount)} />
             <Stat
               label={t("discountAmount")}
-              value={formatDealPrice(stats.totalDiscountAmount)}
+              value={formatDealPrice(stats.totalDiscountAmount, currency)}
             />
-            <Stat label={t("revenue")} value={formatDealPrice(stats.totalRevenue)} />
+            <Stat label={t("revenue")} value={formatDealPrice(stats.totalRevenue, currency)} />
           </div>
         )}
       </div>

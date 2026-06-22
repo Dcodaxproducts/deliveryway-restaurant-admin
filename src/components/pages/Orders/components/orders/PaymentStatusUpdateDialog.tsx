@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useUpdatePaymentTransactionStatus } from "@/hooks/useOrders";
 import type { PaymentTransaction } from "@/types/orders";
 
@@ -42,16 +43,6 @@ const formatStatus = (status?: string | null) =>
         .join(" ")
     : "-";
 
-const formatMoney = (amount?: number | null, currency = "PKR") => {
-  if (typeof amount !== "number" || !Number.isFinite(amount)) return "-";
-
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(amount);
-};
-
 type PaymentStatusUpdateDialogProps = {
   open: boolean;
   orderId?: string | null;
@@ -70,6 +61,7 @@ export function PaymentStatusUpdateDialog({
   onOpenChange,
 }: PaymentStatusUpdateDialogProps) {
   const t = useTranslations("orders");
+  const { formatMoney } = useCurrency();
   const paymentStatusMutation = useUpdatePaymentTransactionStatus(orderId);
   const [paymentStatus, setPaymentStatus] = useState<AdminPaymentStatus>("PAID");
   const [paymentStatusNote, setPaymentStatusNote] = useState(t("paymentStatusNote"));
@@ -158,7 +150,7 @@ export function PaymentStatusUpdateDialog({
                   {t("amount")}
                 </p>
                 <p className="mt-1 text-sm font-bold text-gray-950">
-                  {formatMoney(transaction?.amount, transaction?.currency || "PKR")}
+                  {formatMoney(transaction?.amount, transaction?.currency)}
                 </p>
               </div>
             </div>

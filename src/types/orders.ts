@@ -21,6 +21,7 @@ export type Order = {
   paymentMethod?: string;
   paymentStatus?: string;
   totalAmount?: number;
+  currency?: string | null;
   createdAt: string;
   orderTime?: string;
   isScheduled?: boolean;

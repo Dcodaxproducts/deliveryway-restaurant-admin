@@ -12,6 +12,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
 import { getClientStorageItem, removeClientStorageItem } from "@/services/storage";
 import { getApiErrorMessage } from "@/lib/errors";
@@ -108,7 +109,7 @@ export default function PosCart() {
   const t = useTranslations("pos");
   const commonT = useTranslations("common");
   const router = useRouter();
-  const { branchId, isBranchAdmin } = useAuth();
+  const { branchId, isBranchAdmin, restaurantId } = useAuth();
 
   const [cartItems, setCartItems] = useState<PosCartLineItem[]>([]);
   const [placingOrder, setPlacingOrder] = useState(false);
@@ -584,8 +585,8 @@ setSelectedAddress(null);
     }
   };
 
+  const { formatMoney } = useCurrency(restaurantId);
   const billing = formatPosCartBilling(cartQuery.data, cartItems);
-  const formatMoney = (amount: number) => `$${amount.toFixed(2)}`;
 
   return (
     <div className="w-full bg-white rounded-xl border p-4 flex flex-col gap-4">

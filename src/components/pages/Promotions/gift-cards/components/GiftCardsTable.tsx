@@ -15,6 +15,7 @@ import {
   getGiftCardImageUrl,
 } from "@/components/pages/Promotions/gift-cards/utils/gift-card-formatters";
 import { Button } from "@/components/ui/button";
+import { useCurrency } from "@/hooks/useCurrency";
 import type { GiftCard } from "@/types/gift-cards";
 
 type GiftCardsTableProps = {
@@ -33,6 +34,7 @@ export default function GiftCardsTable({
   const router = useRouter();
   const t = useTranslations("promotions.giftCards");
   const commonT = useTranslations("common");
+  const { resolveCurrency } = useCurrency(giftCards[0]?.restaurant?.id);
 
   if (loading) {
     return (
@@ -112,7 +114,10 @@ export default function GiftCardsTable({
                     </div>
                   </td>
                   <td className="px-4 py-4 align-top text-sm font-semibold text-gray-900">
-                    {formatGiftCardAmount(giftCard.amount)}
+                    {formatGiftCardAmount(
+                      giftCard.amount,
+                      resolveCurrency(giftCard.currency)
+                    )}
                   </td>
                   <td className="px-4 py-4 align-top text-xs text-gray-600">
                     <div>{formatGiftCardUsage(giftCard)}</div>
@@ -205,7 +210,13 @@ export default function GiftCardsTable({
                 {giftCard.description || t("noDescription")}
               </p>
               <div className="grid grid-cols-2 gap-3 text-xs text-gray-600">
-                <Info label={t("amount")} value={formatGiftCardAmount(giftCard.amount)} />
+                <Info
+                  label={t("amount")}
+                  value={formatGiftCardAmount(
+                    giftCard.amount,
+                    resolveCurrency(giftCard.currency)
+                  )}
+                />
                 <Info label={t("usage")} value={formatGiftCardUsage(giftCard)} />
                 <Info label={t("starts")} value={formatGiftCardDate(giftCard.startsAt)} />
                 <Info label={t("expires")} value={formatGiftCardDate(giftCard.expiresAt)} />

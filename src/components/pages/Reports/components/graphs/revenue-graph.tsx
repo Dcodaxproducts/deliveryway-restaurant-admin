@@ -15,7 +15,9 @@ import { RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useGetRevenueTrend } from "@/hooks/useDashboard";
+import { formatMoney } from "@/lib/currency";
 
 type TrendRange = "daily" | "weekly" | "monthly";
 
@@ -26,16 +28,9 @@ type RevenuePoint = {
   cumulativeTotal: number;
 };
 
-const formatCurrency = (value: number, currency = "PKR") => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(Number(value || 0));
-};
-
 const RevenueGraph = () => {
   const { restaurantId, branchId, isBranchAdmin, loading: authLoading } = useAuth();
+  const { currency: fallbackCurrency } = useCurrency(restaurantId);
   const [range, setRange] = useState<TrendRange>("daily");
 
   const {
@@ -56,7 +51,7 @@ const RevenueGraph = () => {
 
   const trendData = revenueTrendResponse?.data;
 
-  const currency = trendData?.currency || "PKR";
+  const currency = trendData?.currency || fallbackCurrency;
   const totalRevenueInRange = Number(trendData?.totalRevenueInRange || 0);
   const currentRange = trendData?.range || range;
 
@@ -96,7 +91,7 @@ const RevenueGraph = () => {
             <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               {loading
                 ? "Loading..."
-                : formatCurrency(totalRevenueInRange, currency)}
+                : formatMoney(totalRevenueInRange, currency)}
             </div>
 
             {hasOnlyOneRevenuePoint ? (
@@ -218,14 +213,14 @@ const RevenueGraph = () => {
                 tickLine={false}
                 tick={{ fill: "#6B7280", fontSize: 12 }}
                 tickFormatter={(value) => {
-                  return formatCurrency(Number(value), currency);
+                  return formatMoney(Number(value), currency);
                 }}
               />
 
               <Tooltip
                 formatter={(value: number, name: string) => {
                   if (name === "revenue") {
-                    return [formatCurrency(value, currency), "Revenue"];
+                    return [formatMoney(value, currency), "Revenue"];
                   }
 
                   return [value, name];

@@ -23,6 +23,7 @@ import {
 import VariationModal from "@/components/pages/Menu/legacy/root-menu-components/listing/VariationModal";
 import { useAuth } from "@/hooks/useAuth";
 import { extractResponseItems, extractResponseMeta } from "@/lib/response";
+import { formatMoney } from "@/lib/currency";
 import { useTranslations } from "next-intl";
 
 const PAGE_LIMIT = 10;
@@ -73,7 +74,7 @@ const formatPrice = (value: any) => {
 };
 
 const formatCurrency = (value: any) => {
-  return `PKR ${formatPrice(value)}`;
+  return formatMoney(formatPrice(value));
 };
 
 export default function VariationsTable() {

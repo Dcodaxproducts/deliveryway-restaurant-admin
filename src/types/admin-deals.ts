@@ -57,6 +57,7 @@ export type AdminDeal = {
   imageUrl?: string | null;
   restaurantId?: string | null;
   branchId?: string | null;
+  currency?: string | null;
   discountValue: number;
   maxDiscountAmount?: number | null;
   minOrderAmount?: number | null;

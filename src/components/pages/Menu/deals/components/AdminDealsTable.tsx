@@ -16,6 +16,7 @@ import {
   getDealTypeLabel,
 } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
 import { Button } from "@/components/ui/button";
+import { useCurrency } from "@/hooks/useCurrency";
 import type { AdminDeal } from "@/types/admin-deals";
 import { useTranslations } from "next-intl";
 
@@ -37,6 +38,7 @@ export default function AdminDealsTable({
   const router = useRouter();
   const t = useTranslations("deals");
   const commonT = useTranslations("common");
+  const { resolveCurrency } = useCurrency(deals[0]?.restaurantId);
 
   if (loading) {
     return (
@@ -110,7 +112,10 @@ export default function AdminDealsTable({
                   {getDealTypeLabel(deal)}
                 </td>
                 <td className="px-4 py-4 align-top text-sm font-semibold text-gray-900">
-                  {formatDealPrice(deal.discountValue)}
+                  {formatDealPrice(
+                    deal.discountValue,
+                    resolveCurrency(deal.currency)
+                  )}
                 </td>
                 <td className="px-4 py-4 align-top text-sm text-gray-700">
                   {getDealSelectedCountLabel(deal)}
@@ -188,7 +193,13 @@ export default function AdminDealsTable({
             </p>
             <div className="grid grid-cols-2 gap-3 text-xs text-gray-600">
               <Info label={t("dealType")} value={getDealTypeLabel(deal)} />
-              <Info label={t("fixedPrice")} value={formatDealPrice(deal.discountValue)} />
+              <Info
+                label={t("fixedPrice")}
+                value={formatDealPrice(
+                  deal.discountValue,
+                  resolveCurrency(deal.currency)
+                )}
+              />
               <Info label={t("scope")} value={getDealSelectedCountLabel(deal)} />
               <Info label={t("requiredQty")} value={getDealRequiredQuantityLabel(deal)} />
               <Info label={t("starts")} value={formatDealDate(deal.startsAt)} />

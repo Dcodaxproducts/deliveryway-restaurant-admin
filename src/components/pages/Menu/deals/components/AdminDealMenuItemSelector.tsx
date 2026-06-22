@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { formatDealPrice } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
 import MenuEntitySelector from "@/components/pages/Menu/shared/MenuEntitySelector";
 import { useAdminDealMenuItems } from "@/hooks/useAdminDealMenuItems";
+import { useCurrency } from "@/hooks/useCurrency";
 import type { AdminDealMenuItemSummary } from "@/types/admin-deals";
 import { useTranslations } from "next-intl";
 
@@ -29,6 +30,7 @@ export default function AdminDealMenuItemSelector({
   helpText,
 }: AdminDealMenuItemSelectorProps) {
   const t = useTranslations("deals.menuItemSelector");
+  const { currency } = useCurrency(restaurantId);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const { options, hasNext, loading } = useAdminDealMenuItems({
@@ -91,7 +93,7 @@ export default function AdminDealMenuItemSelector({
       renderMeta={(item) => (
         <p className="mt-1 truncate text-xs text-gray-500">
           {item.category?.name || t("noCategory")} •{" "}
-          {formatDealPrice(item.basePrice)}
+          {formatDealPrice(item.basePrice, currency)}
         </p>
       )}
       onSearchChange={(nextSearch) => {

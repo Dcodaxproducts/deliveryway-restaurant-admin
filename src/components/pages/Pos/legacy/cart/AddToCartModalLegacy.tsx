@@ -5,6 +5,7 @@ import { Loader2, Minus, Plus, ShoppingCart } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useHttpClient } from "@/hooks/useHttpClient";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 import {
   Dialog,
   DialogContent,
@@ -122,8 +123,6 @@ const toNumber = (value: unknown, fallback = 0) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 };
-
-const formatMoney = (value: unknown) => `$${toNumber(value, 0).toFixed(2)}`;
 
 const POS_LAST_SELECTION_STORAGE_KEY = "posAddToCartLastSelection";
 
@@ -819,6 +818,7 @@ export default function AddToCartModal({
   const t = useTranslations("pos.addToCart");
   const { token, user } = useAuth();
   const restaurantId = user?.restaurantId ?? undefined;
+  const { formatMoney } = useCurrency(restaurantId);
   const { post, get, del } = useHttpClient(token);
 
   const [quantity, setQuantity] = useState(1);

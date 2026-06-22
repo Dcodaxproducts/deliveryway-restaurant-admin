@@ -27,6 +27,7 @@ import CreateMenuItemModal from "@/components/pages/Menu/legacy/root-menu-compon
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import InfiniteScrollFooter from "@/components/common/infinite-scroll-footer";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { formatMoney } from "@/lib/currency";
 import { extractResponseItems, extractResponseMeta } from "@/lib/response";
 import { useTranslations } from "next-intl";
 
@@ -1240,8 +1241,8 @@ function formatCurrency(value: any) {
   const numeric = Number(value ?? 0);
 
   if (Number.isNaN(numeric)) {
-    return "PKR 0.00";
+    return formatMoney(0);
   }
 
-  return `PKR ${numeric.toFixed(2)}`;
+  return formatMoney(numeric);
 }

@@ -12,6 +12,7 @@ import {
   useGetAdminPromotionsOverview,
 } from "@/hooks/usePromotions";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 
 type PromotionTabValue = "overview" | "coupons" | "promotions" | "happy-hours";
 
@@ -35,19 +36,12 @@ type PromotionsOverviewData = {
   couponDrivenOrders?: number;
   couponDrivenRevenue?: number;
   couponDiscountGiven?: number;
+  currency?: string | null;
 
   filters?: {
     restaurantId?: string | null;
     branchId?: string | null;
   };
-};
-
-const formatCurrency = (value?: number) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "PKR",
-    maximumFractionDigits: 2,
-  }).format(Number(value ?? 0));
 };
 
 const getListFromResponse = (response: any) => {
@@ -67,6 +61,7 @@ export default function PromotionsOverview({ onViewAll }: PromotionsOverviewProp
 
   const restaurantId = user?.restaurantId ?? user?.tenantId ?? null;
   const branchId = user?.branchId ?? null;
+  const { formatMoney, resolveCurrency } = useCurrency(restaurantId);
 
   const {
     data: overviewResponse,
@@ -88,6 +83,7 @@ export default function PromotionsOverview({ onViewAll }: PromotionsOverviewProp
   });
 
   const overview: PromotionsOverviewData = overviewResponse?.data ?? {};
+  const overviewCurrency = resolveCurrency(overview.currency);
 
   const happyHours = getListFromResponse(happyHoursResponse);
   const activeHappyHour = happyHours?.[0] ?? null;
@@ -184,7 +180,7 @@ export default function PromotionsOverview({ onViewAll }: PromotionsOverviewProp
 
         <PromotionStatCard
           icon={<ShoppingCart size={18} />}
-          value={formatCurrency(overview.promoDrivenRevenue)}
+          value={formatMoney(overview.promoDrivenRevenue, overviewCurrency)}
           label={t("promoDrivenRevenue")}
           loading={overviewCardLoading}
         />

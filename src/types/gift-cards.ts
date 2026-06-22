@@ -26,6 +26,7 @@ export type GiftCard = {
   discountType?: "FLAT" | string;
   discountValue: number;
   amount: number;
+  currency?: string | null;
   maxUses?: number | null;
   maxUsesPerCustomer?: number | null;
   usedCount?: number;
@@ -218,6 +219,7 @@ export const normalizeGiftCard = (input: unknown): GiftCard | null => {
     discountType: getOptionalString(input, "discountType"),
     discountValue,
     amount,
+    currency: getNullableString(input, "currency"),
     maxUses: getNullableNumber(input, "maxUses"),
     maxUsesPerCustomer: getNullableNumber(input, "maxUsesPerCustomer"),
     usedCount: getNumber(input, "usedCount"),

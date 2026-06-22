@@ -195,6 +195,7 @@ export type AdminInvoice = {
   walletAppliedAmount: number;
   loyaltyDiscountAmount: number;
   totalAmount: number;
+  currency?: string;
 
   paidAt?: string | null;
   issuedAt?: string | null;

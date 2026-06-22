@@ -12,6 +12,7 @@ import TabButton from "@/components/ui/TabButton";
 import OrdersGraph from "@/components/pages/Reports/components/graphs/orders-graph";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 import {
   useGetFinancialReport,
   useGetOrdersReport,
@@ -28,6 +29,7 @@ import {
 
 export default function Orders() {
   const { restaurantId, branchId, isBranchAdmin, loading: authLoading } = useAuth();
+  const { currency: fallbackCurrency } = useCurrency(restaurantId);
   const scopedReportParams = restaurantId
     ? {
         restaurantId,
@@ -52,7 +54,11 @@ export default function Orders() {
 
   const financialData = financialReportResponse?.data;
   const ordersData = ordersReportResponse?.data;
-  const reportCurrency = getReportCurrency(financialData, ordersData);
+  const reportCurrency = getReportCurrency(
+    financialData,
+    ordersData,
+    fallbackCurrency
+  );
 
   const financialStats = useMemo(() => buildFinancialStats(financialData, reportCurrency), [financialData, reportCurrency]);
 

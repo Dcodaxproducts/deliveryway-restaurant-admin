@@ -1,26 +1,23 @@
 import type { StatItem } from "@/types/stats";
+import { formatMoney, resolveCurrency } from "@/lib/currency";
 
 export type ReportTab = "financial" | "order";
 
-export const getReportCurrency = (financialData: any, ordersData: any) =>
-  financialData?.currency ||
-  ordersData?.currency ||
-  financialData?.transactions?.[0]?.currency ||
-  ordersData?.transactions?.[0]?.currency ||
-  "PKR";
+export const getReportCurrency = (
+  financialData: any,
+  ordersData: any,
+  fallbackCurrency?: string
+) =>
+  resolveCurrency(
+    financialData?.currency,
+    ordersData?.currency,
+    financialData?.transactions?.[0]?.currency,
+    ordersData?.transactions?.[0]?.currency,
+    fallbackCurrency
+  );
 
-export const formatCurrency = (value: number, currency = "PKR") => {
-  const numericValue = Number(value || 0);
-
-  try {
-    return new Intl.NumberFormat("de-DE", {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 2,
-    }).format(numericValue);
-  } catch {
-    return `${currency} ${numericValue.toFixed(2)}`;
-  }
+export const formatCurrency = (value: number, currency?: string | null) => {
+  return formatMoney(value, currency);
 };
 
 const withNeutralTrend = (items: Array<Omit<StatItem, "trend">>): StatItem[] =>

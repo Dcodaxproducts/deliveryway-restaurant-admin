@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import AddToCartModal from "@/components/pages/pos/cart/AddToCartModal";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import { useDeleteMenuItem } from "@/hooks/useMenus";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useTranslations } from "next-intl";
 
 type Props = {
@@ -48,19 +49,9 @@ const getDisplayPrice = (item: any) => {
   );
 };
 
-const formatCurrency = (value: unknown) => {
-  const numeric = toNumber(value, 0);
-
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "PKR",
-    minimumFractionDigits: Number.isInteger(numeric) ? 0 : 2,
-    maximumFractionDigits: 2,
-  }).format(numeric);
-};
-
 export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props) {
   const t = useTranslations("pos.menuCard");
+  const { formatMoney } = useCurrency(item?.restaurantId);
   const [open, setOpen] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
 
@@ -149,8 +140,7 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
               {t("price")}
             </p>
             <p className="mt-1 truncate text-2xl font-extrabold tracking-[-0.04em] text-foreground">
-              <span className="text-primary">{formatCurrency(price).charAt(0)}</span>
-              {formatCurrency(price).slice(1)}
+              <span className="text-primary">{formatMoney(price, item?.currency)}</span>
             </p>
           </div>
 

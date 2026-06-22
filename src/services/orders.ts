@@ -152,6 +152,7 @@ export const normalizeOrder = (value: unknown): Order | null => {
     paymentMethod: getOptionalString(value, "paymentMethod"),
     paymentStatus: getOptionalString(value, "paymentStatus"),
     totalAmount: getNumber(value, "totalAmount"),
+    currency: getNullableString(value, "currency"),
     createdAt: getString(value, "createdAt"),
     orderTime: getOptionalString(value, "orderTime"),
     isScheduled:

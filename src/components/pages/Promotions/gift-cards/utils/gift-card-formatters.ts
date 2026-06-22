@@ -1,18 +1,16 @@
 import { formatDateTime24 } from "@/lib/date-time-format";
+import { formatMoney } from "@/lib/currency";
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "PKR",
-  maximumFractionDigits: 2,
-});
-
-export const formatGiftCardAmount = (value: number | string | null | undefined) => {
+export const formatGiftCardAmount = (
+  value: number | string | null | undefined,
+  currency?: string | null
+) => {
   if (value === null || value === undefined || value === "") return "—";
 
   const amount = Number(value);
   if (!Number.isFinite(amount)) return "—";
 
-  return currencyFormatter.format(amount);
+  return formatMoney(amount, currency);
 };
 
 export const formatGiftCardDate = (value: string | null | undefined) => {

@@ -17,6 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { formatMoney, resolveCurrency } from "@/lib/currency";
 
 import {
   Dialog,
@@ -51,22 +52,14 @@ const PDF_GRAY_COLOR: [number, number, number] = [107, 114, 128];
 const PDF_LIGHT_GRAY_COLOR: [number, number, number] = [249, 250, 251];
 const PDF_BORDER_COLOR: [number, number, number] = [229, 231, 235];
 
-const formatCurrency = (value: number, currency = "PKR") => {
-  const numericValue = Number(value || 0);
-
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 2,
-      minimumFractionDigits: 2,
-    }).format(numericValue);
-  } catch {
-    return `${currency} ${numericValue.toFixed(2)}`;
-  }
+const formatCurrency = (value: number, currency?: string | null) => {
+  return formatMoney(value, currency, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 };
 
-const formatSignedCurrency = (value: number, currency = "PKR") => {
+const formatSignedCurrency = (value: number, currency?: string | null) => {
   const numericValue = Number(value || 0);
 
   if (numericValue > 0) {
@@ -104,7 +97,10 @@ const prettyLabel = (value?: string) => {
 };
 
 const getInvoiceCurrency = (invoice?: AdminInvoice | null) => {
-  return invoice?.transactions?.[0]?.currency || "PKR";
+  return resolveCurrency(
+    invoice?.currency,
+    invoice?.transactions?.[0]?.currency
+  );
 };
 
 const getCustomerName = (invoice: AdminInvoice) => {

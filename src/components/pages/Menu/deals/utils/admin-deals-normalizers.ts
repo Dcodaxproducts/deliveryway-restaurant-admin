@@ -219,6 +219,7 @@ export const normalizeAdminDeal = (value: unknown): AdminDeal | null => {
     imageUrl: getNullableString(value, "imageUrl"),
     restaurantId: getNullableString(value, "restaurantId") ?? getNestedNullableString(value, "restaurant", "id"),
     branchId: getNullableString(value, "branchId") ?? getNestedNullableString(value, "branch", "id"),
+    currency: getNullableString(value, "currency"),
     discountValue: getNumber(value, "discountValue"),
     maxDiscountAmount: getNullableNumber(value, "maxDiscountAmount"),
     minOrderAmount: getNullableNumber(value, "minOrderAmount"),
