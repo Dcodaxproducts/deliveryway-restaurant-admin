@@ -101,7 +101,11 @@ export default function AddHappyHour() {
 
   const values = useWatch({ control }) as HappyHourFormValues;
 
-  const { data: detailResponse, isLoading: detailLoading } = useGetAdminHappyHourDetail(id ?? undefined);
+  const { data: detailResponse, isLoading: detailLoading } =
+    useGetAdminHappyHourDetail(id ?? undefined, {
+      restaurantId,
+      branchId,
+    });
 
   const createMutation = useCreateAdminHappyHour();
   const updateMutation = useUpdateAdminHappyHour();

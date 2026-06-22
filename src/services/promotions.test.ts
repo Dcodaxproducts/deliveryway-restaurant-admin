@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createCoupon,
   createAdminPromotionCampaign,
+  getAdminHappyHourDetail,
   getAdminPromotionCampaignDetail,
   getAdminPromotionCampaigns,
   updateAdminPromotionCampaign,
@@ -107,6 +108,27 @@ describe("promotions service", () => {
       "/coupons/coupon-1",
       expect.not.objectContaining({ restaurantId: "restaurant-1" })
     );
+  });
+
+  it("fetches happy hour detail from the dedicated endpoint with scoped params", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        data: { id: "happy-1", title: "Evening Happy Hour" },
+      },
+    });
+
+    const detail = await getAdminHappyHourDetail("happy-1", {
+      restaurantId: "restaurant-1",
+      branchId: "branch-1",
+    });
+
+    expect(mockedGet).toHaveBeenCalledWith("/admin/promotions/happy-hours/happy-1", {
+      params: {
+        restaurantId: "restaurant-1",
+        branchId: "branch-1",
+      },
+    });
+    expect(detail.data.title).toBe("Evening Happy Hour");
   });
 
   it("updates coupon status with restaurantId through the status endpoint", async () => {

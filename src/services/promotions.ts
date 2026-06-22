@@ -164,8 +164,13 @@ export const getAdminHappyHours = async (params?: PromotionQueryParams) => {
   return response.data;
 };
 
-export const getAdminHappyHourDetail = async (id: string) => {
-  const response = await api.get(`/admin/promotions/happy-hours/${id}`);
+export const getAdminHappyHourDetail = async (
+  id: string,
+  params?: PromotionQueryParams
+) => {
+  const response = await api.get(`/admin/promotions/happy-hours/${id}`, {
+    params: buildPromotionParams(params),
+  });
 
   return response.data;
 };

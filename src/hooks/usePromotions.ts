@@ -68,8 +68,15 @@ campaignDetail: (id?: string, params?: PromotionQueryParams) =>
       params?.limit,
     ] as const,
 
-  happyHourDetail: (id?: string) =>
-    ["admin-promotions", "happy-hours", "detail", id] as const,
+  happyHourDetail: (id?: string, params?: PromotionQueryParams) =>
+    [
+      "admin-promotions",
+      "happy-hours",
+      "detail",
+      id,
+      params?.restaurantId,
+      params?.branchId,
+    ] as const,
 
   stats: (id?: string) => ["admin-promotions", "stats", id] as const,
 };
@@ -186,11 +193,14 @@ export const useGetAdminHappyHours = (params?: PromotionQueryParams) => {
   });
 };
 
-export const useGetAdminHappyHourDetail = (id?: string) => {
+export const useGetAdminHappyHourDetail = (
+  id?: string,
+  params?: PromotionQueryParams
+) => {
   return useQuery({
-    queryKey: promotionQueryKeys.happyHourDetail(id),
-    queryFn: () => getAdminHappyHourDetail(id as string),
-    enabled: Boolean(id),
+    queryKey: promotionQueryKeys.happyHourDetail(id, params),
+    queryFn: () => getAdminHappyHourDetail(id as string, params),
+    enabled: Boolean(id && params?.restaurantId),
   });
 };
 
