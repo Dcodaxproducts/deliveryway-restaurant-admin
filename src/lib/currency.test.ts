@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   FALLBACK_CURRENCY,
@@ -6,9 +6,14 @@ import {
   getRestaurantSettingsCurrency,
   normalizeCurrency,
   resolveCurrency,
+  setGlobalDefaultCurrency,
 } from "@/lib/currency";
 
 describe("currency helpers", () => {
+  beforeEach(() => {
+    setGlobalDefaultCurrency(null);
+  });
+
   it("normalizes ISO currency codes", () => {
     expect(normalizeCurrency("aed")).toBe("AED");
     expect(normalizeCurrency(" usd ")).toBe("USD");
@@ -23,6 +28,13 @@ describe("currency helpers", () => {
   it("formats money with the supplied currency", () => {
     expect(formatMoney(12, "AED")).toContain("12");
     expect(formatMoney(12, "usd")).toMatch(/12|US/);
+  });
+
+  it("uses the global default currency ahead of local record currencies", () => {
+    setGlobalDefaultCurrency("EUR");
+
+    expect(resolveCurrency("USD", "AED")).toBe("EUR");
+    expect(formatMoney(12, "USD")).toMatch(/12|€|EUR/);
   });
 
   it("reads restaurant currency settings in priority order", () => {

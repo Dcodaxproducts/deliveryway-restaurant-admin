@@ -9,10 +9,17 @@ import { BrandingProvider } from "@/components/providers/branding-provider";
 import { I18nProvider } from "@/components/providers/i18n-provider";
 import QueryProvider from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { useGlobalSettingsCurrency } from "@/hooks/useCurrency";
 
 type ProvidersProps = {
   children: ReactNode;
 };
+
+function GlobalCurrencyHydrator() {
+  useGlobalSettingsCurrency();
+
+  return null;
+}
 
 export function Providers({ children }: ProvidersProps) {
   return (
@@ -20,6 +27,7 @@ export function Providers({ children }: ProvidersProps) {
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <I18nProvider>
           <AuthProvider>
+            <GlobalCurrencyHydrator />
             <BrandingProvider>
               <AppShell>{children}</AppShell>
             </BrandingProvider>

@@ -1,6 +1,7 @@
 export const FALLBACK_CURRENCY = "PKR";
 
 const CURRENCY_CODE_PATTERN = /^[A-Z]{3}$/;
+let globalDefaultCurrency: string | undefined;
 
 export const normalizeCurrency = (value?: string | null) => {
   const currency = value?.trim().toUpperCase();
@@ -8,10 +9,22 @@ export const normalizeCurrency = (value?: string | null) => {
   return currency && CURRENCY_CODE_PATTERN.test(currency) ? currency : undefined;
 };
 
+export const setGlobalDefaultCurrency = (value?: string | null) => {
+  globalDefaultCurrency = normalizeCurrency(value);
+
+  return globalDefaultCurrency;
+};
+
+export const getGlobalDefaultCurrency = () => globalDefaultCurrency;
+
 export const resolveCurrency = (
   ...candidates: Array<string | null | undefined>
 ) => {
-  return candidates.map(normalizeCurrency).find(Boolean) ?? FALLBACK_CURRENCY;
+  return (
+    getGlobalDefaultCurrency() ??
+    candidates.map(normalizeCurrency).find(Boolean) ??
+    FALLBACK_CURRENCY
+  );
 };
 
 export const formatMoney = (

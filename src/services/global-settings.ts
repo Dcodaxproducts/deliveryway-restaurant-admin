@@ -1,5 +1,5 @@
 import { httpClient } from "@/lib/axios";
-import { normalizeCurrency } from "@/lib/currency";
+import { normalizeCurrency, setGlobalDefaultCurrency } from "@/lib/currency";
 
 export type AdminGlobalSettings = {
   defaultCurrency?: string;
@@ -18,6 +18,8 @@ export const normalizeAdminGlobalSettings = (
     typeof data.defaultCurrency === "string"
       ? normalizeCurrency(data.defaultCurrency)
       : undefined;
+
+  setGlobalDefaultCurrency(defaultCurrency);
 
   return { defaultCurrency };
 };
