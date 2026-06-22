@@ -1,12 +1,9 @@
+import { formatDateTime24 } from "@/lib/date-time-format";
+
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
   maximumFractionDigits: 2,
-});
-
-const dateTimeFormatter = new Intl.DateTimeFormat("en-US", {
-  dateStyle: "medium",
-  timeStyle: "short",
 });
 
 export const formatDealPrice = (value: number | string | null | undefined) => {
@@ -24,7 +21,7 @@ export const formatDealDate = (value: string | null | undefined) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
 
-  return dateTimeFormatter.format(date);
+  return formatDateTime24({ value: date, fallback: "—" });
 };
 
 export const formatShortDealId = (id: string | null | undefined) => {

@@ -9,6 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { formatDateTime24 } from "@/lib/date-time-format";
 import { useTranslations } from "next-intl";
 
 /* ---------- TYPES ---------- */
@@ -57,7 +58,7 @@ export default function CustomerDetailModal({
     : "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200";
 
   const formatDate = (date?: string) =>
-    date ? new Date(date).toLocaleString() : "-";
+    formatDateTime24({ value: date });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

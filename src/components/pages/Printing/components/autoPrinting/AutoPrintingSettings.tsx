@@ -11,6 +11,7 @@ import {
   useGetAdminPrintingStatus,
   useUpdateAdminPrintingSettings,
 } from "@/hooks/usePrinting";
+import { formatDateTime24 } from "@/lib/date-time-format";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
@@ -78,7 +79,7 @@ const formatDateTime = (value?: string | null) => {
 
   if (Number.isNaN(date.getTime())) return value;
 
-  return date.toLocaleString();
+  return formatDateTime24({ value: date, fallback: value });
 };
 
 export default function AutoPrintingSettings({

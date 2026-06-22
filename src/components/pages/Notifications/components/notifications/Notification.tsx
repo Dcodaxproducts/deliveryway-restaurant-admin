@@ -12,6 +12,7 @@ import {
   formatAdminNotification,
   type NotificationCategory,
 } from "@/components/pages/Notifications/utils/notification-formatters";
+import { formatTime24 } from "@/lib/date-time-format";
 import type { AdminNotification } from "@/types/notifications";
 
 interface Props {
@@ -150,10 +151,7 @@ export default function Notifications({
 
               <span className="shrink-0 whitespace-nowrap text-xs text-gray-400">
                 {notification.createdAt
-                  ? new Date(notification.createdAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
+                  ? formatTime24({ value: notification.createdAt, fallback: "" })
                   : ""}
               </span>
             </CardContent>

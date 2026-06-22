@@ -19,6 +19,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { formatDateTime24 } from "@/lib/date-time-format";
 
 export default function CategoryDetailsPage() {
   const router = useRouter();
@@ -557,7 +558,7 @@ function formatDate(value?: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
 
-  return date.toLocaleString();
+  return formatDateTime24({ value: date });
 }
 
 function formatPrice(value: any) {

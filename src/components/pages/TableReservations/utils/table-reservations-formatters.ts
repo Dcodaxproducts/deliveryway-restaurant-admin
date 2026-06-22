@@ -3,14 +3,7 @@ import type {
   TableReservationCustomer,
   TableReservationStatus,
 } from "@/types/table-reservations";
-
-const dateTimeFormatter = new Intl.DateTimeFormat("en", {
-  year: "numeric",
-  month: "short",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-});
+import { formatDateTime24 } from "@/lib/date-time-format";
 
 export const EMPTY_TEXT = "—";
 
@@ -20,7 +13,17 @@ export function formatDateTime(value?: string | null) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return EMPTY_TEXT;
 
-  return dateTimeFormatter.format(date);
+  return formatDateTime24({
+    value: date,
+    fallback: EMPTY_TEXT,
+    options: {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    },
+  });
 }
 
 export function formatReservationDate(value?: string | null) {
@@ -60,4 +63,3 @@ export function formatStatusLabel(status?: TableReservationStatus | null) {
 export function getBranchName(reservation: TableReservation) {
   return reservation.branch?.name || "No branch";
 }
-

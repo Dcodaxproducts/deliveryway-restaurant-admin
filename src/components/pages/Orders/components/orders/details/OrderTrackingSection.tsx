@@ -5,6 +5,7 @@ import { Phone, MapPin } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { formatDeliveryAddress } from "@/components/pages/Orders/components/orders/details/order-details-utils";
+import { formatTime24 } from "@/lib/date-time-format";
 
 type Props = {
   order: any;
@@ -17,7 +18,7 @@ export default function OrderTrackingSection({ order }: Props) {
   // ESTIMATED TIME
   // =========================
   const estimatedTime = order?.isScheduled
-    ? new Date(order.orderTime).toLocaleTimeString()
+    ? formatTime24({ value: order.orderTime })
     : t("estimatedMinutes");
 
   return (

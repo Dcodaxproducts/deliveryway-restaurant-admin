@@ -60,7 +60,7 @@ export const customersData = [
         phone: "+921212121212",
         email: "example@gmail.com",
         orderLimit: 3,
-        joiningDate:"12/13/2025 07:01 PM",
+        joiningDate:"12/13/2025 19:01",
         status: true,
     },
     // Add 6 more similar objects to make a total of 7
@@ -70,7 +70,7 @@ export const customersData = [
         phone: "+921212121212",
         email: "example@gmail.com",
         orderLimit: 3,
-        joiningDate:"12/13/2025 07:01 PM",
+        joiningDate:"12/13/2025 19:01",
         status: true,
     },
     {
@@ -79,7 +79,7 @@ export const customersData = [
         phone: "+921212121212",
         email: "example@gmail.com",
         orderLimit: 3,
-        joiningDate:"12/13/2025 07:01 PM",
+        joiningDate:"12/13/2025 19:01",
         status: true,
     },
     {
@@ -88,7 +88,7 @@ export const customersData = [
         phone: "+921212121212",
         email: "example@gmail.com",
         orderLimit: 3,
-        joiningDate:"12/13/2025 07:01 PM",
+        joiningDate:"12/13/2025 19:01",
         status: true,
     },
     {
@@ -97,7 +97,7 @@ export const customersData = [
         phone: "+921212121212",
         email: "example@gmail.com",
         orderLimit: 3,
-        joiningDate:"12/13/2025 07:01 PM",
+        joiningDate:"12/13/2025 19:01",
         status: true,
     },
     {
@@ -106,7 +106,7 @@ export const customersData = [
         phone: "+921212121212",
         email: "example@gmail.com",
         orderLimit: 3,
-        joiningDate:"12/13/2025 07:01 PM",
+        joiningDate:"12/13/2025 19:01",
         status: true,
     },
     {
@@ -115,7 +115,7 @@ export const customersData = [
         phone: "+921212121212",
         email: "example@gmail.com",
         orderLimit: 3,
-        joiningDate:"12/13/2025 07:01 PM",
+        joiningDate:"12/13/2025 19:01",
         status: true,
     },
 ];

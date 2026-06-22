@@ -1,5 +1,6 @@
 import { DialogHeader } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { formatDateTime24 } from "@/lib/date-time-format";
 import { useTranslations } from "next-intl";
 
 export default function DialogHeaderComponent({
@@ -33,13 +34,13 @@ export default function DialogHeaderComponent({
 
       {createdAt && (
         <p className="text-xs text-muted-foreground  text-center">
-          {t("created")}: {new Date(createdAt).toLocaleString()}
+          {t("created")}: {formatDateTime24({ value: createdAt })}
         </p>
       )}
 
       {updatedAt && (
         <p className="text-xs text-muted-foreground">
-          {t("updated")}: {new Date(updatedAt).toLocaleString()}
+          {t("updated")}: {formatDateTime24({ value: updatedAt })}
         </p>
       )}
     </DialogHeader>

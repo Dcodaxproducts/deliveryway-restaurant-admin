@@ -2,6 +2,7 @@
 
 import Header from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
+import { formatDateTime24 } from "@/lib/date-time-format";
 import { useParams } from "next/navigation";
 import { useGetOrderById } from "@/hooks/useOrders";
 import { useTranslations } from "next-intl";
@@ -85,7 +86,7 @@ export default function GroupOrderDetails() {
           {order.isScheduled && (
             <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded">
               {t("scheduled")}:{" "}
-              {new Date(order.orderTime).toLocaleString()}
+              {formatDateTime24({ value: order.orderTime })}
             </span>
           )}
         </div>

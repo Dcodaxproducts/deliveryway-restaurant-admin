@@ -3,6 +3,7 @@
 import { Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Header from "@/components/common/PageHeader"
+import { formatDateTime24 } from "@/lib/date-time-format"
 import { useTranslations } from "next-intl"
 import type { Order } from "@/types/orders"
 
@@ -48,7 +49,7 @@ export function OrdersHeader({
       o.paymentStatus || "",
       o.totalAmount ?? 0,
       o.createdAt
-        ? new Date(o.createdAt).toLocaleString()
+        ? formatDateTime24({ value: o.createdAt })
         : "",
     ])
 

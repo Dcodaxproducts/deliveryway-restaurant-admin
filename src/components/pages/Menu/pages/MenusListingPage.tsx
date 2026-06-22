@@ -23,6 +23,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetMenuById, useGetMenuItems } from "@/hooks/useMenus";
+import { formatDateTime24 } from "@/lib/date-time-format";
 import { useTranslations } from "next-intl";
 
 type MenuCategorySummary = {
@@ -117,12 +118,16 @@ const formatDateTime = (value?: string | null) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
 
-  return date.toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
+  return formatDateTime24({
+    value: date,
+    fallback: "—",
+    options: {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    },
   });
 };
 

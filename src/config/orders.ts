@@ -33,7 +33,7 @@ export const statsData: StatItem[] = [
 export const orders = [
   {
     id: "#5552375",
-    date: "26 March 2020, 02:12 AM",
+    date: "26 March 2020, 02:12",
     customer: "Emilia Johanson",
     location: "67 St. John’s Road, London",
     status: "Delivered",
@@ -41,7 +41,7 @@ export const orders = [
   },
   {
     id: "#5552376",
-    date: "26 March 2020, 02:12 AM",
+    date: "26 March 2020, 02:12",
     customer: "Emilia Johanson",
     location: "67 St. John’s Road, London",
     status: "Pending",
@@ -49,7 +49,7 @@ export const orders = [
   },
   {
     id: "#5552377",
-    date: "26 March 2020, 02:12 AM",
+    date: "26 March 2020, 02:12",
     customer: "Emilia Johanson",
     location: "67 St. John’s Road, London",
     status: "Processing",
@@ -57,7 +57,7 @@ export const orders = [
   },
   {
     id: "#5552378",
-    date: "26 March 2020, 02:12 AM",
+    date: "26 March 2020, 02:12",
     customer: "Emilia Johanson",
     location: "67 St. John’s Road, London",
     status: "Cancelled",
@@ -65,7 +65,7 @@ export const orders = [
   },
   {
     id: "#5552379",
-    date: "26 March 2020, 02:12 AM",
+    date: "26 March 2020, 02:12",
     customer: "Emilia Johanson",
     location: "67 St. John’s Road, London",
     status: "Refunded",
@@ -73,7 +73,7 @@ export const orders = [
   },
   {
     id: "#5552380",
-    date: "26 March 2020, 02:12 AM",
+    date: "26 March 2020, 02:12",
     customer: "Emilia Johanson",
     location: "67 St. John’s Road, London",
     status: "Delivered",

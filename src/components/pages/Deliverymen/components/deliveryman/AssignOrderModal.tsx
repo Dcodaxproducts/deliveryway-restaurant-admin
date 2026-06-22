@@ -35,6 +35,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGetBranches } from "@/hooks/useBranches";
 import { useAssignOrdersToDeliveryman, useDeliveryman } from "@/hooks/useDeliverymen";
 import { useOrders } from "@/hooks/useOrders";
+import { formatDateTime24 } from "@/lib/date-time-format";
 import type { Order } from "@/types/orders";
 
 interface AssignOrderModalProps {
@@ -390,7 +391,7 @@ export default function AssignOrderModal({
                                   }`}
                                 >
                                   {order.createdAt
-                                    ? new Date(order.createdAt).toLocaleString()
+                                    ? formatDateTime24({ value: order.createdAt })
                                     : "-"}
                                 </p>
                               </div>

@@ -3,6 +3,8 @@
 import { Percent } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { formatTime24 } from "@/lib/date-time-format";
+
 type HappyHourInfo = {
   id?: string;
   name?: string;
@@ -47,10 +49,7 @@ const formatTime = (time?: string) => {
 
   if (Number.isNaN(date.getTime())) return time;
 
-  return date.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatTime24({ value: date, fallback: time });
 };
 
 const formatDiscountType = (type: string | undefined, notAvailable: string) => {

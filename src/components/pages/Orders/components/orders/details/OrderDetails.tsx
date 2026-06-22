@@ -44,6 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { formatDateTime24 } from "@/lib/date-time-format";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -163,7 +164,9 @@ type OrderDetails = {
 const formatDate = (date?: string | null) => {
   if (!date) return "-";
   const parsed = new Date(date);
-  return Number.isNaN(parsed.getTime()) ? "-" : parsed.toLocaleString();
+  return Number.isNaN(parsed.getTime())
+    ? "-"
+    : formatDateTime24({ value: parsed });
 };
 
 const formatMoney = (amount?: number | null, currency = "USD") => {

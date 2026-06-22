@@ -17,6 +17,7 @@ import {
   useDeleteDeliveryman,
   useUpdateDeliveryman,
 } from "@/hooks/useDeliverymen";
+import { formatDateTime24 } from "@/lib/date-time-format";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
@@ -144,7 +145,7 @@ export default function DeliveryManDetails({
             label={t("details.joiningDate")}
             value={
               data?.createdAt
-                ? new Date(data.createdAt).toLocaleString()
+                ? formatDateTime24({ value: data.createdAt })
                 : t("notAvailable")
             }
             showDots

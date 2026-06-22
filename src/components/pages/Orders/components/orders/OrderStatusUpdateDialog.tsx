@@ -14,6 +14,7 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { DateTimePickerField } from "@/components/forms/common/DateTimePickerField";
+import { formatDateTime24 } from "@/lib/date-time-format";
 import {
   Dialog,
   DialogContent,
@@ -89,12 +90,15 @@ const defaultValues: OrderStatusUpdateValues = {
 const formatDateTime = (date?: Date | null) => {
   if (!date || Number.isNaN(date.getTime())) return null;
 
-  return date.toLocaleString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
+  return formatDateTime24({
+    value: date,
+    options: {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    },
   });
 };
 

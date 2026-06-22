@@ -9,6 +9,7 @@ import BranchInfoCard from "./BranchInfoCard";
 import DialogFooterComponent from "./DialogFooterComponent";
 import DialogHeaderComponent from "./DialogHeaderComponent";
 import { useGetBranchHolidayOpeningHours } from "@/hooks/useBranches";
+import { formatDateTime24 } from "@/lib/date-time-format";
 import { useTranslations } from "next-intl";
 
 type BranchDetails = {
@@ -115,7 +116,7 @@ const formatBoolean = (value: boolean | null | undefined, yes: string, no: strin
 
 const formatDate = (value?: string | null) => {
   if (!value) return undefined;
-  return new Date(value).toLocaleString();
+  return formatDateTime24({ value, fallback: value });
 };
 
 const compactInfo = (items: InfoItem[], yes: string, no: string) =>

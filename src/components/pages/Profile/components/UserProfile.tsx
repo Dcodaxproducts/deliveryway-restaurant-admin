@@ -12,6 +12,7 @@ import {
   getStoredAuth,
   saveStoredAuth,
 } from "@/lib/auth";
+import { formatDateTime24 } from "@/lib/date-time-format";
 import { authApi } from "@/services/auth/auth.api";
 
 export default function UserProfile() {
@@ -22,7 +23,7 @@ export default function UserProfile() {
 
   const formatDate = (date?: string | null) => {
     if (!date) return "—";
-    return new Date(date).toLocaleString();
+    return formatDateTime24({ value: date, fallback: "—" });
   };
 
   useEffect(() => {

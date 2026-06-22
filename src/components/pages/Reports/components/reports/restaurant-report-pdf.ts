@@ -2,6 +2,7 @@
 
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { formatDateTime24 } from "@/lib/date-time-format";
 import type { AdminInvoice } from "@/services/reports/reports.api";
 
 type DashboardReportType = "financial" | "order";
@@ -67,12 +68,16 @@ const formatDateTime = (value?: string | null) => {
 
   if (Number.isNaN(date.getTime())) return "-";
 
-  return date.toLocaleString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+  return formatDateTime24({
+    value: date,
+    locale: "de-DE",
+    options: {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    },
   });
 };
 
@@ -141,7 +146,7 @@ const drawHeader = ({
   }
 
   doc.setFontSize(9);
-  doc.text(new Date().toLocaleString("de-DE"), pageWidth - 40, 58, {
+  doc.text(formatDateTime24({ value: new Date(), locale: "de-DE" }), pageWidth - 40, 58, {
     align: "right",
   });
 

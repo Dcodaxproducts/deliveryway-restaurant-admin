@@ -35,6 +35,7 @@ import {
 } from "@/components/pages/Orders/utils/orders-schedule-filters";
 import { useAuth } from "@/hooks/useAuth";
 import { useSendOrderOutForDelivery, useUpdateOrderStatus } from "@/hooks/useOrders";
+import { formatDateTime24 } from "@/lib/date-time-format";
 import { getOrderById } from "@/services/orders/orders.api";
 import {
   canDirectlyUpdateOrderStatus,
@@ -80,11 +81,14 @@ const formatOrderTime = (value?: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
 
-  return date.toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
+  return formatDateTime24({
+    value: date,
+    options: {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    },
   });
 };
 
@@ -368,9 +372,7 @@ export function OrdersTable({
           </TableCell>
 
           <TableCell className="px-4 text-gray-500">
-            {reservationDate
-              ? new Date(reservationDate).toLocaleString()
-              : "-"}
+            {formatDateTime24({ value: reservationDate })}
           </TableCell>
 
           <TableCell className="px-4">
@@ -394,7 +396,7 @@ export function OrdersTable({
                   ) : null}
                   <span
                     className="inline-flex max-w-full items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
-                    title={orderTime?.toLocaleString()}
+                    title={formatDateTime24({ value: orderTime })}
                   >
                     <CalendarClock size={12} />
                     <span className="truncate">{orderTimeLabel}</span>

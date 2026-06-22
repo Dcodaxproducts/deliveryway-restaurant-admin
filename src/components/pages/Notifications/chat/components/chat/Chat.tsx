@@ -11,6 +11,7 @@ import {
   useGetChatThreads,
   useSendChatMessage,
 } from "@/hooks/useChat";
+import { formatTime24 } from "@/lib/date-time-format";
 
 export default function ChatUI() {
   const { token, user } = useAuth();
@@ -88,11 +89,7 @@ useEffect(() => {
 
   ensureOrderThread(orderId);
 }, [orderId, threads]);
-  const formatTime = (date: string) =>
-    new Date(date).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const formatTime = (date: string) => formatTime24({ value: date });
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString("en-US", {

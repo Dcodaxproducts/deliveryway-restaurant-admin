@@ -14,7 +14,7 @@ const restaurants = Array.from({ length: 10 }).map((_, i) => ({
     name: "Dragon Wok",
     model: "Commission",
     domain: "dragonwok.restaurantos.com",
-    date: "2024-12-15 10:30 AM",
+    date: "2024-12-15 10:30",
     status: i % 2 === 0 ? "Active" : "Disabled",
 }));
 
