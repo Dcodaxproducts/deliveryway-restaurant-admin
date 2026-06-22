@@ -114,6 +114,25 @@ export const useUpdateOrderStatus = () => {
   });
 };
 
+export const useSendOrderOutForDelivery = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ orderId }: { orderId: string }) => {
+      await updateOrderStatus(orderId, { status: "PREPARING" });
+      return updateOrderStatus(orderId, { status: "OUT_FOR_DELIVERY" });
+    },
+    onSuccess: (order) => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["orders", "detail", order.id] });
+      toast.success("Order sent out for delivery");
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Unable to send order out for delivery"));
+    },
+  });
+};
+
 export const useRefundPaymentTransaction = (orderId?: string | null) => {
   const queryClient = useQueryClient();
 

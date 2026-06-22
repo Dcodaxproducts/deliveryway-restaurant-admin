@@ -39,8 +39,9 @@ const toPayload = (profile: LegalProfile): LegalProfilePayload => ({
   businessAddress: {
     street: profile.businessAddress.street.trim(),
     shopNumber: profile.businessAddress.shopNumber.trim() || null,
-    city: profile.businessAddress.city.trim(),
     state: profile.businessAddress.state.trim(),
+    postalCode: profile.businessAddress.postalCode.trim(),
+    city: profile.businessAddress.city.trim(),
     country: profile.businessAddress.country.trim(),
   },
   contractText: profile.contractText.trim(),
@@ -50,8 +51,9 @@ const formatAddressPreview = (profile: LegalProfile) =>
   [
     profile.businessAddress.street,
     profile.businessAddress.shopNumber,
-    profile.businessAddress.city,
     profile.businessAddress.state,
+    profile.businessAddress.postalCode,
+    profile.businessAddress.city,
     profile.businessAddress.country,
   ]
     .map((part) => part.trim())
@@ -286,20 +288,28 @@ export function LegalProfilePage() {
                   onChange={(value) => updateAddressField("shopNumber", value)}
                 />
                 <Field
-                  id="business-city"
-                  label={t("city")}
-                  value={draftProfile.businessAddress.city}
-                  placeholder={t("cityPlaceholder")}
-                  disabled={!canEdit || loading}
-                  onChange={(value) => updateAddressField("city", value)}
-                />
-                <Field
                   id="business-state"
                   label={t("state")}
                   value={draftProfile.businessAddress.state}
                   placeholder={t("statePlaceholder")}
                   disabled={!canEdit || loading}
                   onChange={(value) => updateAddressField("state", value)}
+                />
+                <Field
+                  id="business-postal-code"
+                  label={t("postalCode")}
+                  value={draftProfile.businessAddress.postalCode}
+                  placeholder={t("postalCodePlaceholder")}
+                  disabled={!canEdit || loading}
+                  onChange={(value) => updateAddressField("postalCode", value)}
+                />
+                <Field
+                  id="business-city"
+                  label={t("city")}
+                  value={draftProfile.businessAddress.city}
+                  placeholder={t("cityPlaceholder")}
+                  disabled={!canEdit || loading}
+                  onChange={(value) => updateAddressField("city", value)}
                 />
                 <Field
                   id="business-country"

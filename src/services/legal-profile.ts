@@ -3,6 +3,7 @@ import { httpClient } from "@/lib/axios";
 export type LegalBusinessAddress = {
   street: string;
   shopNumber: string;
+  postalCode: string;
   city: string;
   state: string;
   country: string;
@@ -33,6 +34,7 @@ export type LegalProfilePayload = Omit<
 const emptyAddress: LegalBusinessAddress = {
   street: "",
   shopNumber: "",
+  postalCode: "",
   city: "",
   state: "",
   country: "",
@@ -59,6 +61,7 @@ const normalizeBusinessAddress = (
   return {
     street: getString(address, "street"),
     shopNumber: getString(address, "shopNumber"),
+    postalCode: getString(address, "postalCode"),
     city: getString(address, "city"),
     state: getString(address, "state"),
     country: getString(address, "country"),

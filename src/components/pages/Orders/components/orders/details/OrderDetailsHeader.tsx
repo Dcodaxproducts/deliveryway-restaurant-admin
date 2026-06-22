@@ -5,9 +5,10 @@ import { Ban, RefreshCw, Truck, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
-import { useUpdateOrderStatus } from "@/hooks/useOrders";
+import { useSendOrderOutForDelivery, useUpdateOrderStatus } from "@/hooks/useOrders";
 import {
   canDirectlyUpdateOrderStatus,
+  canSendDeliveryOrderOutDirectly,
   canTerminateOrderStatus,
   getNextOrderStatus,
   ORDER_STATUS_ACTION_LABEL_KEYS,
@@ -38,6 +39,7 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
   const t = useTranslations("orders");
   const common = useTranslations("common");
   const updateStatusMutation = useUpdateOrderStatus();
+  const sendOutForDeliveryMutation = useSendOrderOutForDelivery();
 
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [progressOrder, setProgressOrder] = useState<OrderStatusProgressState | null>(null);
@@ -47,6 +49,7 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
     ? t(ORDER_STATUS_LABEL_KEYS[order.status])
     : order.status;
   const canUpdateStatus = Boolean(nextStatus);
+  const canSendOutForDelivery = canSendDeliveryOrderOutDirectly(order);
   const actionLabel = nextStatus && ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus]
     ? t(ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus])
     : common("updateStatus");
@@ -91,6 +94,16 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
       status: updatedOrder.status ?? status,
     });
   };
+  const handleSendOutForDeliveryAction = async () => {
+    const updatedOrder = await sendOutForDeliveryMutation.mutateAsync({
+      orderId: order.id,
+    });
+    setProgressOrder({
+      orderType: updatedOrder.orderType ?? order.orderType,
+      previousStatus: order.status,
+      status: updatedOrder.status ?? "OUT_FOR_DELIVERY",
+    });
+  };
 
   return (
     <>
@@ -131,6 +144,21 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
             >
               <RefreshCw size={16} />
               {actionLabel}
+            </Button>
+          ) : null}
+
+          {canSendOutForDelivery ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={sendOutForDeliveryMutation.isPending}
+              onClick={() => {
+                void handleSendOutForDeliveryAction();
+              }}
+              className="w-full justify-center rounded-[10px] border-primary/30 bg-primary/5 px-4 text-xs font-medium text-primary hover:bg-primary/10 hover:text-primary sm:w-auto sm:text-sm"
+            >
+              <Truck size={16} />
+              {t("sendOutForDeliveryDirect")}
             </Button>
           ) : null}
 

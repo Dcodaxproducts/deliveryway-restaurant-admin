@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Ban, CalendarClock, CreditCard, Eye, MoreHorizontal, RefreshCw, XCircle } from "lucide-react";
+import { Ban, CalendarClock, CreditCard, Eye, MoreHorizontal, RefreshCw, Truck, XCircle } from "lucide-react";
 import EmptyState from "@/components/common/EmptyState";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -34,10 +34,11 @@ import {
   isFutureOrder,
 } from "@/components/pages/Orders/utils/orders-schedule-filters";
 import { useAuth } from "@/hooks/useAuth";
-import { useUpdateOrderStatus } from "@/hooks/useOrders";
+import { useSendOrderOutForDelivery, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { getOrderById } from "@/services/orders/orders.api";
 import {
   canDirectlyUpdateOrderStatus,
+  canSendDeliveryOrderOutDirectly,
   canTerminateOrderStatus,
   getNextOrderStatus,
   ORDER_STATUS_ACTION_LABEL_KEYS,
@@ -115,6 +116,7 @@ export function OrdersTable({
   const [loadingPaymentStatusOrderId, setLoadingPaymentStatusOrderId] =
     useState<string | null>(null);
   const updateStatusMutation = useUpdateOrderStatus();
+  const sendOutForDeliveryMutation = useSendOrderOutForDelivery();
   const canUpdatePaymentStatusRole =
     role === "BUSINESS_ADMIN" || role === "SUPER_ADMIN" || role === "BRANCH_ADMIN";
   const getStatusLabel = (status?: string) =>
@@ -198,6 +200,16 @@ export function OrdersTable({
       orderType: updatedOrder.orderType ?? order.orderType,
       previousStatus: order.status,
       status: updatedOrder.status ?? status,
+    });
+  };
+  const handleSendOutForDeliveryAction = async (order: OrdersTableRow) => {
+    const updatedOrder = await sendOutForDeliveryMutation.mutateAsync({
+      orderId: order.id,
+    });
+    setProgressOrder({
+      orderType: updatedOrder.orderType ?? order.orderType,
+      previousStatus: order.status,
+      status: updatedOrder.status ?? "OUT_FOR_DELIVERY",
     });
   };
   const handlePaymentStatusAction = async (order: OrdersTableRow) => {
@@ -324,6 +336,7 @@ export function OrdersTable({
     const customerDetail = getCustomerDetail(order);
     const addressPreview = getAddressPreview(order);
     const canUpdateStatus = Boolean(getNextOrderStatus(order));
+    const canSendOutForDelivery = canSendDeliveryOrderOutDirectly(order);
     const canUseTerminalActions = canTerminateOrderStatus(order);
     const orderTime = getOrderTimeDate(order);
     const orderTimeLabel = formatOrderTime(order.orderTime);
@@ -482,6 +495,17 @@ export function OrdersTable({
                 >
                   <RefreshCw size={16} />
                   {getStatusActionLabel(order)}
+                </DropdownMenuItem>
+              ) : null}
+              {canSendOutForDelivery ? (
+                <DropdownMenuItem
+                  disabled={sendOutForDeliveryMutation.isPending}
+                  onClick={() => {
+                    void handleSendOutForDeliveryAction(order);
+                  }}
+                >
+                  <Truck size={16} />
+                  {t("sendOutForDeliveryDirect")}
                 </DropdownMenuItem>
               ) : null}
               {canUpdatePaymentStatus ? (

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   canDirectlyUpdateOrderStatus,
+  canSendDeliveryOrderOutDirectly,
   canTerminateOrderStatus,
   getOrderStatusProgressSteps,
   getNextOrderStatus,
@@ -75,6 +76,27 @@ describe("order status transitions", () => {
         status: "PREPARING",
       })
     ).toBe(true);
+  });
+
+  it("allows delivery orders to be sent out directly from confirmed", () => {
+    expect(
+      canSendDeliveryOrderOutDirectly({
+        orderType: "DELIVERY",
+        status: "CONFIRMED",
+      })
+    ).toBe(true);
+    expect(
+      canSendDeliveryOrderOutDirectly({
+        orderType: "TAKEAWAY",
+        status: "CONFIRMED",
+      })
+    ).toBe(false);
+    expect(
+      canSendDeliveryOrderOutDirectly({
+        orderType: "DELIVERY",
+        status: "PREPARING",
+      })
+    ).toBe(false);
   });
 
   it("keeps delivery completion in the popup until an OTP is available", () => {

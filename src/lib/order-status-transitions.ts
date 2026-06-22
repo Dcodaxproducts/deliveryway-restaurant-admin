@@ -117,6 +117,15 @@ export const canDirectlyUpdateOrderStatus = (
   return true;
 };
 
+export const canSendDeliveryOrderOutDirectly = (
+  order: OrderTransitionInput | null | undefined
+) => {
+  return (
+    normalizeValue(order?.orderType) === "DELIVERY" &&
+    normalizeValue(order?.status) === "CONFIRMED"
+  );
+};
+
 export const canTerminateOrderStatus = (
   order: OrderTransitionInput | null | undefined
 ) => {
