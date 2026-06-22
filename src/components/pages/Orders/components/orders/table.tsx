@@ -471,13 +471,18 @@ export function OrdersTable({
             type="button"
             className="p-2 hover:text-primary"
             onClick={() => router.push(getOrderRoute(order))}
+            aria-label={t("viewOrderDetails")}
           >
             <Eye size={18} />
           </button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button type="button" className="p-2 hover:text-primary">
+              <button
+                type="button"
+                className="p-2 hover:text-primary"
+                aria-label={t("orderActions")}
+              >
                 <MoreHorizontal size={18} />
               </button>
             </DropdownMenuTrigger>

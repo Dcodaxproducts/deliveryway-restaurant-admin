@@ -382,6 +382,8 @@
     },
     "statusProgressTitle": "Bestellfortschritt aktualisiert",
     "statusProgressDescription": "Diese Statusschritte sind jetzt für diese Bestellung abgedeckt.",
+    "viewOrderDetails": "Bestelldetails anzeigen",
+    "orderActions": "Bestellaktionen",
     "sendOutForDeliveryDirect": "Zur Lieferung senden",
     "acceptOrderTitle": "Bestellung annehmen",
     "acceptOrderDescription": "Bestätigen Sie die Bestellung und legen Sie die Lieferzeit der Filiale ab jetzt fest.",

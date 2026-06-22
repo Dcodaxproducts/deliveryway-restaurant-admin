@@ -382,6 +382,8 @@
     },
     "statusProgressTitle": "Order progress updated",
     "statusProgressDescription": "These status steps are now covered for this order.",
+    "viewOrderDetails": "View order details",
+    "orderActions": "Order actions",
     "sendOutForDeliveryDirect": "Send out for delivery",
     "acceptOrderTitle": "Accept Order",
     "acceptOrderDescription": "Confirm the order and set the branch delivery time from now.",
