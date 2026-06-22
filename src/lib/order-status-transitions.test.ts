@@ -35,13 +35,13 @@ describe("order status transitions", () => {
     ).toBeUndefined();
   });
 
-  it("requires delivery OTP only when delivering a delivery order", () => {
+  it("does not require delivery OTP when delivering a delivery order", () => {
     expect(
       requiresDeliveryOtpForStatusTransition(
         { orderType: "DELIVERY", status: "OUT_FOR_DELIVERY" },
         "DELIVERED"
       )
-    ).toBe(true);
+    ).toBe(false);
     expect(
       requiresDeliveryOtpForStatusTransition(
         { orderType: "TAKEAWAY", status: "READY_FOR_PICKUP" },
@@ -99,13 +99,13 @@ describe("order status transitions", () => {
     ).toBe(false);
   });
 
-  it("keeps delivery completion in the popup until an OTP is available", () => {
+  it("allows delivery completion without an OTP", () => {
     expect(
       canDirectlyUpdateOrderStatus({
         orderType: "DELIVERY",
         status: "OUT_FOR_DELIVERY",
       })
-    ).toBe(false);
+    ).toBe(true);
     expect(
       canDirectlyUpdateOrderStatus({
         orderType: "DELIVERY",

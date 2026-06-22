@@ -22,7 +22,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -35,7 +34,6 @@ import { useUpdateOrderStatus } from "@/hooks/useOrders";
 import {
   getNextOrderStatus,
   ORDER_STATUS_ACTION_LABEL_KEYS,
-  requiresDeliveryOtpForStatusTransition,
 } from "@/lib/order-status-transitions";
 import { cn } from "@/lib/utils";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
@@ -132,9 +130,7 @@ export function OrderStatusUpdateDialog({
     control,
     formState: { errors },
     handleSubmit,
-    register,
     reset,
-    setError,
   } = useForm<OrderStatusUpdateValues>({
     resolver: zodResolver(orderStatusUpdateSchema),
     defaultValues,
@@ -146,10 +142,6 @@ export function OrderStatusUpdateDialog({
   const selectedStatus = useWatch({ control, name: "status" });
   const isConfirmingPlacedOrder = order?.status === "PLACED" && selectedStatus === "CONFIRMED";
   const isConfirmedOrder = order?.status === "CONFIRMED" && selectedStatus === "CONFIRMED";
-  const requiresDeliveryOtp = requiresDeliveryOtpForStatusTransition(
-    order,
-    selectedStatus
-  );
   const savedDeliveryTime = parseOrderTime(order?.orderTime);
   const shouldPreserveScheduledTime = shouldPreserveScheduledOrderTime(
     order,
@@ -210,16 +202,6 @@ export function OrderStatusUpdateDialog({
   const onSubmit = async (values: OrderStatusUpdateValues) => {
     if (!order) return;
 
-    const deliveryOtp = values.deliveryOtp?.trim();
-
-    if (requiresDeliveryOtp && !deliveryOtp) {
-      setError("deliveryOtp", {
-        type: "required",
-        message: t("deliveryOtpRequired"),
-      });
-      return;
-    }
-
     const orderTimeIso = resolveStatusUpdateOrderTime({
       canEditDeliveryTime,
       deliveryTime: computedDeliveryTime,
@@ -231,7 +213,6 @@ export function OrderStatusUpdateDialog({
       orderId: order.id,
       payload: {
         status: values.status,
-        ...(deliveryOtp ? { deliveryOtp } : {}),
         ...(orderTimeIso ? { orderTime: orderTimeIso } : {}),
       },
     });
@@ -410,20 +391,6 @@ export function OrderStatusUpdateDialog({
                 </div>
               ) : null}
 
-              {requiresDeliveryOtp ? (
-                <div className="space-y-2">
-                  <Label htmlFor="order-delivery-otp">{t("deliveryOtp")}</Label>
-                  <Input
-                    id="order-delivery-otp"
-                    placeholder={t("deliveryOtp")}
-                    className="h-[48px] rounded-[14px]"
-                    {...register("deliveryOtp")}
-                  />
-                  {errors.deliveryOtp?.message ? (
-                    <p className="text-sm text-red-500">{errors.deliveryOtp.message}</p>
-                  ) : null}
-                </div>
-              ) : null}
             </div>
 
             <DialogFooter className="mt-6 flex-col-reverse gap-3 sm:flex-row">

@@ -177,9 +177,6 @@ export function OrdersTable({
       orderId: order.id,
       payload: {
         status: nextStatus,
-        ...(order.deliveryOtp?.trim()
-          ? { deliveryOtp: order.deliveryOtp.trim() }
-          : {}),
       },
     });
     setProgressOrder({
