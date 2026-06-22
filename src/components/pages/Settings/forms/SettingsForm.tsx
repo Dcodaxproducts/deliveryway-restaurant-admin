@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Info } from "lucide-react";
+import { CreditCard, Info, Loader2, Save } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { usePaymentMethods } from "@/hooks/usePaymentMethods";
+import {
+  useRestaurantStripeAccount,
+  useUpdateRestaurantStripeAccount,
+} from "@/hooks/useStripeAccounts";
 import { getApiErrorMessage } from "@/lib/errors";
 import type { PaymentMethod } from "@/types/payment-methods";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -88,7 +94,7 @@ const sidebarLabelClassName =
   "text-base font-semibold text-[#646982] group-hover:text-primary transition-colors";
 
 export default function SettingsForm() {
-  const { isBranchAdmin, isRestaurantAdmin } = useAuth();
+  const { isBranchAdmin, isRestaurantAdmin, restaurantId } = useAuth();
   const canViewPaymentMethods = isBranchAdmin || isRestaurantAdmin;
   const paymentMethodsQuery = usePaymentMethods(canViewPaymentMethods);
   const { handleSubmit, register, setValue, watch } = useForm<SettingsFormValues>({
@@ -294,6 +300,10 @@ export default function SettingsForm() {
           />
         ) : null}
 
+        {isRestaurantAdmin ? (
+          <StripeAccountSection restaurantId={restaurantId} />
+        ) : null}
+
         <section className="flex flex-col sm:flex-row gap-4 justify-end">
           <Button
             type="button"
@@ -308,6 +318,173 @@ export default function SettingsForm() {
         </section>
       </div>
     </form>
+  );
+}
+
+function StripeAccountSection({
+  restaurantId,
+}: {
+  restaurantId?: string | null;
+}) {
+  const accountQuery = useRestaurantStripeAccount(restaurantId);
+  const updateAccount = useUpdateRestaurantStripeAccount();
+  const [accountId, setAccountId] = useState("");
+  const [dashboardUrl, setDashboardUrl] = useState("");
+  const [note, setNote] = useState("");
+  const [chargesEnabled, setChargesEnabled] = useState(false);
+  const [payoutsEnabled, setPayoutsEnabled] = useState(false);
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const stripe = accountQuery.data?.data.stripe;
+
+  useEffect(() => {
+    if (!stripe) return;
+    setAccountId(stripe.accountId ?? "");
+    setDashboardUrl(stripe.dashboardUrl ?? "");
+    setNote(stripe.note ?? "");
+    setChargesEnabled(Boolean(stripe.chargesEnabled));
+    setPayoutsEnabled(Boolean(stripe.payoutsEnabled));
+    setOnboardingComplete(Boolean(stripe.onboardingComplete));
+  }, [stripe]);
+
+  const submit = () => {
+    if (!restaurantId) return;
+
+    updateAccount.mutate({
+      restaurantId,
+      payload: {
+        accountId: accountId.trim() || null,
+        dashboardUrl: dashboardUrl.trim() || null,
+        note: note.trim() || null,
+        chargesEnabled,
+        payoutsEnabled,
+        onboardingComplete,
+      },
+    });
+  };
+
+  return (
+    <section className="space-y-[18px] rounded-[14px] border border-[#E8E8E8] p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-[6px]">
+          <div className="flex items-center gap-2">
+            <CreditCard size={18} className="text-primary" />
+            <h2 className="text-lg font-semibold text-dark">
+              Stripe Account
+            </h2>
+          </div>
+          <p className="text-sm text-gray">
+            Manage the connected Stripe account used for online payments and
+            restaurant payouts.
+          </p>
+        </div>
+        <span
+          className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${
+            stripe?.payoutsEnabled
+              ? "bg-green-100 text-green-700"
+              : "bg-amber-100 text-amber-700"
+          }`}
+        >
+          {stripe?.payoutsEnabled ? "Payouts enabled" : "Payouts disabled"}
+        </span>
+      </div>
+
+      {accountQuery.isLoading ? (
+        <div className="h-[160px] animate-pulse rounded-[10px] bg-gray-100" />
+      ) : null}
+
+      {!accountQuery.isLoading && accountQuery.isError ? (
+        <p className="rounded-[10px] bg-red-50 px-3 py-2 text-sm text-red-600">
+          {getApiErrorMessage(accountQuery.error, "Unable to load Stripe account.")}
+        </p>
+      ) : null}
+
+      {!accountQuery.isLoading && !accountQuery.isError ? (
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className={formGroupClassName}>
+              <Label htmlFor="stripe-account-id">Stripe account ID</Label>
+              <Input
+                id="stripe-account-id"
+                value={accountId}
+                onChange={(event) => setAccountId(event.target.value)}
+                placeholder="acct_..."
+                className={textInputClassName}
+              />
+            </div>
+            <div className={formGroupClassName}>
+              <Label htmlFor="stripe-dashboard-url">Dashboard URL</Label>
+              <Input
+                id="stripe-dashboard-url"
+                value={dashboardUrl}
+                onChange={(event) => setDashboardUrl(event.target.value)}
+                placeholder="https://dashboard.stripe.com/..."
+                className={textInputClassName}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            <StripeSwitch
+              label="Charges"
+              checked={chargesEnabled}
+              onCheckedChange={setChargesEnabled}
+            />
+            <StripeSwitch
+              label="Payouts"
+              checked={payoutsEnabled}
+              onCheckedChange={setPayoutsEnabled}
+            />
+            <StripeSwitch
+              label="Onboarding"
+              checked={onboardingComplete}
+              onCheckedChange={setOnboardingComplete}
+            />
+          </div>
+
+          <div className={formGroupClassName}>
+            <Label htmlFor="stripe-note">Internal note</Label>
+            <Input
+              id="stripe-note"
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Stripe account note"
+              className={textInputClassName}
+            />
+          </div>
+
+          <Button
+            type="button"
+            onClick={submit}
+            disabled={!restaurantId || updateAccount.isPending}
+            className="h-[44px] rounded-[10px]"
+          >
+            {updateAccount.isPending ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 size-4" />
+            )}
+            Save Stripe Settings
+          </Button>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function StripeSwitch({
+  label,
+  checked,
+  onCheckedChange,
+}: {
+  label: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-[10px] border border-[#E8E8E8] px-4 py-3">
+      <span className="text-sm font-semibold text-dark">{label}</span>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
   );
 }
 
