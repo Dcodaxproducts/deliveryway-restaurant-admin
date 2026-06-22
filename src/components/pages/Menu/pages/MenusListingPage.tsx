@@ -141,7 +141,7 @@ const formatMoney = (value?: number | string | null) => {
 
   return new Intl.NumberFormat(undefined, {
     style: "currency",
-    currency: "USD",
+    currency: "PKR",
     minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
     maximumFractionDigits: 2,
   }).format(amount);

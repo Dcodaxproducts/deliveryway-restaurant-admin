@@ -7,9 +7,9 @@ export const getReportCurrency = (financialData: any, ordersData: any) =>
   ordersData?.currency ||
   financialData?.transactions?.[0]?.currency ||
   ordersData?.transactions?.[0]?.currency ||
-  "EUR";
+  "PKR";
 
-export const formatCurrency = (value: number, currency = "EUR") => {
+export const formatCurrency = (value: number, currency = "PKR") => {
   const numericValue = Number(value || 0);
 
   try {

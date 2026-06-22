@@ -53,7 +53,7 @@ const formatCurrency = (value: unknown) => {
 
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency: "PKR",
     minimumFractionDigits: Number.isInteger(numeric) ? 0 : 2,
     maximumFractionDigits: 2,
   }).format(numeric);

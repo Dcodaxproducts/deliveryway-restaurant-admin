@@ -2,7 +2,7 @@ import { formatDateTime24 } from "@/lib/date-time-format";
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
-  currency: "USD",
+  currency: "PKR",
   maximumFractionDigits: 2,
 });
 

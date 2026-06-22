@@ -1240,8 +1240,8 @@ function formatCurrency(value: any) {
   const numeric = Number(value ?? 0);
 
   if (Number.isNaN(numeric)) {
-    return "$0.00";
+    return "PKR 0.00";
   }
 
-  return `$${numeric.toFixed(2)}`;
+  return `PKR ${numeric.toFixed(2)}`;
 }

@@ -169,7 +169,7 @@ const formatDate = (date?: string | null) => {
     : formatDateTime24({ value: parsed });
 };
 
-const formatMoney = (amount?: number | null, currency = "USD") => {
+const formatMoney = (amount?: number | null, currency = "PKR") => {
   if (typeof amount !== "number" || !Number.isFinite(amount)) return "-";
 
   return new Intl.NumberFormat(undefined, {
@@ -309,7 +309,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
     ? t(ORDER_STATUS_LABEL_KEYS[order.status])
     : formatStatus(order.status);
   const paymentMethods = order.paymentOptions?.available || order.availablePaymentMethods || [];
-  const primaryCurrency = latestTransaction?.currency || "USD";
+  const primaryCurrency = latestTransaction?.currency || "PKR";
   const parsedRefundAmount = Number(refundAmount);
   const partialAmountInvalid =
     refundMode === "partial" &&

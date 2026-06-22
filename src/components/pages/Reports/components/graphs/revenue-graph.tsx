@@ -26,7 +26,7 @@ type RevenuePoint = {
   cumulativeTotal: number;
 };
 
-const formatCurrency = (value: number, currency = "USD") => {
+const formatCurrency = (value: number, currency = "PKR") => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
@@ -56,7 +56,7 @@ const RevenueGraph = () => {
 
   const trendData = revenueTrendResponse?.data;
 
-  const currency = trendData?.currency || "USD";
+  const currency = trendData?.currency || "PKR";
   const totalRevenueInRange = Number(trendData?.totalRevenueInRange || 0);
   const currentRange = trendData?.range || range;
 
@@ -218,13 +218,12 @@ const RevenueGraph = () => {
                 tickLine={false}
                 tick={{ fill: "#6B7280", fontSize: 12 }}
                 tickFormatter={(value) => {
-                  if (value >= 1000) return `$${value / 1000}k`;
-                  return `$${value}`;
+                  return formatCurrency(Number(value), currency);
                 }}
               />
 
               <Tooltip
-                formatter={(value: number, name: string, item: any) => {
+                formatter={(value: number, name: string) => {
                   if (name === "revenue") {
                     return [formatCurrency(value, currency), "Revenue"];
                   }

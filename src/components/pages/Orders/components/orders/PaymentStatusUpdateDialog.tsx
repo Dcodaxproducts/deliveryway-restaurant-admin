@@ -42,7 +42,7 @@ const formatStatus = (status?: string | null) =>
         .join(" ")
     : "-";
 
-const formatMoney = (amount?: number | null, currency = "USD") => {
+const formatMoney = (amount?: number | null, currency = "PKR") => {
   if (typeof amount !== "number" || !Number.isFinite(amount)) return "-";
 
   return new Intl.NumberFormat(undefined, {
@@ -158,7 +158,7 @@ export function PaymentStatusUpdateDialog({
                   {t("amount")}
                 </p>
                 <p className="mt-1 text-sm font-bold text-gray-950">
-                  {formatMoney(transaction?.amount, transaction?.currency || "USD")}
+                  {formatMoney(transaction?.amount, transaction?.currency || "PKR")}
                 </p>
               </div>
             </div>

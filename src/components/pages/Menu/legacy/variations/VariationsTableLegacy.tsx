@@ -73,7 +73,7 @@ const formatPrice = (value: any) => {
 };
 
 const formatCurrency = (value: any) => {
-  return `$${formatPrice(value)}`;
+  return `PKR ${formatPrice(value)}`;
 };
 
 export default function VariationsTable() {

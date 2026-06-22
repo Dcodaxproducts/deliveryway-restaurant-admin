@@ -32,7 +32,7 @@ const PDF_GRAY_COLOR: [number, number, number] = [107, 114, 128];
 const PDF_LIGHT_GRAY_COLOR: [number, number, number] = [249, 250, 251];
 const PDF_BORDER_COLOR: [number, number, number] = [229, 231, 235];
 
-const formatCurrency = (value: number, currency = "EUR") => {
+const formatCurrency = (value: number, currency = "PKR") => {
   const numericValue = Number(value || 0);
 
   try {
@@ -46,7 +46,7 @@ const formatCurrency = (value: number, currency = "EUR") => {
   }
 };
 
-const formatInvoiceCurrency = (value: number, currency = "EUR") => {
+const formatInvoiceCurrency = (value: number, currency = "PKR") => {
   const numericValue = Number(value || 0);
 
   try {
@@ -100,7 +100,7 @@ const sanitizeFileName = (value: string) => {
 };
 
 const getInvoiceCurrency = (invoice?: AdminInvoice | null) => {
-  return invoice?.transactions?.[0]?.currency || "EUR";
+  return invoice?.transactions?.[0]?.currency || "PKR";
 };
 
 const getCustomerName = (invoice: AdminInvoice) => {
@@ -192,7 +192,7 @@ const buildBreakdownRows = (items?: Array<{ key: string; count: number }>) => {
   return items.map((item) => [prettyLabel(item.key), String(item.count ?? 0)]);
 };
 
-const buildTopItemsRows = (items?: any[], currency = "EUR") => {
+const buildTopItemsRows = (items?: any[], currency = "PKR") => {
   if (!items?.length) return [];
 
   return items.map((item) => [
@@ -250,7 +250,7 @@ export const downloadRestaurantDashboardReportPdf = ({
   title,
   description,
   restaurantId,
-  currency = "EUR",
+  currency = "PKR",
   stats,
   data,
 }: DownloadRestaurantDashboardReportPdfInput) => {
