@@ -16,10 +16,10 @@ import {
 import { toast } from "sonner";
 
 import Header from "@/components/common/PageHeader";
-import { RichPolicyEditor } from "@/components/pages/Settings/forms/PrivacyPolicyForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useLegalProfile,
@@ -316,12 +316,13 @@ export function LegalProfilePage() {
               <Label htmlFor="contract-text" className="text-sm font-semibold text-[#344054]">
                 {t("contractText")}
               </Label>
-              <RichPolicyEditor
+              <Textarea
                 id="contract-text"
                 value={draftProfile.contractText}
                 placeholder={t("contractTextPlaceholder")}
                 disabled={!canEdit || loading}
-                onChange={(value) => updateField("contractText", value)}
+                onChange={(event) => updateField("contractText", event.target.value)}
+                className="min-h-[360px] resize-y rounded-2xl border-[#D0D5DD] bg-white px-5 py-4 text-sm leading-7 text-[#344054] shadow-none focus-visible:ring-[#C1121F]/20 disabled:cursor-not-allowed disabled:bg-[#F9FAFB]"
               />
             </div>
           </section>
