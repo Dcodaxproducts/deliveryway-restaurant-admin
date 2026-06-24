@@ -116,4 +116,96 @@ describe("restaurant payment management service", () => {
       ],
     });
   });
+
+  it("normalizes the nested restaurant payment management response", () => {
+    const result = normalizeRestaurantPaymentManagement({
+      data: {
+        restaurantId: "restaurant-1",
+        payments: {
+          currency: "EUR",
+          methods: {
+            activePlatformMethods: [
+              "COD",
+              "CARD_ON_DELIVERY",
+              "STRIPE",
+              "PAYPAL",
+              "JAZZCASH",
+            ],
+            restaurantMethods: {
+              allowedPaymentMethods: ["COD", "PAYPAL", "WALLET"],
+              walletEnabled: true,
+              note: "Allow wallet",
+            },
+          },
+          stripe: {
+            accountId: "acct_123",
+            payoutsEnabled: true,
+            chargesEnabled: true,
+            configured: true,
+          },
+          payouts: {
+            provider: "stripe",
+            enabled: true,
+            lastTransfer: {
+              id: "transfer-1",
+            },
+          },
+          wallet: {
+            type: "CUSTOMER_WALLET_EXPOSURE",
+            accountCount: 4,
+            totalBalance: 50,
+          },
+          summary: {
+            transactionCount: 111,
+            estimatedAvailableBalance: 42.39,
+          },
+        },
+        transactions: [
+          {
+            id: "payment-1",
+            paymentMethod: "COD",
+            type: "CHARGE",
+            status: "PENDING",
+            amount: "21.39",
+            currency: "EUR",
+          },
+        ],
+      },
+    });
+
+    expect(result).toMatchObject({
+      restaurantId: "restaurant-1",
+      activePlatformPaymentMethods: [
+        "COD",
+        "CARD_ON_DELIVERY",
+        "STRIPE",
+        "PAYPAL",
+        "JAZZCASH",
+      ],
+      allowedPaymentMethods: ["COD", "PAYPAL", "WALLET"],
+      walletEnabled: true,
+      paymentMethodsNote: "Allow wallet",
+      estimatedAvailableBalance: 42.39,
+      currency: "EUR",
+      stripeAccount: {
+        accountId: "acct_123",
+        configured: true,
+      },
+      walletExposure: {
+        accountCount: 4,
+        totalBalance: 50,
+      },
+      lastTransfer: {
+        id: "transfer-1",
+      },
+      recentLedger: [
+        {
+          id: "payment-1",
+          paymentMethod: "COD",
+          amount: 21.39,
+          currency: "EUR",
+        },
+      ],
+    });
+  });
 });

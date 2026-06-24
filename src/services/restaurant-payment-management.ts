@@ -23,6 +23,7 @@ export type RestaurantPaymentManagement = {
   activePlatformPaymentMethods: PaymentMethodCode[];
   allowedPaymentMethods: PaymentMethodCode[];
   walletEnabled: boolean;
+  paymentMethodsNote: string;
   estimatedAvailableBalance: number | null;
   currency: string | null;
   paymentSummary: RecordValue;
@@ -112,41 +113,47 @@ export const normalizeRestaurantPaymentManagement = (
   const data = getRecord(unwrapData(response));
   const restaurant = getRecord(data.restaurant);
   const settings = getRecord(restaurant.settings);
-  const payments = getRecord(settings.payments);
+  const payments = firstRecord(data.payments, settings.payments);
+  const paymentsMethods = getRecord(payments.methods);
+  const payouts = getRecord(payments.payouts);
   const methodSettings = firstRecord(
+    paymentsMethods.restaurantMethods,
     data.restaurantPaymentMethods,
     data.configuredPaymentMethods,
     data.paymentMethods,
-    data.methods,
-    payments.methods
+    data.methods
   );
   const stripeAccount = firstRecord(
+    payments.stripe,
     data.stripeAccount,
     data.stripe,
     data.restaurantStripeAccount,
-    getRecord(data.payout).stripeAccount
+    payouts.stripeAccount
   );
   const walletExposure = firstRecord(
+    payments.wallet,
     data.customerWalletExposure,
     data.walletExposure,
     data.wallet
   );
   const paymentSummary = firstRecord(
+    payments.summary,
     data.paymentTransactionSummary,
     data.transactionSummary,
     data.paymentSummary,
     data.summary
   );
   const recentLedger = firstArray(
+    data.transactions,
     data.recentLedger,
     data.ledger,
-    data.recentTransactions,
-    data.transactions
+    data.recentTransactions
   )
     .map(normalizeLedgerEntry)
     .filter((entry): entry is RestaurantPaymentLedgerEntry => Boolean(entry));
   const activePlatformPaymentMethods = normalizePaymentMethods(
     firstArray(
+      paymentsMethods.activePlatformMethods,
       data.activePlatformPaymentMethods,
       data.platformPaymentMethods,
       data.activePaymentMethods
@@ -166,16 +173,21 @@ export const normalizeRestaurantPaymentManagement = (
     allowedPaymentMethods,
     walletEnabled,
     estimatedAvailableBalance: getNumber(
-      data.estimatedAvailableBalance ??
+      paymentSummary.estimatedAvailableBalance ??
+        payments.estimatedAvailableBalance ??
+        data.estimatedAvailableBalance ??
         data.availableBalance ??
         getRecord(data.balance).estimatedAvailableBalance
     ),
-    currency: getString(data.currency ?? getRecord(data.balance).currency),
+    currency: getString(
+      payments.currency ?? data.currency ?? getRecord(data.balance).currency
+    ),
     paymentSummary,
     walletExposure,
     stripeAccount,
-    lastTransfer: firstRecord(data.lastTransfer, stripeAccount.lastTransfer),
+    lastTransfer: firstRecord(data.lastTransfer, payouts.lastTransfer, stripeAccount.lastTransfer),
     recentLedger,
+    paymentMethodsNote: getString(methodSettings.note, "") ?? "",
   };
 };
 

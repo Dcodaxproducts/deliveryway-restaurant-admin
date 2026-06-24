@@ -517,8 +517,12 @@ function PaymentManagementSection({
     () => new Set(management?.activePlatformPaymentMethods ?? []),
     [management?.activePlatformPaymentMethods]
   );
-  const methodOptions = management?.activePlatformPaymentMethods.length
-    ? PAYMENT_METHOD_CODES.filter((code) => activeMethodSet.has(code))
+  const methodOptions = management
+    ? PAYMENT_METHOD_CODES.filter(
+        (code) =>
+          activeMethodSet.has(code) ||
+          management.allowedPaymentMethods.includes(code)
+      )
     : PAYMENT_METHOD_CODES;
   const configuredLabel = allowedPaymentMethods.length
     ? allowedPaymentMethods.map((method) => paymentMethodLabels[method]).join(", ")
@@ -533,6 +537,7 @@ function PaymentManagementSection({
 
     setAllowedPaymentMethods(nextAllowedMethods);
     setWalletEnabled(management.walletEnabled);
+    setNote(management.paymentMethodsNote);
   }, [management]);
 
   const toggleMethod = (method: PaymentMethodCode, checked: boolean) => {
@@ -812,7 +817,13 @@ function formatRecordAmount(
   currency: string | null
 ) {
   return formatMoney(
-    getRecordNumber(record, ["balance", "totalExposure", "amount", "walletAmount"]),
+    getRecordNumber(record, [
+      "balance",
+      "totalBalance",
+      "totalExposure",
+      "amount",
+      "walletAmount",
+    ]),
     currency
   );
 }
