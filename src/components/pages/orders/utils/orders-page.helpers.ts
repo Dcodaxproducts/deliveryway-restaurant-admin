@@ -1,6 +1,6 @@
 import type { StatItem } from "@/types/stats";
 
-export type OrderTab = "delivery" | "pickup" | "reservations" | "group";
+export type OrderTab = "all" | "delivery" | "pickup" | "reservations" | "group";
 
 export interface Order {
   id: string;
@@ -69,6 +69,11 @@ export const buildOrderStats = (orderStats: any, t: Translate): StatItem[] => {
 
 export const getOrdersHeaderContent = (tab: OrderTab, isBranchAdmin: boolean, t: Translate) => {
   switch (tab) {
+    case "all":
+      return {
+        title: isBranchAdmin ? t("branchAllOrders") : t("allOrders"),
+        description: isBranchAdmin ? t("branchAllOrdersDescription") : t("allOrdersDescription"),
+      };
     case "delivery":
       return {
         title: isBranchAdmin ? t("branchDeliveryOrders") : t("deliveryOrders"),

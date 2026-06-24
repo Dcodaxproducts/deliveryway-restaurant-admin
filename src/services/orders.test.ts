@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { httpClient } from "@/lib/axios";
+import api, { httpClient } from "@/lib/axios";
 import {
   failPaymentTransaction,
+  getOrders,
   markPaymentTransactionPaid,
   normalizeOrder,
   refundPaymentTransaction,
@@ -22,6 +23,7 @@ vi.mock("@/lib/axios", () => ({
 
 const mockedPatch = vi.mocked(httpClient.patch);
 const mockedPost = vi.mocked(httpClient.post);
+const mockedGet = vi.mocked(api.get);
 
 const orderResponse = {
   data: {
@@ -36,8 +38,35 @@ const orderResponse = {
 
 describe("orders service", () => {
   beforeEach(() => {
+    mockedGet.mockReset();
     mockedPatch.mockReset();
     mockedPost.mockReset();
+  });
+
+  it("omits orderType when fetching the all orders tab", async () => {
+    mockedGet.mockResolvedValue({
+      data: {
+        data: [],
+        meta: null,
+        success: true,
+      },
+    });
+
+    await getOrders({
+      restaurantId: "restaurant-1",
+      page: 1,
+      limit: 10,
+      kind: "order",
+    });
+
+    expect(mockedGet).toHaveBeenCalledWith("/orders", {
+      params: {
+        restaurantId: "restaurant-1",
+        page: 1,
+        limit: 10,
+        kind: "order",
+      },
+    });
   });
 
   it("updateOrderStatus calls /orders/:id/status without duplicating /api/v1", async () => {

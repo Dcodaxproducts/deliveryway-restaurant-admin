@@ -39,7 +39,7 @@ const getOrderCustomerName = (order: Order) => {
 
 export function OrdersPage() {
   const t = useTranslations("orders");
-  const [activeTab, setActiveTab] = useState<OrderTab>("delivery");
+  const [activeTab, setActiveTab] = useState<OrderTab>("all");
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
   const [status, setStatus] = useState("ALL");
@@ -75,7 +75,12 @@ export function OrdersPage() {
 
   const dynamicStats = buildOrderStats(orderStats, t);
 
-  const orderType = activeTab === "delivery" ? "DELIVERY" : activeTab === "pickup" ? "TAKEAWAY" : undefined;
+  const orderType =
+    activeTab === "delivery"
+      ? "DELIVERY"
+      : activeTab === "pickup"
+        ? "TAKEAWAY"
+        : undefined;
   const orderKind = activeTab === "group" ? "group-orders" : "order";
 
   const ordersQuery = useOrders({
@@ -146,6 +151,13 @@ export function OrdersPage() {
         />
 
         <div className="flex items-center gap-0 flex-wrap text-sm lg:text-base">
+          <TabButton
+            active={activeTab === "all"}
+            onClick={() => setActiveTab("all")}
+          >
+            {t("allOrders")}
+          </TabButton>
+
           <TabButton
             active={activeTab === "delivery"}
             onClick={() => setActiveTab("delivery")}
