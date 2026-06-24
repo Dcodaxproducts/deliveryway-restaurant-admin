@@ -6,6 +6,7 @@ import {
   updateRestaurantStripeAccount,
   type UpdateStripeAccountPayload,
 } from "@/services/stripe-accounts";
+import { restaurantPaymentManagementKeys } from "@/hooks/useRestaurantPaymentManagement";
 
 export const stripeAccountKeys = {
   detail: (restaurantId?: string | null) =>
@@ -33,6 +34,9 @@ export const useUpdateRestaurantStripeAccount = () => {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: stripeAccountKeys.detail(variables.restaurantId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: restaurantPaymentManagementKeys.detail(variables.restaurantId),
       });
       toast.success("Stripe account settings saved");
     },

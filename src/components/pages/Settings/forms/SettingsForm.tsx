@@ -1,21 +1,29 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CreditCard, Info, Loader2, Save } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Banknote, CreditCard, Info, Loader2, RefreshCw, Save, Wallet } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
-import { usePaymentMethods } from "@/hooks/usePaymentMethods";
+import {
+  useRestaurantPaymentManagement,
+  useUpdateRestaurantPaymentMethods,
+} from "@/hooks/useRestaurantPaymentManagement";
 import {
   useRestaurantStripeAccount,
   useUpdateRestaurantStripeAccount,
 } from "@/hooks/useStripeAccounts";
 import { getApiErrorMessage } from "@/lib/errors";
-import type { PaymentMethod } from "@/types/payment-methods";
+import {
+  PAYMENT_METHOD_CODES,
+  type PaymentMethodCode,
+} from "@/types/payment-methods";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -94,9 +102,7 @@ const sidebarLabelClassName =
   "text-base font-semibold text-[#646982] group-hover:text-primary transition-colors";
 
 export default function SettingsForm() {
-  const { isBranchAdmin, isRestaurantAdmin, restaurantId } = useAuth();
-  const canViewPaymentMethods = isBranchAdmin || isRestaurantAdmin;
-  const paymentMethodsQuery = usePaymentMethods(canViewPaymentMethods);
+  const { isRestaurantAdmin, restaurantId } = useAuth();
   const { handleSubmit, register, setValue, watch } = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues,
@@ -291,13 +297,8 @@ export default function SettingsForm() {
           />
         </section>
 
-        {canViewPaymentMethods ? (
-          <PaymentMethodsSection
-            isError={paymentMethodsQuery.isError}
-            isLoading={paymentMethodsQuery.isLoading}
-            error={paymentMethodsQuery.error}
-            methods={paymentMethodsQuery.data?.paymentMethods ?? []}
-          />
+        {isRestaurantAdmin ? (
+          <PaymentManagementSection restaurantId={restaurantId} />
         ) : null}
 
         {isRestaurantAdmin ? (
@@ -488,30 +489,98 @@ function StripeSwitch({
   );
 }
 
-type PaymentMethodsSectionProps = {
-  methods: PaymentMethod[];
-  isLoading: boolean;
-  isError: boolean;
-  error: Error | null;
-};
+function PaymentManagementSection({
+  restaurantId,
+}: {
+  restaurantId?: string | null;
+}) {
+  const managementQuery = useRestaurantPaymentManagement(restaurantId);
+  const updateMethods = useUpdateRestaurantPaymentMethods();
+  const [allowedPaymentMethods, setAllowedPaymentMethods] = useState<PaymentMethodCode[]>([]);
+  const [walletEnabled, setWalletEnabled] = useState(false);
+  const [note, setNote] = useState("");
+  const management = managementQuery.data;
+  const activeMethodSet = useMemo(
+    () => new Set(management?.activePlatformPaymentMethods ?? []),
+    [management?.activePlatformPaymentMethods]
+  );
+  const methodOptions = management?.activePlatformPaymentMethods.length
+    ? PAYMENT_METHOD_CODES.filter((code) => activeMethodSet.has(code))
+    : PAYMENT_METHOD_CODES;
+  const configuredLabel = allowedPaymentMethods.length
+    ? allowedPaymentMethods.map((method) => paymentMethodLabels[method]).join(", ")
+    : "Not configured";
 
-function PaymentMethodsSection({
-  methods,
-  isLoading,
-  isError,
-  error,
-}: PaymentMethodsSectionProps) {
+  useEffect(() => {
+    if (!management) return;
+
+    const nextAllowedMethods = management.allowedPaymentMethods.length
+      ? management.allowedPaymentMethods
+      : [];
+
+    setAllowedPaymentMethods(nextAllowedMethods);
+    setWalletEnabled(management.walletEnabled);
+  }, [management]);
+
+  const toggleMethod = (method: PaymentMethodCode, checked: boolean) => {
+    setAllowedPaymentMethods((current) => {
+      const nextMethods = checked
+        ? Array.from(new Set([...current, method]))
+        : current.filter((value) => value !== method);
+
+      if (method === "WALLET") {
+        setWalletEnabled(checked);
+      }
+
+      return nextMethods;
+    });
+  };
+
+  const submit = () => {
+    if (!restaurantId) return;
+
+    updateMethods.mutate({
+      restaurantId,
+      payload: {
+        allowedPaymentMethods,
+        walletEnabled,
+        note: note.trim() || undefined,
+      },
+    });
+  };
+
   return (
     <section className="space-y-[18px] rounded-[14px] border border-[#E8E8E8] p-4">
-      <div className="space-y-[6px]">
-        <h2 className="text-lg font-semibold text-dark">Payment Methods</h2>
-        <p className="text-sm text-gray">
-          These platform payment methods are managed globally. Your role can view
-          available methods but cannot edit them.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-[6px]">
+          <div className="flex items-center gap-2">
+            <Wallet size={18} className="text-primary" />
+            <h2 className="text-lg font-semibold text-dark">
+              Restaurant Payment Management
+            </h2>
+          </div>
+          <p className="text-sm text-gray">
+            Configure accepted checkout methods, wallet availability, and review
+            restaurant payment exposure.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => managementQuery.refetch()}
+          disabled={!restaurantId || managementQuery.isFetching}
+          className="h-[40px] rounded-[10px]"
+        >
+          {managementQuery.isFetching ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-2 size-4" />
+          )}
+          Refresh
+        </Button>
       </div>
 
-      {isLoading ? (
+      {managementQuery.isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2">
           {Array.from({ length: 4 }).map((_, index) => (
             <div
@@ -522,46 +591,216 @@ function PaymentMethodsSection({
         </div>
       ) : null}
 
-      {!isLoading && isError ? (
+      {!managementQuery.isLoading && managementQuery.isError ? (
         <p className="rounded-[10px] bg-red-50 px-3 py-2 text-sm text-red-600">
-          {getApiErrorMessage(error, "Unable to load payment methods.")}
+          {getApiErrorMessage(
+            managementQuery.error,
+            "Unable to load restaurant payment management."
+          )}
         </p>
       ) : null}
 
-      {!isLoading && !isError && methods.length === 0 ? (
-        <p className="rounded-[10px] bg-gray-50 px-3 py-3 text-sm text-gray">
-          No payment methods found.
-        </p>
-      ) : null}
+      {!managementQuery.isLoading && !managementQuery.isError ? (
+        <div className="space-y-5">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <PaymentSummaryCard
+              icon={<CreditCard size={18} />}
+              label="Active platform methods"
+              value={
+                management?.activePlatformPaymentMethods.length
+                  ? management.activePlatformPaymentMethods
+                      .map((method) => paymentMethodLabels[method])
+                      .join(", ")
+                  : "Not available"
+              }
+            />
+            <PaymentSummaryCard
+              icon={<Save size={18} />}
+              label="Restaurant methods"
+              value={configuredLabel}
+            />
+            <PaymentSummaryCard
+              icon={<Banknote size={18} />}
+              label="Estimated available"
+              value={formatMoney(
+                management?.estimatedAvailableBalance ?? null,
+                management?.currency ?? "PKR"
+              )}
+            />
+            <PaymentSummaryCard
+              icon={<Wallet size={18} />}
+              label="Wallet exposure"
+              value={formatRecordAmount(
+                management?.walletExposure,
+                management?.currency ?? "PKR"
+              )}
+            />
+          </div>
 
-      {!isLoading && !isError && methods.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {methods.map((method) => (
-            <PaymentMethodItem key={method.code} method={method} />
-          ))}
+          <div className="space-y-3">
+            <div>
+              <h3 className="text-sm font-semibold text-dark">
+                Accepted checkout methods
+              </h3>
+              <p className="mt-1 text-sm text-gray">
+                Backend stores these under restaurant payment method settings and
+                keeps Stripe account settings intact.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {methodOptions.map((method) => {
+                const checked = allowedPaymentMethods.includes(method);
+
+                return (
+                  <label
+                    key={method}
+                    className="flex cursor-pointer items-center gap-3 rounded-[10px] border border-[#E8E8E8] px-4 py-3"
+                  >
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={(value) => toggleMethod(method, value === true)}
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-dark">
+                        {paymentMethodLabels[method]}
+                      </p>
+                      <p className="mt-1 text-xs font-medium text-gray">
+                        {method}
+                      </p>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 rounded-[10px] border border-[#E8E8E8] px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-dark">
+                Customer wallet payments
+              </p>
+              <p className="mt-1 text-xs text-gray">
+                Enable wallet usage when WALLET is also selected above.
+              </p>
+            </div>
+            <Switch checked={walletEnabled} onCheckedChange={setWalletEnabled} />
+          </div>
+
+          <div className={formGroupClassName}>
+            <Label htmlFor="restaurant-payment-note">Internal note</Label>
+            <Textarea
+              id="restaurant-payment-note"
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Allow cash, Stripe, and wallet"
+              className="min-h-[92px] border-[#BBBBBB] focus:border-primary"
+            />
+          </div>
+
+          <Button
+            type="button"
+            onClick={submit}
+            disabled={
+              !restaurantId ||
+              updateMethods.isPending ||
+              allowedPaymentMethods.length === 0
+            }
+            className="h-[44px] rounded-[10px]"
+          >
+            {updateMethods.isPending ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 size-4" />
+            )}
+            Save Payment Methods
+          </Button>
+
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-dark">
+              Recent payment ledger
+            </h3>
+            {management?.recentLedger.length ? (
+              <div className="overflow-hidden rounded-[10px] border border-[#E8E8E8]">
+                {management.recentLedger.slice(0, 5).map((entry, index) => (
+                  <div
+                    key={`${entry.id}-${index}`}
+                    className="grid gap-2 border-b border-[#E8E8E8] px-4 py-3 text-sm last:border-b-0 sm:grid-cols-[1fr_auto_auto]"
+                  >
+                    <span className="font-semibold text-dark">
+                      {entry.type || entry.paymentMethod || "Payment activity"}
+                    </span>
+                    <span className="text-gray">{entry.status || "Pending"}</span>
+                    <span className="font-semibold text-dark">
+                      {formatMoney(entry.amount, entry.currency || management.currency || "PKR")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="rounded-[10px] bg-gray-50 px-3 py-3 text-sm text-gray">
+                No recent payment ledger entries returned yet.
+              </p>
+            )}
+          </div>
         </div>
       ) : null}
     </section>
   );
 }
 
-function PaymentMethodItem({ method }: { method: PaymentMethod }) {
-  const label = paymentMethodLabels[method.code] ?? method.label;
-
+function PaymentSummaryCard({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-[10px] border border-[#E8E8E8] px-4 py-3">
-      <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-dark">{label}</p>
-        <p className="mt-1 text-xs font-medium text-gray">{method.code}</p>
+    <div className="rounded-[10px] border border-[#E8E8E8] px-4 py-3">
+      <div className="mb-3 flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        {icon}
       </div>
-      <span
-        className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-          method.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
-        }`}
-      >
-        {method.isActive ? "Active" : "Inactive"}
-      </span>
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray">
+        {label}
+      </p>
+      <p className="mt-2 text-sm font-semibold leading-5 text-dark">{value}</p>
     </div>
+  );
+}
+
+function formatMoney(amount: number | null, currency: string | null) {
+  if (amount === null) return "Not available";
+
+  return new Intl.NumberFormat("en", {
+    style: "currency",
+    currency: currency || "PKR",
+    maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
+  }).format(amount);
+}
+
+function getRecordNumber(
+  record: Record<string, unknown> | null | undefined,
+  keys: string[]
+) {
+  for (const key of keys) {
+    const value = record?.[key];
+    const parsed = Number(value);
+
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return null;
+}
+
+function formatRecordAmount(
+  record: Record<string, unknown> | null | undefined,
+  currency: string | null
+) {
+  return formatMoney(
+    getRecordNumber(record, ["balance", "totalExposure", "amount", "walletAmount"]),
+    currency
   );
 }
 
