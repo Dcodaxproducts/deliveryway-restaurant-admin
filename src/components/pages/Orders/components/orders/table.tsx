@@ -92,6 +92,8 @@ const formatOrderTime = (value?: string) => {
   });
 };
 
+const normalizeOrderType = (value?: string | null) => value?.toUpperCase() ?? "";
+
 interface OrdersTableProps {
   orders: OrdersTableRow[];
   loading: boolean;
@@ -138,6 +140,18 @@ export function OrdersTable({
   };
   const getCustomerDetail = (order: OrdersTableRow) =>
     order.customer?.email || order.customer?.phone || order.customer?.id || "-";
+  const getOrderTypeLabel = (orderType?: string | null) => {
+    const normalizedType = normalizeOrderType(orderType);
+
+    if (normalizedType === "DELIVERY") return t("delivery");
+    if (normalizedType === "PICKUP" || normalizedType === "TAKEAWAY") {
+      return t("pickup");
+    }
+    if (normalizedType === "DINE_IN") return t("dineIn");
+    if (normalizedType === "POS") return "POS";
+
+    return orderType ? orderType.replaceAll("_", " ") : "-";
+  };
   const getAddressPreview = (order: OrdersTableRow) => {
     if (order.orderType !== "DELIVERY") {
       return {
@@ -263,6 +277,7 @@ export function OrdersTable({
           headers={[
             t("date"),
             t("customerInfo"),
+            t("orderType"),
             t("address"),
             t("amount"),
             t("statusLabel"),
@@ -311,12 +326,13 @@ export function OrdersTable({
       </>
     ) : (
       <>
-        <SortHeader label={t("date")} sortKey="createdAt" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[20%]" />
-        <SortHeader label={t("customerInfo")} sortKey="customerName" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[22%]" />
+        <SortHeader label={t("date")} sortKey="createdAt" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[16%]" />
+        <SortHeader label={t("customerInfo")} sortKey="customerName" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[18%]" />
+        <SortHeader label={t("orderType")} sortKey="orderType" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[10%]" />
         <TableHead className="w-[16%]">{t("address")}</TableHead>
-        <SortHeader label={t("amount")} sortKey="totalAmount" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[11%]" />
-        <SortHeader label={t("statusLabel")} sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[11%]" />
-        <SortHeader label={t("paymentStatus")} sortKey="paymentStatus" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[12%]" />
+        <SortHeader label={t("amount")} sortKey="totalAmount" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[9%]" />
+        <SortHeader label={t("statusLabel")} sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[10%]" />
+        <SortHeader label={t("paymentStatus")} sortKey="paymentStatus" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[11%]" />
       </>
     )}
 
@@ -335,6 +351,7 @@ export function OrdersTable({
       createdAt,
       totalAmount,
       paymentStatus,
+      orderType,
     } = order;
     const customerNameValue = getCustomerName(order);
     const customerDetail = getCustomerDetail(order);
@@ -419,6 +436,15 @@ export function OrdersTable({
                 {customerDetail}
               </p>
             </div>
+          </TableCell>
+
+          <TableCell className="px-3">
+            <Badge
+              className="max-w-full border-primary/20 bg-primary/10 text-primary"
+              title={getOrderTypeLabel(orderType)}
+            >
+              <span className="truncate">{getOrderTypeLabel(orderType)}</span>
+            </Badge>
           </TableCell>
 
           <TableCell className="px-4 whitespace-normal">
