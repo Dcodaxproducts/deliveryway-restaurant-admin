@@ -321,7 +321,7 @@ export const menuItems: MenuItem[] = [
   {
     title: "Payment Settings",
     labelKey: "paymentSettings",
-    href: "/global-settings",
+    href: "/payment-settings",
     icon: CreditCard,
     section: "account",
     roles: restaurantAdminRoles,

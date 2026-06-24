@@ -101,7 +101,11 @@ const sidebarItemClassName = "flex items-center gap-[12px] cursor-pointer";
 const sidebarLabelClassName =
   "text-base font-semibold text-[#646982] group-hover:text-primary transition-colors";
 
-export default function SettingsForm() {
+type SettingsFormProps = {
+  variant?: "global" | "payments";
+};
+
+export default function SettingsForm({ variant = "global" }: SettingsFormProps) {
   const { isRestaurantAdmin, restaurantId } = useAuth();
   const { handleSubmit, register, setValue, watch } = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
@@ -119,6 +123,23 @@ export default function SettingsForm() {
   const onSubmit = (values: SettingsFormValues) => {
     void values;
   };
+
+  if (variant === "payments") {
+    return (
+      <div className="space-y-[24px] rounded-[14px] bg-white p-4 lg:p-[30px]">
+        {isRestaurantAdmin ? (
+          <>
+            <PaymentManagementSection restaurantId={restaurantId} />
+            <StripeAccountSection restaurantId={restaurantId} />
+          </>
+        ) : (
+          <p className="rounded-[10px] bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            Payment settings are available for restaurant admins.
+          </p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <form
@@ -296,14 +317,6 @@ export default function SettingsForm() {
             onValueChange={(value) => setValue("fontSelection", value, { shouldDirty: true })}
           />
         </section>
-
-        {isRestaurantAdmin ? (
-          <PaymentManagementSection restaurantId={restaurantId} />
-        ) : null}
-
-        {isRestaurantAdmin ? (
-          <StripeAccountSection restaurantId={restaurantId} />
-        ) : null}
 
         <section className="flex flex-col sm:flex-row gap-4 justify-end">
           <Button
