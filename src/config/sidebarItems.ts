@@ -24,6 +24,7 @@ import {
   Coins,
   CreditCard,
   ReceiptText,
+  Inbox,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { IconType } from "react-icons";
@@ -199,6 +200,14 @@ export const menuItems: MenuItem[] = [
     labelKey: "customerManagement",
     href: "/customer-settings",
     icon: PiUsersThree,
+    section: "main",
+    roles: allAdminRoles,
+  },
+  {
+    title: "Contact Submissions",
+    labelKey: "contactSubmissions",
+    href: "/contact-submissions",
+    icon: Inbox,
     section: "main",
     roles: allAdminRoles,
   },
