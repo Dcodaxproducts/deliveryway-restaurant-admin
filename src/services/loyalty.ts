@@ -21,6 +21,17 @@ export type AdjustCustomerLoyaltyParams = {
   payload: AdjustCustomerLoyaltyPayload;
 };
 
+export type AdjustCustomerWalletPayload = {
+  amount: number;
+  isCredit: boolean;
+  note?: string;
+};
+
+export type AdjustCustomerWalletParams = {
+  customerId: string;
+  payload: AdjustCustomerWalletPayload;
+};
+
 export type GetLoyaltyProgramParams = {
   restaurantId?: string;
 };
@@ -68,6 +79,18 @@ export type LoyaltyCustomerSummaryResponse = {
   message?: string;
 };
 
+export type WalletCustomerSummaryResponse = {
+  success: boolean;
+  data: {
+    customerId?: string;
+    balance?: number;
+    currency?: string;
+    history?: any[];
+    [key: string]: any;
+  };
+  message?: string;
+};
+
 /**
  * ==============================
  * ROUTES
@@ -80,6 +103,12 @@ export const LOYALTY_ROUTES = {
 
   adjustCustomer: (customerId: string) =>
     `/admin/loyalty/customers/${encodeURIComponent(customerId)}/adjust`,
+
+  walletSummary: (customerId: string) =>
+    `/admin/loyalty/wallet/customers/${encodeURIComponent(customerId)}`,
+
+  adjustWallet: (customerId: string) =>
+    `/admin/loyalty/wallet/customers/${encodeURIComponent(customerId)}/adjust`,
 
   program: "/admin/loyalty/program",
 };
@@ -124,6 +153,23 @@ export const adjustCustomerLoyaltyPoints = async ({
     LOYALTY_ROUTES.adjustCustomer(customerId),
     payload
   );
+
+  return data;
+};
+
+export const getCustomerWalletSummary = async ({
+  customerId,
+}: LoyaltyCustomerSummaryParams): Promise<WalletCustomerSummaryResponse> => {
+  const { data } = await api.get(LOYALTY_ROUTES.walletSummary(customerId));
+
+  return data;
+};
+
+export const adjustCustomerWallet = async ({
+  customerId,
+  payload,
+}: AdjustCustomerWalletParams) => {
+  const { data } = await api.post(LOYALTY_ROUTES.adjustWallet(customerId), payload);
 
   return data;
 };

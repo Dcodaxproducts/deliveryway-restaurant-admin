@@ -9,6 +9,7 @@ import {
 import { httpClient } from "@/lib/axios";
 import type {
   ForgotPasswordPayload,
+  GoogleLoginPayload,
   LoginPayload,
   ResendOtpPayload,
   ResetPasswordPayload,
@@ -30,6 +31,10 @@ const unwrapEnvelope = (response: unknown) => {
 export const authApi = {
   loginWithFallback: async (payload: LoginPayload) => {
     const response = await httpClient.post("/auth/login", payload);
+    return normalizeAuthPayload(response);
+  },
+  googleLogin: async (payload: GoogleLoginPayload) => {
+    const response = await httpClient.post("/auth/google-login", payload);
     return normalizeAuthPayload(response);
   },
   forgotPassword: (payload: ForgotPasswordPayload) =>

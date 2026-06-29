@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, type FormEvent } from "react";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
@@ -41,6 +41,50 @@ const loginRoles: Array<{
   },
 ];
 
+type GoogleCredentialResponse = { credential?: string };
+
+type GoogleAccounts = {
+  id?: {
+    initialize: (config: {
+      client_id: string;
+      callback: (response: GoogleCredentialResponse) => void;
+    }) => void;
+    prompt: () => void;
+  };
+};
+
+type GoogleWindow = Window & { google?: { accounts?: GoogleAccounts } };
+
+const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+
+const loadGoogleIdentityScript = () =>
+  new Promise<void>((resolve, reject) => {
+    if ((window as GoogleWindow).google?.accounts?.id) {
+      resolve();
+      return;
+    }
+
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      'script[src="https://accounts.google.com/gsi/client"]',
+    );
+
+    if (existingScript) {
+      existingScript.addEventListener("load", () => resolve(), { once: true });
+      existingScript.addEventListener("error", () => reject(new Error("Google login failed to load")), {
+        once: true,
+      });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Google login failed to load"));
+    document.head.appendChild(script);
+  });
+
 function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -51,6 +95,7 @@ function LoginFormContent() {
     control,
     handleSubmit,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -60,6 +105,7 @@ function LoginFormContent() {
       role: "BUSINESS_ADMIN",
     },
   });
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
   useEffect(() => {
     const email = searchParams.get("email");
@@ -106,6 +152,68 @@ function LoginFormContent() {
 
   const handleLoginClick = () => {
     void submitLogin();
+  };
+
+  const handleGoogleLogin = async () => {
+    if (!googleClientId) {
+      toast.error(t("googleClientMissing"));
+      return;
+    }
+
+    try {
+      setIsGoogleSubmitting(true);
+      await loadGoogleIdentityScript();
+      const googleId = (window as GoogleWindow).google?.accounts?.id;
+
+      if (!googleId) {
+        throw new Error(t("googleUnavailable"));
+      }
+
+      googleId.initialize({
+        client_id: googleClientId,
+        callback: async (response: GoogleCredentialResponse) => {
+          try {
+            if (!response.credential) {
+              throw new Error(t("googleCredentialMissing"));
+            }
+
+            const authPayload = await authApi.googleLogin({
+              idToken: response.credential,
+              role: getValues("role"),
+            });
+            const user = authPayload.user;
+
+            if (!user) {
+              throw new Error(t("invalidLoginResponse"));
+            }
+
+            if (!isAllowedAdminRole(user.role)) {
+              toast.error(t("notAuthorized"));
+              return;
+            }
+
+            if (user.role === "BRANCH_ADMIN" && !user.branchId) {
+              toast.error(t("missingBranchAssignment"));
+              return;
+            }
+
+            login(authPayload);
+            toast.success(t("loginSuccess", { role: getRoleLabel(user.role) }));
+            const defaultRedirectPath = user.role === "BRANCH_ADMIN" ? "/branch-workspace" : "/";
+            router.push(getSafeRedirectPath(searchParams.get("redirect") ?? defaultRedirectPath));
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : t("genericError"));
+          } finally {
+            setIsGoogleSubmitting(false);
+          }
+        },
+      });
+
+      googleId.prompt();
+    } catch (error) {
+      setIsGoogleSubmitting(false);
+      toast.error(error instanceof Error ? error.message : t("genericError"));
+    }
   };
 
   return (
@@ -236,10 +344,12 @@ function LoginFormContent() {
 
             <button
               type="button"
+              disabled={isSubmitting || isGoogleSubmitting}
+              onClick={handleGoogleLogin}
               className="flex h-[48px] w-full items-center justify-center gap-3 rounded-[12px] border border-[#BBBBBB] text-sm font-medium transition hover:bg-gray-50"
             >
               <Image src="/google_icon.png" alt={t("googleAlt")} width={18} height={18} />
-              {t("signInWithGoogle")}
+              {isGoogleSubmitting ? t("signingIn") : t("signInWithGoogle")}
             </button>
           </div>
         </form>

@@ -3,11 +3,14 @@ import { toast } from "sonner";
 
 import {
   AdjustCustomerLoyaltyParams,
+  AdjustCustomerWalletParams,
   GetLoyaltyProgramParams,
   LoyaltyCustomerSummaryParams,
   UpdateLoyaltyProgramPayload,
   adjustCustomerLoyaltyPoints,
+  adjustCustomerWallet,
   getCustomerLoyaltySummary,
+  getCustomerWalletSummary,
   getLoyaltyProgram,
   updateLoyaltyProgram,
 } from "@/services/loyalty/loyalty.api";
@@ -35,8 +38,43 @@ export const loyaltyKeys = {
   customer: (customerId?: string) =>
     ["admin-loyalty", "customer", customerId || ""] as const,
 
+  wallet: (customerId?: string) =>
+    ["admin-loyalty", "wallet", customerId || ""] as const,
+
   program: (restaurantId?: string) =>
     ["admin-loyalty", "program", restaurantId || "global"] as const,
+};
+
+export const useGetCustomerWalletSummary = (
+  params?: LoyaltyCustomerSummaryParams,
+) => {
+  return useQuery({
+    queryKey: loyaltyKeys.wallet(params?.customerId),
+    queryFn: () => getCustomerWalletSummary(params as LoyaltyCustomerSummaryParams),
+    enabled: Boolean(params?.customerId),
+  });
+};
+
+export const useAdjustCustomerWallet = (options?: LoyaltyMutationOptions) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: AdjustCustomerWalletParams) => adjustCustomerWallet(params),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.wallet(variables.customerId) });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.all });
+      toast.success(
+        variables.payload.isCredit
+          ? options?.messages?.creditSuccess || options?.messages?.success || "Wallet credited successfully"
+          : options?.messages?.debitSuccess || options?.messages?.success || "Wallet debited successfully",
+      );
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message || options?.messages?.error || "Failed to adjust wallet",
+      );
+    },
+  });
 };
 
 /**

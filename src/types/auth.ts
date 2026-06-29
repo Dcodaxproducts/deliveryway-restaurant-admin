@@ -6,6 +6,11 @@ export type LoginPayload = {
   role?: "BUSINESS_ADMIN" | "BRANCH_ADMIN";
 };
 
+export type GoogleLoginPayload = {
+  idToken: string;
+  role?: "BUSINESS_ADMIN" | "BRANCH_ADMIN";
+};
+
 export type ForgotPasswordPayload = {
   email: string;
   restaurantId?: string;

@@ -27,13 +27,21 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import {
   useAdjustCustomerLoyaltyPoints,
+  useAdjustCustomerWallet,
   useGetCustomerLoyaltySummary,
+  useGetCustomerWalletSummary,
 } from "@/hooks/useLoyalty";
 import { getCustomersList } from "@/services/customers/customers.api";
 import { useLocale, useTranslations } from "next-intl";
 
 type AdjustmentForm = {
   points: string;
+  isCredit: boolean;
+  note: string;
+};
+
+type WalletAdjustmentForm = {
+  amount: string;
   isCredit: boolean;
   note: string;
 };
@@ -48,6 +56,12 @@ type CustomerOption = {
 
 const defaultAdjustmentForm: AdjustmentForm = {
   points: "",
+  isCredit: true,
+  note: "",
+};
+
+const defaultWalletAdjustmentForm: WalletAdjustmentForm = {
+  amount: "",
   isCredit: true,
   note: "",
 };
@@ -258,9 +272,12 @@ export default function CustomerLoyaltyManager() {
 
   const [activeCustomerId, setActiveCustomerId] = useState("");
   const [adjustOpen, setAdjustOpen] = useState(false);
+  const [walletAdjustOpen, setWalletAdjustOpen] = useState(false);
   const [adjustmentForm, setAdjustmentForm] = useState<AdjustmentForm>(
     defaultAdjustmentForm,
   );
+  const [walletAdjustmentForm, setWalletAdjustmentForm] =
+    useState<WalletAdjustmentForm>(defaultWalletAdjustmentForm);
 
   const {
     data: summaryResponse,
@@ -275,12 +292,34 @@ export default function CustomerLoyaltyManager() {
       : undefined,
   );
 
+  const {
+    data: walletResponse,
+    isLoading: isWalletLoading,
+    isFetching: isWalletFetching,
+    refetch: refetchWallet,
+  } = useGetCustomerWalletSummary(
+    activeCustomerId
+      ? {
+          customerId: activeCustomerId,
+        }
+      : undefined,
+  );
+
   const { mutate: adjustPoints, isPending: isAdjusting } =
     useAdjustCustomerLoyaltyPoints({
       messages: {
         creditSuccess: t("messages.pointsAdded"),
         debitSuccess: t("messages.pointsDeducted"),
         error: t("messages.failedAdjust"),
+      },
+    });
+
+  const { mutate: adjustWallet, isPending: isWalletAdjusting } =
+    useAdjustCustomerWallet({
+      messages: {
+        creditSuccess: t("messages.walletCredited"),
+        debitSuccess: t("messages.walletDebited"),
+        error: t("messages.failedAdjustWallet"),
       },
     });
 
@@ -312,6 +351,12 @@ export default function CustomerLoyaltyManager() {
   const history = useMemo(() => {
     return normalizeHistory(summary);
   }, [summary]);
+
+  const walletSummary = walletResponse?.data;
+  const walletHistory = useMemo(
+    () => normalizeHistory(walletSummary),
+    [walletSummary],
+  );
 
   const stats = useMemo(() => {
     return [
@@ -353,6 +398,10 @@ export default function CustomerLoyaltyManager() {
     setAdjustmentForm(defaultAdjustmentForm);
   };
 
+  const resetWalletAdjustment = () => {
+    setWalletAdjustmentForm(defaultWalletAdjustmentForm);
+  };
+
   const handleAdjust = () => {
     if (isBranchAdmin) {
       toast.error(t("validation.branchAdjustmentReadOnly"));
@@ -385,6 +434,43 @@ export default function CustomerLoyaltyManager() {
           setAdjustOpen(false);
           resetAdjustment();
           refetch();
+        },
+      },
+    );
+  };
+
+  const handleWalletAdjust = () => {
+    if (isBranchAdmin) {
+      toast.error(t("validation.branchWalletReadOnly"));
+      return;
+    }
+
+    if (!activeCustomerId) {
+      toast.error(t("validation.selectCustomerFirst"));
+      return;
+    }
+
+    const amount = toNumber(walletAdjustmentForm.amount);
+
+    if (amount <= 0) {
+      toast.error(t("validation.amountPositive"));
+      return;
+    }
+
+    adjustWallet(
+      {
+        customerId: activeCustomerId,
+        payload: {
+          amount,
+          isCredit: walletAdjustmentForm.isCredit,
+          note: walletAdjustmentForm.note.trim(),
+        },
+      },
+      {
+        onSuccess: () => {
+          setWalletAdjustOpen(false);
+          resetWalletAdjustment();
+          refetchWallet();
         },
       },
     );
@@ -604,6 +690,105 @@ export default function CustomerLoyaltyManager() {
               </div>
             )}
           </div>
+
+          <div className="mt-6 overflow-hidden rounded-[18px] border border-gray-100 bg-white shadow-sm">
+            <div className="flex flex-col gap-3 border-b border-gray-100 bg-[#FAFAFA] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-950">
+                  {t("wallet")}
+                </h3>
+                <p className="mt-1 text-xs text-gray-500">
+                  {t("walletDescription")}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!activeCustomerId || isWalletFetching}
+                  onClick={() => refetchWallet()}
+                  className="h-[38px] rounded-[12px]"
+                >
+                  {isWalletFetching ? (
+                    <Loader2 size={15} className="mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCcw size={15} className="mr-2" />
+                  )}
+                  {t("refresh")}
+                </Button>
+
+                {!isBranchAdmin ? (
+                  <Button
+                    type="button"
+                    disabled={!activeCustomerId || isWalletLoading}
+                    onClick={() => setWalletAdjustOpen(true)}
+                    className="h-[38px] rounded-[12px] bg-primary text-white hover:bg-primary/90"
+                  >
+                    <WalletCards size={15} className="mr-2" />
+                    {t("adjustWallet")}
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="grid gap-4 p-4 lg:grid-cols-[240px_1fr]">
+              <div className="rounded-[16px] border border-primary/10 bg-primary/[0.04] p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                  {t("walletBalance")}
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-gray-950">
+                  {Number(walletSummary?.balance || 0).toFixed(2)} {walletSummary?.currency || "USD"}
+                </p>
+              </div>
+
+              {walletHistory.length === 0 ? (
+                <div className="rounded-[16px] border border-dashed border-gray-200 p-6 text-center text-sm text-gray-400">
+                  {t("emptyWalletHistory")}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[640px] text-sm">
+                    <thead>
+                      <tr className="border-b bg-white text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        <th className="px-4 py-3">{t("date")}</th>
+                        <th className="px-4 py-3">{t("type")}</th>
+                        <th className="px-4 py-3 text-right">{t("amount")}</th>
+                        <th className="px-4 py-3 text-right">{t("balanceAfter")}</th>
+                        <th className="px-4 py-3">{t("note")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {walletHistory.map((row: any, index: number) => {
+                        const amount = Number(row?.amount || 0);
+                        const isCredit = amount >= 0 || String(row?.type || "").toLowerCase().includes("credit");
+
+                        return (
+                          <tr key={row?.id || index} className="border-b border-gray-100 transition hover:bg-[#FAFAFA]">
+                            <td className="px-4 py-4 text-gray-700">
+                              {formatDate(row?.createdAt || row?.date, dateLocale)}
+                            </td>
+                            <td className="px-4 py-4">
+                              <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${isCredit ? "bg-green-50 text-green" : "bg-red-50 text-red-600"}`}>
+                                {isCredit ? t("credit") : t("debit")}
+                              </span>
+                            </td>
+                            <td className={`px-4 py-4 text-right font-semibold ${isCredit ? "text-green" : "text-red-600"}`}>
+                              {isCredit ? "+" : "-"}{Math.abs(amount).toFixed(2)}
+                            </td>
+                            <td className="px-4 py-4 text-right text-gray-700">
+                              {Number(row?.balanceAfter || 0).toFixed(2)}
+                            </td>
+                            <td className="px-4 py-4 text-gray-600">{row?.note || "-"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
         </>
       )}
 
@@ -767,6 +952,133 @@ export default function CustomerLoyaltyManager() {
                   <MinusCircle size={16} className="mr-2" />
                   {t("deductPoints")}
                 </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={walletAdjustOpen} onOpenChange={setWalletAdjustOpen} modal>
+        <DialogContent
+          className="max-w-[520px] rounded-[22px] border-0 bg-white p-0 shadow-xl"
+          onCloseAutoFocus={(event) => event.preventDefault()}
+        >
+          <DialogHeader className="border-b border-gray-100 px-5 py-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <DialogTitle className="text-xl font-semibold text-gray-950">
+                  {t("adjustWallet")}
+                </DialogTitle>
+                <p className="mt-1 text-sm text-gray-500">
+                  {t("adjustWalletDescription")}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setWalletAdjustOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+                aria-label={t("closeModal")}
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-4 px-5 py-5">
+            <div className="rounded-[14px] border border-primary/10 bg-primary/[0.04] p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                {t("customer")}
+              </p>
+              <p className="mt-1 break-all text-sm font-semibold text-gray-900">
+                {selectedCustomer?.displayName || activeCustomerId}
+              </p>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-gray-900">
+                {t("adjustmentType")}
+              </label>
+              <div className="grid grid-cols-2 gap-2 rounded-[14px] bg-[#F7F7F7] p-1">
+                <button
+                  type="button"
+                  onClick={() => setWalletAdjustmentForm((prev) => ({ ...prev, isCredit: true }))}
+                  className={`h-[40px] rounded-[11px] text-sm font-semibold transition ${walletAdjustmentForm.isCredit ? "bg-white text-green shadow-sm" : "text-gray-500 hover:bg-white/70"}`}
+                >
+                  {t("creditWallet")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWalletAdjustmentForm((prev) => ({ ...prev, isCredit: false }))}
+                  className={`h-[40px] rounded-[11px] text-sm font-semibold transition ${!walletAdjustmentForm.isCredit ? "bg-white text-red-600 shadow-sm" : "text-gray-500 hover:bg-white/70"}`}
+                >
+                  {t("debitWallet")}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-gray-900">
+                {t("amount")}
+              </label>
+              <Input
+                type="number"
+                min={0.01}
+                step="0.01"
+                value={walletAdjustmentForm.amount}
+                onChange={(event) =>
+                  setWalletAdjustmentForm((prev) => ({ ...prev, amount: event.target.value }))
+                }
+                placeholder="10.00"
+                className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-gray-900">
+                {t("note")}
+              </label>
+              <textarea
+                value={walletAdjustmentForm.note}
+                onChange={(event) =>
+                  setWalletAdjustmentForm((prev) => ({ ...prev, note: event.target.value }))
+                }
+                placeholder={t("walletAdjustmentReason")}
+                rows={4}
+                className="w-full resize-none rounded-[12px] border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-gray-400"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col-reverse gap-2 border-t border-gray-100 px-5 py-4 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isWalletAdjusting}
+              onClick={() => {
+                setWalletAdjustOpen(false);
+                resetWalletAdjustment();
+              }}
+              className="rounded-[12px]"
+            >
+              {commonT("cancel")}
+            </Button>
+
+            <Button
+              type="button"
+              disabled={isWalletAdjusting}
+              onClick={handleWalletAdjust}
+              className="rounded-[12px] bg-primary text-white hover:bg-primary/90 disabled:opacity-60"
+            >
+              {isWalletAdjusting ? (
+                <>
+                  <Loader2 size={16} className="mr-2 animate-spin" />
+                  {t("saving")}
+                </>
+              ) : walletAdjustmentForm.isCredit ? (
+                <>{t("creditWallet")}</>
+              ) : (
+                <>{t("debitWallet")}</>
               )}
             </Button>
           </div>
