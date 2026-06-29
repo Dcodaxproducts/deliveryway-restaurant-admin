@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 import {
   useRestaurantPaymentManagement,
   useUpdateRestaurantPaymentMethods,
@@ -508,11 +509,13 @@ function PaymentManagementSection({
   restaurantId?: string | null;
 }) {
   const managementQuery = useRestaurantPaymentManagement(restaurantId);
+  const { formatMoney: formatCurrency, resolveCurrency } = useCurrency(restaurantId);
   const updateMethods = useUpdateRestaurantPaymentMethods();
   const [allowedPaymentMethods, setAllowedPaymentMethods] = useState<PaymentMethodCode[]>([]);
   const [walletEnabled, setWalletEnabled] = useState(false);
   const [note, setNote] = useState("");
   const management = managementQuery.data;
+  const managementCurrency = resolveCurrency(management?.currency);
   const activeMethodSet = useMemo(
     () => new Set(management?.activePlatformPaymentMethods ?? []),
     [management?.activePlatformPaymentMethods]
@@ -640,9 +643,10 @@ function PaymentManagementSection({
             <PaymentSummaryCard
               icon={<Banknote size={18} />}
               label="Estimated available"
-              value={formatMoney(
+              value={formatOptionalMoney(
                 management?.estimatedAvailableBalance ?? null,
-                management?.currency ?? "PKR"
+                managementCurrency,
+                formatCurrency
               )}
             />
             <PaymentSummaryCard
@@ -650,7 +654,8 @@ function PaymentManagementSection({
               label="Wallet exposure"
               value={formatRecordAmount(
                 management?.walletExposure,
-                management?.currency ?? "PKR"
+                managementCurrency,
+                formatCurrency
               )}
             />
           </div>
@@ -749,7 +754,7 @@ function PaymentManagementSection({
                     </span>
                     <span className="text-gray">{entry.status || "Pending"}</span>
                     <span className="font-semibold text-dark">
-                      {formatMoney(entry.amount, entry.currency || management.currency || "PKR")}
+                      {formatCurrency(entry.amount, entry.currency || managementCurrency)}
                     </span>
                   </div>
                 ))}
@@ -788,14 +793,14 @@ function PaymentSummaryCard({
   );
 }
 
-function formatMoney(amount: number | null, currency: string | null) {
+function formatOptionalMoney(
+  amount: number | null,
+  currency: string | null,
+  formatCurrency: (amount?: number | string | null, currencyOverride?: string | null) => string
+) {
   if (amount === null) return "Not available";
 
-  return new Intl.NumberFormat("en", {
-    style: "currency",
-    currency: currency || "PKR",
-    maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
-  }).format(amount);
+  return formatCurrency(amount, currency);
 }
 
 function getRecordNumber(
@@ -814,9 +819,10 @@ function getRecordNumber(
 
 function formatRecordAmount(
   record: Record<string, unknown> | null | undefined,
-  currency: string | null
+  currency: string | null,
+  formatCurrency: (amount?: number | string | null, currencyOverride?: string | null) => string
 ) {
-  return formatMoney(
+  return formatOptionalMoney(
     getRecordNumber(record, [
       "balance",
       "totalBalance",
@@ -824,7 +830,8 @@ function formatRecordAmount(
       "amount",
       "walletAmount",
     ]),
-    currency
+    currency,
+    formatCurrency
   );
 }
 

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 import {
   useAdjustCustomerLoyaltyPoints,
   useAdjustCustomerWallet,
@@ -263,6 +264,7 @@ export default function CustomerLoyaltyManager() {
   const dateLocale = locale === "de" ? "de-DE" : "en-US";
 
   const normalizedRestaurantId = restaurantId ?? undefined;
+  const { formatMoney, resolveCurrency } = useCurrency(normalizedRestaurantId);
   const normalizedBranchId = isBranchAdmin
     ? (branchId ?? undefined)
     : undefined;
@@ -353,6 +355,7 @@ export default function CustomerLoyaltyManager() {
   }, [summary]);
 
   const walletSummary = walletResponse?.data;
+  const walletCurrency = resolveCurrency(walletSummary?.currency);
   const walletHistory = useMemo(
     () => normalizeHistory(walletSummary),
     [walletSummary],
@@ -738,7 +741,7 @@ export default function CustomerLoyaltyManager() {
                   {t("walletBalance")}
                 </p>
                 <p className="mt-2 text-2xl font-semibold text-gray-950">
-                  {Number(walletSummary?.balance || 0).toFixed(2)} {walletSummary?.currency || "USD"}
+                  {formatMoney(walletSummary?.balance || 0, walletCurrency)}
                 </p>
               </div>
 
@@ -762,6 +765,7 @@ export default function CustomerLoyaltyManager() {
                       {walletHistory.map((row: any, index: number) => {
                         const amount = Number(row?.amount || 0);
                         const isCredit = amount >= 0 || String(row?.type || "").toLowerCase().includes("credit");
+                        const rowCurrency = resolveCurrency(row?.currency || walletCurrency);
 
                         return (
                           <tr key={row?.id || index} className="border-b border-gray-100 transition hover:bg-[#FAFAFA]">
@@ -774,10 +778,10 @@ export default function CustomerLoyaltyManager() {
                               </span>
                             </td>
                             <td className={`px-4 py-4 text-right font-semibold ${isCredit ? "text-green" : "text-red-600"}`}>
-                              {isCredit ? "+" : "-"}{Math.abs(amount).toFixed(2)}
+                              {isCredit ? "+" : "-"}{formatMoney(Math.abs(amount), rowCurrency)}
                             </td>
                             <td className="px-4 py-4 text-right text-gray-700">
-                              {Number(row?.balanceAfter || 0).toFixed(2)}
+                              {formatMoney(row?.balanceAfter || 0, rowCurrency)}
                             </td>
                             <td className="px-4 py-4 text-gray-600">{row?.note || "-"}</td>
                           </tr>
