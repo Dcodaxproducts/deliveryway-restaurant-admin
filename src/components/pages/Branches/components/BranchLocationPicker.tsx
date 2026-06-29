@@ -111,6 +111,7 @@ export type BranchLocationAddressFields = Partial<{
   area: string;
   city: string;
   country: string;
+  postalCode: string;
   state: string;
   street: string;
 }> & {
@@ -148,11 +149,13 @@ const mapPlaceToAddressFields = (
   const locality = getAddressComponent(place.address_components, "locality");
   const adminArea = getAddressComponent(place.address_components, "administrative_area_level_1");
   const country = getAddressComponent(place.address_components, "country");
+  const postalCode = getAddressComponent(place.address_components, "postal_code");
   const street = [streetNumber, route].filter(Boolean).join(" ");
 
   return {
     street: street || place.formatted_address || place.name || "",
     area: neighborhood || sublocality,
+    postalCode,
     city: locality || getAddressComponent(place.address_components, "administrative_area_level_2"),
     state: adminArea,
     country,

@@ -86,6 +86,8 @@ const defaultValues: CreateBranchFormValues = {
   restaurantId: "",
   name: "",
   street: "",
+  shopNumber: "",
+  postalCode: "",
   city: "",
   state: "",
   country: "",
@@ -155,10 +157,12 @@ const branchFieldConfigs: FieldConfig[] = [
     primary: true,
   },
   { name: "street", labelKey: "street", placeholderKey: "streetPlaceholder" },
+  { name: "shopNumber", labelKey: "shopNumber", placeholderKey: "shopNumber" },
+  { name: "postalCode", labelKey: "postalCode", placeholderKey: "postalCode" },
   { name: "city", labelKey: "city", placeholderKey: "cityPlaceholder" },
+  { name: "area", labelKey: "area", placeholderKey: "areaPlaceholder" },
   { name: "state", labelKey: "state", placeholderKey: "statePlaceholder" },
   { name: "country", labelKey: "country", placeholderKey: "countryPlaceholder" },
-  { name: "area", labelKey: "area", placeholderKey: "areaPlaceholder" },
 ];
 
 const adminFieldConfigs: FieldConfig[] = [
@@ -235,6 +239,8 @@ export function CreateBranchModal({
         restaurantId,
         name: values.name,
         street: values.street ?? "",
+        shopNumber: values.shopNumber ?? "",
+        postalCode: values.postalCode ?? "",
         city: values.city ?? "",
         state: values.state ?? "",
         country: values.country ?? "",

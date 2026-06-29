@@ -10,6 +10,22 @@ const createBranchPayload = {
 };
 
 describe("branch service charge validation", () => {
+  it("accepts backend-supported branch address fields on create", () => {
+    const result = createBranchSchema.safeParse({
+      ...createBranchPayload,
+      street: "Street 12",
+      shopNumber: "Shop 4",
+      postalCode: "54000",
+      city: "Lahore",
+      state: "Punjab",
+      country: "Pakistan",
+      lat: "31.5204",
+      lng: "74.3587",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("accepts all backend-supported branch payment methods", () => {
     const result = createBranchSchema.safeParse({
       ...createBranchPayload,
