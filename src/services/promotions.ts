@@ -43,7 +43,7 @@ export type PromotionCampaignPayload = {
 };
 
 export type HappyHourPayload = {
-  code: string;
+  code?: string;
   title: string;
   description?: string;
   restaurantId?: string | null;

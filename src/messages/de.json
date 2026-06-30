@@ -2483,7 +2483,7 @@
       "selectBranch": "Filiale auswählen",
       "selectItem": "Artikel auswählen",
       "happyHourActivePrompt": "Möchten Sie die Happy-Hour-Aktion aktivieren?",
-      "happyHourCode": "Happy-Hour-Code *",
+      "happyHourCode": "Happy-Hour-Code (optional)",
       "happyHourCodePlaceholder": "z. B. EVENING20",
       "happyHourTitle": "Happy-Hour-Titel *",
       "happyHourTitlePlaceholder": "z. B. Evening Happy Hour",

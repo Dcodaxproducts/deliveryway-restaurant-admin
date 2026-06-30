@@ -70,7 +70,7 @@ export type PromotionFormValues = z.infer<typeof promotionSchema>;
 
 export const happyHourSchema = z
   .object({
-    code: z.string().trim().min(1, "Happy hour code is required."),
+    code: optionalStringSchema,
     title: z.string().trim().min(1, "Happy hour title is required."),
     description: optionalStringSchema,
     discountType: discountTypeSchema,

@@ -2483,7 +2483,7 @@
       "selectBranch": "Select branch",
       "selectItem": "Select item",
       "happyHourActivePrompt": "Do you want to activate the happy hour promotion?",
-      "happyHourCode": "Happy Hour Code *",
+      "happyHourCode": "Happy Hour Code (optional)",
       "happyHourCodePlaceholder": "eg. EVENING20",
       "happyHourTitle": "Happy Hour Title *",
       "happyHourTitlePlaceholder": "eg. Evening Happy Hour",

@@ -128,7 +128,6 @@ export default function AddHappyHour() {
     "Percentage discount cannot be greater than 100.": t("validation.percentageDiscountMax"),
     "Expiry date is required.": t("validation.expiryDateRequired"),
     "Expiry date must be after start date.": t("validation.expiryAfterStart"),
-    "Happy hour code is required.": t("validation.happyHourCodeRequired"),
     "Happy hour title is required.": t("validation.happyHourTitleRequired"),
     "Please select at least one active day.": t("validation.activeDayRequired"),
     "Daily start time is required.": t("validation.dailyStartRequired"),
@@ -215,8 +214,10 @@ export default function AddHappyHour() {
   };
 
   const payload = useMemo(() => {
+    const trimmedCode = values.code.trim();
+
     return {
-      code: values.code.trim(),
+      ...(trimmedCode ? { code: trimmedCode } : {}),
       title: values.title.trim(),
       description: values.description.trim(),
       restaurantId,
