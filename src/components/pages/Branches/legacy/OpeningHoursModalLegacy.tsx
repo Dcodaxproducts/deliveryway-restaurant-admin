@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { useGetOpeningHours, useUpdateOpeningHours } from "@/hooks/useBranches";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { Time24Picker } from "@/components/ui/time-24-picker";
 
 interface Props {
   open: boolean;
@@ -487,13 +488,10 @@ export function OpeningHoursModalLegacy({
                 <span className="text-xs font-medium text-gray-600">
                   {t("openTime")}
                 </span>
-                <input
-                  type="time"
+                <Time24Picker
                   value={defaultTimes.openTime}
-                  onChange={(event) =>
-                    handleDefaultTimeChange("openTime", event.target.value)
-                  }
-                  className="h-12 w-full min-w-0 rounded-[10px] border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  onChange={(value) => handleDefaultTimeChange("openTime", value)}
+                  className="h-12 w-full min-w-0 rounded-[10px] border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"
                 />
               </label>
 
@@ -501,13 +499,10 @@ export function OpeningHoursModalLegacy({
                 <span className="text-xs font-medium text-gray-600">
                   {t("closeTime")}
                 </span>
-                <input
-                  type="time"
+                <Time24Picker
                   value={defaultTimes.closeTime}
-                  onChange={(event) =>
-                    handleDefaultTimeChange("closeTime", event.target.value)
-                  }
-                  className="h-12 w-full min-w-0 rounded-[10px] border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  onChange={(value) => handleDefaultTimeChange("closeTime", value)}
+                  className="h-12 w-full min-w-0 rounded-[10px] border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"
                 />
               </label>
             </div>
@@ -577,17 +572,12 @@ export function OpeningHoursModalLegacy({
                             {t("openTime")}
                           </span>
 
-                          <input
-                            type="time"
+                          <Time24Picker
                             value={day.openTime || ""}
-                            onChange={(e) =>
-                              handleHourChange(
-                                index,
-                                "openTime",
-                                e.target.value
-                              )
+                            onChange={(value) =>
+                              handleHourChange(index, "openTime", value)
                             }
-                            className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
+                            className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"
                           />
                         </label>
 
@@ -596,17 +586,12 @@ export function OpeningHoursModalLegacy({
                             {t("closeTime")}
                           </span>
 
-                          <input
-                            type="time"
+                          <Time24Picker
                             value={day.closeTime || ""}
-                            onChange={(e) =>
-                              handleHourChange(
-                                index,
-                                "closeTime",
-                                e.target.value
-                              )
+                            onChange={(value) =>
+                              handleHourChange(index, "closeTime", value)
                             }
-                            className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
+                            className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"
                           />
                         </label>
                       </div>
@@ -648,18 +633,12 @@ export function OpeningHoursModalLegacy({
                                       {t("breakStart")}
                                     </label>
 
-                                    <input
-                                      type="time"
+                                    <Time24Picker
                                       value={breakTime.startTime || ""}
-                                      onChange={(e) =>
-                                        updateBreakTime(
-                                          index,
-                                          breakIndex,
-                                          "startTime",
-                                          e.target.value
-                                        )
+                                      onChange={(value) =>
+                                        updateBreakTime(index, breakIndex, "startTime", value)
                                       }
-                                      className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
+                                      className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"
                                     />
                                   </div>
 
@@ -668,18 +647,12 @@ export function OpeningHoursModalLegacy({
                                       {t("breakEnd")}
                                     </label>
 
-                                    <input
-                                      type="time"
+                                    <Time24Picker
                                       value={breakTime.endTime || ""}
-                                      onChange={(e) =>
-                                        updateBreakTime(
-                                          index,
-                                          breakIndex,
-                                          "endTime",
-                                          e.target.value
-                                        )
+                                      onChange={(value) =>
+                                        updateBreakTime(index, breakIndex, "endTime", value)
                                       }
-                                      className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
+                                      className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"
                                     />
                                   </div>
                                 </div>

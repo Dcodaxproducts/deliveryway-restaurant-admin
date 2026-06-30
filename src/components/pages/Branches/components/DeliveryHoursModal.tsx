@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
+import { Time24Picker } from "@/components/ui/time-24-picker";
 import {
   useGetDeliveryHours,
   useUpdateDeliveryHours,
@@ -554,11 +555,10 @@ function TimeInput({
   return (
     <label className="min-w-0 space-y-1.5">
       <span className="text-xs font-medium text-gray-500">{label}</span>
-      <input
-        type="time"
+      <Time24Picker
         value={value || ""}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-primary focus:ring-2 focus:ring-primary/10"
+        onChange={onChange}
+        className="h-11 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"
       />
     </label>
   );

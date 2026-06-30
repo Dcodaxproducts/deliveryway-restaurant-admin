@@ -9,6 +9,7 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Time24Picker } from "@/components/ui/time-24-picker";
 
 import {
   Collapsible,
@@ -176,10 +177,10 @@ export default function MakeReservationModal({
               onChange={(e) => setReservationDate(e.target.value)}
             />
 
-            <Input
-              type="time"
+            <Time24Picker
               value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              onChange={setStartTime}
+              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
 
             <FormInput

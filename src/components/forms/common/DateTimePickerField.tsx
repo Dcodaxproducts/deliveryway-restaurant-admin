@@ -5,6 +5,7 @@ import { DayPicker } from "react-day-picker";
 import { CalendarDays, Clock3 } from "lucide-react";
 
 import { Label } from "@/components/ui/label";
+import { Time24Picker } from "@/components/ui/time-24-picker";
 import { getStartOfToday } from "@/lib/date-input";
 import { formatDateTime24 } from "@/lib/date-time-format";
 import { cn } from "@/lib/utils";
@@ -130,14 +131,13 @@ export function DateTimePickerField({
           size={17}
           className="absolute left-4 top-1/2 -translate-y-1/2 text-primary"
         />
-        <input
-          type="time"
+        <Time24Picker
           value={toTimeValue(value)}
           disabled={disabled}
-          onChange={(event) => handleTimeChange(event.target.value)}
+          onChange={handleTimeChange}
           className={cn(
             "h-[52px] w-full rounded-[18px] border border-gray-200 bg-white pl-12 pr-4 text-sm font-semibold text-gray-950 shadow-sm outline-none transition",
-            "focus:border-primary/40 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+            "focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
           )}
         />
       </div>

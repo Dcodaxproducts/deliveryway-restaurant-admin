@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Time24Picker } from "@/components/ui/time-24-picker";
 import PageWrapper from "@/components/pages/Promotions/forms/PageWrapper";
 import Section from "@/components/pages/Promotions/forms/Section";
 import AsyncSelect from "@/components/ui/AsyncSelect";
@@ -412,12 +413,12 @@ export default function AddHappyHour() {
               render={({ field, fieldState }) => (
                 <div className="space-y-2">
                   <Label>{t("forms.dailyStartTime")}</Label>
-                  <Input
-                    type="time"
+                  <Time24Picker
                     value={field.value}
                     onChange={field.onChange}
-                    onBlur={field.onBlur}
                     className={INPUT_BASE_CLASS}
+                    required
+                    error={fieldState.error?.message}
                   />
                   {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
                 </div>
@@ -430,12 +431,12 @@ export default function AddHappyHour() {
               render={({ field, fieldState }) => (
                 <div className="space-y-2">
                   <Label>{t("forms.dailyEndTime")}</Label>
-                  <Input
-                    type="time"
+                  <Time24Picker
                     value={field.value}
                     onChange={field.onChange}
-                    onBlur={field.onBlur}
                     className={INPUT_BASE_CLASS}
+                    required
+                    error={fieldState.error?.message}
                   />
                   {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
                 </div>

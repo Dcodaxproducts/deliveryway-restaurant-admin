@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Time24Picker } from "@/components/ui/time-24-picker";
 import { useTranslations } from "next-intl";
 
 import {
@@ -591,14 +592,11 @@ function HolidayHourItem({
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                   />
 
-                  <input
-                    type="time"
+                  <Time24Picker
                     value={row.openTime}
                     disabled={isSaving}
-                    onChange={(event) =>
-                      onChange(row.id, "openTime", event.target.value)
-                    }
-                    className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+                    onChange={(value) => onChange(row.id, "openTime", value)}
+                    className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus-within:border-primary/40 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                   />
                 </div>
               </FieldGroup>
@@ -610,14 +608,11 @@ function HolidayHourItem({
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                   />
 
-                  <input
-                    type="time"
+                  <Time24Picker
                     value={row.closeTime}
                     disabled={isSaving}
-                    onChange={(event) =>
-                      onChange(row.id, "closeTime", event.target.value)
-                    }
-                    className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+                    onChange={(value) => onChange(row.id, "closeTime", value)}
+                    className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-sm text-gray-800 outline-none transition focus-within:border-primary/40 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                   />
                 </div>
               </FieldGroup>

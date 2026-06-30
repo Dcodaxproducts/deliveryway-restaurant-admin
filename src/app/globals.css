@@ -1,3 +1,5 @@
+@import "react-time-picker/dist/TimePicker.css";
+@import "react-clock/dist/Clock.css";
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -211,4 +213,21 @@ div[role="option"][data-disabled] {
   .font-arimo {
     font-family: Arimo, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
+}
+
+
+.time-24-picker,
+.time-24-picker .react-time-picker__wrapper {
+  border: 0;
+  width: 100%;
+}
+
+.time-24-picker .react-time-picker__inputGroup {
+  min-width: 0;
+  flex: 1;
+}
+
+.time-24-picker .react-time-picker__inputGroup__input {
+  outline: none;
+  background: transparent;
 }

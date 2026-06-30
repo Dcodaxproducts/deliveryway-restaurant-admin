@@ -20,6 +20,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import FormInput from "@/components/forms/common/FormInput";
+import { Time24Picker } from "@/components/ui/time-24-picker";
 import AdminDealCategorySelector from "@/components/pages/Menu/deals/components/AdminDealCategorySelector";
 import AdminDealMenuItemSelector from "@/components/pages/Menu/deals/components/AdminDealMenuItemSelector";
 import type { MenuTimingDay, MenuTimingWindow } from "@/services/menus";
@@ -553,17 +554,12 @@ export default function CreateMenuModal({
                                 <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
                                   {t("startTime")}
                                 </label>
-                                <input
-                                  type="time"
+                                <Time24Picker
                                   value={window.start}
-                                  onChange={(event) =>
-                                    updateTimingWindow(
-                                      index,
-                                      "start",
-                                      event.target.value,
-                                    )
+                                  onChange={(value) =>
+                                    updateTimingWindow(index, "start", value)
                                   }
-                                  className="mt-1 h-[42px] w-full min-w-0 rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-semibold outline-none focus:border-primary"
+                                  className="mt-1 h-[42px] w-full min-w-0 rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-semibold outline-none focus-within:border-primary"
                                 />
                               </div>
 
@@ -571,17 +567,12 @@ export default function CreateMenuModal({
                                 <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
                                   {t("endTime")}
                                 </label>
-                                <input
-                                  type="time"
+                                <Time24Picker
                                   value={window.end}
-                                  onChange={(event) =>
-                                    updateTimingWindow(
-                                      index,
-                                      "end",
-                                      event.target.value,
-                                    )
+                                  onChange={(value) =>
+                                    updateTimingWindow(index, "end", value)
                                   }
-                                  className="mt-1 h-[42px] w-full min-w-0 rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-semibold outline-none focus:border-primary"
+                                  className="mt-1 h-[42px] w-full min-w-0 rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-semibold outline-none focus-within:border-primary"
                                 />
                               </div>
                             </div>
