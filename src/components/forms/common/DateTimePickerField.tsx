@@ -118,8 +118,8 @@ export function DateTimePickerField({
                 selected:
                   "[&>button]:bg-primary [&>button]:text-white [&>button]:hover:bg-primary",
                 today: "[&>button]:ring-1 [&>button]:ring-primary",
-                disabled: "pointer-events-none text-gray-300 opacity-50",
-                outside: "text-gray-300",
+                disabled: "pointer-events-none text-gray-400 opacity-100",
+                outside: "text-gray-400",
               }}
             />
           </div>

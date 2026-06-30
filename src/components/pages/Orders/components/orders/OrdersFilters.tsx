@@ -273,7 +273,7 @@ export function OrdersFilters({
                   selected:
                     "[&>button]:bg-primary [&>button]:text-white [&>button]:hover:bg-primary",
                   today: "[&>button]:ring-1 [&>button]:ring-primary",
-                  outside: "text-gray-300",
+                  outside: "text-gray-400",
                 }}
               />
             </div>
