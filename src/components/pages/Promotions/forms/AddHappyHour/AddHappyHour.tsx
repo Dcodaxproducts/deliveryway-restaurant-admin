@@ -28,7 +28,7 @@ import {
 import { getMenuItems } from "@/services/menu/menu.api";
 import { getMenuCategories } from "@/services/menu/categories/menu-categories.api";
 import { getApiErrorMessage } from "@/lib/errors";
-import { getLocalTodayDateTimeInputValue } from "@/lib/date-input";
+import { getLocalTodayInputValue } from "@/lib/date-input";
 import {
   getOptionId,
   getString,
@@ -58,7 +58,7 @@ const defaultValues: HappyHourFormValues = {
   selectedCategory: null,
 };
 
-const toDatetimeLocal = (value?: string | null) => {
+const toDateInput = (value?: string | null) => {
   if (!value) return "";
 
   const date = new Date(value);
@@ -67,14 +67,23 @@ const toDatetimeLocal = (value?: string | null) => {
   const offset = date.getTimezoneOffset();
   const localDate = new Date(date.getTime() - offset * 60 * 1000);
 
-  return localDate.toISOString().slice(0, 16);
+  return localDate.toISOString().slice(0, 10);
 };
 
-const toISOStringOrNull = (value: string) => {
+const toDateISOStringOrNull = (value: string, boundary: "start" | "end") => {
   if (!value) return null;
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
+  const [year, month, day] = value.split("-").map(Number);
+
+  if (!year || !month || !day) return null;
+
+  const date = new Date(year, month - 1, day);
+
+  if (boundary === "end") {
+    date.setHours(23, 59, 59, 999);
+  } else {
+    date.setHours(0, 0, 0, 0);
+  }
 
   return date.toISOString();
 };
@@ -88,7 +97,7 @@ export default function AddHappyHour() {
   const t = useTranslations("promotions");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const minimumDateTime = useMemo(() => getLocalTodayDateTimeInputValue(), []);
+  const minimumDate = useMemo(() => getLocalTodayInputValue(), []);
   const id = searchParams.get("id");
   const isEditMode = Boolean(id);
 
@@ -160,8 +169,8 @@ export default function AddHappyHour() {
       minOrderAmount: String(detail.minOrderAmount ?? ""),
       maxUses: String(detail.maxUses ?? ""),
       maxUsesPerCustomer: String(detail.maxUsesPerCustomer ?? ""),
-      startsAt: toDatetimeLocal(getString(detail, "startsAt")),
-      expiresAt: toDatetimeLocal(getString(detail, "expiresAt")),
+      startsAt: toDateInput(getString(detail, "startsAt")),
+      expiresAt: toDateInput(getString(detail, "expiresAt")),
       isActive: Boolean(detail.isActive),
       activeDays:
         Array.isArray(detail.activeDays) && detail.activeDays.length > 0
@@ -229,8 +238,8 @@ export default function AddHappyHour() {
       minOrderAmount: toNumber(values.minOrderAmount),
       maxUses: toNumber(values.maxUses),
       maxUsesPerCustomer: toNumber(values.maxUsesPerCustomer),
-      startsAt: toISOStringOrNull(values.startsAt),
-      expiresAt: toISOStringOrNull(values.expiresAt),
+      startsAt: toDateISOStringOrNull(values.startsAt, "start"),
+      expiresAt: toDateISOStringOrNull(values.expiresAt, "end"),
       scopeMenuItemId: getOptionId(values.selectedMenuItem) || null,
       scopeCategoryId: getOptionId(values.selectedCategory) || null,
       isActive: values.isActive,
@@ -343,8 +352,8 @@ export default function AddHappyHour() {
                 <div className="space-y-2">
                   <Label>{t("forms.startsAt")}</Label>
                   <Input
-                    type="datetime-local"
-                    min={minimumDateTime}
+                    type="date"
+                    min={minimumDate}
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
@@ -362,8 +371,8 @@ export default function AddHappyHour() {
                 <div className="space-y-2">
                   <Label>{t("forms.expiresAt")}</Label>
                   <Input
-                    type="datetime-local"
-                    min={minimumDateTime}
+                    type="date"
+                    min={minimumDate}
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}

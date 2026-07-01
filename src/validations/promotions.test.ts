@@ -35,8 +35,8 @@ const validHappyHour = {
   minOrderAmount: "",
   maxUses: "",
   maxUsesPerCustomer: "",
-  startsAt: "2026-06-02T06:17",
-  expiresAt: "2026-06-03T06:17",
+  startsAt: "2026-06-02",
+  expiresAt: "2026-06-03",
   isActive: true,
   activeDays: [1, 2, 3],
   dailyStartTime: "12:00",
@@ -66,5 +66,17 @@ describe("happy hour validation", () => {
     const result = happyHourSchema.safeParse({ ...validHappyHour, title: "" });
 
     expect(result.success).toBe(false);
+  });
+
+  it("allows date-only same-day happy hours because daily times define the time window", () => {
+    const result = happyHourSchema.safeParse({
+      ...validHappyHour,
+      startsAt: "2026-06-02",
+      expiresAt: "2026-06-02",
+      dailyStartTime: "12:00",
+      dailyEndTime: "14:00",
+    });
+
+    expect(result.success).toBe(true);
   });
 });

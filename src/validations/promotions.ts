@@ -12,6 +12,23 @@ const positiveNumberStringSchema = (message: string) =>
     message: "Discount value must be greater than 0.",
   });
 
+const getDateBoundary = (value: string, boundary: "start" | "end") => {
+  const [year, month, day] = value.split("-").map(Number);
+  const date = year && month && day
+    ? new Date(year, month - 1, day)
+    : new Date(value);
+
+  if (Number.isNaN(date.getTime())) return null;
+
+  if (boundary === "end") {
+    date.setHours(23, 59, 59, 999);
+  } else {
+    date.setHours(0, 0, 0, 0);
+  }
+
+  return date;
+};
+
 export const promotionSchema = z
   .object({
     code: optionalStringSchema,
@@ -97,11 +114,10 @@ export const happyHourSchema = z
       });
     }
 
-    if (
-      value.startsAt &&
-      value.expiresAt &&
-      new Date(value.expiresAt).getTime() <= new Date(value.startsAt).getTime()
-    ) {
+    const happyHourStart = value.startsAt ? getDateBoundary(value.startsAt, "start") : null;
+    const happyHourEnd = value.expiresAt ? getDateBoundary(value.expiresAt, "end") : null;
+
+    if (happyHourStart && happyHourEnd && happyHourEnd <= happyHourStart) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["expiresAt"],
