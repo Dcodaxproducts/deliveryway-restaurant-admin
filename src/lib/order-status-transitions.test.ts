@@ -4,6 +4,7 @@ import {
   canDirectlyUpdateOrderStatus,
   canSendDeliveryOrderOutDirectly,
   canTerminateOrderStatus,
+  canUseExternalDeliveryFulfillment,
   getOrderStatusProgressSteps,
   getNextOrderStatus,
   requiresDeliveryOtpForStatusTransition,
@@ -97,6 +98,14 @@ describe("order status transitions", () => {
         status: "PREPARING",
       })
     ).toBe(false);
+  });
+
+  it("allows external delivery fulfillment only for active delivery orders", () => {
+    expect(canUseExternalDeliveryFulfillment({ orderType: "DELIVERY", status: "CONFIRMED" })).toBe(true);
+    expect(canUseExternalDeliveryFulfillment({ orderType: "DELIVERY", status: "PREPARING" })).toBe(true);
+    expect(canUseExternalDeliveryFulfillment({ orderType: "TAKEAWAY", status: "PREPARING" })).toBe(false);
+    expect(canUseExternalDeliveryFulfillment({ orderType: "DINE_IN", status: "PREPARING" })).toBe(false);
+    expect(canUseExternalDeliveryFulfillment({ orderType: "DELIVERY", status: "PLACED" })).toBe(false);
   });
 
   it("keeps delivery completion in the popup until an OTP is available", () => {

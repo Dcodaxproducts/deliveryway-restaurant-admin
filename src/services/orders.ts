@@ -221,6 +221,7 @@ export const updateOrderStatus = async (
       status: payload.status,
       deliveryOtp: payload.deliveryOtp?.trim(),
       orderTime: payload.orderTime?.trim(),
+      deliveryFulfillmentMode: payload.deliveryFulfillmentMode,
     })
   );
 

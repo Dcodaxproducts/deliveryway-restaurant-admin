@@ -121,6 +121,20 @@ describe("orders service", () => {
     });
   });
 
+  it("sends external delivery fulfillment mode when requested", async () => {
+    mockedPatch.mockResolvedValue(orderResponse);
+
+    await updateOrderStatus("order-1", {
+      status: "OUT_FOR_DELIVERY",
+      deliveryFulfillmentMode: "EXTERNAL",
+    });
+
+    expect(mockedPatch).toHaveBeenCalledWith("/orders/order-1/status", {
+      status: "OUT_FOR_DELIVERY",
+      deliveryFulfillmentMode: "EXTERNAL",
+    });
+  });
+
   it("normalizes scheduled order fields from list responses", () => {
     const order = normalizeOrder({
       ...orderResponse.data,

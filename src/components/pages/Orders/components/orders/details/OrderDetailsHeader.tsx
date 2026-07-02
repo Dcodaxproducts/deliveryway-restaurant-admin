@@ -5,11 +5,12 @@ import { Ban, RefreshCw, Truck, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
-import { useSendOrderOutForDelivery, useUpdateOrderStatus } from "@/hooks/useOrders";
+import { useSendOrderOutForDelivery, useSendOrderWithExternalDriver, useUpdateOrderStatus } from "@/hooks/useOrders";
 import {
   canDirectlyUpdateOrderStatus,
   canSendDeliveryOrderOutDirectly,
   canTerminateOrderStatus,
+  canUseExternalDeliveryFulfillment,
   getNextOrderStatus,
   ORDER_STATUS_ACTION_LABEL_KEYS,
   ORDER_TERMINAL_ACTION_LABEL_KEYS,
@@ -40,6 +41,7 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
   const common = useTranslations("common");
   const updateStatusMutation = useUpdateOrderStatus();
   const sendOutForDeliveryMutation = useSendOrderOutForDelivery();
+  const externalDriverMutation = useSendOrderWithExternalDriver();
 
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [progressOrder, setProgressOrder] = useState<OrderStatusProgressState | null>(null);
@@ -50,6 +52,7 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
     : order.status;
   const canUpdateStatus = Boolean(nextStatus);
   const canSendOutForDelivery = canSendDeliveryOrderOutDirectly(order);
+  const canUseExternalDriver = canUseExternalDeliveryFulfillment(order);
   const actionLabel = nextStatus && ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus]
     ? t(ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus])
     : common("updateStatus");
@@ -96,6 +99,16 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
   };
   const handleSendOutForDeliveryAction = async () => {
     const updatedOrder = await sendOutForDeliveryMutation.mutateAsync({
+      orderId: order.id,
+    });
+    setProgressOrder({
+      orderType: updatedOrder.orderType ?? order.orderType,
+      previousStatus: order.status,
+      status: updatedOrder.status ?? "OUT_FOR_DELIVERY",
+    });
+  };
+  const handleExternalDriverAction = async () => {
+    const updatedOrder = await externalDriverMutation.mutateAsync({
       orderId: order.id,
     });
     setProgressOrder({
@@ -159,6 +172,21 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
             >
               <Truck size={16} />
               {t("sendOutForDeliveryDirect")}
+            </Button>
+          ) : null}
+
+          {canUseExternalDriver ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={externalDriverMutation.isPending}
+              onClick={() => {
+                void handleExternalDriverAction();
+              }}
+              className="w-full justify-center rounded-[10px] border-primary/30 bg-primary/5 px-4 text-xs font-medium text-primary hover:bg-primary/10 hover:text-primary sm:w-auto sm:text-sm"
+            >
+              <Truck size={16} />
+              {t("externalDriver")}
             </Button>
           ) : null}
 

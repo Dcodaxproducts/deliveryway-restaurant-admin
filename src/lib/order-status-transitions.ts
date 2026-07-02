@@ -126,6 +126,17 @@ export const canSendDeliveryOrderOutDirectly = (
   );
 };
 
+export const canUseExternalDeliveryFulfillment = (
+  order: OrderTransitionInput | null | undefined
+) => {
+  const status = normalizeValue(order?.status);
+
+  return (
+    normalizeValue(order?.orderType) === "DELIVERY" &&
+    (status === "CONFIRMED" || status === "PREPARING")
+  );
+};
+
 export const canTerminateOrderStatus = (
   order: OrderTransitionInput | null | undefined
 ) => {

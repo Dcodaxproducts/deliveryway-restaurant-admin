@@ -26,4 +26,13 @@ describe("order status validation", () => {
       }).success
     ).toBe(true);
   });
+
+  it("allows external delivery fulfillment mode", () => {
+    expect(
+      orderStatusUpdateSchema.safeParse({
+        status: "OUT_FOR_DELIVERY",
+        deliveryFulfillmentMode: "EXTERNAL",
+      }).success
+    ).toBe(true);
+  });
 });

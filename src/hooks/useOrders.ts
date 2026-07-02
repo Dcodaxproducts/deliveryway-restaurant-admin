@@ -133,6 +133,27 @@ export const useSendOrderOutForDelivery = () => {
   });
 };
 
+export const useSendOrderWithExternalDriver = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ orderId }: { orderId: string }) => {
+      return updateOrderStatus(orderId, {
+        status: "OUT_FOR_DELIVERY",
+        deliveryFulfillmentMode: "EXTERNAL",
+      });
+    },
+    onSuccess: (order) => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["orders", "detail", order.id] });
+      toast.success("Order sent with external driver");
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Unable to send order with external driver"));
+    },
+  });
+};
+
 export const useRefundPaymentTransaction = (orderId?: string | null) => {
   const queryClient = useQueryClient();
 

@@ -57,10 +57,13 @@ export type PaymentTransaction = {
   createdAt?: string | null;
 };
 
+export type DeliveryFulfillmentMode = "EXTERNAL";
+
 export type OrderStatusUpdatePayload = {
   status: string;
   deliveryOtp?: string;
   orderTime?: string;
+  deliveryFulfillmentMode?: DeliveryFulfillmentMode;
 };
 
 export type OrderStatusOption = {

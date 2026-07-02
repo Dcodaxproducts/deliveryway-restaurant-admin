@@ -34,13 +34,14 @@ import {
   isFutureOrder,
 } from "@/components/pages/Orders/utils/orders-schedule-filters";
 import { useAuth } from "@/hooks/useAuth";
-import { useSendOrderOutForDelivery, useUpdateOrderStatus } from "@/hooks/useOrders";
+import { useSendOrderOutForDelivery, useSendOrderWithExternalDriver, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { formatDateTime24 } from "@/lib/date-time-format";
 import { getOrderById } from "@/services/orders/orders.api";
 import {
   canDirectlyUpdateOrderStatus,
   canSendDeliveryOrderOutDirectly,
   canTerminateOrderStatus,
+  canUseExternalDeliveryFulfillment,
   getNextOrderStatus,
   ORDER_STATUS_ACTION_LABEL_KEYS,
   ORDER_TERMINAL_ACTION_LABEL_KEYS,
@@ -123,6 +124,7 @@ export function OrdersTable({
     useState<string | null>(null);
   const updateStatusMutation = useUpdateOrderStatus();
   const sendOutForDeliveryMutation = useSendOrderOutForDelivery();
+  const externalDriverMutation = useSendOrderWithExternalDriver();
   const canUpdatePaymentStatusRole =
     role === "BUSINESS_ADMIN" || role === "SUPER_ADMIN" || role === "BRANCH_ADMIN";
   const getStatusLabel = (status?: string) =>
@@ -222,6 +224,16 @@ export function OrdersTable({
   };
   const handleSendOutForDeliveryAction = async (order: OrdersTableRow) => {
     const updatedOrder = await sendOutForDeliveryMutation.mutateAsync({
+      orderId: order.id,
+    });
+    setProgressOrder({
+      orderType: updatedOrder.orderType ?? order.orderType,
+      previousStatus: order.status,
+      status: updatedOrder.status ?? "OUT_FOR_DELIVERY",
+    });
+  };
+  const handleExternalDriverAction = async (order: OrdersTableRow) => {
+    const updatedOrder = await externalDriverMutation.mutateAsync({
       orderId: order.id,
     });
     setProgressOrder({
@@ -358,6 +370,7 @@ export function OrdersTable({
     const addressPreview = getAddressPreview(order);
     const canUpdateStatus = Boolean(getNextOrderStatus(order));
     const canSendOutForDelivery = canSendDeliveryOrderOutDirectly(order);
+    const canUseExternalDriver = canUseExternalDeliveryFulfillment(order);
     const canUseTerminalActions = canTerminateOrderStatus(order);
     const orderTime = getOrderTimeDate(order);
     const orderTimeLabel = formatOrderTime(order.orderTime);
@@ -539,6 +552,17 @@ export function OrdersTable({
                 >
                   <Truck size={16} />
                   {t("sendOutForDeliveryDirect")}
+                </DropdownMenuItem>
+              ) : null}
+              {canUseExternalDriver ? (
+                <DropdownMenuItem
+                  disabled={externalDriverMutation.isPending}
+                  onClick={() => {
+                    void handleExternalDriverAction(order);
+                  }}
+                >
+                  <Truck size={16} />
+                  {t("externalDriver")}
                 </DropdownMenuItem>
               ) : null}
               {canUpdatePaymentStatus ? (
