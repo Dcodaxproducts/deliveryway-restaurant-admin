@@ -258,6 +258,57 @@ const collectEntitySnapshots = (
   return Array.from(map.values());
 };
 
+const normalizeCuisineIds = (sources: any[]): string[] => {
+  const ids = new Set<string>();
+
+  sources.forEach((source) => {
+    normalizeArray(source).forEach((entry) => {
+      if (entry === null || entry === undefined) return;
+
+      if (typeof entry === "string" || typeof entry === "number") {
+        ids.add(String(entry));
+        return;
+      }
+
+      const id = entry?.cuisineId || entry?.cuisine?.id || entry?.id;
+      if (id) ids.add(String(id));
+    });
+  });
+
+  return Array.from(ids);
+};
+
+const collectCuisineSnapshots = (sources: any[]): EntitySnapshot[] => {
+  const map = new Map<string, EntitySnapshot>();
+
+  sources.forEach((source) => {
+    normalizeArray(source).forEach((entry) => {
+      if (!entry) return;
+
+      const cuisine = entry?.cuisine || entry;
+      const id = entry?.cuisineId || cuisine?.id || entry?.id;
+      const name = cuisine?.name || entry?.name;
+
+      if (!id || !hasUsableName(name)) return;
+
+      map.set(String(id), {
+        id: String(id),
+        name: String(name),
+        description: cuisine?.description,
+        isActive:
+          typeof cuisine?.isActive === "boolean"
+            ? cuisine.isActive
+            : typeof entry?.isActive === "boolean"
+            ? entry.isActive
+            : undefined,
+        sortOrder: cuisine?.sortOrder ?? entry?.sortOrder,
+      });
+    });
+  });
+
+  return Array.from(map.values());
+};
+
 const toNumberOrZero = (value: any) => {
   if (value === "" || value === undefined || value === null) return 0;
 
@@ -727,6 +778,23 @@ export const getInitialForm = (restaurantId?: string, initialData?: any) => {
       "modifier"
     ),
 
+    cuisineIds: normalizeCuisineIds([
+      initialData?.cuisineIds,
+      initialData?.cuisines,
+      initialData?.itemCuisines,
+      initialData?.cuisineLinks,
+      initialData?.menuItemCuisines,
+    ]),
+
+    selectedCuisineOptions: collectCuisineSnapshots([
+      initialData?.cuisines,
+      initialData?.itemCuisines,
+      initialData?.cuisineLinks,
+      initialData?.menuItemCuisines,
+    ]),
+
+    cuisineIdsTouched: false,
+
     modifierPriceOverrides: normalizeModifierPriceOverrides(
       rawFlatModifierOverrides
     ),
@@ -875,9 +943,13 @@ export const buildMenuItemPayload = ({
     }
   );
 
+  const selectedCuisineIds = normalizeCuisineIds([form.cuisineIds]);
+  const cuisineIdsTouched = form.cuisineIdsTouched === true;
+
   return {
     restaurantId: restaurantId || form.restaurantId || undefined,
     categoryId: form.categoryId || undefined,
+    ...(!initialDataId || cuisineIdsTouched ? { cuisineIds: selectedCuisineIds } : {}),
 
     name: typeof form.name === "string" ? form.name.trim() : "",
     slug: generatedSlug,

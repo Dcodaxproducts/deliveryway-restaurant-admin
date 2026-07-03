@@ -113,6 +113,8 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [selectedCuisine, setSelectedCuisine] = useState<any>(null);
+  const [selectedCuisines, setSelectedCuisines] = useState<any[]>([]);
   const activeTaxTypes = useMemo(
     () => (taxTypesResponse?.taxTypes ?? []).filter((taxType) => taxType.isActive),
     [taxTypesResponse?.taxTypes]
@@ -218,6 +220,48 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
     };
   };
 
+  const fetchCuisines = async ({
+    search = "",
+    page = 1,
+  }: {
+    search: string;
+    page: number;
+  }) => {
+    if (!restaurantId) {
+      return {
+        data: [],
+        meta: {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrevious: false,
+        },
+      };
+    }
+
+    const params = new URLSearchParams({
+      restaurantId: String(restaurantId),
+      page: String(page),
+      limit: "10",
+      sortBy: "sortOrder",
+      sortOrder: "ASC",
+      includeInactive: "true",
+    });
+
+    if (search?.trim()) {
+      params.set("search", search.trim());
+    }
+
+    const res = await get(`/v1/menu/cuisines?${params.toString()}`);
+
+    return {
+      data: normalizeApiArray(res),
+      meta: res?.meta || res?.data?.meta || res?.data?.pagination || {},
+    };
+  };
+
   useEffect(() => {
     if (!form?.categoryId) {
       setSelectedCategory(null);
@@ -272,6 +316,33 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
   }, [form?.categoryId]);
 
   useEffect(() => {
+    const selectedIds = Array.isArray(form?.cuisineIds)
+      ? form.cuisineIds.map((id: any) => String(id))
+      : [];
+
+    if (selectedIds.length === 0) {
+      setSelectedCuisines([]);
+      setSelectedCuisine(null);
+      return;
+    }
+
+    const existingOptions = Array.isArray(form?.selectedCuisineOptions)
+      ? form.selectedCuisineOptions
+      : [];
+
+    const mappedOptions = selectedIds.map((id: string) => {
+      const matched = existingOptions.find(
+        (cuisine: any) => String(cuisine?.id) === id
+      );
+
+      return matched || { id, name: `Cuisine ${id}` };
+    });
+
+    setSelectedCuisines(mappedOptions);
+    setSelectedCuisine(null);
+  }, [form?.cuisineIds, form?.selectedCuisineOptions]);
+
+  useEffect(() => {
     if (form?.taxTypeCode || !activeTaxTypes.length) return;
 
     const defaultTaxType =
@@ -294,6 +365,24 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
     setForm((prev: any) => ({
       ...prev,
       [key]: value,
+    }));
+  };
+
+  const setCuisineSelection = (nextCuisines: any[]) => {
+    const deduped = Array.from(
+      new Map(
+        nextCuisines
+          .filter((cuisine) => cuisine?.id)
+          .map((cuisine) => [String(cuisine.id), cuisine])
+      ).values()
+    );
+
+    setSelectedCuisines(deduped);
+    setForm((prev: any) => ({
+      ...prev,
+      cuisineIds: deduped.map((cuisine) => String(cuisine.id)),
+      selectedCuisineOptions: deduped,
+      cuisineIdsTouched: true,
     }));
   };
 
@@ -348,6 +437,57 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
         {errors.categoryId ? (
           <p className="text-xs text-red-500">{errors.categoryId}</p>
         ) : null}
+      </div>
+
+      <div className="space-y-2">
+        <Label>Cuisines</Label>
+
+        <AsyncSelect
+          value={selectedCuisine}
+          onChange={(value) => {
+            if (!value?.id) return;
+
+            setSelectedCuisine(value);
+            setCuisineSelection([...selectedCuisines, value]);
+          }}
+          placeholder="Add cuisine"
+          fetchOptions={fetchCuisines}
+          labelKey="name"
+          valueKey="id"
+          searchPlaceholder="Search cuisines..."
+          noResultsText="No cuisines found"
+        />
+
+        {selectedCuisines.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {selectedCuisines.map((cuisine) => (
+              <span
+                key={cuisine.id}
+                className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+              >
+                {cuisine.name || cuisine.slug || cuisine.id}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCuisineSelection(
+                      selectedCuisines.filter(
+                        (selected) => String(selected.id) !== String(cuisine.id)
+                      )
+                    )
+                  }
+                  className="text-primary/70 hover:text-primary"
+                  aria-label={`Remove ${cuisine.name || "cuisine"}`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-gray-500">
+            Optional. Select one or more cuisine tags for this item.
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">

@@ -97,6 +97,14 @@ export const menuItems: MenuItem[] = [
         roles: allAdminRoles,
       },
       {
+        title: "Cuisines",
+        labelKey: "cuisines",
+        href: "/menu/cuisines",
+        icon: ClipboardList,
+        section: "main",
+        roles: restaurantAdminRoles,
+      },
+      {
         title: "Modifier Categories",
         labelKey: "modifierCategories",
         href: "/menu/modifier-categories",
