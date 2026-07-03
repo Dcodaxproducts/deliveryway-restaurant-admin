@@ -227,22 +227,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
     search: string;
     page: number;
   }) => {
-    if (!restaurantId) {
-      return {
-        data: [],
-        meta: {
-          page: 1,
-          limit: 10,
-          total: 0,
-          totalPages: 0,
-          hasNext: false,
-          hasPrevious: false,
-        },
-      };
-    }
-
     const params = new URLSearchParams({
-      restaurantId: String(restaurantId),
       page: String(page),
       limit: "10",
       sortBy: "sortOrder",

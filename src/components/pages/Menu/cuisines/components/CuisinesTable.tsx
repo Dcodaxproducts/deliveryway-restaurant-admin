@@ -1,17 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { FaPen, FaTrash } from "react-icons/fa";
-import { Button } from "@/components/ui/button";
 import PaginationSection from "@/components/common/pagination";
-import { useAuth } from "@/hooks/useAuth";
-import { useCuisines, useDeleteCuisine, useReorderCuisines } from "@/hooks/useCuisines";
-import { getApiErrorMessage } from "@/lib/errors";
-import type { Cuisine } from "@/types/cuisines";
-import CuisineDeleteDialog from "@/components/pages/Menu/cuisines/components/CuisineDeleteDialog";
+import { useCuisines } from "@/hooks/useCuisines";
 import CuisineFilters from "@/components/pages/Menu/cuisines/components/CuisineFilters";
-import CuisineFormDialog from "@/components/pages/Menu/cuisines/components/CuisineFormDialog";
 import {
   formatCuisineDescription,
   formatCuisineSortOrder,
@@ -24,13 +16,6 @@ export default function CuisinesTable() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [includeInactive, setIncludeInactive] = useState(false);
-  const [formOpen, setFormOpen] = useState(false);
-  const [selected, setSelected] = useState<Cuisine | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Cuisine | null>(null);
-  const [deleteError, setDeleteError] = useState("");
-
-  const { restaurantId: authRestaurantId } = useAuth();
-  const restaurantId = authRestaurantId ?? undefined;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -47,7 +32,6 @@ export default function CuisinesTable() {
     isFetching,
     refetch,
   } = useCuisines({
-    restaurantId,
     page,
     limit,
     search: debouncedSearch || undefined,
@@ -55,8 +39,6 @@ export default function CuisinesTable() {
     sortOrder: "ASC",
     includeInactive: includeInactive || undefined,
   });
-  const { mutate: deleteCuisine, isPending: isDeleting } = useDeleteCuisine();
-  const { mutate: reorderCuisines, isPending: isReordering } = useReorderCuisines();
 
   const cuisines = useMemo(() => response?.data ?? [], [response?.data]);
   const isTableLoading = isLoading || isFetching;
@@ -78,72 +60,19 @@ export default function CuisinesTable() {
     };
   }, [cuisines.length, limit, page, response?.meta]);
 
-  const handleDelete = () => {
-    if (!deleteTarget) return;
-
-    setDeleteError("");
-    deleteCuisine(deleteTarget.id, {
-      onSuccess: () => {
-        setDeleteTarget(null);
-        void refetch();
-      },
-      onError: (error) => {
-        setDeleteError(getApiErrorMessage(error, "Unable to delete cuisine."));
-      },
-    });
-  };
-
-  const openCreate = () => {
-    setSelected(null);
-    setFormOpen(true);
-  };
-
-  const openEdit = (cuisine: Cuisine) => {
-    setSelected(cuisine);
-    setFormOpen(true);
-  };
-
-  const moveCuisine = (index: number, direction: "up" | "down") => {
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-
-    if (targetIndex < 0 || targetIndex >= cuisines.length) return;
-
-    const reordered = [...cuisines];
-    const [moved] = reordered.splice(index, 1);
-
-    if (!moved) return;
-
-    reordered.splice(targetIndex, 0, moved);
-
-    reorderCuisines(
-      {
-        items: reordered.map((cuisine, nextIndex) => ({
-          id: cuisine.id,
-          sortOrder: nextIndex,
-        })),
-      },
-      {
-        onSuccess: () => void refetch(),
-      }
-    );
-  };
-
   return (
     <div className="w-full">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-[18px] font-semibold text-gray-900">Cuisines</h2>
           <p className="mt-1 text-sm text-gray-500">
-            Manage cuisine tags used to organize menu items.
+            View global cuisine tags available for menu items.
           </p>
         </div>
 
-        <Button
-          onClick={openCreate}
-          className="h-[40px] rounded-[12px] bg-primary px-4 text-white"
-        >
-          Add Cuisine
-        </Button>
+        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+          Read-only
+        </span>
       </div>
 
       <CuisineFilters
@@ -155,14 +84,7 @@ export default function CuisinesTable() {
           setPage(1);
         }}
         onSearch={() => void refetch()}
-        disabled={!restaurantId}
       />
-
-      {!restaurantId ? (
-        <div className="mb-4 rounded-[14px] border border-amber-100 bg-amber-50 p-4 text-sm text-amber-700">
-          Restaurant context is required to manage cuisines.
-        </div>
-      ) : null}
 
       <div className="hidden overflow-x-auto rounded-[16px] bg-white md:block">
         <table className="w-full text-sm">
@@ -174,8 +96,6 @@ export default function CuisinesTable() {
               <th className="px-2">Image</th>
               <th className="px-2 text-center">Sort Order</th>
               <th className="px-2 text-center">Status</th>
-              <th className="px-2 text-center">Order</th>
-              <th className="px-2 text-center">Actions</th>
             </tr>
           </thead>
 
@@ -184,12 +104,12 @@ export default function CuisinesTable() {
               Array.from({ length: 5 }).map((_, index) => <SkeletonRow key={index} />)
             ) : cuisines.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-10 text-center text-gray-400">
+                <td colSpan={6} className="py-10 text-center text-gray-400">
                   No cuisines found
                 </td>
               </tr>
             ) : (
-              cuisines.map((cuisine, index) => (
+              cuisines.map((cuisine) => (
                 <tr key={cuisine.id} className="border-b hover:bg-gray-50">
                   <td className="px-2 py-4 font-medium text-gray-900">
                     {cuisine.name}
@@ -217,52 +137,6 @@ export default function CuisinesTable() {
                   </td>
                   <td className="px-2 text-center">
                     <StatusBadge isActive={cuisine.isActive} />
-                  </td>
-                  <td className="px-2 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => moveCuisine(index, "up")}
-                        disabled={index === 0 || isReordering}
-                        className="rounded-full p-1 text-gray-500 transition hover:bg-gray-100 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
-                        aria-label="Move cuisine up"
-                      >
-                        <ChevronUp size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => moveCuisine(index, "down")}
-                        disabled={index === cuisines.length - 1 || isReordering}
-                        className="rounded-full p-1 text-gray-500 transition hover:bg-gray-100 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
-                        aria-label="Move cuisine down"
-                      >
-                        <ChevronDown size={16} />
-                      </button>
-                    </div>
-                  </td>
-                  <td className="px-2 text-center">
-                    <div className="flex items-center justify-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(cuisine)}
-                        className="text-gray-500 hover:text-primary"
-                        aria-label="Edit cuisine"
-                      >
-                        <FaPen size={14} />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDeleteError("");
-                          setDeleteTarget(cuisine);
-                        }}
-                        className="text-gray-500 hover:text-red-500"
-                        aria-label="Delete cuisine"
-                      >
-                        <FaTrash size={14} />
-                      </button>
-                    </div>
                   </td>
                 </tr>
               ))
@@ -296,55 +170,23 @@ export default function CuisinesTable() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(cuisine)}
-                    className="text-gray-500 hover:text-primary"
-                    aria-label="Edit cuisine"
-                  >
-                    <FaPen size={14} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDeleteError("");
-                      setDeleteTarget(cuisine);
-                    }}
-                    className="text-gray-500 hover:text-red-500"
-                    aria-label="Delete cuisine"
-                  >
-                    <FaTrash size={14} />
-                  </button>
-                </div>
+                <StatusBadge isActive={cuisine.isActive} />
               </div>
 
               <div className="mt-4 flex items-center justify-between">
                 <span className="text-sm text-gray-500">
                   Sort {formatCuisineSortOrder(cuisine.sortOrder)}
                 </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => moveCuisine(cuisines.indexOf(cuisine), "up")}
-                    disabled={cuisines.indexOf(cuisine) === 0 || isReordering}
-                    className="rounded-full p-1 text-gray-500 transition hover:bg-gray-100 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
-                    aria-label="Move cuisine up"
+                {cuisine.imageUrl ? (
+                  <a
+                    href={cuisine.imageUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm text-primary hover:underline"
                   >
-                    <ChevronUp size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveCuisine(cuisines.indexOf(cuisine), "down")}
-                    disabled={cuisines.indexOf(cuisine) === cuisines.length - 1 || isReordering}
-                    className="rounded-full p-1 text-gray-500 transition hover:bg-gray-100 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
-                    aria-label="Move cuisine down"
-                  >
-                    <ChevronDown size={16} />
-                  </button>
-                  <StatusBadge isActive={cuisine.isActive} />
-                </div>
+                    View image
+                  </a>
+                ) : null}
               </div>
             </div>
           ))
@@ -352,30 +194,6 @@ export default function CuisinesTable() {
 
         <PaginationSection {...pagination} onPageChange={setPage} />
       </div>
-
-      <CuisineFormDialog
-        open={formOpen}
-        onOpenChange={(value) => {
-          setFormOpen(value);
-          if (!value) setSelected(null);
-        }}
-        restaurantId={restaurantId}
-        initialData={selected}
-      />
-
-      <CuisineDeleteDialog
-        cuisine={deleteTarget}
-        open={Boolean(deleteTarget)}
-        errorMessage={deleteError}
-        isLoading={isDeleting}
-        onOpenChange={(value) => {
-          if (!value) {
-            setDeleteTarget(null);
-            setDeleteError("");
-          }
-        }}
-        onConfirm={handleDelete}
-      />
     </div>
   );
 }
@@ -397,7 +215,7 @@ function StatusBadge({ isActive }: { isActive?: boolean }) {
 function SkeletonRow() {
   return (
     <tr className="border-b">
-      {Array.from({ length: 8 }).map((_, index) => (
+      {Array.from({ length: 6 }).map((_, index) => (
         <td key={index} className="px-2 py-4">
           <div className="h-4 animate-pulse rounded bg-gray-100" />
         </td>

@@ -3,11 +3,7 @@ import { cleanParams } from "@/lib/params";
 import { extractResponseItems, extractResponseMeta } from "@/lib/response";
 import type {
   Cuisine,
-  CuisineBulkCreatePayload,
-  CuisineCreatePayload,
   CuisineListParams,
-  CuisineReorderPayload,
-  CuisineUpdatePayload,
   CuisinesListResponse,
   CuisinesMeta,
 } from "@/types/cuisines";
@@ -59,7 +55,6 @@ export const normalizeCuisine = (cuisine: unknown): Cuisine | null => {
 
   return {
     id,
-    restaurantId: getNullableString(cuisine, "restaurantId"),
     name,
     slug: getString(cuisine, "slug"),
     description: getNullableString(cuisine, "description"),
@@ -145,30 +140,3 @@ export const getCuisines = async (
 
   return normalizeCuisinesResponse(response, params);
 };
-
-export const getCuisine = (id: string) =>
-  httpClient.get<unknown>(`${CUISINES_ENDPOINT}/${id}`);
-
-export const createCuisine = (payload: CuisineCreatePayload) =>
-  httpClient.post<unknown, CuisineCreatePayload>(CUISINES_ENDPOINT, payload);
-
-export const bulkCreateCuisines = (payload: CuisineBulkCreatePayload) =>
-  httpClient.post<unknown, CuisineBulkCreatePayload>(
-    `${CUISINES_ENDPOINT}/bulk`,
-    payload
-  );
-
-export const updateCuisine = (id: string, payload: CuisineUpdatePayload) =>
-  httpClient.patch<unknown, CuisineUpdatePayload>(
-    `${CUISINES_ENDPOINT}/${id}`,
-    payload
-  );
-
-export const reorderCuisines = (payload: CuisineReorderPayload) =>
-  httpClient.patch<unknown, CuisineReorderPayload>(
-    `${CUISINES_ENDPOINT}/reorder`,
-    payload
-  );
-
-export const deleteCuisine = (id: string) =>
-  httpClient.delete<unknown>(`${CUISINES_ENDPOINT}/${id}`);
