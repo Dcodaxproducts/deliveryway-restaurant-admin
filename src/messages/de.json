@@ -124,7 +124,7 @@
     "manageMenus": "Menüs verwalten",
     "menu": "Menü",
     "menuItems": "Menüartikel",
-    "categories": "Kategorien/Küchen",
+    "categories": "Kategorien",
     "cuisines": "Küchen",
     "modifierCategories": "Modifier-Kategorien",
     "modifierGroups": "Modifier-Gruppen",
@@ -658,7 +658,7 @@
     "overviewDescription": "Alle Menüs hier anzeigen und verwalten",
     "trashTitle": "Menü-Papierkorb",
     "listingTitle": "Menüliste",
-    "categoriesTitle": "Kategorien/Küchen",
+    "categoriesTitle": "Kategorien",
     "categoriesDescription": "Menükategorien/Küchen verwalten",
     "categoryDetailsTitle": "Kategoriedetails",
     "categoryDetailsDescription": "Kategorieinformationen, Artikel, Variationen und Modifier-Gruppen anzeigen",
@@ -765,7 +765,7 @@
       }
     },
     "listingCategories": {
-      "title": "Kategorien/Küchen",
+      "title": "Kategorien",
       "addNewCategory": "Neue Kategorie hinzufuegen",
       "deleteTitle": "Kategorie loeschen",
       "deleteDescription": "Moechten Sie {name} wirklich loeschen?",

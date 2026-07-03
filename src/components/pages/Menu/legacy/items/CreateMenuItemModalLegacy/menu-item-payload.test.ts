@@ -463,6 +463,60 @@ describe("menu item modifier required payload", () => {
     );
   });
 
+  it("sends selected cuisine ids when creating a menu item", () => {
+    const payload = buildMenuItemPayload({
+      form: {
+        ...baseForm,
+        cuisineIds: ["cuisine-1", "cuisine-2"],
+      },
+      restaurantId: "restaurant-1",
+    });
+
+    expect(payload.cuisineIds).toEqual(["cuisine-1", "cuisine-2"]);
+  });
+
+  it("omits untouched cuisine ids when updating a menu item", () => {
+    const payload = buildMenuItemPayload({
+      form: {
+        ...baseForm,
+        cuisineIds: ["cuisine-1"],
+        cuisineIdsTouched: false,
+      },
+      restaurantId: "restaurant-1",
+      initialDataId: "item-1",
+    });
+
+    expect(payload).not.toHaveProperty("cuisineIds");
+  });
+
+  it("sends an empty cuisineIds array when cuisines are cleared during update", () => {
+    const payload = buildMenuItemPayload({
+      form: {
+        ...baseForm,
+        cuisineIds: [],
+        cuisineIdsTouched: true,
+      },
+      restaurantId: "restaurant-1",
+      initialDataId: "item-1",
+    });
+
+    expect(payload.cuisineIds).toEqual([]);
+  });
+
+  it("hydrates cuisines for edit mode", () => {
+    const form = getInitialForm("restaurant-1", {
+      id: "item-1",
+      name: "Pizza",
+      cuisines: [{ id: "cuisine-1", name: "Italian" }],
+    });
+
+    expect(form.cuisineIds).toEqual(["cuisine-1"]);
+    expect(form.selectedCuisineOptions).toEqual([
+      expect.objectContaining({ id: "cuisine-1", name: "Italian" }),
+    ]);
+    expect(form.cuisineIdsTouched).toBe(false);
+  });
+
   it("hydrates existing nested modifier overrides for edit mode", () => {
     const form = getInitialForm("restaurant-1", {
       id: "item-1",

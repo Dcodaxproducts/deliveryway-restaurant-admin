@@ -124,7 +124,7 @@
     "manageMenus": "Manage Menus",
     "menu": "Menu",
     "menuItems": "Menu Items",
-    "categories": "Categories/Cuisines",
+    "categories": "Categories",
     "cuisines": "Cuisines",
     "modifierCategories": "Modifier Categories",
     "modifierGroups": "Modifier Groups",
@@ -658,7 +658,7 @@
     "overviewDescription": "View and manage all menus from here",
     "trashTitle": "Menu Trash",
     "listingTitle": "Menu Listing",
-    "categoriesTitle": "Categories/Cuisines",
+    "categoriesTitle": "Categories",
     "categoriesDescription": "Manage menu categories/cuisines",
     "categoryDetailsTitle": "Category Details",
     "categoryDetailsDescription": "View category information, items, variations, and modifier groups",
@@ -765,7 +765,7 @@
       }
     },
     "listingCategories": {
-      "title": "Categories/Cuisines",
+      "title": "Categories",
       "addNewCategory": "Add new category",
       "deleteTitle": "Delete category",
       "deleteDescription": "Are you sure you want to delete {name}?",

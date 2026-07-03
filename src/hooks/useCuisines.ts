@@ -7,6 +7,7 @@ export const cuisineKeys = {
   list: (params?: CuisineListParams) =>
     [
       "cuisines",
+      params?.restaurantId ?? "",
       params?.search ?? "",
       params?.page ?? "",
       params?.limit ?? "",
@@ -20,6 +21,7 @@ export const cuisineKeys = {
     [
       "cuisines",
       "infinite",
+      params?.restaurantId ?? "",
       params?.search ?? "",
       params?.limit ?? "",
       params?.sortBy ?? "",
@@ -52,6 +54,7 @@ export const useCuisines = (params?: CuisineListParams) =>
   useQuery({
     queryKey: cuisineKeys.list(params),
     queryFn: () => getCuisines(params),
+    enabled: !params?.restaurantId || Boolean(params.restaurantId),
   });
 
 export const useInfiniteCuisines = (params?: CuisineListParams) => {
@@ -67,5 +70,6 @@ export const useInfiniteCuisines = (params?: CuisineListParams) => {
       }),
     initialPageParam: 1,
     getNextPageParam: getNextCuisinesPageParam,
+    enabled: !params?.restaurantId || Boolean(params.restaurantId),
   });
 };

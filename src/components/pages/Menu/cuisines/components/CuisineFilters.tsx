@@ -1,20 +1,28 @@
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+export type CuisineStatusFilter = "all" | "active" | "inactive";
+
 type CuisineFiltersProps = {
   search: string;
   onSearchChange: (value: string) => void;
-  includeInactive: boolean;
-  onIncludeInactiveChange: (value: boolean) => void;
+  statusFilter: CuisineStatusFilter;
+  onStatusFilterChange: (value: CuisineStatusFilter) => void;
   onSearch: () => void;
   disabled?: boolean;
 };
 
+const statusOptions: Array<{ value: CuisineStatusFilter; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "active", label: "Active cuisines" },
+  { value: "inactive", label: "Inactive cuisines" },
+];
+
 export default function CuisineFilters({
   search,
   onSearchChange,
-  includeInactive,
-  onIncludeInactiveChange,
+  statusFilter,
+  onStatusFilterChange,
   onSearch,
   disabled = false,
 }: CuisineFiltersProps) {
@@ -34,15 +42,26 @@ export default function CuisineFilters({
         />
       </div>
 
-      <label className="flex h-[44px] items-center gap-2 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm text-gray-600">
-        <input
-          type="checkbox"
-          checked={includeInactive}
-          onChange={(event) => onIncludeInactiveChange(event.target.checked)}
-          className="size-4 rounded border-gray-300 text-primary focus:ring-primary"
-        />
-        Show inactive
-      </label>
+      <div className="flex h-[44px] overflow-hidden rounded-[14px] border border-gray-200 bg-[#FAFAFA] p-1">
+        {statusOptions.map((option) => {
+          const isSelected = statusFilter === option.value;
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onStatusFilterChange(option.value)}
+              className={`rounded-[10px] px-3 text-sm font-medium transition-colors ${
+                isSelected
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-gray-600 hover:bg-white hover:text-gray-900"
+              }`}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
 
       <Button
         onClick={onSearch}

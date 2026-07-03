@@ -2,6 +2,7 @@ import type { ApiMeta } from "@/lib/response";
 
 export type Cuisine = {
   id: string;
+  restaurantId?: string | null;
   name: string;
   slug: string;
   description?: string | null;
@@ -13,6 +14,7 @@ export type Cuisine = {
 };
 
 export type CuisineListParams = {
+  restaurantId?: string;
   page?: number;
   limit?: number;
   search?: string;

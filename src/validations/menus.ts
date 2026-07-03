@@ -239,6 +239,7 @@ const menuItemShape = {
 
   variationIds: z.array(idSchema).optional().default([]),
   modifierGroupIds: z.array(idSchema).optional().default([]),
+  cuisineIds: z.array(idSchema).optional().default([]),
 
   modifiers: z.array(menuItemModifierSchema).optional().default([]),
 

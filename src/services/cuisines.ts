@@ -55,6 +55,7 @@ export const normalizeCuisine = (cuisine: unknown): Cuisine | null => {
 
   return {
     id,
+    restaurantId: getNullableString(cuisine, "restaurantId"),
     name,
     slug: getString(cuisine, "slug"),
     description: getNullableString(cuisine, "description"),
