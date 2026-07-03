@@ -52,14 +52,21 @@ export default function CuisinesTable() {
     page,
     limit,
     search: debouncedSearch || undefined,
-    sortBy: "sortOrder",
-    sortOrder: "ASC",
+    sortBy: "createdAt",
+    sortOrder: "DESC",
     all: statusFilter === "all" ? true : undefined,
     inactive: statusFilter === "inactive" ? true : undefined,
     includeInactive: statusFilter === "all" ? true : undefined,
   });
 
-  const cuisines = useMemo(() => response?.data ?? [], [response?.data]);
+  const cuisines = useMemo(() => {
+    return [...(response?.data ?? [])].sort((first, second) => {
+      const secondCreatedAt = new Date(second.createdAt ?? 0).getTime();
+      const firstCreatedAt = new Date(first.createdAt ?? 0).getTime();
+
+      return secondCreatedAt - firstCreatedAt;
+    });
+  }, [response?.data]);
   const isTableLoading = isLoading || isFetching;
 
   const pagination = useMemo(() => {
