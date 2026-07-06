@@ -54,6 +54,55 @@ describe("pos cart pricing", () => {
     ]);
   });
 
+  it("reconstructs paid modifier totals when the cart row only exposes the base item price", () => {
+    const payload = {
+      data: {
+        quote: {
+          subtotal: 9.1,
+          totalAmount: 9.1,
+        },
+        items: [
+          {
+            id: "cart-item-1",
+            menuItemId: "menu-item-1",
+            quantity: 1,
+            unitPrice: 9.1,
+            lineTotal: 9.1,
+            selectedModifiers: [
+              {
+                modifierId: "modifier-tagliatelle",
+                name: "Tagliatelle",
+                quantity: 1,
+                unitPrice: 1,
+                total: 1,
+              },
+              {
+                modifierId: "modifier-parmesan",
+                name: "Parmesan",
+                quantity: 2,
+                unitPrice: 4,
+                total: 8,
+              },
+            ],
+            menuItem: {
+              id: "menu-item-1",
+              name: "Pasta",
+              unitPrice: 9.1,
+            },
+          },
+        ],
+      },
+    };
+
+    const [item] = formatPosCartItems(payload);
+    const billing = formatPosCartBilling(payload, [item]);
+
+    expect(item.unitPrice).toBe(18.1);
+    expect(item.lineTotal).toBe(18.1);
+    expect(billing.subtotal).toBe(18.1);
+    expect(billing.totalAmount).toBe(18.1);
+  });
+
   it("prefers backend quote totals for billing", () => {
     const payload = {
       data: {

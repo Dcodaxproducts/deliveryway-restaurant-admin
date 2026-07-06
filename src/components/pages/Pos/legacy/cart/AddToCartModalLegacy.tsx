@@ -17,6 +17,10 @@ import { toast } from "sonner";
 import { useGetBranches } from "@/hooks/useBranches";
 import AsyncSelect from "@/components/ui/AsyncSelect";
 import { useTranslations } from "next-intl";
+import {
+  buildPosAddToCartModifierSelections,
+  flattenPosAddToCartModifierSelections,
+} from "@/components/pages/Pos/legacy/cart/add-to-cart-payload";
 
 interface AddToCartModalProps {
   open: boolean;
@@ -1148,22 +1152,16 @@ export default function AddToCartModal({
     return true;
   };
 
-  const buildModifiersPayload = () => {
-    return Object.values(selectedModifiers)
-      .flat()
-      .map((modifier) => ({
-        modifierId: modifier.id,
-        quantity: Math.max(1, Math.floor(toNumber(modifier.selectedQuantity, 1))),
-      }));
-  };
-
   const buildPayload = () => {
+    const modifierSelections =
+      buildPosAddToCartModifierSelections(selectedModifiers);
     const payload: any = {
       menuItemId: item.id,
       quantity,
       branchId: selectedBranch?.id,
       note: "",
-      modifiers: buildModifiersPayload(),
+      modifiers: flattenPosAddToCartModifierSelections(modifierSelections),
+      modifierSelections,
     };
 
     if (selectedVariation?.id) {

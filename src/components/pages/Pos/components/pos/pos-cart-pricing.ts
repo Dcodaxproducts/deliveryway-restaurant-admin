@@ -55,6 +55,9 @@ const readString = (record: UnknownRecord, key: string): string | undefined => {
   return typeof value === "string" && value.trim() ? value : undefined;
 };
 
+const numbersMatch = (left: number, right: number) =>
+  Math.abs(left - right) < 0.005;
+
 const getCartData = (payload: unknown): UnknownRecord => {
   if (!isRecord(payload)) return {};
   return isRecord(payload.data) ? payload.data : payload;
@@ -97,15 +100,42 @@ export const formatPosCartItems = (payload: unknown): PosCartLineItem[] => {
     const deal = isRecord(item.deal) ? item.deal : {};
     const quantity = firstNumber(readNumber(item, "quantity"), 1) ?? 1;
     const modifiers = normalizeModifiers(item);
+    const modifiersTotal = modifiers.reduce(
+      (total, modifier) => total + modifier.total,
+      0
+    );
+    const rawItemUnitPrice = readNumber(item, "unitPrice");
+    const menuItemUnitPrice = firstNumber(
+      readNumber(menuItem, "unitPrice"),
+      readNumber(menuItem, "price")
+    );
+    const rawLineTotal = readNumber(item, "lineTotal");
+    const explicitUnitPriceWithModifiers = readNumber(
+      item,
+      "unitPriceWithModifiers"
+    );
+    const shouldAddModifierTotals =
+      explicitUnitPriceWithModifiers === undefined &&
+      modifiersTotal > 0 &&
+      rawItemUnitPrice !== undefined &&
+      menuItemUnitPrice !== undefined &&
+      numbersMatch(rawItemUnitPrice, menuItemUnitPrice);
     const unitPrice =
       firstNumber(
-        readNumber(item, "unitPriceWithModifiers"),
-        readNumber(item, "unitPrice"),
-        readNumber(menuItem, "unitPrice"),
-        readNumber(menuItem, "price")
+        explicitUnitPriceWithModifiers,
+        shouldAddModifierTotals && rawItemUnitPrice !== undefined
+          ? rawItemUnitPrice + modifiersTotal
+          : undefined,
+        rawItemUnitPrice,
+        menuItemUnitPrice
       ) ?? 0;
+    const rawBaseLineTotal = (rawItemUnitPrice ?? unitPrice) * quantity;
+    const computedLineTotal = unitPrice * quantity;
     const lineTotal =
-      firstNumber(readNumber(item, "lineTotal"), unitPrice * quantity) ?? 0;
+      rawLineTotal !== undefined &&
+      !(shouldAddModifierTotals && numbersMatch(rawLineTotal, rawBaseLineTotal))
+        ? rawLineTotal
+        : computedLineTotal;
 
     return {
       id: readString(item, "id") ?? "",
@@ -133,7 +163,11 @@ export const formatPosCartBilling = (
   const data = getCartData(payload);
   const quote = isRecord(data.quote) ? data.quote : {};
   const fallbackSubtotal = items.reduce((total, item) => total + item.lineTotal, 0);
-  const subtotal = firstNumber(readNumber(quote, "subtotal"), fallbackSubtotal) ?? 0;
+  const quoteSubtotal = readNumber(quote, "subtotal");
+  const subtotal =
+    quoteSubtotal !== undefined
+      ? Math.max(quoteSubtotal, fallbackSubtotal)
+      : fallbackSubtotal;
   const deliveryFee = firstNumber(readNumber(quote, "deliveryFee"), 0) ?? 0;
   const taxAmount = firstNumber(readNumber(quote, "taxAmount"), 0) ?? 0;
   const serviceChargeAmount =
@@ -143,6 +177,11 @@ export const formatPosCartBilling = (
   const fallbackTotal =
     subtotal + deliveryFee + taxAmount + serviceChargeAmount + tipAmount - discountAmount;
 
+  const quotedTotal = firstNumber(
+    readNumber(quote, "totalAmount"),
+    readNumber(quote, "payableAmount")
+  );
+
   return {
     subtotal,
     deliveryFee,
@@ -151,10 +190,8 @@ export const formatPosCartBilling = (
     tipAmount,
     discountAmount,
     totalAmount:
-      firstNumber(
-        readNumber(quote, "totalAmount"),
-        readNumber(quote, "payableAmount"),
-        fallbackTotal
-      ) ?? 0,
+      quotedTotal !== undefined
+        ? Math.max(quotedTotal, fallbackTotal)
+        : fallbackTotal,
   };
 };
