@@ -4,6 +4,7 @@ import { useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 
 import { getApiErrorMessage } from "@/lib/errors";
+import { prepareUploadFile } from "@/lib/prepare-upload-file";
 import { createPresignedUpload } from "@/services/storage";
 
 interface UploadResult {
@@ -21,9 +22,11 @@ export const useFileUpload = () => {
     try {
       setUploading(true);
 
+      const prepared = await prepareUploadFile(file);
+
       const presigned = await createPresignedUpload({
-        fileName: file.name,
-        contentType: file.type,
+        fileName: prepared.file.name,
+        contentType: prepared.file.type,
       });
 
       const uploadData = presigned?.data;
@@ -37,7 +40,7 @@ export const useFileUpload = () => {
         headers: {
           ...(uploadData.headers || {}),
         },
-        body: file,
+        body: prepared.file,
       });
 
       if (!uploadResponse.ok) {
