@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFileUpload } from "@/hooks/useFileUpload";
+import { MAX_UPLOAD_FILE_SIZE_MB } from "@/services/storage";
 
 type ImageDropzoneUploadProps = {
   label?: string;
@@ -47,11 +48,11 @@ export default function ImageDropzoneUpload({
   previewAlt = "Image preview",
   emptyTitle = "Drag & drop your image here",
   browseText = "click to browse",
-  helperText = "PNG, JPG, WEBP up to 10MB",
+  helperText = `PNG, JPG, WEBP up to ${MAX_UPLOAD_FILE_SIZE_MB}MB`,
   uploadedTitle = "Image uploaded",
   replaceHint = "Drag & drop another image to replace it",
   uploadingText = "Uploading image...",
-  maxSizeMB = 10,
+  maxSizeMB = MAX_UPLOAD_FILE_SIZE_MB,
   previewHeightClassName = "h-52",
   className = "",
   clearKey,

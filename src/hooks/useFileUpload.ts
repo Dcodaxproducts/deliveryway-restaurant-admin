@@ -27,6 +27,7 @@ export const useFileUpload = () => {
       const presigned = await createPresignedUpload({
         fileName: prepared.file.name,
         contentType: prepared.file.type,
+        fileSize: prepared.file.size,
       });
 
       const uploadData = presigned?.data;

@@ -1,11 +1,13 @@
 import { z } from "zod";
 
+import { MAX_UPLOAD_FILE_SIZE_BYTES, MAX_UPLOAD_FILE_SIZE_MB } from "@/services/storage";
+
 /* ---------------- FILE SCHEMAS ---------------- */
 
 export const image2MB = z
   .any()
   .refine((file) => file instanceof File, "File is required")
-  .refine((file) => file?.size <= 2 * 1024 * 1024, "File must be less than 2MB")
+  .refine((file) => file?.size <= MAX_UPLOAD_FILE_SIZE_BYTES, `File must be less than ${MAX_UPLOAD_FILE_SIZE_MB}MB`)
   .refine(
     (file) =>
       ["image/png", "image/jpeg", "image/jpg"].includes(file?.type),
@@ -15,7 +17,7 @@ export const image2MB = z
 export const image1MB = z
   .any()
   .refine((file) => file instanceof File, "Image is required")
-  .refine((file) => file?.size <= 1 * 1024 * 1024, "Image must be less than 1MB")
+  .refine((file) => file?.size <= MAX_UPLOAD_FILE_SIZE_BYTES, `Image must be less than ${MAX_UPLOAD_FILE_SIZE_MB}MB`)
   .refine(
     (file) =>
       ["image/png", "image/jpeg", "image/jpg"].includes(file?.type),

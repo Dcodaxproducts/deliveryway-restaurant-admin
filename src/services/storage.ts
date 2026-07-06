@@ -1,6 +1,9 @@
 import api from "@/lib/axios";
 
-export const createPresignedUpload = async (payload: { fileName: string; contentType: string }) => {
+export const MAX_UPLOAD_FILE_SIZE_MB = 20;
+export const MAX_UPLOAD_FILE_SIZE_BYTES = MAX_UPLOAD_FILE_SIZE_MB * 1024 * 1024;
+
+export const createPresignedUpload = async (payload: { fileName: string; contentType: string; fileSize: number }) => {
   const { data } = await api.post("/storage/presigned-upload", payload);
   return data;
 };
