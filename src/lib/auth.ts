@@ -2,6 +2,7 @@ export const ADMIN_ROLES = {
   BUSINESS_ADMIN: "BUSINESS_ADMIN",
   RESTAURANT_ADMIN: "RESTAURANT_ADMIN",
   BRANCH_ADMIN: "BRANCH_ADMIN",
+  STAFF: "STAFF",
 } as const;
 
 export type AdminRole = (typeof ADMIN_ROLES)[keyof typeof ADMIN_ROLES] | string;
@@ -16,6 +17,24 @@ export type AuthProfile = {
   updatedAt?: string;
 };
 
+export type StaffPermission = {
+  id?: string;
+  access?: string;
+  operations?: string[];
+};
+
+export type RestaurantAccessScope = {
+  restaurantIds?: string[];
+  branchIds?: string[];
+};
+
+export type AuthStaffRole = {
+  id?: string;
+  name?: string;
+  permissions?: StaffPermission[];
+  restaurantAccess?: RestaurantAccessScope | null;
+};
+
 export type AuthUser = {
   id: string;
   email: string;
@@ -24,6 +43,10 @@ export type AuthUser = {
   restaurantId?: string | null;
   branchId?: string | null;
   branchName?: string | null;
+  actorType?: "USER" | "STAFF" | "DELIVERYMAN" | string;
+  restaurantAccess?: RestaurantAccessScope | null;
+  staffRoleId?: string | null;
+  staffRole?: AuthStaffRole | null;
   isVerified?: boolean;
   isActive?: boolean;
   profile: AuthProfile;
@@ -64,6 +87,64 @@ const getBooleanValue = (
 ) => {
   const value = source?.[key];
   return typeof value === "boolean" ? value : undefined;
+};
+
+const getStringArrayValue = (
+  source: Record<string, unknown> | null | undefined,
+  key: string
+) => {
+  const value = source?.[key];
+  if (!Array.isArray(value)) return undefined;
+
+  return value.filter((item): item is string => typeof item === "string");
+};
+
+const getRestaurantAccess = (
+  source: Record<string, unknown> | null | undefined,
+  fallback?: RestaurantAccessScope | null
+): RestaurantAccessScope | null => {
+  const restaurantIds = getStringArrayValue(source, "restaurantIds");
+  const branchIds = getStringArrayValue(source, "branchIds");
+
+  if (!restaurantIds && !branchIds) return fallback ?? null;
+
+  return {
+    restaurantIds: restaurantIds ?? fallback?.restaurantIds ?? [],
+    branchIds: branchIds ?? fallback?.branchIds ?? [],
+  };
+};
+
+const getStaffPermissions = (source: Record<string, unknown> | null | undefined) => {
+  const permissions = source?.permissions;
+  if (!Array.isArray(permissions)) return undefined;
+
+  return permissions
+    .filter(isRecord)
+    .map((permission): StaffPermission => ({
+      id: getStringValue(permission, "id"),
+      access: getStringValue(permission, "access"),
+      operations: getStringArrayValue(permission, "operations") ?? [],
+    }));
+};
+
+const getStaffRole = (
+  source: Record<string, unknown> | null | undefined,
+  fallback?: AuthStaffRole | null
+): AuthStaffRole | null => {
+  const role = getRecordValue(source, "staffRole");
+  if (!role && !fallback) return null;
+
+  return {
+    ...(fallback ?? {}),
+    ...(role ?? {}),
+    id: getStringValue(role, "id") ?? fallback?.id,
+    name: getStringValue(role, "name") ?? fallback?.name,
+    permissions: getStaffPermissions(role) ?? fallback?.permissions,
+    restaurantAccess: getRestaurantAccess(
+      getRecordValue(role, "restaurantAccess"),
+      fallback?.restaurantAccess
+    ),
+  };
 };
 
 const normalizeRoleName = (role?: string | null) => {
@@ -116,6 +197,13 @@ export const isBranchAdminRole = (role?: string | null) => {
   return normalizeRoleName(role) === ADMIN_ROLES.BRANCH_ADMIN;
 };
 
+export const isStaffRole = (role?: string | null, actorType?: string | null) => {
+  return (
+    normalizeRoleName(actorType) === ADMIN_ROLES.STAFF ||
+    normalizeRoleName(role) === ADMIN_ROLES.STAFF
+  );
+};
+
 export const isRestaurantAdminRole = (role?: string | null) => {
   const normalizedRole = normalizeRoleName(role);
   return (
@@ -125,7 +213,52 @@ export const isRestaurantAdminRole = (role?: string | null) => {
 };
 
 export const isAllowedAdminRole = (role?: string | null) => {
-  return isBranchAdminRole(role) || isRestaurantAdminRole(role);
+  return isBranchAdminRole(role) || isRestaurantAdminRole(role) || isStaffRole(role);
+};
+
+export const hasStaffMenuAccess = (user?: AuthUser | null) => {
+  if (!isStaffRole(user?.role, user?.actorType)) return false;
+
+  const hasAssignedScope = Boolean(
+    user?.restaurantId ||
+      user?.restaurantAccess?.restaurantIds?.length ||
+      user?.staffRole?.restaurantAccess?.restaurantIds?.length
+  );
+
+  if (!hasAssignedScope) return false;
+
+  const permissions = user?.staffRole?.permissions;
+  if (!Array.isArray(permissions)) return false;
+
+  const allowedAccesses = new Set([
+    "*",
+    "menu",
+    "menus",
+    "menu-management",
+    "restaurant-menus",
+    "menu-categories",
+    "menu-items",
+    "modifiers",
+    "modifier-categories",
+    "modifier-groups",
+    "variations",
+    "branch-overrides",
+    "cuisines",
+  ]);
+  const readOperations = new Set(["read", "list", "view", "*"]);
+
+  return permissions.some((permission) => {
+    const access = permission.access?.trim().toLowerCase();
+    const operations = permission.operations?.map((operation) =>
+      operation.trim().toLowerCase()
+    );
+
+    return Boolean(
+      access &&
+        allowedAccesses.has(access) &&
+        operations?.some((operation) => readOperations.has(operation))
+    );
+  });
 };
 
 export const normalizeUser = (
@@ -177,6 +310,11 @@ export const normalizeUser = (
     fallback?.branchName ??
     null;
 
+  const restaurantAccess = getRestaurantAccess(
+    getRecordValue(source, "restaurantAccess"),
+    fallback?.restaurantAccess
+  );
+
   return {
     ...fallback,
     ...(rawRecord ?? {}),
@@ -187,6 +325,10 @@ export const normalizeUser = (
     restaurantId,
     branchId,
     branchName,
+    actorType: getStringValue(source, "actorType") ?? fallback?.actorType,
+    restaurantAccess,
+    staffRoleId: getStringValue(source, "staffRoleId") ?? fallback?.staffRoleId ?? null,
+    staffRole: getStaffRole(source, fallback?.staffRole),
     isVerified: getBooleanValue(source, "isVerified") ?? fallback?.isVerified,
     isActive: getBooleanValue(source, "isActive") ?? fallback?.isActive,
     profile: getProfile(source, fallback),
@@ -271,6 +413,7 @@ export const getRoleLabel = (role?: string | null) => {
   if (normalizedRole === ADMIN_ROLES.BRANCH_ADMIN) return "Branch Admin";
   if (normalizedRole === ADMIN_ROLES.RESTAURANT_ADMIN) return "Restaurant Admin";
   if (normalizedRole === ADMIN_ROLES.BUSINESS_ADMIN) return "Business Admin";
+  if (normalizedRole === ADMIN_ROLES.STAFF) return "Staff";
   return role || "Admin";
 };
 
@@ -281,7 +424,7 @@ export const getScopedQueryParams = (user?: AuthUser | null) => {
     params.restaurantId = user.restaurantId;
   }
 
-  if (isBranchAdminRole(user?.role) && user?.branchId) {
+  if ((isBranchAdminRole(user?.role) || isStaffRole(user?.role, user?.actorType)) && user?.branchId) {
     params.branchId = user.branchId;
   }
 

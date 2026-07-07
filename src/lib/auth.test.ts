@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isBranchAdminRole, normalizeUser } from "@/lib/auth";
+import { hasStaffMenuAccess, isBranchAdminRole, normalizeUser } from "@/lib/auth";
 
 describe("auth helpers", () => {
   it("normalizes restaurant id from a branch admin branch relationship", () => {
@@ -62,5 +62,25 @@ describe("auth helpers", () => {
 
     expect(user?.role).toBe("BRANCH_ADMIN");
     expect(isBranchAdminRole(user?.role)).toBe(true);
+  });
+
+  it("normalizes staff menu access claims from auth payloads", () => {
+    const user = normalizeUser({
+      id: "staff-1",
+      email: "staff@example.com",
+      role: "STAFF",
+      actorType: "STAFF",
+      restaurantAccess: { restaurantIds: ["restaurant-1"], branchIds: ["branch-1"] },
+      staffRoleId: "role-1",
+      staffRole: {
+        id: "role-1",
+        permissions: [{ access: "menu-items", operations: ["read"] }],
+      },
+    });
+
+    expect(user?.actorType).toBe("STAFF");
+    expect(user?.restaurantAccess?.restaurantIds).toEqual(["restaurant-1"]);
+    expect(user?.staffRole?.permissions?.[0]?.access).toBe("menu-items");
+    expect(hasStaffMenuAccess(user)).toBe(true);
   });
 });

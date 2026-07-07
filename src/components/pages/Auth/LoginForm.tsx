@@ -15,7 +15,7 @@ import AuthPageShell from "@/components/pages/Auth/components/AuthPageShell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuthContext } from "@/components/providers/auth-provider";
-import { getRoleLabel, isAllowedAdminRole } from "@/lib/auth";
+import { getRoleLabel, hasStaffMenuAccess, isAllowedAdminRole, isStaffRole } from "@/lib/auth";
 import { getSafeRedirectPath } from "@/lib/auth-routes";
 import { authApi } from "@/services/auth/auth.api";
 import {
@@ -126,6 +126,11 @@ function LoginFormContent() {
         return;
       }
 
+      if (isStaffRole(user.role, user.actorType) && !hasStaffMenuAccess(user)) {
+        toast.error(t("notAuthorized"));
+        return;
+      }
+
       if (user.role === "BRANCH_ADMIN" && !user.branchId) {
         toast.error(t("missingBranchAssignment"));
         return;
@@ -134,7 +139,11 @@ function LoginFormContent() {
       login(authPayload);
       toast.success(t("loginSuccess", { role: getRoleLabel(user.role) }));
 
-      const defaultRedirectPath = user.role === "BRANCH_ADMIN" ? "/branch-workspace" : "/";
+      const defaultRedirectPath = isStaffRole(user.role, user.actorType)
+        ? "/menu"
+        : user.role === "BRANCH_ADMIN"
+          ? "/branch-workspace"
+          : "/";
       const redirectPath = getSafeRedirectPath(searchParams.get("redirect") ?? defaultRedirectPath);
 
       router.push(redirectPath);
@@ -192,6 +201,11 @@ function LoginFormContent() {
               return;
             }
 
+            if (isStaffRole(user.role, user.actorType) && !hasStaffMenuAccess(user)) {
+              toast.error(t("notAuthorized"));
+              return;
+            }
+
             if (user.role === "BRANCH_ADMIN" && !user.branchId) {
               toast.error(t("missingBranchAssignment"));
               return;
@@ -199,7 +213,11 @@ function LoginFormContent() {
 
             login(authPayload);
             toast.success(t("loginSuccess", { role: getRoleLabel(user.role) }));
-            const defaultRedirectPath = user.role === "BRANCH_ADMIN" ? "/branch-workspace" : "/";
+            const defaultRedirectPath = isStaffRole(user.role, user.actorType)
+              ? "/menu"
+              : user.role === "BRANCH_ADMIN"
+                ? "/branch-workspace"
+                : "/";
             router.push(getSafeRedirectPath(searchParams.get("redirect") ?? defaultRedirectPath));
           } catch (error) {
             toast.error(error instanceof Error ? error.message : t("genericError"));

@@ -31,7 +31,7 @@ import type { IconType } from "react-icons";
 import { PiUsersThree } from "react-icons/pi";
 
 export type SidebarSection = "main" | "account";
-export type SidebarRole = "BUSINESS_ADMIN" | "RESTAURANT_ADMIN" | "BRANCH_ADMIN";
+export type SidebarRole = "BUSINESS_ADMIN" | "RESTAURANT_ADMIN" | "BRANCH_ADMIN" | "STAFF";
 
 export interface MenuItem {
   title: string;
@@ -45,6 +45,7 @@ export interface MenuItem {
 
 const restaurantAdminRoles: SidebarRole[] = ["BUSINESS_ADMIN", "RESTAURANT_ADMIN"];
 const allAdminRoles: SidebarRole[] = ["BUSINESS_ADMIN", "RESTAURANT_ADMIN", "BRANCH_ADMIN"];
+const menuStaffRoles: SidebarRole[] = ["BUSINESS_ADMIN", "RESTAURANT_ADMIN", "BRANCH_ADMIN", "STAFF"];
 const branchAdminOnly: SidebarRole[] = ["BRANCH_ADMIN"];
 
 export const menuItems: MenuItem[] = [
@@ -78,7 +79,7 @@ export const menuItems: MenuItem[] = [
     href: "/menu",
     icon: List,
     section: "main",
-    roles: allAdminRoles,
+    roles: menuStaffRoles,
     children: [
       {
         title: "Menu",
@@ -86,7 +87,7 @@ export const menuItems: MenuItem[] = [
         href: "/menu",
         icon: List,
         section: "main",
-        roles: allAdminRoles,
+        roles: menuStaffRoles,
       },
       {
         title: "Categories",
@@ -94,7 +95,7 @@ export const menuItems: MenuItem[] = [
         href: "/menu/categories",
         icon: ClipboardList,
         section: "main",
-        roles: allAdminRoles,
+        roles: menuStaffRoles,
       },
       {
         title: "Cuisines",
@@ -102,7 +103,7 @@ export const menuItems: MenuItem[] = [
         href: "/menu/cuisines",
         icon: ClipboardList,
         section: "main",
-        roles: restaurantAdminRoles,
+        roles: menuStaffRoles,
       },
       {
         title: "Modifier Categories",
@@ -110,7 +111,7 @@ export const menuItems: MenuItem[] = [
         href: "/menu/modifier-categories",
         icon: ClipboardList,
         section: "main",
-        roles: restaurantAdminRoles,
+        roles: menuStaffRoles,
       },
       {
         title: "Modifier Groups",
@@ -118,7 +119,7 @@ export const menuItems: MenuItem[] = [
         href: "/menu/modifier-groups",
         icon: ClipboardList,
         section: "main",
-        roles: restaurantAdminRoles,
+        roles: menuStaffRoles,
       },
       {
         title: "Modifiers",
@@ -126,7 +127,7 @@ export const menuItems: MenuItem[] = [
         href: "/menu/modifier",
         icon: Tags,
         section: "main",
-        roles: restaurantAdminRoles,
+        roles: menuStaffRoles,
       },
       {
         title: "Variations",
@@ -134,7 +135,7 @@ export const menuItems: MenuItem[] = [
         href: "/menu/variations",
         icon: ClipboardList,
         section: "main",
-        roles: restaurantAdminRoles,
+        roles: menuStaffRoles,
       },
       {
         title: "Deals",
@@ -142,7 +143,7 @@ export const menuItems: MenuItem[] = [
         href: "/menu/deals",
         icon: BadgePercent,
         section: "main",
-        roles: allAdminRoles,
+        roles: menuStaffRoles,
       },
       {
         title: "Items",
@@ -150,7 +151,7 @@ export const menuItems: MenuItem[] = [
         href: "/menu/items",
         icon: PackagePlus,
         section: "main",
-        roles: allAdminRoles,
+        roles: menuStaffRoles,
       },
       {
         title: "Allergen",
@@ -158,7 +159,7 @@ export const menuItems: MenuItem[] = [
         href: "/menu/allergen",
         icon: AlertTriangle,
         section: "main",
-        roles: restaurantAdminRoles,
+        roles: menuStaffRoles,
       },
       {
         title: "Labels",
@@ -166,7 +167,7 @@ export const menuItems: MenuItem[] = [
         href: "/menu/labels",
         icon: BadgeCheck,
         section: "main",
-        roles: restaurantAdminRoles,
+        roles: menuStaffRoles,
       },
     ],
   },
