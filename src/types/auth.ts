@@ -3,12 +3,12 @@ import type { AuthStorage, AuthUser } from "@/lib/auth";
 export type LoginPayload = {
   email: string;
   password: string;
-  role?: "BUSINESS_ADMIN" | "BRANCH_ADMIN";
+  role?: "BUSINESS_ADMIN" | "BRANCH_ADMIN" | "STAFF";
 };
 
 export type GoogleLoginPayload = {
   idToken: string;
-  role?: "BUSINESS_ADMIN" | "BRANCH_ADMIN";
+  role?: "BUSINESS_ADMIN" | "BRANCH_ADMIN" | "STAFF";
 };
 
 export type ForgotPasswordPayload = {

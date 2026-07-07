@@ -8,7 +8,7 @@ import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { Building2, Store } from "lucide-react";
+import { Building2, Store, UserCog } from "lucide-react";
 
 import FormInput from "@/components/forms/common/FormInput";
 import AuthPageShell from "@/components/pages/Auth/components/AuthPageShell";
@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 const loginRoles: Array<{
   value: NonNullable<LoginFormValues["role"]>;
   icon: typeof Building2;
-  labelKey: "businessAdminRole" | "branchAdminRole";
+  labelKey: "businessAdminRole" | "branchAdminRole" | "staffRole";
 }> = [
   {
     value: "BUSINESS_ADMIN",
@@ -38,6 +38,11 @@ const loginRoles: Array<{
     value: "BRANCH_ADMIN",
     icon: Store,
     labelKey: "branchAdminRole",
+  },
+  {
+    value: "STAFF",
+    icon: UserCog,
+    labelKey: "staffRole",
   },
 ];
 

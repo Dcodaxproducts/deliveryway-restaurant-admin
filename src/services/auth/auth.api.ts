@@ -48,15 +48,18 @@ const toStaffLoginPayload = (payload: LoginPayload) => ({
 
 export const authApi = {
   loginWithFallback: async (payload: LoginPayload) => {
+    const { role, ...credentials } = payload;
+
+    if (role === "STAFF") {
+      const response = await httpClient.post("/auth/staff/login", credentials);
+      return normalizeAuthPayload(response);
+    }
+
     try {
       const response = await httpClient.post("/auth/login", payload);
       return normalizeAuthPayload(response);
     } catch (error) {
-      if (!shouldTryStaffLogin(payload, error)) {
-        throw error;
-      }
-
-      const response = await httpClient.post("/auth/staff/login", toStaffLoginPayload(payload));
+      const response = await httpClient.post("/auth/staff/login", credentials);
       return normalizeAuthPayload(response);
     }
   },
