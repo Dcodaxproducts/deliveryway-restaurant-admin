@@ -221,8 +221,11 @@ export const hasStaffMenuAccess = (user?: AuthUser | null) => {
 
   const hasAssignedScope = Boolean(
     user?.restaurantId ||
+      user?.branchId ||
       user?.restaurantAccess?.restaurantIds?.length ||
-      user?.staffRole?.restaurantAccess?.restaurantIds?.length
+      user?.restaurantAccess?.branchIds?.length ||
+      user?.staffRole?.restaurantAccess?.restaurantIds?.length ||
+      user?.staffRole?.restaurantAccess?.branchIds?.length
   );
 
   if (!hasAssignedScope) return false;

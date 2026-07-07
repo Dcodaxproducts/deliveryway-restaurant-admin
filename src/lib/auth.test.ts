@@ -83,4 +83,44 @@ describe("auth helpers", () => {
     expect(user?.staffRole?.permissions?.[0]?.access).toBe("menu-items");
     expect(hasStaffMenuAccess(user)).toBe(true);
   });
+
+  it("allows staff menu access with branch-only scope", () => {
+    const user = normalizeUser({
+      id: "staff-branch-1",
+      email: "staff-branch@example.com",
+      role: "STAFF",
+      actorType: "STAFF",
+      restaurantAccess: { restaurantIds: [], branchIds: ["branch-1"] },
+      staffRole: {
+        permissions: [{ access: "menu", operations: ["read"] }],
+      },
+    });
+
+    expect(hasStaffMenuAccess(user)).toBe(true);
+  });
+
+  it("rejects staff menu access without menu permission or assigned scope", () => {
+    const withoutMenuPermission = normalizeUser({
+      id: "staff-2",
+      email: "staff-orders@example.com",
+      role: "STAFF",
+      actorType: "STAFF",
+      restaurantAccess: { restaurantIds: ["restaurant-1"], branchIds: [] },
+      staffRole: {
+        permissions: [{ access: "orders", operations: ["read"] }],
+      },
+    });
+    const withoutScope = normalizeUser({
+      id: "staff-3",
+      email: "staff-no-scope@example.com",
+      role: "STAFF",
+      actorType: "STAFF",
+      staffRole: {
+        permissions: [{ access: "menu", operations: ["read"] }],
+      },
+    });
+
+    expect(hasStaffMenuAccess(withoutMenuPermission)).toBe(false);
+    expect(hasStaffMenuAccess(withoutScope)).toBe(false);
+  });
 });
