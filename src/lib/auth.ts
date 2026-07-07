@@ -288,7 +288,7 @@ export const normalizeUser = (
     fallback?.tenantId ??
     null;
 
-  const restaurantId =
+  let restaurantId =
     getStringValue(source, "restaurantId") ??
     getStringValue(source, "restaurant_id") ??
     getStringValue(source, "rid") ??
@@ -318,6 +318,15 @@ export const normalizeUser = (
     fallback?.restaurantAccess
   );
 
+  const staffRole = getStaffRole(source, fallback?.staffRole);
+  const staffRestaurantIds = restaurantAccess?.restaurantIds?.length
+    ? restaurantAccess.restaurantIds
+    : staffRole?.restaurantAccess?.restaurantIds ?? [];
+
+  if (!restaurantId && isStaffRole(getRoleValue(source, fallback), getStringValue(source, "actorType")) && staffRestaurantIds.length === 1) {
+    restaurantId = staffRestaurantIds[0];
+  }
+
   return {
     ...fallback,
     ...(rawRecord ?? {}),
@@ -331,7 +340,7 @@ export const normalizeUser = (
     actorType: getStringValue(source, "actorType") ?? fallback?.actorType,
     restaurantAccess,
     staffRoleId: getStringValue(source, "staffRoleId") ?? fallback?.staffRoleId ?? null,
-    staffRole: getStaffRole(source, fallback?.staffRole),
+    staffRole,
     isVerified: getBooleanValue(source, "isVerified") ?? fallback?.isVerified,
     isActive: getBooleanValue(source, "isActive") ?? fallback?.isActive,
     profile: getProfile(source, fallback),
