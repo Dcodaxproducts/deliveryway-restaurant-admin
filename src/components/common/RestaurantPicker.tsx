@@ -15,6 +15,7 @@ import {
   getStoredAuth,
   getStringValue,
   isRecord,
+  isStaffRole,
   saveStoredAuth,
 } from "@/lib/auth";
 import { useGetBranch } from "@/hooks/useBranches";
@@ -28,6 +29,15 @@ type RestaurantOption = {
 
 type RestaurantPickerProps = {
   className?: string;
+};
+
+const getStaffRestaurantIds = (user: ReturnType<typeof useAuth>["user"]) => {
+  if (!isStaffRole(user?.role, user?.actorType)) return [];
+
+  const directIds = user?.restaurantAccess?.restaurantIds ?? [];
+  const roleIds = user?.staffRole?.restaurantAccess?.restaurantIds ?? [];
+
+  return Array.from(new Set([...directIds, ...roleIds].filter(Boolean)));
 };
 
 export default function RestaurantPicker({ className }: RestaurantPickerProps) {
@@ -87,8 +97,19 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
       return acc;
     }, []);
 
-    setRestaurants(filtered);
-  }, [restaurantsResponse, user?.tenantId]);
+    const staffRestaurantIds = getStaffRestaurantIds(user);
+    const knownIds = new Set(filtered.map((restaurant) => restaurant.id));
+    const staffFallbackOptions = staffRestaurantIds
+      .filter((id) => !knownIds.has(id))
+      .map((id) => ({
+        id,
+        name: id,
+        tenantId: user?.tenantId ?? null,
+        logoUrl: null,
+      }));
+
+    setRestaurants([...filtered, ...staffFallbackOptions]);
+  }, [restaurantsResponse, user]);
 
   useEffect(() => {
     if (!user?.restaurantId || restaurants.length === 0) return;
