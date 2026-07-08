@@ -8,8 +8,15 @@ import { StaffRoleValues, StaffValues } from "@/validations/employees";
  * ==============================
  */
 
+const toStaffPayload = (payload: StaffValues | Partial<StaffValues>) => {
+  const body = { ...payload };
+  delete body.restaurantId;
+  delete body.branchId;
+  return body;
+};
+
 export const createStaff = async (payload: StaffValues) => {
-  const { data } = await api.post("/staff-management", payload);
+  const { data } = await api.post("/staff-management", toStaffPayload(payload));
   return data;
 };
 
@@ -35,7 +42,7 @@ export const getStaff = async (id: string) => {
 };
 
 export const updateStaff = async (id: string, payload: Partial<StaffValues>) => {
-  const { data } = await api.patch(`/staff-management/${id}`, payload);
+  const { data } = await api.patch(`/staff-management/${id}`, toStaffPayload(payload));
   return data;
 };
 
