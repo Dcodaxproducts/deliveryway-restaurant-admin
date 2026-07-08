@@ -46,6 +46,7 @@ export interface MenuItem {
 
 const restaurantAdminRoles: SidebarRole[] = ["BUSINESS_ADMIN", "RESTAURANT_ADMIN"];
 const allAdminRoles: SidebarRole[] = ["BUSINESS_ADMIN", "RESTAURANT_ADMIN", "BRANCH_ADMIN"];
+const accountProfileRoles: SidebarRole[] = ["BUSINESS_ADMIN", "RESTAURANT_ADMIN", "BRANCH_ADMIN", "STAFF"];
 const menuStaffRoles: SidebarRole[] = ["BUSINESS_ADMIN", "RESTAURANT_ADMIN", "BRANCH_ADMIN", "STAFF"];
 const branchAdminOnly: SidebarRole[] = ["BRANCH_ADMIN"];
 
@@ -349,8 +350,7 @@ export const menuItems: MenuItem[] = [
     href: "/profile",
     icon: User,
     section: "account",
-    roles: allAdminRoles,
-    permissionAccesses: ["settings"],
+    roles: accountProfileRoles,
   },
   {
     title: "Auto-Printing / POS",

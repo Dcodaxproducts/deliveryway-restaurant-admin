@@ -9,7 +9,7 @@ import { LogOut, ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { menuItems, MenuItem, type SidebarRole } from "@/config/sidebarItems";
 import { useAuth } from "@/hooks/useAuth";
-import { hasStaffPermission, isStaffRole } from "@/lib/auth";
+import { getStaffDefaultRedirectPath, hasStaffPermission, isStaffRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -138,6 +138,28 @@ const SidebarItem = ({
   );
 };
 
+
+const getSidebarCta = (
+  user: ReturnType<typeof useAuth>["user"],
+  role: ReturnType<typeof useAuth>["role"],
+  isBranchAdmin: boolean
+): { href: string; labelKey: "myBranchCta" | "addMenuCta" | "manageBranchCta" | "manageOrdersCta" | "openPosCta" | "accountSettingsCta" } => {
+  if (isBranchAdmin) return { href: "/branch-workspace", labelKey: "myBranchCta" };
+
+  if (isStaffRole(role, user?.actorType)) {
+    const href = getStaffDefaultRedirectPath(user);
+
+    if (href === "/branches") return { href, labelKey: "manageBranchCta" };
+    if (href === "/orders") return { href, labelKey: "manageOrdersCta" };
+    if (href === "/pos") return { href, labelKey: "openPosCta" };
+    if (href === "/") return { href: "/profile", labelKey: "accountSettingsCta" };
+
+    return { href, labelKey: "addMenuCta" };
+  }
+
+  return { href: "/menu?create=true", labelKey: "addMenuCta" };
+};
+
 export default function Sidebar({
   onLinkClick,
 }: {
@@ -158,6 +180,7 @@ export default function Sidebar({
     if (!item.roles?.length) return true;
     if (isStaffRole(role, user?.actorType)) {
       if (item.href === "/branch-workspace") return false;
+      if (item.href === "/profile") return true;
       return Boolean(item.permissionAccesses?.length && hasStaffPermission(user, item.permissionAccesses));
     }
 
@@ -265,9 +288,9 @@ export default function Sidebar({
             <Button
               size="sm"
               className="w-full bg-white text-primary hover:bg-white/90 font-semibold"
-              onClick={() => router.push(isBranchAdmin ? "/branch-workspace" : "/menu?create=true")}
+              onClick={() => router.push(getSidebarCta(user, role, isBranchAdmin).href)}
             >
-              {isBranchAdmin ? t("myBranchCta") : t("addMenuCta")}
+              {t(getSidebarCta(user, role, isBranchAdmin).labelKey)}
             </Button>
           </div>
 

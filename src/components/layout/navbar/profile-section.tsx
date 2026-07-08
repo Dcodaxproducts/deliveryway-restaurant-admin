@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { getAvatarUrl, getDisplayName, getInitials } from "@/lib/auth";
+import { getAvatarUrl, getDisplayName, getInitials, isStaffRole } from "@/lib/auth";
 
 export default function ProfileSection() {
   const router = useRouter();
@@ -29,6 +29,7 @@ export default function ProfileSection() {
   const displayName = getDisplayName(user);
   const initials = getInitials(user);
   const avatarUrl = getAvatarUrl(user);
+  const isStaff = isStaffRole(user?.role, user?.actorType);
 
   const navigate = (path: string) => {
     router.push(path);
@@ -95,11 +96,13 @@ export default function ProfileSection() {
               label={navbar("profile")}
               onClick={() => navigate("/profile")}
             />
-            <MenuItem
-              icon={<HelpCircle size={18} />}
-              label={navbar("helpCenter")}
-              onClick={() => navigate("/live-chat")}
-            />
+            {!isStaff ? (
+              <MenuItem
+                icon={<HelpCircle size={18} />}
+                label={navbar("helpCenter")}
+                onClick={() => navigate("/live-chat")}
+              />
+            ) : null}
           </div>
 
           <DropdownMenuSeparator className="mx-4" />

@@ -175,6 +175,10 @@
     "checkDocs": "Bitte lesen Sie unsere Dokumentation",
     "myBranchCta": "MEINE FILIALE",
     "addMenuCta": "MENÜ HINZUFÜGEN",
+    "manageBranchCta": "FILIALE VERWALTEN",
+    "manageOrdersCta": "BESTELLUNGEN VERWALTEN",
+    "openPosCta": "POS ÖFFNEN",
+    "accountSettingsCta": "KONTOEINSTELLUNGEN",
     "logout": "Abmelden",
     "logoutSuccess": "Erfolgreich abgemeldet",
     "accountSettings": "Kontoeinstellungen"
