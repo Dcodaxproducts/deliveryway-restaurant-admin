@@ -2160,6 +2160,8 @@
     "employees": "Mitarbeiter",
     "role": "Rolle",
     "roles": "Rollen",
+    "branchFilter": "Filialfilter",
+    "allBranches": "Alle Filialen",
     "noRolesTitle": "Keine Rollen gefunden",
     "noRolesDescription": "Erstellen Sie Rollen, um Berechtigungen zu verwalten",
     "noEmployeesFound": "Keine Mitarbeiter gefunden.",
@@ -2184,7 +2186,12 @@
       "totalEmployees": "Mitarbeiter insgesamt",
       "activeEmployees": "Aktive Mitarbeiter",
       "inactiveEmployees": "Inaktive Mitarbeiter",
-      "totalRoles": "Rollen insgesamt"
+      "totalRoles": "Rollen insgesamt",
+      "roleBreakdown": "Rollenaufschlüsselung",
+      "roleBreakdownDescription": "Mitarbeiter gruppiert nach zugewiesener Rolle",
+      "employeeCount": "Mitarbeiter",
+      "unassigned": "Nicht zugewiesen",
+      "noRoleBreakdown": "Keine Rollenaufschlüsselung verfügbar"
     },
     "table": {
       "serial": "Nr.",

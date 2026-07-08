@@ -5,17 +5,46 @@ import Container from "@/components/common/Container";
 import StatsSection from "@/components/pages/Employees/components/employee-settings/stats-section";
 import EmployeeTable from "@/components/pages/Employees/components/employee-settings/table";
 import Header from "@/components/pages/Employees/components/employee-settings/header";
-import BranchFilters from "@/components/pages/Branches/components/BranchFilters";
 import { Button } from "@/components/ui/button";
 import RolesTable from "@/components/pages/Employees/components/employee-settings/RolesTable";
 import { useAuth } from "@/hooks/useAuth";
+import { useGetBranches } from "@/hooks/useBranches";
 import { useGetEmployeesStats } from "@/hooks/useDashboard";
 import { useTranslations } from "next-intl";
 
+type BranchOption = {
+  id: string;
+  name?: string;
+  branchName?: string;
+};
+
+const getBranchOptions = (response: unknown): BranchOption[] => {
+  if (Array.isArray(response)) return response as BranchOption[];
+  if (!response || typeof response !== "object") return [];
+
+  const record = response as { data?: unknown; items?: unknown };
+  if (Array.isArray(record.data)) return record.data as BranchOption[];
+  if (Array.isArray(record.items)) return record.items as BranchOption[];
+
+  if (record.data && typeof record.data === "object") {
+    const dataRecord = record.data as { data?: unknown; items?: unknown };
+    if (Array.isArray(dataRecord.data)) return dataRecord.data as BranchOption[];
+    if (Array.isArray(dataRecord.items)) return dataRecord.items as BranchOption[];
+  }
+
+  return [];
+};
+
 const EmployeesSettingsPage = () => {
-  const { restaurantId, branchId, isBranchAdmin } = useAuth();
+  const { branchId, isBranchAdmin } = useAuth();
   const t = useTranslations("employees");
   const scopedBranchId = isBranchAdmin ? branchId : undefined;
+  const [selectedBranchId, setSelectedBranchId] = useState("");
+  const activeBranchId = scopedBranchId || selectedBranchId || undefined;
+  const { data: branchesResponse, isLoading: branchesLoading } = useGetBranches(
+    isBranchAdmin ? undefined : { includeInactive: false },
+  );
+  const branchOptions = getBranchOptions(branchesResponse);
 
   const [activeTab, setActiveTab] = useState<"employees" | "roles">(
     "employees",
@@ -29,12 +58,7 @@ const EmployeesSettingsPage = () => {
     isFetching: isEmployeeStatsFetching,
     refetch: refetchEmployeeStats,
   } = useGetEmployeesStats(
-    restaurantId
-      ? {
-          restaurantId,
-          ...(scopedBranchId ? { branchId: scopedBranchId } : {}),
-        }
-      : undefined,
+    activeBranchId ? { branchId: activeBranchId } : undefined,
   );
 
   const employeeStats = employeeStatsResponse?.data;
@@ -67,7 +91,25 @@ const EmployeesSettingsPage = () => {
         />
 
         {!isBranchAdmin ? (
-          <BranchFilters filters={{}} onFilterChange={() => undefined} />
+          <div className="flex flex-col gap-2 sm:max-w-sm">
+            <label className="text-sm font-medium text-dark" htmlFor="employee-branch-filter">
+              {t("branchFilter")}
+            </label>
+            <select
+              id="employee-branch-filter"
+              value={selectedBranchId}
+              onChange={(event) => setSelectedBranchId(event.target.value)}
+              disabled={branchesLoading}
+              className="h-11 rounded-lg border border-[#E5E7EB] bg-white px-3 text-sm text-dark outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <option value="">{t("allBranches")}</option>
+              {branchOptions.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name || branch.branchName || branch.id}
+                </option>
+              ))}
+            </select>
+          </div>
         ) : null}
 
         {/* Tabs */}
@@ -101,10 +143,7 @@ const EmployeesSettingsPage = () => {
         {activeTab === "employees" && (
           <EmployeeTable
             refreshFlag={refreshEmployees}
-            restaurantId={
-              isBranchAdmin ? undefined : (restaurantId ?? undefined)
-            }
-            branchId={isBranchAdmin ? undefined : scopedBranchId}
+            branchId={activeBranchId}
             onSuccess={triggerEmployeesRefresh}
           />
         )}
@@ -112,10 +151,7 @@ const EmployeesSettingsPage = () => {
         {activeTab === "roles" && (
           <RolesTable
             refreshFlag={refreshRoles}
-            restaurantId={
-              isBranchAdmin ? undefined : (restaurantId ?? undefined)
-            }
-            branchId={isBranchAdmin ? undefined : scopedBranchId}
+            branchId={activeBranchId}
             onSuccess={triggerRolesRefresh}
           />
         )}

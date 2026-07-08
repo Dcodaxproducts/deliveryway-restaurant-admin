@@ -2160,6 +2160,8 @@
     "employees": "Employees",
     "role": "Role",
     "roles": "Roles",
+    "branchFilter": "Branch filter",
+    "allBranches": "All branches",
     "noRolesTitle": "No roles found",
     "noRolesDescription": "Create roles to manage permissions",
     "noEmployeesFound": "No employees found.",
@@ -2184,7 +2186,12 @@
       "totalEmployees": "Total Employees",
       "activeEmployees": "Active Employees",
       "inactiveEmployees": "Inactive Employees",
-      "totalRoles": "Total Roles"
+      "totalRoles": "Total Roles",
+      "roleBreakdown": "Roles Breakdown",
+      "roleBreakdownDescription": "Employees grouped by assigned staff role",
+      "employeeCount": "Employees",
+      "unassigned": "Unassigned",
+      "noRoleBreakdown": "No role breakdown available"
     },
     "table": {
       "serial": "SL",
