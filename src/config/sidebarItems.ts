@@ -41,6 +41,7 @@ export interface MenuItem {
   section: SidebarSection;
   children?: MenuItem[];
   roles?: SidebarRole[];
+  permissionAccesses?: string[];
 }
 
 const restaurantAdminRoles: SidebarRole[] = ["BUSINESS_ADMIN", "RESTAURANT_ADMIN"];
@@ -56,6 +57,7 @@ export const menuItems: MenuItem[] = [
     icon: LayoutGrid,
     section: "main",
     roles: allAdminRoles,
+    permissionAccesses: ["dashboard"],
   },
   {
     title: "Branch Management",
@@ -64,6 +66,7 @@ export const menuItems: MenuItem[] = [
     icon: Store,
     section: "main",
     roles: restaurantAdminRoles,
+    permissionAccesses: ["branch_management", "branch-management"],
   },
   {
     title: "My Branch",
@@ -72,6 +75,7 @@ export const menuItems: MenuItem[] = [
     icon: Store,
     section: "main",
     roles: branchAdminOnly,
+    permissionAccesses: ["branch_management", "branch-management"],
   },
   {
     title: "Menu Management",
@@ -80,6 +84,7 @@ export const menuItems: MenuItem[] = [
     icon: List,
     section: "main",
     roles: menuStaffRoles,
+    permissionAccesses: ["menu", "menu-management", "restaurant-menus"],
     children: [
       {
         title: "Menu",
@@ -88,6 +93,7 @@ export const menuItems: MenuItem[] = [
         icon: List,
         section: "main",
         roles: menuStaffRoles,
+        permissionAccesses: ["menu", "menu-management", "restaurant-menus"],
       },
       {
         title: "Categories",
@@ -96,6 +102,7 @@ export const menuItems: MenuItem[] = [
         icon: ClipboardList,
         section: "main",
         roles: menuStaffRoles,
+        permissionAccesses: ["menu-categories", "menu", "menu-management"],
       },
       {
         title: "Cuisines",
@@ -104,6 +111,7 @@ export const menuItems: MenuItem[] = [
         icon: ClipboardList,
         section: "main",
         roles: menuStaffRoles,
+        permissionAccesses: ["cuisines", "menu", "menu-management"],
       },
       {
         title: "Modifier Categories",
@@ -112,6 +120,7 @@ export const menuItems: MenuItem[] = [
         icon: ClipboardList,
         section: "main",
         roles: menuStaffRoles,
+        permissionAccesses: ["modifier-categories", "modifiers", "menu", "menu-management"],
       },
       {
         title: "Modifier Groups",
@@ -120,6 +129,7 @@ export const menuItems: MenuItem[] = [
         icon: ClipboardList,
         section: "main",
         roles: menuStaffRoles,
+        permissionAccesses: ["modifier-groups", "modifiers", "menu", "menu-management"],
       },
       {
         title: "Modifiers",
@@ -128,6 +138,7 @@ export const menuItems: MenuItem[] = [
         icon: Tags,
         section: "main",
         roles: menuStaffRoles,
+        permissionAccesses: ["modifiers", "menu", "menu-management"],
       },
       {
         title: "Variations",
@@ -136,6 +147,7 @@ export const menuItems: MenuItem[] = [
         icon: ClipboardList,
         section: "main",
         roles: menuStaffRoles,
+        permissionAccesses: ["variations", "menu", "menu-management"],
       },
       {
         title: "Deals",
@@ -144,6 +156,7 @@ export const menuItems: MenuItem[] = [
         icon: BadgePercent,
         section: "main",
         roles: menuStaffRoles,
+        permissionAccesses: ["coupons", "promotions", "menu", "menu-management"],
       },
       {
         title: "Items",
@@ -152,6 +165,7 @@ export const menuItems: MenuItem[] = [
         icon: PackagePlus,
         section: "main",
         roles: menuStaffRoles,
+        permissionAccesses: ["menu-items", "menu", "menu-management"],
       },
       {
         title: "Allergen",
@@ -160,6 +174,7 @@ export const menuItems: MenuItem[] = [
         icon: AlertTriangle,
         section: "main",
         roles: menuStaffRoles,
+        permissionAccesses: ["menu-items", "menu", "menu-management"],
       },
       {
         title: "Labels",
@@ -168,6 +183,7 @@ export const menuItems: MenuItem[] = [
         icon: BadgeCheck,
         section: "main",
         roles: menuStaffRoles,
+        permissionAccesses: ["menu-items", "menu", "menu-management"],
       },
     ],
   },
@@ -178,6 +194,7 @@ export const menuItems: MenuItem[] = [
     icon: ShoppingBag,
     section: "main",
     roles: allAdminRoles,
+    permissionAccesses: ["orders"],
   },
   {
     title: "Table Reservations",
@@ -186,6 +203,7 @@ export const menuItems: MenuItem[] = [
     icon: CalendarCheck,
     section: "main",
     roles: allAdminRoles,
+    permissionAccesses: ["orders", "settings"],
   },
   {
     title: "POS Management",
@@ -194,6 +212,7 @@ export const menuItems: MenuItem[] = [
     icon: Monitor,
     section: "main",
     roles: allAdminRoles,
+    permissionAccesses: ["pos"],
   },
   // Inventory module is intentionally hidden for now.
   // {
@@ -211,6 +230,7 @@ export const menuItems: MenuItem[] = [
     icon: PiUsersThree,
     section: "main",
     roles: allAdminRoles,
+    permissionAccesses: ["customers"],
   },
   {
     title: "Contact Submissions",
@@ -219,6 +239,7 @@ export const menuItems: MenuItem[] = [
     icon: Inbox,
     section: "main",
     roles: allAdminRoles,
+    permissionAccesses: ["settings"],
   },
   {
     title: "Loyalty Program",
@@ -227,6 +248,7 @@ export const menuItems: MenuItem[] = [
     icon: Coins,
     section: "main",
     roles: allAdminRoles,
+    permissionAccesses: ["coupons", "promotions"],
   },
   {
     title: "Deliveryman",
@@ -235,6 +257,7 @@ export const menuItems: MenuItem[] = [
     icon: Truck,
     section: "main",
     roles: allAdminRoles,
+    permissionAccesses: ["staff-management"],
   },
   {
     title: "Employees",
@@ -243,6 +266,7 @@ export const menuItems: MenuItem[] = [
     icon: UserCog,
     section: "main",
     roles: allAdminRoles,
+    permissionAccesses: ["staff-management", "staff-roles"],
   },
   {
     title: "Promotion Management",
@@ -259,6 +283,7 @@ export const menuItems: MenuItem[] = [
         icon: Gift,
         section: "main",
         roles: restaurantAdminRoles,
+        permissionAccesses: ["promotions", "coupons"],
       },
       {
         title: "Gift Cards",
@@ -267,6 +292,7 @@ export const menuItems: MenuItem[] = [
         icon: CreditCard,
         section: "main",
         roles: allAdminRoles,
+        permissionAccesses: ["promotions", "coupons"],
       },
     ],
   },
@@ -277,6 +303,7 @@ export const menuItems: MenuItem[] = [
     icon: FileText,
     section: "main",
     roles: allAdminRoles,
+    permissionAccesses: ["settings"],
     children: [
       {
         title: "Faqs",
@@ -285,6 +312,7 @@ export const menuItems: MenuItem[] = [
         icon: FileText,
         section: "main",
         roles: restaurantAdminRoles,
+        permissionAccesses: ["settings"],
       },
       {
         title: "Legal & Tax Profile",
@@ -293,6 +321,7 @@ export const menuItems: MenuItem[] = [
         icon: ReceiptText,
         section: "main",
         roles: allAdminRoles,
+        permissionAccesses: ["settings"],
       },
       {
         title: "About Us",
@@ -301,6 +330,7 @@ export const menuItems: MenuItem[] = [
         icon: FileText,
         section: "main",
         roles: restaurantAdminRoles,
+        permissionAccesses: ["settings"],
       },
       {
         title: "Privacy Policy",
@@ -309,6 +339,7 @@ export const menuItems: MenuItem[] = [
         icon: ShieldCheck,
         section: "main",
         roles: restaurantAdminRoles,
+        permissionAccesses: ["settings"],
       },
     ],
   },
@@ -319,6 +350,7 @@ export const menuItems: MenuItem[] = [
     icon: User,
     section: "account",
     roles: allAdminRoles,
+    permissionAccesses: ["settings"],
   },
   {
     title: "Auto-Printing / POS",
@@ -327,6 +359,7 @@ export const menuItems: MenuItem[] = [
     icon: Printer,
     section: "account",
     roles: allAdminRoles,
+    permissionAccesses: ["pos"],
   },
   {
     title: "Reports & Payouts",
@@ -335,6 +368,7 @@ export const menuItems: MenuItem[] = [
     icon: BarChart3,
     section: "account",
     roles: allAdminRoles,
+    permissionAccesses: ["reports"],
   },
   {
     title: "Payment Settings",
@@ -343,6 +377,7 @@ export const menuItems: MenuItem[] = [
     icon: CreditCard,
     section: "account",
     roles: restaurantAdminRoles,
+    permissionAccesses: ["settings"],
   },
 
   {
@@ -352,6 +387,7 @@ export const menuItems: MenuItem[] = [
     icon: Bell,
     section: "account",
     roles: allAdminRoles,
+    permissionAccesses: ["chat", "settings"],
   },
   {
     title: "Storefront Settings",
@@ -360,5 +396,6 @@ export const menuItems: MenuItem[] = [
     icon: Palette,
     section: "account",
     roles: restaurantAdminRoles,
+    permissionAccesses: ["settings"],
   },
 ];

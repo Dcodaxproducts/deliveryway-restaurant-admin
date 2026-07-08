@@ -216,10 +216,47 @@ export const isAllowedAdminRole = (role?: string | null) => {
   return isBranchAdminRole(role) || isRestaurantAdminRole(role) || isStaffRole(role);
 };
 
-export const hasStaffMenuAccess = (user?: AuthUser | null) => {
-  if (!isStaffRole(user?.role, user?.actorType)) return false;
+const STAFF_READ_OPERATIONS = new Set([
+  "*",
+  "read",
+  "list",
+  "view",
+  "write",
+  "create",
+  "update",
+  "delete",
+  "manage",
+  "reply",
+  "assign",
+  "resolve",
+]);
 
-  const hasAssignedScope = Boolean(
+const STAFF_ROUTE_ACCESS: Array<{ href: string; accesses: string[] }> = [
+  { href: "/branches", accesses: ["branch_management", "branch-management"] },
+  { href: "/branch-workspace", accesses: ["branch_management", "branch-management"] },
+  { href: "/", accesses: ["dashboard"] },
+  { href: "/orders", accesses: ["orders"] },
+  { href: "/pos", accesses: ["pos"] },
+  { href: "/menu/categories", accesses: ["menu-categories", "menu", "menu-management"] },
+  { href: "/menu/cuisines", accesses: ["cuisines", "menu", "menu-management"] },
+  { href: "/menu/modifier-categories", accesses: ["modifier-categories", "modifiers", "menu", "menu-management"] },
+  { href: "/menu/modifier-groups", accesses: ["modifier-groups", "modifiers", "menu", "menu-management"] },
+  { href: "/menu/modifier", accesses: ["modifiers", "menu", "menu-management"] },
+  { href: "/menu/variations", accesses: ["variations", "menu", "menu-management"] },
+  { href: "/menu/items", accesses: ["menu-items", "menu", "menu-management"] },
+  { href: "/menu", accesses: ["menu", "menu-management", "restaurant-menus"] },
+  { href: "/customer-settings", accesses: ["customers"] },
+  { href: "/employees-settings", accesses: ["staff-management", "staff-roles"] },
+  { href: "/promotion-management", accesses: ["promotions", "coupons"] },
+  { href: "/reports", accesses: ["reports"] },
+  { href: "/auto-printing", accesses: ["pos"] },
+  { href: "/notifications", accesses: ["chat", "settings"] },
+  { href: "/theme-settings", accesses: ["settings"] },
+  { href: "/profile", accesses: ["settings"] },
+];
+
+const hasStaffAssignedScope = (user?: AuthUser | null) =>
+  Boolean(
     user?.restaurantId ||
       user?.branchId ||
       user?.restaurantAccess?.restaurantIds?.length ||
@@ -228,13 +265,46 @@ export const hasStaffMenuAccess = (user?: AuthUser | null) => {
       user?.staffRole?.restaurantAccess?.branchIds?.length
   );
 
-  if (!hasAssignedScope) return false;
+export const hasStaffPermission = (
+  user: AuthUser | null | undefined,
+  accesses?: string[],
+  operations: string[] = Array.from(STAFF_READ_OPERATIONS)
+) => {
+  if (!isStaffRole(user?.role, user?.actorType)) return false;
+  if (!hasStaffAssignedScope(user)) return false;
 
   const permissions = user?.staffRole?.permissions;
   if (!Array.isArray(permissions)) return false;
 
-  const allowedAccesses = new Set([
-    "*",
+  const allowedAccesses = accesses?.length
+    ? new Set(accesses.map((access) => access.trim().toLowerCase()))
+    : null;
+  const allowedOperations = new Set(operations.map((operation) => operation.trim().toLowerCase()));
+
+  return permissions.some((permission) => {
+    const access = permission.access?.trim().toLowerCase();
+    const permissionOperations = permission.operations?.map((operation) => operation.trim().toLowerCase());
+
+    return Boolean(
+      access &&
+        (!allowedAccesses || access === "*" || allowedAccesses.has(access)) &&
+        permissionOperations?.some((operation) => operation === "*" || allowedOperations.has(operation))
+    );
+  });
+};
+
+export const hasStaffPanelAccess = (user?: AuthUser | null) =>
+  hasStaffPermission(user);
+
+export const getStaffDefaultRedirectPath = (user?: AuthUser | null) => {
+  if (!isStaffRole(user?.role, user?.actorType)) return "/";
+
+  const route = STAFF_ROUTE_ACCESS.find((item) => hasStaffPermission(user, item.accesses));
+  return route?.href || "/";
+};
+
+export const hasStaffMenuAccess = (user?: AuthUser | null) => {
+  return hasStaffPermission(user, [
     "menu",
     "menus",
     "menu-management",
@@ -248,20 +318,6 @@ export const hasStaffMenuAccess = (user?: AuthUser | null) => {
     "branch-overrides",
     "cuisines",
   ]);
-  const readOperations = new Set(["read", "list", "view", "*"]);
-
-  return permissions.some((permission) => {
-    const access = permission.access?.trim().toLowerCase();
-    const operations = permission.operations?.map((operation) =>
-      operation.trim().toLowerCase()
-    );
-
-    return Boolean(
-      access &&
-        allowedAccesses.has(access) &&
-        operations?.some((operation) => readOperations.has(operation))
-    );
-  });
 };
 
 export const normalizeUser = (

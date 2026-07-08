@@ -9,7 +9,7 @@ import { LogOut, ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { menuItems, MenuItem, type SidebarRole } from "@/config/sidebarItems";
 import { useAuth } from "@/hooks/useAuth";
-import { hasStaffMenuAccess, isStaffRole } from "@/lib/auth";
+import { hasStaffPermission, isStaffRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -157,7 +157,7 @@ export default function Sidebar({
   const isItemAllowed = (item: MenuItem): boolean => {
     if (!item.roles?.length) return true;
     if (isStaffRole(role, user?.actorType)) {
-      return item.roles.includes("STAFF") && hasStaffMenuAccess(user);
+      return Boolean(item.permissionAccesses?.length && hasStaffPermission(user, item.permissionAccesses));
     }
 
     return isSidebarRole(role) && item.roles.includes(role);

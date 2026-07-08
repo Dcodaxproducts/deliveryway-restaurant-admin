@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { hasStaffMenuAccess, isBranchAdminRole, normalizeUser } from "@/lib/auth";
+import {
+  getStaffDefaultRedirectPath,
+  hasStaffMenuAccess,
+  hasStaffPanelAccess,
+  hasStaffPermission,
+  isBranchAdminRole,
+  normalizeUser,
+} from "@/lib/auth";
 
 describe("auth helpers", () => {
   it("normalizes restaurant id from a branch admin branch relationship", () => {
@@ -122,5 +129,31 @@ describe("auth helpers", () => {
 
     expect(hasStaffMenuAccess(withoutMenuPermission)).toBe(false);
     expect(hasStaffMenuAccess(withoutScope)).toBe(false);
+  });
+
+  it("allows scoped staff panel access with branch management permission", () => {
+    const user = normalizeUser({
+      id: "staff-branch-manager",
+      email: "staff-branch-manager@example.com",
+      role: "STAFF",
+      actorType: "STAFF",
+      restaurantId: null,
+      branchId: null,
+      restaurantAccess: { restaurantIds: ["restaurant-1"], branchIds: [] },
+      staffRole: {
+        permissions: [
+          {
+            access: "branch_management",
+            operations: ["read", "write", "create", "update", "delete"],
+          },
+        ],
+        restaurantAccess: { restaurantIds: ["restaurant-1"], branchIds: [] },
+      },
+    });
+
+    expect(hasStaffPanelAccess(user)).toBe(true);
+    expect(hasStaffPermission(user, ["branch_management"])).toBe(true);
+    expect(hasStaffMenuAccess(user)).toBe(false);
+    expect(getStaffDefaultRedirectPath(user)).toBe("/branches");
   });
 });

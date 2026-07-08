@@ -15,7 +15,7 @@ import AuthPageShell from "@/components/pages/Auth/components/AuthPageShell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuthContext } from "@/components/providers/auth-provider";
-import { getRoleLabel, hasStaffMenuAccess, isAllowedAdminRole, isStaffRole } from "@/lib/auth";
+import { getRoleLabel, getStaffDefaultRedirectPath, hasStaffPanelAccess, isAllowedAdminRole, isStaffRole } from "@/lib/auth";
 import { getSafeRedirectPath } from "@/lib/auth-routes";
 import { authApi } from "@/services/auth/auth.api";
 import {
@@ -131,7 +131,7 @@ function LoginFormContent() {
         return;
       }
 
-      if (isStaffRole(user.role, user.actorType) && !hasStaffMenuAccess(user)) {
+      if (isStaffRole(user.role, user.actorType) && !hasStaffPanelAccess(user)) {
         toast.error(t("notAuthorized"));
         return;
       }
@@ -145,7 +145,7 @@ function LoginFormContent() {
       toast.success(t("loginSuccess", { role: getRoleLabel(user.role) }));
 
       const defaultRedirectPath = isStaffRole(user.role, user.actorType)
-        ? "/menu"
+        ? getStaffDefaultRedirectPath(user)
         : user.role === "BRANCH_ADMIN"
           ? "/branch-workspace"
           : "/";
@@ -206,7 +206,7 @@ function LoginFormContent() {
               return;
             }
 
-            if (isStaffRole(user.role, user.actorType) && !hasStaffMenuAccess(user)) {
+            if (isStaffRole(user.role, user.actorType) && !hasStaffPanelAccess(user)) {
               toast.error(t("notAuthorized"));
               return;
             }
@@ -219,7 +219,7 @@ function LoginFormContent() {
             login(authPayload);
             toast.success(t("loginSuccess", { role: getRoleLabel(user.role) }));
             const defaultRedirectPath = isStaffRole(user.role, user.actorType)
-              ? "/menu"
+              ? getStaffDefaultRedirectPath(user)
               : user.role === "BRANCH_ADMIN"
                 ? "/branch-workspace"
                 : "/";
