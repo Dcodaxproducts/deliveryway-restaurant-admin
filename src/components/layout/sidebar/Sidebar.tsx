@@ -157,6 +157,7 @@ export default function Sidebar({
   const isItemAllowed = (item: MenuItem): boolean => {
     if (!item.roles?.length) return true;
     if (isStaffRole(role, user?.actorType)) {
+      if (item.href === "/branch-workspace") return false;
       return Boolean(item.permissionAccesses?.length && hasStaffPermission(user, item.permissionAccesses));
     }
 
