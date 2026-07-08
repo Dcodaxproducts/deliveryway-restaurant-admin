@@ -2,8 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useEffect, useMemo, useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
-import { useCreateStaffRole, useUpdateStaffRole } from "@/hooks/useEmployees";
+import {
+  useCreateStaffRole,
+  usePermissionModules,
+  useUpdateStaffRole,
+} from "@/hooks/useEmployees";
 import { FIELD_ERROR_CLASS } from "@/components/common/common-classes";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
@@ -39,8 +43,37 @@ type RoleModalProps = {
   branchId?: string;
 };
 
-const ACCESS_OPTIONS = ["Zone", "Orders", "Employees", "Menu", "Reports"];
-const OPERATIONS = ["Create", "Read", "Update", "Delete"];
+type PermissionModuleOption = {
+  name: string;
+  description?: string | null;
+  accessKey: string;
+  defaultActions: string[];
+  sortOrder?: number | null;
+};
+
+const sortPermissionModules = (modules: PermissionModuleOption[]) =>
+  [...modules].sort((first, second) => {
+    const orderDiff = (first.sortOrder ?? 0) - (second.sortOrder ?? 0);
+    return orderDiff || first.name.localeCompare(second.name);
+  });
+
+const sanitizePermissions = (
+  permissions: StaffPermissionValues[],
+  modules: PermissionModuleOption[],
+) => {
+  const actionsByAccess = new Map(
+    modules.map((module) => [module.accessKey, new Set(module.defaultActions)]),
+  );
+
+  return permissions
+    .map((permission) => ({
+      access: permission.access,
+      operations: permission.operations.filter((operation) =>
+        actionsByAccess.get(permission.access)?.has(operation),
+      ),
+    }))
+    .filter((permission) => permission.operations.length > 0);
+};
 
 const defaultValues: StaffRoleValues = {
   name: "",
@@ -82,6 +115,17 @@ export function AddRoleModal({
     },
   });
   const loading = createRoleMutation.isPending || updateRoleMutation.isPending;
+  const { data: modulesData = [], isLoading: modulesLoading } =
+    usePermissionModules();
+  const permissionModules = useMemo(
+    () => sortPermissionModules(modulesData),
+    [modulesData],
+  );
+  const selectedModule = useMemo(
+    () =>
+      permissionModules.find((module) => module.accessKey === selectedAccess),
+    [permissionModules, selectedAccess],
+  );
 
   const {
     control,
@@ -89,19 +133,19 @@ export function AddRoleModal({
     handleSubmit,
     reset,
     setValue,
-    watch,
   } = useForm<StaffRoleValues>({
     resolver: zodResolver(staffRoleSchema),
     defaultValues,
   });
 
-  const permissions = watch("permissions") ?? [];
+  const watchedPermissions = useWatch({ control, name: "permissions" });
+  const permissions = useMemo(() => watchedPermissions ?? [], [watchedPermissions]);
 
   const getAccessLabel = (access: string) =>
-    ACCESS_OPTIONS.includes(access) ? t(`access.${access}`) : access;
+    permissionModules.find((module) => module.accessKey === access)?.name ??
+    access;
 
-  const getOperationLabel = (operation: string) =>
-    OPERATIONS.includes(operation) ? t(`operations.${operation}`) : operation;
+  const getOperationLabel = (operation: string) => operation;
 
   const translateValidationError = (message?: string) => {
     if (!message) return undefined;
@@ -137,6 +181,29 @@ export function AddRoleModal({
     );
   }, [initialData, open, reset]);
 
+  useEffect(() => {
+    if (!open || permissionModules.length === 0) return;
+
+    const sanitizedPermissions = sanitizePermissions(permissions, permissionModules);
+    if (JSON.stringify(sanitizedPermissions) !== JSON.stringify(permissions)) {
+      setValue("permissions", sanitizedPermissions, { shouldValidate: true });
+    }
+
+    if (
+      selectedAccess &&
+      !permissionModules.some((module) => module.accessKey === selectedAccess)
+    ) {
+      setSelectedAccess("");
+      setSelectedOps([]);
+    } else if (selectedModule) {
+      setSelectedOps((current) =>
+        current.filter((operation) =>
+          selectedModule.defaultActions.includes(operation),
+        ),
+      );
+    }
+  }, [open, permissionModules, permissions, selectedAccess, selectedModule, setValue]);
+
   const toggleOperation = (op: string) => {
     setSelectedOps((prev) =>
       prev.includes(op) ? prev.filter((item) => item !== op) : [...prev, op],
@@ -151,9 +218,16 @@ export function AddRoleModal({
       operations: selectedOps,
     };
 
-    setValue("permissions", [...permissions, nextPermission], {
-      shouldValidate: true,
-    });
+    setValue(
+      "permissions",
+      [
+        ...permissions.filter(
+          (permission) => permission.access !== nextPermission.access,
+        ),
+        nextPermission,
+      ],
+      { shouldValidate: true },
+    );
     setSelectedAccess("");
     setSelectedOps([]);
   };
@@ -173,8 +247,19 @@ export function AddRoleModal({
 
   const onSubmit = async (values: StaffRoleValues) => {
     try {
+      const sanitizedPermissions = sanitizePermissions(
+        values.permissions,
+        permissionModules,
+      );
+
+      if (sanitizedPermissions.length === 0) {
+        setValue("permissions", [], { shouldValidate: true });
+        return;
+      }
+
       const payload: StaffRoleValues = {
         ...values,
+        permissions: sanitizedPermissions,
         ...(isBranchAdmin
           ? {}
           : {
@@ -199,7 +284,7 @@ export function AddRoleModal({
     }
   };
 
-  const isAddDisabled = !selectedAccess || selectedOps.length === 0;
+  const isAddDisabled = modulesLoading || !selectedAccess || selectedOps.length === 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -256,9 +341,9 @@ export function AddRoleModal({
                 className="h-[42px] flex-1 rounded-lg border border-gray-300 px-3 text-sm"
               >
                 <option value="">{t("roleModal.selectAccess")}</option>
-                {ACCESS_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {getAccessLabel(option)}
+                {permissionModules.map((module) => (
+                  <option key={module.accessKey} value={module.accessKey}>
+                    {module.name}
                   </option>
                 ))}
               </select>
@@ -273,9 +358,15 @@ export function AddRoleModal({
               </Button>
             </div>
 
-            {selectedAccess ? (
-              <div className="flex flex-wrap gap-4">
-                {OPERATIONS.map((operation) => {
+            {selectedModule ? (
+              <div className="space-y-3">
+                {selectedModule.description ? (
+                  <p className="text-xs text-gray-500">
+                    {selectedModule.description}
+                  </p>
+                ) : null}
+                <div className="flex flex-wrap gap-4">
+                {selectedModule.defaultActions.map((operation) => {
                   const checkboxId = `role-operation-${operation}`;
 
                   return (
@@ -295,6 +386,7 @@ export function AddRoleModal({
                     </label>
                   );
                 })}
+                </div>
               </div>
             ) : null}
           </div>

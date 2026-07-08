@@ -55,6 +55,32 @@ export const updateStaffStatus = async (
   return data;
 };
 
+
+export type PermissionModule = {
+  id?: string;
+  name: string;
+  description?: string | null;
+  accessKey: string;
+  defaultActions: string[];
+  sortOrder?: number | null;
+  isActive?: boolean;
+};
+
+const unwrapData = <T>(response: unknown): T => {
+  const record = response as { data?: unknown };
+  return (Array.isArray(record?.data) ? record.data : response) as T;
+};
+
+export const getPermissionModules = async (params?: {
+  isActive?: boolean;
+  limit?: number;
+}) => {
+  const { data } = await api.get("/permission-modules", {
+    params: { isActive: true, limit: 100, ...params },
+  });
+  return unwrapData<PermissionModule[]>(data);
+};
+
 /**
  * ==============================
  * STAFF ROLE APIS

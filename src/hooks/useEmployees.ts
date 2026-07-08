@@ -12,6 +12,7 @@ import {
   getStaffRole,
   updateStaffRole,
   deleteStaffRole,
+  getPermissionModules,
 } from "@/services/employees/employees.api";
 
 type EmployeeMutationMessages = {
@@ -241,5 +242,13 @@ export const useDeleteStaffRole = (options?: EmployeeMutationOptions) => {
           "Failed to delete role",
       );
     },
+  });
+};
+
+
+export const usePermissionModules = () => {
+  return useQuery({
+    queryKey: ["permission-modules", true, 100],
+    queryFn: () => getPermissionModules({ isActive: true, limit: 100 }),
   });
 };
