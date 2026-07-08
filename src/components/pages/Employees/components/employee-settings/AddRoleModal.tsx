@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/hooks/useAuth";
 import {
   useCreateStaffRole,
   usePermissionModules,
@@ -86,17 +85,8 @@ export function AddRoleModal({
   onOpenChange,
   initialData,
   onSuccess,
-  restaurantId: scopedRestaurantId,
-  branchId: scopedBranchId,
 }: RoleModalProps) {
   const t = useTranslations("employees");
-  const {
-    restaurantId: authRestaurantId,
-    branchId: authBranchId,
-    isBranchAdmin,
-  } = useAuth();
-  const restaurantId = scopedRestaurantId ?? authRestaurantId ?? undefined;
-  const branchId = scopedBranchId ?? (isBranchAdmin ? authBranchId : undefined);
 
   const [selectedAccess, setSelectedAccess] = useState("");
   const [selectedOps, setSelectedOps] = useState<string[]>([]);
@@ -258,14 +248,9 @@ export function AddRoleModal({
       }
 
       const payload: StaffRoleValues = {
-        ...values,
+        name: values.name,
+        description: values.description,
         permissions: sanitizedPermissions,
-        ...(isBranchAdmin
-          ? {}
-          : {
-              restaurantId: restaurantId || undefined,
-              ...(branchId ? { branchId } : {}),
-            }),
       };
 
       if (isEditMode && initialData?.id) {

@@ -87,8 +87,15 @@ export const getPermissionModules = async (params?: {
  * ==============================
  */
 
+const toStaffRolePayload = (payload: StaffRoleValues | Partial<StaffRoleValues>) => {
+  const body = { ...payload };
+  delete body.restaurantId;
+  delete body.branchId;
+  return body;
+};
+
 export const createStaffRole = async (payload: StaffRoleValues) => {
-  const { data } = await api.post("/staff-roles", payload);
+  const { data } = await api.post("/staff-roles", toStaffRolePayload(payload));
   return data;
 };
 
@@ -111,7 +118,7 @@ export const updateStaffRole = async (
   id: string,
   payload: Partial<StaffRoleValues>
 ) => {
-  const { data } = await api.patch(`/staff-roles/${id}`, payload);
+  const { data } = await api.patch(`/staff-roles/${id}`, toStaffRolePayload(payload));
   return data;
 };
 
