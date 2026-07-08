@@ -22,7 +22,10 @@ export const getStaffList = async (params?: {
   restaurantId?: string;
   branchId?: string;
 }) => {
-  const { data } = await api.get("/staff-management", { params });
+  const safeParams = { ...(params || {}) };
+  delete safeParams.restaurantId;
+  delete safeParams.branchId;
+  const { data } = await api.get("/staff-management", { params: safeParams });
   return data;
 };
 
@@ -105,7 +108,10 @@ export const getStaffRoles = async (params?: {
   restaurantId?: string;
   branchId?: string;
 }) => {
-  const { data } = await api.get("/staff-roles", { params });
+  const safeParams = { ...(params || {}) };
+  delete safeParams.restaurantId;
+  delete safeParams.branchId;
+  const { data } = await api.get("/staff-roles", { params: safeParams });
   return data;
 };
 
