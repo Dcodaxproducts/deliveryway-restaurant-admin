@@ -156,4 +156,35 @@ describe("auth helpers", () => {
     expect(hasStaffMenuAccess(user)).toBe(false);
     expect(getStaffDefaultRedirectPath(user)).toBe("/branches");
   });
+
+  it("allows business-admin staff panel access with tenant scoped role", () => {
+    const user = normalizeUser({
+      id: "business-staff",
+      email: "business-staff@example.com",
+      role: "STAFF",
+      actorType: "STAFF",
+      panelType: "BUSINESS_ADMIN",
+      tenantId: "tenant-1",
+      restaurantId: null,
+      branchId: null,
+      restaurantAccess: { restaurantIds: [], branchIds: [] },
+      staffRole: {
+        panelType: "BUSINESS_ADMIN",
+        tenantId: "tenant-1",
+        restaurantId: null,
+        branchId: null,
+        restaurantAccess: null,
+        permissions: [
+          {
+            access: "branch_management",
+            operations: ["read", "write", "create", "update"],
+          },
+        ],
+      },
+    });
+
+    expect(hasStaffPanelAccess(user)).toBe(true);
+    expect(hasStaffPermission(user, ["branch_management"])).toBe(true);
+    expect(getStaffDefaultRedirectPath(user)).toBe("/branches");
+  });
 });

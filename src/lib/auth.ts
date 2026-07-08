@@ -31,6 +31,10 @@ export type RestaurantAccessScope = {
 export type AuthStaffRole = {
   id?: string;
   name?: string;
+  panelType?: string | null;
+  tenantId?: string | null;
+  restaurantId?: string | null;
+  branchId?: string | null;
   permissions?: StaffPermission[];
   restaurantAccess?: RestaurantAccessScope | null;
 };
@@ -43,6 +47,7 @@ export type AuthUser = {
   restaurantId?: string | null;
   branchId?: string | null;
   branchName?: string | null;
+  panelType?: string | null;
   actorType?: "USER" | "STAFF" | "DELIVERYMAN" | string;
   restaurantAccess?: RestaurantAccessScope | null;
   staffRoleId?: string | null;
@@ -139,6 +144,10 @@ const getStaffRole = (
     ...(role ?? {}),
     id: getStringValue(role, "id") ?? fallback?.id,
     name: getStringValue(role, "name") ?? fallback?.name,
+    panelType: getStringValue(role, "panelType") ?? fallback?.panelType ?? null,
+    tenantId: getStringValue(role, "tenantId") ?? fallback?.tenantId ?? null,
+    restaurantId: getStringValue(role, "restaurantId") ?? fallback?.restaurantId ?? null,
+    branchId: getStringValue(role, "branchId") ?? fallback?.branchId ?? null,
     permissions: getStaffPermissions(role) ?? fallback?.permissions,
     restaurantAccess: getRestaurantAccess(
       getRecordValue(role, "restaurantAccess"),
@@ -258,9 +267,13 @@ const STAFF_ROUTE_ACCESS: Array<{ href: string; accesses: string[] }> = [
 const hasStaffAssignedScope = (user?: AuthUser | null) =>
   Boolean(
     user?.restaurantId ||
+      user?.tenantId ||
       user?.branchId ||
       user?.restaurantAccess?.restaurantIds?.length ||
       user?.restaurantAccess?.branchIds?.length ||
+      user?.staffRole?.tenantId ||
+      user?.staffRole?.restaurantId ||
+      user?.staffRole?.branchId ||
       user?.staffRole?.restaurantAccess?.restaurantIds?.length ||
       user?.staffRole?.restaurantAccess?.branchIds?.length
   );
@@ -393,6 +406,7 @@ export const normalizeUser = (
     restaurantId,
     branchId,
     branchName,
+    panelType: getStringValue(source, "panelType") ?? fallback?.panelType ?? null,
     actorType: getStringValue(source, "actorType") ?? fallback?.actorType,
     restaurantAccess,
     staffRoleId: getStringValue(source, "staffRoleId") ?? fallback?.staffRoleId ?? null,
