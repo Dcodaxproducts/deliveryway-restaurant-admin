@@ -563,6 +563,11 @@ function RestaurantWalletPayoutSection({
       {
         onSuccess: () => {
           setAmount("");
+          setBankName("");
+          setAccountTitle("");
+          setAccountNumber("");
+          setIban("");
+          setPhone("");
           setNote("");
         },
       }
@@ -712,9 +717,7 @@ function RestaurantWalletPayoutSection({
                       <span className="font-semibold text-dark">
                         {formatCurrency(request.amount, request.currency || walletCurrency)}
                       </span>
-                      <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700">
-                        {request.status || "REQUESTED"}
-                      </span>
+                      <PayoutStatusBadge status={request.status || "REQUESTED"} />
                     </div>
                     <p className="text-xs text-gray">
                       {formatBankDetails(request.bankDetails)}
@@ -763,6 +766,22 @@ function PayoutInput({
         className={textInputClassName}
       />
     </div>
+  );
+}
+
+function PayoutStatusBadge({ status }: { status: string }) {
+  const normalizedStatus = status.toUpperCase();
+  const className =
+    normalizedStatus === "APPROVED" || normalizedStatus === "PAID"
+      ? "bg-green-100 text-green-700"
+      : normalizedStatus === "REJECTED"
+        ? "bg-red-100 text-red-700"
+        : "bg-amber-100 text-amber-700";
+
+  return (
+    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}>
+      {normalizedStatus}
+    </span>
   );
 }
 
