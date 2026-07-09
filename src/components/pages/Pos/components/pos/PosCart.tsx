@@ -632,9 +632,31 @@ setSelectedAddress(null);
                         </span>
                       ) : null}
                     </div>
-                    <p className="text-xs text-gray-500">
-                      {formatMoney(item.unitPrice)} × {item.quantity}
-                    </p>
+                    <div className="text-xs text-gray-500">
+                      {item.originalUnitPrice > item.unitPrice ? (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-gray-400 line-through">
+                            {formatMoney(item.originalUnitPrice)}
+                          </span>
+                          <span className="font-semibold text-primary">
+                            {formatMoney(item.unitPrice)}
+                          </span>
+                          <span>× {item.quantity}</span>
+                        </div>
+                      ) : (
+                        <p>{formatMoney(item.unitPrice)} × {item.quantity}</p>
+                      )}
+                      {item.originalLineTotal > item.lineTotal ? (
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                          <span className="text-gray-400 line-through">
+                            {formatMoney(item.originalLineTotal)}
+                          </span>
+                          <span className="font-semibold text-primary">
+                            {formatMoney(item.lineTotal)}
+                          </span>
+                        </div>
+                      ) : null}
+                    </div>
                     {item.modifiers.length > 0 ? (
                       <div className="mt-1 space-y-0.5">
                         {item.modifiers.map((modifier, modifierIndex) => (

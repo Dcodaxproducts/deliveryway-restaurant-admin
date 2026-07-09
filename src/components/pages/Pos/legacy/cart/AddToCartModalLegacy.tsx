@@ -779,6 +779,63 @@ const formatModifierSelectionPrice = (
   return `${sign}${formatMoney(Math.abs(total))}`;
 };
 
+const getPromotionInfo = (source: any) => {
+  const happyHour = source?.happyHour;
+
+  if (happyHour && typeof happyHour === "object" && happyHour.isCurrentlyActive !== false) {
+    return happyHour;
+  }
+
+  const promotion = source?.promotion;
+
+  if (!promotion || typeof promotion !== "object") return null;
+
+  const discountValue = toNumber(promotion.discountValue, 0);
+  const discountAmount = toNumber(promotion.discountAmount, 0);
+  const discountedPrice = toNumber(promotion.discountedPrice ?? promotion.discountedAmount, 0);
+  const discountType = String(promotion.discountType || "").toUpperCase();
+
+  if (
+    ((discountType === "PERCENTAGE" || discountType === "FLAT") && discountValue > 0) ||
+    discountAmount > 0 ||
+    discountedPrice > 0
+  ) {
+    return promotion;
+  }
+
+  return null;
+};
+
+const calculatePromotionDiscount = (originalPrice: number, promotion: any) => {
+  const discountValue = toNumber(promotion?.discountValue, 0);
+  const backendDiscountAmount = toNumber(promotion?.discountAmount, 0);
+  const maxDiscountAmount = toNumber(promotion?.maxDiscountAmount, 0);
+  const discountType = String(promotion?.discountType || "").toUpperCase();
+  let discountAmount = 0;
+
+  if (backendDiscountAmount > 0) {
+    discountAmount = backendDiscountAmount;
+  } else if (discountType === "PERCENTAGE") {
+    discountAmount = (originalPrice * discountValue) / 100;
+  } else if (discountType === "FLAT") {
+    discountAmount = discountValue;
+  }
+
+  if (maxDiscountAmount > 0) {
+    discountAmount = Math.min(discountAmount, maxDiscountAmount);
+  }
+
+  return Math.min(Math.max(discountAmount, 0), originalPrice);
+};
+
+const getDiscountedBasePrice = (originalPrice: number, source: any, fallbackSource?: any) => {
+  const promotion = getPromotionInfo(source) || getPromotionInfo(fallbackSource);
+
+  if (!promotion) return originalPrice;
+
+  return Math.max(0, originalPrice - calculatePromotionDiscount(originalPrice, promotion));
+};
+
 const getGroupValidation = (group: ModifierGroup) => {
   const rawMin = toNumber(group?.minSelect, 0);
   const rawMax =
@@ -901,7 +958,12 @@ export default function AddToCartModal({
       }, 0);
   }, [selectedModifiers, item, selectedVariation]);
 
-  const unitPrice = toNumber(selectedOption?.price, 0) + modifiersTotal;
+  const originalBasePrice = toNumber(selectedOption?.price, 0);
+  const discountedBasePrice = getDiscountedBasePrice(originalBasePrice, selectedVariation, item);
+  const hasDiscountedBasePrice = discountedBasePrice < originalBasePrice;
+  const originalUnitPrice = originalBasePrice + modifiersTotal;
+  const unitPrice = discountedBasePrice + modifiersTotal;
+  const originalTotal = originalUnitPrice * quantity;
   const total = unitPrice * quantity;
 
   useEffect(() => {
@@ -1602,8 +1664,17 @@ export default function AddToCartModal({
                 {t("quantity")}
               </span>
 
-              <p className="mt-1 text-lg font-semibold text-primary">
-                {formatMoney(total)}
+              <p className="mt-1 flex flex-wrap items-baseline gap-2 text-lg font-semibold text-primary">
+                {hasDiscountedBasePrice ? (
+                  <>
+                    <span className="text-sm font-medium text-gray-400 line-through">
+                      {formatMoney(originalTotal)}
+                    </span>
+                    <span>{formatMoney(total)}</span>
+                  </>
+                ) : (
+                  <span>{formatMoney(total)}</span>
+                )}
               </p>
             </div>
 

@@ -15,7 +15,9 @@ export type PosCartLineItem = {
   dealId?: string;
   name: string;
   unitPrice: number;
+  originalUnitPrice: number;
   lineTotal: number;
+  originalLineTotal: number;
   quantity: number;
   img?: string;
   modifiers: PosCartModifier[];
@@ -57,6 +59,55 @@ const readString = (record: UnknownRecord, key: string): string | undefined => {
 
 const numbersMatch = (left: number, right: number) =>
   Math.abs(left - right) < 0.005;
+
+const getPromotionInfo = (source: UnknownRecord) => {
+  const happyHour = isRecord(source.happyHour) ? source.happyHour : null;
+
+  if (happyHour && happyHour.isCurrentlyActive !== false) return happyHour;
+
+  const promotion = isRecord(source.promotion) ? source.promotion : null;
+  if (!promotion) return null;
+
+  const discountValue = firstNumber(readNumber(promotion, "discountValue"), 0) ?? 0;
+  const discountAmount = firstNumber(readNumber(promotion, "discountAmount"), 0) ?? 0;
+  const discountedPrice =
+    firstNumber(readNumber(promotion, "discountedPrice"), readNumber(promotion, "discountedAmount"), 0) ?? 0;
+  const discountType = String(promotion.discountType || "").toUpperCase();
+
+  if (
+    ((discountType === "PERCENTAGE" || discountType === "FLAT") && discountValue > 0) ||
+    discountAmount > 0 ||
+    discountedPrice > 0
+  ) {
+    return promotion;
+  }
+
+  return null;
+};
+
+const calculatePromotionDiscount = (originalPrice: number, promotion: UnknownRecord | null) => {
+  if (!promotion || originalPrice <= 0) return 0;
+
+  const discountValue = firstNumber(readNumber(promotion, "discountValue"), 0) ?? 0;
+  const backendDiscountAmount = firstNumber(readNumber(promotion, "discountAmount"), 0) ?? 0;
+  const maxDiscountAmount = firstNumber(readNumber(promotion, "maxDiscountAmount"), 0) ?? 0;
+  const discountType = String(promotion.discountType || "").toUpperCase();
+  let discountAmount = 0;
+
+  if (backendDiscountAmount > 0) {
+    discountAmount = backendDiscountAmount;
+  } else if (discountType === "PERCENTAGE") {
+    discountAmount = (originalPrice * discountValue) / 100;
+  } else if (discountType === "FLAT") {
+    discountAmount = discountValue;
+  }
+
+  if (maxDiscountAmount > 0) {
+    discountAmount = Math.min(discountAmount, maxDiscountAmount);
+  }
+
+  return Math.min(Math.max(discountAmount, 0), originalPrice);
+};
 
 const getCartData = (payload: unknown): UnknownRecord => {
   if (!isRecord(payload)) return {};
@@ -105,6 +156,15 @@ export const formatPosCartItems = (payload: unknown): PosCartLineItem[] => {
       0
     );
     const rawItemUnitPrice = readNumber(item, "unitPrice");
+    const rawDiscountedUnitPrice = firstNumber(
+      readNumber(item, "discountedUnitPrice"),
+      readNumber(item, "discountedUnitPriceWithModifiers"),
+      readNumber(item, "finalUnitPrice")
+    );
+    const rawDiscountedLineTotal = firstNumber(
+      readNumber(item, "discountedLineTotal"),
+      readNumber(item, "finalLineTotal")
+    );
     const menuItemUnitPrice = firstNumber(
       readNumber(menuItem, "unitPrice"),
       readNumber(menuItem, "price")
@@ -120,7 +180,7 @@ export const formatPosCartItems = (payload: unknown): PosCartLineItem[] => {
       rawItemUnitPrice !== undefined &&
       menuItemUnitPrice !== undefined &&
       numbersMatch(rawItemUnitPrice, menuItemUnitPrice);
-    const unitPrice =
+    const originalUnitPrice =
       firstNumber(
         explicitUnitPriceWithModifiers,
         shouldAddModifierTotals && rawItemUnitPrice !== undefined
@@ -129,13 +189,22 @@ export const formatPosCartItems = (payload: unknown): PosCartLineItem[] => {
         rawItemUnitPrice,
         menuItemUnitPrice
       ) ?? 0;
-    const rawBaseLineTotal = (rawItemUnitPrice ?? unitPrice) * quantity;
+    const promotion = getPromotionInfo(menuItem) || getPromotionInfo(item);
+    const itemDiscount = calculatePromotionDiscount(
+      Math.max(0, originalUnitPrice - modifiersTotal),
+      promotion
+    );
+    const computedDiscountedUnitPrice = Math.max(0, originalUnitPrice - itemDiscount);
+    const unitPrice = firstNumber(rawDiscountedUnitPrice, computedDiscountedUnitPrice) ?? originalUnitPrice;
+    const rawBaseLineTotal = (rawItemUnitPrice ?? originalUnitPrice) * quantity;
+    const computedOriginalLineTotal = originalUnitPrice * quantity;
     const computedLineTotal = unitPrice * quantity;
-    const lineTotal =
+    const originalLineTotal =
       rawLineTotal !== undefined &&
       !(shouldAddModifierTotals && numbersMatch(rawLineTotal, rawBaseLineTotal))
         ? rawLineTotal
-        : computedLineTotal;
+        : computedOriginalLineTotal;
+    const lineTotal = firstNumber(rawDiscountedLineTotal, computedLineTotal) ?? originalLineTotal;
 
     return {
       id: readString(item, "id") ?? "",
@@ -148,7 +217,9 @@ export const formatPosCartItems = (payload: unknown): PosCartLineItem[] => {
         readString(menuItem, "name") ||
         "Menu item",
       unitPrice,
+      originalUnitPrice,
       lineTotal,
+      originalLineTotal,
       quantity,
       img: readString(item, "imageUrl") ?? readString(menuItem, "imageUrl"),
       modifiers,
