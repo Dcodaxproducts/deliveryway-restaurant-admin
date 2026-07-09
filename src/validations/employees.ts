@@ -9,10 +9,6 @@ export const staffRoleSchema = z.object({
   name: z.string().min(2, "Role name is required"),
   permissions: z.array(permissionSchema).min(1, "At least one permission is required"),
   description: z.string().max(300).optional(),
-  restaurantId: z.string().optional(),
-  branchId: z.string().optional(),
-  restaurantIds: z.array(z.string()).optional(),
-  branchIds: z.array(z.string()).optional(),
 });
 
 export type StaffRoleValues = z.infer<typeof staffRoleSchema>;

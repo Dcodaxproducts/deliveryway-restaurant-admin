@@ -2218,7 +2218,9 @@
       "selectRole": "Select Role",
       "restaurants": "Restaurants",
       "selectRestaurants": "Select restaurants",
-      "restaurantsHelp": "Business admin staff can be limited to one or more restaurants.",
+      "restaurantsHelp": "Business admin staff can be limited to selected restaurants, or assigned to all restaurants at once.",
+      "assignAllRestaurants": "Assign all",
+      "assigningAllRestaurants": "Assigning...",
       "avatar": "Avatar",
       "uploading": "Uploading...",
       "bio": "Bio"
@@ -2252,6 +2254,7 @@
     },
     "messages": {
       "unableSaveEmployee": "Unable to save employee",
+      "unableLoadRestaurants": "Unable to load restaurants",
       "unableSaveRole": "Unable to save role",
       "staffCreated": "Staff created successfully!",
       "failedCreateStaff": "Failed to create staff",

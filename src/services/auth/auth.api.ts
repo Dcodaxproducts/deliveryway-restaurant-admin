@@ -40,7 +40,11 @@ export const authApi = {
     try {
       const response = await httpClient.post("/auth/login", payload);
       return normalizeAuthPayload(response);
-    } catch {
+    } catch (error) {
+      if (role) {
+        throw error;
+      }
+
       const response = await httpClient.post("/auth/staff/login", credentials);
       return normalizeAuthPayload(response);
     }

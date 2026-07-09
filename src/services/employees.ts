@@ -98,9 +98,16 @@ export const getPermissionModules = async (params?: {
  */
 
 const toStaffRolePayload = (payload: StaffRoleValues | Partial<StaffRoleValues>) => {
-  const body = { ...payload };
+  const body: Partial<StaffRoleValues> & {
+    restaurantId?: string;
+    branchId?: string;
+    restaurantIds?: string[];
+    branchIds?: string[];
+  } = { ...payload };
   delete body.restaurantId;
   delete body.branchId;
+  delete body.restaurantIds;
+  delete body.branchIds;
   return body;
 };
 

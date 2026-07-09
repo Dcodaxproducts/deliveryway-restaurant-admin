@@ -53,6 +53,16 @@ type RestaurantOption = {
   name: string;
 };
 
+type RestaurantListResponse = {
+  data?: unknown;
+  meta?: {
+    totalPages?: number;
+    page?: number;
+    hasNextPage?: boolean;
+    hasMore?: boolean;
+  };
+};
+
 type EmployeeInitialData = Partial<StaffModalValues> & {
   id?: string;
   restaurantAccess?: RestaurantAccessScope | null;
@@ -81,6 +91,55 @@ const defaultValues: StaffModalValues = {
   isActive: true,
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const getRestaurantOptions = (response: RestaurantListResponse): RestaurantOption[] => {
+  const source = Array.isArray(response.data)
+    ? response.data
+    : isRecord(response.data) && Array.isArray(response.data.data)
+      ? response.data.data
+      : [];
+
+  return source
+    .filter(isRecord)
+    .map((item) => ({
+      id: typeof item.id === "string" ? item.id : "",
+      name: typeof item.name === "string" ? item.name : String(item.id ?? ""),
+    }))
+    .filter((item) => item.id);
+};
+
+const fetchAllRestaurantOptions = async () => {
+  const limit = 100;
+  const maxPages = 100;
+  const restaurants = new Map<string, RestaurantOption>();
+
+  for (let page = 1; page <= maxPages; page += 1) {
+    const response = (await getRestaurants({ page, limit })) as RestaurantListResponse;
+    const options = getRestaurantOptions(response);
+
+    options.forEach((restaurant) => restaurants.set(restaurant.id, restaurant));
+
+    const meta = response.meta ?? (isRecord(response.data) && isRecord(response.data.meta)
+      ? response.data.meta
+      : undefined);
+    const totalPages = typeof meta?.totalPages === "number" ? meta.totalPages : undefined;
+    const hasNextPage =
+      typeof meta?.hasNextPage === "boolean"
+        ? meta.hasNextPage
+        : typeof meta?.hasMore === "boolean"
+          ? meta.hasMore
+          : undefined;
+
+    if (totalPages ? page >= totalPages : hasNextPage === false || options.length < limit) {
+      break;
+    }
+  }
+
+  return Array.from(restaurants.values());
+};
+
 export default function EmployeeInvitationModal({
   open,
   onOpenChange,
@@ -92,6 +151,7 @@ export default function EmployeeInvitationModal({
   const canSelectRestaurants = role === "BUSINESS_ADMIN";
   const isEdit = Boolean(initialData?.id);
   const [selectedRestaurants, setSelectedRestaurants] = useState<RestaurantOption[]>([]);
+  const [loadingAllRestaurants, setLoadingAllRestaurants] = useState(false);
 
   const createStaffMutation = useCreateStaff({
     messages: {
@@ -153,6 +213,7 @@ export default function EmployeeInvitationModal({
     if (!open) {
       reset(defaultValues);
       setSelectedRestaurants([]);
+      setLoadingAllRestaurants(false);
       return;
     }
 
@@ -184,6 +245,17 @@ export default function EmployeeInvitationModal({
         : defaultValues,
     );
   }, [initialData, open, reset]);
+
+  const handleAssignAllRestaurants = async () => {
+    try {
+      setLoadingAllRestaurants(true);
+      setSelectedRestaurants(await fetchAllRestaurantOptions());
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, t("messages.unableLoadRestaurants")));
+    } finally {
+      setLoadingAllRestaurants(false);
+    }
+  };
 
   const onSubmit = async (values: StaffModalValues) => {
     try {
@@ -350,9 +422,23 @@ export default function EmployeeInvitationModal({
                   valueKey="id"
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                {t("employeeModal.restaurantsHelp")}
-              </p>
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <p className="text-xs text-gray-500">
+                  {t("employeeModal.restaurantsHelp")}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={loadingAllRestaurants}
+                  onClick={handleAssignAllRestaurants}
+                  className="shrink-0"
+                >
+                  {loadingAllRestaurants
+                    ? t("employeeModal.assigningAllRestaurants")
+                    : t("employeeModal.assignAllRestaurants")}
+                </Button>
+              </div>
             </div>
           ) : null}
 

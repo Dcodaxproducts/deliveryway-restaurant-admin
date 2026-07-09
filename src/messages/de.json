@@ -2218,7 +2218,9 @@
       "selectRole": "Rolle auswählen",
       "restaurants": "Restaurants",
       "selectRestaurants": "Restaurants auswählen",
-      "restaurantsHelp": "Mitarbeiter von Business-Admins können auf ein oder mehrere Restaurants begrenzt werden.",
+      "restaurantsHelp": "Mitarbeiter von Business-Admins können auf ausgewählte Restaurants begrenzt oder allen Restaurants auf einmal zugewiesen werden.",
+      "assignAllRestaurants": "Alle zuweisen",
+      "assigningAllRestaurants": "Wird zugewiesen...",
       "avatar": "Avatar",
       "uploading": "Wird hochgeladen...",
       "bio": "Bio"
@@ -2252,6 +2254,7 @@
     },
     "messages": {
       "unableSaveEmployee": "Mitarbeiter konnte nicht gespeichert werden",
+      "unableLoadRestaurants": "Restaurants konnten nicht geladen werden",
       "unableSaveRole": "Rolle konnte nicht gespeichert werden",
       "staffCreated": "Mitarbeiter erfolgreich erstellt!",
       "failedCreateStaff": "Mitarbeiter konnte nicht erstellt werden",
