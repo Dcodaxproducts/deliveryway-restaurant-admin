@@ -49,6 +49,33 @@ const getDisplayPrice = (item: any) => {
   );
 };
 
+const getDiscountedPrice = (item: any, originalPrice: number) => {
+  const directPrice = toNumber(
+    item?.discountedPrice ??
+      item?.discountPrice ??
+      item?.salePrice ??
+      item?.offerPrice ??
+      item?.finalPrice ??
+      item?.priceAfterDiscount,
+    Number.NaN,
+  );
+
+  if (Number.isFinite(directPrice) && directPrice >= 0 && directPrice < originalPrice) {
+    return directPrice;
+  }
+
+  const discountValue = toNumber(item?.discountValue ?? item?.discount?.value, 0);
+  const discountType = String(item?.discountType ?? item?.discount?.type ?? "").toUpperCase();
+
+  if (discountValue <= 0) return null;
+
+  const calculatedPrice = discountType.includes("PERCENT")
+    ? originalPrice - (originalPrice * discountValue) / 100
+    : originalPrice - discountValue;
+
+  return calculatedPrice >= 0 && calculatedPrice < originalPrice ? calculatedPrice : null;
+};
+
 export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props) {
   const t = useTranslations("pos.menuCard");
   const { formatMoney } = useCurrency(item?.restaurantId);
@@ -59,6 +86,7 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
 
   const image = useMemo(() => getImageUrl(item?.imageUrl), [item?.imageUrl]);
   const price = useMemo(() => getDisplayPrice(item), [item]);
+  const discountedPrice = useMemo(() => getDiscountedPrice(item, price), [item, price]);
 
   const itemName = item?.name || t("fallbackName");
   const categoryName = item?.category?.name || t("uncategorized");
@@ -139,8 +167,17 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {t("price")}
             </p>
-            <p className="mt-1 truncate text-2xl font-extrabold tracking-[-0.04em] text-foreground">
-              <span className="text-primary">{formatMoney(price, item?.currency)}</span>
+            <p className="mt-1 flex flex-wrap items-baseline gap-2 truncate text-2xl font-extrabold tracking-[-0.04em] text-foreground">
+              {discountedPrice !== null ? (
+                <>
+                  <span className="text-primary">{formatMoney(discountedPrice, item?.currency)}</span>
+                  <span className="text-sm font-semibold tracking-normal text-muted-foreground line-through">
+                    {formatMoney(price, item?.currency)}
+                  </span>
+                </>
+              ) : (
+                <span className="text-primary">{formatMoney(price, item?.currency)}</span>
+              )}
             </p>
           </div>
 

@@ -749,7 +749,7 @@ const getModifierEffectivePrice = (
 
   const topLevelItemAmount = getOverrideAmount(topLevelItemOverride);
 
-  if (topLevelItemAmount !== null) {
+  if (topLevelItemAmount !== null && topLevelItemAmount !== 0) {
     return topLevelItemAmount;
   }
 
@@ -761,11 +761,22 @@ const getModifierEffectivePrice = (
 
   const modifierItemAmount = getOverrideAmount(modifierItemOverride);
 
-  if (modifierItemAmount !== null) {
+  if (modifierItemAmount !== null && modifierItemAmount !== 0) {
     return modifierItemAmount;
   }
 
   return toNumber(modifier?.priceDelta, 0);
+};
+
+const formatModifierSelectionPrice = (
+  price: number,
+  quantity: number,
+  formatMoney: (amount: number) => string,
+) => {
+  const total = price * Math.max(1, quantity);
+  const sign = total > 0 ? "+" : "-";
+
+  return `${sign}${formatMoney(Math.abs(total))}`;
 };
 
 const getGroupValidation = (group: ModifierGroup) => {
@@ -1390,9 +1401,13 @@ export default function AddToCartModal({
                           </span>
                         </span>
 
-                        {effectivePrice > 0 ? (
+                        {effectivePrice !== 0 ? (
                           <span className="shrink-0 font-semibold text-primary">
-                            +{formatMoney(effectivePrice * selectedModifierQuantity)}
+                            {formatModifierSelectionPrice(
+                              effectivePrice,
+                              selectedModifierQuantity,
+                              formatMoney,
+                            )}
                           </span>
                         ) : null}
                       </label>

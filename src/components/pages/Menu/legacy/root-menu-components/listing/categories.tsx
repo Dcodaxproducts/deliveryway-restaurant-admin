@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, PlusCircle, X } from "lucide-react";
 import CreateCategoryModalParent from "./CreateCategoryModalParent";
 import useCategories from "@/hooks/useCategories";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
@@ -27,6 +27,13 @@ export default function Categories({
 const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
 const [isDeleting, setIsDeleting] = useState(false);
+const [categoryPage, setCategoryPage] = useState(0);
+const categoriesPerPage = 10;
+const totalCategoryPages = Math.max(1, Math.ceil(categories.length / categoriesPerPage));
+const visibleCategories = categories.slice(
+  categoryPage * categoriesPerPage,
+  categoryPage * categoriesPerPage + categoriesPerPage,
+);
 
 const handleDeleteCategory = async () => {
   if (!deletingCategoryId) return;
@@ -55,6 +62,11 @@ const handleModalChange = (open: boolean) => {
 useEffect(()=>{
   refetch();
 },[])
+useEffect(() => {
+  if (categoryPage > totalCategoryPages - 1) {
+    setCategoryPage(Math.max(0, totalCategoryPages - 1));
+  }
+}, [categoryPage, totalCategoryPages]);
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
@@ -62,8 +74,38 @@ useEffect(()=>{
           {t("title")}
         </h2>
 
-        {showAddNew && (
-          <div className="mt-4 text-center">
+        <div className="flex items-center gap-2">
+          {totalCategoryPages > 1 && (
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                disabled={categoryPage === 0}
+                onClick={() => setCategoryPage((page) => Math.max(0, page - 1))}
+                className="h-9 w-9 rounded-[10px] border-gray-200 text-gray-700 hover:bg-white hover:text-gray-900 hover:shadow-md disabled:opacity-40"
+                aria-label="Show previous categories"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                disabled={categoryPage >= totalCategoryPages - 1}
+                onClick={() =>
+                  setCategoryPage((page) => Math.min(totalCategoryPages - 1, page + 1))
+                }
+                className="h-9 w-9 rounded-[10px] border-gray-200 text-gray-700 hover:bg-white hover:text-gray-900 hover:shadow-md disabled:opacity-40"
+                aria-label="Show next categories"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
+          {showAddNew && (
+          <div className="text-center">
             <Button
               variant="link"
               size="sm"
@@ -74,7 +116,8 @@ useEffect(()=>{
               {t("addNewCategory")}
             </Button>
           </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Category Pills */}
@@ -96,7 +139,7 @@ useEffect(()=>{
   </div>
 ) : (
         <div className="flex flex-wrap gap-x-3 gap-y-5 max-w-[900px]">
-          {categories.map((category) => {
+          {visibleCategories.map((category) => {
             const isActive = selectedCategory === category.id;
 
             return (
@@ -113,8 +156,8 @@ useEffect(()=>{
                     transition
                     ${
                       isActive
-                        ? "bg-primary text-white border-primary hover:bg-red-600"
-                        : "text-[#6A7282] border-[#6A7282] bg-transparent hover:bg-gray-100"
+                        ? "bg-primary text-white border-primary hover:bg-primary hover:text-white hover:shadow-md"
+                        : "text-[#6A7282] border-[#6A7282] bg-transparent hover:bg-transparent hover:text-[#6A7282] hover:shadow-md"
                     }
                   `}
                 >
