@@ -22,18 +22,27 @@ export default function Categories({
   onSelectCategory,
 }: CategoriesProps) {
   const t = useTranslations("menu.listingCategories");
-  const { categories, loading, deleteCategory, refetch } = useCategories();
   const [createCategory, setCreateCategory] = useState(false);
 const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
 const [isDeleting, setIsDeleting] = useState(false);
-const [categoryPage, setCategoryPage] = useState(0);
+const [categoryPage, setCategoryPage] = useState(1);
 const categoriesPerPage = 10;
-const totalCategoryPages = Math.max(1, Math.ceil(categories.length / categoriesPerPage));
-const visibleCategories = categories.slice(
-  categoryPage * categoriesPerPage,
-  categoryPage * categoriesPerPage + categoriesPerPage,
+const { categories, loading, fetching, refetch, deleteCategory, meta } = useCategories({
+  page: categoryPage,
+  limit: categoriesPerPage,
+});
+const totalCategoryPages = Math.max(
+  1,
+  Number(meta?.totalPages) ||
+    Math.ceil((Number(meta?.total) || categories.length) / categoriesPerPage) ||
+    1,
 );
+const hasPreviousCategoryPage = categoryPage > 1;
+const hasNextCategoryPage =
+  typeof meta?.hasNext === "boolean"
+    ? meta.hasNext
+    : categoryPage < totalCategoryPages || categories.length >= categoriesPerPage;
 
 const handleDeleteCategory = async () => {
   if (!deletingCategoryId) return;
@@ -59,12 +68,9 @@ const handleModalChange = (open: boolean) => {
     refetch();
   }
 };
-useEffect(()=>{
-  refetch();
-},[])
 useEffect(() => {
-  if (categoryPage > totalCategoryPages - 1) {
-    setCategoryPage(Math.max(0, totalCategoryPages - 1));
+  if (categoryPage > totalCategoryPages) {
+    setCategoryPage(Math.max(1, totalCategoryPages));
   }
 }, [categoryPage, totalCategoryPages]);
   return (
@@ -81,8 +87,8 @@ useEffect(() => {
                 type="button"
                 variant="outline"
                 size="icon"
-                disabled={categoryPage === 0}
-                onClick={() => setCategoryPage((page) => Math.max(0, page - 1))}
+                disabled={!hasPreviousCategoryPage || fetching}
+                onClick={() => setCategoryPage((page) => Math.max(1, page - 1))}
                 className="h-9 w-9 rounded-[10px] border-gray-200 text-gray-700 hover:bg-white hover:text-gray-900 hover:shadow-md disabled:opacity-40"
                 aria-label="Show previous categories"
               >
@@ -92,9 +98,9 @@ useEffect(() => {
                 type="button"
                 variant="outline"
                 size="icon"
-                disabled={categoryPage >= totalCategoryPages - 1}
+                disabled={!hasNextCategoryPage || fetching}
                 onClick={() =>
-                  setCategoryPage((page) => Math.min(totalCategoryPages - 1, page + 1))
+                  setCategoryPage((page) => page + 1)
                 }
                 className="h-9 w-9 rounded-[10px] border-gray-200 text-gray-700 hover:bg-white hover:text-gray-900 hover:shadow-md disabled:opacity-40"
                 aria-label="Show next categories"
@@ -139,7 +145,7 @@ useEffect(() => {
   </div>
 ) : (
         <div className="flex flex-wrap gap-x-3 gap-y-5 max-w-[900px]">
-          {visibleCategories.map((category) => {
+          {categories.map((category) => {
             const isActive = selectedCategory === category.id;
 
             return (

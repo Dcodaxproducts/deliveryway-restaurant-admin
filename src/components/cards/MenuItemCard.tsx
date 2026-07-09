@@ -49,7 +49,71 @@ const getDisplayPrice = (item: any) => {
   );
 };
 
+const getPromotionInfo = (source: any) => {
+  const happyHour = source?.happyHour;
+
+  if (happyHour && typeof happyHour === "object" && happyHour.isCurrentlyActive !== false) {
+    return happyHour;
+  }
+
+  const promotion = source?.promotion;
+
+  if (!promotion || typeof promotion !== "object") return null;
+
+  const discountValue = toNumber(promotion.discountValue, 0);
+  const discountAmount = toNumber(promotion.discountAmount, 0);
+  const discountedPrice = toNumber(promotion.discountedPrice ?? promotion.discountedAmount, 0);
+  const discountType = String(promotion.discountType || "").toUpperCase();
+
+  if (
+    (discountType === "PERCENTAGE" || discountType === "FLAT") && discountValue > 0 ||
+    discountAmount > 0 ||
+    discountedPrice > 0
+  ) {
+    return promotion;
+  }
+
+  return null;
+};
+
+const calculatePromotionDiscount = (originalPrice: number, promotion: any) => {
+  const discountValue = toNumber(promotion?.discountValue, 0);
+  const backendDiscountAmount = toNumber(promotion?.discountAmount, 0);
+  const maxDiscountAmount = toNumber(promotion?.maxDiscountAmount, 0);
+  const discountType = String(promotion?.discountType || "").toUpperCase();
+
+  let discountAmount = 0;
+
+  if (backendDiscountAmount > 0) {
+    discountAmount = backendDiscountAmount;
+  } else if (discountType === "PERCENTAGE") {
+    discountAmount = (originalPrice * discountValue) / 100;
+  } else if (discountType === "FLAT") {
+    discountAmount = discountValue;
+  }
+
+  if (maxDiscountAmount > 0) {
+    discountAmount = Math.min(discountAmount, maxDiscountAmount);
+  }
+
+  return Math.min(Math.max(discountAmount, 0), originalPrice);
+};
+
 const getDiscountedPrice = (item: any, originalPrice: number) => {
+  const defaultVariation = Array.isArray(item?.variations)
+    ? item.variations.find((variation: any) => variation?.isDefault) ||
+      item.variations[0]
+    : null;
+  const promotion = getPromotionInfo(defaultVariation) || getPromotionInfo(item);
+
+  if (promotion) {
+    const promotionPrice = originalPrice - calculatePromotionDiscount(originalPrice, promotion);
+
+    if (promotionPrice >= 0 && promotionPrice < originalPrice) {
+      return promotionPrice;
+    }
+  }
+
   const directPrice = toNumber(
     item?.discountedPrice ??
       item?.discountPrice ??
