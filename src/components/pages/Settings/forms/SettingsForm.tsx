@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Banknote, CreditCard, Info, Loader2, RefreshCw, Save, Wallet } from "lucide-react";
+import { Banknote, CreditCard, Info, Loader2, RefreshCw, Save, Send, Wallet } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 
@@ -13,7 +13,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import {
+  useCreateRestaurantPayoutRequest,
   useRestaurantPaymentManagement,
+  useRestaurantPayoutRequests,
+  useRestaurantWallet,
   useUpdateRestaurantPaymentMethods,
 } from "@/hooks/useRestaurantPaymentManagement";
 import {
@@ -107,7 +110,7 @@ type SettingsFormProps = {
 };
 
 export default function SettingsForm({ variant = "global" }: SettingsFormProps) {
-  const { isRestaurantAdmin, restaurantId } = useAuth();
+  const { isBranchAdmin, isRestaurantAdmin, restaurantId } = useAuth();
   const { handleSubmit, register, setValue, watch } = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues,
@@ -128,14 +131,15 @@ export default function SettingsForm({ variant = "global" }: SettingsFormProps) 
   if (variant === "payments") {
     return (
       <div className="space-y-[24px] rounded-[14px] bg-white p-4 lg:p-[30px]">
-        {isRestaurantAdmin ? (
+        {isRestaurantAdmin || isBranchAdmin ? (
           <>
             <PaymentManagementSection restaurantId={restaurantId} />
+            <RestaurantWalletPayoutSection restaurantId={restaurantId} />
             <StripeAccountSection restaurantId={restaurantId} />
           </>
         ) : (
           <p className="rounded-[10px] bg-amber-50 px-4 py-3 text-sm text-amber-700">
-            Payment settings are available for restaurant admins.
+            Payment settings are available for restaurant and branch admins.
           </p>
         )}
       </div>
@@ -501,6 +505,278 @@ function StripeSwitch({
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
     </div>
   );
+}
+
+function RestaurantWalletPayoutSection({
+  restaurantId,
+}: {
+  restaurantId?: string | null;
+}) {
+  const walletQuery = useRestaurantWallet(restaurantId);
+  const payoutRequestsQuery = useRestaurantPayoutRequests(restaurantId);
+  const createPayoutRequest = useCreateRestaurantPayoutRequest();
+  const { formatMoney: formatCurrency, resolveCurrency } = useCurrency(restaurantId);
+  const walletCurrency = resolveCurrency(walletQuery.data?.currency);
+  const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState(walletCurrency || "PKR");
+  const [bankName, setBankName] = useState("");
+  const [accountTitle, setAccountTitle] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [iban, setIban] = useState("");
+  const [phone, setPhone] = useState("");
+  const [note, setNote] = useState("");
+  const parsedAmount = Number(amount);
+  const canSubmit =
+    Boolean(restaurantId) &&
+    Number.isFinite(parsedAmount) &&
+    parsedAmount > 0 &&
+    bankName.trim().length > 0 &&
+    accountTitle.trim().length > 0 &&
+    accountNumber.trim().length > 0 &&
+    !createPayoutRequest.isPending;
+
+  useEffect(() => {
+    if (walletCurrency && currency === "PKR") {
+      setCurrency(walletCurrency);
+    }
+  }, [currency, walletCurrency]);
+
+  const submit = () => {
+    if (!restaurantId || !canSubmit) return;
+
+    createPayoutRequest.mutate(
+      {
+        restaurantId,
+        payload: {
+          amount: parsedAmount,
+          currency: currency.trim().toUpperCase() || walletCurrency || "PKR",
+          bankDetails: {
+            bankName: bankName.trim(),
+            accountTitle: accountTitle.trim(),
+            accountNumber: accountNumber.trim(),
+            iban: iban.trim() || undefined,
+            phone: phone.trim() || undefined,
+          },
+          note: note.trim() || undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          setAmount("");
+          setNote("");
+        },
+      }
+    );
+  };
+
+  return (
+    <section className="space-y-[18px] rounded-[14px] border border-[#E8E8E8] p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-[6px]">
+          <div className="flex items-center gap-2">
+            <Banknote size={18} className="text-primary" />
+            <h2 className="text-lg font-semibold text-dark">
+              Restaurant Wallet & Payouts
+            </h2>
+          </div>
+          <p className="text-sm text-gray">
+            Review the restaurant wallet balance and request a manual bank payout.
+            Wallet deductions happen only after Super Admin marks a payout as paid.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            walletQuery.refetch();
+            payoutRequestsQuery.refetch();
+          }}
+          disabled={!restaurantId || walletQuery.isFetching || payoutRequestsQuery.isFetching}
+          className="h-[40px] rounded-[10px]"
+        >
+          {walletQuery.isFetching || payoutRequestsQuery.isFetching ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-2 size-4" />
+          )}
+          Refresh
+        </Button>
+      </div>
+
+      {walletQuery.isError ? (
+        <p className="rounded-[10px] bg-red-50 px-3 py-2 text-sm text-red-600">
+          {getApiErrorMessage(walletQuery.error, "Unable to load restaurant wallet.")}
+        </p>
+      ) : null}
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <PaymentSummaryCard
+          icon={<Wallet size={18} />}
+          label="Wallet balance"
+          value={
+            walletQuery.isLoading
+              ? "Loading..."
+              : formatOptionalMoney(walletQuery.data?.balance ?? null, walletCurrency, formatCurrency)
+          }
+        />
+        <PaymentSummaryCard
+          icon={<CreditCard size={18} />}
+          label="Wallet type"
+          value={walletQuery.data?.type || "Restaurant wallet"}
+        />
+        <PaymentSummaryCard
+          icon={<Info size={18} />}
+          label="Customer wallet exposure"
+          value={formatRecordAmount(
+            walletQuery.data?.customerWalletExposure,
+            walletCurrency,
+            formatCurrency
+          )}
+        />
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1fr_1.1fr]">
+        <div className="space-y-4 rounded-[12px] bg-gray-50 p-4">
+          <div>
+            <h3 className="text-sm font-semibold text-dark">Request payout</h3>
+            <p className="mt-1 text-xs text-gray">
+              Submit bank details for Super Admin approval and external transfer.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
+            <div className={formGroupClassName}>
+              <Label htmlFor="payout-amount">Amount</Label>
+              <Input
+                id="payout-amount"
+                inputMode="decimal"
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+                placeholder="5000"
+                className={textInputClassName}
+              />
+            </div>
+            <div className={formGroupClassName}>
+              <Label htmlFor="payout-currency">Currency</Label>
+              <Input
+                id="payout-currency"
+                value={currency}
+                onChange={(event) => setCurrency(event.target.value.toUpperCase())}
+                placeholder={walletCurrency || "PKR"}
+                className={textInputClassName}
+              />
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <PayoutInput id="payout-bank" label="Bank name" value={bankName} onChange={setBankName} placeholder="HBL" />
+            <PayoutInput id="payout-title" label="Account title" value={accountTitle} onChange={setAccountTitle} placeholder="Pizza House" />
+            <PayoutInput id="payout-number" label="Account number" value={accountNumber} onChange={setAccountNumber} placeholder="1234567890" />
+            <PayoutInput id="payout-iban" label="IBAN (optional)" value={iban} onChange={setIban} placeholder="PK36..." />
+            <PayoutInput id="payout-phone" label="Phone (optional)" value={phone} onChange={setPhone} placeholder="03410000000" />
+          </div>
+          <div className={formGroupClassName}>
+            <Label htmlFor="payout-note">Note</Label>
+            <Textarea
+              id="payout-note"
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Please transfer payout"
+              className="min-h-[84px] border-[#BBBBBB] focus:border-primary"
+            />
+          </div>
+          <Button type="button" onClick={submit} disabled={!canSubmit} className="h-[44px] rounded-[10px]">
+            {createPayoutRequest.isPending ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Send className="mr-2 size-4" />
+            )}
+            Submit Payout Request
+          </Button>
+        </div>
+
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-dark">Payout requests</h3>
+          {payoutRequestsQuery.isLoading ? (
+            <div className="h-[180px] animate-pulse rounded-[10px] bg-gray-100" />
+          ) : null}
+          {payoutRequestsQuery.isError ? (
+            <p className="rounded-[10px] bg-red-50 px-3 py-2 text-sm text-red-600">
+              {getApiErrorMessage(payoutRequestsQuery.error, "Unable to load payout requests.")}
+            </p>
+          ) : null}
+          {!payoutRequestsQuery.isLoading && !payoutRequestsQuery.isError ? (
+            payoutRequestsQuery.data?.length ? (
+              <div className="overflow-hidden rounded-[10px] border border-[#E8E8E8]">
+                {payoutRequestsQuery.data.slice(0, 8).map((request) => (
+                  <div key={request.id} className="space-y-2 border-b border-[#E8E8E8] px-4 py-3 last:border-b-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-semibold text-dark">
+                        {formatCurrency(request.amount, request.currency || walletCurrency)}
+                      </span>
+                      <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700">
+                        {request.status || "REQUESTED"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray">
+                      {formatBankDetails(request.bankDetails)}
+                    </p>
+                    {request.paymentReference ? (
+                      <p className="text-xs font-medium text-dark">
+                        Reference: {request.paymentReference}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="rounded-[10px] bg-gray-50 px-3 py-3 text-sm text-gray">
+                No payout requests submitted yet.
+              </p>
+            )
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PayoutInput({
+  id,
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <div className={formGroupClassName}>
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className={textInputClassName}
+      />
+    </div>
+  );
+}
+
+function formatBankDetails(bankDetails: Record<string, unknown>) {
+  const values = [
+    bankDetails.bankName,
+    bankDetails.accountTitle,
+    bankDetails.accountNumber,
+    bankDetails.iban,
+  ]
+    .filter(Boolean)
+    .map(String);
+
+  return values.length ? values.join(" · ") : "Bank details unavailable";
 }
 
 function PaymentManagementSection({

@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { httpClient } from "@/lib/axios";
 import {
+  createRestaurantPayoutRequest,
+  getRestaurantPayoutRequests,
   getRestaurantPaymentManagement,
+  getRestaurantWallet,
   normalizeRestaurantPaymentManagement,
   updateRestaurantPaymentMethods,
 } from "@/services/restaurant-payment-management";
@@ -10,6 +13,7 @@ import {
 vi.mock("@/lib/axios", () => ({
   httpClient: {
     get: vi.fn(),
+    post: vi.fn(),
     patch: vi.fn(),
   },
 }));
@@ -19,6 +23,7 @@ const mockedHttpClient = vi.mocked(httpClient);
 describe("restaurant payment management service", () => {
   beforeEach(() => {
     mockedHttpClient.get.mockReset();
+    mockedHttpClient.post.mockReset();
     mockedHttpClient.patch.mockReset();
   });
 
@@ -56,6 +61,91 @@ describe("restaurant payment management service", () => {
         allowedPaymentMethods: ["COD", "STRIPE", "WALLET"],
         walletEnabled: true,
         note: "Allow cash, Stripe, and wallet",
+      }
+    );
+  });
+
+  it("GET calls the restaurant wallet endpoint", async () => {
+    mockedHttpClient.get.mockResolvedValueOnce({
+      data: {
+        wallet: {
+          type: "RESTAURANT_WALLET",
+          balance: "900",
+          currency: "PKR",
+          customerWalletExposure: { totalBalance: 250 },
+        },
+      },
+    });
+
+    const result = await getRestaurantWallet("restaurant-1");
+
+    expect(mockedHttpClient.get).toHaveBeenCalledWith(
+      "/payments/restaurants/restaurant-1/wallet"
+    );
+    expect(result).toMatchObject({
+      type: "RESTAURANT_WALLET",
+      balance: 900,
+      currency: "PKR",
+      customerWalletExposure: { totalBalance: 250 },
+    });
+  });
+
+  it("GET calls the payout requests endpoint", async () => {
+    mockedHttpClient.get.mockResolvedValueOnce({
+      data: {
+        requests: [
+          {
+            id: "request-1",
+            amount: "5000",
+            currency: "PKR",
+            status: "REQUESTED",
+            bankDetails: { bankName: "HBL" },
+          },
+        ],
+      },
+    });
+
+    const result = await getRestaurantPayoutRequests("restaurant-1");
+
+    expect(mockedHttpClient.get).toHaveBeenCalledWith(
+      "/payments/restaurants/restaurant-1/payout-requests"
+    );
+    expect(result).toEqual([
+      expect.objectContaining({
+        id: "request-1",
+        amount: 5000,
+        currency: "PKR",
+        status: "REQUESTED",
+        bankDetails: { bankName: "HBL" },
+      }),
+    ]);
+  });
+
+  it("POST creates a payout request", async () => {
+    mockedHttpClient.post.mockResolvedValueOnce({ data: { success: true } });
+
+    await createRestaurantPayoutRequest("restaurant-1", {
+      amount: 5000,
+      currency: "PKR",
+      bankDetails: {
+        bankName: "HBL",
+        accountTitle: "Pizza House",
+        accountNumber: "1234567890",
+      },
+      note: "Please transfer payout",
+    });
+
+    expect(mockedHttpClient.post).toHaveBeenCalledWith(
+      "/payments/restaurants/restaurant-1/payout-requests",
+      {
+        amount: 5000,
+        currency: "PKR",
+        bankDetails: {
+          bankName: "HBL",
+          accountTitle: "Pizza House",
+          accountNumber: "1234567890",
+        },
+        note: "Please transfer payout",
       }
     );
   });

@@ -33,6 +33,40 @@ export type RestaurantPaymentManagement = {
   recentLedger: RestaurantPaymentLedgerEntry[];
 };
 
+export type RestaurantWallet = {
+  type: string | null;
+  balance: number | null;
+  currency: string | null;
+  customerWalletExposure: RecordValue;
+};
+
+export type RestaurantPayoutRequestStatus = "REQUESTED" | "APPROVED" | "PAID" | "REJECTED" | string;
+
+export type RestaurantPayoutRequest = {
+  id: string;
+  amount: number | null;
+  currency: string | null;
+  status: RestaurantPayoutRequestStatus | null;
+  bankDetails: RecordValue;
+  note: string | null;
+  paymentReference: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
+export type CreateRestaurantPayoutRequestPayload = {
+  amount: number;
+  currency: string;
+  bankDetails: {
+    bankName: string;
+    accountTitle: string;
+    accountNumber: string;
+    iban?: string;
+    phone?: string;
+  };
+  note?: string;
+};
+
 export type UpdateRestaurantPaymentMethodsPayload = {
   allowedPaymentMethods: PaymentMethodCode[];
   walletEnabled: boolean;
@@ -105,6 +139,47 @@ const normalizeLedgerEntry = (value: unknown): RestaurantPaymentLedgerEntry | nu
     currency: getString(value.currency),
     createdAt: getString(value.createdAt),
   };
+};
+
+const normalizeWallet = (response: unknown): RestaurantWallet => {
+  const data = getRecord(unwrapData(response));
+  const wallet = firstRecord(data.wallet, data.account, data);
+
+  return {
+    type: getString(wallet.type, "RESTAURANT_WALLET"),
+    balance: getNumber(wallet.balance ?? wallet.availableBalance ?? wallet.amount),
+    currency: getString(wallet.currency ?? data.currency),
+    customerWalletExposure: firstRecord(
+      wallet.customerWalletExposure,
+      data.customerWalletExposure
+    ),
+  };
+};
+
+const normalizePayoutRequest = (value: unknown): RestaurantPayoutRequest | null => {
+  if (!isRecord(value)) return null;
+
+  return {
+    id: getString(value.id, "payout-request") ?? "payout-request",
+    amount: getNumber(value.amount),
+    currency: getString(value.currency),
+    status: getString(value.status),
+    bankDetails: getRecord(value.bankDetails),
+    note: getString(value.note),
+    paymentReference: getString(value.paymentReference),
+    createdAt: getString(value.createdAt),
+    updatedAt: getString(value.updatedAt),
+  };
+};
+
+const normalizePayoutRequests = (response: unknown): RestaurantPayoutRequest[] => {
+  const data = unwrapData(response);
+  const record = getRecord(data);
+  const rows = firstArray(data, record.items, record.requests, record.payoutRequests, record.data);
+
+  return rows
+    .map(normalizePayoutRequest)
+    .filter((request): request is RestaurantPayoutRequest => Boolean(request));
 };
 
 export const normalizeRestaurantPaymentManagement = (
@@ -198,6 +273,31 @@ export const getRestaurantPaymentManagement = async (restaurantId: string) => {
 
   return normalizeRestaurantPaymentManagement(response);
 };
+
+export const getRestaurantWallet = async (restaurantId: string) => {
+  const response = await httpClient.get<unknown>(
+    `/payments/restaurants/${restaurantId}/wallet`
+  );
+
+  return normalizeWallet(response);
+};
+
+export const getRestaurantPayoutRequests = async (restaurantId: string) => {
+  const response = await httpClient.get<unknown>(
+    `/payments/restaurants/${restaurantId}/payout-requests`
+  );
+
+  return normalizePayoutRequests(response);
+};
+
+export const createRestaurantPayoutRequest = (
+  restaurantId: string,
+  payload: CreateRestaurantPayoutRequestPayload
+) =>
+  httpClient.post<unknown, CreateRestaurantPayoutRequestPayload>(
+    `/payments/restaurants/${restaurantId}/payout-requests`,
+    payload
+  );
 
 export const updateRestaurantPaymentMethods = (
   restaurantId: string,
