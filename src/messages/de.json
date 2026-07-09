@@ -2216,6 +2216,9 @@
       "password": "Passwort *",
       "role": "Rolle *",
       "selectRole": "Rolle auswählen",
+      "restaurants": "Restaurants",
+      "selectRestaurants": "Restaurants auswählen",
+      "restaurantsHelp": "Mitarbeiter von Business-Admins können auf ein oder mehrere Restaurants begrenzt werden.",
       "avatar": "Avatar",
       "uploading": "Wird hochgeladen...",
       "bio": "Bio"
@@ -2228,6 +2231,9 @@
       "addPermission": "Berechtigung hinzufügen",
       "selectAccess": "Zugriff auswählen",
       "permissions": "Berechtigungen",
+      "restaurants": "Restaurants",
+      "selectRestaurants": "Restaurants auswählen",
+      "restaurantsHelp": "Begrenzt die Berechtigungen dieser Rolle auf ein oder mehrere Restaurants. Leer lassen für mandantenweiten Zugriff.",
       "description": "Beschreibung",
       "descriptionPlaceholder": "Kurze Beschreibung..."
     },

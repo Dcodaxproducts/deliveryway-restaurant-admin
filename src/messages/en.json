@@ -2216,6 +2216,9 @@
       "password": "Password *",
       "role": "Role *",
       "selectRole": "Select Role",
+      "restaurants": "Restaurants",
+      "selectRestaurants": "Select restaurants",
+      "restaurantsHelp": "Business admin staff can be limited to one or more restaurants.",
       "avatar": "Avatar",
       "uploading": "Uploading...",
       "bio": "Bio"
@@ -2228,6 +2231,9 @@
       "addPermission": "Add Permission",
       "selectAccess": "Select Access",
       "permissions": "Permissions",
+      "restaurants": "Restaurants",
+      "selectRestaurants": "Select restaurants",
+      "restaurantsHelp": "Limit this role's permissions to one or more restaurants. Leave empty for tenant-wide access.",
       "description": "Description",
       "descriptionPlaceholder": "Short description..."
     },

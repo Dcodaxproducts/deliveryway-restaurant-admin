@@ -11,6 +11,8 @@ export const staffRoleSchema = z.object({
   description: z.string().max(300).optional(),
   restaurantId: z.string().optional(),
   branchId: z.string().optional(),
+  restaurantIds: z.array(z.string()).optional(),
+  branchIds: z.array(z.string()).optional(),
 });
 
 export type StaffRoleValues = z.infer<typeof staffRoleSchema>;
@@ -27,6 +29,8 @@ export const staffSchema = z.object({
   isActive: z.boolean().default(true),
   restaurantId: z.string().optional(),
   branchId: z.string().optional(),
+  restaurantIds: z.array(z.string()).optional(),
+  branchIds: z.array(z.string()).optional(),
 });
 
 export type StaffValues = z.infer<typeof staffSchema>;

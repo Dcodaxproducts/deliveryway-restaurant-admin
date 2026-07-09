@@ -7,6 +7,7 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import AsyncMultiSelect from "@/components/ui/AsyncMultiSelect";
 import {
   Dialog,
   DialogContent,
@@ -20,8 +21,10 @@ import {
   usePermissionModules,
   useUpdateStaffRole,
 } from "@/hooks/useEmployees";
+import { useAuth } from "@/hooks/useAuth";
 import { FIELD_ERROR_CLASS } from "@/components/common/common-classes";
 import { getApiErrorMessage } from "@/lib/errors";
+import { getRestaurants } from "@/services/restaurants";
 import {
   staffRoleSchema,
   type StaffPermissionValues,
@@ -31,6 +34,7 @@ import { useTranslations } from "next-intl";
 
 type RoleInitialData = Partial<StaffRoleValues> & {
   id?: string;
+  restaurantAccess?: RestaurantAccessScope | null;
 };
 
 type RoleModalProps = {
@@ -48,6 +52,16 @@ type PermissionModuleOption = {
   accessKey: string;
   defaultActions: string[];
   sortOrder?: number | null;
+};
+
+type RestaurantAccessScope = {
+  restaurantIds?: string[];
+  branchIds?: string[];
+};
+
+type RestaurantOption = {
+  id: string;
+  name: string;
 };
 
 const sortPermissionModules = (modules: PermissionModuleOption[]) =>
@@ -87,9 +101,12 @@ export function AddRoleModal({
   onSuccess,
 }: RoleModalProps) {
   const t = useTranslations("employees");
+  const { role } = useAuth();
+  const canSelectRestaurants = role === "BUSINESS_ADMIN";
 
   const [selectedAccess, setSelectedAccess] = useState("");
   const [selectedOps, setSelectedOps] = useState<string[]>([]);
+  const [selectedRestaurants, setSelectedRestaurants] = useState<RestaurantOption[]>([]);
 
   const isEditMode = Boolean(initialData?.id);
   const createRoleMutation = useCreateStaffRole({
@@ -155,8 +172,19 @@ export function AddRoleModal({
       reset(defaultValues);
       setSelectedAccess("");
       setSelectedOps([]);
+      setSelectedRestaurants([]);
       return;
     }
+
+    const restaurantIds =
+      initialData?.restaurantIds ?? initialData?.restaurantAccess?.restaurantIds ?? [];
+
+    setSelectedRestaurants(
+      restaurantIds.map((id) => ({
+        id,
+        name: id,
+      })),
+    );
 
     reset(
       initialData
@@ -166,6 +194,8 @@ export function AddRoleModal({
             permissions: initialData.permissions ?? [],
             restaurantId: initialData.restaurantId,
             branchId: initialData.branchId,
+            restaurantIds,
+            branchIds: initialData.branchIds ?? initialData.restaurantAccess?.branchIds,
           }
         : defaultValues,
     );
@@ -251,6 +281,9 @@ export function AddRoleModal({
         name: values.name,
         description: values.description,
         permissions: sanitizedPermissions,
+        ...(canSelectRestaurants
+          ? { restaurantIds: selectedRestaurants.map((restaurant) => restaurant.id) }
+          : {}),
       };
 
       if (isEditMode && initialData?.id) {
@@ -309,6 +342,31 @@ export function AddRoleModal({
               </p>
             ) : null}
           </div>
+
+          {canSelectRestaurants ? (
+            <div>
+              <Label className="text-sm font-medium">
+                {t("roleModal.restaurants")}
+              </Label>
+              <div className="mt-1">
+                <AsyncMultiSelect
+                  value={selectedRestaurants}
+                  onChange={(restaurants) =>
+                    setSelectedRestaurants(restaurants as RestaurantOption[])
+                  }
+                  placeholder={t("roleModal.selectRestaurants")}
+                  fetchOptions={({ search, page }) =>
+                    getRestaurants({ search, page, limit: 20 })
+                  }
+                  labelKey="name"
+                  valueKey="id"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                {t("roleModal.restaurantsHelp")}
+              </p>
+            </div>
+          ) : null}
 
           <div className="space-y-4 rounded-xl border p-4">
             <p className="text-sm font-medium">

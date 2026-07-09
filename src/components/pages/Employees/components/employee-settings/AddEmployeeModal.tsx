@@ -1,11 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm, type Control } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import AsyncMultiSelect from "@/components/ui/AsyncMultiSelect";
 import ImageDropzoneUpload from "@/components/ui/ImageDropzoneUpload";
 import {
   Dialog,
@@ -27,6 +28,7 @@ import {
   MUTED_TEXT_SM_CLASS,
 } from "@/components/common/common-classes";
 import { getApiErrorMessage } from "@/lib/errors";
+import { getRestaurants } from "@/services/restaurants";
 import {
   staffModalSchema,
   type StaffModalValues,
@@ -37,10 +39,23 @@ import { useTranslations } from "next-intl";
 type StaffRoleOption = {
   id: string;
   name: string;
+  restaurantAccess?: RestaurantAccessScope | null;
+  restaurantId?: string | null;
+};
+
+type RestaurantAccessScope = {
+  restaurantIds?: string[];
+  branchIds?: string[];
+};
+
+type RestaurantOption = {
+  id: string;
+  name: string;
 };
 
 type EmployeeInitialData = Partial<StaffModalValues> & {
   id?: string;
+  restaurantAccess?: RestaurantAccessScope | null;
 };
 
 type StaffMutationPayload = StaffValues & {
@@ -73,8 +88,10 @@ export default function EmployeeInvitationModal({
   onSuccess,
 }: EmployeeInvitationModalProps) {
   const t = useTranslations("employees");
-  const { restaurantId, branchId, isBranchAdmin } = useAuth();
+  const { restaurantId, branchId, isBranchAdmin, role } = useAuth();
+  const canSelectRestaurants = role === "BUSINESS_ADMIN";
   const isEdit = Boolean(initialData?.id);
+  const [selectedRestaurants, setSelectedRestaurants] = useState<RestaurantOption[]>([]);
 
   const createStaffMutation = useCreateStaff({
     messages: {
@@ -135,8 +152,19 @@ export default function EmployeeInvitationModal({
   useEffect(() => {
     if (!open) {
       reset(defaultValues);
+      setSelectedRestaurants([]);
       return;
     }
+
+    const restaurantIds =
+      initialData?.restaurantIds ?? initialData?.restaurantAccess?.restaurantIds ?? [];
+
+    setSelectedRestaurants(
+      restaurantIds.map((id) => ({
+        id,
+        name: id,
+      })),
+    );
 
     reset(
       initialData
@@ -150,6 +178,8 @@ export default function EmployeeInvitationModal({
             avatarUrl: initialData.avatarUrl ?? "",
             bio: initialData.bio ?? "",
             isActive: initialData.isActive ?? true,
+            restaurantIds,
+            branchIds: initialData.branchIds ?? initialData.restaurantAccess?.branchIds,
           }
         : defaultValues,
     );
@@ -157,6 +187,12 @@ export default function EmployeeInvitationModal({
 
   const onSubmit = async (values: StaffModalValues) => {
     try {
+      const selectedRole = roles.find((item) => item.id === values.staffRoleId);
+      const roleRestaurantIds = [
+        ...(selectedRole?.restaurantAccess?.restaurantIds ?? []),
+        ...(selectedRole?.restaurantId ? [selectedRole.restaurantId] : []),
+      ];
+      const restaurantIds = selectedRestaurants.map((restaurant) => restaurant.id);
       const payload: StaffMutationPayload = {
         email: values.email,
         password: values.password ?? "",
@@ -167,6 +203,15 @@ export default function EmployeeInvitationModal({
         avatarUrl: values.avatarUrl,
         bio: values.bio,
         isActive: values.isActive,
+        ...(canSelectRestaurants
+          ? {
+              restaurantIds: restaurantIds.length
+                ? restaurantIds
+                : roleRestaurantIds.length
+                  ? [...new Set(roleRestaurantIds)]
+                  : undefined,
+            }
+          : {}),
         ...(isBranchAdmin
           ? {}
           : {
@@ -285,6 +330,31 @@ export default function EmployeeInvitationModal({
               </p>
             ) : null}
           </div>
+
+          {canSelectRestaurants ? (
+            <div>
+              <Label className="text-sm font-medium">
+                {t("employeeModal.restaurants")}
+              </Label>
+              <div className="mt-1">
+                <AsyncMultiSelect
+                  value={selectedRestaurants}
+                  onChange={(restaurants) =>
+                    setSelectedRestaurants(restaurants as RestaurantOption[])
+                  }
+                  placeholder={t("employeeModal.selectRestaurants")}
+                  fetchOptions={({ search, page }) =>
+                    getRestaurants({ search, page, limit: 20 })
+                  }
+                  labelKey="name"
+                  valueKey="id"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                {t("employeeModal.restaurantsHelp")}
+              </p>
+            </div>
+          ) : null}
 
           <Controller
             control={control}
