@@ -646,16 +646,6 @@ setSelectedAddress(null);
                       ) : (
                         <p>{formatMoney(item.unitPrice)} × {item.quantity}</p>
                       )}
-                      {item.originalLineTotal > item.lineTotal ? (
-                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                          <span className="text-gray-400 line-through">
-                            {formatMoney(item.originalLineTotal)}
-                          </span>
-                          <span className="font-semibold text-primary">
-                            {formatMoney(item.lineTotal)}
-                          </span>
-                        </div>
-                      ) : null}
                     </div>
                     {item.modifiers.length > 0 ? (
                       <div className="mt-1 space-y-0.5">

@@ -86,6 +86,10 @@ type DeliveryAddress = {
 
 type OrderItem = {
   id?: string | null;
+  type?: string | null;
+  itemType?: string | null;
+  dealId?: string | null;
+  name?: string | null;
   menuItemName?: string | null;
   variationName?: string | null;
   quantity?: number | null;
@@ -102,6 +106,8 @@ type OrderItem = {
     category?: { name?: string | null } | null;
   } | null;
   imageUrl?: string | null;
+  includedItems?: OrderItem[] | null;
+  items?: OrderItem[] | null;
 };
 
 type Transaction = {
@@ -177,6 +183,16 @@ const formatMoney = (amount?: number | null, currency?: string | null) => {
 
   return formatCurrencyAmount(amount, currency);
 };
+
+const getAmountNumber = (amount?: number | null) =>
+  typeof amount === "number" && Number.isFinite(amount) ? amount : 0;
+
+const isDealItem = (item: OrderItem) =>
+  String(item.type || item.itemType || "").toUpperCase() === "DEAL" ||
+  Boolean(item.dealId || item.includedItems?.length || item.items?.length);
+
+const getIncludedDealItemName = (item: OrderItem, fallback: string) =>
+  item.menuItemName || item.name || item.menuItem?.category?.name || fallback;
 
 const getTransactionAmount = (transaction: Transaction) => {
   const amount = Number(transaction.amount || 0);
@@ -279,6 +295,10 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   const [paymentStatusNote, setPaymentStatusNote] = useState(t("paymentStatusNote"));
   const [isPaymentStatusConfirming, setIsPaymentStatusConfirming] = useState(false);
   const items = order.items || [];
+  const couponCode = order.coupon?.code?.trim() || "";
+  const couponTitle = order.coupon?.title?.trim() || "";
+  const hasBackendDealRows = items.some(isDealItem);
+  const shouldShowInferredDeal = /^DEAL-/i.test(couponCode) && !hasBackendDealRows && items.length > 0;
   const selectedPaymentMethod = getSelectedPaymentMethod(order);
   const paymentLabel = formatPaymentMethod(selectedPaymentMethod);
   const selectedPaymentMethodKey = selectedPaymentMethod?.toUpperCase();
@@ -359,6 +379,93 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
     [t("total"), order.totalAmount],
     [t("payableAmount"), order.payableAmount],
   ] satisfies Array<[string, number | null | undefined]>;
+
+  const renderIncludedDealItems = (includedItems: OrderItem[]) => (
+    <div className="mt-3 rounded-xl bg-gray-50 p-3">
+      <p className="text-xs font-semibold text-gray-600">Deal includes:</p>
+      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        {includedItems.map((includedItem, itemIndex) => {
+          const modifiers = includedItem.snapshotModifiers || [];
+          const itemImage = includedItem.imageUrl || includedItem.menuItem?.imageUrl || "/burgerOne.jpg";
+
+          return (
+            <div
+              key={`${includedItem.id || itemIndex}`}
+              className="flex items-center gap-2 rounded-lg bg-white p-2 shadow-sm ring-1 ring-gray-100"
+            >
+              <Image
+                src={itemImage}
+                alt={getIncludedDealItemName(includedItem, t("itemFallback"))}
+                width={44}
+                height={44}
+                className="size-11 rounded-lg object-cover"
+                unoptimized
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold text-gray-800">
+                  {getIncludedDealItemName(includedItem, t("itemFallback"))}
+                </p>
+                {modifiers.length ? (
+                  <p className="mt-0.5 truncate text-[11px] text-gray-500">
+                    {modifiers.map((modifier) => `${modifier.name} x${modifier.quantity ?? 1}`).join(", ")}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderDealCard = ({
+    keyValue,
+    title,
+    code,
+    total,
+    quantity,
+    imageUrl,
+    includedItems,
+  }: {
+    keyValue: string;
+    title: string;
+    code?: string | null;
+    total?: number | null;
+    quantity?: number | null;
+    imageUrl?: string | null;
+    includedItems: OrderItem[];
+  }) => (
+    <div key={keyValue} className="rounded-2xl border border-primary/15 bg-white p-3 shadow-sm">
+      <div className="flex gap-4">
+        <Image
+          src={imageUrl || includedItems.find((item) => item.imageUrl || item.menuItem?.imageUrl)?.imageUrl || includedItems.find((item) => item.menuItem?.imageUrl)?.menuItem?.imageUrl || "/burgerOne.jpg"}
+          alt={title}
+          width={64}
+          height={64}
+          className="size-16 rounded-xl object-cover"
+          unoptimized
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-primary">
+                  Deal
+                </span>
+                {code ? <span className="text-xs font-medium text-gray-500">Deal code: {code}</span> : null}
+              </div>
+              <h4 className="mt-2 font-semibold text-gray-950">{title}</h4>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-bold text-primary">{formatMoney(total, primaryCurrency)}</p>
+              <p className="text-xs text-gray-500">Qty: {quantity ?? 1}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      {includedItems.length ? renderIncludedDealItems(includedItems) : null}
+    </div>
+  );
 
   const openRefundDialog = () => {
     if (!refundableTransaction?.id || refundMutation.isPending) return;
@@ -480,7 +587,35 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
               description={t("itemsOverviewDescription")}
             />
             <div className="space-y-3">
-              {items.map((item, index) => {
+              {shouldShowInferredDeal ? renderDealCard({
+                keyValue: "inferred-deal",
+                title: couponTitle || "Deal",
+                code: couponCode,
+                total: order.subtotal ?? items.reduce((total, item) => {
+                  const fallbackTotal = getAmountNumber(item.unitPrice) * getAmountNumber(item.quantity);
+                  return total + getAmountNumber(item.lineTotal ?? fallbackTotal);
+                }, 0),
+                quantity: 1,
+                includedItems: items,
+              }) : items.map((item, index) => {
+                if (isDealItem(item)) {
+                  const includedItems = item.items?.length ? item.items : item.includedItems || [];
+                  const dealTotal = item.lineTotal ?? includedItems.reduce((total, includedItem) => {
+                    const fallbackTotal = getAmountNumber(includedItem.unitPrice) * getAmountNumber(includedItem.quantity);
+                    return total + getAmountNumber(includedItem.lineTotal ?? fallbackTotal);
+                  }, 0);
+
+                  return renderDealCard({
+                    keyValue: `deal-${item.dealId || item.id || index}`,
+                    title: item.menuItemName || item.name || couponTitle || "Deal",
+                    code: item.dealId,
+                    total: dealTotal,
+                    quantity: item.quantity,
+                    imageUrl: item.imageUrl || item.menuItem?.imageUrl,
+                    includedItems,
+                  });
+                }
+
                 const imageUrl = item.menuItem?.imageUrl || item.imageUrl || "/burgerOne.jpg";
                 const modifiers = item.snapshotModifiers || [];
 
