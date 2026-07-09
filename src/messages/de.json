@@ -2220,6 +2220,7 @@
       "selectRestaurants": "Restaurants auswählen",
       "restaurantsHelp": "Mitarbeiter von Business-Admins können auf ausgewählte Restaurants begrenzt oder allen Restaurants auf einmal zugewiesen werden.",
       "assignAllRestaurants": "Alle zuweisen",
+      "allRestaurantsAssigned": "Alle zugewiesen",
       "assigningAllRestaurants": "Wird zugewiesen...",
       "avatar": "Avatar",
       "uploading": "Wird hochgeladen...",

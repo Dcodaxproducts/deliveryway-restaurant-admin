@@ -187,4 +187,26 @@ describe("auth helpers", () => {
     expect(hasStaffPermission(user, ["branch_management"])).toBe(true);
     expect(getStaffDefaultRedirectPath(user)).toBe("/branches");
   });
+
+  it("normalizes all-restaurants staff access claims", () => {
+    const user = normalizeUser({
+      id: "staff-all-restaurants",
+      email: "staff-all@example.com",
+      role: "STAFF",
+      actorType: "STAFF",
+      restaurantAccess: {
+        allRestaurants: true,
+        restaurantIds: [],
+        branchIds: [],
+      },
+      staffRole: {
+        permissions: [{ access: "menu", operations: ["read"] }],
+      },
+    });
+
+    expect(user?.restaurantAccess?.allRestaurants).toBe(true);
+    expect(user?.restaurantAccess?.hasAllRestaurantsAccess).toBe(true);
+    expect(hasStaffPanelAccess(user)).toBe(true);
+    expect(hasStaffMenuAccess(user)).toBe(true);
+  });
 });

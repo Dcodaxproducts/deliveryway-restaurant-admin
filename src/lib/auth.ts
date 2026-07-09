@@ -26,6 +26,8 @@ export type StaffPermission = {
 export type RestaurantAccessScope = {
   restaurantIds?: string[];
   branchIds?: string[];
+  allRestaurants?: boolean;
+  hasAllRestaurantsAccess?: boolean;
 };
 
 export type AuthStaffRole = {
@@ -110,12 +112,20 @@ const getRestaurantAccess = (
 ): RestaurantAccessScope | null => {
   const restaurantIds = getStringArrayValue(source, "restaurantIds");
   const branchIds = getStringArrayValue(source, "branchIds");
+  const allRestaurants =
+    getBooleanValue(source, "allRestaurants") ??
+    getBooleanValue(source, "hasAllRestaurantsAccess") ??
+    fallback?.allRestaurants ??
+    fallback?.hasAllRestaurantsAccess ??
+    false;
 
-  if (!restaurantIds && !branchIds) return fallback ?? null;
+  if (!restaurantIds && !branchIds && !allRestaurants) return fallback ?? null;
 
   return {
     restaurantIds: restaurantIds ?? fallback?.restaurantIds ?? [],
     branchIds: branchIds ?? fallback?.branchIds ?? [],
+    allRestaurants,
+    hasAllRestaurantsAccess: allRestaurants,
   };
 };
 
@@ -271,11 +281,15 @@ const hasStaffAssignedScope = (user?: AuthUser | null) =>
       user?.branchId ||
       user?.restaurantAccess?.restaurantIds?.length ||
       user?.restaurantAccess?.branchIds?.length ||
+      user?.restaurantAccess?.allRestaurants ||
+      user?.restaurantAccess?.hasAllRestaurantsAccess ||
       user?.staffRole?.tenantId ||
       user?.staffRole?.restaurantId ||
       user?.staffRole?.branchId ||
       user?.staffRole?.restaurantAccess?.restaurantIds?.length ||
-      user?.staffRole?.restaurantAccess?.branchIds?.length
+      user?.staffRole?.restaurantAccess?.branchIds?.length ||
+      user?.staffRole?.restaurantAccess?.allRestaurants ||
+      user?.staffRole?.restaurantAccess?.hasAllRestaurantsAccess
   );
 
 export const hasStaffPermission = (

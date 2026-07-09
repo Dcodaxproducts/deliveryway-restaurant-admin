@@ -27,6 +27,8 @@ export const staffSchema = z.object({
   branchId: z.string().optional(),
   restaurantIds: z.array(z.string()).optional(),
   branchIds: z.array(z.string()).optional(),
+  allRestaurants: z.boolean().optional(),
+  hasAllRestaurantsAccess: z.boolean().optional(),
 });
 
 export type StaffValues = z.infer<typeof staffSchema>;

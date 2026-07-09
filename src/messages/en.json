@@ -2220,6 +2220,7 @@
       "selectRestaurants": "Select restaurants",
       "restaurantsHelp": "Business admin staff can be limited to selected restaurants, or assigned to all restaurants at once.",
       "assignAllRestaurants": "Assign all",
+      "allRestaurantsAssigned": "All assigned",
       "assigningAllRestaurants": "Assigning...",
       "avatar": "Avatar",
       "uploading": "Uploading...",
