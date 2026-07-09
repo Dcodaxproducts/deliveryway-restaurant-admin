@@ -167,6 +167,7 @@ type OrderDetails = {
   deliveryAddress?: DeliveryAddress | null;
   deliveryman?: NamedEntity | null;
   transactions?: Transaction[] | null;
+  displayItems?: OrderItem[] | null;
   items?: OrderItem[] | null;
 };
 
@@ -297,7 +298,8 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   const items = order.items || [];
   const couponCode = order.coupon?.code?.trim() || "";
   const couponTitle = order.coupon?.title?.trim() || "";
-  const hasBackendDealRows = items.some(isDealItem);
+  const displayItems = order.displayItems?.length ? order.displayItems : items;
+  const hasBackendDealRows = displayItems.some(isDealItem);
   const shouldShowInferredDeal = /^DEAL-/i.test(couponCode) && !hasBackendDealRows && items.length > 0;
   const selectedPaymentMethod = getSelectedPaymentMethod(order);
   const paymentLabel = formatPaymentMethod(selectedPaymentMethod);
@@ -381,9 +383,9 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   ] satisfies Array<[string, number | null | undefined]>;
 
   const renderIncludedDealItems = (includedItems: OrderItem[]) => (
-    <div className="mt-5 rounded-[18px] bg-gray-50 px-4 py-4">
-      <p className="text-sm font-bold text-gray-600">Includes:</p>
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+    <div className="mt-3 rounded-xl bg-gray-50 p-3">
+      <p className="text-xs font-semibold text-gray-600">Includes:</p>
+      <div className="mt-2 grid gap-2 sm:grid-cols-2">
         {includedItems.map((includedItem, itemIndex) => {
           const modifiers = includedItem.snapshotModifiers || [];
           const itemImage = includedItem.imageUrl || includedItem.menuItem?.imageUrl || "/burgerOne.jpg";
@@ -392,22 +394,22 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
           return (
             <div
               key={`${includedItem.id || itemIndex}`}
-              className="flex min-h-[76px] items-center gap-3 rounded-[14px] bg-white p-3 shadow-[0_8px_20px_rgba(15,23,42,0.08)] ring-1 ring-gray-100"
+              className="flex items-center gap-2 rounded-lg bg-white p-2 shadow-sm ring-1 ring-gray-100"
             >
               <Image
                 src={itemImage}
                 alt={getIncludedDealItemName(includedItem, t("itemFallback"))}
-                width={56}
-                height={56}
-                className="size-14 shrink-0 rounded-[12px] object-cover"
+                width={44}
+                height={44}
+                className="size-11 shrink-0 rounded-lg object-cover"
                 unoptimized
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-gray-800">
+                <p className="truncate text-xs font-semibold text-gray-800">
                   {quantity}× {getIncludedDealItemName(includedItem, t("itemFallback"))}
                 </p>
                 {modifiers.length ? (
-                  <p className="mt-1 truncate text-xs font-medium text-gray-500">
+                  <p className="mt-0.5 truncate text-[11px] text-gray-500">
                     {modifiers.map((modifier) => `${modifier.name} x${modifier.quantity ?? 1}`).join(", ")}
                   </p>
                 ) : null}
@@ -438,28 +440,28 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   }) => (
     <div
       key={keyValue}
-      className="rounded-[22px] border border-primary/20 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
+      className="rounded-2xl border border-primary/15 bg-white p-3 shadow-sm"
     >
-      <div className="flex gap-5">
+      <div className="flex items-center gap-4">
         <Image
           src={imageUrl || includedItems.find((item) => item.imageUrl || item.menuItem?.imageUrl)?.imageUrl || includedItems.find((item) => item.menuItem?.imageUrl)?.menuItem?.imageUrl || "/burgerOne.jpg"}
           alt={title}
-          width={96}
-          height={96}
-          className="size-24 shrink-0 rounded-[14px] object-cover"
+          width={76}
+          height={76}
+          className="size-[76px] shrink-0 rounded-[12px] object-cover"
           unoptimized
         />
-        <div className="min-w-0 flex-1 space-y-3">
-          <div className="flex flex-wrap items-center gap-3">
-                <span className="rounded-full bg-primary/10 px-4 py-1.5 text-sm font-bold uppercase tracking-[0.08em] text-primary">
-                  Deal
-                </span>
-                {code ? <span className="text-sm font-bold text-gray-500">Deal code: {code}</span> : null}
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-primary">
+              Deal
+            </span>
+            {code ? <span className="text-xs font-medium text-gray-500">Deal code: {code}</span> : null}
           </div>
-          <h4 className="text-xl font-bold text-gray-950">{title}</h4>
+          <h4 className="text-base font-medium text-gray-900">{title}</h4>
           <div className="flex items-end justify-between gap-4">
-            <p className="text-xl font-bold text-primary">{formatMoney(total, primaryCurrency)}</p>
-            <p className="text-lg font-medium text-gray-700">Qty: {quantity ?? 1}</p>
+            <p className="text-base font-medium text-primary">{formatMoney(total, primaryCurrency)}</p>
+            <p className="text-sm text-gray-700">Qty: {quantity ?? 1}</p>
           </div>
         </div>
       </div>
@@ -597,7 +599,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                 }, 0),
                 quantity: order.itemCount ?? items.length,
                 includedItems: items,
-              }) : items.map((item, index) => {
+              }) : displayItems.map((item, index) => {
                 if (isDealItem(item)) {
                   const includedItems = item.items?.length ? item.items : item.includedItems || [];
                   const dealTotal = item.lineTotal ?? includedItems.reduce((total, includedItem) => {
