@@ -144,7 +144,6 @@ export default function ContextGate() {
     restaurantsResponse,
     staffRestaurantDetailsKey,
     staffRestaurantIds,
-    staffRestaurantQueries,
     user?.tenantId,
   ]);
 

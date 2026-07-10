@@ -160,7 +160,6 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
     restaurantsResponse,
     staffRestaurantDetailsKey,
     staffRestaurantIds,
-    staffRestaurantQueries,
     user?.tenantId,
   ]);
 
