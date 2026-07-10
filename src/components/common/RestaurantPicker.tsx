@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Check } from "lucide-react";
 import BrandLogo from "@/components/common/BrandLogo";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useQueries } from "@tanstack/react-query";
 import { useGetRestaurants } from "@/hooks/useRestaurants";
+import { getRestaurant } from "@/services/restaurants";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
@@ -40,19 +42,64 @@ const getStaffRestaurantIds = (user: ReturnType<typeof useAuth>["user"]) => {
   return Array.from(new Set([...directIds, ...roleIds].filter(Boolean)));
 };
 
+const getRestaurantName = (restaurant: unknown, fallback: string) => {
+  if (!isRecord(restaurant)) return fallback;
+
+  return (
+    getStringValue(restaurant, "name") ??
+    getStringValue(restaurant, "restaurantName") ??
+    getStringValue(restaurant, "businessName") ??
+    fallback
+  );
+};
+
+const getRestaurantLogoUrl = (restaurant: unknown) => {
+  if (!isRecord(restaurant)) return null;
+
+  const branding = getRecordValue(restaurant, "branding");
+  const assets = getRecordValue(branding, "assets");
+  const logo = getRecordValue(branding, "logo");
+
+  return (
+    getStringValue(restaurant, "logoUrl") ??
+    getStringValue(assets, "logoUrl") ??
+    getStringValue(logo, "light") ??
+    null
+  );
+};
+
 export default function RestaurantPicker({ className }: RestaurantPickerProps) {
   const t = useTranslations("common");
   const navigation = useTranslations("navigation");
   const { token, user, setUser, isBranchAdmin, branchId, logout } = useAuth();
-  const { data: assignedBranch } = useGetBranch(isBranchAdmin && branchId ? branchId : "");
+  const { data: assignedBranch } = useGetBranch(
+    isBranchAdmin && branchId ? branchId : "",
+  );
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const [restaurants, setRestaurants] = useState<RestaurantOption[]>([]);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantOption | null>(null);
+  const [selectedRestaurant, setSelectedRestaurant] =
+    useState<RestaurantOption | null>(null);
+
+  const staffRestaurantIds = useMemo(() => getStaffRestaurantIds(user), [user]);
+  const staffRestaurantQueries = useQueries({
+    queries: staffRestaurantIds.map((id) => ({
+      queryKey: ["staff-restaurant", id],
+      queryFn: () => getRestaurant(id),
+      enabled: Boolean(token && id),
+      retry: false,
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+  const staffRestaurantDetailsKey = JSON.stringify(
+    staffRestaurantQueries.map((query) => query.data ?? null),
+  );
 
   const [open, setOpen] = useState(false);
-  const { data: restaurantsResponse, isFetching } = useGetRestaurants(Boolean(token && user?.id && canSwitchRestaurant(user)));
+  const { data: restaurantsResponse, isFetching } = useGetRestaurants(
+    Boolean(token && user?.id && canSwitchRestaurant(user)),
+  );
 
   const handleLogout = (): void => {
     logout();
@@ -64,57 +111,65 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
   };
 
   useEffect(() => {
-    const data = isRecord(restaurantsResponse) ? restaurantsResponse.data : undefined;
+    const data = isRecord(restaurantsResponse)
+      ? restaurantsResponse.data
+      : undefined;
     const rows = Array.isArray(data) ? data : [];
     const userTenantId = user?.tenantId ?? null;
+    const allowedStaffIds = new Set(staffRestaurantIds);
     const filtered = rows.reduce<RestaurantOption[]>((acc, row) => {
       if (!isRecord(row)) return acc;
 
       const id = getStringValue(row, "id");
       if (!id) return acc;
+      if (allowedStaffIds.size > 0 && !allowedStaffIds.has(id)) return acc;
 
       const tenant = getRecordValue(row, "tenant");
-      const tenantId = getStringValue(row, "tenantId") ?? getStringValue(tenant, "id") ?? null;
+      const tenantId =
+        getStringValue(row, "tenantId") ?? getStringValue(tenant, "id") ?? null;
 
       if (userTenantId && tenantId && tenantId !== userTenantId) return acc;
 
-      const branding = getRecordValue(row, "branding");
-      const assets = getRecordValue(branding, "assets");
-      const logo = getRecordValue(branding, "logo");
-      const logoUrl =
-        getStringValue(row, "logoUrl") ??
-        getStringValue(assets, "logoUrl") ??
-        getStringValue(logo, "light") ??
-        null;
-
       acc.push({
         id,
-        name: getStringValue(row, "name") ?? id,
+        name: getRestaurantName(row, id),
         tenantId,
-        logoUrl,
+        logoUrl: getRestaurantLogoUrl(row),
       });
 
       return acc;
     }, []);
 
-    const staffRestaurantIds = getStaffRestaurantIds(user);
     const knownIds = new Set(filtered.map((restaurant) => restaurant.id));
     const staffFallbackOptions = staffRestaurantIds
       .filter((id) => !knownIds.has(id))
-      .map((id) => ({
-        id,
-        name: id,
-        tenantId: user?.tenantId ?? null,
-        logoUrl: null,
-      }));
+      .map((id) => {
+        const restaurant =
+          staffRestaurantQueries[staffRestaurantIds.indexOf(id)]?.data;
+
+        return {
+          id,
+          name: getRestaurantName(restaurant, id),
+          tenantId: user?.tenantId ?? null,
+          logoUrl: getRestaurantLogoUrl(restaurant),
+        };
+      });
 
     setRestaurants([...filtered, ...staffFallbackOptions]);
-  }, [restaurantsResponse, user]);
+  }, [
+    restaurantsResponse,
+    staffRestaurantDetailsKey,
+    staffRestaurantIds,
+    staffRestaurantQueries,
+    user?.tenantId,
+  ]);
 
   useEffect(() => {
     if (!user?.restaurantId || restaurants.length === 0) return;
 
-    const r = restaurants.find((restaurant) => restaurant.id === user.restaurantId);
+    const r = restaurants.find(
+      (restaurant) => restaurant.id === user.restaurantId,
+    );
     if (r) setSelectedRestaurant(r);
   }, [user?.restaurantId, restaurants]);
 
@@ -146,7 +201,7 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
             restaurantId,
             branchId: null,
           }
-        : prev
+        : prev,
     );
 
     const stored = getStoredAuth() || {};
@@ -179,7 +234,7 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
         title={branchId ? `Branch ID: ${branchId}` : branchLabel}
         className={cn(
           "flex h-[52px] w-full items-center gap-3 rounded-xl bg-primary/10 px-3 text-left text-sm text-primary ring-1 ring-primary/20 transition hover:bg-primary/15 md:h-[56px] md:max-w-[340px] md:px-4",
-          className
+          className,
         )}
       >
         <BrandLogo
@@ -192,9 +247,7 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
           <span className="block text-xs font-semibold uppercase tracking-wide text-primary/80">
             {t("branchScope")}
           </span>
-          <span className="block truncate font-semibold">
-            {branchLabel}
-          </span>
+          <span className="block truncate font-semibold">{branchLabel}</span>
         </span>
       </button>
     );
@@ -272,12 +325,8 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
 
             {!isFetching && restaurants.length === 0 && (
               <div className="text-center text-xs text-gray-500 py-3 space-y-2">
-                <p>
-                  {t("noRestaurants")}
-                </p>
-                <p>
-                  {t("requestRestaurant")}
-                </p>
+                <p>{t("noRestaurants")}</p>
+                <p>{t("requestRestaurant")}</p>
 
                 <button
                   onClick={handleLogout}
