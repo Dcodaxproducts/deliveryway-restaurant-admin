@@ -6,6 +6,9 @@ import {
   hasStaffPanelAccess,
   hasStaffPermission,
   isBranchAdminRole,
+  isStaffRouteAllowed,
+  normalizePermissionAccess,
+  normalizePermissionOperation,
   normalizeUser,
 } from "@/lib/auth";
 
@@ -186,6 +189,49 @@ describe("auth helpers", () => {
     expect(hasStaffPanelAccess(user)).toBe(true);
     expect(hasStaffPermission(user, ["branch_management"])).toBe(true);
     expect(getStaffDefaultRedirectPath(user)).toBe("/branches");
+  });
+
+  it("matches backend staff permission aliases and operation aliases", () => {
+    const user = normalizeUser({
+      id: "staff-aliases",
+      email: "staff-aliases@example.com",
+      role: "BUSINESS_ADMIN",
+      actorType: "STAFF",
+      restaurantAccess: { restaurantIds: ["restaurant-1"], branchIds: [] },
+      staffRole: {
+        permissions: [
+          { access: "staff_management", operations: ["get"] },
+          { access: "staff-roles", operations: ["edit"] },
+          { access: "menu-items", operations: ["all"] },
+        ],
+      },
+    });
+
+    expect(normalizePermissionAccess("staff_management")).toBe("employees");
+    expect(normalizePermissionOperation("get")).toBe("read");
+    expect(normalizePermissionOperation("edit")).toBe("update");
+    expect(normalizePermissionOperation("all")).toBe("manage");
+    expect(hasStaffPermission(user, ["employees"], ["read"])).toBe(true);
+    expect(hasStaffPermission(user, ["employees"], ["update"])).toBe(true);
+    expect(hasStaffPermission(user, ["menu-management"], ["delete"])).toBe(true);
+  });
+
+  it("allows staff direct routes only through canonical sidebar permissions", () => {
+    const user = normalizeUser({
+      id: "staff-routes",
+      email: "staff-routes@example.com",
+      role: "STAFF",
+      actorType: "STAFF",
+      restaurantAccess: { restaurantIds: ["restaurant-1"], branchIds: [] },
+      staffRole: {
+        permissions: [{ access: "employees", operations: ["read"] }],
+      },
+    });
+
+    expect(isStaffRouteAllowed(user, "/employees-settings/trash")).toBe(true);
+    expect(isStaffRouteAllowed(user, "/deliveryman")).toBe(false);
+    expect(isStaffRouteAllowed(user, "/profile")).toBe(true);
+    expect(getStaffDefaultRedirectPath(user)).toBe("/employees-settings");
   });
 
   it("normalizes all-restaurants staff access claims", () => {

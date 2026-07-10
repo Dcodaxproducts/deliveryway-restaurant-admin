@@ -41,7 +41,7 @@ export const authApi = {
       const response = await httpClient.post("/auth/login", payload);
       return normalizeAuthPayload(response);
     } catch (error) {
-      if (role) {
+      if (role && role !== "BUSINESS_ADMIN") {
         throw error;
       }
 

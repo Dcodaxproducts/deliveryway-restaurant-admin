@@ -253,7 +253,6 @@ export const isAllowedAdminRole = (role?: string | null) => {
 };
 
 const PERMISSION_ACCESS_ALIASES: Record<string, string> = {
-  branch_management: "branch-management",
   menu: "menu-management",
   menus: "menu-management",
   "restaurant-menus": "menu-management",
@@ -268,27 +267,50 @@ const PERMISSION_ACCESS_ALIASES: Record<string, string> = {
   orders: "order-management",
   pos: "pos-management",
   customers: "customer-management",
+  staff: "employees",
+  staffs: "employees",
+  employee: "employees",
   "staff-management": "employees",
   "staff-roles": "employees",
+  "employee-management": "employees",
   promotions: "promotion-management",
   coupons: "promotion-management",
   settings: "content-management",
+  faqs: "content-management",
+  "legal-profile": "content-management",
   reports: "reports-payouts",
+  payouts: "reports-payouts",
   chat: "notifications",
+  "live-chat": "notifications",
+  "notification-settings": "notifications",
 };
 
 export const normalizePermissionAccess = (access?: string | null) => {
-  const normalized = access?.trim().toLowerCase();
+  const normalized = access?.trim().toLowerCase().replace(/[\s_]+/g, "-");
   if (!normalized) return "";
 
   return PERMISSION_ACCESS_ALIASES[normalized] ?? normalized;
 };
 
+const PERMISSION_OPERATION_ALIASES: Record<string, string> = {
+  list: "read",
+  view: "read",
+  get: "read",
+  edit: "update",
+  remove: "delete",
+  all: "manage",
+};
+
+export const normalizePermissionOperation = (operation?: string | null) => {
+  const normalized = operation?.trim().toLowerCase();
+  if (!normalized) return "";
+
+  return PERMISSION_OPERATION_ALIASES[normalized] ?? normalized;
+};
+
 const STAFF_READ_OPERATIONS = new Set([
   "*",
   "read",
-  "list",
-  "view",
   "write",
   "create",
   "update",
@@ -311,6 +333,8 @@ const STAFF_ROUTE_ACCESS: Array<{ href: string; accesses: string[] }> = [
   { href: "/menu/modifier", accesses: ["menu-management"] },
   { href: "/menu/variations", accesses: ["menu-management"] },
   { href: "/menu/items", accesses: ["menu-management"] },
+  { href: "/menu/allergen", accesses: ["menu-management"] },
+  { href: "/menu/labels", accesses: ["menu-management"] },
   {
     href: "/menu/deals",
     accesses: ["menu-management", "promotion-management"],
@@ -338,6 +362,8 @@ const STAFF_ROUTE_ACCESS: Array<{ href: string; accesses: string[] }> = [
   { href: "/reports", accesses: ["reports-payouts"] },
   { href: "/payment-settings", accesses: ["payment-settings"] },
   { href: "/notifications", accesses: ["notifications"] },
+  { href: "/notification-settings", accesses: ["notifications"] },
+  { href: "/live-chat", accesses: ["notifications"] },
   { href: "/theme-settings", accesses: ["storefront-settings"] },
 ];
 
@@ -374,23 +400,54 @@ export const hasStaffPermission = (
     ? new Set(accesses.map(normalizePermissionAccess).filter(Boolean))
     : null;
   const allowedOperations = new Set(
-    operations.map((operation) => operation.trim().toLowerCase()),
+    operations.map(normalizePermissionOperation).filter(Boolean),
   );
 
   return permissions.some((permission) => {
     const access = normalizePermissionAccess(permission.access);
-    const permissionOperations = permission.operations?.map((operation) =>
-      operation.trim().toLowerCase(),
-    );
+    const permissionOperations = permission.operations
+      ?.map(normalizePermissionOperation)
+      .filter(Boolean);
 
     return Boolean(
       access &&
       (!allowedAccesses || access === "*" || allowedAccesses.has(access)) &&
       permissionOperations?.some(
-        (operation) => operation === "*" || allowedOperations.has(operation),
+        (operation) =>
+          operation === "*" ||
+          operation === "manage" ||
+          allowedOperations.has(operation),
       ),
     );
   });
+};
+
+export const getStaffRoutePermissionAccesses = (pathname?: string | null) => {
+  const path = pathname?.split(/[?#]/)[0] || "/";
+
+  if (path === "/profile") return ["*"];
+
+  const matchingRoute = STAFF_ROUTE_ACCESS
+    .filter((item) =>
+      item.href === "/"
+        ? path === "/"
+        : path === item.href || path.startsWith(`${item.href}/`),
+    )
+    .sort((first, second) => second.href.length - first.href.length)[0];
+
+  return matchingRoute?.accesses ?? [];
+};
+
+export const isStaffRouteAllowed = (
+  user: AuthUser | null | undefined,
+  pathname?: string | null,
+) => {
+  if (!isStaffRole(user?.role, user?.actorType)) return true;
+
+  const accesses = getStaffRoutePermissionAccesses(pathname);
+  if (accesses.includes("*")) return true;
+
+  return accesses.length > 0 && hasStaffPermission(user, accesses);
 };
 
 export const hasStaffPanelAccess = (user?: AuthUser | null) =>

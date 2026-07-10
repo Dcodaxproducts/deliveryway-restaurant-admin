@@ -5,8 +5,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import {
   getScopedQueryParams,
+  getStaffDefaultRedirectPath,
   isBranchAdminRole,
   isRestaurantAdminRole,
+  isStaffRole,
+  isStaffRouteAllowed,
 } from "@/lib/auth";
 import { buildLoginRoute } from "@/lib/auth-routes";
 import { isPublicRoute as isPublicAccessRoute } from "@/lib/access";
@@ -19,8 +22,18 @@ export const useAuth = () => {
   const isPublicRoute = isPublicAccessRoute(pathname);
 
   useEffect(() => {
-    if (!loading && !user && !isPublicRoute) {
+    if (loading || isPublicRoute) return;
+
+    if (!user) {
       router.push(buildLoginRoute(pathname));
+      return;
+    }
+
+    if (
+      isStaffRole(user.role, user.actorType) &&
+      !isStaffRouteAllowed(user, pathname)
+    ) {
+      router.replace(getStaffDefaultRedirectPath(user));
     }
   }, [loading, user, pathname, isPublicRoute, router]);
 

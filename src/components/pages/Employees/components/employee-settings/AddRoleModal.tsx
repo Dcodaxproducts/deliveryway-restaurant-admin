@@ -21,6 +21,7 @@ import {
   useUpdateStaffRole,
 } from "@/hooks/useEmployees";
 import { FIELD_ERROR_CLASS } from "@/components/common/common-classes";
+import { normalizePermissionAccess, normalizePermissionOperation } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
   staffRoleSchema,
@@ -61,17 +62,23 @@ const sanitizePermissions = (
   modules: PermissionModuleOption[],
 ) => {
   const actionsByAccess = new Map(
-    modules.map((module) => [module.accessKey, new Set(module.defaultActions)]),
+    modules.map((module) => [
+      module.accessKey,
+      new Set(module.defaultActions.map(normalizePermissionOperation)),
+    ]),
   );
 
   return permissions
-    .map((permission) => ({
-      access: permission.access,
-      operations: permission.operations.filter((operation) =>
-        actionsByAccess.get(permission.access)?.has(operation),
-      ),
-    }))
-    .filter((permission) => permission.operations.length > 0);
+    .map((permission) => {
+      const access = normalizePermissionAccess(permission.access);
+      const allowedActions = actionsByAccess.get(access);
+      const operations = Array.from(
+        new Set(permission.operations.map(normalizePermissionOperation)),
+      ).filter((operation) => allowedActions?.has(operation));
+
+      return { access, operations };
+    })
+    .filter((permission) => permission.access && permission.operations.length > 0);
 };
 
 const defaultValues: StaffRoleValues = {
