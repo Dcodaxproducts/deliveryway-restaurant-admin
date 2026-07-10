@@ -74,7 +74,7 @@ export const isRecord = (value: unknown): value is Record<string, unknown> => {
 
 export const getStringValue = (
   source: Record<string, unknown> | null | undefined,
-  key: string
+  key: string,
 ) => {
   const value = source?.[key];
   return typeof value === "string" ? value : undefined;
@@ -82,7 +82,7 @@ export const getStringValue = (
 
 export const getRecordValue = (
   source: Record<string, unknown> | null | undefined,
-  key: string
+  key: string,
 ): Record<string, unknown> | undefined => {
   const value = source?.[key];
   return isRecord(value) ? value : undefined;
@@ -90,7 +90,7 @@ export const getRecordValue = (
 
 const getBooleanValue = (
   source: Record<string, unknown> | null | undefined,
-  key: string
+  key: string,
 ) => {
   const value = source?.[key];
   return typeof value === "boolean" ? value : undefined;
@@ -98,7 +98,7 @@ const getBooleanValue = (
 
 const getStringArrayValue = (
   source: Record<string, unknown> | null | undefined,
-  key: string
+  key: string,
 ) => {
   const value = source?.[key];
   if (!Array.isArray(value)) return undefined;
@@ -108,7 +108,7 @@ const getStringArrayValue = (
 
 const getRestaurantAccess = (
   source: Record<string, unknown> | null | undefined,
-  fallback?: RestaurantAccessScope | null
+  fallback?: RestaurantAccessScope | null,
 ): RestaurantAccessScope | null => {
   const restaurantIds = getStringArrayValue(source, "restaurantIds");
   const branchIds = getStringArrayValue(source, "branchIds");
@@ -129,22 +129,22 @@ const getRestaurantAccess = (
   };
 };
 
-const getStaffPermissions = (source: Record<string, unknown> | null | undefined) => {
+const getStaffPermissions = (
+  source: Record<string, unknown> | null | undefined,
+) => {
   const permissions = source?.permissions;
   if (!Array.isArray(permissions)) return undefined;
 
-  return permissions
-    .filter(isRecord)
-    .map((permission): StaffPermission => ({
-      id: getStringValue(permission, "id"),
-      access: getStringValue(permission, "access"),
-      operations: getStringArrayValue(permission, "operations") ?? [],
-    }));
+  return permissions.filter(isRecord).map((permission): StaffPermission => ({
+    id: getStringValue(permission, "id"),
+    access: getStringValue(permission, "access"),
+    operations: getStringArrayValue(permission, "operations") ?? [],
+  }));
 };
 
 const getStaffRole = (
   source: Record<string, unknown> | null | undefined,
-  fallback?: AuthStaffRole | null
+  fallback?: AuthStaffRole | null,
 ): AuthStaffRole | null => {
   const role = getRecordValue(source, "staffRole");
   if (!role && !fallback) return null;
@@ -156,23 +156,29 @@ const getStaffRole = (
     name: getStringValue(role, "name") ?? fallback?.name,
     panelType: getStringValue(role, "panelType") ?? fallback?.panelType ?? null,
     tenantId: getStringValue(role, "tenantId") ?? fallback?.tenantId ?? null,
-    restaurantId: getStringValue(role, "restaurantId") ?? fallback?.restaurantId ?? null,
+    restaurantId:
+      getStringValue(role, "restaurantId") ?? fallback?.restaurantId ?? null,
     branchId: getStringValue(role, "branchId") ?? fallback?.branchId ?? null,
     permissions: getStaffPermissions(role) ?? fallback?.permissions,
     restaurantAccess: getRestaurantAccess(
       getRecordValue(role, "restaurantAccess"),
-      fallback?.restaurantAccess
+      fallback?.restaurantAccess,
     ),
   };
 };
 
 const normalizeRoleName = (role?: string | null) => {
-  return role?.trim().replace(/[\s-]+/g, "_").toUpperCase() || "";
+  return (
+    role
+      ?.trim()
+      .replace(/[\s-]+/g, "_")
+      .toUpperCase() || ""
+  );
 };
 
 const getRoleValue = (
   source: Record<string, unknown> | null | undefined,
-  fallback?: Partial<AuthUser> | null
+  fallback?: Partial<AuthUser> | null,
 ) => {
   const role = source?.role;
 
@@ -185,7 +191,7 @@ const getRoleValue = (
       getStringValue(role, "name") ??
         getStringValue(role, "key") ??
         getStringValue(role, "code") ??
-        getStringValue(role, "value")
+        getStringValue(role, "value"),
     );
   }
 
@@ -194,21 +200,27 @@ const getRoleValue = (
 
 const getProfile = (
   source: Record<string, unknown>,
-  fallback?: Partial<AuthUser> | null
+  fallback?: Partial<AuthUser> | null,
 ): AuthProfile => {
   const profile = getRecordValue(source, "profile");
 
   return {
     ...(fallback?.profile ?? {}),
     ...(profile ?? {}),
-    firstName: getStringValue(profile, "firstName") ?? fallback?.profile?.firstName,
-    lastName: getStringValue(profile, "lastName") ?? fallback?.profile?.lastName,
+    firstName:
+      getStringValue(profile, "firstName") ?? fallback?.profile?.firstName,
+    lastName:
+      getStringValue(profile, "lastName") ?? fallback?.profile?.lastName,
     avatarUrl:
-      getStringValue(profile, "avatarUrl") ?? fallback?.profile?.avatarUrl ?? null,
+      getStringValue(profile, "avatarUrl") ??
+      fallback?.profile?.avatarUrl ??
+      null,
     phone: getStringValue(profile, "phone") ?? fallback?.profile?.phone ?? null,
     bio: getStringValue(profile, "bio") ?? fallback?.profile?.bio ?? null,
-    createdAt: getStringValue(profile, "createdAt") ?? fallback?.profile?.createdAt,
-    updatedAt: getStringValue(profile, "updatedAt") ?? fallback?.profile?.updatedAt,
+    createdAt:
+      getStringValue(profile, "createdAt") ?? fallback?.profile?.createdAt,
+    updatedAt:
+      getStringValue(profile, "updatedAt") ?? fallback?.profile?.updatedAt,
   };
 };
 
@@ -216,7 +228,10 @@ export const isBranchAdminRole = (role?: string | null) => {
   return normalizeRoleName(role) === ADMIN_ROLES.BRANCH_ADMIN;
 };
 
-export const isStaffRole = (role?: string | null, actorType?: string | null) => {
+export const isStaffRole = (
+  role?: string | null,
+  actorType?: string | null,
+) => {
   return (
     normalizeRoleName(actorType) === ADMIN_ROLES.STAFF ||
     normalizeRoleName(role) === ADMIN_ROLES.STAFF
@@ -232,7 +247,41 @@ export const isRestaurantAdminRole = (role?: string | null) => {
 };
 
 export const isAllowedAdminRole = (role?: string | null) => {
-  return isBranchAdminRole(role) || isRestaurantAdminRole(role) || isStaffRole(role);
+  return (
+    isBranchAdminRole(role) || isRestaurantAdminRole(role) || isStaffRole(role)
+  );
+};
+
+const PERMISSION_ACCESS_ALIASES: Record<string, string> = {
+  branch_management: "branch-management",
+  menu: "menu-management",
+  menus: "menu-management",
+  "restaurant-menus": "menu-management",
+  "menu-categories": "menu-management",
+  "menu-items": "menu-management",
+  modifiers: "menu-management",
+  "modifier-categories": "menu-management",
+  "modifier-groups": "menu-management",
+  variations: "menu-management",
+  "branch-overrides": "menu-management",
+  cuisines: "menu-management",
+  orders: "order-management",
+  pos: "pos-management",
+  customers: "customer-management",
+  "staff-management": "employees",
+  "staff-roles": "employees",
+  promotions: "promotion-management",
+  coupons: "promotion-management",
+  settings: "content-management",
+  reports: "reports-payouts",
+  chat: "notifications",
+};
+
+export const normalizePermissionAccess = (access?: string | null) => {
+  const normalized = access?.trim().toLowerCase();
+  if (!normalized) return "";
+
+  return PERMISSION_ACCESS_ALIASES[normalized] ?? normalized;
 };
 
 const STAFF_READ_OPERATIONS = new Set([
@@ -251,51 +300,69 @@ const STAFF_READ_OPERATIONS = new Set([
 ]);
 
 const STAFF_ROUTE_ACCESS: Array<{ href: string; accesses: string[] }> = [
-  { href: "/branches", accesses: ["branch_management", "branch-management"] },
-  { href: "/branch-workspace", accesses: ["branch_management", "branch-management"] },
   { href: "/", accesses: ["dashboard"] },
-  { href: "/orders", accesses: ["orders"] },
-  { href: "/pos", accesses: ["pos"] },
-  { href: "/menu/categories", accesses: ["menu-categories", "menu", "menu-management"] },
-  { href: "/menu/cuisines", accesses: ["cuisines", "menu", "menu-management"] },
-  { href: "/menu/modifier-categories", accesses: ["modifier-categories", "modifiers", "menu", "menu-management"] },
-  { href: "/menu/modifier-groups", accesses: ["modifier-groups", "modifiers", "menu", "menu-management"] },
-  { href: "/menu/modifier", accesses: ["modifiers", "menu", "menu-management"] },
-  { href: "/menu/variations", accesses: ["variations", "menu", "menu-management"] },
-  { href: "/menu/items", accesses: ["menu-items", "menu", "menu-management"] },
-  { href: "/menu", accesses: ["menu", "menu-management", "restaurant-menus"] },
-  { href: "/customer-settings", accesses: ["customers"] },
-  { href: "/employees-settings", accesses: ["staff-management", "staff-roles"] },
-  { href: "/promotion-management", accesses: ["promotions", "coupons"] },
-  { href: "/reports", accesses: ["reports"] },
-  { href: "/auto-printing", accesses: ["pos"] },
-  { href: "/notifications", accesses: ["chat", "settings"] },
-  { href: "/theme-settings", accesses: ["settings"] },
-  { href: "/profile", accesses: ["settings"] },
+  { href: "/branches", accesses: ["branch-management"] },
+  { href: "/branch-workspace", accesses: ["branch-management"] },
+  { href: "/menu", accesses: ["menu-management"] },
+  { href: "/menu/categories", accesses: ["menu-management"] },
+  { href: "/menu/cuisines", accesses: ["menu-management"] },
+  { href: "/menu/modifier-categories", accesses: ["menu-management"] },
+  { href: "/menu/modifier-groups", accesses: ["menu-management"] },
+  { href: "/menu/modifier", accesses: ["menu-management"] },
+  { href: "/menu/variations", accesses: ["menu-management"] },
+  { href: "/menu/items", accesses: ["menu-management"] },
+  {
+    href: "/menu/deals",
+    accesses: ["menu-management", "promotion-management"],
+  },
+  { href: "/orders", accesses: ["order-management"] },
+  { href: "/table-reservations", accesses: ["table-reservations"] },
+  { href: "/pos", accesses: ["pos-management"] },
+  { href: "/customer-settings", accesses: ["customer-management"] },
+  { href: "/contact-submissions", accesses: ["contact-submissions"] },
+  { href: "/loyalty", accesses: ["loyalty-program"] },
+  { href: "/deliveryman", accesses: ["deliveryman"] },
+  { href: "/employees-settings", accesses: ["employees"] },
+  { href: "/promotion-management", accesses: ["promotion-management"] },
+  {
+    href: "/promotion-management/gift-cards",
+    accesses: ["promotion-management"],
+  },
+  { href: "/content-management", accesses: ["content-management"] },
+  { href: "/faqs", accesses: ["content-management"] },
+  { href: "/legal-profile", accesses: ["content-management"] },
+  { href: "/content-management/about", accesses: ["content-management"] },
+  { href: "/privacy-policy", accesses: ["content-management"] },
+  { href: "/profile", accesses: ["profile"] },
+  { href: "/auto-printing", accesses: ["auto-printing-pos"] },
+  { href: "/reports", accesses: ["reports-payouts"] },
+  { href: "/payment-settings", accesses: ["payment-settings"] },
+  { href: "/notifications", accesses: ["notifications"] },
+  { href: "/theme-settings", accesses: ["storefront-settings"] },
 ];
 
 const hasStaffAssignedScope = (user?: AuthUser | null) =>
   Boolean(
     user?.restaurantId ||
-      user?.tenantId ||
-      user?.branchId ||
-      user?.restaurantAccess?.restaurantIds?.length ||
-      user?.restaurantAccess?.branchIds?.length ||
-      user?.restaurantAccess?.allRestaurants ||
-      user?.restaurantAccess?.hasAllRestaurantsAccess ||
-      user?.staffRole?.tenantId ||
-      user?.staffRole?.restaurantId ||
-      user?.staffRole?.branchId ||
-      user?.staffRole?.restaurantAccess?.restaurantIds?.length ||
-      user?.staffRole?.restaurantAccess?.branchIds?.length ||
-      user?.staffRole?.restaurantAccess?.allRestaurants ||
-      user?.staffRole?.restaurantAccess?.hasAllRestaurantsAccess
+    user?.tenantId ||
+    user?.branchId ||
+    user?.restaurantAccess?.restaurantIds?.length ||
+    user?.restaurantAccess?.branchIds?.length ||
+    user?.restaurantAccess?.allRestaurants ||
+    user?.restaurantAccess?.hasAllRestaurantsAccess ||
+    user?.staffRole?.tenantId ||
+    user?.staffRole?.restaurantId ||
+    user?.staffRole?.branchId ||
+    user?.staffRole?.restaurantAccess?.restaurantIds?.length ||
+    user?.staffRole?.restaurantAccess?.branchIds?.length ||
+    user?.staffRole?.restaurantAccess?.allRestaurants ||
+    user?.staffRole?.restaurantAccess?.hasAllRestaurantsAccess,
   );
 
 export const hasStaffPermission = (
   user: AuthUser | null | undefined,
   accesses?: string[],
-  operations: string[] = Array.from(STAFF_READ_OPERATIONS)
+  operations: string[] = Array.from(STAFF_READ_OPERATIONS),
 ) => {
   if (!isStaffRole(user?.role, user?.actorType)) return false;
   if (!hasStaffAssignedScope(user)) return false;
@@ -304,18 +371,24 @@ export const hasStaffPermission = (
   if (!Array.isArray(permissions)) return false;
 
   const allowedAccesses = accesses?.length
-    ? new Set(accesses.map((access) => access.trim().toLowerCase()))
+    ? new Set(accesses.map(normalizePermissionAccess).filter(Boolean))
     : null;
-  const allowedOperations = new Set(operations.map((operation) => operation.trim().toLowerCase()));
+  const allowedOperations = new Set(
+    operations.map((operation) => operation.trim().toLowerCase()),
+  );
 
   return permissions.some((permission) => {
-    const access = permission.access?.trim().toLowerCase();
-    const permissionOperations = permission.operations?.map((operation) => operation.trim().toLowerCase());
+    const access = normalizePermissionAccess(permission.access);
+    const permissionOperations = permission.operations?.map((operation) =>
+      operation.trim().toLowerCase(),
+    );
 
     return Boolean(
       access &&
-        (!allowedAccesses || access === "*" || allowedAccesses.has(access)) &&
-        permissionOperations?.some((operation) => operation === "*" || allowedOperations.has(operation))
+      (!allowedAccesses || access === "*" || allowedAccesses.has(access)) &&
+      permissionOperations?.some(
+        (operation) => operation === "*" || allowedOperations.has(operation),
+      ),
     );
   });
 };
@@ -326,33 +399,24 @@ export const hasStaffPanelAccess = (user?: AuthUser | null) =>
 export const getStaffDefaultRedirectPath = (user?: AuthUser | null) => {
   if (!isStaffRole(user?.role, user?.actorType)) return "/";
 
-  const route = STAFF_ROUTE_ACCESS.find((item) => hasStaffPermission(user, item.accesses));
+  const route = STAFF_ROUTE_ACCESS.find((item) =>
+    hasStaffPermission(user, item.accesses),
+  );
   return route?.href || "/";
 };
 
 export const hasStaffMenuAccess = (user?: AuthUser | null) => {
-  return hasStaffPermission(user, [
-    "menu",
-    "menus",
-    "menu-management",
-    "restaurant-menus",
-    "menu-categories",
-    "menu-items",
-    "modifiers",
-    "modifier-categories",
-    "modifier-groups",
-    "variations",
-    "branch-overrides",
-    "cuisines",
-  ]);
+  return hasStaffPermission(user, ["menu-management"]);
 };
 
 export const normalizeUser = (
   rawUser: unknown,
-  fallback?: Partial<AuthUser> | null
+  fallback?: Partial<AuthUser> | null,
 ): AuthUser | null => {
   const rawRecord = isRecord(rawUser) ? rawUser : null;
-  const fallbackRecord = fallback ? (fallback as Partial<AuthUser> & Record<string, unknown>) : null;
+  const fallbackRecord = fallback
+    ? (fallback as Partial<AuthUser> & Record<string, unknown>)
+    : null;
   const source = rawRecord ?? fallbackRecord;
 
   if (!source) return null;
@@ -398,15 +462,22 @@ export const normalizeUser = (
 
   const restaurantAccess = getRestaurantAccess(
     getRecordValue(source, "restaurantAccess"),
-    fallback?.restaurantAccess
+    fallback?.restaurantAccess,
   );
 
   const staffRole = getStaffRole(source, fallback?.staffRole);
   const staffRestaurantIds = restaurantAccess?.restaurantIds?.length
     ? restaurantAccess.restaurantIds
-    : staffRole?.restaurantAccess?.restaurantIds ?? [];
+    : (staffRole?.restaurantAccess?.restaurantIds ?? []);
 
-  if (!restaurantId && isStaffRole(getRoleValue(source, fallback), getStringValue(source, "actorType")) && staffRestaurantIds.length === 1) {
+  if (
+    !restaurantId &&
+    isStaffRole(
+      getRoleValue(source, fallback),
+      getStringValue(source, "actorType"),
+    ) &&
+    staffRestaurantIds.length === 1
+  ) {
     restaurantId = staffRestaurantIds[0];
   }
 
@@ -420,10 +491,12 @@ export const normalizeUser = (
     restaurantId,
     branchId,
     branchName,
-    panelType: getStringValue(source, "panelType") ?? fallback?.panelType ?? null,
+    panelType:
+      getStringValue(source, "panelType") ?? fallback?.panelType ?? null,
     actorType: getStringValue(source, "actorType") ?? fallback?.actorType,
     restaurantAccess,
-    staffRoleId: getStringValue(source, "staffRoleId") ?? fallback?.staffRoleId ?? null,
+    staffRoleId:
+      getStringValue(source, "staffRoleId") ?? fallback?.staffRoleId ?? null,
     staffRole,
     isVerified: getBooleanValue(source, "isVerified") ?? fallback?.isVerified,
     isActive: getBooleanValue(source, "isActive") ?? fallback?.isActive,
@@ -433,7 +506,7 @@ export const normalizeUser = (
 
 export const normalizeAuthPayload = (
   payload: unknown,
-  fallback?: AuthStorage | null
+  fallback?: AuthStorage | null,
 ): AuthStorage => {
   const payloadRecord = isRecord(payload) ? payload : {};
   const envelopeData = getRecordValue(payloadRecord, "data");
@@ -444,7 +517,8 @@ export const normalizeAuthPayload = (
     getStringValue(data, "accessToken") ??
     getStringValue(data, "token") ??
     fallback?.accessToken;
-  const refreshToken = getStringValue(data, "refreshToken") ?? fallback?.refreshToken;
+  const refreshToken =
+    getStringValue(data, "refreshToken") ?? fallback?.refreshToken;
   const userPayload = data.user ?? data;
   const user = normalizeUser(userPayload, fallbackUser);
 
@@ -507,7 +581,8 @@ export const getAvatarUrl = (user?: AuthUser | null) => {
 export const getRoleLabel = (role?: string | null) => {
   const normalizedRole = normalizeRoleName(role);
   if (normalizedRole === ADMIN_ROLES.BRANCH_ADMIN) return "Branch Admin";
-  if (normalizedRole === ADMIN_ROLES.RESTAURANT_ADMIN) return "Restaurant Admin";
+  if (normalizedRole === ADMIN_ROLES.RESTAURANT_ADMIN)
+    return "Restaurant Admin";
   if (normalizedRole === ADMIN_ROLES.BUSINESS_ADMIN) return "Business Admin";
   if (normalizedRole === ADMIN_ROLES.STAFF) return "Staff";
   return role || "Admin";
@@ -520,7 +595,11 @@ export const getScopedQueryParams = (user?: AuthUser | null) => {
     params.restaurantId = user.restaurantId;
   }
 
-  if ((isBranchAdminRole(user?.role) || isStaffRole(user?.role, user?.actorType)) && user?.branchId) {
+  if (
+    (isBranchAdminRole(user?.role) ||
+      isStaffRole(user?.role, user?.actorType)) &&
+    user?.branchId
+  ) {
     params.branchId = user.branchId;
   }
 
