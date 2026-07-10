@@ -9,16 +9,33 @@ import {
   updateRestaurantGiftCardsVisibility,
 } from "@/services/restaurants";
 
-export const restaurantQueryKeys = {
-  all: ["restaurants"] as const,
-  detail: (restaurantId?: string) => ["restaurants", "detail", restaurantId || ""] as const,
+export type RestaurantsListParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
 };
 
-export const useGetRestaurants = (enabled = true) => {
+export const restaurantQueryKeys = {
+  all: ["restaurants"] as const,
+  list: (params?: RestaurantsListParams) =>
+    ["restaurants", "list", params ?? {}] as const,
+  detail: (restaurantId?: string) =>
+    ["restaurants", "detail", restaurantId || ""] as const,
+};
+
+export const useGetRestaurants = (
+  paramsOrEnabled: RestaurantsListParams | boolean = true,
+  enabled = true,
+) => {
+  const params =
+    typeof paramsOrEnabled === "boolean" ? undefined : paramsOrEnabled;
+  const queryEnabled =
+    typeof paramsOrEnabled === "boolean" ? paramsOrEnabled : enabled;
+
   return useQuery({
-    queryKey: restaurantQueryKeys.all,
-    queryFn: () => getRestaurants(),
-    enabled,
+    queryKey: restaurantQueryKeys.list(params),
+    queryFn: () => getRestaurants(params),
+    enabled: queryEnabled,
   });
 };
 
@@ -46,7 +63,7 @@ export const useUpdateRestaurantGiftCardsVisibility = () => {
     onSuccess: (restaurant, variables) => {
       queryClient.setQueryData(
         restaurantQueryKeys.detail(variables.restaurantId),
-        restaurant
+        restaurant,
       );
       queryClient.invalidateQueries({
         queryKey: restaurantQueryKeys.detail(variables.restaurantId),
@@ -54,12 +71,12 @@ export const useUpdateRestaurantGiftCardsVisibility = () => {
       toast.success(
         variables.isEnabled
           ? "Gift cards are visible on the customer website."
-          : "Gift cards are hidden from the customer website."
+          : "Gift cards are hidden from the customer website.",
       );
     },
     onError: (error) => {
       toast.error(
-        getApiErrorMessage(error, "Unable to update gift card visibility.")
+        getApiErrorMessage(error, "Unable to update gift card visibility."),
       );
     },
   });

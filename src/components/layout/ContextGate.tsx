@@ -26,6 +26,33 @@ type RestaurantOption = {
   tenantId?: string | null;
 };
 
+const RESTAURANT_SELECTOR_LIMIT = 20;
+
+const getResponseRows = (response: unknown) => {
+  if (!isRecord(response)) return [];
+
+  return Array.isArray(response.data) ? response.data : [];
+};
+
+const getResponseMeta = (response: unknown) => {
+  if (!isRecord(response)) return null;
+
+  return isRecord(response.meta) ? response.meta : null;
+};
+
+const mergeRestaurantsById = (
+  current: RestaurantOption[],
+  next: RestaurantOption[],
+) => {
+  const map = new Map(current.map((restaurant) => [restaurant.id, restaurant]));
+
+  next.forEach((restaurant) => {
+    map.set(restaurant.id, { ...map.get(restaurant.id), ...restaurant });
+  });
+
+  return Array.from(map.values());
+};
+
 const getStaffRestaurantIds = (
   user: ReturnType<typeof useAuthContext>["user"],
 ) => {
@@ -58,6 +85,11 @@ export default function ContextGate() {
   const [restaurants, setRestaurants] = useState<RestaurantOption[]>([]);
   const [selectedRestaurant, setSelectedRestaurant] =
     useState<RestaurantOption | null>(null);
+  const [restaurantSearch, setRestaurantSearch] = useState("");
+  const [debouncedRestaurantSearch, setDebouncedRestaurantSearch] =
+    useState("");
+  const [restaurantPage, setRestaurantPage] = useState(1);
+  const [hasMoreRestaurants, setHasMoreRestaurants] = useState(false);
   const staffRestaurantIds = useMemo(() => getStaffRestaurantIds(user), [user]);
   const staffRestaurantQueries = useQueries({
     queries: staffRestaurantIds.map((id) => ({
@@ -72,8 +104,30 @@ export default function ContextGate() {
     staffRestaurantQueries.map((query) => query.data ?? null),
   );
   const { data: restaurantsResponse, isFetching } = useGetRestaurants(
+    {
+      page: restaurantPage,
+      limit: RESTAURANT_SELECTOR_LIMIT,
+      search: debouncedRestaurantSearch || undefined,
+    },
     Boolean(open && Boolean(token)),
   );
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedRestaurantSearch(restaurantSearch.trim());
+      setRestaurantPage(1);
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [restaurantSearch]);
+
+  useEffect(() => {
+    if (!open) {
+      setRestaurantSearch("");
+      setDebouncedRestaurantSearch("");
+      setRestaurantPage(1);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (pathname === "/login") {
@@ -97,10 +151,15 @@ export default function ContextGate() {
   }, [user, loading, token, pathname]);
 
   useEffect(() => {
-    const data = isRecord(restaurantsResponse)
-      ? restaurantsResponse.data
-      : undefined;
-    const rows = Array.isArray(data) ? data : [];
+    const rows = getResponseRows(restaurantsResponse);
+    const meta = getResponseMeta(restaurantsResponse);
+    const totalPages = Number(meta?.totalPages ?? meta?.pages ?? 0);
+    const responseHasNext =
+      typeof meta?.hasNext === "boolean"
+        ? meta.hasNext
+        : totalPages > 0
+          ? restaurantPage < totalPages
+          : rows.length >= RESTAURANT_SELECTOR_LIMIT;
     const userTenantId = user?.tenantId ?? null;
     const allowedStaffIds = new Set(staffRestaurantIds);
     const filtered = rows.reduce<RestaurantOption[]>((acc, row) => {
@@ -126,11 +185,13 @@ export default function ContextGate() {
     }, []);
 
     const knownIds = new Set(filtered.map((restaurant) => restaurant.id));
+    const staffRestaurantDetails = JSON.parse(
+      staffRestaurantDetailsKey,
+    ) as unknown[];
     const staffFallbackOptions = staffRestaurantIds
       .filter((id) => !knownIds.has(id))
       .map((id) => {
-        const restaurant =
-          staffRestaurantQueries[staffRestaurantIds.indexOf(id)]?.data;
+        const restaurant = staffRestaurantDetails[staffRestaurantIds.indexOf(id)];
 
         return {
           id,
@@ -139,13 +200,31 @@ export default function ContextGate() {
         };
       });
 
-    setRestaurants([...filtered, ...staffFallbackOptions]);
+    const nextRestaurants = [...filtered, ...staffFallbackOptions];
+
+    setHasMoreRestaurants(responseHasNext);
+    setRestaurants((current) =>
+      restaurantPage === 1
+        ? nextRestaurants
+        : mergeRestaurantsById(current, nextRestaurants),
+    );
   }, [
     restaurantsResponse,
     staffRestaurantDetailsKey,
     staffRestaurantIds,
     user?.tenantId,
+    restaurantPage,
   ]);
+
+  const handleRestaurantScroll = (event: { currentTarget: HTMLDivElement }) => {
+    const target = event.currentTarget;
+    const nearBottom =
+      target.scrollTop + target.clientHeight >= target.scrollHeight - 24;
+
+    if (nearBottom && hasMoreRestaurants && !isFetching) {
+      setRestaurantPage((page) => page + 1);
+    }
+  };
 
   const handleConfirm = () => {
     if (!selectedRestaurant) {
@@ -195,8 +274,21 @@ export default function ContextGate() {
           <div className="h-2 w-10 rounded-full bg-primary" />
         </div>
 
-        <div className="max-h-[300px] space-y-3 overflow-auto pr-1">
-          {isFetching
+        <div className="mb-4">
+          <input
+            type="search"
+            value={restaurantSearch}
+            onChange={(event) => setRestaurantSearch(event.target.value)}
+            placeholder="Search restaurants..."
+            className="h-11 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm outline-none transition focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
+          />
+        </div>
+
+        <div
+          className="max-h-[300px] space-y-3 overflow-auto pr-1"
+          onScroll={handleRestaurantScroll}
+        >
+          {isFetching && restaurants.length === 0
             ? Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
@@ -205,37 +297,39 @@ export default function ContextGate() {
               ))
             : null}
 
-          {!isFetching
-            ? restaurants.map((restaurant) => (
-                <button
-                  key={restaurant.id}
-                  onClick={() => setSelectedRestaurant(restaurant)}
-                  className={cn(
-                    "w-full rounded-xl border p-4 text-left transition-all duration-200",
-                    selectedRestaurant?.id === restaurant.id
-                      ? "border-primary bg-primary/5 shadow-sm"
-                      : "border-gray-200 hover:border-primary hover:bg-gray-50 hover:shadow-sm",
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {restaurant.name}
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {restaurant.id}
-                      </div>
-                    </div>
-
-                    {selectedRestaurant?.id === restaurant.id ? (
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
-                        <Check size={14} className="text-primary" />
-                      </div>
-                    ) : null}
+          {restaurants.map((restaurant) => (
+            <button
+              key={restaurant.id}
+              onClick={() => setSelectedRestaurant(restaurant)}
+              className={cn(
+                "w-full rounded-xl border p-4 text-left transition-all duration-200",
+                selectedRestaurant?.id === restaurant.id
+                  ? "border-primary bg-primary/5 shadow-sm"
+                  : "border-gray-200 hover:border-primary hover:bg-gray-50 hover:shadow-sm",
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium text-gray-900">
+                    {restaurant.name}
                   </div>
-                </button>
-              ))
-            : null}
+                  <div className="text-xs text-gray-400">{restaurant.id}</div>
+                </div>
+
+                {selectedRestaurant?.id === restaurant.id ? (
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
+                    <Check size={14} className="text-primary" />
+                  </div>
+                ) : null}
+              </div>
+            </button>
+          ))}
+
+          {isFetching && restaurants.length > 0 ? (
+            <div className="py-3 text-center text-xs text-gray-400">
+              Loading more restaurants...
+            </div>
+          ) : null}
 
           {!isFetching && restaurants.length === 0 ? (
             <div className="space-y-3 py-6 text-center text-sm text-gray-500">

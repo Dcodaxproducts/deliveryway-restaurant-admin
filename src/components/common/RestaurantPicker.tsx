@@ -29,6 +29,33 @@ type RestaurantOption = {
   logoUrl?: string | null;
 };
 
+const RESTAURANT_PICKER_LIMIT = 20;
+
+const getResponseRows = (response: unknown) => {
+  if (!isRecord(response)) return [];
+
+  return Array.isArray(response.data) ? response.data : [];
+};
+
+const getResponseMeta = (response: unknown) => {
+  if (!isRecord(response)) return null;
+
+  return isRecord(response.meta) ? response.meta : null;
+};
+
+const mergeRestaurantsById = (
+  current: RestaurantOption[],
+  next: RestaurantOption[],
+) => {
+  const map = new Map(current.map((restaurant) => [restaurant.id, restaurant]));
+
+  next.forEach((restaurant) => {
+    map.set(restaurant.id, { ...map.get(restaurant.id), ...restaurant });
+  });
+
+  return Array.from(map.values());
+};
+
 type RestaurantPickerProps = {
   className?: string;
 };
@@ -81,6 +108,11 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
   const [restaurants, setRestaurants] = useState<RestaurantOption[]>([]);
   const [selectedRestaurant, setSelectedRestaurant] =
     useState<RestaurantOption | null>(null);
+  const [restaurantSearch, setRestaurantSearch] = useState("");
+  const [debouncedRestaurantSearch, setDebouncedRestaurantSearch] =
+    useState("");
+  const [restaurantPage, setRestaurantPage] = useState(1);
+  const [hasMoreRestaurants, setHasMoreRestaurants] = useState(false);
 
   const staffRestaurantIds = useMemo(() => getStaffRestaurantIds(user), [user]);
   const staffRestaurantQueries = useQueries({
@@ -98,8 +130,30 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
 
   const [open, setOpen] = useState(false);
   const { data: restaurantsResponse, isFetching } = useGetRestaurants(
+    {
+      page: restaurantPage,
+      limit: RESTAURANT_PICKER_LIMIT,
+      search: debouncedRestaurantSearch || undefined,
+    },
     Boolean(token && user?.id && canSwitchRestaurant(user)),
   );
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedRestaurantSearch(restaurantSearch.trim());
+      setRestaurantPage(1);
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [restaurantSearch]);
+
+  useEffect(() => {
+    if (!open) {
+      setRestaurantSearch("");
+      setDebouncedRestaurantSearch("");
+      setRestaurantPage(1);
+    }
+  }, [open]);
 
   const handleLogout = (): void => {
     logout();
@@ -111,10 +165,15 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
   };
 
   useEffect(() => {
-    const data = isRecord(restaurantsResponse)
-      ? restaurantsResponse.data
-      : undefined;
-    const rows = Array.isArray(data) ? data : [];
+    const rows = getResponseRows(restaurantsResponse);
+    const meta = getResponseMeta(restaurantsResponse);
+    const totalPages = Number(meta?.totalPages ?? meta?.pages ?? 0);
+    const responseHasNext =
+      typeof meta?.hasNext === "boolean"
+        ? meta.hasNext
+        : totalPages > 0
+          ? restaurantPage < totalPages
+          : rows.length >= RESTAURANT_PICKER_LIMIT;
     const userTenantId = user?.tenantId ?? null;
     const allowedStaffIds = new Set(staffRestaurantIds);
     const filtered = rows.reduce<RestaurantOption[]>((acc, row) => {
@@ -141,11 +200,13 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
     }, []);
 
     const knownIds = new Set(filtered.map((restaurant) => restaurant.id));
+    const staffRestaurantDetails = JSON.parse(
+      staffRestaurantDetailsKey,
+    ) as unknown[];
     const staffFallbackOptions = staffRestaurantIds
       .filter((id) => !knownIds.has(id))
       .map((id) => {
-        const restaurant =
-          staffRestaurantQueries[staffRestaurantIds.indexOf(id)]?.data;
+        const restaurant = staffRestaurantDetails[staffRestaurantIds.indexOf(id)];
 
         return {
           id,
@@ -155,12 +216,20 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
         };
       });
 
-    setRestaurants([...filtered, ...staffFallbackOptions]);
+    const nextRestaurants = [...filtered, ...staffFallbackOptions];
+
+    setHasMoreRestaurants(responseHasNext);
+    setRestaurants((current) =>
+      restaurantPage === 1
+        ? nextRestaurants
+        : mergeRestaurantsById(current, nextRestaurants),
+    );
   }, [
     restaurantsResponse,
     staffRestaurantDetailsKey,
     staffRestaurantIds,
     user?.tenantId,
+    restaurantPage,
   ]);
 
   useEffect(() => {
@@ -186,6 +255,16 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
     return () =>
       document.removeEventListener("pointerdown", handleClickOutside);
   }, []);
+
+  const handleRestaurantScroll = (event: { currentTarget: HTMLDivElement }) => {
+    const target = event.currentTarget;
+    const nearBottom =
+      target.scrollTop + target.clientHeight >= target.scrollHeight - 24;
+
+    if (nearBottom && hasMoreRestaurants && !isFetching) {
+      setRestaurantPage((page) => page + 1);
+    }
+  };
 
   const handleSelectRestaurant = (restaurant: RestaurantOption) => {
     setSelectedRestaurant(restaurant);
@@ -285,8 +364,20 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
             {t("selectRestaurant")}
           </p>
 
-          <div className="space-y-1 max-h-[240px] overflow-auto">
+          <input
+            type="search"
+            value={restaurantSearch}
+            onChange={(event) => setRestaurantSearch(event.target.value)}
+            placeholder="Search restaurants..."
+            className="mb-2 h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm outline-none transition focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
+          />
+
+          <div
+            className="space-y-1 max-h-[240px] overflow-auto"
+            onScroll={handleRestaurantScroll}
+          >
             {isFetching &&
+              restaurants.length === 0 &&
               Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
@@ -294,33 +385,38 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
                 />
               ))}
 
-            {!isFetching &&
-              restaurants.map((restaurant) => (
-                <button
-                  key={restaurant.id}
-                  onClick={() => handleSelectRestaurant(restaurant)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all ${
-                    selectedRestaurant?.id === restaurant.id
-                      ? "bg-primary/5 text-primary"
-                      : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <BrandLogo
-                      className="shrink-0 gap-0"
-                      imageClassName="size-7 rounded-full bg-white shadow-sm"
-                      showName={false}
-                      logoUrl={restaurant.logoUrl}
-                      name={restaurant.name}
-                    />
-                    <span className="truncate">{restaurant.name}</span>
-                  </span>
+            {restaurants.map((restaurant) => (
+              <button
+                key={restaurant.id}
+                onClick={() => handleSelectRestaurant(restaurant)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all ${
+                  selectedRestaurant?.id === restaurant.id
+                    ? "bg-primary/5 text-primary"
+                    : "hover:bg-gray-100 text-gray-700"
+                }`}
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <BrandLogo
+                    className="shrink-0 gap-0"
+                    imageClassName="size-7 rounded-full bg-white shadow-sm"
+                    showName={false}
+                    logoUrl={restaurant.logoUrl}
+                    name={restaurant.name}
+                  />
+                  <span className="truncate">{restaurant.name}</span>
+                </span>
 
-                  {selectedRestaurant?.id === restaurant.id && (
-                    <Check size={14} className="text-primary" />
-                  )}
-                </button>
-              ))}
+                {selectedRestaurant?.id === restaurant.id && (
+                  <Check size={14} className="text-primary" />
+                )}
+              </button>
+            ))}
+
+            {isFetching && restaurants.length > 0 ? (
+              <div className="py-2 text-center text-xs text-gray-400">
+                Loading more restaurants...
+              </div>
+            ) : null}
 
             {!isFetching && restaurants.length === 0 && (
               <div className="text-center text-xs text-gray-500 py-3 space-y-2">
