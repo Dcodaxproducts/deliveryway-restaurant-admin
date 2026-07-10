@@ -70,15 +70,20 @@ type OrderStatusUpdateDialogProps = {
 };
 
 type DurationOption = {
-  key: "20min" | "40min" | "60min" | "custom";
+  key: string;
   labelKey: string;
   minutes?: number;
 };
 
 const durationOptions: DurationOption[] = [
+  { key: "10min", labelKey: "duration10Min", minutes: 10 },
+  { key: "15min", labelKey: "duration15Min", minutes: 15 },
   { key: "20min", labelKey: "duration20Min", minutes: 20 },
+  { key: "30min", labelKey: "duration30Min", minutes: 30 },
   { key: "40min", labelKey: "duration40Min", minutes: 40 },
+  { key: "50min", labelKey: "duration50Min", minutes: 50 },
   { key: "60min", labelKey: "duration60Min", minutes: 60 },
+  { key: "75min", labelKey: "duration75Min", minutes: 75 },
   { key: "custom", labelKey: "durationCustom" },
 ];
 
@@ -102,6 +107,8 @@ const formatDateTime = (date?: Date | null) => {
   });
 };
 
+const getDurationLabelKey = (minutes: number) => `duration${minutes}Minutes`;
+
 const buildFutureOrderTime = (minutes: number) => {
   const date = new Date();
   date.setMinutes(date.getMinutes() + Math.max(minutes, 1));
@@ -119,16 +126,20 @@ export function OrderStatusUpdateDialog({
   const common = useTranslations("common");
   const t = useTranslations("orders");
   const nextStatus = getNextOrderStatus(order);
-  const nextStatusLabel = nextStatus && ORDER_STATUS_LABEL_KEYS[nextStatus]
-    ? t(ORDER_STATUS_LABEL_KEYS[nextStatus])
-    : nextStatus;
-  const actionLabel = nextStatus && ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus]
-    ? t(ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus])
-    : common("updateStatus");
-  const [durationKey, setDurationKey] = useState<DurationOption["key"]>("20min");
+  const nextStatusLabel =
+    nextStatus && ORDER_STATUS_LABEL_KEYS[nextStatus]
+      ? t(ORDER_STATUS_LABEL_KEYS[nextStatus])
+      : nextStatus;
+  const actionLabel =
+    nextStatus && ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus]
+      ? t(ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus])
+      : common("updateStatus");
+  const [durationKey, setDurationKey] =
+    useState<DurationOption["key"]>("20min");
   const [customDateTime, setCustomDateTime] = useState(() =>
-    buildFutureOrderTime(20)
+    buildFutureOrderTime(20),
   );
+  const [customMinutes, setCustomMinutes] = useState("");
   const [mode, setMode] = useState<"main" | "custom">("main");
   const [deliveryTimeEditing, setDeliveryTimeEditing] = useState(false);
 
@@ -148,16 +159,18 @@ export function OrderStatusUpdateDialog({
     },
   });
   const selectedStatus = useWatch({ control, name: "status" });
-  const isConfirmingPlacedOrder = order?.status === "PLACED" && selectedStatus === "CONFIRMED";
-  const isConfirmedOrder = order?.status === "CONFIRMED" && selectedStatus === "CONFIRMED";
+  const isConfirmingPlacedOrder =
+    order?.status === "PLACED" && selectedStatus === "CONFIRMED";
+  const isConfirmedOrder =
+    order?.status === "CONFIRMED" && selectedStatus === "CONFIRMED";
   const requiresDeliveryOtp = requiresDeliveryOtpForStatusTransition(
     order,
-    selectedStatus
+    selectedStatus,
   );
   const savedDeliveryTime = parseOrderTime(order?.orderTime);
   const shouldPreserveScheduledTime = shouldPreserveScheduledOrderTime(
     order,
-    selectedStatus
+    selectedStatus,
   );
   const canEditDeliveryTime =
     (isConfirmingPlacedOrder && !shouldPreserveScheduledTime) ||
@@ -167,32 +180,52 @@ export function OrderStatusUpdateDialog({
     if (open) {
       setDurationKey("20min");
       setCustomDateTime(buildFutureOrderTime(20));
+      setCustomMinutes("");
       setMode("main");
-      setDeliveryTimeEditing(
-        order?.status === "PLACED" && !order?.isScheduled
-      );
+      setDeliveryTimeEditing(order?.status === "PLACED" && !order?.isScheduled);
     }
   }, [open, order?.isScheduled, order?.status]);
 
   const durationMinutes = useMemo(() => {
-    return durationOptions.find((item) => item.key === durationKey)?.minutes ?? 20;
+    return (
+      durationOptions.find((item) => item.key === durationKey)?.minutes ?? 20
+    );
   }, [durationKey]);
+  const parsedCustomMinutes = Math.max(
+    0,
+    Math.floor(Number(customMinutes || 0)),
+  );
+  const hasCustomMinutes = durationKey === "custom" && parsedCustomMinutes > 0;
 
   const computedDeliveryTime = useMemo(
     () =>
       durationKey === "custom"
-        ? customDateTime
+        ? hasCustomMinutes
+          ? buildFutureOrderTime(parsedCustomMinutes)
+          : customDateTime
         : buildFutureOrderTime(durationMinutes),
-    [customDateTime, durationKey, durationMinutes]
+    [
+      customDateTime,
+      durationKey,
+      durationMinutes,
+      hasCustomMinutes,
+      parsedCustomMinutes,
+    ],
   );
 
   const durationText = useMemo(() => {
-    if (durationKey === "20min") return t("duration20Minutes");
-    if (durationKey === "40min") return t("duration40Minutes");
-    if (durationKey === "60min") return t("duration60Minutes");
+    const preset = durationOptions.find((item) => item.key === durationKey);
+
+    if (preset?.minutes) {
+      return t(getDurationLabelKey(preset.minutes));
+    }
+
+    if (hasCustomMinutes) {
+      return t("durationCustomMinutes", { count: parsedCustomMinutes });
+    }
 
     return formatDateTime(customDateTime) ?? t("durationCustom");
-  }, [durationKey, customDateTime, t]);
+  }, [durationKey, customDateTime, hasCustomMinutes, parsedCustomMinutes, t]);
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -207,6 +240,7 @@ export function OrderStatusUpdateDialog({
     setDurationKey(key);
     if (key === "custom") {
       setCustomDateTime(savedDeliveryTime ?? buildFutureOrderTime(20));
+      setCustomMinutes("");
       setMode("custom");
     }
   };
@@ -253,10 +287,16 @@ export function OrderStatusUpdateDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[92vh] max-w-[520px] overflow-y-auto rounded-[28px] border-0 bg-white p-0">
         {mode === "main" ? (
-          <form className="p-5 sm:p-7" noValidate onSubmit={handleSubmit(onSubmit)}>
+          <form
+            className="p-5 sm:p-7"
+            noValidate
+            onSubmit={handleSubmit(onSubmit)}
+          >
             <DialogHeader className="space-y-2">
               <DialogTitle className="text-[24px] font-bold text-gray-950">
-                {isConfirmingPlacedOrder ? t("acceptOrderTitle") : t("updateStatusTitle")}
+                {isConfirmingPlacedOrder
+                  ? t("acceptOrderTitle")
+                  : t("updateStatusTitle")}
               </DialogTitle>
               <DialogDescription className="text-sm leading-6 text-gray-500">
                 {isConfirmingPlacedOrder
@@ -277,7 +317,10 @@ export function OrderStatusUpdateDialog({
                       onValueChange={field.onChange}
                       disabled={!nextStatus}
                     >
-                      <SelectTrigger id="order-status" className="h-[48px] rounded-[14px]">
+                      <SelectTrigger
+                        id="order-status"
+                        className="h-[48px] rounded-[14px]"
+                      >
                         <SelectValue placeholder={common("selectStatus")} />
                       </SelectTrigger>
                       <SelectContent>
@@ -291,9 +334,13 @@ export function OrderStatusUpdateDialog({
                   )}
                 />
                 {errors.status?.message ? (
-                  <p className="text-sm text-red-500">{errors.status.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.status.message}
+                  </p>
                 ) : !nextStatus ? (
-                  <p className="text-sm text-gray-500">{t("noStatusTransition")}</p>
+                  <p className="text-sm text-gray-500">
+                    {t("noStatusTransition")}
+                  </p>
                 ) : null}
               </div>
 
@@ -369,7 +416,7 @@ export function OrderStatusUpdateDialog({
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     {durationOptions.map((item) => {
                       const active = durationKey === item.key;
 
@@ -380,14 +427,18 @@ export function OrderStatusUpdateDialog({
                           onClick={() => handleDurationClick(item.key)}
                           disabled={isLoading}
                           className={cn(
-                            "h-[82px] rounded-[16px] border bg-white transition hover:border-primary/40",
+                            "h-[78px] rounded-[16px] border bg-white px-2 text-center transition hover:border-primary/40",
                             "flex flex-col items-center justify-center gap-2",
-                            active ? "border-primary shadow-sm" : "border-transparent"
+                            active
+                              ? "border-primary shadow-sm"
+                              : "border-transparent",
                           )}
                         >
                           <Clock3
                             size={19}
-                            className={active ? "text-primary" : "text-gray-400"}
+                            className={
+                              active ? "text-primary" : "text-gray-400"
+                            }
                           />
                           <span className="text-sm font-semibold text-gray-950">
                             {t(item.labelKey)}
@@ -403,8 +454,10 @@ export function OrderStatusUpdateDialog({
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-gray-900">
-                        {t("deliveryTimeWillBe")} {" "}
-                        <span className="text-primary">{formatDateTime(computedDeliveryTime)}</span>
+                        {t("deliveryTimeWillBe")}{" "}
+                        <span className="text-primary">
+                          {formatDateTime(computedDeliveryTime)}
+                        </span>
                       </p>
                       <p className="mt-1 text-xs text-gray-500">
                         {t("deliveryInDuration", { duration: durationText })}
@@ -424,7 +477,9 @@ export function OrderStatusUpdateDialog({
                     {...register("deliveryOtp")}
                   />
                   {errors.deliveryOtp?.message ? (
-                    <p className="text-sm text-red-500">{errors.deliveryOtp.message}</p>
+                    <p className="text-sm text-red-500">
+                      {errors.deliveryOtp.message}
+                    </p>
                   ) : null}
                 </div>
               ) : null}
@@ -445,7 +500,11 @@ export function OrderStatusUpdateDialog({
                 disabled={isLoading || !nextStatus}
                 className="h-[48px] flex-1 rounded-full bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90"
               >
-                {isLoading ? <Loader2 size={18} className="animate-spin" /> : actionLabel}
+                {isLoading ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  actionLabel
+                )}
               </Button>
             </DialogFooter>
           </form>
@@ -460,13 +519,47 @@ export function OrderStatusUpdateDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="mt-6">
+            <div className="mt-6 space-y-4">
+              <div className="rounded-[18px] border border-primary/10 bg-primary/5 p-4">
+                <Label
+                  htmlFor="custom-minutes"
+                  className="text-sm font-semibold text-gray-900"
+                >
+                  {t("customMinutesLabel")}
+                </Label>
+                <Input
+                  id="custom-minutes"
+                  type="number"
+                  min={1}
+                  step={1}
+                  inputMode="numeric"
+                  value={customMinutes}
+                  disabled={isLoading}
+                  placeholder={t("customMinutesPlaceholder")}
+                  onChange={(event) => setCustomMinutes(event.target.value)}
+                  className="mt-2 h-[48px] rounded-[14px] bg-white"
+                />
+                <p className="mt-2 text-xs leading-5 text-gray-500">
+                  {t("customMinutesDescription")}
+                </p>
+              </div>
+
+              <div className="relative flex items-center gap-3 text-xs font-bold uppercase tracking-[0.14em] text-gray-400">
+                <span className="h-px flex-1 bg-gray-200" />
+                {t("customTimeOr")}
+                <span className="h-px flex-1 bg-gray-200" />
+              </div>
+
               <DateTimePickerField
                 label={t("selectDateAndTime")}
                 value={customDateTime}
                 minDate={new Date()}
-                disabled={isLoading}
-                helperText={t("customDeliveryTimeDescription")}
+                disabled={isLoading || hasCustomMinutes}
+                helperText={
+                  hasCustomMinutes
+                    ? t("customDateTimeDisabledByMinutes")
+                    : t("customDeliveryTimeDescription")
+                }
                 onChange={setCustomDateTime}
               />
             </div>
@@ -494,6 +587,7 @@ export function OrderStatusUpdateDialog({
                 onClick={() => {
                   setMode("main");
                   setDurationKey("20min");
+                  setCustomMinutes("");
                 }}
                 className="h-[48px] flex-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200"
               >

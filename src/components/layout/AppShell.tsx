@@ -8,6 +8,7 @@ import { Navbar } from "@/components/layout/navbar/navbar";
 import Sidebar from "@/components/layout/sidebar/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { isPublicRoute } from "@/lib/access";
+import { cn } from "@/lib/utils";
 
 type AppShellProps = {
   children: ReactNode;
@@ -28,15 +29,31 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <>
-      {!hideLayout && <Navbar />}
-      <div className="flex min-h-[calc(100vh-76px)] items-start">
+      {!hideLayout && (
+        <div className="fixed inset-x-0 top-0 z-40">
+          <Navbar />
+        </div>
+      )}
+      <div
+        className={cn(
+          "flex min-h-screen items-start",
+          !hideLayout && "pt-[76px]",
+        )}
+      >
         {!hideLayout && (
-          <div className="hidden h-[calc(100vh-76px)] shrink-0 overflow-hidden xl:sticky xl:top-[76px] xl:flex">
+          <div className="hidden h-[calc(100vh-76px)] shrink-0 overflow-hidden xl:fixed xl:left-0 xl:top-[76px] xl:flex">
             <Sidebar />
           </div>
         )}
 
-        <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+        <div
+          className={cn(
+            "flex min-w-0 flex-1 flex-col",
+            !hideLayout && "xl:pl-[280px]",
+          )}
+        >
+          {children}
+        </div>
       </div>
       <ContextGate />
     </>
