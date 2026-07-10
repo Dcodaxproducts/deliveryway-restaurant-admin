@@ -29,16 +29,14 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <>
       {!hideLayout && <Navbar />}
-      <div className="flex min-h-[calc(100vh-80px)] items-stretch">
+      <div className="flex min-h-[calc(100vh-76px)] items-start">
         {!hideLayout && (
-          <div className="hidden shrink-0 xl:flex">
+          <div className="hidden h-[calc(100vh-76px)] shrink-0 overflow-hidden xl:sticky xl:top-[76px] xl:flex">
             <Sidebar />
           </div>
         )}
 
-        <div className="flex min-w-0 flex-1 flex-col self-stretch">
-          {children}
-        </div>
+        <div className="flex min-w-0 flex-1 flex-col">{children}</div>
       </div>
       <ContextGate />
     </>
