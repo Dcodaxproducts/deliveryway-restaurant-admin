@@ -15,42 +15,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useDownloadOrderInvoicePdf, useSendOrderInvoiceEmail } from "@/hooks/useOrders";
-import { formatDateTime24 } from "@/lib/date-time-format";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  useDownloadOrderInvoicePdf,
+  useSendOrderInvoiceEmail,
+} from "@/hooks/useOrders";
 import type { GeneratedInvoice } from "@/services/reports/reports.api";
-
-const formatDate = (value?: string | null) => {
-  if (!value) return "-";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-
-  return formatDateTime24({
-    value: date,
-    options: {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    },
-  });
-};
-
-const formatPeriod = (from?: string | null, to?: string | null) => {
-  if (!from && !to) return "-";
-
-  const formatPeriodDate = (value?: string | null) => {
-    if (!value) return "-";
-
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "-";
-
-    return date.toLocaleDateString();
-  };
-
-  return `${formatPeriodDate(from)} – ${formatPeriodDate(to)}`;
-};
 
 const formatMoney = (amount?: number | null, currency?: string | null) => {
   const numericAmount = Number(amount ?? 0);
@@ -67,7 +37,12 @@ const formatMoney = (amount?: number | null, currency?: string | null) => {
 };
 
 const prettyLabel = (value?: string | null) =>
-  value ? value.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) : "-";
+  value
+    ? value
+        .replaceAll("_", " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase())
+    : "-";
 
 interface GeneratedInvoiceHistoryTableProps {
   invoices: GeneratedInvoice[];
@@ -79,6 +54,7 @@ export function GeneratedInvoiceHistoryTable({
   loading,
 }: GeneratedInvoiceHistoryTableProps) {
   const t = useTranslations("orders");
+  const { user, branchId, isBranchAdmin } = useAuth();
   const downloadInvoiceMutation = useDownloadOrderInvoicePdf({
     success: t("invoiceDownloaded"),
     error: t("invoiceDownloadFailed"),
@@ -91,14 +67,9 @@ export function GeneratedInvoiceHistoryTable({
   const headers = [
     t("invoiceNumber"),
     t("statusLabel"),
-    t("restaurant"),
-    t("branch"),
     t("linkedRecord"),
-    t("period"),
     t("currencyTotal"),
     t("sentDownloaded"),
-    t("lastSent"),
-    t("documentType"),
   ];
 
   if (loading) {
@@ -121,14 +92,9 @@ export function GeneratedInvoiceHistoryTable({
           <TableRow>
             <TableHead>{t("invoiceNumber")}</TableHead>
             <TableHead>{t("statusLabel")}</TableHead>
-            <TableHead>{t("restaurant")}</TableHead>
-            <TableHead>{t("branch")}</TableHead>
             <TableHead>{t("linkedRecord")}</TableHead>
-            <TableHead>{t("period")}</TableHead>
             <TableHead>{t("currencyTotal")}</TableHead>
             <TableHead>{t("sentDownloaded")}</TableHead>
-            <TableHead>{t("lastSent")}</TableHead>
-            <TableHead>{t("documentType")}</TableHead>
             <TableHead className="text-right">{t("actions")}</TableHead>
           </TableRow>
         </TableHeader>
@@ -141,6 +107,16 @@ export function GeneratedInvoiceHistoryTable({
             const isSending =
               sendInvoiceEmailMutation.isPending &&
               sendInvoiceEmailMutation.variables?.orderId === orderId;
+            const invoiceRestaurantId =
+              invoice.restaurantId || user?.restaurantId || undefined;
+            const invoiceBranchId =
+              invoice.branchId ||
+              (isBranchAdmin ? branchId : undefined) ||
+              undefined;
+            const actionParams = {
+              restaurantId: invoiceRestaurantId,
+              branchId: invoiceBranchId,
+            };
 
             return (
               <TableRow key={invoice.id}>
@@ -148,15 +124,21 @@ export function GeneratedInvoiceHistoryTable({
                   {invoice.invoiceNumber || "-"}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={invoice.status === "SENT" ? "default" : "secondary"}>
+                  <Badge
+                    variant={
+                      invoice.status === "SENT" ? "default" : "secondary"
+                    }
+                  >
                     {prettyLabel(invoice.status)}
                   </Badge>
                 </TableCell>
-                <TableCell>{invoice.restaurant?.name || invoice.tenant?.name || "-"}</TableCell>
-                <TableCell>{invoice.branch?.name || "-"}</TableCell>
                 <TableCell>
                   <div className="space-y-1 text-sm">
-                    <p>{invoice.orderId ? `${t("orderId")}: ${invoice.orderId}` : "-"}</p>
+                    <p>
+                      {invoice.orderId
+                        ? `${t("orderId")}: ${invoice.orderId}`
+                        : "-"}
+                    </p>
                     {invoice.subscriptionId ? (
                       <p className="text-xs text-gray-500">
                         {t("subscriptionId")}: {invoice.subscriptionId}
@@ -164,8 +146,9 @@ export function GeneratedInvoiceHistoryTable({
                     ) : null}
                   </div>
                 </TableCell>
-                <TableCell>{formatPeriod(invoice.periodFrom, invoice.periodTo)}</TableCell>
-                <TableCell>{formatMoney(invoice.totalAmount, invoice.currency)}</TableCell>
+                <TableCell>
+                  {formatMoney(invoice.totalAmount, invoice.currency)}
+                </TableCell>
                 <TableCell>
                   {t("sentDownloadedValue", {
                     sent: invoice.sentCount ?? 0,
@@ -173,44 +156,43 @@ export function GeneratedInvoiceHistoryTable({
                   })}
                 </TableCell>
                 <TableCell>
-                  <div className="space-y-1">
-                    <p>{formatDate(invoice.lastSentAt)}</p>
-                    {invoice.lastSentTo ? (
-                      <p className="text-xs text-gray-500">{invoice.lastSentTo}</p>
-                    ) : null}
-                  </div>
-                </TableCell>
-                <TableCell>{prettyLabel(invoice.documentType || invoice.kind)}</TableCell>
-                <TableCell>
                   <div className="flex justify-end gap-2">
                     <Button
                       type="button"
                       variant="outline"
-                      size="sm"
-                      disabled={!orderId || isDownloading}
+                      size="icon"
+                      title={t("downloadInvoice")}
+                      aria-label={t("downloadInvoice")}
+                      disabled={
+                        !orderId || !invoiceRestaurantId || isDownloading
+                      }
                       onClick={() => {
-                        if (!orderId) return;
+                        if (!orderId || !invoiceRestaurantId) return;
                         downloadInvoiceMutation.mutate({
                           orderId,
                           orderNumber: invoice.invoiceNumber,
+                          params: actionParams,
                         });
                       }}
                     >
-                      <Download className="mr-2 h-4 w-4" />
-                      {isDownloading ? t("downloadingInvoice") : t("downloadInvoice")}
+                      <Download className="h-4 w-4" />
                     </Button>
                     <Button
                       type="button"
                       variant="outline"
-                      size="sm"
-                      disabled={!orderId || isSending}
+                      size="icon"
+                      title={t("sendInvoiceEmail")}
+                      aria-label={t("sendInvoiceEmail")}
+                      disabled={!orderId || !invoiceRestaurantId || isSending}
                       onClick={() => {
-                        if (!orderId) return;
-                        sendInvoiceEmailMutation.mutate({ orderId });
+                        if (!orderId || !invoiceRestaurantId) return;
+                        sendInvoiceEmailMutation.mutate({
+                          orderId,
+                          params: actionParams,
+                        });
                       }}
                     >
-                      <Mail className="mr-2 h-4 w-4" />
-                      {isSending ? t("sendingInvoiceEmail") : t("sendInvoiceEmail")}
+                      <Mail className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>
