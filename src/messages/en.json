@@ -1518,6 +1518,7 @@
       "itemLimitPlaceholder": "eg. 2",
       "forcedVariation": "Forced variation",
       "noForcedVariation": "No forced variation",
+      "clearForcedVariation": "Clear forced variation",
       "categoryFallback": "Category",
       "minimumOrderAmountPlaceholder": "eg. 100",
       "maximumDiscountAmountPlaceholder": "eg. 50",

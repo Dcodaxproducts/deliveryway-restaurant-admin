@@ -541,6 +541,7 @@ export default function AdminDealForm({
                       itemLimitPlaceholder: t("itemLimitPlaceholder"),
                       forcedVariation: t("forcedVariation"),
                       noForcedVariation: t("noForcedVariation"),
+                      clearForcedVariation: t("clearForcedVariation"),
                       categoryFallback: t("categoryFallback"),
                     }}
                     onChange={field.onChange}
@@ -618,6 +619,7 @@ type CategoryRulesEditorProps = {
     itemLimitPlaceholder: string;
     forcedVariation: string;
     noForcedVariation: string;
+    clearForcedVariation: string;
     categoryFallback: string;
   };
   onChange: (rules: AdminDealCategoryRuleFormValues[]) => void;
@@ -729,7 +731,7 @@ function CategoryRulesEditor({
                       })
                     }
                   >
-                    {labels.noForcedVariation}
+                    {labels.clearForcedVariation}
                   </button>
                 ) : null}
               </div>
@@ -825,8 +827,9 @@ function CategoryVariationSelect({
         return;
       }
 
-      setSelectedVariationOption(null);
-      onChangeRef.current("");
+      // Keep the user's selected value. This page-1 validation request can miss
+      // valid searched or paginated variations, which made the field look empty.
+      return;
     };
 
     validateSelectedVariation();

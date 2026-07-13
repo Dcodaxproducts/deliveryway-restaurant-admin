@@ -1518,6 +1518,7 @@
       "itemLimitPlaceholder": "z. B. 2",
       "forcedVariation": "Erzwungene Variation",
       "noForcedVariation": "Keine erzwungene Variation",
+      "clearForcedVariation": "Erzwungene Variation entfernen",
       "categoryFallback": "Kategorie",
       "minimumOrderAmountPlaceholder": "z. B. 100",
       "maximumDiscountAmountPlaceholder": "z. B. 50",
