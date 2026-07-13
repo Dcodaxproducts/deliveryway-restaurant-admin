@@ -614,7 +614,11 @@
     "customMinutesPlaceholder": "e.g. 45 or 70",
     "customMinutesDescription": "Enter any number of minutes from now. Leave empty to use the exact date/time picker.",
     "customTimeOr": "or",
-    "customDateTimeDisabledByMinutes": "Clear the minutes field to pick an exact date and time."
+    "customDateTimeDisabledByMinutes": "Clear the minutes field to pick an exact date and time.",
+    "downloadInvoice": "Download invoice",
+    "downloadingInvoice": "Downloading invoice...",
+    "invoiceDownloaded": "Invoice downloaded",
+    "invoiceDownloadFailed": "Unable to download invoice"
   },
   "tableReservations": {
     "title": "Table Reservations",

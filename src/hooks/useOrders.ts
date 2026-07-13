@@ -5,10 +5,12 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
+  downloadOrderInvoicePdf,
   failPaymentTransaction,
   getOrderById,
   getOrders,
   markPaymentTransactionPaid,
+  type DownloadOrderInvoicePdfParams,
   type PaymentStatusUpdatePayload,
   refundPaymentTransaction,
   updatePaymentTransactionStatus,
@@ -43,7 +45,9 @@ export function useOrders(params?: UseOrdersParams) {
   const { user, isBranchAdmin } = useAuth();
 
   const restaurantId = params?.restaurantId ?? user?.restaurantId;
-  const branchId = params?.branchId ?? (isBranchAdmin ? user?.branchId ?? undefined : undefined);
+  const branchId =
+    params?.branchId ??
+    (isBranchAdmin ? (user?.branchId ?? undefined) : undefined);
 
   const query = useQuery({
     queryKey: [
@@ -92,6 +96,59 @@ export const useGetOrderById = (id?: string) => {
   });
 };
 
+const downloadBlobFile = (blob: Blob, fileName: string) => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  window.URL.revokeObjectURL(url);
+};
+
+const sanitizeFileName = (value: string) => {
+  return value.replace(/[^a-z0-9-_]+/gi, "-").replace(/^-+|-+$/g, "");
+};
+
+export const useDownloadOrderInvoicePdf = (messages?: {
+  success?: string;
+  error?: string;
+}) => {
+  return useMutation({
+    mutationFn: ({
+      orderId,
+      orderNumber,
+      params,
+    }: {
+      orderId: string;
+      orderNumber?: string;
+      params?: DownloadOrderInvoicePdfParams;
+    }) =>
+      downloadOrderInvoicePdf(orderId, params).then((blob) => ({
+        blob,
+        orderId,
+        orderNumber,
+      })),
+    onSuccess: ({ blob, orderId, orderNumber }) => {
+      const invoiceLabel = sanitizeFileName(orderNumber || orderId || "order");
+      downloadBlobFile(blob, `invoice-${invoiceLabel}.pdf`);
+      toast.success(messages?.success || "Invoice downloaded");
+    },
+    onError: (error) => {
+      toast.error(
+        getApiErrorMessage(
+          error,
+          messages?.error || "Unable to download invoice",
+        ),
+      );
+    },
+  });
+};
+
 export const useUpdateOrderStatus = () => {
   const queryClient = useQueryClient();
 
@@ -105,7 +162,9 @@ export const useUpdateOrderStatus = () => {
     }) => updateOrderStatus(orderId, payload),
     onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["orders", "detail", order.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["orders", "detail", order.id],
+      });
       toast.success("Order status updated");
     },
     onError: (error) => {
@@ -124,11 +183,15 @@ export const useSendOrderOutForDelivery = () => {
     },
     onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["orders", "detail", order.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["orders", "detail", order.id],
+      });
       toast.success("Order sent out for delivery");
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Unable to send order out for delivery"));
+      toast.error(
+        getApiErrorMessage(error, "Unable to send order out for delivery"),
+      );
     },
   });
 };
@@ -145,11 +208,15 @@ export const useSendOrderWithExternalDriver = () => {
     },
     onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["orders", "detail", order.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["orders", "detail", order.id],
+      });
       toast.success("Order sent with external driver");
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Unable to send order with external driver"));
+      toast.error(
+        getApiErrorMessage(error, "Unable to send order with external driver"),
+      );
     },
   });
 };
@@ -170,7 +237,9 @@ export const useRefundPaymentTransaction = (orderId?: string | null) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       if (orderId) {
-        queryClient.invalidateQueries({ queryKey: ["orders", "detail", orderId] });
+        queryClient.invalidateQueries({
+          queryKey: ["orders", "detail", orderId],
+        });
       }
       toast.success("Payment refunded");
     },
@@ -206,7 +275,9 @@ export const useUpdatePaymentTransactionStatus = (orderId?: string | null) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       if (orderId) {
-        queryClient.invalidateQueries({ queryKey: ["orders", "detail", orderId] });
+        queryClient.invalidateQueries({
+          queryKey: ["orders", "detail", orderId],
+        });
       }
       toast.success("Payment status updated");
     },

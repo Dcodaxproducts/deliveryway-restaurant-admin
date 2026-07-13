@@ -1,6 +1,10 @@
 import api, { httpClient } from "@/lib/axios";
 import { cleanParams } from "@/lib/params";
-import type { Order, OrderStatusUpdatePayload, PaymentTransaction } from "@/types/orders";
+import type {
+  Order,
+  OrderStatusUpdatePayload,
+  PaymentTransaction,
+} from "@/types/orders";
 
 export interface GetOrdersParams {
   restaurantId: string;
@@ -41,11 +45,20 @@ export type PaymentStatusUpdatePayload = {
   note?: string;
 };
 
+export type DownloadOrderInvoicePdfParams = {
+  restaurantId?: string;
+  branchId?: string;
+};
+
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
-const getString = (source: Record<string, unknown>, key: string, fallback = "") => {
+const getString = (
+  source: Record<string, unknown>,
+  key: string,
+  fallback = "",
+) => {
   const value = source[key];
   return typeof value === "string" ? value : fallback;
 };
@@ -62,7 +75,9 @@ const getNullableString = (source: Record<string, unknown>, key: string) => {
 
 const getNumber = (source: Record<string, unknown>, key: string) => {
   const value = source[key];
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : undefined;
 };
 
 const getNullableNumber = (source: Record<string, unknown>, key: string) => {
@@ -113,7 +128,9 @@ const normalizeDeliveryAddress = (value: unknown): Order["deliveryAddress"] => {
   };
 };
 
-const normalizePaymentTransaction = (value: unknown): PaymentTransaction | null => {
+const normalizePaymentTransaction = (
+  value: unknown,
+): PaymentTransaction | null => {
   if (!isRecord(value)) return null;
 
   return {
@@ -130,12 +147,16 @@ const normalizePaymentTransaction = (value: unknown): PaymentTransaction | null 
   };
 };
 
-const normalizePaymentTransactions = (value: unknown): PaymentTransaction[] | null => {
+const normalizePaymentTransactions = (
+  value: unknown,
+): PaymentTransaction[] | null => {
   if (!Array.isArray(value)) return null;
 
   return value
     .map(normalizePaymentTransaction)
-    .filter((transaction): transaction is PaymentTransaction => Boolean(transaction));
+    .filter((transaction): transaction is PaymentTransaction =>
+      Boolean(transaction),
+    );
 };
 
 export const normalizeOrder = (value: unknown): Order | null => {
@@ -170,7 +191,8 @@ export const normalizeOrder = (value: unknown): Order | null => {
 };
 
 const unwrapOrder = (payload: unknown): Order => {
-  const source = isRecord(payload) && "data" in payload ? payload.data : payload;
+  const source =
+    isRecord(payload) && "data" in payload ? payload.data : payload;
   const order = normalizeOrder(source);
 
   if (!order) {
@@ -181,7 +203,7 @@ const unwrapOrder = (payload: unknown): Order => {
 };
 
 export const getOrders = async (
-  params: GetOrdersParams
+  params: GetOrdersParams,
 ): Promise<GetOrdersResponse> => {
   const { data } = await api.get("/orders", {
     params: {
@@ -211,18 +233,36 @@ export const getOrderById = async (id: string) => {
   return data?.data;
 };
 
+export const downloadOrderInvoicePdf = async (
+  orderId: string,
+  params?: DownloadOrderInvoicePdfParams,
+) => {
+  const { data } = await api.get<Blob>(
+    `/admin/reports/invoices/${orderId}/pdf`,
+    {
+      params: cleanParams(params),
+      responseType: "blob",
+    },
+  );
+
+  return data;
+};
+
 export const updateOrderStatus = async (
   orderId: string,
-  payload: OrderStatusUpdatePayload
+  payload: OrderStatusUpdatePayload,
 ): Promise<Order> => {
-  const response = await httpClient.patch<unknown, Partial<OrderStatusUpdatePayload>>(
+  const response = await httpClient.patch<
+    unknown,
+    Partial<OrderStatusUpdatePayload>
+  >(
     `/orders/${orderId}/status`,
     cleanParams({
       status: payload.status,
       deliveryOtp: payload.deliveryOtp?.trim(),
       orderTime: payload.orderTime?.trim(),
       deliveryFulfillmentMode: payload.deliveryFulfillmentMode,
-    })
+    }),
   );
 
   return unwrapOrder(response);
@@ -230,11 +270,11 @@ export const updateOrderStatus = async (
 
 export const refundPaymentTransaction = async (
   paymentId: string,
-  payload: RefundPaymentPayload = {}
+  payload: RefundPaymentPayload = {},
 ) => {
   const response = await httpClient.post<unknown, RefundPaymentPayload>(
     `/payments/${paymentId}/refund`,
-    cleanParams(payload)
+    cleanParams(payload),
   );
 
   return response;
@@ -242,7 +282,7 @@ export const refundPaymentTransaction = async (
 
 export const markPaymentTransactionPaid = async (
   paymentId: string,
-  payload: Pick<PaymentStatusUpdatePayload, "note"> = {}
+  payload: Pick<PaymentStatusUpdatePayload, "note"> = {},
 ) => {
   const response = await httpClient.post<
     unknown,
@@ -254,7 +294,7 @@ export const markPaymentTransactionPaid = async (
 
 export const failPaymentTransaction = async (
   paymentId: string,
-  payload: Pick<PaymentStatusUpdatePayload, "note"> = {}
+  payload: Pick<PaymentStatusUpdatePayload, "note"> = {},
 ) => {
   const response = await httpClient.post<
     unknown,
@@ -266,12 +306,12 @@ export const failPaymentTransaction = async (
 
 export const updatePaymentTransactionStatus = async (
   paymentId: string,
-  payload: PaymentStatusUpdatePayload
+  payload: PaymentStatusUpdatePayload,
 ) => {
-  const response = await httpClient.patch<unknown, Partial<PaymentStatusUpdatePayload>>(
-    `/payments/${paymentId}/status`,
-    cleanParams(payload)
-  );
+  const response = await httpClient.patch<
+    unknown,
+    Partial<PaymentStatusUpdatePayload>
+  >(`/payments/${paymentId}/status`, cleanParams(payload));
 
   return response;
 };

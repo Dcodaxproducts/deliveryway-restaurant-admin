@@ -614,7 +614,11 @@
     "customMinutesPlaceholder": "z. B. 45 oder 70",
     "customMinutesDescription": "Geben Sie eine beliebige Anzahl Minuten ab jetzt ein. Leer lassen, um Datum und Uhrzeit exakt zu wählen.",
     "customTimeOr": "oder",
-    "customDateTimeDisabledByMinutes": "Leeren Sie das Minutenfeld, um Datum und Uhrzeit exakt auszuwählen."
+    "customDateTimeDisabledByMinutes": "Leeren Sie das Minutenfeld, um Datum und Uhrzeit exakt auszuwählen.",
+    "downloadInvoice": "Rechnung herunterladen",
+    "downloadingInvoice": "Rechnung wird heruntergeladen...",
+    "invoiceDownloaded": "Rechnung heruntergeladen",
+    "invoiceDownloadFailed": "Rechnung konnte nicht heruntergeladen werden"
   },
   "tableReservations": {
     "title": "Tischreservierungen",

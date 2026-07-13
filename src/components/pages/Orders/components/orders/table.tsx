@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Ban, CalendarClock, CreditCard, Eye, MoreHorizontal, RefreshCw, Truck, XCircle } from "lucide-react";
+import { Ban, CalendarClock, CreditCard, Download, Eye, MoreHorizontal, RefreshCw, Truck, XCircle } from "lucide-react";
 import EmptyState from "@/components/common/EmptyState";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,7 @@ import {
   isFutureOrder,
 } from "@/components/pages/Orders/utils/orders-schedule-filters";
 import { useAuth } from "@/hooks/useAuth";
-import { useSendOrderOutForDelivery, useSendOrderWithExternalDriver, useUpdateOrderStatus } from "@/hooks/useOrders";
+import { useDownloadOrderInvoicePdf, useSendOrderOutForDelivery, useSendOrderWithExternalDriver, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { formatDateTime24 } from "@/lib/date-time-format";
 import { getOrderById } from "@/services/orders/orders.api";
 import {
@@ -113,7 +113,7 @@ export function OrdersTable({
   activeTab
 }: OrdersTableProps) {
   const router = useRouter();
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const common = useTranslations("common");
   const t = useTranslations("orders");
   const [statusOrder, setStatusOrder] = useState<OrdersTableRow | null>(null);
@@ -125,6 +125,10 @@ export function OrdersTable({
   const updateStatusMutation = useUpdateOrderStatus();
   const sendOutForDeliveryMutation = useSendOrderOutForDelivery();
   const externalDriverMutation = useSendOrderWithExternalDriver();
+  const downloadInvoiceMutation = useDownloadOrderInvoicePdf({
+    success: t("invoiceDownloaded"),
+    error: t("invoiceDownloadFailed"),
+  });
   const canUpdatePaymentStatusRole =
     role === "BUSINESS_ADMIN" || role === "SUPER_ADMIN" || role === "BRANCH_ADMIN";
   const getStatusLabel = (status?: string) =>
@@ -242,6 +246,17 @@ export function OrdersTable({
       status: updatedOrder.status ?? "OUT_FOR_DELIVERY",
     });
   };
+  const handleDownloadInvoiceAction = (order: OrdersTableRow) => {
+    downloadInvoiceMutation.mutate({
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      params: {
+        restaurantId: user?.restaurantId ?? undefined,
+        branchId: order.branchId ?? undefined,
+      },
+    });
+  };
+
   const handlePaymentStatusAction = async (order: OrdersTableRow) => {
     if (!canUpdatePaymentStatusRole || loadingPaymentStatusOrderId) return;
 
@@ -378,6 +393,9 @@ export function OrdersTable({
     const canUpdatePaymentStatus =
       canUpdatePaymentStatusRole && paymentStatus !== "REFUNDED";
     const paymentStatusLoading = loadingPaymentStatusOrderId === id;
+    const invoiceDownloading =
+      downloadInvoiceMutation.isPending &&
+      downloadInvoiceMutation.variables?.orderId === id;
 
     return (
     <TableRow key={id} className="border-none h-[70px]">
@@ -531,6 +549,13 @@ export function OrdersTable({
               <DropdownMenuItem onClick={() => router.push(getOrderRoute(order))}>
                 <Eye size={16} />
                 {common("viewDetails")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={invoiceDownloading}
+                onClick={() => handleDownloadInvoiceAction(order)}
+              >
+                <Download size={16} />
+                {invoiceDownloading ? t("downloadingInvoice") : t("downloadInvoice")}
               </DropdownMenuItem>
               {canUpdateStatus ? (
                 <DropdownMenuItem
