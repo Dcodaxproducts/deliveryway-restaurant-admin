@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import StatsSection from "@/components/common/stats-section";
 import { OrdersHeader } from "@/components/pages/Orders/components/orders/header";
 import Container from "@/components/common/Container";
@@ -30,6 +31,15 @@ import {
 import { useTranslations } from "next-intl";
 import type { Order } from "@/types/orders";
 
+const orderTabs = new Set<OrderTab>([
+  "all",
+  "delivery",
+  "pickup",
+  "reservations",
+  "group",
+  "invoice-history",
+]);
+
 const getOrderCustomerName = (order: Order) => {
   const customer = order.customer;
   return (
@@ -41,14 +51,16 @@ const getOrderCustomerName = (order: Order) => {
 
 export function OrdersPage() {
   const t = useTranslations("orders");
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<OrderTab>("all");
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
   const [status, setStatus] = useState("ALL");
   const [scheduleFilter, setScheduleFilter] =
     useState<OrdersScheduleFilter>("ALL");
-  const [scheduleRange, setScheduleRange] =
-    useState<OrdersScheduleDateRange>({});
+  const [scheduleRange, setScheduleRange] = useState<OrdersScheduleDateRange>(
+    {},
+  );
 
   const [sortKey, setSortKey] = useState<keyof OrdersTableRow | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -58,7 +70,6 @@ export function OrdersPage() {
   const { user, branchId, isBranchAdmin } = useAuth();
   const restaurantId = user?.restaurantId;
   const scopedBranchId = isBranchAdmin ? branchId || undefined : undefined;
-
 
   const {
     data: orderStatsResponse,
@@ -70,7 +81,7 @@ export function OrdersPage() {
           restaurantId,
           ...(scopedBranchId ? { branchId: scopedBranchId } : {}),
         }
-      : undefined
+      : undefined,
   );
 
   const orderStats = orderStatsResponse?.data;
@@ -103,7 +114,7 @@ export function OrdersPage() {
     {
       kind: "ORDER",
     },
-    { enabled: isInvoiceHistoryTab }
+    { enabled: isInvoiceHistoryTab },
   );
 
   const orders: Order[] = ordersQuery.orders;
@@ -115,10 +126,15 @@ export function OrdersPage() {
   const hasPrevious = paginationMeta?.hasPrevious || false;
 
   useEffect(() => {
-    if (window.location.search.includes("tab=invoice-history")) {
-      setActiveTab("invoice-history");
+    const tab = searchParams.get("tab") as OrderTab | null;
+
+    if (tab && orderTabs.has(tab)) {
+      setActiveTab(tab);
+      return;
     }
-  }, []);
+
+    setActiveTab("all");
+  }, [searchParams]);
 
   useEffect(() => {
     setPage(1);
@@ -139,25 +155,33 @@ export function OrdersPage() {
         ...order,
         customerName: getOrderCustomerName(order),
       })),
-    [orders]
+    [orders],
   );
   const filteredOrders = useMemo(
     () =>
       ordersWithCustomerName.filter((order) =>
-        matchesOrdersScheduleFilter(order, scheduleFilter, scheduleRange)
+        matchesOrdersScheduleFilter(order, scheduleFilter, scheduleRange),
       ),
-    [ordersWithCustomerName, scheduleFilter, scheduleRange]
+    [ordersWithCustomerName, scheduleFilter, scheduleRange],
   );
   const sortedOrders = sortKey
     ? sortData<OrdersTableRow>(filteredOrders, sortKey, sortDir)
     : filteredOrders;
   const isClientScheduleFilterActive = scheduleFilter !== "ALL";
 
-  const { title, description } = getOrdersHeaderContent(activeTab, isBranchAdmin, t);
+  const { title, description } = getOrdersHeaderContent(
+    activeTab,
+    isBranchAdmin,
+    t,
+  );
 
   return (
     <Container>
-      <OrdersHeader title={title} description={description} orders={sortedOrders} />
+      <OrdersHeader
+        title={title}
+        description={description}
+        orders={sortedOrders}
+      />
 
       <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6">
         <StatsSection
@@ -206,47 +230,50 @@ export function OrdersPage() {
         {isInvoiceHistoryTab ? (
           <GeneratedInvoiceHistoryTable
             invoices={generatedInvoicesQuery.data?.data || []}
-            loading={generatedInvoicesQuery.isLoading || generatedInvoicesQuery.isFetching}
+            loading={
+              generatedInvoicesQuery.isLoading ||
+              generatedInvoicesQuery.isFetching
+            }
           />
         ) : (
           <>
-        <OrdersFilters
-          onSearch={setSearch}
-          onSortChange={setSortOrder}
-          onStatusChange={setStatus}
-          scheduleFilter={scheduleFilter}
-          scheduleRange={scheduleRange}
-          onScheduleFilterChange={setScheduleFilter}
-          onScheduleRangeChange={setScheduleRange}
-        />
+            <OrdersFilters
+              onSearch={setSearch}
+              onSortChange={setSortOrder}
+              onStatusChange={setStatus}
+              scheduleFilter={scheduleFilter}
+              scheduleRange={scheduleRange}
+              onScheduleFilterChange={setScheduleFilter}
+              onScheduleRangeChange={setScheduleRange}
+            />
 
-        {isClientScheduleFilterActive ? (
-          <div className="rounded-[16px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-            {t("scheduleClientFilterNotice", {
-              shown: sortedOrders.length,
-              loaded: ordersWithCustomerName.length,
-            })}
-          </div>
-        ) : null}
+            {isClientScheduleFilterActive ? (
+              <div className="rounded-[16px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+                {t("scheduleClientFilterNotice", {
+                  shown: sortedOrders.length,
+                  loaded: ordersWithCustomerName.length,
+                })}
+              </div>
+            ) : null}
 
-        <OrdersTable
-          orders={sortedOrders}
-          loading={loading}
-          sortKey={sortKey}
-          sortDir={sortDir}
-          onSort={handleSort}
-          activeTab={activeTab}
-        />
+            <OrdersTable
+              orders={sortedOrders}
+              loading={loading}
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={handleSort}
+              activeTab={activeTab}
+            />
 
-        <PaginationSection
-          page={page}
-          totalPages={totalPages}
-          total={total}
-          limit={limit}
-          hasNext={hasNext}
-          hasPrevious={hasPrevious}
-          onPageChange={(newPage: number) => setPage(newPage)}
-        />
+            <PaginationSection
+              page={page}
+              totalPages={totalPages}
+              total={total}
+              limit={limit}
+              hasNext={hasNext}
+              hasPrevious={hasPrevious}
+              onPageChange={(newPage: number) => setPage(newPage)}
+            />
           </>
         )}
       </div>

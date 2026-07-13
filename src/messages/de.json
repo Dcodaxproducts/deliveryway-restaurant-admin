@@ -181,7 +181,12 @@
     "accountSettingsCta": "KONTOEINSTELLUNGEN",
     "logout": "Abmelden",
     "logoutSuccess": "Erfolgreich abgemeldet",
-    "accountSettings": "Kontoeinstellungen"
+    "accountSettings": "Kontoeinstellungen",
+    "allOrders": "Alle Bestellungen",
+    "deliveryOrders": "Lieferbestellungen",
+    "pickupOrders": "Abholbestellungen",
+    "groupOrders": "Gruppenbestellungen",
+    "invoiceHistory": "Rechnungshistorie"
   },
   "navbar": {
     "openSidebar": "Seitenleiste öffnen",

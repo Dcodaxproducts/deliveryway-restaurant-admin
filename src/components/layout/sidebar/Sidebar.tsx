@@ -4,12 +4,16 @@ import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LogOut, ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { menuItems, MenuItem, type SidebarRole } from "@/config/sidebarItems";
 import { useAuth } from "@/hooks/useAuth";
-import { getStaffDefaultRedirectPath, hasStaffPermission, isStaffRole } from "@/lib/auth";
+import {
+  getStaffDefaultRedirectPath,
+  hasStaffPermission,
+  isStaffRole,
+} from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -80,7 +84,9 @@ const SidebarItem = ({
             {item.children?.map((child) => {
               const ChildIcon = child.icon;
               const childActive = isActiveRoute(child.href, child.children);
-              const childLabel = child.labelKey ? t(child.labelKey) : child.title;
+              const childLabel = child.labelKey
+                ? t(child.labelKey)
+                : child.title;
 
               return (
                 <Link
@@ -127,9 +133,7 @@ const SidebarItem = ({
 
       <span
         className={`text-sm truncate ${
-          isActive
-            ? "text-primary font-medium"
-            : "text-gray hover:text-primary"
+          isActive ? "text-primary font-medium" : "text-gray hover:text-primary"
         }`}
       >
         {label}
@@ -138,13 +142,22 @@ const SidebarItem = ({
   );
 };
 
-
 const getSidebarCta = (
   user: ReturnType<typeof useAuth>["user"],
   role: ReturnType<typeof useAuth>["role"],
-  isBranchAdmin: boolean
-): { href: string; labelKey: "myBranchCta" | "addMenuCta" | "manageBranchCta" | "manageOrdersCta" | "openPosCta" | "accountSettingsCta" } => {
-  if (isBranchAdmin) return { href: "/branch-workspace", labelKey: "myBranchCta" };
+  isBranchAdmin: boolean,
+): {
+  href: string;
+  labelKey:
+    | "myBranchCta"
+    | "addMenuCta"
+    | "manageBranchCta"
+    | "manageOrdersCta"
+    | "openPosCta"
+    | "accountSettingsCta";
+} => {
+  if (isBranchAdmin)
+    return { href: "/branch-workspace", labelKey: "myBranchCta" };
 
   if (isStaffRole(role, user?.actorType)) {
     const href = getStaffDefaultRedirectPath(user);
@@ -152,7 +165,8 @@ const getSidebarCta = (
     if (href === "/branches") return { href, labelKey: "manageBranchCta" };
     if (href === "/orders") return { href, labelKey: "manageOrdersCta" };
     if (href === "/pos") return { href, labelKey: "openPosCta" };
-    if (href === "/") return { href: "/profile", labelKey: "accountSettingsCta" };
+    if (href === "/")
+      return { href: "/profile", labelKey: "accountSettingsCta" };
 
     return { href, labelKey: "addMenuCta" };
   }
@@ -166,6 +180,7 @@ export default function Sidebar({
   onLinkClick?: () => void;
 }): ReactElement {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations("navigation");
   const { user, role, isBranchAdmin, logout } = useAuth();
@@ -181,7 +196,10 @@ export default function Sidebar({
     if (isStaffRole(role, user?.actorType)) {
       if (item.href === "/branch-workspace") return false;
       if (item.href === "/profile") return true;
-      return Boolean(item.permissionAccesses?.length && hasStaffPermission(user, item.permissionAccesses));
+      return Boolean(
+        item.permissionAccesses?.length &&
+        hasStaffPermission(user, item.permissionAccesses),
+      );
     }
 
     return isSidebarRole(role) && item.roles.includes(role);
@@ -206,7 +224,7 @@ export default function Sidebar({
 
     if (children?.length) {
       const hasActiveChild = children.some((child) =>
-        isActiveRoute(child.href, child.children)
+        isActiveRoute(child.href, child.children),
       );
 
       if (hasActiveChild) return true;
@@ -214,11 +232,27 @@ export default function Sidebar({
 
     if (!href) return false;
 
-    if (href === "/") {
+    const [hrefPath, hrefQuery = ""] = href.split("?");
+    const hrefSearchParams = new URLSearchParams(hrefQuery);
+    const hrefTab = hrefSearchParams.get("tab");
+
+    if (hrefPath === "/") {
       return pathname === "/";
     }
 
-    return pathname === href || pathname.startsWith(`${href}/`);
+    const pathMatches =
+      pathname === hrefPath || pathname.startsWith(`${hrefPath}/`);
+
+    if (!pathMatches) {
+      return false;
+    }
+
+    if (hrefTab) {
+      const currentTab = searchParams.get("tab") || "all";
+      return currentTab === hrefTab;
+    }
+
+    return true;
   };
 
   const handleLogout = (): void => {
@@ -288,7 +322,9 @@ export default function Sidebar({
             <Button
               size="sm"
               className="w-full bg-white text-primary hover:bg-white/90 font-semibold"
-              onClick={() => router.push(getSidebarCta(user, role, isBranchAdmin).href)}
+              onClick={() =>
+                router.push(getSidebarCta(user, role, isBranchAdmin).href)
+              }
             >
               {t(getSidebarCta(user, role, isBranchAdmin).labelKey)}
             </Button>

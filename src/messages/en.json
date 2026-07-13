@@ -181,7 +181,12 @@
     "logoutSuccess": "Logged out successfully",
     "allergen": "Allergen",
     "deliveryman": "Deliveryman",
-    "accountSettings": "Account Settings"
+    "accountSettings": "Account Settings",
+    "allOrders": "All Orders",
+    "deliveryOrders": "Delivery Orders",
+    "pickupOrders": "Pickup Orders",
+    "groupOrders": "Group Orders",
+    "invoiceHistory": "Invoice History"
   },
   "navbar": {
     "openSidebar": "Open sidebar",
