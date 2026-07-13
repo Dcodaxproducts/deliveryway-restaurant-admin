@@ -9,10 +9,12 @@ import {
   getAdminReportInvoiceDetails,
   getAdminReportInvoices,
   getFinancialReport,
+  getGeneratedInvoices,
   getOrdersReport,
   OrdersReportParams,
   AdminInvoicesParams,
   AdminInvoiceDetailsParams,
+  GeneratedInvoicesParams,
   MenuExportReportParams,
   OrdersExportReportParams,
   CustomersExportReportParams,
@@ -116,6 +118,28 @@ export const useGetFinancialReport = (params?: FinancialReportParams) => {
  * INVOICE REPORT HOOKS
  * ==============================
  */
+
+export const useGetGeneratedInvoices = (
+  params?: GeneratedInvoicesParams,
+  options?: { enabled?: boolean }
+) => {
+  return useQuery({
+    queryKey: [
+      "reports",
+      "generated-invoices",
+      params?.restaurantId,
+      params?.branchId,
+      params?.kind,
+      params?.status,
+      params?.subscriptionId,
+      params?.orderId,
+      params?.fromDate,
+      params?.toDate,
+    ],
+    queryFn: () => getGeneratedInvoices(params),
+    enabled: options?.enabled ?? true,
+  });
+};
 
 export const useGetAdminReportInvoices = (params?: AdminInvoicesParams) => {
   return useQuery({

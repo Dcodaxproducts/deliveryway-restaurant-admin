@@ -622,7 +622,20 @@
     "sendInvoiceEmail": "Send invoice to customer email",
     "sendingInvoiceEmail": "Sending invoice...",
     "invoiceEmailSent": "Invoice sent to customer email",
-    "invoiceEmailFailed": "Unable to send invoice email"
+    "invoiceEmailFailed": "Unable to send invoice email",
+    "invoiceHistory": "Invoice History",
+    "invoiceHistoryDescription": "Review generated order invoices, delivery status, downloads, and customer email sends.",
+    "invoiceHistoryEmptyTitle": "No generated invoices yet",
+    "invoiceHistoryEmptyDescription": "Generated order invoices will appear here after they are downloaded or emailed.",
+    "invoiceNumber": "Invoice number",
+    "linkedRecord": "Order / subscription",
+    "subscriptionId": "Subscription ID",
+    "period": "Period",
+    "currencyTotal": "Currency / total",
+    "sentDownloaded": "Sent / downloads",
+    "sentDownloadedValue": "{sent} sent / {downloaded} downloads",
+    "lastSent": "Last sent",
+    "documentType": "Document type"
   },
   "tableReservations": {
     "title": "Table Reservations",

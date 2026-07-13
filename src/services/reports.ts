@@ -129,6 +129,19 @@ export type AdminInvoiceDetailsParams = BaseReportParams & {
   orderId: string;
 };
 
+export type GeneratedInvoiceKind = "ORDER" | "SUBSCRIPTION" | "WEEKLY_PAYOUT";
+
+export type GeneratedInvoiceStatus = "ISSUED" | "SENT";
+
+export type GeneratedInvoicesParams = BaseReportParams & {
+  kind?: GeneratedInvoiceKind | string;
+  status?: GeneratedInvoiceStatus | string;
+  subscriptionId?: string;
+  orderId?: string;
+  fromDate?: string;
+  toDate?: string;
+};
+
 export type ReportRestaurant = {
   id: string;
   name: string;
@@ -173,6 +186,39 @@ export type InvoiceItem = {
   note?: string | null;
   snapshotModifiers?: any[];
   createdAt?: string;
+};
+
+export type GeneratedInvoice = {
+  id: string;
+  invoiceNumber: string;
+  kind: GeneratedInvoiceKind | string;
+  status: GeneratedInvoiceStatus | string;
+  tenantId?: string | null;
+  restaurantId?: string | null;
+  branchId?: string | null;
+  customerId?: string | null;
+  orderId?: string | null;
+  subscriptionId?: string | null;
+  periodFrom?: string | null;
+  periodTo?: string | null;
+  currency?: string | null;
+  totalAmount: number;
+  sentCount: number;
+  downloadedCount: number;
+  lastSentAt?: string | null;
+  lastSentTo?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  documentType?: string | null;
+  restaurant?: ReportRestaurant | null;
+  branch?: ReportBranch | null;
+  tenant?: { id: string; name: string } | null;
+};
+
+export type GeneratedInvoicesResponse = {
+  success?: boolean;
+  data: GeneratedInvoice[];
+  message?: string;
 };
 
 export type AdminInvoice = {
@@ -267,6 +313,16 @@ export const getFinancialReport = async (params?: FinancialReportParams) => {
  * INVOICE REPORT APIS
  * ==============================
  */
+
+export const getGeneratedInvoices = async (
+  params?: GeneratedInvoicesParams
+): Promise<GeneratedInvoicesResponse> => {
+  const { data } = await api.get("/admin/reports/generated-invoices", {
+    params: cleanParams(params),
+  });
+
+  return data;
+};
 
 export const getAdminReportInvoices = async (
   params?: AdminInvoicesParams

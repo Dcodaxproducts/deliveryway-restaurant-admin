@@ -622,7 +622,20 @@
     "sendInvoiceEmail": "Rechnung an Kunden-E-Mail senden",
     "sendingInvoiceEmail": "Rechnung wird gesendet...",
     "invoiceEmailSent": "Rechnung an Kunden-E-Mail gesendet",
-    "invoiceEmailFailed": "Rechnungs-E-Mail konnte nicht gesendet werden"
+    "invoiceEmailFailed": "Rechnungs-E-Mail konnte nicht gesendet werden",
+    "invoiceHistory": "Rechnungshistorie",
+    "invoiceHistoryDescription": "Prüfen Sie generierte Bestellrechnungen, Versandstatus, Downloads und E-Mail-Versände an Kunden.",
+    "invoiceHistoryEmptyTitle": "Noch keine generierten Rechnungen",
+    "invoiceHistoryEmptyDescription": "Generierte Bestellrechnungen erscheinen hier, sobald sie heruntergeladen oder per E-Mail versendet wurden.",
+    "invoiceNumber": "Rechnungsnummer",
+    "linkedRecord": "Bestellung / Abonnement",
+    "subscriptionId": "Abonnement-ID",
+    "period": "Zeitraum",
+    "currencyTotal": "Währung / Gesamtbetrag",
+    "sentDownloaded": "Gesendet / Downloads",
+    "sentDownloadedValue": "{sent} gesendet / {downloaded} Downloads",
+    "lastSent": "Zuletzt gesendet",
+    "documentType": "Dokumenttyp"
   },
   "tableReservations": {
     "title": "Tischreservierungen",

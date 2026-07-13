@@ -1,6 +1,6 @@
 import type { StatItem } from "@/types/stats";
 
-export type OrderTab = "all" | "delivery" | "pickup" | "reservations" | "group";
+export type OrderTab = "all" | "delivery" | "pickup" | "reservations" | "group" | "invoice-history";
 
 export interface Order {
   id: string;
@@ -88,6 +88,8 @@ export const getOrdersHeaderContent = (tab: OrderTab, isBranchAdmin: boolean, t:
       return { title: t("reservationsTitle"), description: t("reservationsDescription") };
     case "group":
       return { title: t("groupOrderSummaryTitle"), description: t("groupOrderSummaryDescription") };
+    case "invoice-history":
+      return { title: t("invoiceHistory"), description: t("invoiceHistoryDescription") };
     default:
       return { title: t("orderList"), description: t("orderListDescription") };
   }

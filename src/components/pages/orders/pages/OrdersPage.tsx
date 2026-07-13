@@ -10,11 +10,13 @@ import {
 } from "@/components/pages/Orders/components/orders/table";
 import { Button } from "@/components/ui/button";
 import { OrdersFilters } from "@/components/pages/Orders/components/orders/OrdersFilters";
+import { GeneratedInvoiceHistoryTable } from "@/components/pages/Orders/components/orders/GeneratedInvoiceHistoryTable";
 import { useAuth } from "@/hooks/useAuth";
 import PaginationSection from "@/components/common/pagination";
 import { sortData } from "@/lib/sort-data";
 import { useGetOrdersStats } from "@/hooks/useDashboard";
 import { useOrders } from "@/hooks/useOrders";
+import { useGetGeneratedInvoices } from "@/hooks/useReports";
 import {
   buildOrderStats,
   getOrdersHeaderContent,
@@ -82,6 +84,7 @@ export function OrdersPage() {
         ? "TAKEAWAY"
         : undefined;
   const orderKind = activeTab === "group" ? "group-orders" : "order";
+  const isInvoiceHistoryTab = activeTab === "invoice-history";
 
   const ordersQuery = useOrders({
     restaurantId: restaurantId || undefined,
@@ -93,8 +96,15 @@ export function OrdersPage() {
     limit,
     orderType,
     kind: orderKind,
-    enabled: true,
+    enabled: !isInvoiceHistoryTab,
   });
+
+  const generatedInvoicesQuery = useGetGeneratedInvoices(
+    {
+      kind: "ORDER",
+    },
+    { enabled: isInvoiceHistoryTab }
+  );
 
   const orders: Order[] = ordersQuery.orders;
   const paginationMeta = ordersQuery.meta;
@@ -103,6 +113,12 @@ export function OrdersPage() {
   const total = paginationMeta?.total || 0;
   const hasNext = paginationMeta?.hasNext || false;
   const hasPrevious = paginationMeta?.hasPrevious || false;
+
+  useEffect(() => {
+    if (window.location.search.includes("tab=invoice-history")) {
+      setActiveTab("invoice-history");
+    }
+  }, []);
 
   useEffect(() => {
     setPage(1);
@@ -178,8 +194,22 @@ export function OrdersPage() {
           >
             {t("groupOrders")}
           </TabButton>
+
+          <TabButton
+            active={activeTab === "invoice-history"}
+            onClick={() => setActiveTab("invoice-history")}
+          >
+            {t("invoiceHistory")}
+          </TabButton>
         </div>
 
+        {isInvoiceHistoryTab ? (
+          <GeneratedInvoiceHistoryTable
+            invoices={generatedInvoicesQuery.data?.data || []}
+            loading={generatedInvoicesQuery.isLoading || generatedInvoicesQuery.isFetching}
+          />
+        ) : (
+          <>
         <OrdersFilters
           onSearch={setSearch}
           onSortChange={setSortOrder}
@@ -217,6 +247,8 @@ export function OrdersPage() {
           hasPrevious={hasPrevious}
           onPageChange={(newPage: number) => setPage(newPage)}
         />
+          </>
+        )}
       </div>
     </Container>
   );
