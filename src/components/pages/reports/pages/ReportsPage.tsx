@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, ReceiptText } from "lucide-react";
+import { Download } from "lucide-react";
 import { toast } from "sonner";
 
 import StatsSection from "@/components/common/stats-section";
@@ -17,7 +17,6 @@ import {
   useGetFinancialReport,
   useGetOrdersReport,
 } from "@/hooks/useReports";
-import RestaurantInvoicesModal from "@/components/pages/Reports/components/reports/RestaurantInvoicesModal";
 import { downloadRestaurantDashboardReportPdf } from "@/components/pages/Reports/components/reports/restaurant-report-pdf";
 import {
   buildFinancialStats,
@@ -38,8 +37,6 @@ export default function Orders() {
     : undefined;
 
   const [activeTab, setActiveTab] = useState<ReportTab>("financial");
-  const [invoicesOpen, setInvoicesOpen] = useState(false);
-
   const {
     data: financialReportResponse,
     isLoading: financialLoading,
@@ -117,15 +114,6 @@ export default function Orders() {
             Download PDF
           </Button>
 
-          <Button
-            type="button"
-            disabled={!restaurantId}
-            onClick={() => setInvoicesOpen(true)}
-            className="h-[44px] rounded-[12px] px-5"
-          >
-            <ReceiptText size={17} className="mr-2" />
-            {isBranchAdmin ? "Branch Invoices" : "Restaurant Invoices"}
-          </Button>
         </div>
       </div>
 
@@ -168,13 +156,6 @@ export default function Orders() {
           </>
         )}
       </div>
-
-      <RestaurantInvoicesModal
-        open={invoicesOpen}
-        onOpenChange={setInvoicesOpen}
-        restaurantId={restaurantId}
-        branchId={isBranchAdmin ? branchId : undefined}
-      />
     </Container>
   );
 }

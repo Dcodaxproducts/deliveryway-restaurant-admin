@@ -618,7 +618,11 @@
     "downloadInvoice": "Download invoice",
     "downloadingInvoice": "Downloading invoice...",
     "invoiceDownloaded": "Invoice downloaded",
-    "invoiceDownloadFailed": "Unable to download invoice"
+    "invoiceDownloadFailed": "Unable to download invoice",
+    "sendInvoiceEmail": "Send invoice to customer email",
+    "sendingInvoiceEmail": "Sending invoice...",
+    "invoiceEmailSent": "Invoice sent to customer email",
+    "invoiceEmailFailed": "Unable to send invoice email"
   },
   "tableReservations": {
     "title": "Table Reservations",

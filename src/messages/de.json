@@ -618,7 +618,11 @@
     "downloadInvoice": "Rechnung herunterladen",
     "downloadingInvoice": "Rechnung wird heruntergeladen...",
     "invoiceDownloaded": "Rechnung heruntergeladen",
-    "invoiceDownloadFailed": "Rechnung konnte nicht heruntergeladen werden"
+    "invoiceDownloadFailed": "Rechnung konnte nicht heruntergeladen werden",
+    "sendInvoiceEmail": "Rechnung an Kunden-E-Mail senden",
+    "sendingInvoiceEmail": "Rechnung wird gesendet...",
+    "invoiceEmailSent": "Rechnung an Kunden-E-Mail gesendet",
+    "invoiceEmailFailed": "Rechnungs-E-Mail konnte nicht gesendet werden"
   },
   "tableReservations": {
     "title": "Tischreservierungen",

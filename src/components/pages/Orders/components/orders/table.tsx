@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Ban, CalendarClock, CreditCard, Download, Eye, MoreHorizontal, RefreshCw, Truck, XCircle } from "lucide-react";
+import { Ban, CalendarClock, CreditCard, Download, Eye, Mail, MoreHorizontal, RefreshCw, Truck, XCircle } from "lucide-react";
 import EmptyState from "@/components/common/EmptyState";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,7 @@ import {
   isFutureOrder,
 } from "@/components/pages/Orders/utils/orders-schedule-filters";
 import { useAuth } from "@/hooks/useAuth";
-import { useDownloadOrderInvoicePdf, useSendOrderOutForDelivery, useSendOrderWithExternalDriver, useUpdateOrderStatus } from "@/hooks/useOrders";
+import { useDownloadOrderInvoicePdf, useSendOrderInvoiceEmail, useSendOrderOutForDelivery, useSendOrderWithExternalDriver, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { formatDateTime24 } from "@/lib/date-time-format";
 import { getOrderById } from "@/services/orders/orders.api";
 import {
@@ -128,6 +128,10 @@ export function OrdersTable({
   const downloadInvoiceMutation = useDownloadOrderInvoicePdf({
     success: t("invoiceDownloaded"),
     error: t("invoiceDownloadFailed"),
+  });
+  const sendInvoiceEmailMutation = useSendOrderInvoiceEmail({
+    success: t("invoiceEmailSent"),
+    error: t("invoiceEmailFailed"),
   });
   const canUpdatePaymentStatusRole =
     role === "BUSINESS_ADMIN" || role === "SUPER_ADMIN" || role === "BRANCH_ADMIN";
@@ -250,6 +254,16 @@ export function OrdersTable({
     downloadInvoiceMutation.mutate({
       orderId: order.id,
       orderNumber: order.orderNumber,
+      params: {
+        restaurantId: user?.restaurantId ?? undefined,
+        branchId: order.branchId ?? undefined,
+      },
+    });
+  };
+
+  const handleSendInvoiceEmailAction = (order: OrdersTableRow) => {
+    sendInvoiceEmailMutation.mutate({
+      orderId: order.id,
       params: {
         restaurantId: user?.restaurantId ?? undefined,
         branchId: order.branchId ?? undefined,
@@ -396,6 +410,9 @@ export function OrdersTable({
     const invoiceDownloading =
       downloadInvoiceMutation.isPending &&
       downloadInvoiceMutation.variables?.orderId === id;
+    const invoiceEmailSending =
+      sendInvoiceEmailMutation.isPending &&
+      sendInvoiceEmailMutation.variables?.orderId === id;
 
     return (
     <TableRow key={id} className="border-none h-[70px]">
@@ -556,6 +573,13 @@ export function OrdersTable({
               >
                 <Download size={16} />
                 {invoiceDownloading ? t("downloadingInvoice") : t("downloadInvoice")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={invoiceEmailSending}
+                onClick={() => handleSendInvoiceEmailAction(order)}
+              >
+                <Mail size={16} />
+                {invoiceEmailSending ? t("sendingInvoiceEmail") : t("sendInvoiceEmail")}
               </DropdownMenuItem>
               {canUpdateStatus ? (
                 <DropdownMenuItem

@@ -10,8 +10,10 @@ import {
   getOrderById,
   getOrders,
   markPaymentTransactionPaid,
+  sendOrderInvoiceEmail,
   type DownloadOrderInvoicePdfParams,
   type PaymentStatusUpdatePayload,
+  type SendOrderInvoiceEmailParams,
   refundPaymentTransaction,
   updatePaymentTransactionStatus,
   updateOrderStatus,
@@ -143,6 +145,32 @@ export const useDownloadOrderInvoicePdf = (messages?: {
         getApiErrorMessage(
           error,
           messages?.error || "Unable to download invoice",
+        ),
+      );
+    },
+  });
+};
+
+export const useSendOrderInvoiceEmail = (messages?: {
+  success?: string;
+  error?: string;
+}) => {
+  return useMutation({
+    mutationFn: ({
+      orderId,
+      params,
+    }: {
+      orderId: string;
+      params?: SendOrderInvoiceEmailParams;
+    }) => sendOrderInvoiceEmail(orderId, params),
+    onSuccess: () => {
+      toast.success(messages?.success || "Invoice sent to customer email");
+    },
+    onError: (error) => {
+      toast.error(
+        getApiErrorMessage(
+          error,
+          messages?.error || "Unable to send invoice email",
         ),
       );
     },

@@ -50,6 +50,8 @@ export type DownloadOrderInvoicePdfParams = {
   branchId?: string;
 };
 
+export type SendOrderInvoiceEmailParams = DownloadOrderInvoicePdfParams;
+
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
@@ -242,6 +244,21 @@ export const downloadOrderInvoicePdf = async (
     {
       params: cleanParams(params),
       responseType: "blob",
+    },
+  );
+
+  return data;
+};
+
+export const sendOrderInvoiceEmail = async (
+  orderId: string,
+  params?: SendOrderInvoiceEmailParams,
+) => {
+  const { data } = await api.post(
+    `/admin/reports/invoices/${orderId}/send-email`,
+    undefined,
+    {
+      params: cleanParams(params),
     },
   );
 
