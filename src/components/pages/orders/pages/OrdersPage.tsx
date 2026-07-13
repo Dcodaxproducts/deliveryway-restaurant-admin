@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import StatsSection from "@/components/common/stats-section";
 import { OrdersHeader } from "@/components/pages/Orders/components/orders/header";
 import Container from "@/components/common/Container";
@@ -51,6 +51,7 @@ const getOrderCustomerName = (order: Order) => {
 
 export function OrdersPage() {
   const t = useTranslations("orders");
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<OrderTab>("all");
   const [search, setSearch] = useState("");
@@ -113,8 +114,10 @@ export function OrdersPage() {
   const generatedInvoicesQuery = useGetGeneratedInvoices(
     {
       kind: "ORDER",
+      restaurantId: restaurantId || undefined,
+      branchId: scopedBranchId,
     },
-    { enabled: isInvoiceHistoryTab },
+    { enabled: isInvoiceHistoryTab && Boolean(restaurantId) },
   );
 
   const orders: Order[] = ordersQuery.orders;
@@ -139,6 +142,11 @@ export function OrdersPage() {
   useEffect(() => {
     setPage(1);
   }, [search, sortOrder, status, activeTab, scheduleFilter, scheduleRange]);
+
+  const handleTabChange = (tab: OrderTab) => {
+    setActiveTab(tab);
+    router.replace(`/orders?tab=${tab}`, { scroll: false });
+  };
 
   const handleSort = (key: keyof OrdersTableRow) => {
     if (sortKey === key) {
@@ -193,35 +201,35 @@ export function OrdersPage() {
         <div className="flex items-center gap-0 flex-wrap text-sm lg:text-base">
           <TabButton
             active={activeTab === "all"}
-            onClick={() => setActiveTab("all")}
+            onClick={() => handleTabChange("all")}
           >
             {t("allOrders")}
           </TabButton>
 
           <TabButton
             active={activeTab === "delivery"}
-            onClick={() => setActiveTab("delivery")}
+            onClick={() => handleTabChange("delivery")}
           >
             {t("deliveryOrders")}
           </TabButton>
 
           <TabButton
             active={activeTab === "pickup"}
-            onClick={() => setActiveTab("pickup")}
+            onClick={() => handleTabChange("pickup")}
           >
             {t("pickupOrders")}
           </TabButton>
 
           <TabButton
             active={activeTab === "group"}
-            onClick={() => setActiveTab("group")}
+            onClick={() => handleTabChange("group")}
           >
             {t("groupOrders")}
           </TabButton>
 
           <TabButton
             active={activeTab === "invoice-history"}
-            onClick={() => setActiveTab("invoice-history")}
+            onClick={() => handleTabChange("invoice-history")}
           >
             {t("invoiceHistory")}
           </TabButton>
