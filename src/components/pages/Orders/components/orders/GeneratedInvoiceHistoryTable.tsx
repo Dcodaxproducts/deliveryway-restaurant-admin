@@ -93,7 +93,6 @@ export function GeneratedInvoiceHistoryTable({
     t("statusLabel"),
     t("linkedRecord"),
     t("currencyTotal"),
-    t("sentDownloaded"),
   ];
 
   const refreshInvoiceHistory = () => {
@@ -121,11 +120,10 @@ export function GeneratedInvoiceHistoryTable({
         <Table className="table-fixed">
           <TableHeader>
             <TableRow className="border-none">
-              <TableHead className="w-[24%]">{t("invoiceNumber")}</TableHead>
+              <TableHead className="w-[28%]">{t("invoiceNumber")}</TableHead>
               <TableHead className="w-[14%]">{t("statusLabel")}</TableHead>
-              <TableHead className="w-[27%]">{t("linkedRecord")}</TableHead>
-              <TableHead className="w-[14%]">{t("currencyTotal")}</TableHead>
-              <TableHead className="w-[13%]">{t("sentDownloaded")}</TableHead>
+              <TableHead className="w-[34%]">{t("linkedRecord")}</TableHead>
+              <TableHead className="w-[16%]">{t("currencyTotal")}</TableHead>
               <TableHead className="w-20 text-center">{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
@@ -197,12 +195,6 @@ export function GeneratedInvoiceHistoryTable({
                   </TableCell>
                   <TableCell className="px-4 font-medium text-gray-700">
                     {formatMoney(invoice.totalAmount, invoice.currency)}
-                  </TableCell>
-                  <TableCell className="px-4 text-sm text-gray-500">
-                    {t("sentDownloadedValue", {
-                      sent: invoice.sentCount ?? 0,
-                      downloaded: invoice.downloadedCount ?? 0,
-                    })}
                   </TableCell>
                   <TableCell className="px-3">
                     <div className="flex justify-center gap-2">
@@ -299,12 +291,6 @@ export function GeneratedInvoiceHistoryTable({
               <div className="mt-4 flex items-center justify-between gap-3 text-sm">
                 <span className="font-semibold text-gray-800">
                   {formatMoney(invoice.totalAmount, invoice.currency)}
-                </span>
-                <span className="text-gray-500">
-                  {t("sentDownloadedValue", {
-                    sent: invoice.sentCount ?? 0,
-                    downloaded: invoice.downloadedCount ?? 0,
-                  })}
                 </span>
               </div>
 
