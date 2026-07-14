@@ -3,7 +3,6 @@
 import Header from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import {
-  Trash2,
   Download,
   PlusCircle,
   HelpCircle,
@@ -71,7 +70,7 @@ function BranchesHeaderContent({
             {/* Import */}
             <Button
               variant="outline"
-              className="h-[38px] sm:h-[44px] rounded-[12px] px-3 sm:px-4 flex items-center gap-2 border-[#E6E7EC] text-[13px] sm:text-[15px] font-[500] text-[#767676]"
+              className="h-[38px] sm:h-[44px] rounded-[12px] px-3 sm:px-4 flex items-center gap-2 border-[#E6E7EC] text-[13px] sm:text-[15px] font-[500] text-[#767676] transition-colors hover:border-[#D6D9E0] hover:bg-gray-50 hover:text-[#4B5563] focus-visible:ring-primary/20"
               onClick={() => setOpen(true)}
             >
               <Download size={18} className="text-[#767676]" />
@@ -81,7 +80,7 @@ function BranchesHeaderContent({
 
             {/* Create Branch */}
             <Button
-              className="h-[38px] sm:h-[44px] rounded-[12px] px-4 sm:px-5 flex items-center gap-2 bg-primary hover:bg-red-700 text-white text-[13px] sm:text-[15px] font-[500]"
+              className="h-[38px] sm:h-[44px] rounded-[12px] px-4 sm:px-5 flex items-center gap-2 bg-primary text-white text-[13px] sm:text-[15px] font-[500] transition-colors hover:bg-primary/90 focus-visible:ring-primary/25"
               onClick={() => setCreateBranch(true)}
             >
               <PlusCircle size={18} color="#fff" />
@@ -92,7 +91,7 @@ function BranchesHeaderContent({
           /*  Edit Mode → Show Back Button */
           <Button
             variant="outline"
-             className="h-[38px] sm:h-[44px] rounded-[12px] px-4 sm:px-5 flex items-center gap-2 bg-primary hover:bg-red-700 text-white text-[13px] sm:text-[15px] font-[500]"
+             className="h-[38px] sm:h-[44px] rounded-[12px] px-4 sm:px-5 flex items-center gap-2 border-primary bg-primary text-white text-[13px] sm:text-[15px] font-[500] transition-colors hover:bg-primary/90 hover:text-white focus-visible:ring-primary/25"
              onClick={() => router.push(isBranchAdmin ? "/branch-workspace" : "/branches")}
           >
             <ArrowLeft size={18} />

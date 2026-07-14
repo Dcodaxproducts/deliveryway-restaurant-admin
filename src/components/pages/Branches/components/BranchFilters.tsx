@@ -113,7 +113,9 @@ link.setAttribute("download", "data.csv");
               text-white
               text-[16px]
               font-[600]
+              transition-colors
               hover:bg-primary/90
+              focus-visible:ring-primary/25
             "
           >
             {commonT("search")}
@@ -124,9 +126,9 @@ link.setAttribute("download", "data.csv");
         <Button
           onClick={exportCSV}
           variant="outline"
-          className="h-[44px] px-5 rounded-[14px] border-[#E5E7EB] flex items-center gap-2 shrink-0 text-[#767676] text-[15px] font-[600]"
+          className="h-[44px] px-5 rounded-[14px] border-[var(--brand-accent)]/40 bg-white flex items-center gap-2 shrink-0 text-[var(--brand-accent)] text-[15px] font-[600] transition-colors hover:border-[var(--brand-accent)] hover:bg-[var(--brand-accent)]/10 hover:text-[var(--brand-accent)] focus-visible:ring-[var(--brand-accent)]/25"
         >
-          <Download size={18} color="#767676" />
+          <Download size={18} className="text-[var(--brand-accent)]" />
           {commonT("export")}
         </Button>
 
@@ -134,7 +136,7 @@ link.setAttribute("download", "data.csv");
         <Button
           onClick={() => setOpen(true)}
           variant="outline"
-          className="h-[44px] px-5 rounded-[14px] border-[#E5E7EB] text-[#767676] flex items-center gap-2 text-[15px] font-[600]"
+          className="h-[44px] px-5 rounded-[14px] border-[#E5E7EB] text-[#767676] flex items-center gap-2 text-[15px] font-[600] transition-colors hover:border-[#D6D9E0] hover:bg-gray-50 hover:text-[#4B5563] focus-visible:ring-primary/20"
         >
           <SlidersHorizontal size={18} color="#767676" />
           {commonT("filter")}

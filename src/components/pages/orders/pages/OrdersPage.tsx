@@ -201,6 +201,7 @@ export function OrdersPage() {
         <div className="flex items-center gap-0 flex-wrap text-sm lg:text-base">
           <TabButton
             active={activeTab === "all"}
+            tone="primary"
             onClick={() => handleTabChange("all")}
           >
             {t("allOrders")}
@@ -208,6 +209,7 @@ export function OrdersPage() {
 
           <TabButton
             active={activeTab === "delivery"}
+            tone="accent"
             onClick={() => handleTabChange("delivery")}
           >
             {t("deliveryOrders")}
@@ -215,6 +217,7 @@ export function OrdersPage() {
 
           <TabButton
             active={activeTab === "pickup"}
+            tone="primary"
             onClick={() => handleTabChange("pickup")}
           >
             {t("pickupOrders")}
@@ -222,6 +225,7 @@ export function OrdersPage() {
 
           <TabButton
             active={activeTab === "group"}
+            tone="primary"
             onClick={() => handleTabChange("group")}
           >
             {t("groupOrders")}
@@ -229,6 +233,7 @@ export function OrdersPage() {
 
           <TabButton
             active={activeTab === "invoice-history"}
+            tone="primary"
             onClick={() => handleTabChange("invoice-history")}
           >
             {t("invoiceHistory")}
@@ -291,22 +296,30 @@ export function OrdersPage() {
 
 function TabButton({
   active,
+  tone,
   children,
   onClick,
 }: {
   active: boolean;
+  tone: "primary" | "accent";
   children: React.ReactNode;
   onClick: () => void;
 }) {
+  const activeClass =
+    tone === "accent"
+      ? "bg-[var(--brand-accent)] text-white hover:bg-[var(--brand-accent)]/90 focus-visible:ring-[var(--brand-accent)]/30"
+      : "bg-primary text-white hover:bg-primary/90 focus-visible:ring-primary/30";
+
   return (
     <Button
       onClick={onClick}
-      variant={active ? "default" : "ghost"}
-      className={
+      variant="ghost"
+      aria-pressed={active}
+      className={`rounded-[14px] px-3 py-2.5 text-sm font-semibold transition-colors sm:px-6 ${
         active
-          ? "rounded-[14px] px-3 sm:px-6 py-2.5 bg-primary text-white"
-          : "rounded-full px-3 sm:px-6 py-2 text-gray-500 hover:text-black"
-      }
+          ? activeClass
+          : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus-visible:ring-gray-200"
+      }`}
     >
       {children}
     </Button>
