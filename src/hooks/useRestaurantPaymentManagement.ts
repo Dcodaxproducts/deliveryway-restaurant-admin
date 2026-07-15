@@ -9,8 +9,6 @@ import {
   getRestaurantPaymentManagement,
   getRestaurantWallet,
   type CreateRestaurantPayoutRequestPayload,
-  updateRestaurantPaymentMethods,
-  type UpdateRestaurantPaymentMethodsPayload,
 } from "@/services/restaurant-payment-management";
 
 export const restaurantPaymentManagementKeys = {
@@ -31,31 +29,6 @@ export const useRestaurantPaymentManagement = (
     queryFn: () => getRestaurantPaymentManagement(restaurantId as string),
     enabled: Boolean(restaurantId) && enabled,
   });
-
-export const useUpdateRestaurantPaymentMethods = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      restaurantId,
-      payload,
-    }: {
-      restaurantId: string;
-      payload: UpdateRestaurantPaymentMethodsPayload;
-    }) => updateRestaurantPaymentMethods(restaurantId, payload),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: restaurantPaymentManagementKeys.detail(variables.restaurantId),
-      });
-      toast.success("Restaurant payment methods saved");
-    },
-    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
-      toast.error(
-        error.response?.data?.message ?? "Unable to save restaurant payment methods"
-      );
-    },
-  });
-};
 
 export const useRestaurantWallet = (restaurantId?: string | null) =>
   useQuery({

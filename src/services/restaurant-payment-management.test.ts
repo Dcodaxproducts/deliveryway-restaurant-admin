@@ -7,7 +7,6 @@ import {
   getRestaurantPaymentManagement,
   getRestaurantWallet,
   normalizeRestaurantPaymentManagement,
-  updateRestaurantPaymentMethods,
 } from "@/services/restaurant-payment-management";
 
 vi.mock("@/lib/axios", () => ({
@@ -43,25 +42,6 @@ describe("restaurant payment management service", () => {
 
     expect(mockedHttpClient.get).toHaveBeenCalledWith(
       "/payments/restaurants/restaurant-1/management"
-    );
-  });
-
-  it("PATCH updates restaurant payment methods", async () => {
-    mockedHttpClient.patch.mockResolvedValueOnce({ data: { success: true } });
-
-    await updateRestaurantPaymentMethods("restaurant-1", {
-      allowedPaymentMethods: ["COD", "STRIPE", "WALLET"],
-      walletEnabled: true,
-      note: "Allow cash, Stripe, and wallet",
-    });
-
-    expect(mockedHttpClient.patch).toHaveBeenCalledWith(
-      "/payments/restaurants/restaurant-1/methods",
-      {
-        allowedPaymentMethods: ["COD", "STRIPE", "WALLET"],
-        walletEnabled: true,
-        note: "Allow cash, Stripe, and wallet",
-      }
     );
   });
 

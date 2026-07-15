@@ -7,7 +7,7 @@ const PaymentSettingsPage = () => {
     <Container>
       <Header
         title="Payment Settings"
-        description="Manage restaurant checkout methods, wallet availability, and Stripe account setup"
+        description="Review wallet payouts and request manual payout transfers"
       />
       <SettingsForm variant="payments" />
     </Container>

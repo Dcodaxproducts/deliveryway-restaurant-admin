@@ -67,12 +67,6 @@ export type CreateRestaurantPayoutRequestPayload = {
   note?: string;
 };
 
-export type UpdateRestaurantPaymentMethodsPayload = {
-  allowedPaymentMethods: PaymentMethodCode[];
-  walletEnabled: boolean;
-  note?: string;
-};
-
 const isRecord = (value: unknown): value is RecordValue =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
@@ -296,14 +290,5 @@ export const createRestaurantPayoutRequest = (
 ) =>
   httpClient.post<unknown, CreateRestaurantPayoutRequestPayload>(
     `/payments/restaurants/${restaurantId}/payout-requests`,
-    payload
-  );
-
-export const updateRestaurantPaymentMethods = (
-  restaurantId: string,
-  payload: UpdateRestaurantPaymentMethodsPayload
-) =>
-  httpClient.patch<unknown, UpdateRestaurantPaymentMethodsPayload>(
-    `/payments/restaurants/${restaurantId}/methods`,
     payload
   );
