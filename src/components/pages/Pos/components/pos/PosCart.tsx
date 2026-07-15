@@ -281,10 +281,10 @@ export default function PosCart() {
         : Math.max(1, item.quantity - 1);
 
     try {
-      if (item.type === "DEAL" && item.dealId) {
+      if (item.type === "DEAL") {
         await updateDealQuantityMutation.mutateAsync({
           customerId,
-          dealId: item.dealId,
+          dealTargetId: id,
           quantity: newQty,
         });
       } else {
@@ -313,10 +313,10 @@ export default function PosCart() {
     if (!item) return;
 
     try {
-      if (item.type === "DEAL" && item.dealId) {
+      if (item.type === "DEAL") {
         await deleteCartDealMutation.mutateAsync({
           customerId,
-          dealId: item.dealId,
+          dealTargetId: id,
         });
       } else {
         await deleteCartItemMutation.mutateAsync({ customerId, itemId: id });

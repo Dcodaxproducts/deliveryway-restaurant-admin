@@ -30,14 +30,14 @@ export const updateCartItemQuantity = async ({
 
 export const updateCartDealQuantity = async ({
   customerId,
-  dealId,
+  dealTargetId,
   quantity,
 }: {
   customerId: string;
-  dealId: string;
+  dealTargetId: string;
   quantity: number;
 }) => {
-  const { data } = await api.patch(`/cart/deals/${dealId}?customerId=${customerId}`, { quantity });
+  const { data } = await api.patch(`/cart/deals/${encodeURIComponent(dealTargetId)}?customerId=${customerId}`, { quantity });
   return data;
 };
 
@@ -46,8 +46,8 @@ export const deleteCartItem = async ({ customerId, itemId }: { customerId: strin
   return data;
 };
 
-export const deleteCartDeal = async ({ customerId, dealId }: { customerId: string; dealId: string }) => {
-  const { data } = await api.delete(`/cart/deals/${dealId}?customerId=${customerId}`);
+export const deleteCartDeal = async ({ customerId, dealTargetId }: { customerId: string; dealTargetId: string }) => {
+  const { data } = await api.delete(`/cart/deals/${encodeURIComponent(dealTargetId)}?customerId=${customerId}`);
   return data;
 };
 
