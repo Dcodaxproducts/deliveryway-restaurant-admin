@@ -112,6 +112,7 @@ export type BranchLocationAddressFields = Partial<{
   city: string;
   country: string;
   postalCode: string;
+  shopNumber: string;
   state: string;
   street: string;
 }> & {
@@ -138,7 +139,25 @@ const getAddressComponent = (
   name: "long_name" | "short_name" = "long_name"
 ) => components?.find((component) => component.types.includes(type))?.[name] ?? "";
 
-const mapPlaceToAddressFields = (
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const getFirstAddressLine = (place: GooglePlaceResult) =>
+  (place.formatted_address || place.name || "").split(",")[0]?.trim() || "";
+
+const stripStreetNumberFromStreet = (street: string, streetNumber: string) => {
+  const trimmedStreet = street.trim();
+
+  if (!streetNumber) return trimmedStreet;
+
+  const escapedStreetNumber = escapeRegExp(streetNumber.trim());
+
+  return trimmedStreet
+    .replace(new RegExp(`^${escapedStreetNumber}\\s+`, "i"), "")
+    .replace(new RegExp(`\\s+${escapedStreetNumber}$`, "i"), "")
+    .trim();
+};
+
+export const mapPlaceToAddressFields = (
   place: GooglePlaceResult,
   point: LatLngNumberPoint
 ): BranchLocationAddressFields => {
@@ -150,10 +169,14 @@ const mapPlaceToAddressFields = (
   const adminArea = getAddressComponent(place.address_components, "administrative_area_level_1");
   const country = getAddressComponent(place.address_components, "country");
   const postalCode = getAddressComponent(place.address_components, "postal_code");
-  const street = [streetNumber, route].filter(Boolean).join(" ");
+  const fallbackStreet = stripStreetNumberFromStreet(
+    getFirstAddressLine(place),
+    streetNumber
+  );
 
   return {
-    street: street || place.formatted_address || place.name || "",
+    street: route || fallbackStreet,
+    shopNumber: streetNumber,
     area: neighborhood || sublocality,
     postalCode,
     city: locality || getAddressComponent(place.address_components, "administrative_area_level_2"),
