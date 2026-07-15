@@ -25,7 +25,12 @@ const DAYS = [
   "SATURDAY",
 ] as const;
 
-const DELIVERY_MODES: DeliveryMode[] = ["RADIUS", "ZONE", "ZONE_BANDS", "POSTAL_CODE"];
+const DELIVERY_MODES: DeliveryMode[] = [
+  "RADIUS",
+  "ZONE",
+  "ZONE_BANDS",
+  "POSTAL_CODE",
+];
 
 const BRANCH_SETTINGS_PATCH_BLOCKLIST = [
   "openingHours",
@@ -63,7 +68,7 @@ const toCoordinateValue = (value: unknown): string | number | undefined =>
 
 const normalizeBranchAdminForEdit = (
   branchAdmin: unknown,
-  manager: unknown
+  manager: unknown,
 ): BranchAdmin => {
   const adminRecord = toRecord(branchAdmin);
   const adminProfileRecord = toRecord(adminRecord.profile);
@@ -75,21 +80,30 @@ const normalizeBranchAdminForEdit = (
     password: toStringValue(adminRecord.password),
     firstName: toStringValue(
       adminRecord.firstName,
-      toStringValue(adminProfileRecord.firstName, toStringValue(profileRecord.firstName))
+      toStringValue(
+        adminProfileRecord.firstName,
+        toStringValue(profileRecord.firstName),
+      ),
     ),
     lastName: toStringValue(
       adminRecord.lastName,
-      toStringValue(adminProfileRecord.lastName, toStringValue(profileRecord.lastName))
+      toStringValue(
+        adminProfileRecord.lastName,
+        toStringValue(profileRecord.lastName),
+      ),
     ),
     phone: toStringValue(
       adminRecord.phone,
-      toStringValue(adminProfileRecord.phone, toStringValue(profileRecord.phone))
+      toStringValue(
+        adminProfileRecord.phone,
+        toStringValue(profileRecord.phone),
+      ),
     ),
   };
 };
 
 export const normalizeBranchAdminForPatch = (
-  branchAdmin: unknown
+  branchAdmin: unknown,
 ): BranchAdmin | undefined => {
   const adminRecord = toRecord(branchAdmin);
   const admin: BranchAdmin = {
@@ -133,7 +147,7 @@ export const normalizeOpeningHoursForApi = (openingHours: unknown) => {
 
   return DAYS.map((dayOfWeek) => {
     const existing = toRecord(
-      rawHours.find((item) => toRecord(item).dayOfWeek === dayOfWeek)
+      rawHours.find((item) => toRecord(item).dayOfWeek === dayOfWeek),
     );
 
     return {
@@ -156,11 +170,17 @@ export const normalizeHolidayRangesForApi = (holidayRanges: unknown) => {
       const isClosed = Boolean(record.isClosed ?? true);
 
       return {
-        fromDate: String(record.fromDate || record.startDate || record.date || ""),
+        fromDate: String(
+          record.fromDate || record.startDate || record.date || "",
+        ),
         toDate: String(record.toDate || record.endDate || record.date || ""),
         isClosed,
-        openTime: isClosed ? undefined : toStringValue(record.openTime, "09:00"),
-        closeTime: isClosed ? undefined : toStringValue(record.closeTime, "18:00"),
+        openTime: isClosed
+          ? undefined
+          : toStringValue(record.openTime, "09:00"),
+        closeTime: isClosed
+          ? undefined
+          : toStringValue(record.closeTime, "18:00"),
         note: String(record.note || ""),
       };
     })
@@ -199,10 +219,12 @@ const normalizeDeliveryZonesForApi = (zones: unknown): DeliveryZone[] => {
       freeDeliveryThreshold: toNumber(record.freeDeliveryThreshold, 0),
       polygon: Array.isArray(record.polygon)
         ? record.polygon
-          .map((point) => normalizePolygonPoint(point))
-          .filter((point: DeliveryPolygonPoint | null): point is DeliveryPolygonPoint =>
-            Boolean(point)
-          )
+            .map((point) => normalizePolygonPoint(point))
+            .filter(
+              (
+                point: DeliveryPolygonPoint | null,
+              ): point is DeliveryPolygonPoint => Boolean(point),
+            )
         : [],
     };
   });
@@ -241,7 +263,9 @@ const normalizePostalCodeRulesForApi = (rules: unknown): PostalCodeRule[] => {
   });
 };
 
-export const normalizeDeliveryConfigForApi = (deliveryConfig: unknown): DeliveryConfig => {
+export const normalizeDeliveryConfigForApi = (
+  deliveryConfig: unknown,
+): DeliveryConfig => {
   const record = toRecord(deliveryConfig);
 
   return {
@@ -258,7 +282,7 @@ export const normalizeDeliveryConfigForApi = (deliveryConfig: unknown): Delivery
 };
 
 export const normalizeServiceChargeForApi = (
-  serviceCharge: unknown
+  serviceCharge: unknown,
 ): BranchServiceChargeSettings => {
   const record = toRecord(serviceCharge);
   const type = record.type === "AMOUNT" ? "AMOUNT" : "PERCENTAGE";
@@ -273,14 +297,16 @@ export const normalizeServiceChargeForApi = (
 
 export const buildServiceChargeSettingsPayload = (
   existingSettings: unknown,
-  serviceCharge: unknown
+  serviceCharge: unknown,
 ): BranchSettings => ({
   ...sanitizeBranchSettingsForPatch(existingSettings),
   allowedPaymentMethods: DEFAULT_ALLOWED_PAYMENT_METHODS,
   serviceCharge: normalizeServiceChargeForApi(serviceCharge),
 });
 
-export const sanitizeBranchSettingsForPatch = (settings: unknown): BranchSettings => {
+export const sanitizeBranchSettingsForPatch = (
+  settings: unknown,
+): BranchSettings => {
   const safeSettings: BranchSettings = { ...toRecord(settings) };
 
   BRANCH_SETTINGS_PATCH_BLOCKLIST.forEach((key) => {
@@ -298,25 +324,33 @@ const isValidCoordinate = (point: DeliveryPolygonPoint) =>
   point.lng >= -180 &&
   point.lng <= 180;
 
-export const getDeliveryConfigValidationError = (deliveryConfig: DeliveryConfig) => {
+export const getDeliveryConfigValidationError = (
+  deliveryConfig: DeliveryConfig,
+) => {
   if (deliveryConfig.radiusKm < 0) return "Radius cannot be negative";
   if (deliveryConfig.deliveryFee < 0) return "Delivery fee cannot be negative";
-  if (deliveryConfig.minOrderAmount < 0) return "Minimum order amount cannot be negative";
-  if (deliveryConfig.freeDeliveryThreshold < 0) return "Free delivery threshold cannot be negative";
+  if (deliveryConfig.minOrderAmount < 0)
+    return "Minimum order amount cannot be negative";
+  if (deliveryConfig.freeDeliveryThreshold < 0)
+    return "Free delivery threshold cannot be negative";
   if (deliveryConfig.mode === "RADIUS" && deliveryConfig.radiusKm <= 0) {
     return "Radius must be greater than 0 for radius delivery mode";
   }
 
   if (deliveryConfig.mode === "ZONE") {
-    if (!deliveryConfig.zones.length) return "Please add at least one delivery zone";
+    if (!deliveryConfig.zones.length)
+      return "Please add at least one delivery zone";
 
     for (const [index, zone] of deliveryConfig.zones.entries()) {
       const label = zone.name || `Zone ${index + 1}`;
 
       if (!zone.name) return `Zone ${index + 1} name is required`;
-      if (zone.deliveryFee < 0) return `${label} delivery fee cannot be negative`;
-      if (zone.minOrderAmount < 0) return `${label} minimum order cannot be negative`;
-      if (zone.freeDeliveryThreshold < 0) return `${label} free delivery threshold cannot be negative`;
+      if (zone.deliveryFee < 0)
+        return `${label} delivery fee cannot be negative`;
+      if (zone.minOrderAmount < 0)
+        return `${label} minimum order cannot be negative`;
+      if (zone.freeDeliveryThreshold < 0)
+        return `${label} free delivery threshold cannot be negative`;
       if (!Array.isArray(zone.polygon) || zone.polygon.length < 3) {
         return `${label} must have at least 3 polygon points`;
       }
@@ -327,18 +361,25 @@ export const getDeliveryConfigValidationError = (deliveryConfig: DeliveryConfig)
     }
   }
 
-  if (deliveryConfig.mode === "ZONE_BANDS" && !deliveryConfig.zoneBands.length) {
+  if (
+    deliveryConfig.mode === "ZONE_BANDS" &&
+    !deliveryConfig.zoneBands.length
+  ) {
     return "Please add at least one distance zone band";
   }
 
   for (const [index, band] of deliveryConfig.zoneBands.entries()) {
     const label = `Zone band ${index + 1}`;
 
-    if (band.fromKm < 0 || band.toKm < 0) return `${label} distance cannot be negative`;
-    if (band.toKm <= band.fromKm) return `${label} To KM must be greater than From KM`;
+    if (band.fromKm < 0 || band.toKm < 0)
+      return `${label} distance cannot be negative`;
+    if (band.toKm <= band.fromKm)
+      return `${label} To KM must be greater than From KM`;
     if (band.deliveryFee < 0) return `${label} delivery fee cannot be negative`;
-    if (band.minOrderAmount < 0) return `${label} minimum order cannot be negative`;
-    if (band.freeDeliveryThreshold < 0) return `${label} free delivery threshold cannot be negative`;
+    if (band.minOrderAmount < 0)
+      return `${label} minimum order cannot be negative`;
+    if (band.freeDeliveryThreshold < 0)
+      return `${label} free delivery threshold cannot be negative`;
   }
 
   if (deliveryConfig.mode === "POSTAL_CODE") {
@@ -349,7 +390,8 @@ export const getDeliveryConfigValidationError = (deliveryConfig: DeliveryConfig)
     const seenPostalCodes = new Set<string>();
 
     for (const [index, rule] of deliveryConfig.postalCodeRules.entries()) {
-      if (!rule.postalCode) return `Postal code rule ${index + 1} requires a postal code`;
+      if (!rule.postalCode)
+        return `Postal code rule ${index + 1} requires a postal code`;
       const postalCode = rule.postalCode.trim().toLowerCase();
 
       if (seenPostalCodes.has(postalCode)) {
@@ -376,15 +418,16 @@ export const getDeliveryConfigValidationError = (deliveryConfig: DeliveryConfig)
 export const getBranchSettingsValidationError = (settings: unknown) => {
   const branchSettings = toRecord(settings);
   const tableReservationsEnabled = Boolean(
-    branchSettings.tableReservationsEnabled ?? false
+    branchSettings.tableReservationsEnabled ?? false,
   );
   const tableCount = toNumber(branchSettings.tableCount, 0);
   const serviceChargeError = getServiceChargeValidationError(
-    normalizeServiceChargeForApi(branchSettings.serviceCharge)
+    normalizeServiceChargeForApi(branchSettings.serviceCharge),
   );
 
   if (tableCount < 0) return "Table count cannot be negative";
-  if (!Number.isInteger(tableCount)) return "Table count must be a whole number";
+  if (!Number.isInteger(tableCount))
+    return "Table count must be a whole number";
   if (tableReservationsEnabled && tableCount < 1) {
     return "Table count must be at least 1 when table reservations are enabled";
   }
@@ -394,7 +437,7 @@ export const getBranchSettingsValidationError = (settings: unknown) => {
 };
 
 export const getServiceChargeValidationError = (
-  serviceCharge: BranchServiceChargeSettings
+  serviceCharge: BranchServiceChargeSettings,
 ) => {
   if (!serviceCharge.isEnabled) return null;
 
@@ -411,9 +454,13 @@ export const getServiceChargeValidationError = (
 
 export const buildBranchPatchPayload = (
   branchData: BranchFormData,
-  settings: BranchSettings
+  settings: BranchSettings,
+  options: { includeBranchAdmin?: boolean } = {},
 ): BranchFormData => {
-  const branchAdmin = normalizeBranchAdminForPatch(branchData.branchAdmin);
+  const includeBranchAdmin = options.includeBranchAdmin ?? true;
+  const branchAdmin = includeBranchAdmin
+    ? normalizeBranchAdminForPatch(branchData.branchAdmin)
+    : undefined;
 
   return {
     restaurantId: branchData.restaurantId,
@@ -438,7 +485,7 @@ export const buildBranchPatchPayload = (
 
 export const buildSafeBranchSettings = (
   settings: unknown,
-  deliveryConfig: DeliveryConfig
+  deliveryConfig: DeliveryConfig,
 ): BranchSettings => {
   const settingsRecord = toRecord(settings);
   const automation = toRecord(settingsRecord.automation);
@@ -452,8 +499,12 @@ export const buildSafeBranchSettings = (
       ? settingsRecord.allowedOrderTypes.map(String)
       : DEFAULT_ALLOWED_ORDER_TYPES,
     allowedPaymentMethods: DEFAULT_ALLOWED_PAYMENT_METHODS,
-    tableReservationsEnabled: Boolean(settingsRecord.tableReservationsEnabled ?? false),
-    tableReservationAutoAccept: Boolean(settingsRecord.tableReservationAutoAccept ?? false),
+    tableReservationsEnabled: Boolean(
+      settingsRecord.tableReservationsEnabled ?? false,
+    ),
+    tableReservationAutoAccept: Boolean(
+      settingsRecord.tableReservationAutoAccept ?? false,
+    ),
     tableCount: Math.max(0, Math.trunc(toNumber(settingsRecord.tableCount, 0))),
     deliveryTime:
       settingsRecord.deliveryTime === "" ||
@@ -480,7 +531,9 @@ export const buildSafeBranchSettings = (
   };
 };
 
-export const hydrateBranchForEdit = (branchData: BranchFormData): BranchFormData => {
+export const hydrateBranchForEdit = (
+  branchData: BranchFormData,
+): BranchFormData => {
   const settings = branchData.settings || {};
   const deliveryConfig = normalizeDeliveryConfigForApi(settings.deliveryConfig);
   const address = toRecord(branchData.address);
@@ -496,9 +549,15 @@ export const hydrateBranchForEdit = (branchData: BranchFormData): BranchFormData
     name: toStringValue(branchData.name),
     description: toStringValue(branchData.description),
     street: toStringValue(branchData.street, toStringValue(address.street)),
-    shopNumber: toStringValue(branchData.shopNumber, toStringValue(address.shopNumber)),
+    shopNumber: toStringValue(
+      branchData.shopNumber,
+      toStringValue(address.shopNumber),
+    ),
     area: toStringValue(branchData.area, toStringValue(address.area)),
-    postalCode: toStringValue(branchData.postalCode, toStringValue(address.postalCode)),
+    postalCode: toStringValue(
+      branchData.postalCode,
+      toStringValue(address.postalCode),
+    ),
     city: toStringValue(branchData.city, toStringValue(address.city)),
     state: toStringValue(branchData.state, toStringValue(address.state)),
     country: toStringValue(branchData.country, toStringValue(address.country)),
@@ -518,14 +577,15 @@ export const hydrateBranchForEdit = (branchData: BranchFormData): BranchFormData
       lat: toCoordinateValue(address.lat),
       lng: toCoordinateValue(address.lng),
     },
-    branchAdmin: normalizeBranchAdminForEdit(
-      branchData.branchAdmin,
-      manager
-    ),
+    branchAdmin: normalizeBranchAdminForEdit(branchData.branchAdmin, manager),
     settings: {
       ...settings,
-      tableReservationsEnabled: Boolean(settings?.tableReservationsEnabled ?? false),
-      tableReservationAutoAccept: Boolean(settings?.tableReservationAutoAccept ?? false),
+      tableReservationsEnabled: Boolean(
+        settings?.tableReservationsEnabled ?? false,
+      ),
+      tableReservationAutoAccept: Boolean(
+        settings?.tableReservationAutoAccept ?? false,
+      ),
       tableCount: Math.max(0, Math.trunc(toNumber(settings?.tableCount, 0))),
       serviceCharge: normalizeServiceChargeForApi(settings.serviceCharge),
       deliveryConfig,

@@ -53,13 +53,20 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
   const { isBranchAdmin, branchId: authBranchId } = useAuth();
   const updateBranchMutation = useUpdateBranchForEdit();
   const updateDeliveryTimeMutation = useUpdateBranchDeliveryTime();
-  const branchId = isBranchAdmin ? authBranchId || requestedBranchId : requestedBranchId;
+  const branchId = isBranchAdmin
+    ? authBranchId || requestedBranchId
+    : requestedBranchId;
 
   const branchQuery = useGetBranchForEdit(branchId);
   const deliveryTimeQuery = useGetBranchDeliveryTime(branchId);
 
   useEffect(() => {
-    if (isBranchAdmin && requestedBranchId && authBranchId && requestedBranchId !== authBranchId) {
+    if (
+      isBranchAdmin &&
+      requestedBranchId &&
+      authBranchId &&
+      requestedBranchId !== authBranchId
+    ) {
       toast.error(t("notAllowedForBranch"));
       router.replace(`/branches/edit?branchId=${authBranchId}`);
       return;
@@ -72,8 +79,7 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
             deliveryTime: deliveryTimeQuery.data.deliveryTime,
             deliveryIntervalMinutes:
               deliveryTimeQuery.data.deliveryIntervalMinutes,
-            pickupIntervalMinutes:
-              deliveryTimeQuery.data.pickupIntervalMinutes,
+            pickupIntervalMinutes: deliveryTimeQuery.data.pickupIntervalMinutes,
           }
         : {};
 
@@ -111,7 +117,13 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
 
     await updateBranchMutation.mutateAsync({
       id: branchId as string,
-      data: buildBranchPatchPayload(branchData as BranchFormData, fullSettings),
+      data: buildBranchPatchPayload(
+        branchData as BranchFormData,
+        fullSettings,
+        {
+          includeBranchAdmin: !isBranchAdmin,
+        },
+      ),
     });
 
     toast.success(t("basicInfoUpdated"));
@@ -142,10 +154,10 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
       data: {
         deliveryTime: toNonNegativeInteger(fullSettings.deliveryTime),
         deliveryIntervalMinutes: toNonNegativeInteger(
-          fullSettings.deliveryIntervalMinutes
+          fullSettings.deliveryIntervalMinutes,
         ),
         pickupIntervalMinutes: toNonNegativeInteger(
-          fullSettings.pickupIntervalMinutes
+          fullSettings.pickupIntervalMinutes,
         ),
       },
     });
@@ -158,7 +170,9 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
 
     try {
       const settings = branchData.settings || {};
-      const deliveryConfig = normalizeDeliveryConfigForApi(settings.deliveryConfig);
+      const deliveryConfig = normalizeDeliveryConfigForApi(
+        settings.deliveryConfig,
+      );
       const validationError =
         activeTab === "delivery"
           ? getDeliveryConfigValidationError(deliveryConfig)
@@ -187,7 +201,9 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
         setActiveTab("workingHours");
       }
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : t("somethingWentWrong"));
+      toast.error(
+        error instanceof Error ? error.message : t("somethingWentWrong"),
+      );
     }
   };
 
@@ -198,14 +214,18 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
         tabLabel: t("basicInformation"),
         title: t("setupBasicInformation"),
         description: t("basicInformationDescription"),
-        component: <EditBranchBasicInfoStep data={branchData} setData={setBranchData} />,
+        component: (
+          <EditBranchBasicInfoStep data={branchData} setData={setBranchData} />
+        ),
       },
       {
         key: "delivery",
         tabLabel: t("deliveryAreaCharges"),
         title: t("deliveryAreaChargesSetup"),
         description: t("deliveryAreaChargesDescription"),
-        component: <EditBranchDeliveryStep data={branchData} setData={setBranchData} />,
+        component: (
+          <EditBranchDeliveryStep data={branchData} setData={setBranchData} />
+        ),
       },
       {
         key: "workingHours",
@@ -221,13 +241,13 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
         ),
       },
     ],
-    [branchData, deliveryTimeQuery.isLoading, t]
+    [branchData, deliveryTimeQuery.isLoading, t],
   );
 
   const currentStep = steps.find((step) => step.key === activeTab) ?? steps[0];
   const currentStepIndex = Math.max(
     steps.findIndex((step) => step.key === currentStep.key),
-    0
+    0,
   );
   const branchName = branchData?.name?.trim();
   const headerTitle = branchName
@@ -241,15 +261,16 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
 
   return (
     <Container>
-      <Header
-        title={headerTitle}
-        description={headerDescription}
-      />
+      <Header title={headerTitle} description={headerDescription} />
 
       <div className="space-y-8 rounded-[14px] bg-white shadow-sm lg:p-8">
         <div className="flex flex-wrap items-center gap-3">
           {steps.map(({ key, tabLabel }) => (
-            <TabButton key={key} active={activeTab === key} onClick={() => setActiveTab(key)}>
+            <TabButton
+              key={key}
+              active={activeTab === key}
+              onClick={() => setActiveTab(key)}
+            >
               {tabLabel}
             </TabButton>
           ))}

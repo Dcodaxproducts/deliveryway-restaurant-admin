@@ -35,7 +35,9 @@ const validPostalDeliveryConfig = {
 
 describe("edit branch delivery and settings mapper", () => {
   it("normalizes postal code delivery rules with all backend amount fields", () => {
-    const deliveryConfig = normalizeDeliveryConfigForApi(validPostalDeliveryConfig);
+    const deliveryConfig = normalizeDeliveryConfigForApi(
+      validPostalDeliveryConfig,
+    );
 
     expect(deliveryConfig.postalCodeRules).toEqual([
       {
@@ -59,7 +61,9 @@ describe("edit branch delivery and settings mapper", () => {
       ],
     });
 
-    expect(getDeliveryConfigValidationError(deliveryConfig)).toContain("duplicates");
+    expect(getDeliveryConfigValidationError(deliveryConfig)).toContain(
+      "duplicates",
+    );
   });
 
   it("rejects negative postal code delivery amounts during edit validation", () => {
@@ -76,7 +80,7 @@ describe("edit branch delivery and settings mapper", () => {
     });
 
     expect(getDeliveryConfigValidationError(deliveryConfig)).toBe(
-      "Postal code rule 1 minimum order cannot be negative"
+      "Postal code rule 1 minimum order cannot be negative",
     );
   });
 
@@ -85,19 +89,23 @@ describe("edit branch delivery and settings mapper", () => {
       getBranchSettingsValidationError({
         tableReservationsEnabled: true,
         tableCount: 0,
-      })
-    ).toBe("Table count must be at least 1 when table reservations are enabled");
+      }),
+    ).toBe(
+      "Table count must be at least 1 when table reservations are enabled",
+    );
 
     expect(
       getBranchSettingsValidationError({
         tableReservationsEnabled: false,
         tableCount: 0,
-      })
+      }),
     ).toBeNull();
   });
 
   it("preserves existing settings and includes new table reservation fields in branch payload", () => {
-    const deliveryConfig = normalizeDeliveryConfigForApi(validPostalDeliveryConfig);
+    const deliveryConfig = normalizeDeliveryConfigForApi(
+      validPostalDeliveryConfig,
+    );
     const settings = buildSafeBranchSettings(
       {
         allowedOrderTypes: ["DELIVERY"],
@@ -110,7 +118,7 @@ describe("edit branch delivery and settings mapper", () => {
         tableReservationAutoAccept: true,
         tableCount: 12,
       },
-      deliveryConfig
+      deliveryConfig,
     );
 
     const payload = buildBranchPatchPayload(
@@ -125,7 +133,7 @@ describe("edit branch delivery and settings mapper", () => {
           country: "PK",
         },
       },
-      settings
+      settings,
     );
 
     expect(payload.settings).toMatchObject({
@@ -172,7 +180,7 @@ describe("edit branch delivery and settings mapper", () => {
         isEnabled: true,
         type: "PERCENTAGE",
         value: 10,
-      }
+      },
     );
 
     expect(settings).toMatchObject({
@@ -216,7 +224,9 @@ describe("edit branch delivery and settings mapper", () => {
   });
 
   it("keeps delivery, table, and tax settings in full settings payload", () => {
-    const deliveryConfig = normalizeDeliveryConfigForApi(validPostalDeliveryConfig);
+    const deliveryConfig = normalizeDeliveryConfigForApi(
+      validPostalDeliveryConfig,
+    );
     const settings = buildSafeBranchSettings(
       {
         allowedOrderTypes: ["DELIVERY"],
@@ -234,7 +244,7 @@ describe("edit branch delivery and settings mapper", () => {
           value: 100,
         },
       },
-      deliveryConfig
+      deliveryConfig,
     );
 
     expect(settings).toMatchObject({
@@ -263,7 +273,7 @@ describe("edit branch delivery and settings mapper", () => {
           type: "PERCENTAGE",
           value: 101,
         },
-      })
+      }),
     ).toBe("Percentage service charge cannot exceed 100");
 
     expect(
@@ -273,7 +283,7 @@ describe("edit branch delivery and settings mapper", () => {
           type: "AMOUNT",
           value: 0,
         },
-      })
+      }),
     ).toBe("Service charge value must be greater than 0 when enabled");
 
     expect(
@@ -283,7 +293,7 @@ describe("edit branch delivery and settings mapper", () => {
           type: "PERCENTAGE",
           value: 0,
         },
-      })
+      }),
     ).toBeNull();
   });
 
@@ -416,7 +426,7 @@ describe("edit branch delivery and settings mapper", () => {
           phone: "12345678",
         },
       },
-      {}
+      {},
     );
 
     expect(payload.branchAdmin).toEqual({
@@ -425,6 +435,25 @@ describe("edit branch delivery and settings mapper", () => {
       lastName: "Hassan",
       phone: "12345678",
     });
+  });
+
+  it("can omit branch admin info from branch-admin self-service patch payloads", () => {
+    const payload = buildBranchPatchPayload(
+      {
+        restaurantId: "restaurant-1",
+        name: "Blue Area",
+        branchAdmin: {
+          email: "branch@yopmail.com",
+          firstName: "Branch",
+          lastName: "Admin",
+          phone: "12345678",
+        },
+      },
+      {},
+      { includeBranchAdmin: false },
+    );
+
+    expect(payload).not.toHaveProperty("branchAdmin");
   });
 
   it("sends editable branch identity fields as flat backend patch fields", () => {
@@ -451,7 +480,7 @@ describe("edit branch delivery and settings mapper", () => {
           lng: "0",
         },
       },
-      {}
+      {},
     );
 
     expect(payload).toMatchObject({
@@ -483,7 +512,7 @@ describe("edit branch delivery and settings mapper", () => {
           phone: " 12345678 ",
         },
       },
-      {}
+      {},
     );
 
     expect(payload.branchAdmin).toEqual({
@@ -508,7 +537,7 @@ describe("edit branch delivery and settings mapper", () => {
           phone: "",
         },
       },
-      {}
+      {},
     );
 
     expect(payload).not.toHaveProperty("branchAdmin");
@@ -535,7 +564,7 @@ describe("edit branch delivery and settings mapper", () => {
           phone: "12345678",
         },
       },
-      settings
+      settings,
     );
 
     expect(payload.branchAdmin).toEqual({
@@ -626,7 +655,7 @@ describe("edit branch delivery and settings mapper", () => {
         isEnabled: false,
         type: "AMOUNT",
         value: 100,
-      })
+      }),
     ).toEqual({
       isEnabled: false,
       type: "PERCENTAGE",
