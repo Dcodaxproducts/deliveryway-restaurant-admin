@@ -19,3 +19,15 @@ export const normalizeLocale = (locale?: string | null): AppLocale => {
   if (!locale) return DEFAULT_LOCALE;
   return isAppLocale(locale) ? locale : DEFAULT_LOCALE;
 };
+
+export const getRequestLocale = (): AppLocale => {
+  if (typeof window === "undefined") {
+    return DEFAULT_LOCALE;
+  }
+
+  try {
+    return normalizeLocale(window.localStorage.getItem(LOCALE_STORAGE_KEY));
+  } catch {
+    return DEFAULT_LOCALE;
+  }
+};

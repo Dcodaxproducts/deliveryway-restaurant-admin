@@ -5,9 +5,11 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   NextIntlClientProvider,
   type AbstractIntlMessages,
@@ -57,8 +59,10 @@ const persistLocale = (locale: AppLocale) => {
 };
 
 export function I18nProvider({ children }: I18nProviderProps) {
+  const queryClient = useQueryClient();
   const [locale, setLocaleState] = useState<AppLocale>(DEFAULT_LOCALE);
   const [isLocaleReady, setIsLocaleReady] = useState(false);
+  const previousLocaleRef = useRef<AppLocale | null>(null);
 
   useEffect(() => {
     const storedLocale = window.localStorage.getItem(LOCALE_STORAGE_KEY);
@@ -68,6 +72,19 @@ export function I18nProvider({ children }: I18nProviderProps) {
     persistLocale(nextLocale);
     setIsLocaleReady(true);
   }, []);
+
+  useEffect(() => {
+    if (!isLocaleReady) {
+      return;
+    }
+
+    const previousLocale = previousLocaleRef.current;
+    previousLocaleRef.current = locale;
+
+    if (previousLocale && previousLocale !== locale) {
+      void queryClient.invalidateQueries();
+    }
+  }, [isLocaleReady, locale, queryClient]);
 
   const setLocale = useCallback((nextLocale: AppLocale) => {
     const normalizedLocale = normalizeLocale(nextLocale);

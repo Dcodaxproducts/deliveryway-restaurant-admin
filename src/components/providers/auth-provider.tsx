@@ -10,6 +10,7 @@ import {
   type SetStateAction,
 } from "react";
 import { API_BASE_URL } from "@/lib/constants";
+import { getRequestLocale } from "@/config/i18n";
 import {
   AuthStorage,
   AuthUser,
@@ -44,6 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const res = await fetch(`${API_BASE_URL}/v1/auth/refresh`, {
         method: "POST",
         headers: {
+          "Accept-Language": getRequestLocale(),
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -68,6 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchMe = async (accessToken: string, fallback?: AuthStorage | null) => {
     const res = await fetch(`${API_BASE_URL}/v1/auth/me`, {
       headers: {
+        "Accept-Language": getRequestLocale(),
         Authorization: `Bearer ${accessToken}`,
       },
     });

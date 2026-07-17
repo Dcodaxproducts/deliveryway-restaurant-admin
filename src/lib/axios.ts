@@ -1,4 +1,5 @@
-import axios, { type AxiosRequestConfig, type Method } from "axios";
+import axios, { AxiosHeaders, type AxiosRequestConfig, type Method } from "axios";
+import { getRequestLocale } from "@/config/i18n";
 import { baseURL } from "@/lib/constants";
 import { buildLoginRoute } from "@/lib/auth-routes";
 import {
@@ -26,7 +27,11 @@ const refreshAccessToken = async () => {
     if (!refreshToken) return null;
 
     try {
-      const { data } = await axios.post(`${baseURL}/auth/refresh`, { refreshToken });
+      const { data } = await axios.post(
+        `${baseURL}/auth/refresh`,
+        { refreshToken },
+        { headers: { "Accept-Language": getRequestLocale() } },
+      );
       const merged = normalizeAuthPayload(data, stored);
       saveStoredAuth(merged);
 
@@ -47,10 +52,15 @@ export const api = axios.create({ baseURL });
 api.interceptors.request.use((config) => {
   const stored = getStoredAuth();
   const accessToken = stored?.accessToken;
+  const headers = AxiosHeaders.from(config.headers);
+
+  headers.set("Accept-Language", getRequestLocale());
 
   if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
+    headers.set("Authorization", `Bearer ${accessToken}`);
   }
+
+  config.headers = headers;
 
   return config;
 });
