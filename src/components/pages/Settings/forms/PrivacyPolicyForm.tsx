@@ -136,6 +136,14 @@ const editorButtonGroups: EditorButton[][] = [
 
 const editorSwatches = ["#101828", "#475467", "#C1121F", "#1D7FA8", "#027A48", "#B54708"];
 
+const editorFontSizes = [
+  { label: "Small", value: "2" },
+  { label: "Normal", value: "3" },
+  { label: "Large", value: "4" },
+  { label: "Extra large", value: "5" },
+  { label: "Display", value: "6" },
+];
+
 const buildPreviewDocument = (content: string, emptyPreview: string) => {
   const safeContent = content.trim() || emptyPreview;
 
@@ -448,6 +456,29 @@ export function RichPolicyEditor({
             }
             aria-label="Custom text color"
           />
+        </label>
+
+        <label className="inline-flex h-11 items-center gap-2 rounded-full border border-[#EAECF0] bg-white px-3 text-sm font-semibold text-[#475467] transition hover:bg-[#F2F4F7]">
+          <Type className="size-4" />
+          <select
+            defaultValue=""
+            disabled={disabled}
+            onChange={(event) => {
+              runCommand({ type: "command", command: "fontSize", value: event.target.value });
+              event.target.value = "";
+            }}
+            className="cursor-pointer bg-transparent text-sm font-semibold text-[#475467] outline-none disabled:cursor-not-allowed"
+            aria-label="Font size"
+          >
+            <option value="" disabled>
+              Font size
+            </option>
+            {editorFontSizes.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full border border-[#EAECF0] bg-white px-3 text-sm font-semibold text-[#475467] transition hover:bg-[#F2F4F7]">
@@ -956,13 +987,14 @@ function CustomerAppContentPage({
   const currentDraftContent = isAboutUsPage
     ? buildAboutPageHtml(draftAboutPage)
     : draftContent;
+  const previewContent = isAboutUsPage ? currentDraftContent : "";
   const isDirty = currentDraftContent !== savedContent;
   const loading = authLoading || isLoading;
   const isSaving =
     contentField === "aboutUs" ? updateAboutUs.isPending : updatePrivacyPolicy.isPending;
   const previewDocument = useMemo(
-    () => buildPreviewDocument(currentDraftContent, emptyPreview),
-    [currentDraftContent, emptyPreview],
+    () => buildPreviewDocument(previewContent, emptyPreview),
+    [emptyPreview, previewContent],
   );
   const wordCount = useMemo(() => countWords(stripHtmlToText(currentDraftContent)), [currentDraftContent]);
   const characterCount = currentDraftContent.length;
@@ -1021,6 +1053,38 @@ function CustomerAppContentPage({
     await navigator.clipboard.writeText(publicLink);
     toast.success(t("linkCopied"));
   };
+
+  const publicPageSection = (
+    <section className="rounded-3xl border border-[#EAECF0] bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold text-[#101828]">
+            {t("publicPageTitle")}
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-[#667085]">
+            {t("publicPageDescription")}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-[#EAECF0] bg-[#F8F9FB] p-3">
+        <code className="block break-all text-xs leading-5 text-[#475467]">
+          {publicLink || t("missingRestaurant")}
+        </code>
+      </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        onClick={handleCopyPublicLink}
+        disabled={!publicLink}
+        className="mt-4 h-10 rounded-full border-[#D0D5DD] bg-white text-[#344054]"
+      >
+        <Copy />
+        {t("copyLink")}
+      </Button>
+    </section>
+  );
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] px-4 py-5 sm:px-6 lg:px-8">
@@ -1107,7 +1171,12 @@ function CustomerAppContentPage({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        <div
+          className={cn(
+            "grid grid-cols-1 gap-5",
+            isAboutUsPage && "xl:grid-cols-[1.1fr_0.9fr]",
+          )}
+        >
           <section className="overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
             <div className="border-b border-[#EAECF0] px-5 py-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1150,79 +1219,55 @@ function CustomerAppContentPage({
             </div>
           </section>
 
-          <aside className="space-y-5">
-            <section className="overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-              <div className="border-b border-[#EAECF0] px-5 py-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Eye className="size-4 text-[#1D7FA8]" />
-                      <h2 className="text-base font-semibold text-[#101828]">
-                        {t("previewTitle")}
-                      </h2>
+          {isAboutUsPage ? (
+            <aside className="space-y-5">
+              <section className="overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+                <div className="border-b border-[#EAECF0] px-5 py-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Eye className="size-4 text-[#1D7FA8]" />
+                        <h2 className="text-base font-semibold text-[#101828]">
+                          {t("previewTitle")}
+                        </h2>
+                      </div>
+                      <p className="mt-1 text-sm text-[#667085]">{t("previewDescription")}</p>
                     </div>
-                    <p className="mt-1 text-sm text-[#667085]">{t("previewDescription")}</p>
+
+                    {isDirty ? (
+                      <span className="rounded-full bg-[#FFF7E6] px-3 py-1 text-xs font-semibold text-[#B54708]">
+                        {t("draft")}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF3] px-3 py-1 text-xs font-semibold text-[#027A48]">
+                        <CheckCircle2 className="size-3.5" />
+                        {t("live")}
+                      </span>
+                    )}
                   </div>
-
-                  {isDirty ? (
-                    <span className="rounded-full bg-[#FFF7E6] px-3 py-1 text-xs font-semibold text-[#B54708]">
-                      {t("draft")}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF3] px-3 py-1 text-xs font-semibold text-[#027A48]">
-                      <CheckCircle2 className="size-3.5" />
-                      {t("live")}
-                    </span>
-                  )}
                 </div>
-              </div>
 
-              <div className="bg-[#F8F9FB] p-4">
-                <div className="overflow-hidden rounded-[24px] border border-[#EAECF0] bg-white shadow-sm">
-                  <div className="border-b border-[#EAECF0] px-5 py-4">
-                    <p className="text-sm font-semibold text-[#101828]">{t("modalTitle")}</p>
-                    <p className="mt-1 text-xs text-[#667085]">{t("modalSubtitle")}</p>
+                <div className="bg-[#F8F9FB] p-4">
+                  <div className="overflow-hidden rounded-[24px] border border-[#EAECF0] bg-white shadow-sm">
+                    <div className="border-b border-[#EAECF0] px-5 py-4">
+                      <p className="text-sm font-semibold text-[#101828]">{t("modalTitle")}</p>
+                      <p className="mt-1 text-xs text-[#667085]">{t("modalSubtitle")}</p>
+                    </div>
+                    <iframe
+                      title={t("previewTitle")}
+                      sandbox=""
+                      srcDoc={previewDocument}
+                      className="h-[460px] w-full bg-white"
+                    />
                   </div>
-                  <iframe
-                    title={t("previewTitle")}
-                    sandbox=""
-                    srcDoc={previewDocument}
-                    className="h-[460px] w-full bg-white"
-                  />
                 </div>
-              </div>
-            </section>
+              </section>
 
-            <section className="rounded-3xl border border-[#EAECF0] bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-base font-semibold text-[#101828]">
-                    {t("publicPageTitle")}
-                  </h2>
-                  <p className="mt-1 text-sm leading-6 text-[#667085]">
-                    {t("publicPageDescription")}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-[#EAECF0] bg-[#F8F9FB] p-3">
-                <code className="block break-all text-xs leading-5 text-[#475467]">
-                  {publicLink || t("missingRestaurant")}
-                </code>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCopyPublicLink}
-                disabled={!publicLink}
-                className="mt-4 h-10 w-full rounded-full border-[#D0D5DD] bg-white text-[#344054]"
-              >
-                <Copy />
-                {t("copyLink")}
-              </Button>
-            </section>
-          </aside>
+              {publicPageSection}
+            </aside>
+          ) : (
+            publicPageSection
+          )}
         </div>
       </div>
     </div>
