@@ -63,12 +63,6 @@ const taxRules = [
   },
 ];
 
-const currencyFormats = [
-  { label: "$1,000.00", value: "prefix" },
-  { label: "1,000.00 USD", value: "suffix" },
-  { label: "USD 1,000.00", value: "iso" },
-];
-
 const dateFormats = [
   { label: "DD/MM/YYYY", value: "dd/mm/yyyy" },
   { label: "MM/DD/YYYY", value: "mm/dd/yyyy" },
@@ -88,6 +82,7 @@ type SettingsFormProps = {
 
 export default function SettingsForm({ variant = "global" }: SettingsFormProps) {
   const { isBranchAdmin, isRestaurantAdmin, restaurantId } = useAuth();
+  const { currency, formatMoney } = useCurrency();
   const { handleSubmit, register, setValue, watch } = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues,
@@ -100,6 +95,11 @@ export default function SettingsForm({ variant = "global" }: SettingsFormProps) 
   const defaultPlatformLanguage = watch("defaultPlatformLanguage");
   const timezone = watch("timezone");
   const fontSelection = watch("fontSelection");
+  const currencyFormats = [
+    { label: formatMoney(1000), value: "prefix" },
+    { label: `1,000.00 ${currency}`, value: "suffix" },
+    { label: `${currency} 1,000.00`, value: "iso" },
+  ];
 
   const onSubmit = (values: SettingsFormValues) => {
     void values;
@@ -206,12 +206,12 @@ export default function SettingsForm({ variant = "global" }: SettingsFormProps) 
             >
               <SelectTrigger id="default-platform-currency" className="h-[52px] border-[#BBBBBB]">
                 <div className="flex items-center gap-2">
-                  <span className="text-dark">$</span>
+                  <span className="text-dark">{currency}</span>
                   <SelectValue placeholder="Select Currency" />
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="usd">USD</SelectItem>
+                <SelectItem value={currency.toLowerCase()}>{currency}</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -12,6 +12,7 @@ import { useDeleteModifier, useModifiers } from "@/hooks/useModifiers";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useTranslations } from "next-intl";
 import type { Modifier } from "@/types/modifiers";
 
@@ -23,6 +24,7 @@ export default function ModifiersTable() {
 
   const { restaurantId: authRestaurantId } = useAuth();
   const restaurantId = authRestaurantId ?? undefined;
+  const { formatMoney } = useCurrency(restaurantId);
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -87,14 +89,6 @@ export default function ModifiersTable() {
       hasPrevious: source?.hasPrevious ?? currentPage > 1,
     };
   }, [response, items.length, page, limit]);
-
-  const formatPrice = (value?: number) => {
-    const numeric = Number(value ?? 0);
-
-    if (Number.isNaN(numeric)) return "0.00";
-
-    return numeric.toFixed(2);
-  };
 
   const handleDelete = () => {
     if (!deleteId) return;
@@ -242,7 +236,7 @@ export default function ModifiersTable() {
                   </td>
 
                   <td className="px-2 text-center font-medium text-gray-900">
-                    ${formatPrice(item.priceDelta)}
+                    {formatMoney(item.priceDelta)}
                   </td>
 
                   <td className="px-2 text-center">
@@ -332,7 +326,7 @@ export default function ModifiersTable() {
                     {item.category?.name || t("uncategorized")}
                   </span>
                   <span className="text-sm font-semibold text-primary">
-                    ${formatPrice(item.priceDelta)}
+                    {formatMoney(item.priceDelta)}
                   </span>
                 </div>
 

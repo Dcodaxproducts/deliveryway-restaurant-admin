@@ -34,6 +34,7 @@ import {
 import { getApiErrorMessage } from "@/lib/errors";
 import { ADMIN_ROLES } from "@/lib/auth";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 import type {
   ModifierGroup,
   ModifierGroupModifier,
@@ -50,13 +51,7 @@ type ManageGroupModifiersDialogProps = {
   restaurantId?: string;
 };
 
-const formatPrice = (priceDelta?: string | number | null) => {
-  const numeric = Number(priceDelta ?? 0);
-
-  if (Number.isNaN(numeric)) return "0.00";
-
-  return numeric.toFixed(2);
-};
+type MoneyFormatter = (amount?: number | string | null) => string;
 
 export function ManageGroupModifiersDialog({
   open,
@@ -66,6 +61,7 @@ export function ManageGroupModifiersDialog({
 }: ManageGroupModifiersDialogProps) {
   const t = useTranslations("menu.modifierGroupsTable.manage");
   const commonT = useTranslations("common");
+  const { formatMoney } = useCurrency(restaurantId);
   const [page, setPage] = useState(1);
   const [limit] = useState(8);
   const [search, setSearch] = useState("");
@@ -308,6 +304,7 @@ export function ManageGroupModifiersDialog({
                       isDetaching && detachingModifierId === modifier.id
                     }
                     canDetach={canDetachModifier}
+                    formatMoney={formatMoney}
                     onDetach={() => setModifierToDetach(modifier)}
                   />
                 ))
@@ -378,6 +375,7 @@ export function ManageGroupModifiersDialog({
                     isAttaching={
                       isAttaching && attachingModifierId === modifier.id
                     }
+                    formatMoney={formatMoney}
                     onSortOrderChange={(value) =>
                       updateSortOrder(modifier.id, value)
                     }
@@ -432,11 +430,13 @@ function AttachedModifierCard({
   modifier,
   isDetaching,
   canDetach,
+  formatMoney,
   onDetach,
 }: {
   modifier: ModifierGroupModifier;
   isDetaching: boolean;
   canDetach: boolean;
+  formatMoney: MoneyFormatter;
   onDetach: () => void;
 }) {
   const t = useTranslations("menu.modifierGroupsTable.manage");
@@ -449,8 +449,8 @@ function AttachedModifierCard({
             {modifier.name}
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            {modifier.category?.name || t("noCategory")} · $
-            {formatPrice(modifier.priceDelta)}
+            {modifier.category?.name || t("noCategory")} ·{" "}
+            {formatMoney(modifier.priceDelta)}
           </p>
           <p className="mt-1 text-xs text-gray-400">
             {t("sortOrder")}: {modifier.sortOrder ?? 0}
@@ -479,6 +479,7 @@ function ModifierOption({
   attached,
   sortOrder,
   isAttaching,
+  formatMoney,
   onSortOrderChange,
   onAttach,
 }: {
@@ -486,6 +487,7 @@ function ModifierOption({
   attached: boolean;
   sortOrder: string;
   isAttaching: boolean;
+  formatMoney: MoneyFormatter;
   onSortOrderChange: (value: string) => void;
   onAttach: () => void;
 }) {
@@ -498,8 +500,8 @@ function ModifierOption({
           {modifier.name}
         </p>
         <p className="mt-1 truncate text-xs text-gray-500">
-          {modifier.category?.name || t("noCategory")} · $
-          {formatPrice(modifier.priceDelta)}
+          {modifier.category?.name || t("noCategory")} ·{" "}
+          {formatMoney(modifier.priceDelta)}
         </p>
       </div>
 

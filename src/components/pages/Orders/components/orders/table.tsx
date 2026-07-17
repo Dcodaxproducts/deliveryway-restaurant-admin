@@ -34,6 +34,7 @@ import {
   isFutureOrder,
 } from "@/components/pages/Orders/utils/orders-schedule-filters";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useDownloadOrderInvoicePdf, useSendOrderInvoiceEmail, useSendOrderOutForDelivery, useSendOrderWithExternalDriver, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { formatDateTime24 } from "@/lib/date-time-format";
 import { getOrderById } from "@/services/orders/orders.api";
@@ -114,6 +115,7 @@ export function OrdersTable({
 }: OrdersTableProps) {
   const router = useRouter();
   const { role, user } = useAuth();
+  const { formatMoney } = useCurrency();
   const common = useTranslations("common");
   const t = useTranslations("orders");
   const [statusOrder, setStatusOrder] = useState<OrdersTableRow | null>(null);
@@ -524,7 +526,7 @@ export function OrdersTable({
           </TableCell>
 
           <TableCell className="px-4 font-medium text-green-600">
-            <span className="block truncate">${totalAmount ?? 0}</span>
+            <span className="block truncate">{formatMoney(totalAmount)}</span>
           </TableCell>
 
           <TableCell className="px-4">

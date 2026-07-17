@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { formatDateTime24 } from "@/lib/date-time-format";
 import { useParams } from "next/navigation";
 import { useGetOrderById } from "@/hooks/useOrders";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useTranslations } from "next-intl";
 
 export default function GroupOrderDetails() {
   const t = useTranslations("orders");
   const { orderId } = useParams();
   const { data: order, isLoading: loading } = useGetOrderById(orderId as string);
+  const { formatMoney } = useCurrency();
 
 
 
@@ -188,7 +190,7 @@ export default function GroupOrderDetails() {
             <div className="text-right text-sm">
               <p>x{item.quantity}</p>
               <p className="text-green-600 font-medium">
-                ${item.lineTotal}
+                {formatMoney(item.lineTotal)}
               </p>
             </div>
           </div>
@@ -201,20 +203,20 @@ export default function GroupOrderDetails() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
           <div>
             <p className="text-gray-500">{t("subtotal")}</p>
-            <p>${order.subtotal}</p>
+            <p>{formatMoney(order.subtotal)}</p>
           </div>
           <div>
             <p className="text-gray-500">{t("deliveryFee")}</p>
-            <p>${order.deliveryFee}</p>
+            <p>{formatMoney(order.deliveryFee)}</p>
           </div>
           <div>
             <p className="text-gray-500">{t("tax")}</p>
-            <p>${order.taxAmount}</p>
+            <p>{formatMoney(order.taxAmount)}</p>
           </div>
           <div>
             <p className="text-gray-500">{t("total")}</p>
             <p className="text-green-600 font-semibold">
-              ${order.totalAmount}
+              {formatMoney(order.totalAmount)}
             </p>
           </div>
         </div>
