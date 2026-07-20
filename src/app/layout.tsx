@@ -11,6 +11,16 @@ type RootLayoutProps = {
 };
 
 export const metadata: Metadata = {
+  title: {
+    default: "DeliveryWay Restaurant Admin",
+    template: "%s | DeliveryWay Restaurant Admin",
+  },
+  applicationName: "DeliveryWay Restaurant Admin",
+  icons: {
+    icon: "/deliveryway-logo.jpg",
+    shortcut: "/deliveryway-logo.jpg",
+    apple: "/deliveryway-logo.jpg",
+  },
   other: {
     google: "notranslate",
   },

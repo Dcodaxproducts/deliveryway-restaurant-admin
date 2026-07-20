@@ -48,7 +48,7 @@ export default function BrandLogo({
     }
 
     const themedLogo = currentTheme === "dark" ? restaurant.branding.logo.dark : restaurant.branding.logo.light;
-    return normalizeLogoUrl(themedLogo) || normalizeLogoUrl(restaurant.logoUrl) || normalizeLogoUrl(restaurant.branding.assets.logoUrl);
+    return normalizeLogoUrl(themedLogo) || normalizeLogoUrl(restaurant.logoUrl) || normalizeLogoUrl(restaurant.branding.assets.logoUrl) || "/deliveryway-logo.jpg";
   }, [currentTheme, logoUrl, restaurant.branding.assets.logoUrl, restaurant.branding.logo.dark, restaurant.branding.logo.light, restaurant.logoUrl]);
 
   useEffect(() => {
