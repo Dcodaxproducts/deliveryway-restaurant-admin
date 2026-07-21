@@ -99,6 +99,8 @@ export type RestaurantBrandingProfile = {
   id?: string;
   tenantId?: string;
   customDomain?: string;
+  customDomainVerifiedAt?: string | null;
+  subdomain: string;
   settings?: Record<string, unknown>;
   name: string;
   slug: string;
@@ -117,7 +119,6 @@ export type RestaurantBrandingPayload = {
 
 export type RestaurantBrandingPatchPayload = {
   name: string;
-  slug: string;
   logoUrl: string;
   coverImage: string;
   customDomain?: string;

@@ -2623,6 +2623,8 @@
     "customDomain": "Custom Domain",
     "displayOnly": "Nur Anzeige",
     "customDomainManaged": "Diese Domain wird über die Backend-Konfiguration verwaltet und kann hier nicht bearbeitet werden.",
+    "customDomainVerified": "Verifiziert. Kunden können diese benutzerdefinierte Domain verwenden.",
+    "customDomainPendingVerification": "Gespeichert, aber erst nach Verifizierung von Domaininhaberschaft und DNS aktiv.",
     "customDomainFallbackDescription": "Es ist noch keine Custom Domain konfiguriert, daher können Kunden die generierte Storefront-Adresse verwenden.",
     "customDomainFallbackHint": "Generiert aus der aktuellen App-Domain und dem Restaurant-Slug.",
     "supportContact": "Supportkontakt",

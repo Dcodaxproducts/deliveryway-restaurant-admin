@@ -412,7 +412,7 @@ describe("branding helpers", () => {
     const patchPayload = buildRestaurantBrandingPatchPayload(payload);
 
     expect(patchPayload.name).toBe("Patch Restaurant");
-    expect(patchPayload.slug).toBe("patch-restaurant");
+    expect("slug" in patchPayload).toBe(false);
     expect(patchPayload.customDomain).toBe("orders.example.com");
     expect("restaurant" in patchPayload).toBe(false);
   });

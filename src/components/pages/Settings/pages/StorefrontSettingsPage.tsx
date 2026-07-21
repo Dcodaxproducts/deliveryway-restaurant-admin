@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { FieldPath } from "react-hook-form";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Globe2, LockKeyhole } from "lucide-react";
+import { Globe2 } from "lucide-react";
 import { toast } from "sonner";
 
 import Container from "@/components/common/Container";
@@ -57,12 +57,6 @@ const profileFields: TextFieldConfig[] = [
     label: "Restaurant Name",
     name: "restaurant.name",
     placeholder: "Deliveryway Restaurant",
-  },
-  {
-    id: "restaurant-slug",
-    label: "Restaurant Slug",
-    name: "restaurant.slug",
-    placeholder: "deliveryway-restaurant",
   },
   {
     id: "restaurant-tagline",
@@ -188,12 +182,21 @@ export function StorefrontSettingsPage() {
     [formState, getFieldState]
   );
   const isBrandingBusy = isBrandingLoading || isBrandingSaving;
-  const restaurantSlug = watchedValues?.restaurant?.slug?.trim();
+  const restaurantSubdomain = watchedValues?.restaurant?.subdomain?.trim();
   const customDomain = watchedValues?.restaurant?.customDomain?.trim();
-  const fallbackStorefrontAddress = restaurantSlug
-    ? `${browserOrigin || "https://app.deliveryway.co"}/${restaurantSlug}`
-    : browserOrigin || "https://app.deliveryway.co";
-  const storefrontAddress = customDomain || fallbackStorefrontAddress;
+  const customDomainVerified = Boolean(
+    watchedValues?.restaurant?.customDomainVerifiedAt,
+  );
+  const customerAppBaseDomain =
+    process.env.NEXT_PUBLIC_CUSTOMER_APP_BASE_DOMAIN?.trim() ||
+    "delivery-way.de";
+  const fallbackStorefrontAddress = restaurantSubdomain
+    ? `https://${restaurantSubdomain}.${customerAppBaseDomain}`
+    : browserOrigin;
+  const storefrontAddress =
+    customDomain && customDomainVerified
+      ? `https://${customDomain}`
+      : fallbackStorefrontAddress;
 
   const onSubmit = async (values: BrandingFormValues) => {
     try {
@@ -318,28 +321,42 @@ export function StorefrontSettingsPage() {
                         <p className="text-sm font-semibold text-[#030401]">
                           {t("customDomain")}
                         </p>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600">
-                          <LockKeyhole className="h-3 w-3" />
-                          {t("displayOnly")}
-                        </span>
                       </div>
                       <p className="mt-1 text-xs leading-5 text-gray-500">
                         {customDomain
-                          ? t("customDomainManaged")
+                          ? customDomainVerified
+                            ? t("customDomainVerified")
+                            : t("customDomainPendingVerification")
                           : t("customDomainFallbackDescription")}
                       </p>
                     </div>
                   </div>
                 </div>
                 <div className="mt-4 rounded-[14px] border border-gray-200 bg-white px-4 py-3">
+                  <p className="text-xs font-medium text-gray-500">Default storefront</p>
                   <p className="break-all text-sm font-semibold text-[#030401]">
-                    {storefrontAddress}
+                    {fallbackStorefrontAddress}
                   </p>
-                  {!customDomain ? (
-                    <p className="mt-1 text-xs text-gray-500">
-                      {t("customDomainFallbackHint")}
+                </div>
+                <div className="mt-4">
+                  <label htmlFor="restaurant-custom-domain" className={BRANDING_LABEL_CLASS}>
+                    {t("customDomain")}
+                  </label>
+                  <Input
+                    id="restaurant-custom-domain"
+                    placeholder="orders.yourrestaurant.com"
+                    aria-invalid={Boolean(getError("restaurant.customDomain"))}
+                    className={BRANDING_INPUT_CLASS}
+                    {...register("restaurant.customDomain")}
+                  />
+                  {getError("restaurant.customDomain") ? (
+                    <p className={BRANDING_ERROR_CLASS}>
+                      {getError("restaurant.customDomain")}
                     </p>
                   ) : null}
+                  <p className="mt-2 break-all text-xs text-gray-500">
+                    Active storefront: {storefrontAddress}
+                  </p>
                 </div>
               </div>
             </div>

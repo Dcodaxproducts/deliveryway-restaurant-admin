@@ -22,6 +22,8 @@ const defaultRestaurant = DEFAULT_RESTAURANT_BRANDING_PAYLOAD.restaurant;
 const expectNoReadOnlyPatchFields = (patchPayload: RestaurantBrandingPatchPayload) => {
   expect("id" in patchPayload).toBe(false);
   expect("tenantId" in patchPayload).toBe(false);
+  expect("slug" in patchPayload).toBe(false);
+  expect("subdomain" in patchPayload).toBe(false);
   expect("settings" in patchPayload).toBe(false);
   expect("tenant" in patchPayload).toBe(false);
   expect("_count" in patchPayload).toBe(false);
@@ -194,7 +196,6 @@ describe("branding service", () => {
       expect("restaurant" in patchPayload).toBe(false);
       expect(patchPayload).toMatchObject({
         name: "Patch Restaurant",
-        slug: "patch-restaurant",
         logoUrl: "https://cdn.example.com/logo.png",
         coverImage: "https://cdn.example.com/cover.png",
         customDomain: "orders.patch.example.com",
@@ -287,7 +288,6 @@ describe("branding service", () => {
       expect(endpoint).toBe("/restaurants/restaurant-1");
       expect(patchPayload).toMatchObject({
         name: "Real Restaurant",
-        slug: "real-restaurant",
         logoUrl: "https://cdn.example.com/logo.png",
         coverImage: "https://cdn.example.com/cover.png",
         customDomain: "orders.real.example.com",

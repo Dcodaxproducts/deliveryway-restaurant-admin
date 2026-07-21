@@ -128,7 +128,19 @@ const socialMediaSchema = z.object({
 export const restaurantBrandingProfileSchema = z.object({
   id: z.string().optional(),
   tenantId: z.string().optional(),
-  customDomain: z.string().optional(),
+  customDomain: z
+    .string()
+    .refine(
+      (value) =>
+        value === "" ||
+        /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(
+          value.trim().replace(/\.$/, ""),
+        ),
+      "Enter a hostname without protocol, path, or port",
+    )
+    .optional(),
+  customDomainVerifiedAt: z.string().nullable().optional(),
+  subdomain: z.string().min(1, "Restaurant subdomain is required"),
   settings: z.record(z.unknown()).optional(),
   name: z.string().min(1, "Restaurant name is required"),
   slug: z.string().min(1, "Restaurant slug is required"),

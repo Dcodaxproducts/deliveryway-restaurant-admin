@@ -131,6 +131,7 @@ const hasRestaurantPayloadFields = (value: Record<string, unknown>): boolean =>
   "tenantId" in value ||
   "name" in value ||
   "slug" in value ||
+  "subdomain" in value ||
   "logoUrl" in value ||
   "coverImage" in value ||
   "customDomain" in value ||
@@ -283,7 +284,6 @@ export const buildRestaurantBrandingPatchPayload = (
 
   return {
     name: restaurant.name,
-    slug: restaurant.slug,
     logoUrl: restaurant.logoUrl,
     coverImage: restaurant.coverImage,
     customDomain: restaurant.customDomain ?? "",
@@ -344,6 +344,14 @@ export const normalizeBrandingPayload = (input: unknown): RestaurantBrandingPayl
       ...(getOptionalString(restaurant, "id") ? { id: getOptionalString(restaurant, "id") } : {}),
       ...(getOptionalString(restaurant, "tenantId") ? { tenantId: getOptionalString(restaurant, "tenantId") } : {}),
       customDomain: getString(restaurant, "customDomain", defaults.restaurant.customDomain ?? ""),
+      customDomainVerifiedAt:
+        getOptionalString(restaurant, "customDomainVerifiedAt") ?? null,
+      subdomain: getString(
+        restaurant,
+        "subdomain",
+        defaults.restaurant.subdomain,
+        (value) => value.trim().length > 0,
+      ),
       ...(settings ? { settings } : {}),
       name: getString(restaurant, "name", defaults.restaurant.name, (value) => value.trim().length > 0),
       slug: getString(restaurant, "slug", defaults.restaurant.slug, (value) => value.trim().length > 0),

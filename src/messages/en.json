@@ -2623,6 +2623,8 @@
     "customDomain": "Custom Domain",
     "displayOnly": "Display only",
     "customDomainManaged": "This domain is managed by backend configuration and cannot be edited here.",
+    "customDomainVerified": "Verified. Customer traffic can use this custom domain.",
+    "customDomainPendingVerification": "Saved but not active until domain ownership and DNS are verified.",
     "customDomainFallbackDescription": "No custom domain is configured yet, so customers can use the generated storefront address.",
     "customDomainFallbackHint": "Generated from the current app domain and restaurant slug.",
     "supportContact": "Support Contact",
