@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import api from "@/lib/axios";
+import { api } from "@/lib/axios";
 import {
   getBranchDeliveryTime,
   getDeliveryHours,
@@ -12,7 +12,7 @@ import {
 } from "@/services/branches";
 
 vi.mock("@/lib/axios", () => ({
-  default: {
+  api: {
     get: vi.fn(),
     patch: vi.fn(),
     put: vi.fn(),

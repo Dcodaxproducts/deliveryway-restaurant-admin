@@ -1,4 +1,4 @@
-import api from "@/lib/axios";
+import { api } from "@/lib/axios";
 
 export const getChatThreads = async () => {
   const { data } = await api.get("/chat/threads");

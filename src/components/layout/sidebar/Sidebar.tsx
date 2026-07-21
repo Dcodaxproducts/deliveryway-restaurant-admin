@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -20,6 +20,8 @@ import { toast } from "sonner";
 interface SidebarItemProps {
   item: MenuItem;
   isActive: boolean;
+  isOpen?: boolean;
+  onOpenChange?: () => void;
   onLinkClick?: () => void;
   isActiveRoute: (href?: string, children?: MenuItem[]) => boolean;
 }
@@ -27,6 +29,8 @@ interface SidebarItemProps {
 const SidebarItem = ({
   item,
   isActive,
+  isOpen = false,
+  onOpenChange,
   onLinkClick,
   isActiveRoute,
 }: SidebarItemProps): ReactElement => {
@@ -36,20 +40,13 @@ const SidebarItem = ({
   const hasChildren = Boolean(item.children?.length);
   const label = item.labelKey ? t(item.labelKey) : item.title;
 
-  const [open, setOpen] = useState<boolean>(isActive);
-
-  useEffect(() => {
-    if (isActive) {
-      setOpen(true);
-    }
-  }, [isActive]);
-
   if (hasChildren) {
     return (
       <div className={isDashboard ? "mb-5 mt-5" : "mb-2.5"}>
         <button
           type="button"
-          onClick={() => setOpen((prev) => !prev)}
+          aria-expanded={isOpen}
+          onClick={onOpenChange}
           className="w-full flex items-center justify-between px-6 transition-colors"
         >
           <div className="flex items-center gap-3 min-w-0">
@@ -72,14 +69,14 @@ const SidebarItem = ({
             </span>
           </div>
 
-          {open ? (
+          {isOpen ? (
             <ChevronDown size={18} className="text-primary shrink-0" />
           ) : (
             <ChevronRight size={18} className="text-primary shrink-0" />
           )}
         </button>
 
-        {open && (
+        {isOpen && (
           <div className="mt-2 space-y-1">
             {item.children?.map((child) => {
               const ChildIcon = child.icon;
@@ -174,7 +171,7 @@ const getSidebarCta = (
   return { href: "/menu?create=true", labelKey: "addMenuCta" };
 };
 
-export default function Sidebar({
+function SidebarContent({
   onLinkClick,
 }: {
   onLinkClick?: () => void;
@@ -184,6 +181,12 @@ export default function Sidebar({
   const router = useRouter();
   const t = useTranslations("navigation");
   const { user, role, isBranchAdmin, logout } = useAuth();
+  const routeKey = `${pathname}?${searchParams.toString()}`;
+  const [menuState, setMenuState] = useState<{
+    routeKey: string;
+    openKey: string | null;
+  }>({ routeKey, openKey: null });
+  const openMenuKey = menuState.routeKey === routeKey ? menuState.openKey : null;
 
   const isSidebarRole = (value?: string | null): value is SidebarRole =>
     value === "BUSINESS_ADMIN" ||
@@ -255,6 +258,11 @@ export default function Sidebar({
     return true;
   };
 
+  const handleLinkClick = (): void => {
+    setMenuState({ routeKey, openKey: null });
+    onLinkClick?.();
+  };
+
   const handleLogout = (): void => {
     logout();
     toast.success(t("logoutSuccess"));
@@ -265,14 +273,21 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="flex h-full w-72 flex-col overflow-y-auto bg-white">
+    <aside className="flex h-full w-72 flex-col overflow-y-auto overscroll-contain bg-white xl:overflow-y-hidden xl:hover:overflow-y-auto">
       <nav className="flex flex-col px-0 pt-5">
         {mainItems.map((item) => (
           <SidebarItem
             key={item.title}
             item={item}
             isActive={isActiveRoute(item.href, item.children)}
-            onLinkClick={onLinkClick}
+            isOpen={openMenuKey === item.title}
+            onOpenChange={() =>
+              setMenuState({
+                routeKey,
+                openKey: openMenuKey === item.title ? null : item.title,
+              })
+            }
+            onLinkClick={handleLinkClick}
             isActiveRoute={isActiveRoute}
           />
         ))}
@@ -289,7 +304,14 @@ export default function Sidebar({
               key={item.title}
               item={item}
               isActive={isActiveRoute(item.href, item.children)}
-              onLinkClick={onLinkClick}
+              isOpen={openMenuKey === item.title}
+              onOpenChange={() =>
+                setMenuState({
+                  routeKey,
+                  openKey: openMenuKey === item.title ? null : item.title,
+                })
+              }
+              onLinkClick={handleLinkClick}
               isActiveRoute={isActiveRoute}
             />
           ))}
@@ -343,5 +365,17 @@ export default function Sidebar({
         </div>
       </nav>
     </aside>
+  );
+}
+
+export function Sidebar({
+  onLinkClick,
+}: {
+  onLinkClick?: () => void;
+}): ReactElement {
+  return (
+    <Suspense fallback={<aside className="h-full w-72 bg-white" />}>
+      <SidebarContent onLinkClick={onLinkClick} />
+    </Suspense>
   );
 }

@@ -1,4 +1,4 @@
-import api from "@/lib/axios";
+import { api } from "@/lib/axios";
 import { cleanParams, type QueryParams } from "@/lib/params";
 import type { MenuItemsListParams } from "@/types/menu-items";
 import type {

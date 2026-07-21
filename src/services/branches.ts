@@ -1,4 +1,4 @@
-import api from "@/lib/axios";
+import { api } from "@/lib/axios";
 import { parseSchema } from "@/lib/zod-errors";
 import { PAYMENT_METHOD_CODES } from "@/types/payment-methods";
 import {

@@ -1,4 +1,4 @@
-import api from "@/lib/axios";
+import { api } from "@/lib/axios";
 import { normalizeCategoryOption } from "@/lib/category-options";
 import { cleanParams } from "@/lib/params";
 import { extractResponseItems, extractResponseMeta } from "@/lib/response";

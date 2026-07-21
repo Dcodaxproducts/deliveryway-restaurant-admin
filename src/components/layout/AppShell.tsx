@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import ContextGate from "@/components/layout/ContextGate";
 import { Navbar } from "@/components/layout/navbar/navbar";
-import Sidebar from "@/components/layout/sidebar/Sidebar";
+import { Sidebar } from "@/components/layout/sidebar/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { isPublicRoute } from "@/lib/access";
 import { cn } from "@/lib/utils";

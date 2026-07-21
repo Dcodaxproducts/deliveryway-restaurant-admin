@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import api from "@/lib/axios";
+import { api } from "@/lib/axios";
 import { deleteCartDeal, updateCartDealQuantity } from "@/services/pos";
 
 vi.mock("@/lib/axios", () => ({
-  default: {
+  api: {
     delete: vi.fn(),
     patch: vi.fn(),
   },

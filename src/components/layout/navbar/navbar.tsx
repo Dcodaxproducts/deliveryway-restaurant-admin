@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import Sidebar from "@/components/layout/sidebar/Sidebar";
+import { Sidebar } from "@/components/layout/sidebar/Sidebar";
 import { SearchBar } from "./search-bar";
 import NotificationBell from "./notification";
 import ProfileSection from "./profile-section";

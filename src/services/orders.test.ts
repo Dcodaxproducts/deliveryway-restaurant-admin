@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import api, { httpClient } from "@/lib/axios";
+import { api, httpClient } from "@/lib/axios";
 import {
   failPaymentTransaction,
   getOrders,
@@ -12,7 +12,7 @@ import {
 } from "@/services/orders";
 
 vi.mock("@/lib/axios", () => ({
-  default: {
+  api: {
     get: vi.fn(),
   },
   httpClient: {

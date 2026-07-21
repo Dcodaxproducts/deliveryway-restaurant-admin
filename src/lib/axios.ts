@@ -17,6 +17,20 @@ export type RequestOptions = Omit<AxiosRequestConfig, "url" | "method" | "data" 
 
 let refreshPromise: Promise<string | null> | null = null;
 
+const authenticationEndpoints = [
+  "/auth/login",
+  "/auth/staff/login",
+  "/auth/google-login",
+] as const;
+
+export const isAuthenticationRequest = (requestUrl: string): boolean => {
+  const requestPath = requestUrl.split("?", 1)[0];
+
+  return authenticationEndpoints.some(
+    (endpoint) => requestPath === endpoint || requestPath.endsWith(endpoint),
+  );
+};
+
 const refreshAccessToken = async () => {
   if (refreshPromise) return refreshPromise;
 
@@ -69,12 +83,19 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const requestUrl = String(originalRequest?.url || "");
+    const isLoginRequest = isAuthenticationRequest(requestUrl);
 
     if (error.response?.status === 403) {
       error.message = error.response?.data?.message || "Not allowed for this branch/account";
     }
 
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !isLoginRequest
+    ) {
       originalRequest._retry = true;
       const accessToken = await refreshAccessToken();
 
@@ -132,5 +153,3 @@ export const httpClient = {
 };
 
 export const normalizeEndpoint = (endpoint: string) => endpoint.replace(/^\/v1/, "");
-
-export default api;

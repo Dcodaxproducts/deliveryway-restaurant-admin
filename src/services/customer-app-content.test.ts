@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import api from "@/lib/axios";
+import { api } from "@/lib/axios";
 import {
   buildAboutUsPageLink,
   buildPrivacyPolicyPageLink,
@@ -13,7 +13,7 @@ import {
 } from "@/services/customer-app-content";
 
 vi.mock("@/lib/axios", () => ({
-  default: {
+  api: {
     get: vi.fn(),
     patch: vi.fn(),
   },

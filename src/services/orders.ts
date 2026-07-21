@@ -1,4 +1,4 @@
-import api, { httpClient } from "@/lib/axios";
+import { api, httpClient } from "@/lib/axios";
 import { cleanParams } from "@/lib/params";
 import type {
   Order,

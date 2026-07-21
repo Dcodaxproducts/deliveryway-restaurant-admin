@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
@@ -159,15 +159,6 @@ function LoginFormContent() {
 
   const submitLogin = handleSubmit(onSubmit);
 
-  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    void submitLogin(event);
-  };
-
-  const handleLoginClick = () => {
-    void submitLogin();
-  };
-
   const handleGoogleLogin = async () => {
     if (!googleClientId) {
       toast.error(t("googleClientMissing"));
@@ -253,7 +244,7 @@ function LoginFormContent() {
           {t("loginSubtitle")}
         </p>
 
-        <form className="mt-8 space-y-5" noValidate onSubmit={handleFormSubmit}>
+        <form className="mt-8 space-y-5" noValidate onSubmit={submitLogin}>
           <Controller
             control={control}
             name="email"
@@ -351,9 +342,8 @@ function LoginFormContent() {
 
           <div className="space-y-3 pt-1">
             <Button
-              type="button"
+              type="submit"
               disabled={isSubmitting}
-              onClick={handleLoginClick}
               className="h-[48px] w-full rounded-[12px] text-base"
             >
               {isSubmitting ? t("signingIn") : t("signIn")}

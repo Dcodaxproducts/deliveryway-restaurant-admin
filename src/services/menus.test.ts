@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import api from "@/lib/axios";
+import { api } from "@/lib/axios";
 import { getMenuItems } from "@/services/menus";
 
 vi.mock("@/lib/axios", () => ({
-  default: {
+  api: {
     get: vi.fn(),
   },
 }));

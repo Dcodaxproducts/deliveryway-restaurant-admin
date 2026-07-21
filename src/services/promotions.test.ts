@@ -10,10 +10,10 @@ import {
   updateCoupon,
   updateCouponStatus,
 } from "@/services/promotions";
-import api from "@/lib/axios";
+import { api } from "@/lib/axios";
 
 vi.mock("@/lib/axios", () => ({
-  default: {
+  api: {
     get: vi.fn(),
     post: vi.fn(),
     patch: vi.fn(),
