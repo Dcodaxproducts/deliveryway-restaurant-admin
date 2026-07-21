@@ -10,12 +10,22 @@ import {
 } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
-import { CARD_PANEL_CLASS, FIELD_ERROR_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
+import {
+  CARD_PANEL_CLASS,
+  FIELD_ERROR_CLASS,
+  MUTED_TEXT_SM_CLASS,
+} from "@/components/common/common-classes";
 import {
   BranchLocationPicker,
   type BranchLocationAddressFields,
@@ -41,33 +51,33 @@ const INPUT_CLASS =
 const PRIMARY_INPUT_CLASS = `${INPUT_CLASS} border-primary bg-primary/5`;
 
 const defaultCreateBranchSettings: NonNullable<BranchValues["settings"]> = {
-    deliveryConfig: {
-      mode: "RADIUS",
-      radiusKm: 5,
-      minOrderAmount: 0,
-      deliveryFee: 0,
-      isFreeDelivery: false,
-      freeDeliveryThreshold: 0,
-      zones: [],
-      zoneBands: [],
-      postalCodeRules: [],
-    },
-    allowedOrderTypes: ["DELIVERY"],
-    allowedPaymentMethods: DEFAULT_ALLOWED_PAYMENT_METHODS,
-    automation: {
-      autoAcceptOrders: false,
-      estimatedPrepTime: 30,
-    },
-    taxation: {
-      taxPercentage: 0,
-    },
-    tableReservationsEnabled: false,
-    tableReservationAutoAccept: false,
-    tableCount: 0,
-    contact: {
-      phone: "",
-      whatsapp: "",
-    },
+  deliveryConfig: {
+    mode: "RADIUS",
+    radiusKm: 5,
+    minOrderAmount: 0,
+    deliveryFee: 0,
+    isFreeDelivery: false,
+    freeDeliveryThreshold: 0,
+    zones: [],
+    zoneBands: [],
+    postalCodeRules: [],
+  },
+  allowedOrderTypes: ["DELIVERY"],
+  allowedPaymentMethods: DEFAULT_ALLOWED_PAYMENT_METHODS,
+  automation: {
+    autoAcceptOrders: false,
+    estimatedPrepTime: 30,
+  },
+  taxation: {
+    taxPercentage: 0,
+  },
+  tableReservationsEnabled: false,
+  tableReservationAutoAccept: false,
+  tableCount: 0,
+  contact: {
+    phone: "",
+    whatsapp: "",
+  },
 };
 
 const defaultValues: CreateBranchFormValues = {
@@ -94,7 +104,7 @@ const defaultValues: CreateBranchFormValues = {
 };
 
 const buildCreateBranchSettings = (
-  settings: CreateBranchFormValues["settings"]
+  settings: CreateBranchFormValues["settings"],
 ): NonNullable<BranchValues["settings"]> => ({
   ...defaultCreateBranchSettings,
   ...(settings ?? {}),
@@ -143,23 +153,33 @@ const branchFieldConfigs: FieldConfig[] = [
   { name: "city", labelKey: "city", placeholderKey: "cityPlaceholder" },
   { name: "area", labelKey: "area", placeholderKey: "areaPlaceholder" },
   { name: "state", labelKey: "state", placeholderKey: "statePlaceholder" },
-  { name: "country", labelKey: "country", placeholderKey: "countryPlaceholder" },
+  {
+    name: "country",
+    labelKey: "country",
+    placeholderKey: "countryPlaceholder",
+  },
 ];
 
 const adminFieldConfigs: FieldConfig[] = [
   { name: "branchAdmin.firstName", placeholderKey: "firstName" },
   { name: "branchAdmin.lastName", placeholderKey: "lastName" },
   { name: "branchAdmin.email", placeholderKey: "email" },
-  { name: "branchAdmin.password", placeholderKey: "password", type: "password" },
+  {
+    name: "branchAdmin.password",
+    placeholderKey: "password",
+    type: "password",
+  },
   { name: "branchAdmin.phone", placeholderKey: "phone" },
 ];
 
 const getErrorMessage = (
   errors: FieldErrors<CreateBranchFormValues>,
-  name: Path<CreateBranchFormValues>
+  name: Path<CreateBranchFormValues>,
 ) => {
   if (name.startsWith("branchAdmin.")) {
-    const adminKey = name.split(".")[1] as keyof CreateBranchFormValues["branchAdmin"];
+    const adminKey = name.split(
+      ".",
+    )[1] as keyof CreateBranchFormValues["branchAdmin"];
     return errors.branchAdmin?.[adminKey]?.message;
   }
 
@@ -262,17 +282,28 @@ export function CreateBranchModal({
       <div key={name} className="space-y-1">
         {labelKey ? (
           <Label htmlFor={fieldId} className="text-sm">
-            {t(labelKey)} {required ? <span className="text-primary">*</span> : null}
+            {t(labelKey)}{" "}
+            {required ? <span className="text-primary">*</span> : null}
           </Label>
         ) : null}
-        <Input
-          id={fieldId}
-          type={type}
-          placeholder={t(placeholderKey)}
-          className={primary ? PRIMARY_INPUT_CLASS : INPUT_CLASS}
-          aria-invalid={Boolean(errorMessage)}
-          {...register(name)}
-        />
+        {type === "password" ? (
+          <PasswordInput
+            id={fieldId}
+            placeholder={t(placeholderKey)}
+            className={primary ? PRIMARY_INPUT_CLASS : INPUT_CLASS}
+            aria-invalid={Boolean(errorMessage)}
+            {...register(name)}
+          />
+        ) : (
+          <Input
+            id={fieldId}
+            type={type}
+            placeholder={t(placeholderKey)}
+            className={primary ? PRIMARY_INPUT_CLASS : INPUT_CLASS}
+            aria-invalid={Boolean(errorMessage)}
+            {...register(name)}
+          />
+        )}
         {errorMessage ? (
           <p className={FIELD_ERROR_CLASS}>{errorMessage}</p>
         ) : null}
@@ -284,13 +315,17 @@ export function CreateBranchModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-[760px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
         <DialogHeader className="space-y-1">
-          <DialogTitle className="text-xl font-semibold">{t("createBranch")}</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            {t("createBranch")}
+          </DialogTitle>
           <p className={MUTED_TEXT_SM_CLASS}>{t("createDescription")}</p>
         </DialogHeader>
 
         <form noValidate onSubmit={handleSubmit(onSubmit)}>
           <div className={`mt-4 ${CARD_PANEL_CLASS} space-y-4`}>
-            {branchNameFieldConfig ? renderBranchField(branchNameFieldConfig) : null}
+            {branchNameFieldConfig
+              ? renderBranchField(branchNameFieldConfig)
+              : null}
 
             <div className="space-y-2">
               <div>
@@ -339,10 +374,15 @@ export function CreateBranchModal({
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="create-branch-table-reservations" className="text-sm">
+                  <Label
+                    htmlFor="create-branch-table-reservations"
+                    className="text-sm"
+                  >
                     {t("enableTableReservations")}
                   </Label>
-                  <p className="text-xs text-gray-500">{t("allowTableReservations")}</p>
+                  <p className="text-xs text-gray-500">
+                    {t("allowTableReservations")}
+                  </p>
                 </div>
                 <Controller
                   control={control}
@@ -360,10 +400,15 @@ export function CreateBranchModal({
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="create-branch-auto-accept-reservations" className="text-sm">
+                  <Label
+                    htmlFor="create-branch-auto-accept-reservations"
+                    className="text-sm"
+                  >
                     {t("autoAcceptReservations")}
                   </Label>
-                  <p className="text-xs text-gray-500">{t("autoAcceptReservationsHelper")}</p>
+                  <p className="text-xs text-gray-500">
+                    {t("autoAcceptReservationsHelper")}
+                  </p>
                 </div>
                 <Controller
                   control={control}
@@ -402,7 +447,9 @@ export function CreateBranchModal({
 
             <hr className="border-gray-200 my-2" />
 
-            <h4 className="text-sm font-medium text-gray-900">{t("branchAdminInfo")}</h4>
+            <h4 className="text-sm font-medium text-gray-900">
+              {t("branchAdminInfo")}
+            </h4>
 
             {adminFieldConfigs.map((config) => {
               const { name, placeholderKey, type } = config;
@@ -445,7 +492,9 @@ export function CreateBranchModal({
               className="px-8 py-2 rounded-[10px] bg-primary hover:bg-primary/90 text-[17px]"
               disabled={createBranchMutation.isPending}
             >
-              {createBranchMutation.isPending ? t("creating") : commonT("create")}
+              {createBranchMutation.isPending
+                ? t("creating")
+                : commonT("create")}
             </Button>
           </div>
         </form>

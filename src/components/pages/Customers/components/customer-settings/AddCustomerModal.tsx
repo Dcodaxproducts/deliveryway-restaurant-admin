@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   useCreateCustomer,
   useUpdateCustomer,
@@ -411,17 +412,21 @@ function CustomerField({
       <Controller
         control={control}
         name={name}
-        render={({ field }) => (
-          <Input
-            id={id}
-            type={type}
-            value={typeof field.value === "string" ? field.value : ""}
-            onChange={({ target: { value } }) => field.onChange(value)}
-            onBlur={field.onBlur}
-            placeholder={placeholder}
-            className="h-[44px] rounded-[10px] border border-gray-300"
-          />
-        )}
+        render={({ field }) => {
+          const FieldInput = type === "password" ? PasswordInput : Input;
+
+          return (
+            <FieldInput
+              id={id}
+              {...(type === "password" ? {} : { type })}
+              value={typeof field.value === "string" ? field.value : ""}
+              onChange={({ target: { value } }) => field.onChange(value)}
+              onBlur={field.onBlur}
+              placeholder={placeholder}
+              className="h-[44px] rounded-[10px] border border-gray-300"
+            />
+          );
+        }}
       />
       {error ? <p className={FIELD_ERROR_CLASS}>{error}</p> : null}
     </div>

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useCreateStaff,
@@ -93,7 +94,9 @@ export default function EmployeeInvitationModal({
   const { restaurantId, branchId, isBranchAdmin, role } = useAuth();
   const canSelectRestaurants = role === "BUSINESS_ADMIN";
   const isEdit = Boolean(initialData?.id);
-  const [selectedRestaurants, setSelectedRestaurants] = useState<RestaurantOption[]>([]);
+  const [selectedRestaurants, setSelectedRestaurants] = useState<
+    RestaurantOption[]
+  >([]);
   const [allRestaurants, setAllRestaurants] = useState(false);
 
   const createStaffMutation = useCreateStaff({
@@ -161,12 +164,14 @@ export default function EmployeeInvitationModal({
     }
 
     const restaurantIds =
-      initialData?.restaurantIds ?? initialData?.restaurantAccess?.restaurantIds ?? [];
+      initialData?.restaurantIds ??
+      initialData?.restaurantAccess?.restaurantIds ??
+      [];
     const hasAllRestaurantsAccess = Boolean(
       initialData?.allRestaurants ??
-        initialData?.hasAllRestaurantsAccess ??
-        initialData?.restaurantAccess?.allRestaurants ??
-        initialData?.restaurantAccess?.hasAllRestaurantsAccess,
+      initialData?.hasAllRestaurantsAccess ??
+      initialData?.restaurantAccess?.allRestaurants ??
+      initialData?.restaurantAccess?.hasAllRestaurantsAccess,
     );
 
     setAllRestaurants(hasAllRestaurantsAccess);
@@ -192,7 +197,8 @@ export default function EmployeeInvitationModal({
             bio: initialData.bio ?? "",
             isActive: initialData.isActive ?? true,
             restaurantIds: hasAllRestaurantsAccess ? [] : restaurantIds,
-            branchIds: initialData.branchIds ?? initialData.restaurantAccess?.branchIds,
+            branchIds:
+              initialData.branchIds ?? initialData.restaurantAccess?.branchIds,
             allRestaurants: hasAllRestaurantsAccess,
             hasAllRestaurantsAccess,
           }
@@ -207,7 +213,9 @@ export default function EmployeeInvitationModal({
         ...(selectedRole?.restaurantAccess?.restaurantIds ?? []),
         ...(selectedRole?.restaurantId ? [selectedRole.restaurantId] : []),
       ];
-      const restaurantIds = selectedRestaurants.map((restaurant) => restaurant.id);
+      const restaurantIds = selectedRestaurants.map(
+        (restaurant) => restaurant.id,
+      );
       const payload: StaffMutationPayload = {
         email: values.email,
         password: values.password ?? "",
@@ -220,7 +228,11 @@ export default function EmployeeInvitationModal({
         isActive: values.isActive,
         ...(canSelectRestaurants
           ? allRestaurants
-            ? { allRestaurants: true, hasAllRestaurantsAccess: true, restaurantIds: [] }
+            ? {
+                allRestaurants: true,
+                hasAllRestaurantsAccess: true,
+                restaurantIds: [],
+              }
             : {
                 allRestaurants: false,
                 hasAllRestaurantsAccess: false,
@@ -478,16 +490,20 @@ function EmployeeField({
       <Controller
         control={control}
         name={name}
-        render={({ field }) => (
-          <Input
-            id={id}
-            type={type}
-            value={typeof field.value === "string" ? field.value : ""}
-            onChange={({ target: { value } }) => field.onChange(value)}
-            onBlur={field.onBlur}
-            className="h-[44px] rounded-lg border border-gray-300"
-          />
-        )}
+        render={({ field }) => {
+          const FieldInput = type === "password" ? PasswordInput : Input;
+
+          return (
+            <FieldInput
+              id={id}
+              {...(type === "password" ? {} : { type })}
+              value={typeof field.value === "string" ? field.value : ""}
+              onChange={({ target: { value } }) => field.onChange(value)}
+              onBlur={field.onBlur}
+              className="h-[44px] rounded-lg border border-gray-300"
+            />
+          );
+        }}
       />
       {error ? <p className={FIELD_ERROR_CLASS}>{error}</p> : null}
     </div>
