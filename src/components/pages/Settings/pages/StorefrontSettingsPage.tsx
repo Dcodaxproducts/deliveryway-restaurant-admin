@@ -354,6 +354,40 @@ export function StorefrontSettingsPage() {
                       {getError("restaurant.customDomain")}
                     </p>
                   ) : null}
+                  {customDomain ? (
+                    <div className="mt-4 rounded-[14px] border border-primary/20 bg-primary/5 p-4">
+                      <p className="text-sm font-semibold text-[#030401]">
+                        {t("customDomainGuideTitle")}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-gray-600">
+                        {t("customDomainGuideIntro")}
+                      </p>
+                      <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-[12px] border border-primary/10 bg-white p-3 text-xs">
+                        <dt className="font-medium text-gray-500">
+                          {t("customDomainGuideType")}
+                        </dt>
+                        <dd className="font-semibold text-[#030401]">CNAME</dd>
+                        <dt className="font-medium text-gray-500">
+                          {t("customDomainGuideHost")}
+                        </dt>
+                        <dd className="break-all font-semibold text-[#030401]">
+                          {customDomain}
+                        </dd>
+                        <dt className="font-medium text-gray-500">
+                          {t("customDomainGuideTarget")}
+                        </dt>
+                        <dd className="break-all font-semibold text-[#030401]">
+                          {customerAppBaseDomain}
+                        </dd>
+                      </dl>
+                      <p className="mt-3 text-xs leading-5 text-gray-600">
+                        {t("customDomainGuideProviderHint")}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-gray-600">
+                        {t("customDomainGuideActivation")}
+                      </p>
+                    </div>
+                  ) : null}
                   <p className="mt-2 break-all text-xs text-gray-500">
                     Active storefront: {storefrontAddress}
                   </p>
