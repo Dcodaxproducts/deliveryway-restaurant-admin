@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import type { FieldPath } from "react-hook-form";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Globe2 } from "lucide-react";
+import { Globe2, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 
 import Container from "@/components/common/Container";
@@ -150,8 +150,6 @@ export function StorefrontSettingsPage() {
     isBrandingSaving,
     brandingError,
   } = useBranding();
-  const [browserOrigin, setBrowserOrigin] = useState("");
-
   const {
     register,
     handleSubmit,
@@ -173,31 +171,11 @@ export function StorefrontSettingsPage() {
     reset(savedBranding);
   }, [reset, savedBranding]);
 
-  useEffect(() => {
-    setBrowserOrigin(window.location.origin);
-  }, []);
-
   const getError = useCallback(
     (name: FieldPath<BrandingFormValues>) => getFieldState(name, formState).error?.message,
     [formState, getFieldState]
   );
   const isBrandingBusy = isBrandingLoading || isBrandingSaving;
-  const restaurantSubdomain = watchedValues?.restaurant?.subdomain?.trim();
-  const customDomain = watchedValues?.restaurant?.customDomain?.trim();
-  const customDomainVerified = Boolean(
-    watchedValues?.restaurant?.customDomainVerifiedAt,
-  );
-  const customerAppBaseDomain =
-    process.env.NEXT_PUBLIC_CUSTOMER_APP_BASE_DOMAIN?.trim() ||
-    "delivery-way.de";
-  const fallbackStorefrontAddress = restaurantSubdomain
-    ? `https://${restaurantSubdomain}.${customerAppBaseDomain}`
-    : browserOrigin;
-  const storefrontAddress =
-    customDomain && customDomainVerified
-      ? `https://${customDomain}`
-      : fallbackStorefrontAddress;
-
   const onSubmit = async (values: BrandingFormValues) => {
     try {
       await saveBranding(values);
@@ -310,88 +288,34 @@ export function StorefrontSettingsPage() {
           <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
             {profileFields.map(renderTextField)}
             <div className="md:col-span-2">
-              <div className="rounded-[18px] border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-5 shadow-sm">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex min-w-0 gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
-                      <Globe2 className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-[#030401]">
-                          {t("customDomain")}
-                        </p>
-                      </div>
-                      <p className="mt-1 text-xs leading-5 text-gray-500">
-                        {customDomain
-                          ? customDomainVerified
-                            ? t("customDomainVerified")
-                            : t("customDomainPendingVerification")
-                          : t("customDomainFallbackDescription")}
+              <div className="rounded-[18px] border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-5 shadow-sm sm:p-6">
+                <div className="flex min-w-0 gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[16px] bg-primary/10 text-primary">
+                    <Globe2 className="h-6 w-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-base font-semibold text-[#030401]">
+                        {t("customDomain")}
                       </p>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                        <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
+                        {t("displayOnly")}
+                      </span>
                     </div>
+                    <p className="mt-2 text-sm leading-5 text-gray-500">
+                      {t("customDomainManaged")}
+                    </p>
                   </div>
                 </div>
-                <div className="mt-4 rounded-[14px] border border-gray-200 bg-white px-4 py-3">
-                  <p className="text-xs font-medium text-gray-500">Default storefront</p>
-                  <p className="break-all text-sm font-semibold text-[#030401]">
-                    {fallbackStorefrontAddress}
-                  </p>
-                </div>
-                <div className="mt-4">
-                  <label htmlFor="restaurant-custom-domain" className={BRANDING_LABEL_CLASS}>
-                    {t("customDomain")}
-                  </label>
-                  <Input
-                    id="restaurant-custom-domain"
-                    placeholder="orders.yourrestaurant.com"
-                    aria-invalid={Boolean(getError("restaurant.customDomain"))}
-                    className={BRANDING_INPUT_CLASS}
-                    {...register("restaurant.customDomain")}
-                  />
-                  {getError("restaurant.customDomain") ? (
-                    <p className={BRANDING_ERROR_CLASS}>
-                      {getError("restaurant.customDomain")}
-                    </p>
-                  ) : null}
-                  {customDomain ? (
-                    <div className="mt-4 rounded-[14px] border border-primary/20 bg-primary/5 p-4">
-                      <p className="text-sm font-semibold text-[#030401]">
-                        {t("customDomainGuideTitle")}
-                      </p>
-                      <p className="mt-1 text-xs leading-5 text-gray-600">
-                        {t("customDomainGuideIntro")}
-                      </p>
-                      <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-[12px] border border-primary/10 bg-white p-3 text-xs">
-                        <dt className="font-medium text-gray-500">
-                          {t("customDomainGuideType")}
-                        </dt>
-                        <dd className="font-semibold text-[#030401]">CNAME</dd>
-                        <dt className="font-medium text-gray-500">
-                          {t("customDomainGuideHost")}
-                        </dt>
-                        <dd className="break-all font-semibold text-[#030401]">
-                          {customDomain}
-                        </dd>
-                        <dt className="font-medium text-gray-500">
-                          {t("customDomainGuideTarget")}
-                        </dt>
-                        <dd className="break-all font-semibold text-[#030401]">
-                          {customerAppBaseDomain}
-                        </dd>
-                      </dl>
-                      <p className="mt-3 text-xs leading-5 text-gray-600">
-                        {t("customDomainGuideProviderHint")}
-                      </p>
-                      <p className="mt-1 text-xs leading-5 text-gray-600">
-                        {t("customDomainGuideActivation")}
-                      </p>
-                    </div>
-                  ) : null}
-                  <p className="mt-2 break-all text-xs text-gray-500">
-                    Active storefront: {storefrontAddress}
-                  </p>
-                </div>
+                <Input
+                  id="restaurant-custom-domain"
+                  readOnly
+                  aria-readonly="true"
+                  aria-label={t("customDomain")}
+                  className={`${BRANDING_INPUT_CLASS} mt-6 h-[58px] bg-white px-5 font-semibold text-[#030401] read-only:cursor-text`}
+                  {...register("restaurant.customDomain")}
+                />
               </div>
             </div>
             {profileTextAreas.map(renderTextAreaField)}
