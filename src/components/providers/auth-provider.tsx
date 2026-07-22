@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!stored?.refreshToken) return false;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/v1/auth/refresh`, {
+      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: "POST",
         headers: {
           "Accept-Language": getRequestLocale(),
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchMe = async (accessToken: string, fallback?: AuthStorage | null) => {
-    const res = await fetch(`${API_BASE_URL}/v1/auth/me`, {
+    const res = await fetch(`${API_BASE_URL}/auth/me`, {
       headers: {
         "Accept-Language": getRequestLocale(),
         Authorization: `Bearer ${accessToken}`,

@@ -12,6 +12,7 @@ import {
   useSendChatMessage,
 } from "@/hooks/useChat";
 import { formatTime24 } from "@/lib/date-time-format";
+import { CHAT_BASE_URL } from "@/lib/constants";
 
 export default function ChatUI() {
   const { token, user } = useAuth();
@@ -149,7 +150,7 @@ const fetchMessages = async () => {
   useEffect(() => {
     if (!token) return;
 
-    const socket = io("https://deliveryway.dcodax.co/chat", {
+    const socket = io(CHAT_BASE_URL, {
       transports: ["websocket"],
       auth: { token },
     });

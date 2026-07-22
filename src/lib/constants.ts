@@ -1,12 +1,11 @@
-const rawApiUrl = (process.env.NEXT_PUBLIC_API_URL || "https://deliveryway.dcodax.co/api").replace(/\/+$/, "");
+const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
 
-export const API_BASE_URL = rawApiUrl.endsWith("/v1")
-  ? rawApiUrl.slice(0, -3)
-  : rawApiUrl;
+if (!configuredApiBaseUrl) {
+  throw new Error("NEXT_PUBLIC_API_BASE_URL is required");
+}
 
-export const baseURL = API_BASE_URL.endsWith("/v1")
-  ? API_BASE_URL
-  : `${API_BASE_URL}/v1`;
+export const API_BASE_URL = configuredApiBaseUrl.replace(/\/+$/, "");
+export const CHAT_BASE_URL = new URL("/chat", API_BASE_URL).toString().replace(/\/$/, "");
 
 export const ROUTES = {
   HOME: "/",

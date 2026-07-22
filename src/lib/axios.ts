@@ -1,6 +1,6 @@
 import axios, { AxiosHeaders, type AxiosRequestConfig, type Method } from "axios";
 import { getRequestLocale } from "@/config/i18n";
-import { baseURL } from "@/lib/constants";
+import { API_BASE_URL } from "@/lib/constants";
 import { buildLoginRoute } from "@/lib/auth-routes";
 import {
   clearStoredAuth,
@@ -42,7 +42,7 @@ const refreshAccessToken = async () => {
 
     try {
       const { data } = await axios.post(
-        `${baseURL}/auth/refresh`,
+        `${API_BASE_URL}/auth/refresh`,
         { refreshToken },
         { headers: { "Accept-Language": getRequestLocale() } },
       );
@@ -61,7 +61,7 @@ const refreshAccessToken = async () => {
   return refreshPromise;
 };
 
-export const api = axios.create({ baseURL });
+export const api = axios.create({ baseURL: API_BASE_URL });
 
 api.interceptors.request.use((config) => {
   const stored = getStoredAuth();
