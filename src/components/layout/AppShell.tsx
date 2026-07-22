@@ -30,18 +30,18 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <>
       {!hideLayout && (
-        <div className="fixed inset-x-0 top-0 z-40 xl:left-72">
+        <div className="fixed inset-x-0 top-0 z-40">
           <Navbar />
         </div>
       )}
       <div
         className={cn(
           "flex min-h-screen items-start",
-          !hideLayout && "pt-[76px]",
+          !hideLayout && "pt-[116px] md:pt-[76px]",
         )}
       >
         {!hideLayout && (
-          <div className="hidden h-screen shrink-0 overflow-hidden xl:fixed xl:inset-y-0 xl:left-0 xl:z-50 xl:flex">
+          <div className="hidden h-[calc(100vh-76px)] shrink-0 overflow-hidden xl:fixed xl:left-0 xl:top-[76px] xl:z-30 xl:flex">
             <Sidebar />
           </div>
         )}
