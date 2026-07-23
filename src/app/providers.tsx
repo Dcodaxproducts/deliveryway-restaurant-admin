@@ -10,13 +10,15 @@ import { I18nProvider } from "@/components/providers/i18n-provider";
 import QueryProvider from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { useGlobalSettingsCurrency } from "@/hooks/useCurrency";
+import { useRealtimeOrderNotifications } from "@/hooks/useRealtimeOrderNotifications";
 
 type ProvidersProps = {
   children: ReactNode;
 };
 
-function GlobalCurrencyHydrator() {
+function GlobalAppHydrator() {
   useGlobalSettingsCurrency();
+  useRealtimeOrderNotifications();
 
   return null;
 }
@@ -27,7 +29,7 @@ export function Providers({ children }: ProvidersProps) {
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <I18nProvider>
           <AuthProvider>
-            <GlobalCurrencyHydrator />
+            <GlobalAppHydrator />
             <BrandingProvider>
               <AppShell>{children}</AppShell>
             </BrandingProvider>
