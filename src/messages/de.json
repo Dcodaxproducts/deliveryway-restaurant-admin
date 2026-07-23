@@ -3108,6 +3108,7 @@
     "connectionType": "Verbindungstyp",
     "selectConnectionType": "Verbindungstyp auswählen",
     "networkIp": "Netzwerk / IP",
+    "bluetooth": "Bluetooth",
     "printQueue": "Druckwarteschlange",
     "printerName": "Druckername",
     "printerNamePlaceholder": "z. B. Küchendrucker",

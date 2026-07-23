@@ -12,10 +12,12 @@ import {
   useUpdateAdminPrintingSettings,
 } from "@/hooks/usePrinting";
 import { formatDateTime24 } from "@/lib/date-time-format";
+import { getApiErrorMessage } from "@/lib/errors";
+import type { PrintingConnectionType } from "@/services/printing";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
-type ConnectionType = "USB" | "NETWORK" | "QUEUE" | "";
+type ConnectionType = PrintingConnectionType | "";
 
 type AutoPrintingSettingsProps = {
   branchId?: string | null;
@@ -61,7 +63,12 @@ const normalizeStatus = (status?: string) => {
 const getStatusClass = (status?: string) => {
   const value = status?.toLowerCase();
 
-  if (value === "connected" || value === "online" || value === "healthy") {
+  if (
+    value === "connected" ||
+    value === "online" ||
+    value === "healthy" ||
+    value === "success"
+  ) {
     return "text-green-600";
   }
 
@@ -87,8 +94,14 @@ export default function AutoPrintingSettings({
 }: AutoPrintingSettingsProps) {
   const t = useTranslations("printing");
   const commonT = useTranslations("common");
-  const { restaurantId, branchId: authBranchId, isBranchAdmin, loading: authLoading } = useAuth();
-  const effectiveBranchId = branchId || (isBranchAdmin ? authBranchId : undefined);
+  const {
+    restaurantId,
+    branchId: authBranchId,
+    isBranchAdmin,
+    loading: authLoading,
+  } = useAuth();
+  const effectiveBranchId =
+    branchId || (isBranchAdmin ? authBranchId : undefined);
 
   const queryParams = useMemo(() => {
     if (!restaurantId) return undefined;
@@ -148,7 +161,7 @@ export default function AutoPrintingSettings({
 
   const updateField = <K extends keyof PrintingSettings>(
     key: K,
-    value: PrintingSettings[K]
+    value: PrintingSettings[K],
   ) => {
     setForm((prev) => ({
       ...prev,
@@ -161,7 +174,7 @@ export default function AutoPrintingSettings({
       | "printKitchenTicket"
       | "printCustomerReceipt"
       | "autoPrintOnNewOrder"
-      | "autoPrintOnStatusChange"
+      | "autoPrintOnStatusChange",
   ) => {
     setForm((prev) => ({
       ...prev,
@@ -189,19 +202,17 @@ export default function AutoPrintingSettings({
         autoPrintOnStatusChange: form.autoPrintOnStatusChange,
         printCustomerReceipt: form.printCustomerReceipt,
         printKitchenTicket: form.printKitchenTicket,
-        connectionType: form.connectionType || undefined,
-        printerName: form.printerName || undefined,
-        printerTarget: form.printerTarget || undefined,
-        deviceId: form.deviceId || undefined,
-        ipAddress: form.ipAddress || undefined,
-        queueName: form.queueName || undefined,
-      } as any);
+        connectionType: form.connectionType || null,
+        printerName: form.printerName.trim() || null,
+        printerTarget: form.printerTarget.trim() || null,
+        deviceId: form.deviceId.trim() || null,
+        ipAddress: form.ipAddress.trim() || null,
+        queueName: form.queueName.trim() || null,
+      });
 
       toast.success(t("toast.updated"));
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || t("toast.failedUpdate")
-      );
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, t("toast.failedUpdate")));
     }
   };
 
@@ -224,7 +235,9 @@ export default function AutoPrintingSettings({
             <span className="font-medium capitalize text-gray-700">
               {source || t("restaurant")}
             </span>
-            {inheritedFromRestaurant ? ` · ${t("inheritedFromRestaurant")}` : ""}
+            {inheritedFromRestaurant
+              ? ` · ${t("inheritedFromRestaurant")}`
+              : ""}
           </p>
 
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm text-gray-600 md:grid-cols-4">
@@ -259,14 +272,15 @@ export default function AutoPrintingSettings({
         </div>
 
         <div className="text-right">
-          <p
-            className={`text-m font-medium ${getStatusClass(health?.status)}`}
-          >
+          <p className={`text-m font-medium ${getStatusClass(health?.status)}`}>
             {normalizeStatus(health?.status)}
           </p>
 
           <p className="text-xs text-gray-600">
-            {t("latest")}: {health?.latest ? formatDateTime(health.latest) : t("noRecentActivity")}
+            {t("latest")}:{" "}
+            {health?.latest
+              ? formatDateTime(health.latest.timestamp)
+              : t("noRecentActivity")}
           </p>
 
           {health?.latestErrorMessage ? (
@@ -292,87 +306,93 @@ export default function AutoPrintingSettings({
         </div>
       </div>
 
-<div className="mb-12">
-  <h3 className="mb-6 text-2xl font-semibold">{t("connectPrinter")}</h3>
+      <div className="mb-12">
+        <h3 className="mb-6 text-2xl font-semibold">{t("connectPrinter")}</h3>
 
-  <div className="mb-6">
-    <label className="mb-2 block text-[16px]">{t("connectionType")}</label>
+        <div className="mb-6">
+          <label className="mb-2 block text-[16px]">
+            {t("connectionType")}
+          </label>
 
-    <div className="relative">
-      <select
-        value={form.connectionType}
-        onChange={(event) =>
-          updateField("connectionType", event.target.value as ConnectionType)
-        }
-        className="h-11 w-full appearance-none rounded-[10px] border border-[#BBBBBB] px-4 pr-12 text-sm text-gray-500 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-      >
-        <option value="">{t("selectConnectionType")}</option>
-        <option value="USB">USB</option>
-        <option value="NETWORK">{t("networkIp")}</option>
-        <option value="QUEUE">{t("printQueue")}</option>
-      </select>
+          <div className="relative">
+            <select
+              value={form.connectionType}
+              onChange={(event) =>
+                updateField(
+                  "connectionType",
+                  event.target.value as ConnectionType,
+                )
+              }
+              className="h-11 w-full appearance-none rounded-[10px] border border-[#BBBBBB] px-4 pr-12 text-sm text-gray-500 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            >
+              <option value="">{t("selectConnectionType")}</option>
+              <option value="USB">USB</option>
+              <option value="LAN">{t("networkIp")}</option>
+              <option value="BLUETOOTH">{t("bluetooth")}</option>
+              <option value="CLOUD">{t("printQueue")}</option>
+            </select>
 
-      <div className="pointer-events-none absolute right-0 top-0 flex h-full w-10 items-center justify-center rounded-r-[10px] bg-primary">
-        <ChevronDown size={16} className="text-white" />
+            <div className="pointer-events-none absolute right-0 top-0 flex h-full w-10 items-center justify-center rounded-r-[10px] bg-primary">
+              <ChevronDown size={16} className="text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+          <FormInput
+            label={t("printerName")}
+            placeholder={t("printerNamePlaceholder")}
+            value={form.printerName}
+            onChange={(value) => updateField("printerName", value)}
+          />
+
+          <FormInput
+            label={t("printerTarget")}
+            placeholder={t("printerTargetPlaceholder")}
+            value={form.printerTarget}
+            onChange={(value) => updateField("printerTarget", value)}
+          />
+
+          <FormInput
+            label={t("deviceId")}
+            placeholder={t("deviceIdPlaceholder")}
+            value={form.deviceId}
+            onChange={(value) => updateField("deviceId", value)}
+          />
+
+          <FormInput
+            label={t("ipAddress")}
+            placeholder={t("ipAddressPlaceholder")}
+            value={form.ipAddress}
+            onChange={(value) => updateField("ipAddress", value)}
+          />
+
+          <FormInput
+            label={t("queueName")}
+            placeholder={t("queueNamePlaceholder")}
+            value={form.queueName}
+            onChange={(value) => updateField("queueName", value)}
+          />
+        </div>
+
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={updating}
+            className="h-[40px] rounded-[12px] bg-primary px-16 py-1.5 hover:bg-red-800"
+          >
+            {updating ? (
+              <>
+                <Loader2 size={16} className="mr-2 animate-spin" />
+                {commonT("saving")}
+              </>
+            ) : (
+              t("connect")
+            )}
+          </Button>
+        </div>
       </div>
-    </div>
-  </div>
-
-  <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-    <FormInput
-      label={t("printerName")}
-      placeholder={t("printerNamePlaceholder")}
-      value={form.printerName}
-      onChange={(value) => updateField("printerName", value)}
-    />
-
-    <FormInput
-      label={t("printerTarget")}
-      placeholder={t("printerTargetPlaceholder")}
-      value={form.printerTarget}
-      onChange={(value) => updateField("printerTarget", value)}
-    />
-
-    <FormInput
-      label={t("deviceId")}
-      placeholder={t("deviceIdPlaceholder")}
-      value={form.deviceId}
-      onChange={(value) => updateField("deviceId", value)}
-    />
-
-    <FormInput
-      label={t("ipAddress")}
-      placeholder={t("ipAddressPlaceholder")}
-      value={form.ipAddress}
-      onChange={(value) => updateField("ipAddress", value)}
-    />
-
-    <FormInput
-      label={t("queueName")}
-      placeholder={t("queueNamePlaceholder")}
-      value={form.queueName}
-      onChange={(value) => updateField("queueName", value)}
-    />
-  </div>
-
-  <div className="flex justify-end">
-    <Button
-      type="button"
-      onClick={handleSave}
-      disabled={updating}
-      className="h-[40px] rounded-[12px] bg-primary px-16 py-1.5 hover:bg-red-800"
-    >
-      {updating ? (
-        <>
-          <Loader2 size={16} className="mr-2 animate-spin" />
-          {commonT("saving")}
-        </>
-      ) : (
-        t("connect")
-      )}
-    </Button>
-  </div>
-</div>
 
       <div className="mb-12">
         <h3 className="mb-6 text-2xl font-semibold">{t("printSettings")}</h3>

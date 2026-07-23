@@ -3108,6 +3108,7 @@
     "connectionType": "Connection Type",
     "selectConnectionType": "Select connection type",
     "networkIp": "Network / IP",
+    "bluetooth": "Bluetooth",
     "printQueue": "Print Queue",
     "printerName": "Printer Name",
     "printerNamePlaceholder": "eg. Kitchen Printer",
