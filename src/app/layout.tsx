@@ -28,7 +28,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" className="notranslate" translate="no" suppressHydrationWarning>
+    <html
+      lang="de"
+      className="notranslate"
+      translate="no"
+      suppressHydrationWarning
+    >
       <body
         className={`${onest.variable} ${barlow.variable} ${poppins.variable} ${arimo.variable} ${onest.className} bg-background text-foreground`}
       >

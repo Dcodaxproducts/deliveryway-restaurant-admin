@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Radio } from "@/components/ui/radioBtn";
 import FormInput from "@/components/forms/common/FormInput";
 import { getLocalTodayInputValue } from "@/lib/date-input";
+import { useTranslations } from "next-intl";
 
 type FilterModalProps = {
   open: boolean;
@@ -26,6 +27,7 @@ export default function FilterModal({
   filters,
   onApply,
 }: FilterModalProps) {
+  const t = useTranslations("common");
   const [status, setStatus] = useState("all");
   const [sortBy, setSortBy] = useState("default");
   const [withDeleted, setWithDeleted] = useState(false);
@@ -33,7 +35,6 @@ export default function FilterModal({
   const [creationDate, setCreationDate] = useState("");
   const [modifiedDate, setModifiedDate] = useState("");
   const todayDate = useMemo(() => getLocalTodayInputValue(), []);
-
 
   useEffect(() => {
     if (!filters) return;
@@ -48,7 +49,6 @@ export default function FilterModal({
       setWithDeleted(filters.withDeleted);
     }
   }, [filters]);
-
 
   const handleReset = () => {
     setStatus("all");
@@ -67,7 +67,6 @@ export default function FilterModal({
 
     onOpenChange(false);
   };
-
 
   const handleApply = () => {
     let includeInactive = false;
@@ -99,117 +98,109 @@ export default function FilterModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[420px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
-
-
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
-            Filter
+            {t("filter")}
           </DialogTitle>
 
-          <p className="text-sm text-gray-500">
-            Filter by Status and sorting
-          </p>
+          <p className="text-sm text-gray-500">{t("filterDescription")}</p>
         </DialogHeader>
 
         {/* BODY */}
 
         <div className="mt-4 rounded-[14px] bg-white p-4 space-y-6">
-
           {/* STATUS */}
 
           <div className="space-y-3">
-            <p className="text-sm font-medium">Status</p>
+            <p className="text-sm font-medium">{t("status")}</p>
 
             <div className="flex gap-6">
               <div onClick={() => setStatus("all")}>
-                <Radio label="All" active={status === "all"} />
+                <Radio label={t("all")} active={status === "all"} />
               </div>
 
               <div onClick={() => setStatus("active")}>
-                <Radio label="Active" active={status === "active"} />
+                <Radio label={t("active")} active={status === "active"} />
               </div>
 
               <div onClick={() => setStatus("inactive")}>
-                <Radio label="Inactive" active={status === "inactive"} />
+                <Radio label={t("inactive")} active={status === "inactive"} />
               </div>
             </div>
           </div>
 
           {/* CREATION DATE */}
 
-         <FormInput
-  label="Creation Date"
-  type="date"
-  min={todayDate}
-  value={creationDate}
-  onChange={setCreationDate}
-/>
+          <FormInput
+            label={t("creationDate")}
+            type="date"
+            min={todayDate}
+            value={creationDate}
+            onChange={setCreationDate}
+          />
 
           {/* MODIFIED DATE */}
 
-       <FormInput
-  label="Modified Date"
-  type="date"
-  min={todayDate}
-  value={modifiedDate}
-  onChange={setModifiedDate}
-/>
+          <FormInput
+            label={t("modifiedDate")}
+            type="date"
+            min={todayDate}
+            value={modifiedDate}
+            onChange={setModifiedDate}
+          />
 
           {/* OPTIONS */}
 
           <div className="space-y-2">
-            <p className="text-sm font-medium">Options</p>
+            <p className="text-sm font-medium">{t("options")}</p>
 
             <div className="flex items-center gap-2">
               <Checkbox
                 checked={withDeleted}
                 onCheckedChange={(v) => setWithDeleted(!!v)}
               />
-              <span className="text-sm">Include Deleted</span>
+              <span className="text-sm">{t("includeDeleted")}</span>
             </div>
           </div>
 
           {/* SORT */}
 
           <div className="space-y-3">
-            <p className="text-sm font-medium">Sort By</p>
+            <p className="text-sm font-medium">{t("sortBy")}</p>
 
             <div className="space-y-3">
               <div onClick={() => setSortBy("default")}>
                 <Radio
-                  label="Newest to Oldest"
+                  label={t("newestToOldest")}
                   active={sortBy === "default"}
                 />
               </div>
 
               <div onClick={() => setSortBy("oldest")}>
                 <Radio
-                  label="Oldest to Newest"
+                  label={t("oldestToNewest")}
                   active={sortBy === "oldest"}
                 />
               </div>
             </div>
           </div>
-
         </div>
-
 
         <div className="mt-6 flex items-center justify-center gap-6">
           <button
             onClick={handleReset}
             className="text-sm font-medium text-gray-600 hover:text-black"
           >
-            Reset
+            {t("reset")}
           </button>
 
           <Button
             onClick={handleApply}
             className="px-8 py-2 rounded-[10px] bg-primary hover:bg-primary/90"
           >
-            Apply
+            {t("apply")}
           </Button>
         </div>
-
       </DialogContent>
     </Dialog>
   );

@@ -17,6 +17,7 @@ import type {
   UseFormSetValue,
 } from "react-hook-form";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import {
   FIELD_ERROR_CLASS,
@@ -42,7 +43,7 @@ type ImageUploadFieldProps<TFieldValues extends FieldValues> = {
 };
 
 const toFieldValue = <TFieldValues extends FieldValues>(
-  value: string
+  value: string,
 ): PathValue<TFieldValues, FieldPath<TFieldValues>> => {
   return value as PathValue<TFieldValues, FieldPath<TFieldValues>>;
 };
@@ -59,6 +60,7 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
   previewAlt = "Image preview",
   disabled = false,
 }: ImageUploadFieldProps<TFieldValues>) {
+  const t = useTranslations("common");
   const inputId = useId();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const previewObjectUrlRef = useRef<string | null>(null);
@@ -101,7 +103,7 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
     if (!file || isDisabled) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Please upload a valid image file.");
+      toast.error(t("invalidImageFile"));
       return;
     }
 
@@ -189,9 +191,11 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
             />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent px-4 py-3">
               <div className="pr-12">
-                <p className="text-sm font-semibold text-white">Image uploaded</p>
+                <p className="text-sm font-semibold text-white">
+                  {t("imageUploaded")}
+                </p>
                 <p className="text-xs text-white/80">
-                  Drop another image here to replace it.
+                  {t("dropImageToReplace")}
                 </p>
               </div>
             </div>
@@ -203,7 +207,7 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
                 updateValue("");
               }}
               disabled={isDisabled}
-              aria-label={`Clear ${label}`}
+              aria-label={t("clearField", { field: label })}
               className="absolute right-3 top-3 h-8 w-8 rounded-full bg-white/90 p-0 text-red-500 shadow hover:bg-white"
             >
               <Trash2 size={15} />
@@ -225,9 +229,15 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
                 <ImagePlus size={24} />
               )}
             </div>
-            <p className="mt-4 text-sm font-semibold text-gray-900">Drag & drop image here</p>
+            <p className="mt-4 text-sm font-semibold text-gray-900">
+              {t("dragDropImage")}
+            </p>
             <p className="mt-1 text-xs text-gray-500">
-              or <span className="font-medium text-primary">click to browse</span>
+              {t.rich("orClickToBrowse", {
+                browse: (chunks) => (
+                  <span className="font-medium text-primary">{chunks}</span>
+                ),
+              })}
             </p>
             <p className="mt-1 text-[11px] text-gray-400">PNG, JPG, WEBP</p>
           </div>
@@ -256,7 +266,7 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
           ) : (
             <UploadCloud size={16} className="mr-2" />
           )}
-          Upload
+          {t("upload")}
         </Button>
       </div>
 

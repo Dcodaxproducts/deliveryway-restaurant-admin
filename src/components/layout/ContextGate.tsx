@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useQueries } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useGetRestaurants } from "@/hooks/useRestaurants";
 import { getRestaurant } from "@/services/restaurants";
 
@@ -76,6 +77,7 @@ const getRestaurantName = (restaurant: unknown, fallback: string) => {
 };
 
 export default function ContextGate() {
+  const t = useTranslations("common");
   const router = useRouter();
   const pathname = usePathname();
 
@@ -191,7 +193,8 @@ export default function ContextGate() {
     const staffFallbackOptions = staffRestaurantIds
       .filter((id) => !knownIds.has(id))
       .map((id) => {
-        const restaurant = staffRestaurantDetails[staffRestaurantIds.indexOf(id)];
+        const restaurant =
+          staffRestaurantDetails[staffRestaurantIds.indexOf(id)];
 
         return {
           id,
@@ -228,7 +231,7 @@ export default function ContextGate() {
 
   const handleConfirm = () => {
     if (!selectedRestaurant) {
-      toast.error("Please select a restaurant");
+      toast.error(t("selectRestaurantRequired"));
       return;
     }
 
@@ -252,7 +255,7 @@ export default function ContextGate() {
       saveStoredAuth(stored);
     }
 
-    toast.success("Workspace selected");
+    toast.success(t("workspaceSelected"));
     setOpen(false);
   };
 
@@ -263,10 +266,10 @@ export default function ContextGate() {
       <div className="w-full max-w-[560px] animate-in rounded-3xl border border-gray-100 bg-white p-8 shadow-2xl duration-300 zoom-in-95">
         <div className="mb-6 text-center">
           <h2 className="text-2xl font-semibold tracking-tight">
-            Setup Your Workspace
+            {t("setupWorkspace")}
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Select a restaurant to continue
+            {t("selectRestaurantToContinue")}
           </p>
         </div>
 
@@ -279,7 +282,7 @@ export default function ContextGate() {
             type="search"
             value={restaurantSearch}
             onChange={(event) => setRestaurantSearch(event.target.value)}
-            placeholder="Search restaurants..."
+            placeholder={t("searchRestaurants")}
             className="h-11 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm outline-none transition focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
           />
         </div>
@@ -327,17 +330,14 @@ export default function ContextGate() {
 
           {isFetching && restaurants.length > 0 ? (
             <div className="py-3 text-center text-xs text-gray-400">
-              Loading more restaurants...
+              {t("loadingMoreRestaurants")}
             </div>
           ) : null}
 
           {!isFetching && restaurants.length === 0 ? (
             <div className="space-y-3 py-6 text-center text-sm text-gray-500">
-              <p>
-                You haven’t registered any restaurant or it might have been
-                deleted.
-              </p>
-              <p>Please request Super Admin to add one, then login again.</p>
+              <p>{t("noRestaurants")}</p>
+              <p>{t("requestRestaurant")}</p>
 
               <button
                 onClick={() => {
@@ -346,7 +346,7 @@ export default function ContextGate() {
                 }}
                 className="mt-2 rounded-lg bg-red-500 px-4 py-2 text-sm text-white hover:bg-red-600"
               >
-                Logout & Go to Login
+                {t("logoutAndLogin")}
               </button>
             </div>
           ) : null}
@@ -363,7 +363,7 @@ export default function ContextGate() {
                 : "cursor-not-allowed bg-gray-200 text-gray-400",
             )}
           >
-            Continue
+            {t("continue")}
           </button>
         </div>
       </div>

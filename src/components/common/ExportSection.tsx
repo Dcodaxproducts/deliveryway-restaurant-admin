@@ -1,11 +1,16 @@
+"use client";
+
 import { FileText } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 
 export default function ExportSection() {
+  const t = useTranslations("common");
+
   return (
     <div className="space-y-[15px]">
-      <h3 className="text-base text-dark">Export Reports</h3>
+      <h3 className="text-base text-dark">{t("exportReports")}</h3>
 
       <div className="scroll-hidden flex max-w-[700px] gap-[16px] overflow-x-auto">
         <Button

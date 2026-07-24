@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslations } from "next-intl";
 
 type Props = {
   headers: string[];
@@ -22,14 +23,14 @@ export default function TableSkeleton({
   showCheckbox = false,
   showActions = false,
 }: Props) {
+  const t = useTranslations("common");
+
   return (
     <div className="hidden lg:block">
       <Table className="animate-pulse">
         <TableHeader>
           <TableRow className="border-none bg-gray-50">
-            {showCheckbox && (
-              <TableHead className="w-[50px]" />
-            )}
+            {showCheckbox && <TableHead className="w-[50px]" />}
 
             {headers.map((header, i) => (
               <TableHead key={i} className="text-gray-600">
@@ -38,7 +39,7 @@ export default function TableSkeleton({
             ))}
 
             {showActions && (
-              <TableHead className="text-center">Actions</TableHead>
+              <TableHead className="text-center">{t("actions")}</TableHead>
             )}
           </TableRow>
         </TableHeader>

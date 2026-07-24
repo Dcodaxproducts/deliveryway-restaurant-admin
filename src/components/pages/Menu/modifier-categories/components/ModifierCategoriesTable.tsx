@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { FaPen, FaTrash } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import PaginationSection from "@/components/common/pagination";
@@ -17,10 +18,10 @@ import ModifierCategoryFormDialog from "@/components/pages/Menu/modifier-categor
 import {
   formatModifierCategoryDescription,
   formatModifierCategorySortOrder,
-  formatModifierCategoryStatus,
 } from "@/components/pages/Menu/modifier-categories/utils/modifier-category-formatters";
 
 export default function ModifierCategoriesTable() {
+  const t = useTranslations("common");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [search, setSearch] = useState("");
@@ -29,7 +30,7 @@ export default function ModifierCategoriesTable() {
   const [formOpen, setFormOpen] = useState(false);
   const [selected, setSelected] = useState<ModifierCategory | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ModifierCategory | null>(
-    null
+    null,
   );
   const [deleteError, setDeleteError] = useState("");
 
@@ -91,7 +92,7 @@ export default function ModifierCategoriesTable() {
       },
       onError: (error) => {
         setDeleteError(
-          getApiErrorMessage(error, "Unable to delete modifier category.")
+          getApiErrorMessage(error, t("deleteModifierCategoryFailed")),
         );
       },
     });
@@ -112,10 +113,10 @@ export default function ModifierCategoriesTable() {
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-[18px] font-semibold text-gray-900">
-            Modifier Categories
+            {t("modifierCategories")}
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Create categories such as Bread, Sauces, Cheese, and Toppings.
+            {t("modifierCategoriesDescription")}
           </p>
         </div>
 
@@ -123,7 +124,7 @@ export default function ModifierCategoriesTable() {
           onClick={openCreate}
           className="h-[40px] rounded-[12px] bg-primary px-4 text-white"
         >
-          Add Category
+          {t("addCategory")}
         </Button>
       </div>
 
@@ -143,12 +144,12 @@ export default function ModifierCategoriesTable() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-gray-500">
-              <th className="px-2 py-3">Name</th>
-              <th className="px-2">Slug</th>
-              <th className="px-2">Description</th>
-              <th className="px-2 text-center">Sort Order</th>
-              <th className="px-2 text-center">Status</th>
-              <th className="px-2 text-center">Actions</th>
+              <th className="px-2 py-3">{t("name")}</th>
+              <th className="px-2">{t("slug")}</th>
+              <th className="px-2">{t("description")}</th>
+              <th className="px-2 text-center">{t("sortOrder")}</th>
+              <th className="px-2 text-center">{t("status")}</th>
+              <th className="px-2 text-center">{t("actions")}</th>
             </tr>
           </thead>
 
@@ -160,7 +161,7 @@ export default function ModifierCategoriesTable() {
             ) : categories.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-10 text-center text-gray-400">
-                  No modifier categories found
+                  {t("noModifierCategoriesFound")}
                 </td>
               </tr>
             ) : (
@@ -185,7 +186,7 @@ export default function ModifierCategoriesTable() {
                         type="button"
                         onClick={() => openEdit(category)}
                         className="text-gray-500 hover:text-primary"
-                        aria-label="Edit modifier category"
+                        aria-label={t("editModifierCategory")}
                       >
                         <FaPen size={14} />
                       </button>
@@ -197,7 +198,7 @@ export default function ModifierCategoriesTable() {
                           setDeleteTarget(category);
                         }}
                         className="text-gray-500 hover:text-red-500"
-                        aria-label="Delete modifier category"
+                        aria-label={t("deleteModifierCategory")}
                       >
                         <FaTrash size={14} />
                       </button>
@@ -221,7 +222,7 @@ export default function ModifierCategoriesTable() {
           ))
         ) : categories.length === 0 ? (
           <div className="py-10 text-center text-gray-400">
-            No modifier categories found
+            {t("noModifierCategoriesFound")}
           </div>
         ) : (
           categories.map((category) => (
@@ -247,7 +248,7 @@ export default function ModifierCategoriesTable() {
                     type="button"
                     onClick={() => openEdit(category)}
                     className="text-gray-500 hover:text-primary"
-                    aria-label="Edit modifier category"
+                    aria-label={t("editModifierCategory")}
                   >
                     <FaPen size={14} />
                   </button>
@@ -259,7 +260,7 @@ export default function ModifierCategoriesTable() {
                       setDeleteTarget(category);
                     }}
                     className="text-gray-500 hover:text-red-500"
-                    aria-label="Delete modifier category"
+                    aria-label={t("deleteModifierCategory")}
                   >
                     <FaTrash size={14} />
                   </button>
@@ -268,7 +269,9 @@ export default function ModifierCategoriesTable() {
 
               <div className="mt-4 flex items-center justify-between">
                 <span className="text-sm text-gray-500">
-                  Sort {formatModifierCategorySortOrder(category.sortOrder)}
+                  {t("sortValue", {
+                    value: formatModifierCategorySortOrder(category.sortOrder),
+                  })}
                 </span>
                 <StatusBadge isActive={category.isActive} />
               </div>
@@ -307,6 +310,7 @@ export default function ModifierCategoriesTable() {
 }
 
 function StatusBadge({ isActive }: { isActive?: boolean }) {
+  const t = useTranslations("common");
   const active = isActive !== false;
 
   return (
@@ -315,7 +319,7 @@ function StatusBadge({ isActive }: { isActive?: boolean }) {
         active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
       }`}
     >
-      {formatModifierCategoryStatus(active)}
+      {active ? t("active") : t("inactive")}
     </span>
   );
 }
