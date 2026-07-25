@@ -1,7 +1,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Banknote, CreditCard, Info, Loader2, RefreshCw, Send, Wallet } from "lucide-react";
+import {
+  Banknote,
+  CreditCard,
+  Info,
+  Loader2,
+  RefreshCw,
+  Send,
+  Wallet,
+} from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 
@@ -13,7 +21,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import {
   useCreateRestaurantPayoutRequest,
+  useCreateRestaurantPayoutProviderRequest,
   useRestaurantPayoutRequests,
+  useRestaurantPayoutProviderRequests,
   useRestaurantWallet,
 } from "@/hooks/useRestaurantPaymentManagement";
 import { getApiErrorMessage } from "@/lib/errors";
@@ -54,8 +64,16 @@ const sidebarItems = [
 ];
 
 const taxRules = [
-  { id: "tax-rule-inclusive", value: "inclusive", label: "Prices are inclusive of tax" },
-  { id: "tax-rule-exclusive", value: "exclusive", label: "Prices are exclusive of tax" },
+  {
+    id: "tax-rule-inclusive",
+    value: "inclusive",
+    label: "Prices are inclusive of tax",
+  },
+  {
+    id: "tax-rule-exclusive",
+    value: "exclusive",
+    label: "Prices are exclusive of tax",
+  },
   {
     id: "tax-rule-completed",
     value: "completed",
@@ -80,13 +98,16 @@ type SettingsFormProps = {
   variant?: "global" | "payments";
 };
 
-export default function SettingsForm({ variant = "global" }: SettingsFormProps) {
+export default function SettingsForm({
+  variant = "global",
+}: SettingsFormProps) {
   const { isBranchAdmin, isRestaurantAdmin, restaurantId } = useAuth();
   const { currency, formatMoney } = useCurrency();
-  const { handleSubmit, register, setValue, watch } = useForm<SettingsFormValues>({
-    resolver: zodResolver(settingsSchema),
-    defaultValues,
-  });
+  const { handleSubmit, register, setValue, watch } =
+    useForm<SettingsFormValues>({
+      resolver: zodResolver(settingsSchema),
+      defaultValues,
+    });
 
   const currencyFormat = watch("currencyFormat");
   const dateFormat = watch("dateFormat");
@@ -139,7 +160,8 @@ export default function SettingsForm({ variant = "global" }: SettingsFormProps) 
           <div className={formGroupClassName}>
             <Label htmlFor="global-tax-percentage">Global Tax %</Label>
             <p className="text-sm text-gray mb-2">
-              Set the default tax percentage applied to transactions across the platform.
+              Set the default tax percentage applied to transactions across the
+              platform.
             </p>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dark font-medium">
@@ -162,12 +184,18 @@ export default function SettingsForm({ variant = "global" }: SettingsFormProps) 
             <RadioGroup
               aria-labelledby="tax-handling-rule-label"
               value={taxHandlingRule}
-              onValueChange={(value) => setValue("taxHandlingRule", value, { shouldDirty: true })}
+              onValueChange={(value) =>
+                setValue("taxHandlingRule", value, { shouldDirty: true })
+              }
               className="space-y-[24px]"
             >
               {taxRules.map(({ id, value, label }) => (
                 <div key={value} className="flex items-center gap-3">
-                  <RadioGroupItem id={id} value={value} className="border-dark" />
+                  <RadioGroupItem
+                    id={id}
+                    value={value}
+                    className="border-dark"
+                  />
                   <Label htmlFor={id}>{label}</Label>
                 </div>
               ))}
@@ -194,30 +222,41 @@ export default function SettingsForm({ variant = "global" }: SettingsFormProps) 
 
         <section className="space-y-[24px]">
           <div className={formGroupClassName}>
-            <Label htmlFor="default-platform-currency">Default Platform Currency</Label>
+            <Label htmlFor="default-platform-currency">
+              Default Platform Currency
+            </Label>
             <p className="text-sm text-gray mb-2">
               This currency will be used as the default for all monetary values.
             </p>
             <Select
               value={defaultPlatformCurrency}
               onValueChange={(value) =>
-                setValue("defaultPlatformCurrency", value, { shouldDirty: true })
+                setValue("defaultPlatformCurrency", value, {
+                  shouldDirty: true,
+                })
               }
             >
-              <SelectTrigger id="default-platform-currency" className="h-[52px] border-[#BBBBBB]">
+              <SelectTrigger
+                id="default-platform-currency"
+                className="h-[52px] border-[#BBBBBB]"
+              >
                 <div className="flex items-center gap-2">
                   <span className="text-dark">{currency}</span>
                   <SelectValue placeholder="Select Currency" />
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={currency.toLowerCase()}>{currency}</SelectItem>
+                <SelectItem value={currency.toLowerCase()}>
+                  {currency}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-[12px]">
-            <Label id="currency-display-format-label">Currency Display Format</Label>
+            <Label id="currency-display-format-label">
+              Currency Display Format
+            </Label>
             <div
               aria-labelledby="currency-display-format-label"
               className="grid grid-cols-3 gap-4"
@@ -228,7 +267,9 @@ export default function SettingsForm({ variant = "global" }: SettingsFormProps) 
                   key={value}
                   label={label}
                   active={currencyFormat === value}
-                  onClick={() => setValue("currencyFormat", value, { shouldDirty: true })}
+                  onClick={() =>
+                    setValue("currencyFormat", value, { shouldDirty: true })
+                  }
                 />
               ))}
             </div>
@@ -249,13 +290,19 @@ export default function SettingsForm({ variant = "global" }: SettingsFormProps) 
 
           <div className="space-y-[12px]">
             <Label id="date-format-label">Date Format</Label>
-            <div aria-labelledby="date-format-label" className="grid grid-cols-3 gap-2" role="group">
+            <div
+              aria-labelledby="date-format-label"
+              className="grid grid-cols-3 gap-2"
+              role="group"
+            >
               {dateFormats.map(({ label, value }) => (
                 <FormatBtn
                   key={value}
                   label={label}
                   active={dateFormat === value}
-                  onClick={() => setValue("dateFormat", value, { shouldDirty: true })}
+                  onClick={() =>
+                    setValue("dateFormat", value, { shouldDirty: true })
+                  }
                 />
               ))}
             </div>
@@ -267,7 +314,9 @@ export default function SettingsForm({ variant = "global" }: SettingsFormProps) 
             type="select"
             placeholder="Select Timezone"
             value={timezone}
-            onValueChange={(value) => setValue("timezone", value, { shouldDirty: true })}
+            onValueChange={(value) =>
+              setValue("timezone", value, { shouldDirty: true })
+            }
           />
         </section>
 
@@ -292,7 +341,9 @@ export default function SettingsForm({ variant = "global" }: SettingsFormProps) 
             type="select"
             placeholder="Select font"
             value={fontSelection}
-            onValueChange={(value) => setValue("fontSelection", value, { shouldDirty: true })}
+            onValueChange={(value) =>
+              setValue("fontSelection", value, { shouldDirty: true })
+            }
           />
         </section>
 
@@ -304,7 +355,11 @@ export default function SettingsForm({ variant = "global" }: SettingsFormProps) 
           >
             Cancel
           </Button>
-          <Button type="submit" variant="default" className="h-[52px] px-10 rounded-[10px]">
+          <Button
+            type="submit"
+            variant="default"
+            className="h-[52px] px-10 rounded-[10px]"
+          >
             Save & Activate
           </Button>
         </section>
@@ -320,8 +375,11 @@ function RestaurantWalletPayoutSection({
 }) {
   const walletQuery = useRestaurantWallet(restaurantId);
   const payoutRequestsQuery = useRestaurantPayoutRequests(restaurantId);
+  const providerSettingsQuery =
+    useRestaurantPayoutProviderRequests(restaurantId);
   const createPayoutRequest = useCreateRestaurantPayoutRequest();
-  const { formatMoney: formatCurrency, resolveCurrency } = useCurrency(restaurantId);
+  const { formatMoney: formatCurrency, resolveCurrency } =
+    useCurrency(restaurantId);
   const walletCurrency = resolveCurrency(walletQuery.data?.currency);
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState(walletCurrency || "PKR");
@@ -340,6 +398,11 @@ function RestaurantWalletPayoutSection({
     accountTitle.trim().length > 0 &&
     accountNumber.trim().length > 0 &&
     !createPayoutRequest.isPending;
+  const hasAutomatedPayoutProvider = Boolean(
+    providerSettingsQuery.data?.configurations.some(
+      (configuration) => configuration.enabled,
+    ),
+  );
 
   useEffect(() => {
     if (walletCurrency && currency === "PKR") {
@@ -376,7 +439,7 @@ function RestaurantWalletPayoutSection({
           setPhone("");
           setNote("");
         },
-      }
+      },
     );
   };
 
@@ -391,8 +454,9 @@ function RestaurantWalletPayoutSection({
             </h2>
           </div>
           <p className="text-sm text-gray">
-            Review the restaurant wallet balance and request a manual bank payout.
-            Wallet deductions happen only after Super Admin marks a payout as paid.
+            Review the restaurant wallet balance and request a manual bank
+            payout. Wallet deductions happen only after Super Admin marks a
+            payout as paid.
           </p>
         </div>
         <Button
@@ -402,7 +466,11 @@ function RestaurantWalletPayoutSection({
             walletQuery.refetch();
             payoutRequestsQuery.refetch();
           }}
-          disabled={!restaurantId || walletQuery.isFetching || payoutRequestsQuery.isFetching}
+          disabled={
+            !restaurantId ||
+            walletQuery.isFetching ||
+            payoutRequestsQuery.isFetching
+          }
           className="h-[40px] rounded-[10px]"
         >
           {walletQuery.isFetching || payoutRequestsQuery.isFetching ? (
@@ -416,7 +484,10 @@ function RestaurantWalletPayoutSection({
 
       {walletQuery.isError ? (
         <p className="rounded-[10px] bg-red-50 px-3 py-2 text-sm text-red-600">
-          {getApiErrorMessage(walletQuery.error, "Unable to load restaurant wallet.")}
+          {getApiErrorMessage(
+            walletQuery.error,
+            "Unable to load restaurant wallet.",
+          )}
         </p>
       ) : null}
 
@@ -427,7 +498,11 @@ function RestaurantWalletPayoutSection({
           value={
             walletQuery.isLoading
               ? "Loading..."
-              : formatOptionalMoney(walletQuery.data?.balance ?? null, walletCurrency, formatCurrency)
+              : formatOptionalMoney(
+                  walletQuery.data?.balance ?? null,
+                  walletCurrency,
+                  formatCurrency,
+                )
           }
         />
         <PaymentSummaryCard
@@ -441,68 +516,123 @@ function RestaurantWalletPayoutSection({
           value={formatRecordAmount(
             walletQuery.data?.customerWalletExposure,
             walletCurrency,
-            formatCurrency
+            formatCurrency,
           )}
         />
       </div>
 
+      <PayoutProviderRequestSection restaurantId={restaurantId} />
+
       <div className="grid gap-5 xl:grid-cols-[1fr_1.1fr]">
-        <div className="space-y-4 rounded-[12px] bg-gray-50 p-4">
-          <div>
-            <h3 className="text-sm font-semibold text-dark">Request payout</h3>
-            <p className="mt-1 text-xs text-gray">
-              Submit bank details for Super Admin approval and external transfer.
+        {hasAutomatedPayoutProvider ? (
+          <div className="rounded-[12px] bg-green-50 p-4">
+            <h3 className="text-sm font-semibold text-green-800">
+              Automated payouts enabled
+            </h3>
+            <p className="mt-1 text-xs leading-5 text-green-700">
+              Super Admin can transfer this wallet through the approved Stripe
+              or PayPal provider. A manual bank withdrawal request is not
+              needed.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
-            <div className={formGroupClassName}>
-              <Label htmlFor="payout-amount">Amount</Label>
-              <Input
-                id="payout-amount"
-                inputMode="decimal"
-                value={amount}
-                onChange={(event) => setAmount(event.target.value)}
-                placeholder="5000"
-                className={textInputClassName}
+        ) : (
+          <div className="space-y-4 rounded-[12px] bg-gray-50 p-4">
+            <div>
+              <h3 className="text-sm font-semibold text-dark">
+                Request payout
+              </h3>
+              <p className="mt-1 text-xs text-gray">
+                Submit bank details for Super Admin approval and external
+                transfer.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
+              <div className={formGroupClassName}>
+                <Label htmlFor="payout-amount">Amount</Label>
+                <Input
+                  id="payout-amount"
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value)}
+                  placeholder="5000"
+                  className={textInputClassName}
+                />
+              </div>
+              <div className={formGroupClassName}>
+                <Label htmlFor="payout-currency">Currency</Label>
+                <Input
+                  id="payout-currency"
+                  value={currency}
+                  onChange={(event) =>
+                    setCurrency(event.target.value.toUpperCase())
+                  }
+                  placeholder={walletCurrency || "PKR"}
+                  className={textInputClassName}
+                />
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <PayoutInput
+                id="payout-bank"
+                label="Bank name"
+                value={bankName}
+                onChange={setBankName}
+                placeholder="HBL"
+              />
+              <PayoutInput
+                id="payout-title"
+                label="Account title"
+                value={accountTitle}
+                onChange={setAccountTitle}
+                placeholder="Pizza House"
+              />
+              <PayoutInput
+                id="payout-number"
+                label="Account number"
+                value={accountNumber}
+                onChange={setAccountNumber}
+                placeholder="1234567890"
+              />
+              <PayoutInput
+                id="payout-iban"
+                label="IBAN (optional)"
+                value={iban}
+                onChange={setIban}
+                placeholder="PK36..."
+              />
+              <PayoutInput
+                id="payout-phone"
+                label="Phone (optional)"
+                value={phone}
+                onChange={setPhone}
+                placeholder="03410000000"
               />
             </div>
             <div className={formGroupClassName}>
-              <Label htmlFor="payout-currency">Currency</Label>
-              <Input
-                id="payout-currency"
-                value={currency}
-                onChange={(event) => setCurrency(event.target.value.toUpperCase())}
-                placeholder={walletCurrency || "PKR"}
-                className={textInputClassName}
+              <Label htmlFor="payout-note">Note</Label>
+              <Textarea
+                id="payout-note"
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                placeholder="Please transfer payout"
+                className="min-h-[84px] border-[#BBBBBB] focus:border-primary"
               />
             </div>
+            <Button
+              type="button"
+              onClick={submit}
+              disabled={!canSubmit}
+              className="h-[44px] rounded-[10px]"
+            >
+              {createPayoutRequest.isPending ? (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              ) : (
+                <Send className="mr-2 size-4" />
+              )}
+              Submit Payout Request
+            </Button>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <PayoutInput id="payout-bank" label="Bank name" value={bankName} onChange={setBankName} placeholder="HBL" />
-            <PayoutInput id="payout-title" label="Account title" value={accountTitle} onChange={setAccountTitle} placeholder="Pizza House" />
-            <PayoutInput id="payout-number" label="Account number" value={accountNumber} onChange={setAccountNumber} placeholder="1234567890" />
-            <PayoutInput id="payout-iban" label="IBAN (optional)" value={iban} onChange={setIban} placeholder="PK36..." />
-            <PayoutInput id="payout-phone" label="Phone (optional)" value={phone} onChange={setPhone} placeholder="03410000000" />
-          </div>
-          <div className={formGroupClassName}>
-            <Label htmlFor="payout-note">Note</Label>
-            <Textarea
-              id="payout-note"
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder="Please transfer payout"
-              className="min-h-[84px] border-[#BBBBBB] focus:border-primary"
-            />
-          </div>
-          <Button type="button" onClick={submit} disabled={!canSubmit} className="h-[44px] rounded-[10px]">
-            {createPayoutRequest.isPending ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <Send className="mr-2 size-4" />
-            )}
-            Submit Payout Request
-          </Button>
-        </div>
+        )}
 
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-dark">Payout requests</h3>
@@ -511,19 +641,30 @@ function RestaurantWalletPayoutSection({
           ) : null}
           {payoutRequestsQuery.isError ? (
             <p className="rounded-[10px] bg-red-50 px-3 py-2 text-sm text-red-600">
-              {getApiErrorMessage(payoutRequestsQuery.error, "Unable to load payout requests.")}
+              {getApiErrorMessage(
+                payoutRequestsQuery.error,
+                "Unable to load payout requests.",
+              )}
             </p>
           ) : null}
           {!payoutRequestsQuery.isLoading && !payoutRequestsQuery.isError ? (
             payoutRequestsQuery.data?.length ? (
               <div className="overflow-hidden rounded-[10px] border border-[#E8E8E8]">
                 {payoutRequestsQuery.data.slice(0, 8).map((request) => (
-                  <div key={request.id} className="space-y-2 border-b border-[#E8E8E8] px-4 py-3 last:border-b-0">
+                  <div
+                    key={request.id}
+                    className="space-y-2 border-b border-[#E8E8E8] px-4 py-3 last:border-b-0"
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="font-semibold text-dark">
-                        {formatCurrency(request.amount, request.currency || walletCurrency)}
+                        {formatCurrency(
+                          request.amount,
+                          request.currency || walletCurrency,
+                        )}
                       </span>
-                      <PayoutStatusBadge status={request.status || "REQUESTED"} />
+                      <PayoutStatusBadge
+                        status={request.status || "REQUESTED"}
+                      />
                     </div>
                     <p className="text-xs text-gray">
                       {formatBankDetails(request.bankDetails)}
@@ -545,6 +686,214 @@ function RestaurantWalletPayoutSection({
         </div>
       </div>
     </section>
+  );
+}
+
+function PayoutProviderRequestSection({
+  restaurantId,
+}: {
+  restaurantId?: string | null;
+}) {
+  const requestsQuery = useRestaurantPayoutProviderRequests(restaurantId);
+  const createRequest = useCreateRestaurantPayoutProviderRequest();
+  const [provider, setProvider] = useState<"STRIPE" | "PAYPAL">("STRIPE");
+  const [stripeAccountId, setStripeAccountId] = useState("");
+  const [paypalClientId, setPaypalClientId] = useState("");
+  const [paypalClientSecret, setPaypalClientSecret] = useState("");
+  const [paypalRecipientEmail, setPaypalRecipientEmail] = useState("");
+  const [paypalEnvironment, setPaypalEnvironment] = useState<
+    "SANDBOX" | "LIVE"
+  >("LIVE");
+  const [note, setNote] = useState("");
+  const activeConfiguration = requestsQuery.data?.configurations.find(
+    (configuration) =>
+      configuration.provider === provider && configuration.enabled,
+  );
+  const latestRequest = requestsQuery.data?.requests.find(
+    (request) => request.provider === provider,
+  );
+  const canSubmit =
+    Boolean(restaurantId) &&
+    !createRequest.isPending &&
+    (provider === "STRIPE"
+      ? stripeAccountId.trim().length > 0
+      : paypalClientId.trim().length > 0 &&
+        paypalClientSecret.trim().length > 0 &&
+        paypalRecipientEmail.trim().length > 0);
+
+  const submit = () => {
+    if (!restaurantId || !canSubmit) return;
+
+    createRequest.mutate(
+      {
+        restaurantId,
+        payload:
+          provider === "STRIPE"
+            ? {
+                provider,
+                stripeAccountId: stripeAccountId.trim(),
+                note: note.trim() || undefined,
+              }
+            : {
+                provider,
+                paypalClientId: paypalClientId.trim(),
+                paypalClientSecret: paypalClientSecret,
+                paypalRecipientEmail: paypalRecipientEmail.trim(),
+                paypalEnvironment,
+                note: note.trim() || undefined,
+              },
+      },
+      {
+        onSuccess: () => {
+          setPaypalClientSecret("");
+          setNote("");
+        },
+      },
+    );
+  };
+
+  return (
+    <div className="space-y-4 rounded-[12px] border border-[#E8E8E8] bg-white p-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-dark">
+            Automated payout provider
+          </h3>
+          <p className="mt-1 text-xs text-gray">
+            Submit your Stripe connected account or PayPal business credentials
+            for Super Admin approval. PayPal secrets are encrypted and never
+            shown again.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-9 rounded-[10px]"
+          onClick={() => requestsQuery.refetch()}
+          disabled={requestsQuery.isFetching}
+        >
+          {requestsQuery.isFetching ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-2 size-4" />
+          )}
+          Refresh
+        </Button>
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <div className={formGroupClassName}>
+          <Label>Provider</Label>
+          <Select
+            value={provider}
+            onValueChange={(value) => setProvider(value as "STRIPE" | "PAYPAL")}
+          >
+            <SelectTrigger className={selectTriggerClassName}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="STRIPE">Stripe Connect</SelectItem>
+              <SelectItem value="PAYPAL">PayPal Payouts</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {provider === "STRIPE" ? (
+          <PayoutInput
+            id="stripe-payout-account"
+            label="Stripe connected account ID"
+            value={stripeAccountId}
+            onChange={setStripeAccountId}
+            placeholder="acct_..."
+          />
+        ) : (
+          <>
+            <PayoutInput
+              id="paypal-client-id"
+              label="PayPal client ID"
+              value={paypalClientId}
+              onChange={setPaypalClientId}
+              placeholder="PayPal REST app client ID"
+            />
+            <div className={formGroupClassName}>
+              <Label htmlFor="paypal-client-secret">PayPal client secret</Label>
+              <Input
+                id="paypal-client-secret"
+                type="password"
+                autoComplete="new-password"
+                value={paypalClientSecret}
+                onChange={(event) => setPaypalClientSecret(event.target.value)}
+                placeholder="Submitted once and encrypted"
+                className={textInputClassName}
+              />
+            </div>
+            <PayoutInput
+              id="paypal-recipient-email"
+              label="PayPal payout email"
+              value={paypalRecipientEmail}
+              onChange={setPaypalRecipientEmail}
+              placeholder="payments@restaurant.de"
+            />
+            <div className={formGroupClassName}>
+              <Label>PayPal environment</Label>
+              <Select
+                value={paypalEnvironment}
+                onValueChange={(value) =>
+                  setPaypalEnvironment(value as "SANDBOX" | "LIVE")
+                }
+              >
+                <SelectTrigger className={selectTriggerClassName}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="LIVE">Live</SelectItem>
+                  <SelectItem value="SANDBOX">Sandbox</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className={formGroupClassName}>
+        <Label htmlFor="payout-provider-note">Note for Super Admin</Label>
+        <Textarea
+          id="payout-provider-note"
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          className="min-h-[72px] border-[#BBBBBB] focus:border-primary"
+          placeholder="Optional configuration note"
+        />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="button"
+          onClick={submit}
+          disabled={!canSubmit}
+          className="h-[42px] rounded-[10px]"
+        >
+          {createRequest.isPending ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <Send className="mr-2 size-4" />
+          )}
+          Send for approval
+        </Button>
+        <span className="text-xs text-gray">
+          {activeConfiguration
+            ? `${provider} is approved for automated payouts.`
+            : latestRequest
+              ? `${provider} request status: ${latestRequest.status}`
+              : `No ${provider} request submitted.`}
+        </span>
+      </div>
+      {latestRequest?.rejectionReason ? (
+        <p className="rounded-[8px] bg-red-50 px-3 py-2 text-xs text-red-600">
+          Rejection reason: {latestRequest.rejectionReason}
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -585,7 +934,9 @@ function PayoutStatusBadge({ status }: { status: string }) {
         : "bg-amber-100 text-amber-700";
 
   return (
-    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}>
+    <span
+      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}
+    >
       {normalizedStatus}
     </span>
   );
@@ -629,7 +980,10 @@ function PaymentSummaryCard({
 function formatOptionalMoney(
   amount: number | null,
   currency: string | null,
-  formatCurrency: (amount?: number | string | null, currencyOverride?: string | null) => string
+  formatCurrency: (
+    amount?: number | string | null,
+    currencyOverride?: string | null,
+  ) => string,
 ) {
   if (amount === null) return "Not available";
 
@@ -638,7 +992,7 @@ function formatOptionalMoney(
 
 function getRecordNumber(
   record: Record<string, unknown> | null | undefined,
-  keys: string[]
+  keys: string[],
 ) {
   for (const key of keys) {
     const value = record?.[key];
@@ -653,7 +1007,10 @@ function getRecordNumber(
 function formatRecordAmount(
   record: Record<string, unknown> | null | undefined,
   currency: string | null,
-  formatCurrency: (amount?: number | string | null, currencyOverride?: string | null) => string
+  formatCurrency: (
+    amount?: number | string | null,
+    currencyOverride?: string | null,
+  ) => string,
 ) {
   return formatOptionalMoney(
     getRecordNumber(record, [
@@ -664,7 +1021,7 @@ function formatRecordAmount(
       "walletAmount",
     ]),
     currency,
-    formatCurrency
+    formatCurrency,
   );
 }
 
@@ -674,9 +1031,9 @@ type FormGroupProps = {
   placeholder: string;
   type?: "text" | "select";
   prefix?: string;
-  registration?: ReturnType<typeof useForm<SettingsFormValues>>["register"] extends (
-    name: infer Name
-  ) => infer Registration
+  registration?: ReturnType<
+    typeof useForm<SettingsFormValues>
+  >["register"] extends (name: infer Name) => infer Registration
     ? Registration
     : never;
   value?: string;
@@ -728,21 +1085,28 @@ type ColorFieldProps = {
   id: string;
   label: string;
   swatchClassName: string;
-  registration: ReturnType<typeof useForm<SettingsFormValues>>["register"] extends (
-    name: infer Name
-  ) => infer Registration
+  registration: ReturnType<
+    typeof useForm<SettingsFormValues>
+  >["register"] extends (name: infer Name) => infer Registration
     ? Registration
     : never;
 };
 
-function ColorField({ id, label, swatchClassName, registration }: ColorFieldProps) {
+function ColorField({
+  id,
+  label,
+  swatchClassName,
+  registration,
+}: ColorFieldProps) {
   return (
     <div className={formGroupClassName}>
       <Label htmlFor={id}>{label}</Label>
       <div className="flex gap-2">
         <div className={`size-[52px] rounded-md shrink-0 ${swatchClassName}`} />
         <div className="relative w-full">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray">#</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray">
+            #
+          </span>
           <Input
             id={id}
             placeholder="Add Color Code"

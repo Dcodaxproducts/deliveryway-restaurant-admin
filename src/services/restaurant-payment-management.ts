@@ -40,7 +40,8 @@ export type RestaurantWallet = {
   customerWalletExposure: RecordValue;
 };
 
-export type RestaurantPayoutRequestStatus = "REQUESTED" | "APPROVED" | "PAID" | "REJECTED" | string;
+export type RestaurantPayoutRequestStatus =
+  "REQUESTED" | "APPROVED" | "PAID" | "REJECTED" | string;
 
 export type RestaurantPayoutRequest = {
   id: string;
@@ -67,10 +68,51 @@ export type CreateRestaurantPayoutRequestPayload = {
   note?: string;
 };
 
+export type RestaurantPayoutProvider = "STRIPE" | "PAYPAL";
+
+export type RestaurantPayoutProviderRequest = {
+  provider: RestaurantPayoutProvider;
+  status: "REQUESTED" | "APPROVED" | "REJECTED";
+  publicDetails: RecordValue;
+  credentialsSubmitted: boolean;
+  note: string | null;
+  requestedAt: string | null;
+  rejectionReason: string | null;
+};
+
+export type RestaurantPayoutProviderConfiguration = {
+  provider: RestaurantPayoutProvider;
+  enabled: boolean;
+  publicDetails: RecordValue;
+  credentialsConfigured: boolean;
+  approvedAt: string | null;
+};
+
+export type RestaurantPayoutProviderSettings = {
+  requests: RestaurantPayoutProviderRequest[];
+  configurations: RestaurantPayoutProviderConfiguration[];
+};
+
+export type CreateRestaurantPayoutProviderRequestPayload =
+  | {
+      provider: "STRIPE";
+      stripeAccountId: string;
+      note?: string;
+    }
+  | {
+      provider: "PAYPAL";
+      paypalClientId: string;
+      paypalClientSecret: string;
+      paypalRecipientEmail: string;
+      paypalEnvironment: "SANDBOX" | "LIVE";
+      note?: string;
+    };
+
 const isRecord = (value: unknown): value is RecordValue =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
-const getRecord = (value: unknown): RecordValue => (isRecord(value) ? value : {});
+const getRecord = (value: unknown): RecordValue =>
+  isRecord(value) ? value : {};
 
 const getString = (value: unknown, fallback: string | null = null) => {
   if (value === null || value === undefined || value === "") return fallback;
@@ -121,7 +163,9 @@ const firstArray = (...values: unknown[]) => {
   return [];
 };
 
-const normalizeLedgerEntry = (value: unknown): RestaurantPaymentLedgerEntry | null => {
+const normalizeLedgerEntry = (
+  value: unknown,
+): RestaurantPaymentLedgerEntry | null => {
   if (!isRecord(value)) return null;
 
   return {
@@ -141,16 +185,20 @@ const normalizeWallet = (response: unknown): RestaurantWallet => {
 
   return {
     type: getString(wallet.type, "RESTAURANT_WALLET"),
-    balance: getNumber(wallet.balance ?? wallet.availableBalance ?? wallet.amount),
+    balance: getNumber(
+      wallet.balance ?? wallet.availableBalance ?? wallet.amount,
+    ),
     currency: getString(wallet.currency ?? data.currency),
     customerWalletExposure: firstRecord(
       wallet.customerWalletExposure,
-      data.customerWalletExposure
+      data.customerWalletExposure,
     ),
   };
 };
 
-const normalizePayoutRequest = (value: unknown): RestaurantPayoutRequest | null => {
+const normalizePayoutRequest = (
+  value: unknown,
+): RestaurantPayoutRequest | null => {
   if (!isRecord(value)) return null;
 
   return {
@@ -166,10 +214,18 @@ const normalizePayoutRequest = (value: unknown): RestaurantPayoutRequest | null 
   };
 };
 
-const normalizePayoutRequests = (response: unknown): RestaurantPayoutRequest[] => {
+const normalizePayoutRequests = (
+  response: unknown,
+): RestaurantPayoutRequest[] => {
   const data = unwrapData(response);
   const record = getRecord(data);
-  const rows = firstArray(data, record.items, record.requests, record.payoutRequests, record.data);
+  const rows = firstArray(
+    data,
+    record.items,
+    record.requests,
+    record.payoutRequests,
+    record.data,
+  );
 
   return rows
     .map(normalizePayoutRequest)
@@ -177,7 +233,7 @@ const normalizePayoutRequests = (response: unknown): RestaurantPayoutRequest[] =
 };
 
 export const normalizeRestaurantPaymentManagement = (
-  response: unknown
+  response: unknown,
 ): RestaurantPaymentManagement => {
   const data = getRecord(unwrapData(response));
   const restaurant = getRecord(data.restaurant);
@@ -190,33 +246,33 @@ export const normalizeRestaurantPaymentManagement = (
     data.restaurantPaymentMethods,
     data.configuredPaymentMethods,
     data.paymentMethods,
-    data.methods
+    data.methods,
   );
   const stripeAccount = firstRecord(
     payments.stripe,
     data.stripeAccount,
     data.stripe,
     data.restaurantStripeAccount,
-    payouts.stripeAccount
+    payouts.stripeAccount,
   );
   const walletExposure = firstRecord(
     payments.wallet,
     data.customerWalletExposure,
     data.walletExposure,
-    data.wallet
+    data.wallet,
   );
   const paymentSummary = firstRecord(
     payments.summary,
     data.paymentTransactionSummary,
     data.transactionSummary,
     data.paymentSummary,
-    data.summary
+    data.summary,
   );
   const recentLedger = firstArray(
     data.transactions,
     data.recentLedger,
     data.ledger,
-    data.recentTransactions
+    data.recentTransactions,
   )
     .map(normalizeLedgerEntry)
     .filter((entry): entry is RestaurantPaymentLedgerEntry => Boolean(entry));
@@ -225,16 +281,17 @@ export const normalizeRestaurantPaymentManagement = (
       paymentsMethods.activePlatformMethods,
       data.activePlatformPaymentMethods,
       data.platformPaymentMethods,
-      data.activePaymentMethods
-    )
+      data.activePaymentMethods,
+    ),
   );
   const allowedPaymentMethods = normalizePaymentMethods(
     methodSettings.allowedPaymentMethods ??
       methodSettings.allowedMethods ??
-      methodSettings.methods
+      methodSettings.methods,
   );
   const walletEnabled =
-    getBoolean(methodSettings.walletEnabled) || allowedPaymentMethods.includes("WALLET");
+    getBoolean(methodSettings.walletEnabled) ||
+    allowedPaymentMethods.includes("WALLET");
 
   return {
     restaurantId: getString(data.restaurantId ?? restaurant.id),
@@ -246,15 +303,19 @@ export const normalizeRestaurantPaymentManagement = (
         payments.estimatedAvailableBalance ??
         data.estimatedAvailableBalance ??
         data.availableBalance ??
-        getRecord(data.balance).estimatedAvailableBalance
+        getRecord(data.balance).estimatedAvailableBalance,
     ),
     currency: getString(
-      payments.currency ?? data.currency ?? getRecord(data.balance).currency
+      payments.currency ?? data.currency ?? getRecord(data.balance).currency,
     ),
     paymentSummary,
     walletExposure,
     stripeAccount,
-    lastTransfer: firstRecord(data.lastTransfer, payouts.lastTransfer, stripeAccount.lastTransfer),
+    lastTransfer: firstRecord(
+      data.lastTransfer,
+      payouts.lastTransfer,
+      stripeAccount.lastTransfer,
+    ),
     recentLedger,
     paymentMethodsNote: getString(methodSettings.note, "") ?? "",
   };
@@ -262,7 +323,7 @@ export const normalizeRestaurantPaymentManagement = (
 
 export const getRestaurantPaymentManagement = async (restaurantId: string) => {
   const response = await httpClient.get<unknown>(
-    `/payments/restaurants/${restaurantId}/management`
+    `/payments/restaurants/${restaurantId}/management`,
   );
 
   return normalizeRestaurantPaymentManagement(response);
@@ -270,7 +331,7 @@ export const getRestaurantPaymentManagement = async (restaurantId: string) => {
 
 export const getRestaurantWallet = async (restaurantId: string) => {
   const response = await httpClient.get<unknown>(
-    `/payments/restaurants/${restaurantId}/wallet`
+    `/payments/restaurants/${restaurantId}/wallet`,
   );
 
   return normalizeWallet(response);
@@ -278,7 +339,7 @@ export const getRestaurantWallet = async (restaurantId: string) => {
 
 export const getRestaurantPayoutRequests = async (restaurantId: string) => {
   const response = await httpClient.get<unknown>(
-    `/payments/restaurants/${restaurantId}/payout-requests`
+    `/payments/restaurants/${restaurantId}/payout-requests`,
   );
 
   return normalizePayoutRequests(response);
@@ -286,9 +347,59 @@ export const getRestaurantPayoutRequests = async (restaurantId: string) => {
 
 export const createRestaurantPayoutRequest = (
   restaurantId: string,
-  payload: CreateRestaurantPayoutRequestPayload
+  payload: CreateRestaurantPayoutRequestPayload,
 ) =>
   httpClient.post<unknown, CreateRestaurantPayoutRequestPayload>(
     `/payments/restaurants/${restaurantId}/payout-requests`,
-    payload
+    payload,
+  );
+
+export const getRestaurantPayoutProviderRequests = async (
+  restaurantId: string,
+): Promise<RestaurantPayoutProviderSettings> => {
+  const response = await httpClient.get<unknown>(
+    `/payments/restaurants/${restaurantId}/payout-provider-requests`,
+  );
+  const data = getRecord(unwrapData(response));
+  const requests = Array.isArray(data.requests) ? data.requests : [];
+  const configurations = Array.isArray(data.configurations)
+    ? data.configurations
+    : [];
+
+  return {
+    requests: requests.filter(isRecord).map((request) => ({
+      provider: getString(
+        request.provider,
+        "STRIPE",
+      ) as RestaurantPayoutProvider,
+      status: getString(
+        request.status,
+        "REQUESTED",
+      ) as RestaurantPayoutProviderRequest["status"],
+      publicDetails: getRecord(request.publicDetails),
+      credentialsSubmitted: getBoolean(request.credentialsSubmitted),
+      note: getString(request.note),
+      requestedAt: getString(request.requestedAt),
+      rejectionReason: getString(request.rejectionReason),
+    })),
+    configurations: configurations.filter(isRecord).map((configuration) => ({
+      provider: getString(
+        configuration.provider,
+        "STRIPE",
+      ) as RestaurantPayoutProvider,
+      enabled: getBoolean(configuration.enabled),
+      publicDetails: getRecord(configuration.publicDetails),
+      credentialsConfigured: getBoolean(configuration.credentialsConfigured),
+      approvedAt: getString(configuration.approvedAt),
+    })),
+  };
+};
+
+export const createRestaurantPayoutProviderRequest = (
+  restaurantId: string,
+  payload: CreateRestaurantPayoutProviderRequestPayload,
+) =>
+  httpClient.post<unknown, CreateRestaurantPayoutProviderRequestPayload>(
+    `/payments/restaurants/${restaurantId}/payout-provider-requests`,
+    payload,
   );
