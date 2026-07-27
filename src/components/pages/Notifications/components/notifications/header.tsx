@@ -5,13 +5,13 @@ import Header from "@/components/common/PageHeader";
 import { useMarkAllNotificationsSeen } from "@/hooks/useNotifications";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import type { AdminNotification } from "@/types/notifications";
+import type { GetNotificationsParams } from "@/services/notifications";
 
 interface Props {
   title: string;
   description: string;
   hasUnread: boolean;
-  notifications: AdminNotification[];
+  scope: GetNotificationsParams;
   refetch: () => void;
 }
 
@@ -19,7 +19,7 @@ export default function NotificationsHeader({
   title,
   description,
   hasUnread,
-  notifications,
+  scope,
   refetch,
 }: Props) {
   const common = useTranslations("common");
@@ -28,12 +28,10 @@ export default function NotificationsHeader({
   const loading = markAllSeenMutation.isPending;
 
   const handleMarkAllRead = async () => {
-    const hasPending = notifications.some((n) => n.status === "PENDING");
-
-    if (!hasPending) return;
+    if (!hasUnread) return;
 
     try {
-      await markAllSeenMutation.mutateAsync();
+      await markAllSeenMutation.mutateAsync(scope);
 
       toast.success(t("allMarkedRead"));
       refetch();

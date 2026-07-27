@@ -40,27 +40,48 @@ export const useUpdateNotificationSettings = () => {
     onError: (err: any) => {
       toast.error(
         err?.response?.data?.message ||
-          "Failed to update notification settings"
+          "Failed to update notification settings",
       );
     },
   });
 };
 
-import { getNotifications, markAllNotificationsSeen, type GetNotificationsParams } from "@/services/notifications";
+import {
+  getNotifications,
+  getNotificationSummary,
+  markAllNotificationsSeen,
+  type GetNotificationsParams,
+} from "@/services/notifications";
 
 export const notificationQueryKeys = {
-  list: (params?: GetNotificationsParams) => [
-    "notifications",
-    params?.restaurantId,
-    params?.branchId,
-    params?.status,
-  ] as const,
+  list: (params?: GetNotificationsParams) =>
+    [
+      "notifications",
+      params?.restaurantId,
+      params?.branchId,
+      params?.status,
+    ] as const,
+  summary: (params?: GetNotificationsParams) =>
+    [
+      "notifications",
+      "summary",
+      params?.restaurantId,
+      params?.branchId,
+    ] as const,
 };
 
 export const useGetNotifications = (params?: GetNotificationsParams) => {
   return useQuery({
     queryKey: notificationQueryKeys.list(params),
     queryFn: () => getNotifications(params as GetNotificationsParams),
+    enabled: Boolean(params?.restaurantId),
+  });
+};
+
+export const useGetNotificationSummary = (params?: GetNotificationsParams) => {
+  return useQuery({
+    queryKey: notificationQueryKeys.summary(params),
+    queryFn: () => getNotificationSummary(params as GetNotificationsParams),
     enabled: Boolean(params?.restaurantId),
   });
 };

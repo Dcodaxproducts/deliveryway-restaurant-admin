@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
 import { toast } from "sonner";
 
@@ -21,8 +22,35 @@ const MAX_SEEN_ORDER_IDS = 100;
 export const getOrderTrackingSocketUrl = () =>
   new URL("/orders-tracking", API_BASE_URL).toString().replace(/\/$/, "");
 
+const playNewOrderSound = () => {
+  const AudioContextClass =
+    window.AudioContext ??
+    (
+      window as typeof window & {
+        webkitAudioContext?: typeof AudioContext;
+      }
+    ).webkitAudioContext;
+
+  if (!AudioContextClass) return;
+
+  const context = new AudioContextClass();
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.frequency.setValueAtTime(880, context.currentTime);
+  gain.gain.setValueAtTime(0.12, context.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.45);
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.start();
+  oscillator.stop(context.currentTime + 0.45);
+  oscillator.addEventListener("ended", () => {
+    void context.close();
+  });
+};
+
 export function useRealtimeOrderNotifications() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const orders = useTranslations("orders");
   const seenOrderIds = useRef(new Set<string>());
   const { token, restaurantId, branchId, isBranchAdmin, isRestaurantAdmin } =
@@ -73,11 +101,44 @@ export function useRealtimeOrderNotifications() {
       void queryClient.invalidateQueries({ queryKey: ["orders"] });
       void queryClient.invalidateQueries({ queryKey: ["notifications"] });
 
+      try {
+        playNewOrderSound();
+      } catch {
+        // Audio alerts are best-effort and can be blocked by browser policy.
+      }
+
+      if (
+        typeof Notification !== "undefined" &&
+        Notification.permission === "granted"
+      ) {
+        const desktopNotification = new Notification(
+          orders("newOrderReceived", {
+            order: payload.id.slice(-8),
+          }),
+          {
+            body: orders("ordersUpdatedRealtime"),
+            tag: `order-${payload.id}`,
+          },
+        );
+        desktopNotification.onclick = () => {
+          window.focus();
+          router.push(`/orders/details/${payload.id}`);
+          desktopNotification.close();
+        };
+      }
+
       toast.success(
         orders("newOrderReceived", {
           order: payload.id.slice(-8),
         }),
-        { description: orders("ordersUpdatedRealtime") },
+        {
+          description: orders("ordersUpdatedRealtime"),
+          duration: Number.POSITIVE_INFINITY,
+          action: {
+            label: orders("viewOrderDetails"),
+            onClick: () => router.push(`/orders/details/${payload.id}`),
+          },
+        },
       );
     });
 
@@ -91,6 +152,7 @@ export function useRealtimeOrderNotifications() {
     orders,
     queryClient,
     restaurantId,
+    router,
     token,
   ]);
 }

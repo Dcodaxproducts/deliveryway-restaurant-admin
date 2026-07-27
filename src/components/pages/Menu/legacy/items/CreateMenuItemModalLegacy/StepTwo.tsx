@@ -1,20 +1,9 @@
 "use client";
 
-import {
-  forwardRef,
-  useImperativeHandle,
-  useMemo,
-  useState,
-} from "react";
+import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { z } from "zod";
 import { parseSchema } from "@/lib/zod-errors";
-import {
-  Info,
-  ListChecks,
-  Loader2,
-  PackageCheck,
-  Tags,
-} from "lucide-react";
+import { Info, ListChecks, Loader2, PackageCheck, Tags } from "lucide-react";
 import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
@@ -33,6 +22,7 @@ import {
   sanitizeNonNegativeNumber,
 } from "@/lib/number-input";
 import { useTranslations } from "next-intl";
+import { resolveMenuRestaurantId } from "@/lib/menu-restaurant-scope";
 
 type Field = keyof z.infer<typeof schema>;
 
@@ -100,7 +90,7 @@ const normalizeLabelOptions = (response: any): OptionItem[] => {
 
 const normalizeTemplateOptions = (
   response: any,
-  templateType: "allergens" | "additives"
+  templateType: "allergens" | "additives",
 ): OptionItem[] => {
   const candidates = [
     response?.data?.[templateType],
@@ -123,13 +113,7 @@ const normalizeTemplateOptions = (
 };
 
 const createLocalFetchOptions =
-  ({
-    items,
-    keys,
-  }: {
-    items: OptionItem[];
-    keys: Array<keyof OptionItem>;
-  }) =>
+  ({ items, keys }: { items: OptionItem[]; keys: Array<keyof OptionItem> }) =>
   async ({ search, page }: { search: string; page: number }) => {
     const keyword = search.trim().toLowerCase();
 
@@ -138,8 +122,8 @@ const createLocalFetchOptions =
           keys.some((key) =>
             String(item?.[key] || "")
               .toLowerCase()
-              .includes(keyword)
-          )
+              .includes(keyword),
+          ),
         )
       : items;
 
@@ -168,7 +152,7 @@ const createSelectedOptions = ({
 }) => {
   return selectedValues.map((selectedValue) => {
     const existing = options.find(
-      (option) => String(option?.[valueKey]) === String(selectedValue)
+      (option) => String(option?.[valueKey]) === String(selectedValue),
     );
 
     if (existing) return existing;
@@ -249,11 +233,11 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
   const commonT = useTranslations("common");
   const { restaurantId: authRestaurantId, user } = useAuth();
 
-  const restaurantId =
-    authRestaurantId ??
-    user?.restaurantId ??
-    user?.tenantId ??
-    form?.restaurantId;
+  const restaurantId = resolveMenuRestaurantId(
+    authRestaurantId,
+    user?.restaurantId,
+    form?.restaurantId,
+  );
 
   const [errors, setErrors] = useState<any>({});
   const [imageUploading, setImageUploading] = useState(false);
@@ -264,7 +248,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
         ? {
             restaurantId,
           }
-        : undefined
+        : undefined,
     );
 
   const { data: allergenTemplatesResponse, isLoading: allergensLoading } =
@@ -309,12 +293,14 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
   }, [allergenOptions]);
 
   const selectedAdditiveCodeValues = useMemo(() => {
-    return selectedAllergenCodeValues.filter((code) => additiveCodeSet.has(code));
+    return selectedAllergenCodeValues.filter((code) =>
+      additiveCodeSet.has(code),
+    );
   }, [selectedAllergenCodeValues, additiveCodeSet]);
 
   const selectedVisibleAllergenCodeValues = useMemo(() => {
     return selectedAllergenCodeValues.filter(
-      (code) => allergenCodeSet.has(code) || !additiveCodeSet.has(code)
+      (code) => allergenCodeSet.has(code) || !additiveCodeSet.has(code),
     );
   }, [selectedAllergenCodeValues, allergenCodeSet, additiveCodeSet]);
 
@@ -369,7 +355,10 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
     nextCodes: string[];
     preserveCodes: string[];
   }) => {
-    update("allergenCodes", Array.from(new Set([...nextCodes, ...preserveCodes])));
+    update(
+      "allergenCodes",
+      Array.from(new Set([...nextCodes, ...preserveCodes])),
+    );
   };
 
   const handleImagePreviewChange = (previewUrl: string) => {
@@ -667,13 +656,13 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
                 onChange={(event) =>
                   update(
                     "minSelect",
-                    sanitizeNonNegativeNumber(event.target.value)
+                    sanitizeNonNegativeNumber(event.target.value),
                   )
                 }
                 onBlur={(event) =>
                   validateField(
                     "minSelect",
-                    sanitizeNonNegativeNumber(event.target.value)
+                    sanitizeNonNegativeNumber(event.target.value),
                   )
                 }
                 placeholder="0"
@@ -723,13 +712,13 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
                 onChange={(event) =>
                   update(
                     "maxSelect",
-                    sanitizeNonNegativeNumber(event.target.value)
+                    sanitizeNonNegativeNumber(event.target.value),
                   )
                 }
                 onBlur={(event) =>
                   validateField(
                     "maxSelect",
-                    sanitizeNonNegativeNumber(event.target.value)
+                    sanitizeNonNegativeNumber(event.target.value),
                   )
                 }
                 placeholder={t("noMaximum")}
@@ -795,13 +784,13 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
                 onChange={(event) =>
                   update(
                     "minQuantity",
-                    sanitizeNonNegativeNumber(event.target.value)
+                    sanitizeNonNegativeNumber(event.target.value),
                   )
                 }
                 onBlur={(event) =>
                   validateField(
                     "minQuantity",
-                    sanitizeNonNegativeNumber(event.target.value)
+                    sanitizeNonNegativeNumber(event.target.value),
                   )
                 }
                 placeholder="1"
@@ -831,13 +820,13 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
                 onChange={(event) =>
                   update(
                     "maxQuantity",
-                    sanitizeNonNegativeNumber(event.target.value)
+                    sanitizeNonNegativeNumber(event.target.value),
                   )
                 }
                 onBlur={(event) =>
                   validateField(
                     "maxQuantity",
-                    sanitizeNonNegativeNumber(event.target.value)
+                    sanitizeNonNegativeNumber(event.target.value),
                   )
                 }
                 placeholder="5"
@@ -892,7 +881,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
                   "labels",
                   selected
                     .map((item: any) => String(item?.value || "").trim())
-                    .filter(Boolean)
+                    .filter(Boolean),
                 )
               }
               placeholder={t("selectItemLabels")}
@@ -902,9 +891,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
               maxSelectedLabelCount={3}
             />
 
-            <p className="text-xs leading-5 text-gray-400">
-              {t("labelsHelp")}
-            </p>
+            <p className="text-xs leading-5 text-gray-400">{t("labelsHelp")}</p>
           </div>
 
           <div className="space-y-2">
@@ -993,13 +980,13 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
             onChange={(e) =>
               update(
                 "prepTimeMinutes",
-                sanitizeNonNegativeNumber(e.target.value)
+                sanitizeNonNegativeNumber(e.target.value),
               )
             }
             onBlur={(e) =>
               validateField(
                 "prepTimeMinutes",
-                sanitizeNonNegativeNumber(e.target.value)
+                sanitizeNonNegativeNumber(e.target.value),
               )
             }
             placeholder={t("preparationTimePlaceholder")}
@@ -1026,7 +1013,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
             onBlur={(e) =>
               validateField(
                 "sortOrder",
-                sanitizeNonNegativeNumber(e.target.value)
+                sanitizeNonNegativeNumber(e.target.value),
               )
             }
             placeholder="0"
@@ -1039,8 +1026,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
         </div>
 
         <div className="space-y-2">
-          <Label>{t("depositAmount")}
-          </Label>
+          <Label>{t("depositAmount")}</Label>
 
           <Input
             type="number"
@@ -1054,7 +1040,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
             onBlur={(e) =>
               validateField(
                 "depositAmount",
-                sanitizeNonNegativeNumber(e.target.value)
+                sanitizeNonNegativeNumber(e.target.value),
               )
             }
             placeholder="0"
@@ -1144,9 +1130,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
             className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
           />
 
-          <p className="text-xs text-gray-400">
-            {t("dietaryFlagsHelp")}
-          </p>
+          <p className="text-xs text-gray-400">{t("dietaryFlagsHelp")}</p>
         </div>
 
         {/* Removed for now as requested.
@@ -1170,7 +1154,9 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
       <section className="rounded-[18px] border border-gray-100 bg-[#FAFAFA] p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-gray-900">{t("itemStatus")}</p>
+            <p className="text-sm font-semibold text-gray-900">
+              {t("itemStatus")}
+            </p>
             <p className="mt-1 text-sm text-gray-500">
               {t("itemStatusDescription")}
             </p>
@@ -1187,7 +1173,6 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
           </label>
         </div>
       </section>
-
     </div>
   );
 });

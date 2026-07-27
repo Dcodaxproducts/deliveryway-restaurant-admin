@@ -35,7 +35,7 @@ export function Providers({ children }: ProvidersProps) {
             </BrandingProvider>
           </AuthProvider>
         </I18nProvider>
-        <Toaster position="top-right" richColors />
+        <Toaster position="top-right" richColors closeButton />
       </ThemeProvider>
     </QueryProvider>
   );

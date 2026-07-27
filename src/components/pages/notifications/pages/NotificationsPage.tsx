@@ -9,19 +9,22 @@ import type { AdminNotification } from "@/types/notifications";
 
 const NotificationsPage = () => {
   const { restaurantId, branchId, isBranchAdmin } = useAuth();
+  const scope = restaurantId
+    ? {
+        restaurantId,
+        ...(isBranchAdmin && branchId ? { branchId } : {}),
+      }
+    : undefined;
 
-  const { data: notificationsResponse, isLoading: loading, refetch } = useGetNotifications(
-    restaurantId
-      ? {
-          restaurantId,
-          ...(isBranchAdmin && branchId ? { branchId } : {}),
-        }
-      : undefined
-  );
+  const {
+    data: notificationsResponse,
+    isLoading: loading,
+    refetch,
+  } = useGetNotifications(scope);
 
   const notifications = notificationsResponse?.data || [];
   const hasUnread = notifications.some(
-    (notification: AdminNotification) => !notification.seen
+    (notification: AdminNotification) => !notification.seen,
   );
 
   return (
@@ -34,14 +37,11 @@ const NotificationsPage = () => {
             : "Manage your restaurant alerts, updates, and customer activity."
         }
         hasUnread={hasUnread}
-        notifications={notifications}
+        scope={scope as NonNullable<typeof scope>}
         refetch={() => refetch()}
       />
 
-      <Notifications
-        notifications={notifications}
-        loading={loading}
-      />
+      <Notifications notifications={notifications} loading={loading} />
     </Container>
   );
 };

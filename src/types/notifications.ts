@@ -24,3 +24,14 @@ export type AdminNotificationsResponse = {
   meta?: unknown;
   message?: string;
 };
+
+export type AdminNotificationSummary = {
+  total: number;
+  unseen: number;
+  seen: number;
+};
+
+export type AdminNotificationSummaryResponse = {
+  data: AdminNotificationSummary;
+  message?: string;
+};

@@ -2,6 +2,7 @@ import { api } from "@/lib/axios";
 import type {
   AdminNotification,
   AdminNotificationMetadata,
+  AdminNotificationSummaryResponse,
   AdminNotificationsResponse,
 } from "@/types/notifications";
 
@@ -30,7 +31,9 @@ const getBoolean = (source: Record<string, unknown>, key: string) => {
   return typeof value === "boolean" ? value : undefined;
 };
 
-const normalizeMetadata = (value: unknown): AdminNotificationMetadata | null => {
+const normalizeMetadata = (
+  value: unknown,
+): AdminNotificationMetadata | null => {
   if (!isRecord(value)) return null;
 
   return {
@@ -56,14 +59,14 @@ const normalizeNotification = (value: unknown): AdminNotification | null => {
     message: getOptionalString(value, "message"),
     description: getOptionalString(value, "description"),
     status: getString(value, "status") || undefined,
-    seen: getBoolean(value, "seen"),
+    seen: getBoolean(value, "seen") ?? getBoolean(value, "isSeen"),
     createdAt: getOptionalString(value, "createdAt"),
     metadata: normalizeMetadata(value.metadata),
   };
 };
 
 export const normalizeNotificationsResponse = (
-  payload: unknown
+  payload: unknown,
 ): AdminNotificationsResponse => {
   const source = isRecord(payload) ? payload : {};
   const rawData = Array.isArray(source.data) ? source.data : [];
@@ -80,13 +83,24 @@ export const normalizeNotificationsResponse = (
 };
 
 export const getNotifications = async (
-  params: GetNotificationsParams
+  params: GetNotificationsParams,
 ): Promise<AdminNotificationsResponse> => {
   const { data } = await api.get("/notifications", { params });
   return normalizeNotificationsResponse(data);
 };
 
-export const markAllNotificationsSeen = async () => {
-  const { data } = await api.post("/notifications/seen-all");
+export const getNotificationSummary = async (
+  params: GetNotificationsParams,
+): Promise<AdminNotificationSummaryResponse> => {
+  const { data } = await api.get("/notifications/summary", { params });
+  return data;
+};
+
+export const markAllNotificationsSeen = async (
+  params: GetNotificationsParams,
+) => {
+  const { data } = await api.post("/notifications/seen-all", undefined, {
+    params,
+  });
   return data;
 };

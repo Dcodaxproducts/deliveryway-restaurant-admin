@@ -24,10 +24,7 @@ export const allergenAdditiveTemplateKeys = {
   all: ["allergen-additive-templates"] as const,
 
   list: (params?: GetAllergenAdditiveTemplatesParams) =>
-    [
-      "allergen-additive-templates",
-      params?.restaurantId || "global",
-    ] as const,
+    ["allergen-additive-templates", params?.restaurantId || "global"] as const,
 };
 
 /**
@@ -37,11 +34,12 @@ export const allergenAdditiveTemplateKeys = {
  */
 
 export const useGetAllergenAdditiveTemplates = (
-  params?: GetAllergenAdditiveTemplatesParams
+  params?: GetAllergenAdditiveTemplatesParams,
 ) => {
   return useQuery({
     queryKey: allergenAdditiveTemplateKeys.list(params),
     queryFn: () => getAllergenAdditiveTemplates(params),
+    enabled: Boolean(params?.restaurantId),
   });
 };
 
@@ -79,7 +77,7 @@ export const useUpdateAllergenAdditiveTemplates = () => {
     onError: (error: any) => {
       toast.error(
         error?.response?.data?.message ||
-          "Failed to update allergen and additive templates"
+          "Failed to update allergen and additive templates",
       );
     },
   });
@@ -107,9 +105,7 @@ export const useCreateAllergenAdditiveTemplate = () => {
     },
 
     onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to add template"
-      );
+      toast.error(error?.response?.data?.message || "Failed to add template");
     },
   });
 };
@@ -137,7 +133,7 @@ export const useUpdateSingleAllergenAdditiveTemplate = () => {
 
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || "Failed to update template"
+        error?.response?.data?.message || "Failed to update template",
       );
     },
   });
@@ -166,7 +162,7 @@ export const useDeleteAllergenAdditiveTemplate = () => {
 
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || "Failed to delete template"
+        error?.response?.data?.message || "Failed to delete template",
       );
     },
   });
