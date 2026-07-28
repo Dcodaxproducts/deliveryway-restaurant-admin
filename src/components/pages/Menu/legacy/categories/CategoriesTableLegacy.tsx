@@ -44,12 +44,9 @@ const mergeUniqueById = (prev: any[], next: any[]) => {
 export default function CategoriesTable({ refetchKey }: any) {
   const t = useTranslations("menu.categories");
   const commonT = useTranslations("common");
-  const { user, restaurantId: authRestaurantId, branchId, isBranchAdmin } = useAuth();
+  const { restaurantId, branchId, isBranchAdmin } = useAuth();
 const [statusFilter, setStatusFilter] = useState("all");
 const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
-
-  const restaurantId =
-    authRestaurantId ?? user?.restaurantId ?? user?.tenantId ?? "";
 
   const router = useRouter();
 

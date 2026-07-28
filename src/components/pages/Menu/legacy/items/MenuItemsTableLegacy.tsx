@@ -93,14 +93,10 @@ export default function MenuItemsTable({ refetchKey }: any) {
   const t = useTranslations("menu.itemsTable");
   const commonT = useTranslations("common");
   const {
-    user,
-    restaurantId: authRestaurantId,
+    restaurantId,
     branchId,
     isBranchAdmin,
   } = useAuth();
-
-  const restaurantId =
-    authRestaurantId ?? user?.restaurantId ?? user?.tenantId ?? "";
 
   const reorderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const querySignatureRef = useRef<string>("");

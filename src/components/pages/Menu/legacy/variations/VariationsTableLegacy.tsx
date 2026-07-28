@@ -80,10 +80,7 @@ const formatCurrency = (value: any) => {
 export default function VariationsTable() {
   const t = useTranslations("menu.variationsTable");
   const commonT = useTranslations("common");
-  const { user, restaurantId: authRestaurantId } = useAuth();
-
-  const restaurantId =
-    authRestaurantId ?? user?.restaurantId ?? user?.tenantId ?? "";
+  const { restaurantId } = useAuth();
 
   const [page, setPage] = useState(1);
   const [limit] = useState(PAGE_LIMIT);

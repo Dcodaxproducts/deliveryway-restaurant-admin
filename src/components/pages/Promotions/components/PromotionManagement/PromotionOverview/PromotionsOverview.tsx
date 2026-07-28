@@ -57,10 +57,7 @@ const getListFromResponse = (response: any) => {
 
 export default function PromotionsOverview({ onViewAll }: PromotionsOverviewProps) {
   const t = useTranslations("promotions");
-  const { user } = useAuth();
-
-  const restaurantId = user?.restaurantId ?? user?.tenantId ?? null;
-  const branchId = user?.branchId ?? null;
+  const { restaurantId, branchId } = useAuth();
   const { formatMoney, resolveCurrency } = useCurrency(restaurantId);
 
   const {

@@ -114,10 +114,7 @@ const createValueFromLabel = (label: string) => {
 export default function LabelsTable() {
   const t = useTranslations("menu.labelsTable");
   const commonT = useTranslations("common");
-  const { user, restaurantId: authRestaurantId } = useAuth();
-
-  const restaurantId =
-    authRestaurantId ?? user?.restaurantId ?? user?.tenantId ?? "";
+  const { restaurantId } = useAuth();
 
   const [page, setPage] = useState(1);
 

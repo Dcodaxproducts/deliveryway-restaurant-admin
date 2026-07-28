@@ -56,11 +56,11 @@ const extractMeta = (response: any) => {
 
 export default function MenusPage() {
   const t = useTranslations("menu.overview");
-  const { user, restaurantId: authRestaurantId, branchId, isBranchAdmin, loading: authLoading } =
-    useAuth();
-
-  const restaurantId =
-    authRestaurantId || user?.restaurantId || (user as any)?.tenantId || "";
+  const {
+    restaurantId,
+    isBranchAdmin,
+    loading: authLoading,
+  } = useAuth();
 
   const [filters, setFilters] = useState({ search: "" });
   const [debouncedSearch, setDebouncedSearch] = useState("");
