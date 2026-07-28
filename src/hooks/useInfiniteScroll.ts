@@ -25,22 +25,52 @@ export function useInfiniteScroll<T extends HTMLElement>({
 
     if (!target || !enabled) return;
 
+    let frameId: number | null = null;
+    let hasTriggered = false;
+    const margin = Number.parseFloat(rootMargin) || 0;
+    const loadMore = () => {
+      if (hasTriggered) return;
+
+      hasTriggered = true;
+      callbackRef.current();
+    };
+    const checkPosition = () => {
+      if (frameId !== null) return;
+
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+        const bounds = target.getBoundingClientRect();
+
+        if (bounds.top <= window.innerHeight + margin) {
+          loadMore();
+        }
+      });
+    };
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) {
-          callbackRef.current();
+          loadMore();
         }
       },
       {
         root: null,
         rootMargin,
         threshold,
-      }
+      },
     );
 
     observer.observe(target);
+    window.addEventListener("scroll", checkPosition, true);
+    window.addEventListener("resize", checkPosition);
+    checkPosition();
 
     return () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+      window.removeEventListener("scroll", checkPosition, true);
+      window.removeEventListener("resize", checkPosition);
       observer.unobserve(target);
       observer.disconnect();
     };

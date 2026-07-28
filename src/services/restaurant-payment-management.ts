@@ -68,6 +68,12 @@ export type CreateRestaurantPayoutRequestPayload = {
   note?: string;
 };
 
+export type UpdateRestaurantPaymentMethodsPayload = {
+  allowedPaymentMethods: PaymentMethodCode[];
+  walletEnabled: boolean;
+  note?: string;
+};
+
 export type RestaurantPayoutProvider = "STRIPE" | "PAYPAL";
 
 export type RestaurantPayoutProviderRequest = {
@@ -328,6 +334,15 @@ export const getRestaurantPaymentManagement = async (restaurantId: string) => {
 
   return normalizeRestaurantPaymentManagement(response);
 };
+
+export const updateRestaurantPaymentMethods = (
+  restaurantId: string,
+  payload: UpdateRestaurantPaymentMethodsPayload,
+) =>
+  httpClient.patch<unknown, UpdateRestaurantPaymentMethodsPayload>(
+    `/payments/restaurants/${restaurantId}/methods`,
+    payload,
+  );
 
 export const getRestaurantWallet = async (restaurantId: string) => {
   const response = await httpClient.get<unknown>(

@@ -24,9 +24,15 @@ import {
   useCreateRestaurantPayoutProviderRequest,
   useRestaurantPayoutRequests,
   useRestaurantPayoutProviderRequests,
+  useRestaurantPaymentManagement,
   useRestaurantWallet,
+  useUpdateRestaurantPaymentMethods,
 } from "@/hooks/useRestaurantPaymentManagement";
 import { getApiErrorMessage } from "@/lib/errors";
+import {
+  PAYMENT_METHOD_LABELS,
+  type PaymentMethodCode,
+} from "@/types/payment-methods";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
@@ -129,6 +135,9 @@ export default function SettingsForm({
   if (variant === "payments") {
     return (
       <div className="space-y-[24px] rounded-[14px] bg-white p-4 lg:p-[30px]">
+        {isRestaurantAdmin ? (
+          <RestaurantPaymentMethodsSection restaurantId={restaurantId} />
+        ) : null}
         {isRestaurantAdmin || isBranchAdmin ? (
           <RestaurantWalletPayoutSection restaurantId={restaurantId} />
         ) : (
@@ -365,6 +374,141 @@ export default function SettingsForm({
         </section>
       </div>
     </form>
+  );
+}
+
+function RestaurantPaymentMethodsSection({
+  restaurantId,
+}: {
+  restaurantId?: string | null;
+}) {
+  const managementQuery = useRestaurantPaymentManagement(restaurantId);
+  const updateMethods = useUpdateRestaurantPaymentMethods();
+  const [selectedMethods, setSelectedMethods] = useState<PaymentMethodCode[]>(
+    [],
+  );
+  const [note, setNote] = useState("");
+
+  useEffect(() => {
+    if (!managementQuery.data) return;
+
+    setSelectedMethods(managementQuery.data.allowedPaymentMethods);
+    setNote(managementQuery.data.paymentMethodsNote);
+  }, [managementQuery.data]);
+
+  const activeMethods =
+    managementQuery.data?.activePlatformPaymentMethods ?? [];
+  const toggleMethod = (method: PaymentMethodCode) => {
+    setSelectedMethods((current) =>
+      current.includes(method)
+        ? current.filter((entry) => entry !== method)
+        : [...current, method],
+    );
+  };
+  const canSave =
+    Boolean(restaurantId) &&
+    selectedMethods.length > 0 &&
+    !updateMethods.isPending;
+
+  return (
+    <section className="space-y-[18px] rounded-[14px] border border-[#E8E8E8] p-4">
+      <div className="flex items-start gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <CreditCard size={19} />
+        </span>
+        <div>
+          <h2 className="text-lg font-semibold text-dark">
+            Accepted payment methods
+          </h2>
+          <p className="mt-1 text-sm text-gray">
+            Choose which platform-enabled payment methods customers can use at
+            this restaurant.
+          </p>
+        </div>
+      </div>
+
+      {managementQuery.isLoading ? (
+        <div className="flex min-h-24 items-center justify-center text-gray">
+          <Loader2 className="size-5 animate-spin" />
+        </div>
+      ) : null}
+
+      {managementQuery.isError ? (
+        <p className="rounded-[10px] bg-red-50 px-3 py-2 text-sm text-red-600">
+          {getApiErrorMessage(
+            managementQuery.error,
+            "Unable to load payment methods.",
+          )}
+        </p>
+      ) : null}
+
+      {!managementQuery.isLoading && !managementQuery.isError ? (
+        activeMethods.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {activeMethods.map((method) => (
+              <label
+                key={method}
+                className="flex cursor-pointer items-center gap-3 rounded-[10px] border border-[#E8E8E8] bg-gray-50 px-4 py-3 text-sm font-medium text-dark"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedMethods.includes(method)}
+                  onChange={() => toggleMethod(method)}
+                  className="size-4 accent-primary"
+                />
+                {PAYMENT_METHOD_LABELS[method]}
+              </label>
+            ))}
+          </div>
+        ) : (
+          <p className="rounded-[10px] bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            Super Admin has not enabled any platform payment methods.
+          </p>
+        )
+      ) : null}
+
+      <div className={formGroupClassName}>
+        <Label htmlFor="payment-method-note">Customer payment note</Label>
+        <Textarea
+          id="payment-method-note"
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          placeholder="Optional checkout instructions"
+          className="min-h-[76px] border-[#BBBBBB] focus:border-primary"
+        />
+      </div>
+
+      {selectedMethods.length === 0 && activeMethods.length > 0 ? (
+        <p className="text-sm font-medium text-red-600">
+          Select at least one payment method.
+        </p>
+      ) : null}
+
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          onClick={() => {
+            if (!restaurantId || !canSave) return;
+
+            updateMethods.mutate({
+              restaurantId,
+              payload: {
+                allowedPaymentMethods: selectedMethods,
+                walletEnabled: selectedMethods.includes("WALLET"),
+                note: note.trim(),
+              },
+            });
+          }}
+          disabled={!canSave}
+          className="h-[44px] rounded-[10px]"
+        >
+          {updateMethods.isPending ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : null}
+          Save Payment Methods
+        </Button>
+      </div>
+    </section>
   );
 }
 

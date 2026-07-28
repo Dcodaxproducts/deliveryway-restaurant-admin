@@ -10,6 +10,7 @@ type Props = {
   shown: number;
   total?: number;
   label?: string;
+  onLoadMore?: () => void;
 };
 
 export default function InfiniteScrollFooter({
@@ -19,6 +20,7 @@ export default function InfiniteScrollFooter({
   shown,
   total,
   label = "items",
+  onLoadMore,
 }: Props) {
   return (
     <div
@@ -31,9 +33,13 @@ export default function InfiniteScrollFooter({
           Loading more {label}...
         </div>
       ) : hasMore ? (
-        <p className="text-sm text-gray-400">
-          Scroll down to load more {label}
-        </p>
+        <button
+          type="button"
+          onClick={onLoadMore}
+          className="rounded-lg px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
+        >
+          Scroll down or click to load more {label}
+        </button>
       ) : shown > 0 ? (
         <p className="text-sm text-gray-400">
           Showing {shown} of {total || shown} {label}
