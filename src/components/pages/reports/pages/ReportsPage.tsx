@@ -10,11 +10,13 @@ import Header from "@/components/common/PageHeader";
 import RevenueAnalytics from "@/components/pages/Dashboard/components/dashboard/revenue-trend-section";
 import TabButton from "@/components/ui/TabButton";
 import OrdersGraph from "@/components/pages/Reports/components/graphs/orders-graph";
+import { GeneratedInvoiceHistoryTable } from "@/components/pages/Orders/components/orders/GeneratedInvoiceHistoryTable";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import {
   useGetFinancialReport,
+  useGetGeneratedInvoices,
   useGetOrdersReport,
 } from "@/hooks/useReports";
 import { downloadRestaurantDashboardReportPdf } from "@/components/pages/Reports/components/reports/restaurant-report-pdf";
@@ -48,6 +50,15 @@ export default function Orders() {
     isLoading: ordersLoading,
     isFetching: ordersFetching,
   } = useGetOrdersReport(scopedReportParams);
+  const generatedInvoicesQuery = useGetGeneratedInvoices(
+    {
+      restaurantId: restaurantId || undefined,
+      branchId: isBranchAdmin ? branchId || undefined : undefined,
+    },
+    {
+      enabled: activeTab === "invoice-history" && Boolean(restaurantId),
+    },
+  );
 
   const financialData = financialReportResponse?.data;
   const ordersData = ordersReportResponse?.data;
@@ -70,13 +81,19 @@ export default function Orders() {
 
   const activeLoading =
     authLoading ||
-    (activeTab === "financial"
-      ? financialLoading || financialFetching
-      : ordersLoading || ordersFetching);
+    (activeTab === "invoice-history"
+      ? generatedInvoicesQuery.isLoading || generatedInvoicesQuery.isFetching
+      : activeTab === "financial"
+        ? financialLoading || financialFetching
+        : ordersLoading || ordersFetching);
 
   const handleDownloadActiveReportPdf = () => {
     if (!restaurantId) {
       toast.error("Restaurant is not available");
+      return;
+    }
+
+    if (activeTab === "invoice-history") {
       return;
     }
 
@@ -103,16 +120,18 @@ export default function Orders() {
         <Header title={title} description={description} />
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={activeLoading || !restaurantId}
-            onClick={handleDownloadActiveReportPdf}
-            className="h-[44px] rounded-[12px] border-gray-200 px-5 text-gray-700"
-          >
-            <Download size={17} className="mr-2" />
-            Download PDF
-          </Button>
+          {activeTab !== "invoice-history" ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={activeLoading || !restaurantId}
+              onClick={handleDownloadActiveReportPdf}
+              className="h-[44px] rounded-[12px] border-gray-200 px-5 text-gray-700"
+            >
+              <Download size={17} className="mr-2" />
+              Download PDF
+            </Button>
+          ) : null}
 
         </div>
       </div>
@@ -132,9 +151,21 @@ export default function Orders() {
           >
             Orders Report
           </TabButton>
+
+          <TabButton
+            active={activeTab === "invoice-history"}
+            onClick={() => setActiveTab("invoice-history")}
+          >
+            Invoice History
+          </TabButton>
         </div>
 
-        {activeTab === "financial" ? (
+        {activeTab === "invoice-history" ? (
+          <GeneratedInvoiceHistoryTable
+            invoices={generatedInvoicesQuery.data?.data || []}
+            loading={activeLoading}
+          />
+        ) : activeTab === "financial" ? (
           <>
             <StatsSection
               stats={activeStats}
