@@ -34,6 +34,7 @@ export const promotionSchema = z
     code: optionalStringSchema,
     title: z.string().trim().min(1, "Offer title is required."),
     description: optionalStringSchema,
+    audience: z.enum(["GUEST", "REGISTERED", "BOTH"]).default("BOTH"),
     thumbnailUrl: thumbnailUrlSchema.optional().default(""),
     discountType: discountTypeSchema,
     discountValue: positiveNumberStringSchema("Discount value is required."),

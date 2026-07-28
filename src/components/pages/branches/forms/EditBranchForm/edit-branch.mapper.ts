@@ -417,6 +417,10 @@ export const getDeliveryConfigValidationError = (
 
 export const getBranchSettingsValidationError = (settings: unknown) => {
   const branchSettings = toRecord(settings);
+  const notificationSettings = toRecord(branchSettings.notificationSettings);
+  const notificationTypes = toRecord(notificationSettings.notificationTypes);
+  const newOrderNotification = toRecord(notificationTypes.newOrder);
+  const orderEmail = toStringValue(notificationSettings.emailAddress).trim();
   const tableReservationsEnabled = Boolean(
     branchSettings.tableReservationsEnabled ?? false,
   );
@@ -432,6 +436,12 @@ export const getBranchSettingsValidationError = (settings: unknown) => {
     return "Table count must be at least 1 when table reservations are enabled";
   }
   if (serviceChargeError) return serviceChargeError;
+  if (
+    newOrderNotification.email === true &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderEmail)
+  ) {
+    return "Enter a valid order notification email before enabling notifications";
+  }
 
   return null;
 };

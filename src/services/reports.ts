@@ -324,6 +324,21 @@ export const getGeneratedInvoices = async (
   return data;
 };
 
+export const downloadGeneratedInvoicePdf = async (
+  invoiceId: string,
+  params?: BaseReportParams,
+) => {
+  const response = await api.get(
+    `/admin/reports/generated-invoices/${invoiceId}/pdf`,
+    {
+      params: cleanParams(params),
+      responseType: "blob",
+    },
+  );
+
+  return response.data as Blob;
+};
+
 export const getAdminReportInvoices = async (
   params?: AdminInvoicesParams
 ): Promise<AdminInvoicesResponse> => {

@@ -67,6 +67,7 @@ const getDefaultValues = ({
 }): AdminDealFormValues => ({
   title: initialDeal?.title ?? "",
   description: initialDeal?.description ?? "",
+  audience: initialDeal?.audience ?? "BOTH",
   thumbnailUrl: initialDeal?.thumbnailUrl ?? "",
   imageUrl: initialDeal?.imageUrl ?? "",
   restaurantId: initialDeal?.restaurantId ?? restaurantId ?? "",
@@ -294,6 +295,27 @@ export default function AdminDealForm({
                   placeholder={t("descriptionPlaceholder")}
                   className="min-h-[110px] w-full rounded-md border border-[#BBBBBB] px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
+              </div>
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="audience"
+            render={({ field }) => (
+              <div className="space-y-2">
+                <Label>{t("audience")}</Label>
+                <select
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  className="h-[44px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                >
+                  <option value="BOTH">{t("audienceBoth")}</option>
+                  <option value="REGISTERED">{t("audienceRegistered")}</option>
+                  <option value="GUEST">{t("audienceGuests")}</option>
+                </select>
+                <p className={MUTED_TEXT_SM_CLASS}>{t("audienceHelp")}</p>
               </div>
             )}
           />

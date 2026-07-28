@@ -1,4 +1,5 @@
 export type AdminDealSelectionMode = "FIXED_ITEMS" | "FLEXIBLE_ITEMS";
+export type PromotionAudience = "GUEST" | "REGISTERED" | "BOTH";
 
 export type AdminDealLifecycle =
   | "active"
@@ -53,6 +54,7 @@ export type AdminDeal = {
   code?: string | null;
   title: string;
   description?: string | null;
+  audience?: PromotionAudience;
   thumbnailUrl?: string | null;
   imageUrl?: string | null;
   restaurantId?: string | null;
@@ -109,6 +111,7 @@ export type AdminDealsListResponse = {
 export type AdminDealFormValues = {
   title: string;
   description?: string;
+  audience?: PromotionAudience;
   restaurantId?: string;
   branchId?: string;
   thumbnailUrl?: string;
@@ -134,6 +137,7 @@ export type AdminDealCategoryRulePayload = {
 export type AdminDealCreatePayload = {
   title: string;
   description?: string;
+  audience?: PromotionAudience;
   thumbnailUrl?: string;
   imageUrl?: string;
   restaurantId?: string;

@@ -227,6 +227,47 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
         </div>
       </Section>
 
+      <Section label={t("orderNotificationEmail")}>
+        <div className="space-y-4">
+          <FormInput
+            label={t("orderNotificationEmailAddress")}
+            type="email"
+            value={data.settings?.notificationSettings?.emailAddress || ""}
+            onChange={(val) =>
+              update(["settings", "notificationSettings", "emailAddress"], val)
+            }
+          />
+          <div className="flex items-center justify-between rounded-[12px] border p-4">
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {t("enableOrderNotificationEmail")}
+              </p>
+              <p className="text-xs text-gray-500">
+                {t("orderNotificationEmailHelp")}
+              </p>
+            </div>
+            <Switch
+              checked={
+                data.settings?.notificationSettings?.notificationTypes?.newOrder
+                  ?.email || false
+              }
+              onCheckedChange={(val) =>
+                update(
+                  [
+                    "settings",
+                    "notificationSettings",
+                    "notificationTypes",
+                    "newOrder",
+                    "email",
+                  ],
+                  val,
+                )
+              }
+            />
+          </div>
+        </div>
+      </Section>
+
       <Section label={t("tableReservationSettings")}>
         <div className="space-y-4">
           <div className="flex items-center justify-between rounded-[12px] border p-4">

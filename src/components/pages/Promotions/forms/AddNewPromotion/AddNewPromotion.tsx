@@ -43,6 +43,7 @@ const defaultValues: PromotionFormValues = {
   code: "",
   title: "",
   description: "",
+  audience: "BOTH",
   thumbnailUrl: "",
   discountType: "FLAT",
   discountValue: "",
@@ -157,6 +158,10 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
       code: getString(detail, "code") ?? "",
       title: getString(detail, "title") ?? "",
       description: getString(detail, "description") ?? "",
+      audience:
+        detail.audience === "GUEST" || detail.audience === "REGISTERED"
+          ? detail.audience
+          : "BOTH",
       thumbnailUrl: getString(detail, "thumbnailUrl") ?? "",
       discountType: detail.discountType === "PERCENTAGE" ? "PERCENTAGE" : "FLAT",
       discountValue: String(detail.discountValue ?? ""),
@@ -243,6 +248,7 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
           : { code: trimmedCode }),
       title: values.title.trim(),
       description: values.description.trim(),
+      audience: values.audience,
       ...(thumbnailUrl ? { thumbnailUrl } : {}),
       restaurantId,
       branchId: selectedBranchId || undefined,
@@ -371,6 +377,27 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                   placeholder={t("forms.promotionDescriptionPlaceholder")}
                   className="min-h-[110px] w-full rounded-md border border-[#BBBBBB] px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
+              </div>
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="audience"
+            render={({ field }) => (
+              <div className="space-y-2">
+                <Label>{t("forms.audience")}</Label>
+                <select
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  className="h-[52px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-base outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                >
+                  <option value="BOTH">{t("forms.audienceBoth")}</option>
+                  <option value="REGISTERED">{t("forms.audienceRegistered")}</option>
+                  <option value="GUEST">{t("forms.audienceGuests")}</option>
+                </select>
+                <p className={MUTED_TEXT_SM_CLASS}>{t("forms.audienceHelp")}</p>
               </div>
             )}
           />

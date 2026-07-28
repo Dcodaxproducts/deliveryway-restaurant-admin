@@ -141,17 +141,6 @@ export function OrdersTable({
     status && ORDER_STATUS_LABEL_KEYS[status]
       ? t(ORDER_STATUS_LABEL_KEYS[status])
       : status;
-  const getCustomerName = (order: OrdersTableRow) => {
-    const customer = order.customer;
-    const fullName =
-      customer?.fullName ||
-      customer?.name ||
-      `${customer?.firstName ?? ""} ${customer?.lastName ?? ""}`.trim();
-
-    return fullName || order.customerName || t("unknownUser");
-  };
-  const getCustomerDetail = (order: OrdersTableRow) =>
-    order.customer?.email || order.customer?.phone || order.customer?.id || "-";
   const getOrderTypeLabel = (orderType?: string | null) => {
     const normalizedType = normalizeOrderType(orderType);
 
@@ -319,7 +308,6 @@ export function OrdersTable({
         <TableSkeleton
           headers={[
             t("date"),
-            t("customerInfo"),
             t("orderType"),
             t("address"),
             t("amount"),
@@ -369,13 +357,12 @@ export function OrdersTable({
       </>
     ) : (
       <>
-        <SortHeader label={t("date")} sortKey="createdAt" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[16%]" />
-        <SortHeader label={t("customerInfo")} sortKey="customerName" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[18%]" />
-        <SortHeader label={t("orderType")} sortKey="orderType" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[10%]" />
-        <TableHead className="w-[16%]">{t("address")}</TableHead>
-        <SortHeader label={t("amount")} sortKey="totalAmount" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[9%]" />
-        <SortHeader label={t("statusLabel")} sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[10%]" />
-        <SortHeader label={t("paymentStatus")} sortKey="paymentStatus" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[11%]" />
+        <SortHeader label={t("date")} sortKey="createdAt" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[19%]" />
+        <SortHeader label={t("orderType")} sortKey="orderType" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[12%]" />
+        <TableHead className="w-[22%]">{t("address")}</TableHead>
+        <SortHeader label={t("amount")} sortKey="totalAmount" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[12%]" />
+        <SortHeader label={t("statusLabel")} sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[13%]" />
+        <SortHeader label={t("paymentStatus")} sortKey="paymentStatus" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[14%]" />
       </>
     )}
 
@@ -396,8 +383,6 @@ export function OrdersTable({
       paymentStatus,
       orderType,
     } = order;
-    const customerNameValue = getCustomerName(order);
-    const customerDetail = getCustomerDetail(order);
     const addressPreview = getAddressPreview(order);
     const canUpdateStatus = Boolean(getNextOrderStatus(order));
     const canSendOutForDelivery = canSendDeliveryOrderOutDirectly(order);
@@ -474,17 +459,6 @@ export function OrdersTable({
                   {t("asap")}
                 </span>
               )}
-            </div>
-          </TableCell>
-
-          <TableCell className="px-4 whitespace-normal">
-            <div className="min-w-0 space-y-1">
-              <p className="truncate font-medium text-gray-700" title={customerNameValue}>
-                {customerNameValue}
-              </p>
-              <p className="break-all text-sm leading-5 text-gray-500" title={customerDetail}>
-                {customerDetail}
-              </p>
             </div>
           </TableCell>
 

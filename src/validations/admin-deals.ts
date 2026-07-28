@@ -68,6 +68,7 @@ export const adminDealFormSchema = z
   .object({
     title: z.string().trim().min(1, "Title is required."),
     description: optionalText,
+    audience: z.enum(["GUEST", "REGISTERED", "BOTH"]).default("BOTH"),
     restaurantId: optionalText,
     branchId: optionalText,
     thumbnailUrl: optionalImageUrlSchema,
@@ -190,6 +191,7 @@ export const adminDealFormSchema = z
 const buildBasePayload = (values: AdminDealFormValues): AdminDealCreatePayload => {
   const payload: AdminDealCreatePayload = {
     title: values.title.trim(),
+    audience: values.audience ?? "BOTH",
     discountValue: values.discountValue,
     dealSelectionMode: values.dealSelectionMode,
     isActive: values.isActive,

@@ -1,8 +1,10 @@
 "use client";
 
-import { Download, Mail } from "lucide-react";
+import { Download, Loader2, Mail } from "lucide-react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import EmptyState from "@/components/common/EmptyState";
 import TableSkeleton from "@/components/common/TableSkeleton";
@@ -18,10 +20,12 @@ import {
 } from "@/components/ui/table";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  useDownloadOrderInvoicePdf,
   useSendOrderInvoiceEmail,
 } from "@/hooks/useOrders";
-import type { GeneratedInvoice } from "@/services/reports/reports.api";
+import {
+  downloadGeneratedInvoicePdf,
+  type GeneratedInvoice,
+} from "@/services/reports/reports.api";
 
 const formatMoney = (amount?: number | null, currency?: string | null) => {
   const numericAmount = Number(amount ?? 0);
@@ -79,10 +83,9 @@ export function GeneratedInvoiceHistoryTable({
   const t = useTranslations("orders");
   const queryClient = useQueryClient();
   const { user, branchId, isBranchAdmin } = useAuth();
-  const downloadInvoiceMutation = useDownloadOrderInvoicePdf({
-    success: t("invoiceDownloaded"),
-    error: t("invoiceDownloadFailed"),
-  });
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<
+    string | null
+  >(null);
   const sendInvoiceEmailMutation = useSendOrderInvoiceEmail({
     success: t("invoiceEmailSent"),
     error: t("invoiceEmailFailed"),
@@ -99,6 +102,29 @@ export function GeneratedInvoiceHistoryTable({
     queryClient.invalidateQueries({
       queryKey: ["reports", "generated-invoices"],
     });
+  };
+
+  const handleDownload = async (
+    invoice: GeneratedInvoice,
+    params: { restaurantId?: string; branchId?: string },
+  ) => {
+    setDownloadingInvoiceId(invoice.id);
+
+    try {
+      const blob = await downloadGeneratedInvoicePdf(invoice.id, params);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${invoice.invoiceNumber || invoice.id}.pdf`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      toast.success(t("invoiceDownloaded"));
+      refreshInvoiceHistory();
+    } catch {
+      toast.error(t("invoiceDownloadFailed"));
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
   };
 
   if (loading) {
@@ -130,9 +156,7 @@ export function GeneratedInvoiceHistoryTable({
           <TableBody>
             {invoices.map((invoice) => {
               const orderId = invoice.orderId || undefined;
-              const isDownloading =
-                downloadInvoiceMutation.isPending &&
-                downloadInvoiceMutation.variables?.orderId === orderId;
+              const isDownloading = downloadingInvoiceId === invoice.id;
               const isSending =
                 sendInvoiceEmailMutation.isPending &&
                 sendInvoiceEmailMutation.variables?.orderId === orderId;
@@ -205,21 +229,18 @@ export function GeneratedInvoiceHistoryTable({
                         title={t("downloadInvoice")}
                         aria-label={t("downloadInvoice")}
                         disabled={
-                          !orderId || !invoiceRestaurantId || isDownloading
+                          !invoiceRestaurantId || isDownloading
                         }
                         onClick={() => {
-                          if (!orderId || !invoiceRestaurantId) return;
-                          downloadInvoiceMutation.mutate(
-                            {
-                              orderId,
-                              orderNumber: invoice.invoiceNumber,
-                              params: actionParams,
-                            },
-                            { onSettled: refreshInvoiceHistory },
-                          );
+                          if (!invoiceRestaurantId) return;
+                          void handleDownload(invoice, actionParams);
                         }}
                       >
-                        <Download className="h-4 w-4" />
+                        {isDownloading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
                       </Button>
                       <Button
                         type="button"
@@ -301,20 +322,20 @@ export function GeneratedInvoiceHistoryTable({
                   size="icon"
                   title={t("downloadInvoice")}
                   aria-label={t("downloadInvoice")}
-                  disabled={!orderId || !invoiceRestaurantId}
+                  disabled={
+                    !invoiceRestaurantId ||
+                    downloadingInvoiceId === invoice.id
+                  }
                   onClick={() => {
-                    if (!orderId || !invoiceRestaurantId) return;
-                    downloadInvoiceMutation.mutate(
-                      {
-                        orderId,
-                        orderNumber: invoice.invoiceNumber,
-                        params: actionParams,
-                      },
-                      { onSettled: refreshInvoiceHistory },
-                    );
+                    if (!invoiceRestaurantId) return;
+                    void handleDownload(invoice, actionParams);
                   }}
                 >
-                  <Download className="h-4 w-4" />
+                  {downloadingInvoiceId === invoice.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
                 </Button>
                 <Button
                   type="button"

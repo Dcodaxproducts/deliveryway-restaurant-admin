@@ -75,6 +75,14 @@ export type BranchSettings = {
     phone?: string;
     whatsapp?: string;
   };
+  notificationSettings?: {
+    emailAddress?: string;
+    notificationTypes?: {
+      newOrder?: {
+        email?: boolean;
+      };
+    };
+  };
   [key: string]: unknown;
 };
 

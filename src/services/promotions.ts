@@ -18,6 +18,7 @@ export type PromotionCampaignPayload = {
   code?: string;
   title: string;
   description?: string;
+  audience?: "GUEST" | "REGISTERED" | "BOTH";
   thumbnailUrl?: string;
   restaurantId?: string | null;
   branchId?: string | null;
