@@ -5,6 +5,8 @@ import {
   updateNotificationSettings,
   NotificationSettingsValues,
 } from "@/services/notifications/notification-settings.api";
+import { useAuth } from "@/hooks/useAuth";
+import { getApiErrorMessage } from "@/lib/errors";
 
 /**
  * ==============================
@@ -12,9 +14,12 @@ import {
  * ==============================
  */
 export const useGetNotificationSettings = () => {
+  const { restaurantId } = useAuth();
+
   return useQuery({
-    queryKey: ["notification-settings"], // no restaurant dimension now
-    queryFn: getNotificationSettings,
+    queryKey: ["notification-settings", restaurantId],
+    queryFn: () => getNotificationSettings(restaurantId as string),
+    enabled: Boolean(restaurantId),
   });
 };
 
@@ -24,23 +29,28 @@ export const useGetNotificationSettings = () => {
  */
 export const useUpdateNotificationSettings = () => {
   const queryClient = useQueryClient();
+  const { restaurantId } = useAuth();
 
   return useMutation({
-    mutationFn: (payload: NotificationSettingsValues) =>
-      updateNotificationSettings(payload),
+    mutationFn: (payload: NotificationSettingsValues) => {
+      if (!restaurantId) {
+        throw new Error("Restaurant context is required");
+      }
+
+      return updateNotificationSettings(restaurantId, payload);
+    },
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["notification-settings"],
+        queryKey: ["notification-settings", restaurantId],
       });
 
       toast.success("Notification settings updated successfully!");
     },
 
-    onError: (err: any) => {
+    onError: (error: unknown) => {
       toast.error(
-        err?.response?.data?.message ||
-          "Failed to update notification settings",
+        getApiErrorMessage(error, "Failed to update notification settings"),
       );
     },
   });

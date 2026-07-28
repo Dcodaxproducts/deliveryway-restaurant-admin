@@ -1,4 +1,5 @@
 import { api } from "@/lib/axios";
+import { isRecord } from "@/lib/auth";
 
 /**
  * ==============================
@@ -27,13 +28,35 @@ export type NotificationSettingsValues = {
  * ==============================
  */
 const normalizeNotificationSettings = (
-  payload: any
+  payload: unknown,
 ): NotificationSettingsValues => {
+  const settings = isRecord(payload) ? payload : {};
+  const notificationTypes = isRecord(settings.notificationTypes)
+    ? Object.fromEntries(
+        Object.entries(settings.notificationTypes).map(([key, value]) => {
+          const channel = isRecord(value) ? value : {};
+          return [
+            key,
+            {
+              email: channel.email === true,
+              sms: channel.sms === true,
+              whatsapp: channel.whatsapp === true,
+            },
+          ];
+        }),
+      )
+    : {};
+
   return {
-    emailAddress: payload?.emailAddress ?? "",
-    phoneNumber: payload?.phoneNumber ?? "",
-    whatsappNumber: payload?.whatsappNumber ?? "",
-    notificationTypes: payload?.notificationTypes ?? {},
+    emailAddress:
+      typeof settings.emailAddress === "string" ? settings.emailAddress : "",
+    phoneNumber:
+      typeof settings.phoneNumber === "string" ? settings.phoneNumber : "",
+    whatsappNumber:
+      typeof settings.whatsappNumber === "string"
+        ? settings.whatsappNumber
+        : "",
+    notificationTypes,
   };
 };
 
@@ -43,30 +66,30 @@ const normalizeNotificationSettings = (
  * ==============================
  */
 
-const BASE_URL = "/admin/global-settings";
+const getBaseUrl = (restaurantId: string) =>
+  `/restaurants/${encodeURIComponent(restaurantId)}/notification-settings`;
 
 /**
  * GET GLOBAL NOTIFICATION SETTINGS
  */
-export const getNotificationSettings = async (): Promise<NotificationSettingsValues> => {
-  const { data } = await api.get(BASE_URL);
+export const getNotificationSettings = async (
+  restaurantId: string,
+): Promise<NotificationSettingsValues> => {
+  const { data } = await api.get(getBaseUrl(restaurantId));
+  const response = isRecord(data) ? data : {};
 
-  // backend wraps inside notificationSettings
-  const settings = data?.data?.notificationSettings ?? data?.notificationSettings ?? {};
-
-  return normalizeNotificationSettings(settings);
+  return normalizeNotificationSettings(response.data);
 };
 
 /**
  */
 export const updateNotificationSettings = async (
-  payload: NotificationSettingsValues
+  restaurantId: string,
+  payload: NotificationSettingsValues,
 ) => {
   const cleanPayload = normalizeNotificationSettings(payload);
 
-  const { data } = await api.patch(BASE_URL, {
-    notificationSettings: cleanPayload,
-  });
+  const { data } = await api.patch(getBaseUrl(restaurantId), cleanPayload);
 
   return data;
 };

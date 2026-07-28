@@ -22,6 +22,20 @@ const MAX_SEEN_ORDER_IDS = 100;
 export const getOrderTrackingSocketUrl = () =>
   new URL("/orders-tracking", API_BASE_URL).toString().replace(/\/$/, "");
 
+export const buildOrderTrackingSocketAuth = ({
+  token,
+  restaurantId,
+  branchId,
+}: {
+  token: string;
+  restaurantId: string;
+  branchId?: string;
+}) => ({
+  token,
+  restaurantId,
+  ...(branchId ? { branchId } : {}),
+});
+
 const playNewOrderSound = () => {
   const AudioContextClass =
     window.AudioContext ??
@@ -68,7 +82,13 @@ export function useRealtimeOrderNotifications() {
 
     const socket = io(getOrderTrackingSocketUrl(), {
       auth: (callback) => {
-        callback({ token: getStoredAuth()?.accessToken ?? token });
+        callback(
+          buildOrderTrackingSocketAuth({
+            token: getStoredAuth()?.accessToken ?? token,
+            restaurantId,
+            branchId,
+          }),
+        );
       },
       transports: ["websocket", "polling"],
       withCredentials: true,
@@ -79,6 +99,13 @@ export function useRealtimeOrderNotifications() {
       randomizationFactor: 0.5,
       timeout: 10_000,
     });
+
+    const refreshOrderData = () => {
+      void queryClient.invalidateQueries({ queryKey: ["orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    };
+
+    socket.on("connect", refreshOrderData);
 
     socket.on("order.created", (payload: OrderCreatedPayload) => {
       if (
@@ -98,8 +125,7 @@ export function useRealtimeOrderNotifications() {
         }
       }
 
-      void queryClient.invalidateQueries({ queryKey: ["orders"] });
-      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      refreshOrderData();
 
       try {
         playNewOrderSound();
