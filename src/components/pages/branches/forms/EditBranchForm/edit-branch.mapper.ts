@@ -14,6 +14,7 @@ import type {
   PostalCodeRule,
   ZoneBand,
 } from "./types";
+import { parseLocalizedDecimal } from "@/lib/decimal";
 
 const DAYS = [
   "SUNDAY",
@@ -122,8 +123,7 @@ export const normalizeBranchAdminForPatch = (
 };
 
 export const toNumber = (value: unknown, fallback = 0) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
+  return parseLocalizedDecimal(value, fallback);
 };
 
 export const normalizeBreakTimesForApi = (breakTimes: unknown) => {

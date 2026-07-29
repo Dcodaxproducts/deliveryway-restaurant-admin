@@ -34,6 +34,18 @@ const validPostalDeliveryConfig = {
 };
 
 describe("edit branch delivery and settings mapper", () => {
+  it("normalizes German comma decimals for delivery radius and fees", () => {
+    const deliveryConfig = normalizeDeliveryConfigForApi({
+      ...validPostalDeliveryConfig,
+      mode: "RADIUS",
+      radiusKm: "1,5",
+      deliveryFee: "3,50",
+    });
+
+    expect(deliveryConfig.radiusKm).toBe(1.5);
+    expect(deliveryConfig.deliveryFee).toBe(3.5);
+  });
+
   it("normalizes postal code delivery rules with all backend amount fields", () => {
     const deliveryConfig = normalizeDeliveryConfigForApi(
       validPostalDeliveryConfig,

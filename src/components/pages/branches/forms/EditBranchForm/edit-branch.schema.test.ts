@@ -20,6 +20,27 @@ describe("edit branch schema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts German comma decimals for delivery radius and fees", () => {
+    const result = editBranchSchema.safeParse({
+      ...validEditBranchPayload,
+      settings: {
+        deliveryConfig: {
+          mode: "RADIUS",
+          radiusKm: "1,5",
+          minOrderAmount: "0",
+          deliveryFee: "3,50",
+          isFreeDelivery: false,
+          freeDeliveryThreshold: "0",
+          zones: [],
+          zoneBands: [],
+          postalCodeRules: [],
+        },
+      },
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("rejects invalid branch admin email", () => {
     const result = editBranchSchema.safeParse({
       ...validEditBranchPayload,

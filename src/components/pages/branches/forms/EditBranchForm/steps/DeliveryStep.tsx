@@ -21,6 +21,7 @@ import {
   PAYMENT_METHOD_CODES,
   PAYMENT_METHOD_LABELS,
 } from "@/types/payment-methods";
+import { normalizeDecimalInput } from "@/lib/decimal";
 
 const ORDER_TYPES = ["DELIVERY", "TAKEAWAY", "DINE_IN"];
 const PAYMENT_METHODS = [...PAYMENT_METHOD_CODES];
@@ -1302,7 +1303,10 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               label={t("baseDeliveryFee")}
               value={toInputNumber(delivery.deliveryFee)}
               onChange={(val) =>
-                updateDeliveryConfig("deliveryFee", val ? Number(val) : 0)
+                updateDeliveryConfig(
+                  "deliveryFee",
+                  val ? normalizeDecimalInput(val) : 0
+                )
               }
             />
 
@@ -1310,7 +1314,10 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               label={t("radiusKm")}
               value={toInputNumber(delivery.radiusKm)}
               onChange={(val) =>
-                updateDeliveryConfig("radiusKm", val ? Number(val) : 0)
+                updateDeliveryConfig(
+                  "radiusKm",
+                  val ? normalizeDecimalInput(val) : 0
+                )
               }
             />
 
@@ -1318,7 +1325,10 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               label={t("minimumOrderAmount")}
               value={toInputNumber(delivery.minOrderAmount)}
               onChange={(val) =>
-                updateDeliveryConfig("minOrderAmount", val ? Number(val) : 0)
+                updateDeliveryConfig(
+                  "minOrderAmount",
+                  val ? normalizeDecimalInput(val) : 0
+                )
               }
             />
 
@@ -1328,7 +1338,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               onChange={(val) =>
                 updateDeliveryConfig(
                   "freeDeliveryThreshold",
-                  val ? Number(val) : 0
+                  val ? normalizeDecimalInput(val) : 0
                 )
               }
             />
@@ -1394,7 +1404,11 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                         label={t("fromKm")}
                         value={toInputNumber(band?.fromKm)}
                         onChange={(val) =>
-                          updateZoneBand(index, "fromKm", val ? Number(val) : 0)
+                          updateZoneBand(
+                            index,
+                            "fromKm",
+                            val ? normalizeDecimalInput(val) : 0
+                          )
                         }
                       />
 
@@ -1402,7 +1416,11 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                         label={t("toKm")}
                         value={toInputNumber(band?.toKm)}
                         onChange={(val) =>
-                          updateZoneBand(index, "toKm", val ? Number(val) : 0)
+                          updateZoneBand(
+                            index,
+                            "toKm",
+                            val ? normalizeDecimalInput(val) : 0
+                          )
                         }
                       />
 
@@ -1413,7 +1431,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updateZoneBand(
                             index,
                             "deliveryFee",
-                            val ? Number(val) : 0
+                            val ? normalizeDecimalInput(val) : 0
                           )
                         }
                       />
@@ -1425,7 +1443,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updateZoneBand(
                             index,
                             "minOrderAmount",
-                            val ? Number(val) : 0
+                            val ? normalizeDecimalInput(val) : 0
                           )
                         }
                       />
@@ -1437,7 +1455,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updateZoneBand(
                             index,
                             "freeDeliveryThreshold",
-                            val ? Number(val) : 0
+                            val ? normalizeDecimalInput(val) : 0
                           )
                         }
                       />
@@ -1567,7 +1585,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                             updateZone(
                               zoneIndex,
                               "deliveryFee",
-                              val ? Number(val) : 0
+                              val ? normalizeDecimalInput(val) : 0
                             )
                           }
                         />
@@ -1579,7 +1597,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                             updateZone(
                               zoneIndex,
                               "minOrderAmount",
-                              val ? Number(val) : 0
+                              val ? normalizeDecimalInput(val) : 0
                             )
                           }
                         />
@@ -1591,7 +1609,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                             updateZone(
                               zoneIndex,
                               "freeDeliveryThreshold",
-                              val ? Number(val) : 0
+                              val ? normalizeDecimalInput(val) : 0
                             )
                           }
                         />
@@ -1730,7 +1748,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updatePostalRule(
                             index,
                             "deliveryFee",
-                            val ? Number(val) : 0
+                            val ? normalizeDecimalInput(val) : 0
                           )
                         }
                       />
@@ -1742,7 +1760,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updatePostalRule(
                             index,
                             "minOrderAmount",
-                            val ? Number(val) : 0
+                            val ? normalizeDecimalInput(val) : 0
                           )
                         }
                       />
@@ -1754,7 +1772,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updatePostalRule(
                             index,
                             "freeDeliveryThreshold",
-                            val ? Number(val) : 0
+                            val ? normalizeDecimalInput(val) : 0
                           )
                         }
                       />

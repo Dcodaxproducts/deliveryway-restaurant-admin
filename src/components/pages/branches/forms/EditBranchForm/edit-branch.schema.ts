@@ -1,5 +1,11 @@
 import { z } from "zod";
+import { parseLocalizedDecimal } from "@/lib/decimal";
 import { validationMessages } from "@/lib/validation";
+
+const decimal = z.preprocess(
+  (value) => parseLocalizedDecimal(value, Number.NaN),
+  z.number().min(0)
+);
 
 export const deliveryPolygonPointSchema = z.object({
   lat: z.number().min(-90).max(90),
@@ -9,27 +15,27 @@ export const deliveryPolygonPointSchema = z.object({
 export const deliveryZoneSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(1, validationMessages.required),
-  deliveryFee: z.coerce.number().min(0),
-  minOrderAmount: z.coerce.number().min(0),
-  freeDeliveryThreshold: z.coerce.number().min(0),
+  deliveryFee: decimal,
+  minOrderAmount: decimal,
+  freeDeliveryThreshold: decimal,
   polygon: z.array(deliveryPolygonPointSchema),
 });
 
 export const zoneBandSchema = z.object({
   id: z.string().optional(),
-  fromKm: z.coerce.number().min(0),
-  toKm: z.coerce.number().min(0),
-  deliveryFee: z.coerce.number().min(0),
-  minOrderAmount: z.coerce.number().min(0),
-  freeDeliveryThreshold: z.coerce.number().min(0),
+  fromKm: decimal,
+  toKm: decimal,
+  deliveryFee: decimal,
+  minOrderAmount: decimal,
+  freeDeliveryThreshold: decimal,
 });
 
 export const postalCodeRuleSchema = z.object({
   id: z.string().optional(),
   postalCode: z.string().trim().min(1, validationMessages.required),
-  deliveryFee: z.coerce.number().min(0),
-  minOrderAmount: z.coerce.number().min(0),
-  freeDeliveryThreshold: z.coerce.number().min(0),
+  deliveryFee: decimal,
+  minOrderAmount: decimal,
+  freeDeliveryThreshold: decimal,
 });
 
 export const serviceChargeSchema = z
@@ -61,11 +67,11 @@ export const serviceChargeSchema = z
 
 export const deliveryConfigSchema = z.object({
   mode: z.enum(["RADIUS", "ZONE", "ZONE_BANDS", "POSTAL_CODE"]),
-  radiusKm: z.coerce.number().min(0),
-  minOrderAmount: z.coerce.number().min(0),
-  deliveryFee: z.coerce.number().min(0),
+  radiusKm: decimal,
+  minOrderAmount: decimal,
+  deliveryFee: decimal,
   isFreeDelivery: z.boolean(),
-  freeDeliveryThreshold: z.coerce.number().min(0),
+  freeDeliveryThreshold: decimal,
   zones: z.array(deliveryZoneSchema),
   zoneBands: z.array(zoneBandSchema),
   postalCodeRules: z.array(postalCodeRuleSchema),

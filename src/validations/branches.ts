@@ -1,5 +1,11 @@
 import { z } from "zod";
 import { PAYMENT_METHOD_CODES } from "@/types/payment-methods";
+import { parseLocalizedDecimal } from "@/lib/decimal";
+
+const decimal = z.preprocess(
+  (value) => parseLocalizedDecimal(value, Number.NaN),
+  z.number().min(0)
+);
 
 /**
  * ==============================
@@ -43,20 +49,20 @@ export const BranchAdminSchema = z.object({
 
 export const DeliveryConfigSchema = z.object({
   mode: z.string().optional().default("RADIUS"),
-  radiusKm: z.coerce.number().min(0).optional().default(0),
-  minOrderAmount: z.coerce.number().min(0).optional().default(0),
-  deliveryFee: z.coerce.number().min(0).optional().default(0),
+  radiusKm: decimal.optional().default(0),
+  minOrderAmount: decimal.optional().default(0),
+  deliveryFee: decimal.optional().default(0),
   isFreeDelivery: z.boolean().optional().default(false),
-  freeDeliveryThreshold: z.coerce.number().min(0).optional().default(0),
+  freeDeliveryThreshold: decimal.optional().default(0),
   zones: z.array(z.unknown()).optional().default([]),
   zoneBands: z.array(z.unknown()).optional().default([]),
   postalCodeRules: z
     .array(
       z.object({
         postalCode: z.string().trim().min(1, "Postal code is required"),
-        deliveryFee: z.coerce.number().min(0),
-        minOrderAmount: z.coerce.number().min(0),
-        freeDeliveryThreshold: z.coerce.number().min(0),
+        deliveryFee: decimal,
+        minOrderAmount: decimal,
+        freeDeliveryThreshold: decimal,
       })
     )
     .optional()
