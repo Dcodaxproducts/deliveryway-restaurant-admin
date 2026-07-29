@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Loader2, Mail } from "lucide-react";
+import { Download, Eye, Loader2, Mail } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,9 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  useSendOrderInvoiceEmail,
-} from "@/hooks/useOrders";
+import { useSendOrderInvoiceEmail } from "@/hooks/useOrders";
 import {
   downloadGeneratedInvoicePdf,
   type GeneratedInvoice,
@@ -88,10 +86,26 @@ export function GeneratedInvoiceHistoryTable({
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<
     string | null
   >(null);
+  const [viewingInvoiceId, setViewingInvoiceId] = useState<string | null>(null);
   const sendInvoiceEmailMutation = useSendOrderInvoiceEmail({
     success: t("invoiceEmailSent"),
     error: t("invoiceEmailFailed"),
   });
+  const getInvoiceKindLabel = (kind?: string | null) => {
+    if (kind === "SUBSCRIPTION") return t("subscriptionInvoice");
+    if (kind === "WEEKLY_PAYOUT") return t("weeklyPayoutInvoice");
+    if (kind === "ORDER") return t("orderInvoice");
+    return prettyLabel(kind);
+  };
+  const getInvoiceStatusLabel = (status?: string | null) => {
+    if (status === "ISSUED") return t("invoiceStatuses.issued");
+    if (status === "SENT") return t("invoiceStatuses.sent");
+    if (status === "PAID") return t("invoiceStatuses.paid");
+    if (status === "FAILED") return t("invoiceStatuses.failed");
+    if (status === "VOID") return t("invoiceStatuses.void");
+    if (status === "CANCELLED") return t("invoiceStatuses.cancelled");
+    return prettyLabel(status);
+  };
 
   const headers = [
     t("invoiceNumber"),
@@ -126,6 +140,33 @@ export function GeneratedInvoiceHistoryTable({
       toast.error(t("invoiceDownloadFailed"));
     } finally {
       setDownloadingInvoiceId(null);
+    }
+  };
+
+  const handleView = async (
+    invoice: GeneratedInvoice,
+    params: { restaurantId?: string; branchId?: string },
+  ) => {
+    setViewingInvoiceId(invoice.id);
+    const openedWindow = window.open("", "_blank");
+
+    try {
+      if (!openedWindow) {
+        toast.error(t("invoiceViewFailed"));
+        return;
+      }
+
+      openedWindow.opener = null;
+      const blob = await downloadGeneratedInvoicePdf(invoice.id, params);
+      const url = URL.createObjectURL(blob);
+      openedWindow.location.href = url;
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      refreshInvoiceHistory();
+    } catch {
+      openedWindow?.close();
+      toast.error(t("invoiceViewFailed"));
+    } finally {
+      setViewingInvoiceId(null);
     }
   };
 
@@ -167,6 +208,7 @@ export function GeneratedInvoiceHistoryTable({
             {invoices.map((invoice) => {
               const orderId = invoice.orderId || undefined;
               const isDownloading = downloadingInvoiceId === invoice.id;
+              const isViewing = viewingInvoiceId === invoice.id;
               const isSending =
                 sendInvoiceEmailMutation.isPending &&
                 sendInvoiceEmailMutation.variables?.orderId === orderId;
@@ -204,14 +246,14 @@ export function GeneratedInvoiceHistoryTable({
                       variant="outline"
                       className={getStatusClassName(invoice.status)}
                     >
-                      {prettyLabel(invoice.status)}
+                      {getInvoiceStatusLabel(invoice.status)}
                     </Badge>
                   </TableCell>
                   <TableCell className="px-4">
                     <div className="min-w-0 space-y-1 text-sm">
                       <p className="truncate font-medium text-gray-700">
                         {mode === "billing"
-                          ? `${t("invoiceType")}: ${prettyLabel(invoice.kind)}`
+                          ? `${t("invoiceType")}: ${getInvoiceKindLabel(invoice.kind)}`
                           : invoice.orderId
                             ? `${t("orderId")}: ${invoice.orderId}`
                             : "-"}
@@ -247,11 +289,27 @@ export function GeneratedInvoiceHistoryTable({
                         type="button"
                         variant="outline"
                         size="icon"
+                        title={t("viewInvoice")}
+                        aria-label={t("viewInvoice")}
+                        disabled={!invoiceRestaurantId || isViewing}
+                        onClick={() => {
+                          if (!invoiceRestaurantId) return;
+                          void handleView(invoice, actionParams);
+                        }}
+                      >
+                        {isViewing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
                         title={t("downloadInvoice")}
                         aria-label={t("downloadInvoice")}
-                        disabled={
-                          !invoiceRestaurantId || isDownloading
-                        }
+                        disabled={!invoiceRestaurantId || isDownloading}
                         onClick={() => {
                           if (!invoiceRestaurantId) return;
                           void handleDownload(invoice, actionParams);
@@ -322,7 +380,7 @@ export function GeneratedInvoiceHistoryTable({
                   </p>
                   <p className="mt-1 truncate text-sm text-gray-500">
                     {mode === "billing"
-                      ? `${t("invoiceType")}: ${prettyLabel(invoice.kind)}`
+                      ? `${t("invoiceType")}: ${getInvoiceKindLabel(invoice.kind)}`
                       : invoice.orderId
                         ? `${t("orderId")}: ${invoice.orderId}`
                         : "-"}
@@ -337,7 +395,7 @@ export function GeneratedInvoiceHistoryTable({
                   variant="outline"
                   className={getStatusClassName(invoice.status)}
                 >
-                  {prettyLabel(invoice.status)}
+                  {getInvoiceStatusLabel(invoice.status)}
                 </Badge>
               </div>
 
@@ -352,11 +410,30 @@ export function GeneratedInvoiceHistoryTable({
                   type="button"
                   variant="outline"
                   size="icon"
+                  title={t("viewInvoice")}
+                  aria-label={t("viewInvoice")}
+                  disabled={
+                    !invoiceRestaurantId || viewingInvoiceId === invoice.id
+                  }
+                  onClick={() => {
+                    if (!invoiceRestaurantId) return;
+                    void handleView(invoice, actionParams);
+                  }}
+                >
+                  {viewingInvoiceId === invoice.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
                   title={t("downloadInvoice")}
                   aria-label={t("downloadInvoice")}
                   disabled={
-                    !invoiceRestaurantId ||
-                    downloadingInvoiceId === invoice.id
+                    !invoiceRestaurantId || downloadingInvoiceId === invoice.id
                   }
                   onClick={() => {
                     if (!invoiceRestaurantId) return;

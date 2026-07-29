@@ -3,6 +3,7 @@ import { formatMoney, resolveCurrency } from "@/lib/currency";
 import type { GeneratedInvoice } from "@/services/reports";
 
 export type ReportTab = "financial" | "order" | "invoice-history";
+export type ReportTranslate = (key: string) => string;
 
 const RESTAURANT_BILLING_INVOICE_KINDS = new Set([
   "SUBSCRIPTION",
@@ -30,32 +31,35 @@ export const mergeRestaurantBillingInvoices = (
 export const getReportCurrency = (
   financialData: any,
   ordersData: any,
-  fallbackCurrency?: string
+  fallbackCurrency?: string,
 ) =>
   resolveCurrency(
     financialData?.currency,
     ordersData?.currency,
     financialData?.transactions?.[0]?.currency,
     ordersData?.transactions?.[0]?.currency,
-    fallbackCurrency
+    fallbackCurrency,
   );
 
 export const formatCurrency = (value: number, currency?: string | null) => {
   return formatMoney(value, currency);
 };
 
-const withNeutralTrend = (items: Array<Omit<StatItem, "trend">>): StatItem[] =>
+const withNeutralTrend = (
+  items: Array<Omit<StatItem, "trend">>,
+  t: ReportTranslate,
+): StatItem[] =>
   items.map((item) => ({
     ...item,
     trend: {
       direction: "up",
-      percentage: "Live",
+      percentage: t("live"),
     },
   }));
 
 const getCountByKey = (
   list: { key: string; count: number }[] | undefined,
-  keys: string[]
+  keys: string[],
 ) => {
   const normalizedKeys = keys.map((key) => key.toUpperCase());
 
@@ -66,60 +70,71 @@ const getCountByKey = (
   );
 };
 
-export const buildFinancialStats = (financialData: any, currency: string): StatItem[] =>
-  withNeutralTrend([
-    {
-      _id: "financial-total-orders",
-      title: "Total Orders",
-      value: String(financialData?.totalOrders ?? 0),
-      icon: "orders",
-    },
-    {
-      _id: "financial-gross-revenue",
-      title: "Gross Revenue",
-      value: formatCurrency(financialData?.grossRevenue ?? 0, currency),
-      icon: "revenue",
-    },
-    {
-      _id: "financial-paid-revenue",
-      title: "Paid Revenue",
-      value: formatCurrency(financialData?.paidRevenue ?? 0, currency),
-      icon: "completed",
-    },
-    {
-      _id: "financial-net-revenue",
-      title: "Net Revenue",
-      value: formatCurrency(financialData?.netRevenue ?? 0, currency),
-      icon: "store",
-    },
-    {
-      _id: "financial-average-order-value",
-      title: "Average Order Value",
-      value: formatCurrency(financialData?.averageOrderValue ?? 0, currency),
-      icon: "users",
-    },
-    {
-      _id: "financial-tax",
-      title: "Total Tax",
-      value: formatCurrency(financialData?.totalTax ?? 0, currency),
-      icon: "revenue",
-    },
-    {
-      _id: "financial-delivery-fee",
-      title: "Delivery Fee",
-      value: formatCurrency(financialData?.totalDeliveryFee ?? 0, currency),
-      icon: "orders",
-    },
-    {
-      _id: "financial-refunded",
-      title: "Refunded Amount",
-      value: formatCurrency(financialData?.refundedAmount ?? 0, currency),
-      icon: "cancelled",
-      iconStyle: "danger",
-    },
-  ]);
+export const buildFinancialStats = (
+  financialData: any,
+  currency: string,
+  t: ReportTranslate,
+): StatItem[] =>
+  withNeutralTrend(
+    [
+      {
+        _id: "financial-total-orders",
+        title: t("stats.totalOrders"),
+        value: String(financialData?.totalOrders ?? 0),
+        icon: "orders",
+      },
+      {
+        _id: "financial-gross-revenue",
+        title: t("stats.grossRevenue"),
+        value: formatCurrency(financialData?.grossRevenue ?? 0, currency),
+        icon: "revenue",
+      },
+      {
+        _id: "financial-paid-revenue",
+        title: t("stats.paidRevenue"),
+        value: formatCurrency(financialData?.paidRevenue ?? 0, currency),
+        icon: "completed",
+      },
+      {
+        _id: "financial-net-revenue",
+        title: t("stats.netRevenue"),
+        value: formatCurrency(financialData?.netRevenue ?? 0, currency),
+        icon: "store",
+      },
+      {
+        _id: "financial-average-order-value",
+        title: t("stats.averageOrderValue"),
+        value: formatCurrency(financialData?.averageOrderValue ?? 0, currency),
+        icon: "users",
+      },
+      {
+        _id: "financial-tax",
+        title: t("stats.totalTax"),
+        value: formatCurrency(financialData?.totalTax ?? 0, currency),
+        icon: "revenue",
+      },
+      {
+        _id: "financial-delivery-fee",
+        title: t("stats.deliveryFee"),
+        value: formatCurrency(financialData?.totalDeliveryFee ?? 0, currency),
+        icon: "orders",
+      },
+      {
+        _id: "financial-refunded",
+        title: t("stats.refundedAmount"),
+        value: formatCurrency(financialData?.refundedAmount ?? 0, currency),
+        icon: "cancelled",
+        iconStyle: "danger",
+      },
+    ],
+    t,
+  );
 
-export const buildOrderReportStats = (ordersData: any, currency: string): StatItem[] => {
+export const buildOrderReportStats = (
+  ordersData: any,
+  currency: string,
+  t: ReportTranslate,
+): StatItem[] => {
   const placedOrders = getCountByKey(ordersData?.statusBreakdown, ["PLACED"]);
   const ongoingOrders = getCountByKey(ordersData?.statusBreakdown, [
     "CONFIRMED",
@@ -138,42 +153,108 @@ export const buildOrderReportStats = (ordersData: any, currency: string): StatIt
     "CANCELLED",
     "REJECTED",
   ]);
-  const paidOrders = getCountByKey(ordersData?.paymentStatusBreakdown, ["PAID"]);
-  const pendingPayments = getCountByKey(ordersData?.paymentStatusBreakdown, ["PENDING"]);
-
-  return withNeutralTrend([
-    { _id: "orders-total", title: "Total Orders", value: String(ordersData?.totalOrders ?? 0), icon: "orders" },
-    { _id: "orders-placed", title: "Placed Orders", value: String(placedOrders), icon: "ongoing" },
-    { _id: "orders-ongoing", title: "Ongoing", value: String(ongoingOrders), icon: "ongoing" },
-    { _id: "orders-completed", title: "Completed", value: String(completedOrders), icon: "completed" },
-    { _id: "orders-cancelled", title: "Cancelled", value: String(cancelledOrders), icon: "cancelled", iconStyle: "danger" },
-    { _id: "orders-total-revenue", title: "Total Revenue", value: formatCurrency(ordersData?.totalRevenue ?? 0, currency), icon: "revenue" },
-    { _id: "orders-paid", title: "Paid Orders", value: String(paidOrders), icon: "completed" },
-    { _id: "orders-pending-payment", title: "Pending Payments", value: String(pendingPayments), icon: "users" },
+  const paidOrders = getCountByKey(ordersData?.paymentStatusBreakdown, [
+    "PAID",
   ]);
+  const pendingPayments = getCountByKey(ordersData?.paymentStatusBreakdown, [
+    "PENDING",
+  ]);
+
+  return withNeutralTrend(
+    [
+      {
+        _id: "orders-total",
+        title: t("stats.totalOrders"),
+        value: String(ordersData?.totalOrders ?? 0),
+        icon: "orders",
+      },
+      {
+        _id: "orders-placed",
+        title: t("stats.placedOrders"),
+        value: String(placedOrders),
+        icon: "ongoing",
+      },
+      {
+        _id: "orders-ongoing",
+        title: t("stats.ongoing"),
+        value: String(ongoingOrders),
+        icon: "ongoing",
+      },
+      {
+        _id: "orders-completed",
+        title: t("stats.completed"),
+        value: String(completedOrders),
+        icon: "completed",
+      },
+      {
+        _id: "orders-cancelled",
+        title: t("stats.cancelled"),
+        value: String(cancelledOrders),
+        icon: "cancelled",
+        iconStyle: "danger",
+      },
+      {
+        _id: "orders-total-revenue",
+        title: t("stats.totalRevenue"),
+        value: formatCurrency(ordersData?.totalRevenue ?? 0, currency),
+        icon: "revenue",
+      },
+      {
+        _id: "orders-paid",
+        title: t("stats.paidOrders"),
+        value: String(paidOrders),
+        icon: "completed",
+      },
+      {
+        _id: "orders-pending-payment",
+        title: t("stats.pendingPayments"),
+        value: String(pendingPayments),
+        icon: "users",
+      },
+    ],
+    t,
+  );
 };
 
-export const getReportHeaderContent = (tab: ReportTab, isBranchAdmin: boolean) => {
+export const getReportHeaderContent = (
+  tab: ReportTab,
+  isBranchAdmin: boolean,
+  t: ReportTranslate,
+) => {
   if (tab === "financial") {
     return {
-      title: isBranchAdmin ? "Branch Financial Report" : "Financial Report",
-      description: isBranchAdmin ? "View financial data for your assigned branch" : "Manage and view all financial data in one place",
+      title: t(
+        isBranchAdmin
+          ? "headers.branchFinancialTitle"
+          : "headers.financialTitle",
+      ),
+      description: t(
+        isBranchAdmin
+          ? "headers.branchFinancialDescription"
+          : "headers.financialDescription",
+      ),
     };
   }
 
   if (tab === "invoice-history") {
     return {
-      title: isBranchAdmin
-        ? "Branch Billing Documents"
-        : "Subscription & Payout Invoices",
-      description: isBranchAdmin
-        ? "View subscription and payout documents available to your branch"
-        : "View and download restaurant subscription and payout billing documents",
+      title: t(
+        isBranchAdmin ? "headers.branchBillingTitle" : "headers.billingTitle",
+      ),
+      description: t(
+        isBranchAdmin
+          ? "headers.branchBillingDescription"
+          : "headers.billingDescription",
+      ),
     };
   }
 
   return {
-    title: isBranchAdmin ? "Branch Order Report" : "Order Report",
-    description: isBranchAdmin ? "View order analytics for your assigned branch" : "Manage and view all orders in one place",
+    title: t(isBranchAdmin ? "headers.branchOrderTitle" : "headers.orderTitle"),
+    description: t(
+      isBranchAdmin
+        ? "headers.branchOrderDescription"
+        : "headers.orderDescription",
+    ),
   };
 };

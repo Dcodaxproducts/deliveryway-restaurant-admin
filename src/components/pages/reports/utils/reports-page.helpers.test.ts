@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { mergeRestaurantBillingInvoices } from "./reports-page.helpers";
+import {
+  buildFinancialStats,
+  getReportHeaderContent,
+  mergeRestaurantBillingInvoices,
+} from "./reports-page.helpers";
 import type { GeneratedInvoice } from "@/services/reports";
 
 const makeInvoice = (
@@ -25,11 +29,21 @@ describe("mergeRestaurantBillingInvoices", () => {
         makeInvoice("subscription", "SUBSCRIPTION", "2026-07-01T00:00:00Z"),
         makeInvoice("order", "ORDER", "2026-07-03T00:00:00Z"),
       ],
-      [
-        makeInvoice("payout", "WEEKLY_PAYOUT", "2026-07-02T00:00:00Z"),
-      ],
+      [makeInvoice("payout", "WEEKLY_PAYOUT", "2026-07-02T00:00:00Z")],
     );
 
     expect(result.map(({ id }) => id)).toEqual(["payout", "subscription"]);
+  });
+
+  it("uses localized labels for report cards and headers", () => {
+    const t = (key: string) => `translated:${key}`;
+
+    expect(buildFinancialStats({}, "EUR", t)[0]?.title).toBe(
+      "translated:stats.totalOrders",
+    );
+    expect(getReportHeaderContent("invoice-history", false, t)).toEqual({
+      title: "translated:headers.billingTitle",
+      description: "translated:headers.billingDescription",
+    });
   });
 });

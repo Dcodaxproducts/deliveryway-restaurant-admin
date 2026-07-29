@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Download } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import StatsSection from "@/components/common/stats-section";
@@ -30,7 +32,15 @@ import {
 } from "@/components/pages/reports/utils/reports-page.helpers";
 
 export default function Orders() {
-  const { restaurantId, branchId, isBranchAdmin, loading: authLoading } = useAuth();
+  const t = useTranslations("reports");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const {
+    restaurantId,
+    branchId,
+    isBranchAdmin,
+    loading: authLoading,
+  } = useAuth();
   const { currency: fallbackCurrency } = useCurrency(restaurantId);
   const scopedReportParams = restaurantId
     ? {
@@ -40,6 +50,16 @@ export default function Orders() {
     : undefined;
 
   const [activeTab, setActiveTab] = useState<ReportTab>("financial");
+  useEffect(() => {
+    const requestedTab = searchParams.get("tab");
+    if (
+      requestedTab === "financial" ||
+      requestedTab === "order" ||
+      requestedTab === "invoice-history"
+    ) {
+      setActiveTab(requestedTab);
+    }
+  }, [searchParams]);
   const {
     data: financialReportResponse,
     isLoading: financialLoading,
@@ -85,14 +105,24 @@ export default function Orders() {
   const reportCurrency = getReportCurrency(
     financialData,
     ordersData,
-    fallbackCurrency
+    fallbackCurrency,
   );
 
-  const financialStats = useMemo(() => buildFinancialStats(financialData, reportCurrency), [financialData, reportCurrency]);
+  const financialStats = useMemo(
+    () => buildFinancialStats(financialData, reportCurrency, t),
+    [financialData, reportCurrency, t],
+  );
 
-  const orderStats = useMemo(() => buildOrderReportStats(ordersData, reportCurrency), [ordersData, reportCurrency]);
+  const orderStats = useMemo(
+    () => buildOrderReportStats(ordersData, reportCurrency, t),
+    [ordersData, reportCurrency, t],
+  );
 
-  const { title, description } = getReportHeaderContent(activeTab, isBranchAdmin);
+  const { title, description } = getReportHeaderContent(
+    activeTab,
+    isBranchAdmin,
+    t,
+  );
 
   const activeStats = activeTab === "financial" ? financialStats : orderStats;
 
@@ -112,7 +142,7 @@ export default function Orders() {
 
   const handleDownloadActiveReportPdf = () => {
     if (!restaurantId) {
-      toast.error("Restaurant is not available");
+      toast.error(t("restaurantUnavailable"));
       return;
     }
 
@@ -134,7 +164,12 @@ export default function Orders() {
       data: activeReportData,
     });
 
-    toast.success(`${title} PDF downloaded successfully`);
+    toast.success(t("pdfDownloaded", { title }));
+  };
+
+  const handleTabChange = (tab: ReportTab) => {
+    setActiveTab(tab);
+    router.replace(`/reports?tab=${tab}`, { scroll: false });
   };
 
   return (
@@ -152,10 +187,9 @@ export default function Orders() {
               className="h-[44px] rounded-[12px] border-gray-200 px-5 text-gray-700"
             >
               <Download size={17} className="mr-2" />
-              Download PDF
+              {t("downloadPdf")}
             </Button>
           ) : null}
-
         </div>
       </div>
 
@@ -163,23 +197,23 @@ export default function Orders() {
         <div className="flex items-center gap-6">
           <TabButton
             active={activeTab === "financial"}
-            onClick={() => setActiveTab("financial")}
+            onClick={() => handleTabChange("financial")}
           >
-            Financial Report
+            {t("tabs.financial")}
           </TabButton>
 
           <TabButton
             active={activeTab === "order"}
-            onClick={() => setActiveTab("order")}
+            onClick={() => handleTabChange("order")}
           >
-            Orders Report
+            {t("tabs.orders")}
           </TabButton>
 
           <TabButton
             active={activeTab === "invoice-history"}
-            onClick={() => setActiveTab("invoice-history")}
+            onClick={() => handleTabChange("invoice-history")}
           >
-            Invoice History
+            {t("tabs.invoiceHistory")}
           </TabButton>
         </div>
 
