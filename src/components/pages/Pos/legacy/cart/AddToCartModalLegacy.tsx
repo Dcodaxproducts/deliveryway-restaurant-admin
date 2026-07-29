@@ -21,6 +21,10 @@ import {
   buildPosAddToCartModifierSelections,
   flattenPosAddToCartModifierSelections,
 } from "@/components/pages/Pos/legacy/cart/add-to-cart-payload";
+import {
+  getPosCustomerOptionLabel,
+  resolvePosBranchSelection,
+} from "@/components/pages/Pos/legacy/cart/pos-selection";
 
 interface AddToCartModalProps {
   open: boolean;
@@ -904,6 +908,7 @@ export default function AddToCartModal({
   const { data: branchesData } = useGetBranches({
     restaurantId,
   });
+  const branches = useMemo(() => normalizeApiList(branchesData), [branchesData]);
 
   const variations = useMemo(() => getItemVariations(item), [item]);
 
@@ -990,6 +995,14 @@ export default function AddToCartModal({
   }, [open, item?.id, options]);
 
   useEffect(() => {
+    if (!open || branches.length === 0) return;
+
+    setSelectedBranch((current: { id?: string } | null) =>
+      resolvePosBranchSelection(branches, current?.id),
+    );
+  }, [branches, open]);
+
+  useEffect(() => {
     if (!options.length) return;
 
     const selectedStillExists = options.some(
@@ -1022,11 +1035,10 @@ export default function AddToCartModal({
   const fetchBranches = async ({ search }: any) => {
     if (!restaurantId) return { data: [] };
 
-    const list = normalizeApiList(branchesData);
     const normalizedSearch = String(search || "").toLowerCase();
 
     return {
-      data: list.filter((branch: any) =>
+      data: branches.filter((branch: any) =>
         String(branch?.name || "")
           .toLowerCase()
           .includes(normalizedSearch),
@@ -1052,10 +1064,11 @@ export default function AddToCartModal({
     return {
       data: raw.map((customer: any) => ({
         ...customer,
-        fullName:
-          `${customer?.profile?.firstName || ""} ${customer?.profile?.lastName || ""}`.trim() ||
-          customer?.email ||
+        fullName: getPosCustomerOptionLabel(
+          customer,
           t("customer"),
+          t("guestCustomer"),
+        ),
       })),
       meta: res?.data?.meta || res?.meta,
     };
@@ -1571,7 +1584,7 @@ export default function AddToCartModal({
                 labelKey="name"
                 valueKey="id"
                 placeholder={t("selectBranchPlaceholder")}
-                searchPlaceholder={t("searchPlaceholder")}
+                searchPlaceholder={t("customerSearchPlaceholder")}
                 noResultsText={t("noResultsFound")}
               />
             </div>

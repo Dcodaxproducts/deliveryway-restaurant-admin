@@ -210,6 +210,14 @@ export default function PosCart() {
   }, [customerDetailQuery.data]);
 
   const isGuestCustomer = selectedCustomer?.isGuest === true;
+  const updateGuestContact = (
+    field: "email" | "phone",
+    value: string,
+  ) => {
+    setSelectedCustomer((current) =>
+      current ? { ...current, [field]: value } : current,
+    );
+  };
 
   const getResponseMessage = (res: unknown, fallback: string) => {
     if (!res || typeof res !== "object") return fallback;
@@ -709,6 +717,38 @@ setSelectedAddress(null);
               ) : null}
             </div>
           </div>
+
+          {isGuestCustomer ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1 text-xs text-gray-500">
+                <span>{t("guestEmail")}</span>
+                <input
+                  type="email"
+                  value={selectedCustomer?.email ?? ""}
+                  onChange={(event) =>
+                    updateGuestContact("email", event.target.value)
+                  }
+                  placeholder={t("guestEmailPlaceholder")}
+                  autoComplete="email"
+                  className="h-10 w-full rounded-md border bg-white px-3 text-sm text-gray-900"
+                />
+              </label>
+
+              <label className="space-y-1 text-xs text-gray-500">
+                <span>{t("guestPhone")}</span>
+                <input
+                  type="tel"
+                  value={selectedCustomer?.phone ?? ""}
+                  onChange={(event) =>
+                    updateGuestContact("phone", event.target.value)
+                  }
+                  placeholder={t("guestPhonePlaceholder")}
+                  autoComplete="tel"
+                  className="h-10 w-full rounded-md border bg-white px-3 text-sm text-gray-900"
+                />
+              </label>
+            </div>
+          ) : null}
 
           <div>
             <p className="text-xs text-gray-400 mb-2">{t("orderType")}</p>
