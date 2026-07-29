@@ -27,7 +27,7 @@ export default function AdminDealMenuItemSelector({
   onChange,
   restaurantId,
   categoryId,
-  initialItems = [],
+  initialItems,
   error,
   helpText,
 }: AdminDealMenuItemSelectorProps) {

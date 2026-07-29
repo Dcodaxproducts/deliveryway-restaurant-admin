@@ -6,6 +6,12 @@ import { normalizeAdminDealMenuItem } from "@/components/pages/Menu/deals/utils/
 import { getMenuItems } from "@/services/menu/menu.api";
 import type { AdminDealMenuItemSummary } from "@/types/admin-deals";
 
+const EMPTY_INITIAL_ITEMS: AdminDealMenuItemSummary[] = [];
+
+export const resolveAdminDealInitialItems = (
+  initialItems?: AdminDealMenuItemSummary[],
+) => initialItems ?? EMPTY_INITIAL_ITEMS;
+
 const getResponseItems = (response: unknown): AdminDealMenuItemSummary[] => {
   const source = response && typeof response === "object" ? response : {};
   const record = source as Record<string, unknown>;
@@ -47,15 +53,17 @@ export const useAdminDealMenuItems = ({
   search,
   restaurantId,
   categoryId,
-  initialItems = [],
+  initialItems,
 }: UseAdminDealMenuItemsParams) => {
-  const [options, setOptions] = useState<AdminDealMenuItemSummary[]>(initialItems);
+  const resolvedInitialItems = resolveAdminDealInitialItems(initialItems);
+  const [options, setOptions] =
+    useState<AdminDealMenuItemSummary[]>(resolvedInitialItems);
   const [hasNext, setHasNext] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setOptions((current) => mergeItems(current, initialItems));
-  }, [initialItems]);
+    setOptions((current) => mergeItems(current, resolvedInitialItems));
+  }, [resolvedInitialItems]);
 
   useEffect(() => {
     let mounted = true;
@@ -74,7 +82,7 @@ export const useAdminDealMenuItems = ({
 
         if (mounted) {
           setOptions((current) => {
-            if (page === 1) return mergeItems(initialItems, items);
+            if (page === 1) return mergeItems(resolvedInitialItems, items);
             return mergeItems(current, items);
           });
           setHasNext(items.length > 0);
@@ -90,7 +98,14 @@ export const useAdminDealMenuItems = ({
       mounted = false;
       window.clearTimeout(timeoutId);
     };
-  }, [categoryId, initialItems, limit, page, restaurantId, search]);
+  }, [
+    categoryId,
+    limit,
+    page,
+    resolvedInitialItems,
+    restaurantId,
+    search,
+  ]);
 
   return {
     options,
