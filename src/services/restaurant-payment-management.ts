@@ -99,21 +99,6 @@ export type RestaurantPayoutProviderSettings = {
   configurations: RestaurantPayoutProviderConfiguration[];
 };
 
-export type CreateRestaurantPayoutProviderRequestPayload =
-  | {
-      provider: "STRIPE";
-      stripeAccountId: string;
-      note?: string;
-    }
-  | {
-      provider: "PAYPAL";
-      paypalClientId: string;
-      paypalClientSecret: string;
-      paypalRecipientEmail: string;
-      paypalEnvironment: "SANDBOX" | "LIVE";
-      note?: string;
-    };
-
 const isRecord = (value: unknown): value is RecordValue =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
@@ -409,12 +394,3 @@ export const getRestaurantPayoutProviderRequests = async (
     })),
   };
 };
-
-export const createRestaurantPayoutProviderRequest = (
-  restaurantId: string,
-  payload: CreateRestaurantPayoutProviderRequestPayload,
-) =>
-  httpClient.post<unknown, CreateRestaurantPayoutProviderRequestPayload>(
-    `/payments/restaurants/${restaurantId}/payout-provider-requests`,
-    payload,
-  );

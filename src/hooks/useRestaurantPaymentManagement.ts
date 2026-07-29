@@ -5,14 +5,12 @@ import { toast } from "sonner";
 
 import {
   createRestaurantPayoutRequest,
-  createRestaurantPayoutProviderRequest,
   getRestaurantPayoutRequests,
   getRestaurantPayoutProviderRequests,
   getRestaurantPaymentManagement,
   getRestaurantWallet,
   updateRestaurantPaymentMethods,
   type CreateRestaurantPayoutRequestPayload,
-  type CreateRestaurantPayoutProviderRequestPayload,
   type UpdateRestaurantPaymentMethodsPayload,
 } from "@/services/restaurant-payment-management";
 
@@ -123,33 +121,3 @@ export const useRestaurantPayoutProviderRequests = (
     queryFn: () => getRestaurantPayoutProviderRequests(restaurantId as string),
     enabled: Boolean(restaurantId),
   });
-
-export const useCreateRestaurantPayoutProviderRequest = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      restaurantId,
-      payload,
-    }: {
-      restaurantId: string;
-      payload: CreateRestaurantPayoutProviderRequestPayload;
-    }) => createRestaurantPayoutProviderRequest(restaurantId, payload),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: restaurantPaymentManagementKeys.payoutProviderRequests(
-          variables.restaurantId,
-        ),
-      });
-      toast.success("Payout provider request submitted");
-    },
-    onError: (
-      error: Error & { response?: { data?: { message?: string } } },
-    ) => {
-      toast.error(
-        error.response?.data?.message ??
-          "Unable to submit payout provider request",
-      );
-    },
-  });
-};
