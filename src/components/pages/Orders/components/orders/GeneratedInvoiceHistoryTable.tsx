@@ -74,11 +74,13 @@ const getStatusClassName = (status?: string | null) => {
 interface GeneratedInvoiceHistoryTableProps {
   invoices: GeneratedInvoice[];
   loading: boolean;
+  mode?: "orders" | "billing";
 }
 
 export function GeneratedInvoiceHistoryTable({
   invoices,
   loading,
+  mode = "orders",
 }: GeneratedInvoiceHistoryTableProps) {
   const t = useTranslations("orders");
   const queryClient = useQueryClient();
@@ -134,8 +136,16 @@ export function GeneratedInvoiceHistoryTable({
   if (!invoices.length) {
     return (
       <EmptyState
-        title={t("invoiceHistoryEmptyTitle")}
-        description={t("invoiceHistoryEmptyDescription")}
+        title={t(
+          mode === "billing"
+            ? "billingInvoiceHistoryEmptyTitle"
+            : "invoiceHistoryEmptyTitle",
+        )}
+        description={t(
+          mode === "billing"
+            ? "billingInvoiceHistoryEmptyDescription"
+            : "invoiceHistoryEmptyDescription",
+        )}
       />
     );
   }
@@ -199,13 +209,12 @@ export function GeneratedInvoiceHistoryTable({
                   </TableCell>
                   <TableCell className="px-4">
                     <div className="min-w-0 space-y-1 text-sm">
-                      <p
-                        className="truncate font-medium text-gray-700"
-                        title={orderId}
-                      >
-                        {invoice.orderId
-                          ? `${t("orderId")}: ${invoice.orderId}`
-                          : "-"}
+                      <p className="truncate font-medium text-gray-700">
+                        {mode === "billing"
+                          ? `${t("invoiceType")}: ${prettyLabel(invoice.kind)}`
+                          : invoice.orderId
+                            ? `${t("orderId")}: ${invoice.orderId}`
+                            : "-"}
                       </p>
                       {invoice.subscriptionId ? (
                         <p
@@ -213,6 +222,18 @@ export function GeneratedInvoiceHistoryTable({
                           title={invoice.subscriptionId}
                         >
                           {t("subscriptionId")}: {invoice.subscriptionId}
+                        </p>
+                      ) : null}
+                      {mode === "billing" &&
+                      (invoice.periodFrom || invoice.periodTo) ? (
+                        <p className="truncate text-xs text-gray-500">
+                          {t("billingPeriod")}:{" "}
+                          {[invoice.periodFrom, invoice.periodTo]
+                            .filter(Boolean)
+                            .map((value) =>
+                              new Date(String(value)).toLocaleDateString(),
+                            )
+                            .join(" – ")}
                         </p>
                       ) : null}
                     </div>
@@ -242,26 +263,30 @@ export function GeneratedInvoiceHistoryTable({
                           <Download className="h-4 w-4" />
                         )}
                       </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        title={t("sendInvoiceEmail")}
-                        aria-label={t("sendInvoiceEmail")}
-                        disabled={!orderId || !invoiceRestaurantId || isSending}
-                        onClick={() => {
-                          if (!orderId || !invoiceRestaurantId) return;
-                          sendInvoiceEmailMutation.mutate(
-                            {
-                              orderId,
-                              params: actionParams,
-                            },
-                            { onSettled: refreshInvoiceHistory },
-                          );
-                        }}
-                      >
-                        <Mail className="h-4 w-4" />
-                      </Button>
+                      {mode === "orders" ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          title={t("sendInvoiceEmail")}
+                          aria-label={t("sendInvoiceEmail")}
+                          disabled={
+                            !orderId || !invoiceRestaurantId || isSending
+                          }
+                          onClick={() => {
+                            if (!orderId || !invoiceRestaurantId) return;
+                            sendInvoiceEmailMutation.mutate(
+                              {
+                                orderId,
+                                params: actionParams,
+                              },
+                              { onSettled: refreshInvoiceHistory },
+                            );
+                          }}
+                        >
+                          <Mail className="h-4 w-4" />
+                        </Button>
+                      ) : null}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -296,10 +321,17 @@ export function GeneratedInvoiceHistoryTable({
                     {invoice.invoiceNumber || "-"}
                   </p>
                   <p className="mt-1 truncate text-sm text-gray-500">
-                    {invoice.orderId
-                      ? `${t("orderId")}: ${invoice.orderId}`
-                      : "-"}
+                    {mode === "billing"
+                      ? `${t("invoiceType")}: ${prettyLabel(invoice.kind)}`
+                      : invoice.orderId
+                        ? `${t("orderId")}: ${invoice.orderId}`
+                        : "-"}
                   </p>
+                  {invoice.subscriptionId ? (
+                    <p className="mt-1 truncate text-xs text-gray-500">
+                      {t("subscriptionId")}: {invoice.subscriptionId}
+                    </p>
+                  ) : null}
                 </div>
                 <Badge
                   variant="outline"
@@ -337,26 +369,28 @@ export function GeneratedInvoiceHistoryTable({
                     <Download className="h-4 w-4" />
                   )}
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  title={t("sendInvoiceEmail")}
-                  aria-label={t("sendInvoiceEmail")}
-                  disabled={!orderId || !invoiceRestaurantId}
-                  onClick={() => {
-                    if (!orderId || !invoiceRestaurantId) return;
-                    sendInvoiceEmailMutation.mutate(
-                      {
-                        orderId,
-                        params: actionParams,
-                      },
-                      { onSettled: refreshInvoiceHistory },
-                    );
-                  }}
-                >
-                  <Mail className="h-4 w-4" />
-                </Button>
+                {mode === "orders" ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    title={t("sendInvoiceEmail")}
+                    aria-label={t("sendInvoiceEmail")}
+                    disabled={!orderId || !invoiceRestaurantId}
+                    onClick={() => {
+                      if (!orderId || !invoiceRestaurantId) return;
+                      sendInvoiceEmailMutation.mutate(
+                        {
+                          orderId,
+                          params: actionParams,
+                        },
+                        { onSettled: refreshInvoiceHistory },
+                      );
+                    }}
+                  >
+                    <Mail className="h-4 w-4" />
+                  </Button>
+                ) : null}
               </div>
             </div>
           );

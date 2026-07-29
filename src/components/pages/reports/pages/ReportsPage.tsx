@@ -25,6 +25,7 @@ import {
   buildOrderReportStats,
   getReportCurrency,
   getReportHeaderContent,
+  mergeRestaurantBillingInvoices,
   type ReportTab,
 } from "@/components/pages/reports/utils/reports-page.helpers";
 
@@ -50,14 +51,33 @@ export default function Orders() {
     isLoading: ordersLoading,
     isFetching: ordersFetching,
   } = useGetOrdersReport(scopedReportParams);
-  const generatedInvoicesQuery = useGetGeneratedInvoices(
+  const subscriptionInvoicesQuery = useGetGeneratedInvoices(
     {
       restaurantId: restaurantId || undefined,
       branchId: isBranchAdmin ? branchId || undefined : undefined,
+      kind: "SUBSCRIPTION",
     },
     {
       enabled: activeTab === "invoice-history" && Boolean(restaurantId),
     },
+  );
+  const payoutInvoicesQuery = useGetGeneratedInvoices(
+    {
+      restaurantId: restaurantId || undefined,
+      branchId: isBranchAdmin ? branchId || undefined : undefined,
+      kind: "WEEKLY_PAYOUT",
+    },
+    {
+      enabled: activeTab === "invoice-history" && Boolean(restaurantId),
+    },
+  );
+  const billingInvoices = useMemo(
+    () =>
+      mergeRestaurantBillingInvoices(
+        subscriptionInvoicesQuery.data?.data || [],
+        payoutInvoicesQuery.data?.data || [],
+      ),
+    [payoutInvoicesQuery.data?.data, subscriptionInvoicesQuery.data?.data],
   );
 
   const financialData = financialReportResponse?.data;
@@ -82,7 +102,10 @@ export default function Orders() {
   const activeLoading =
     authLoading ||
     (activeTab === "invoice-history"
-      ? generatedInvoicesQuery.isLoading || generatedInvoicesQuery.isFetching
+      ? subscriptionInvoicesQuery.isLoading ||
+        subscriptionInvoicesQuery.isFetching ||
+        payoutInvoicesQuery.isLoading ||
+        payoutInvoicesQuery.isFetching
       : activeTab === "financial"
         ? financialLoading || financialFetching
         : ordersLoading || ordersFetching);
@@ -162,8 +185,9 @@ export default function Orders() {
 
         {activeTab === "invoice-history" ? (
           <GeneratedInvoiceHistoryTable
-            invoices={generatedInvoicesQuery.data?.data || []}
+            invoices={billingInvoices}
             loading={activeLoading}
+            mode="billing"
           />
         ) : activeTab === "financial" ? (
           <>
