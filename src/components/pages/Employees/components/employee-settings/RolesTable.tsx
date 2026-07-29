@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { Trash2, Pencil } from "lucide-react";
 import EmptyState from "@/components/common/EmptyState";
 import { toast } from "sonner";
@@ -224,38 +225,112 @@ const RolesTable = ({
                 <TableCell>
                   <div className="flex justify-center gap-2 text-gray">
                     {/* EDIT */}
-                    <button
-                      className="p-2"
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         setEditRole(role);
                         setOpen(true);
                       }}
                     >
-                      <Pencil size={18} />
-                    </button>
+                      <Pencil size={16} />
+                      {t("actions.edit")}
+                    </Button>
 
                     {/* DELETE */}
-                    <button
-                      className="p-2 text-red-500"
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-red-500"
                       onClick={() => handleDelete(role.id)}
                     >
-                      <Trash2 size={18} />
-                    </button>
+                      <Trash2 size={16} />
+                      {t("actions.delete")}
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-        <AddRoleModal
-          open={open}
-          onOpenChange={setOpen}
-          initialData={editRole}
-          onSuccess={onSuccess}
-          restaurantId={restaurantId}
-          branchId={branchId}
-        />
       </div>
+
+      <div className="space-y-3 md:hidden">
+        {roles.map((role) => (
+          <div key={role.id} className="rounded-xl border bg-white p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-medium text-dark">{role.name}</p>
+                {role.description ? (
+                  <p className="mt-1 text-sm text-gray-500">
+                    {role.description}
+                  </p>
+                ) : null}
+              </div>
+              <Switch
+                checked={role.isActive}
+                onCheckedChange={() => toggleStatus(role)}
+              />
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-1">
+              {role.permissions?.map((permission) => (
+                <span
+                  key={
+                    permission.id ??
+                    `${role.id}-${permission.access}-${permission.operations.join("-")}`
+                  }
+                  className="rounded bg-gray-100 px-2 py-1 text-xs"
+                >
+                  {getAccessLabel(permission.access)} (
+                  {permission.operations.map(getOperationLabel).join(", ")})
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2 border-t pt-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setEditRole(role);
+                  setOpen(true);
+                }}
+              >
+                <Pencil size={16} />
+                {t("actions.edit")}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="text-red-500"
+                onClick={() => handleDelete(role.id)}
+              >
+                <Trash2 size={16} />
+                {t("actions.delete")}
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <AddRoleModal
+        open={open}
+        onOpenChange={(nextOpen) => {
+          setOpen(nextOpen);
+          if (!nextOpen) {
+            setEditRole(null);
+          }
+        }}
+        initialData={editRole}
+        onSuccess={onSuccess}
+        restaurantId={restaurantId}
+        branchId={branchId}
+      />
     </>
   );
 };

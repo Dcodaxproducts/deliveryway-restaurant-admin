@@ -264,7 +264,9 @@ const PERMISSION_ACCESS_ALIASES: Record<string, string> = {
   variations: "menu-management",
   "branch-overrides": "menu-management",
   cuisines: "menu-management",
+  deals: "menu-management",
   orders: "order-management",
+  "group-orders": "order-management",
   pos: "pos-management",
   customers: "customer-management",
   staff: "employees",
@@ -286,7 +288,10 @@ const PERMISSION_ACCESS_ALIASES: Record<string, string> = {
 };
 
 export const normalizePermissionAccess = (access?: string | null) => {
-  const normalized = access?.trim().toLowerCase().replace(/[\s_]+/g, "-");
+  const normalized = access
+    ?.trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, "-");
   if (!normalized) return "";
 
   return PERMISSION_ACCESS_ALIASES[normalized] ?? normalized;
@@ -335,10 +340,7 @@ const STAFF_ROUTE_ACCESS: Array<{ href: string; accesses: string[] }> = [
   { href: "/menu/items", accesses: ["menu-management"] },
   { href: "/menu/allergen", accesses: ["menu-management"] },
   { href: "/menu/labels", accesses: ["menu-management"] },
-  {
-    href: "/menu/deals",
-    accesses: ["menu-management", "promotion-management"],
-  },
+  { href: "/menu/deals", accesses: ["menu-management"] },
   { href: "/orders", accesses: ["order-management"] },
   { href: "/table-reservations", accesses: ["table-reservations"] },
   { href: "/pos", accesses: ["pos-management"] },
@@ -427,13 +429,11 @@ export const getStaffRoutePermissionAccesses = (pathname?: string | null) => {
 
   if (path === "/profile") return ["*"];
 
-  const matchingRoute = STAFF_ROUTE_ACCESS
-    .filter((item) =>
-      item.href === "/"
-        ? path === "/"
-        : path === item.href || path.startsWith(`${item.href}/`),
-    )
-    .sort((first, second) => second.href.length - first.href.length)[0];
+  const matchingRoute = STAFF_ROUTE_ACCESS.filter((item) =>
+    item.href === "/"
+      ? path === "/"
+      : path === item.href || path.startsWith(`${item.href}/`),
+  ).sort((first, second) => second.href.length - first.href.length)[0];
 
   return matchingRoute?.accesses ?? [];
 };

@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
-import { Controller, useForm, type Control } from "react-hook-form";
+import { Controller, useForm, useWatch, type Control } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -154,6 +154,17 @@ export default function EmployeeInvitationModal({
     resolver: zodResolver(staffModalSchema),
     defaultValues,
   });
+  const selectedStaffRoleId = useWatch({ control, name: "staffRoleId" });
+  const selectedRole = roles.find((item) => item.id === selectedStaffRoleId);
+  const roleRestaurantIds = [
+    ...(selectedRole?.restaurantAccess?.restaurantIds ?? []),
+    ...(selectedRole?.restaurantId ? [selectedRole.restaurantId] : []),
+  ].filter((id, index, ids) => ids.indexOf(id) === index);
+  const roleBranchIds = [
+    ...(selectedRole?.restaurantAccess?.branchIds ?? []),
+  ].filter((id, index, ids) => ids.indexOf(id) === index);
+  const isSelectedRoleScoped =
+    roleRestaurantIds.length > 0 || roleBranchIds.length > 0;
 
   useEffect(() => {
     if (!open) {
@@ -208,14 +219,12 @@ export default function EmployeeInvitationModal({
 
   const onSubmit = async (values: StaffModalValues) => {
     try {
-      const selectedRole = roles.find((item) => item.id === values.staffRoleId);
-      const roleRestaurantIds = [
-        ...(selectedRole?.restaurantAccess?.restaurantIds ?? []),
-        ...(selectedRole?.restaurantId ? [selectedRole.restaurantId] : []),
-      ];
       const restaurantIds = selectedRestaurants.map(
         (restaurant) => restaurant.id,
       );
+      const scopedRestaurantIds = isSelectedRoleScoped
+        ? restaurantIds.filter((id) => roleRestaurantIds.includes(id))
+        : restaurantIds;
       const payload: StaffMutationPayload = {
         email: values.email,
         password: values.password ?? "",
@@ -227,21 +236,30 @@ export default function EmployeeInvitationModal({
         bio: values.bio,
         isActive: values.isActive,
         ...(canSelectRestaurants
-          ? allRestaurants
+          ? isSelectedRoleScoped
             ? {
-                allRestaurants: true,
-                hasAllRestaurantsAccess: true,
-                restaurantIds: [],
-              }
-            : {
                 allRestaurants: false,
                 hasAllRestaurantsAccess: false,
-                restaurantIds: restaurantIds.length
-                  ? restaurantIds
-                  : roleRestaurantIds.length
-                    ? [...new Set(roleRestaurantIds)]
-                    : undefined,
+                restaurantIds: scopedRestaurantIds.length
+                  ? scopedRestaurantIds
+                  : roleRestaurantIds,
+                branchIds: roleBranchIds,
               }
+            : allRestaurants
+              ? {
+                  allRestaurants: true,
+                  hasAllRestaurantsAccess: true,
+                  restaurantIds: [],
+                }
+              : {
+                  allRestaurants: false,
+                  hasAllRestaurantsAccess: false,
+                  restaurantIds: restaurantIds.length
+                    ? restaurantIds
+                    : roleRestaurantIds.length
+                      ? [...new Set(roleRestaurantIds)]
+                      : undefined,
+                }
           : {}),
         ...(isBranchAdmin
           ? {}
@@ -342,7 +360,26 @@ export default function EmployeeInvitationModal({
                 <select
                   id="employee-role"
                   value={field.value}
-                  onChange={({ target: { value } }) => field.onChange(value)}
+                  onChange={({ target: { value } }) => {
+                    field.onChange(value);
+                    const nextRole = roles.find((item) => item.id === value);
+                    const nextRoleRestaurantIds = [
+                      ...(nextRole?.restaurantAccess?.restaurantIds ?? []),
+                      ...(nextRole?.restaurantId
+                        ? [nextRole.restaurantId]
+                        : []),
+                    ].filter((id, index, ids) => ids.indexOf(id) === index);
+
+                    if (nextRoleRestaurantIds.length) {
+                      setAllRestaurants(false);
+                      setSelectedRestaurants(
+                        nextRoleRestaurantIds.map((id) => ({
+                          id,
+                          name: id,
+                        })),
+                      );
+                    }
+                  }}
                   onBlur={field.onBlur}
                   className="mt-1 h-[44px] w-full rounded-lg border border-gray-300 px-3 text-sm"
                 >
@@ -372,7 +409,14 @@ export default function EmployeeInvitationModal({
                   value={selectedRestaurants}
                   onChange={(restaurants) => {
                     setAllRestaurants(false);
-                    setSelectedRestaurants(restaurants as RestaurantOption[]);
+                    const nextRestaurants = restaurants as RestaurantOption[];
+                    setSelectedRestaurants(
+                      isSelectedRoleScoped
+                        ? nextRestaurants.filter((restaurant) =>
+                            roleRestaurantIds.includes(restaurant.id),
+                          )
+                        : nextRestaurants,
+                    );
                   }}
                   placeholder={t("employeeModal.selectRestaurants")}
                   fetchOptions={({ search, page }) =>
@@ -384,12 +428,15 @@ export default function EmployeeInvitationModal({
               </div>
               <div className="mt-2 flex items-center justify-between gap-3">
                 <p className="text-xs text-gray-500">
-                  {t("employeeModal.restaurantsHelp")}
+                  {isSelectedRoleScoped
+                    ? t("employeeModal.roleScopedRestaurantsHelp")
+                    : t("employeeModal.restaurantsHelp")}
                 </p>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
+                  disabled={isSelectedRoleScoped}
                   onClick={() => {
                     setAllRestaurants(true);
                     setSelectedRestaurants([]);

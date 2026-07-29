@@ -2322,6 +2322,7 @@
       "restaurants": "Restaurants",
       "selectRestaurants": "Restaurants auswählen",
       "restaurantsHelp": "Mitarbeiter von Business-Admins können auf ausgewählte Restaurants begrenzt oder allen Restaurants auf einmal zugewiesen werden.",
+      "roleScopedRestaurantsHelp": "Der Restaurantzugriff dieses Mitarbeiters bleibt auf die ausgewählte Rolle beschränkt.",
       "assignAllRestaurants": "Alle zuweisen",
       "allRestaurantsAssigned": "Alle zugewiesen",
       "assigningAllRestaurants": "Wird zugewiesen...",

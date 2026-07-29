@@ -2322,6 +2322,7 @@
       "restaurants": "Restaurants",
       "selectRestaurants": "Select restaurants",
       "restaurantsHelp": "Business admin staff can be limited to selected restaurants, or assigned to all restaurants at once.",
+      "roleScopedRestaurantsHelp": "This employee's restaurant access stays within the selected role.",
       "assignAllRestaurants": "Assign all",
       "allRestaurantsAssigned": "All assigned",
       "assigningAllRestaurants": "Assigning...",

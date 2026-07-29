@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   getStaffDefaultRedirectPath,
+  getStaffRoutePermissionAccesses,
   hasStaffMenuAccess,
   hasStaffPanelAccess,
   hasStaffPermission,
@@ -80,7 +81,10 @@ describe("auth helpers", () => {
       email: "staff@example.com",
       role: "STAFF",
       actorType: "STAFF",
-      restaurantAccess: { restaurantIds: ["restaurant-1"], branchIds: ["branch-1"] },
+      restaurantAccess: {
+        restaurantIds: ["restaurant-1"],
+        branchIds: ["branch-1"],
+      },
       staffRoleId: "role-1",
       staffRole: {
         id: "role-1",
@@ -213,7 +217,9 @@ describe("auth helpers", () => {
     expect(normalizePermissionOperation("all")).toBe("manage");
     expect(hasStaffPermission(user, ["employees"], ["read"])).toBe(true);
     expect(hasStaffPermission(user, ["employees"], ["update"])).toBe(true);
-    expect(hasStaffPermission(user, ["menu-management"], ["delete"])).toBe(true);
+    expect(hasStaffPermission(user, ["menu-management"], ["delete"])).toBe(
+      true,
+    );
   });
 
   it("allows staff direct routes only through canonical sidebar permissions", () => {
@@ -232,6 +238,24 @@ describe("auth helpers", () => {
     expect(isStaffRouteAllowed(user, "/deliveryman")).toBe(false);
     expect(isStaffRouteAllowed(user, "/profile")).toBe(true);
     expect(getStaffDefaultRedirectPath(user)).toBe("/employees-settings");
+  });
+
+  it("treats deals as a nested menu-management route", () => {
+    const user = normalizeUser({
+      id: "staff-1",
+      role: "STAFF",
+      actorType: "STAFF",
+      tenantId: "tenant-1",
+      restaurantAccess: { restaurantIds: ["restaurant-1"] },
+      staffRole: {
+        permissions: [{ access: "menu-management", operations: ["read"] }],
+      },
+    });
+
+    expect(getStaffRoutePermissionAccesses("/menu/deals")).toEqual([
+      "menu-management",
+    ]);
+    expect(isStaffRouteAllowed(user, "/menu/deals")).toBe(true);
   });
 
   it("normalizes all-restaurants staff access claims", () => {

@@ -94,9 +94,13 @@ export default function EmployeeTable({
 
   useEffect(() => {
     if (refreshFlag !== undefined) {
-      refetch();
+      if (page === 1) {
+        refetch();
+      } else {
+        setPage(1);
+      }
     }
-  }, [refreshFlag, refetch]);
+  }, [page, refreshFlag, refetch]);
 
   const handleDelete = () => {
     if (!deleteId) return;
