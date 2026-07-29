@@ -345,6 +345,8 @@ export default function EmployeeInvitationModal({
               id="employee-password"
               label={t("employeeModal.password")}
               type="password"
+              showLabel={t("employeeModal.showPassword")}
+              hideLabel={t("employeeModal.hidePassword")}
               error={translateValidationError(errors.password?.message)}
             />
           </div>
@@ -518,6 +520,8 @@ type EmployeeFieldProps = {
   id: string;
   label: string;
   type?: string;
+  showLabel?: string;
+  hideLabel?: string;
   error?: string;
 };
 
@@ -527,6 +531,8 @@ function EmployeeField({
   id,
   label,
   type = "text",
+  showLabel,
+  hideLabel,
   error,
 }: EmployeeFieldProps) {
   return (
@@ -543,7 +549,9 @@ function EmployeeField({
           return (
             <FieldInput
               id={id}
-              {...(type === "password" ? {} : { type })}
+              {...(type === "password"
+                ? { showLabel, hideLabel }
+                : { type })}
               value={typeof field.value === "string" ? field.value : ""}
               onChange={({ target: { value } }) => field.onChange(value)}
               onBlur={field.onBlur}

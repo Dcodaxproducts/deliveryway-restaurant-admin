@@ -2330,6 +2330,8 @@
       "lastName": "Nachname *",
       "phone": "Telefon",
       "password": "Passwort *",
+      "showPassword": "Mitarbeiterpasswort anzeigen",
+      "hidePassword": "Mitarbeiterpasswort ausblenden",
       "role": "Rolle *",
       "selectRole": "Rolle auswählen",
       "restaurants": "Restaurants",

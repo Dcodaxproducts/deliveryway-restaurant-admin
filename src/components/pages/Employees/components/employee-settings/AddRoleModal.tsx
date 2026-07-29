@@ -326,7 +326,11 @@ export function AddRoleModal({
                 value={selectedAccess}
                 onChange={({ target: { value } }) => {
                   setSelectedAccess(value);
-                  setSelectedOps([]);
+                  setSelectedOps(
+                    permissionModules.find(
+                      (module) => module.accessKey === value,
+                    )?.defaultActions ?? [],
+                  );
                 }}
                 className="h-[42px] flex-1 rounded-lg border border-gray-300 px-3 text-sm"
               >
