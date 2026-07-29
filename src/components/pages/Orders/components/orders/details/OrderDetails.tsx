@@ -461,7 +461,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
           <h4 className="text-base font-medium text-gray-900">{title}</h4>
           <div className="flex items-end justify-between gap-4">
             <p className="text-base font-medium text-primary">{formatMoney(total, primaryCurrency)}</p>
-            <p className="text-sm text-gray-700">Qty: {quantity ?? 1}</p>
+            <p className="text-sm text-gray-700">{t("qty")}: {quantity ?? 1}</p>
           </div>
         </div>
       </div>
