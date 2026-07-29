@@ -123,6 +123,8 @@ export default function AdminDealForm({
 }: AdminDealFormProps) {
   const t = useTranslations("deals.form");
   const commonT = useTranslations("common");
+  const resolvedRestaurantId =
+    restaurantId || initialDeal?.restaurantId || undefined;
   const initialMenuItems: AdminDealMenuItemSummary[] = useMemo(
     () => initialDeal?.scopeMenuItems ?? [],
     [initialDeal?.scopeMenuItems]
@@ -183,10 +185,10 @@ export default function AdminDealForm({
     search: string;
     page: number;
   }) => {
-    if (!restaurantId) return { data: [] };
+    if (!resolvedRestaurantId) return { data: [] };
 
     const response = await getMenuVariations({
-      restaurantId,
+      restaurantId: resolvedRestaurantId,
       categoryId,
       search,
       page,
@@ -204,7 +206,7 @@ export default function AdminDealForm({
           name: String(variation.name),
         })),
     };
-  }, [restaurantId]);
+  }, [resolvedRestaurantId]);
 
   useEffect(() => {
     setSelectedCategoryOptions(initialCategories);
@@ -555,7 +557,7 @@ export default function AdminDealForm({
                   <AdminDealMenuItemSelector
                     value={field.value}
                     onChange={field.onChange}
-                    restaurantId={restaurantId}
+                    restaurantId={resolvedRestaurantId}
                     initialItems={initialMenuItems}
                     error={fieldState.error?.message}
                   />
@@ -578,7 +580,7 @@ export default function AdminDealForm({
                     <AdminDealCategorySelector
                       value={field.value}
                       onChange={field.onChange}
-                      restaurantId={restaurantId}
+                      restaurantId={resolvedRestaurantId}
                       branchId={branchId}
                       initialCategories={initialCategories}
                       onSelectionOptionsChange={setSelectedCategoryOptions}
@@ -595,7 +597,7 @@ export default function AdminDealForm({
                     categoryIds={scopeCategoryIds}
                     categories={selectedCategoryOptions}
                     rules={field.value}
-                    restaurantId={restaurantId}
+                    restaurantId={resolvedRestaurantId}
                     initialVariationOptions={initialVariationOptions}
                     fetchVariationOptions={fetchVariationOptions}
                     error={fieldState.error?.message}

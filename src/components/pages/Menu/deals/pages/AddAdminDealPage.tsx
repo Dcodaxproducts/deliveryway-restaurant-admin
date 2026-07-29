@@ -62,7 +62,8 @@ export default function AddAdminDealPage() {
         branchId: isBranchAdmin ? branchId : values.branchId,
       })
     );
-    router.push("/menu/deals");
+    router.replace("/menu/deals");
+    router.refresh();
   };
 
   return (

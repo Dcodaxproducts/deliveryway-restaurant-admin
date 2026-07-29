@@ -46,7 +46,7 @@ export default function AdminDealMenuItemSelector({
 
   useEffect(() => {
     setPage(1);
-  }, [restaurantId]);
+  }, [categoryId, restaurantId]);
 
   const selectedItems = useMemo(() => {
     return value

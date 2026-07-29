@@ -72,8 +72,8 @@ export function useCreateAdminDeal() {
 
   return useMutation({
     mutationFn: (payload: AdminDealCreatePayload) => createAdminDeal(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminDealsQueryKeys.all });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminDealsQueryKeys.all });
       toast.success("Deal created successfully.");
     },
     onError: (error) => {
