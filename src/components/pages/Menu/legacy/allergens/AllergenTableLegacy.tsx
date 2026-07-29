@@ -148,15 +148,25 @@ const sortTemplates = (
   sortOrder: SortOrder
 ) => {
   return [...items].sort((a, b) => {
+    if (sortBy === "type") {
+      const typeRank: Record<TemplateType, number> = {
+        allergens: 0,
+        additives: 1,
+      };
+      const typeResult = typeRank[a.type] - typeRank[b.type];
+      const result =
+        typeResult !== 0
+          ? typeResult
+          : normalizeText(a.code).localeCompare(normalizeText(b.code));
+
+      return sortOrder === "ASC" ? result : -result;
+    }
+
     const aValue =
-      sortBy === "type"
-        ? getTypeLabel(a.type).toLowerCase()
-        : normalizeText(a?.[sortBy] || "");
+      normalizeText(a?.[sortBy] || "");
 
     const bValue =
-      sortBy === "type"
-        ? getTypeLabel(b.type).toLowerCase()
-        : normalizeText(b?.[sortBy] || "");
+      normalizeText(b?.[sortBy] || "");
 
     const result = aValue.localeCompare(bValue);
 

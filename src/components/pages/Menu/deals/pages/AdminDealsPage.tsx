@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import Container from "@/components/common/Container";
 import AdminDealDeleteDialog from "@/components/pages/Menu/deals/components/AdminDealDeleteDialog";
@@ -12,7 +12,11 @@ import AdminDealsFilters, {
 import AdminDealsHeader from "@/components/pages/Menu/deals/components/AdminDealsHeader";
 import AdminDealsPagination from "@/components/pages/Menu/deals/components/AdminDealsPagination";
 import AdminDealsTable from "@/components/pages/Menu/deals/components/AdminDealsTable";
-import { useAdminDeals, useDeleteAdminDeal } from "@/hooks/useAdminDeals";
+import {
+  useAdminDeals,
+  useDeleteAdminDeal,
+  useReorderAdminDeals,
+} from "@/hooks/useAdminDeals";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetBranches } from "@/hooks/useBranches";
 import type { AdminDeal, AdminDealsListParams } from "@/types/admin-deals";
@@ -50,6 +54,7 @@ export default function AdminDealsPage() {
   const [limit, setLimit] = useState(20);
   const [dealToDelete, setDealToDelete] = useState<AdminDeal | null>(null);
   const [dealForStats, setDealForStats] = useState<AdminDeal | null>(null);
+  const [orderedDeals, setOrderedDeals] = useState<AdminDeal[]>([]);
 
   const branchesQuery = useGetBranches(
     restaurantId
@@ -91,7 +96,11 @@ export default function AdminDealsPage() {
 
   const dealsQuery = useAdminDeals(params);
   const deleteMutation = useDeleteAdminDeal();
-  const deals = dealsQuery.data?.deals ?? [];
+  const reorderMutation = useReorderAdminDeals();
+  const deals = useMemo(
+    () => dealsQuery.data?.deals ?? [],
+    [dealsQuery.data?.deals],
+  );
   const meta = dealsQuery.data?.meta ?? {
     page,
     limit,
@@ -125,6 +134,40 @@ export default function AdminDealsPage() {
     setDealToDelete(null);
   };
 
+  useEffect(() => {
+    setOrderedDeals(deals);
+  }, [deals]);
+
+  const canReorder =
+    page === 1 &&
+    !filters.search &&
+    filters.lifecycle === "ALL";
+
+  const handleReorder = (fromId: string, toId: string) => {
+    if (!canReorder) return;
+
+    const fromIndex = orderedDeals.findIndex((deal) => deal.id === fromId);
+    const toIndex = orderedDeals.findIndex((deal) => deal.id === toId);
+
+    if (fromIndex < 0 || toIndex < 0) return;
+
+    const nextDeals = [...orderedDeals];
+    const [movedDeal] = nextDeals.splice(fromIndex, 1);
+    nextDeals.splice(toIndex, 0, movedDeal);
+    setOrderedDeals(nextDeals);
+
+    reorderMutation.mutate(
+      {
+        orderedDealIds: nextDeals.map((deal) => deal.id),
+        restaurantId: restaurantId || undefined,
+        branchId: scopedBranchId,
+      },
+      {
+        onError: () => setOrderedDeals(deals),
+      },
+    );
+  };
+
   return (
     <Container>
       <AdminDealsHeader
@@ -146,11 +189,13 @@ export default function AdminDealsPage() {
         />
 
         <AdminDealsTable
-          deals={deals}
+          deals={orderedDeals}
           loading={dealsQuery.isLoading}
           error={dealsQuery.error}
           onDelete={setDealToDelete}
           onStats={setDealForStats}
+          onReorder={canReorder ? handleReorder : undefined}
+          reordering={reorderMutation.isPending}
         />
 
         <AdminDealsPagination

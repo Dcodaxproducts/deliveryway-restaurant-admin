@@ -110,7 +110,7 @@ describe("admin deal validation", () => {
     expect(result.success).toBe(false);
   });
 
-  it("flexible item deal rejects required quantity greater than selected item count", () => {
+  it("flexible item deal allows repeating an eligible item", () => {
     const result = adminDealFormSchema.safeParse({
       ...validValues,
       dealSelectionMode: "FLEXIBLE_ITEMS",
@@ -118,7 +118,7 @@ describe("admin deal validation", () => {
       scopeMenuItemIds: ["item-1", "item-2"],
     });
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it("flexible category deal requires at least 1 category", () => {

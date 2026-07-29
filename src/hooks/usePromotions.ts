@@ -11,6 +11,7 @@ import {
   getAdminPromotionsOverview,
   getAdminPromotionStats,
   createCoupon,
+  deleteCoupon,
   getCoupons,
   updateCouponStatus,
   updateCoupon,
@@ -311,6 +312,17 @@ export const useUpdateCoupon = () => {
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: Partial<CouponPayload> }) =>
       updateCoupon(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: couponQueryKeys.all });
+    },
+  });
+};
+
+export const useDeleteCoupon = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteCoupon(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: couponQueryKeys.all });
     },

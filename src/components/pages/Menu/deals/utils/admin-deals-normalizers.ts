@@ -187,6 +187,8 @@ const normalizeAdminDealCategoryRule = (
     menuCategoryId,
     itemLimit: getNumber(value, "itemLimit", 1),
     variationId: getNullableString(value, "variationId"),
+    includedMenuItemIds: normalizeStringArray(value.includedMenuItemIds),
+    excludedMenuItemIds: normalizeStringArray(value.excludedMenuItemIds),
     ...(variation ? { variation } : {}),
   };
 };

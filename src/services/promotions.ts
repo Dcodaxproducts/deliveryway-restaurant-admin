@@ -261,6 +261,11 @@ export const updateCoupon = async (id: string, payload: Partial<CouponPayload>) 
   return response.data;
 };
 
+export const deleteCoupon = async (id: string) => {
+  const response = await api.delete(`/coupons/${id}`);
+  return response.data;
+};
+
 export const updateCouponStatus = async (
   code: string,
   payload: CouponStatusPayload

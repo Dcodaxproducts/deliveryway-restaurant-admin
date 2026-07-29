@@ -8,7 +8,7 @@ export type AdminDealLifecycle =
   | "inactive"
   | string;
 
-export type AdminDealSourceType = "ITEMS" | "CATEGORIES";
+export type AdminDealSourceType = "ITEMS" | "CATEGORIES" | "BOTH";
 export type AdminDealKind = "FIXED_PRICE" | "ITEM_DEAL" | "BUNDLE" | string;
 export type AdminDealDiscountType = "FIXED_PRICE" | "PERCENTAGE" | "FLAT" | string;
 
@@ -41,12 +41,16 @@ export type AdminDealCategoryRule = {
   itemLimit: number;
   variationId?: string | null;
   variation?: AdminDealVariationSummary | null;
+  includedMenuItemIds?: string[];
+  excludedMenuItemIds?: string[];
 };
 
 export type AdminDealCategoryRuleFormValues = {
   menuCategoryId: string;
   itemLimit: number | null;
   variationId?: string;
+  includedMenuItemIds?: string[];
+  excludedMenuItemIds?: string[];
 };
 
 export type AdminDeal = {
@@ -132,6 +136,8 @@ export type AdminDealCategoryRulePayload = {
   menuCategoryId: string;
   itemLimit: number;
   variationId?: string;
+  includedMenuItemIds?: string[];
+  excludedMenuItemIds?: string[];
 };
 
 export type AdminDealCreatePayload = {
@@ -149,6 +155,7 @@ export type AdminDealCreatePayload = {
   dealRequiredQuantity?: number;
   scopeMenuItemIds?: string[];
   scopeCategoryIds?: string[];
+  sortOrder?: number;
   scopeCategories?: AdminDealCategoryRulePayload[];
   isActive: boolean;
 };

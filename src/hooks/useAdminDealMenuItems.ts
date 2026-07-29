@@ -37,6 +37,7 @@ type UseAdminDealMenuItemsParams = {
   limit: number;
   search: string;
   restaurantId?: string;
+  categoryId?: string;
   initialItems?: AdminDealMenuItemSummary[];
 };
 
@@ -45,6 +46,7 @@ export const useAdminDealMenuItems = ({
   limit,
   search,
   restaurantId,
+  categoryId,
   initialItems = [],
 }: UseAdminDealMenuItemsParams) => {
   const [options, setOptions] = useState<AdminDealMenuItemSummary[]>(initialItems);
@@ -66,6 +68,7 @@ export const useAdminDealMenuItems = ({
           limit,
           search,
           restaurantId,
+          categoryId,
         });
         const items = getResponseItems(response);
 
@@ -87,7 +90,7 @@ export const useAdminDealMenuItems = ({
       mounted = false;
       window.clearTimeout(timeoutId);
     };
-  }, [initialItems, limit, page, restaurantId, search]);
+  }, [categoryId, initialItems, limit, page, restaurantId, search]);
 
   return {
     options,

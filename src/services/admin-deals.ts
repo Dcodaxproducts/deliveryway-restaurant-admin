@@ -78,6 +78,14 @@ export async function deleteAdminDeal(
   });
 }
 
+export async function reorderAdminDeals(payload: {
+  orderedDealIds: string[];
+  restaurantId?: string;
+  branchId?: string;
+}) {
+  return httpClient.patch("/admin/deals/reorder", payload);
+}
+
 export async function getAdminDealStats(
   id: string,
   params?: AdminDealScopeParams

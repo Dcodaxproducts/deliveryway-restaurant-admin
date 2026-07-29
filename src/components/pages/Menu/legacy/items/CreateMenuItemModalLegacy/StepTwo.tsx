@@ -30,6 +30,7 @@ type OptionItem = {
   value?: string;
   code?: string;
   label: string;
+  displayLabel?: string;
 };
 
 const schema = z.object({
@@ -108,6 +109,9 @@ const normalizeTemplateOptions = (
     .map((item) => ({
       code: String(item?.code || "").trim(),
       label: String(item?.label || item?.code || "").trim(),
+      displayLabel: `${String(item?.code || "").trim()} — ${String(
+        item?.label || item?.code || "",
+      ).trim()}`,
     }))
     .filter((item) => item.code && item.label);
 };
@@ -330,14 +334,14 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
   const fetchAllergenOptions = useMemo(() => {
     return createLocalFetchOptions({
       items: allergenOptions,
-      keys: ["code", "label"],
+      keys: ["code", "label", "displayLabel"],
     });
   }, [allergenOptions]);
 
   const fetchAdditiveOptions = useMemo(() => {
     return createLocalFetchOptions({
       items: additiveOptions,
-      keys: ["code", "label"],
+      keys: ["code", "label", "displayLabel"],
     });
   }, [additiveOptions]);
 
@@ -886,7 +890,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
               }
               placeholder={t("selectItemLabels")}
               fetchOptions={fetchLabelOptions}
-              labelKey="label"
+              labelKey="displayLabel"
               valueKey="value"
               maxSelectedLabelCount={3}
             />
@@ -918,7 +922,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
               }
               placeholder={t("selectAllergenCodes")}
               fetchOptions={fetchAllergenOptions}
-              labelKey="label"
+              labelKey="displayLabel"
               valueKey="code"
               maxSelectedLabelCount={3}
             />

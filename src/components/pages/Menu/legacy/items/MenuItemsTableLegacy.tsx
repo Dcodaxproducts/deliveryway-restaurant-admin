@@ -168,6 +168,8 @@ export default function MenuItemsTable({ refetchKey }: any) {
       restaurantId: restaurantId || undefined,
       categoryId,
       inactive: statusFilter === "inactive" ? true : undefined,
+      sortBy: "sortOrder" as const,
+      sortOrder: "ASC" as const,
     }),
     [page, limit, debouncedSearch, restaurantId, categoryId, statusFilter],
   );

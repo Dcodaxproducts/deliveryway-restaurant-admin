@@ -14,6 +14,7 @@ type AdminDealMenuItemSelectorProps = {
   value: string[];
   onChange: (value: string[]) => void;
   restaurantId?: string;
+  categoryId?: string;
   initialItems?: AdminDealMenuItemSummary[];
   error?: string;
   helpText?: string;
@@ -25,6 +26,7 @@ export default function AdminDealMenuItemSelector({
   value,
   onChange,
   restaurantId,
+  categoryId,
   initialItems = [],
   error,
   helpText,
@@ -38,6 +40,7 @@ export default function AdminDealMenuItemSelector({
     limit: MENU_ITEMS_PAGE_SIZE,
     search,
     restaurantId,
+    categoryId,
     initialItems,
   });
 

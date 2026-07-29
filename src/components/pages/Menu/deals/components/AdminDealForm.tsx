@@ -77,11 +77,16 @@ const getDefaultValues = ({
   expiresAt: toDateTimeLocalValue(initialDeal?.expiresAt),
   dealSelectionMode: initialDeal?.dealSelectionMode ?? "FIXED_ITEMS",
   dealSourceType:
-    (initialDeal?.scopeCategoryRules?.length ?? 0) > 0 ||
-    (initialDeal?.scopeCategoryIds?.length ?? 0) > 0 ||
-    (initialDeal?.scopeCategories?.length ?? 0) > 0
-      ? "CATEGORIES"
-      : "ITEMS",
+    ((initialDeal?.scopeCategoryRules?.length ?? 0) > 0 ||
+      (initialDeal?.scopeCategoryIds?.length ?? 0) > 0 ||
+      (initialDeal?.scopeCategories?.length ?? 0) > 0) &&
+    (initialDeal?.scopeMenuItemIds?.length ?? 0) > 0
+      ? "BOTH"
+      : (initialDeal?.scopeCategoryRules?.length ?? 0) > 0 ||
+          (initialDeal?.scopeCategoryIds?.length ?? 0) > 0 ||
+          (initialDeal?.scopeCategories?.length ?? 0) > 0
+        ? "CATEGORIES"
+        : "ITEMS",
   dealRequiredQuantity: initialDeal?.dealRequiredQuantity ?? null,
   scopeMenuItemIds: initialDeal?.scopeMenuItemIds ?? [],
   scopeCategoryIds:
@@ -93,6 +98,8 @@ const getDefaultValues = ({
       menuCategoryId: rule.menuCategoryId,
       itemLimit: rule.itemLimit,
       variationId: rule.variationId ?? "",
+      includedMenuItemIds: rule.includedMenuItemIds ?? [],
+      excludedMenuItemIds: rule.excludedMenuItemIds ?? [],
     })) ?? [],
   isActive: initialDeal?.isActive ?? true,
 });
@@ -156,7 +163,11 @@ export default function AdminDealForm({
   const scopeCategoryIds = useWatch({ control, name: "scopeCategoryIds" });
   const scopeCategoryRules = useWatch({ control, name: "scopeCategoryRules" });
   const isFlexibleDeal = dealSelectionMode === "FLEXIBLE_ITEMS";
-  const isCategorySource = isFlexibleDeal && dealSourceType === "CATEGORIES";
+  const usesCategorySource =
+    isFlexibleDeal &&
+    (dealSourceType === "CATEGORIES" || dealSourceType === "BOTH");
+  const usesItemSource =
+    dealSourceType === "ITEMS" || dealSourceType === "BOTH";
   const hasCustomDealWindow = Boolean(startsAt || expiresAt);
   const categoryRuleTotal = useMemo(() => {
     return scopeCategoryRules
@@ -200,7 +211,7 @@ export default function AdminDealForm({
   }, [initialCategories]);
 
   useEffect(() => {
-    if (!isCategorySource) return;
+    if (!usesCategorySource) return;
 
     const currentRuleMap = new Map(
       scopeCategoryRules.map((rule) => [rule.menuCategoryId, rule])
@@ -211,6 +222,8 @@ export default function AdminDealForm({
           menuCategoryId: categoryId,
           itemLimit: 1,
           variationId: "",
+          includedMenuItemIds: [],
+          excludedMenuItemIds: [],
         }
       );
     });
@@ -228,7 +241,7 @@ export default function AdminDealForm({
     if (rulesChanged) {
       setValue("scopeCategoryRules", nextRules, { shouldValidate: true });
     }
-  }, [isCategorySource, scopeCategoryIds, scopeCategoryRules, setValue]);
+  }, [usesCategorySource, scopeCategoryIds, scopeCategoryRules, setValue]);
 
   const handleDealTypeChange = (value: AdminDealFormValues["dealSelectionMode"]) => {
     setValue("dealSelectionMode", value, { shouldValidate: true });
@@ -245,7 +258,7 @@ export default function AdminDealForm({
     if (value === "CATEGORIES") {
       setValue("scopeMenuItemIds", [], { shouldValidate: true });
       setValue("dealRequiredQuantity", null, { shouldValidate: true });
-    } else {
+    } else if (value === "ITEMS") {
       setValue("scopeCategoryIds", [], { shouldValidate: true });
       setValue("scopeCategoryRules", [], { shouldValidate: true });
     }
@@ -388,9 +401,16 @@ export default function AdminDealForm({
                     options={[
                       { label: t("sourceItems"), value: "ITEMS" },
                       { label: t("sourceCategories"), value: "CATEGORIES" },
+                      { label: t("sourceItemsAndCategories"), value: "BOTH" },
                     ]}
                     onChange={(value) =>
-                      handleSourceTypeChange(value === "CATEGORIES" ? "CATEGORIES" : "ITEMS")
+                      handleSourceTypeChange(
+                        value === "BOTH"
+                          ? "BOTH"
+                          : value === "CATEGORIES"
+                            ? "CATEGORIES"
+                            : "ITEMS"
+                      )
                     }
                   />
                 )}
@@ -398,7 +418,7 @@ export default function AdminDealForm({
             ) : null}
           </div>
 
-          {isFlexibleDeal && !isCategorySource ? (
+          {isFlexibleDeal && !usesCategorySource ? (
             <Controller
               control={control}
               name="dealRequiredQuantity"
@@ -416,7 +436,7 @@ export default function AdminDealForm({
             />
           ) : null}
 
-          {isCategorySource ? (
+          {usesCategorySource ? (
             <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800">
               {t("categoryRulesRequiredQuantity", {
                 count: categoryRuleTotal,
@@ -521,8 +541,30 @@ export default function AdminDealForm({
           />
         </Section>
 
-        <Section label={isCategorySource ? t("selectedCategories") : t("selectedMenuItems")}>
-          {isCategorySource ? (
+        <Section label={t("dealSelections")}>
+          {usesItemSource ? (
+            <Controller
+              control={control}
+              name="scopeMenuItemIds"
+              render={({ field, fieldState }) => (
+                <div className="space-y-2">
+                  <Label className="text-[16px]">{t("selectMenuItems")}</Label>
+                  <p className={MUTED_TEXT_SM_CLASS}>
+                    {isFlexibleDeal ? t("requiredItemsHelp") : t("fixedItemsHelp")}
+                  </p>
+                  <AdminDealMenuItemSelector
+                    value={field.value}
+                    onChange={field.onChange}
+                    restaurantId={restaurantId}
+                    initialItems={initialMenuItems}
+                    error={fieldState.error?.message}
+                  />
+                </div>
+              )}
+            />
+          ) : null}
+
+          {usesCategorySource ? (
             <>
               <Controller
                 control={control}
@@ -553,6 +595,7 @@ export default function AdminDealForm({
                     categoryIds={scopeCategoryIds}
                     categories={selectedCategoryOptions}
                     rules={field.value}
+                    restaurantId={restaurantId}
                     initialVariationOptions={initialVariationOptions}
                     fetchVariationOptions={fetchVariationOptions}
                     error={fieldState.error?.message}
@@ -565,33 +608,15 @@ export default function AdminDealForm({
                       noForcedVariation: t("noForcedVariation"),
                       clearForcedVariation: t("clearForcedVariation"),
                       categoryFallback: t("categoryFallback"),
+                      includedItems: t("includedItems"),
+                      excludedItems: t("excludedItems"),
                     }}
                     onChange={field.onChange}
                   />
                 )}
               />
             </>
-          ) : (
-            <Controller
-              control={control}
-              name="scopeMenuItemIds"
-              render={({ field, fieldState }) => (
-                <div className="space-y-2">
-                  <Label className="text-[16px]">{t("selectMenuItems")}</Label>
-                  <p className={MUTED_TEXT_SM_CLASS}>
-                    {isFlexibleDeal ? t("flexibleItemsHelp") : t("fixedItemsHelp")}
-                  </p>
-                  <AdminDealMenuItemSelector
-                    value={field.value}
-                    onChange={field.onChange}
-                    restaurantId={restaurantId}
-                    initialItems={initialMenuItems}
-                    error={fieldState.error?.message}
-                  />
-                </div>
-              )}
-            />
-          )}
+          ) : null}
         </Section>
 
         <div className="flex justify-end gap-3">
@@ -624,6 +649,7 @@ type VariationOption = {
 };
 
 type CategoryRulesEditorProps = {
+  restaurantId?: string;
   categoryIds: string[];
   categories: AdminDealCategorySummary[];
   rules: AdminDealCategoryRuleFormValues[];
@@ -643,11 +669,14 @@ type CategoryRulesEditorProps = {
     noForcedVariation: string;
     clearForcedVariation: string;
     categoryFallback: string;
+    includedItems: string;
+    excludedItems: string;
   };
   onChange: (rules: AdminDealCategoryRuleFormValues[]) => void;
 };
 
 function CategoryRulesEditor({
+  restaurantId,
   categoryIds,
   categories,
   rules,
@@ -692,70 +721,109 @@ function CategoryRulesEditor({
               menuCategoryId: categoryId,
               itemLimit: 1,
               variationId: "",
+              includedMenuItemIds: [],
+              excludedMenuItemIds: [],
             };
 
           return (
             <div
               key={categoryId}
-              className="grid gap-3 rounded-[12px] border border-gray-100 bg-[#FAFAFA] p-3 md:grid-cols-[minmax(0,1fr)_140px_minmax(180px,220px)] md:items-end"
+              className="space-y-4 rounded-[12px] border border-gray-100 bg-[#FAFAFA] p-3"
             >
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-gray-900">
-                  {getCategoryName(categoryId)}
-                </p>
-                <p className="mt-1 truncate text-xs text-gray-400">
-                  {categoryId}
-                </p>
-              </div>
+              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_140px_minmax(180px,220px)] md:items-end">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-gray-900">
+                    {getCategoryName(categoryId)}
+                  </p>
+                  <p className="mt-1 truncate text-xs text-gray-400">
+                    {categoryId}
+                  </p>
+                </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs">{labels.itemLimit}</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={rule.itemLimit ?? ""}
-                  placeholder={labels.itemLimitPlaceholder}
-                  onChange={(event) => {
-                    const nextValue = event.target.value;
-                    updateRule(categoryId, {
-                      itemLimit: nextValue === "" ? null : Number(nextValue),
-                    });
-                  }}
-                  className={INPUT_BASE_CLASS}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs">{labels.forcedVariation}</Label>
-                <CategoryVariationSelect
-                  categoryId={categoryId}
-                  value={rule.variationId ?? ""}
-                  initialVariationOptions={initialVariationOptions}
-                  fetchVariationOptions={fetchVariationOptions}
-                  labels={{
-                    forcedVariation: labels.forcedVariation,
-                    noForcedVariation: labels.noForcedVariation,
-                  }}
-                  onChange={(variationId) =>
-                    updateRule(categoryId, {
-                      variationId,
-                    })
-                  }
-                />
-                {rule.variationId ? (
-                  <button
-                    type="button"
-                    className="text-xs font-medium text-gray-500 hover:text-gray-800"
-                    onClick={() =>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">{labels.itemLimit}</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={rule.itemLimit ?? ""}
+                    placeholder={labels.itemLimitPlaceholder}
+                    onChange={(event) => {
+                      const nextValue = event.target.value;
                       updateRule(categoryId, {
-                        variationId: "",
+                        itemLimit: nextValue === "" ? null : Number(nextValue),
+                      });
+                    }}
+                    className={INPUT_BASE_CLASS}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs">{labels.forcedVariation}</Label>
+                  <CategoryVariationSelect
+                    categoryId={categoryId}
+                    value={rule.variationId ?? ""}
+                    initialVariationOptions={initialVariationOptions}
+                    fetchVariationOptions={fetchVariationOptions}
+                    labels={{
+                      forcedVariation: labels.forcedVariation,
+                      noForcedVariation: labels.noForcedVariation,
+                    }}
+                    onChange={(variationId) =>
+                      updateRule(categoryId, {
+                        variationId,
                       })
                     }
-                  >
-                    {labels.clearForcedVariation}
-                  </button>
-                ) : null}
+                  />
+                  {rule.variationId ? (
+                    <button
+                      type="button"
+                      className="text-xs font-medium text-gray-500 hover:text-gray-800"
+                      onClick={() =>
+                        updateRule(categoryId, {
+                          variationId: "",
+                        })
+                      }
+                    >
+                      {labels.clearForcedVariation}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-xs">{labels.includedItems}</Label>
+                  <AdminDealMenuItemSelector
+                    value={rule.includedMenuItemIds ?? []}
+                    onChange={(includedMenuItemIds) =>
+                      updateRule(categoryId, {
+                        includedMenuItemIds,
+                        excludedMenuItemIds: (
+                          rule.excludedMenuItemIds ?? []
+                        ).filter((id) => !includedMenuItemIds.includes(id)),
+                      })
+                    }
+                    restaurantId={restaurantId}
+                    categoryId={categoryId}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">{labels.excludedItems}</Label>
+                  <AdminDealMenuItemSelector
+                    value={rule.excludedMenuItemIds ?? []}
+                    onChange={(excludedMenuItemIds) =>
+                      updateRule(categoryId, {
+                        excludedMenuItemIds,
+                        includedMenuItemIds: (
+                          rule.includedMenuItemIds ?? []
+                        ).filter((id) => !excludedMenuItemIds.includes(id)),
+                      })
+                    }
+                    restaurantId={restaurantId}
+                    categoryId={categoryId}
+                  />
+                </div>
               </div>
             </div>
           );

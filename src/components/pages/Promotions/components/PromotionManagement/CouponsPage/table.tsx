@@ -11,10 +11,15 @@ import SortableHeader from "@/components/common/sortable-head";
 import EmptyState from "@/components/common/EmptyState";
 import PromotionCreateLink from "../PromotionOverview/PromotionCreateLink";
 import PaginationSection from "@/components/common/PaginationSection";
-import { Eye, MoreHorizontal, Pencil } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useGetCoupons, useToggleCouponStatus } from "@/hooks/usePromotions";
+import {
+  useDeleteCoupon,
+  useGetCoupons,
+  useToggleCouponStatus,
+} from "@/hooks/usePromotions";
 import { useRouter } from "next/navigation";
+import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import {
   getString,
   isRecord,
@@ -81,6 +86,7 @@ const CouponsTable = () => {
   const commonT = useTranslations("common");
   const { restaurantId } = useAuth();
   const toggleCouponStatusMutation = useToggleCouponStatus();
+  const deleteCouponMutation = useDeleteCoupon();
   const router = useRouter();
 
   const [page, setPage] = useState(1);
@@ -88,6 +94,7 @@ const CouponsTable = () => {
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [openView, setOpenView] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Coupon | null>(null);
 
   const { data: couponsResponse, refetch } = useGetCoupons({
     restaurantId: restaurantId || undefined,
@@ -212,6 +219,15 @@ const CouponsTable = () => {
                         >
                           <Pencil size={14} /> {t("actions.edit")}
                         </button>
+                        <button
+                          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                          onClick={() => {
+                            setDeleteTarget(c);
+                            setDropdownOpen(null);
+                          }}
+                        >
+                          <Trash2 size={14} /> {commonT("delete")}
+                        </button>
                       </div>
                     )}
 
@@ -279,6 +295,25 @@ const CouponsTable = () => {
           </div>
         </div>
       )}
+      <DeleteDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(value) => {
+          if (!value) setDeleteTarget(null);
+        }}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+
+          deleteCouponMutation.mutate(deleteTarget.id, {
+            onSuccess: () => {
+              setDeleteTarget(null);
+              void refetch();
+            },
+          });
+        }}
+        isLoading={deleteCouponMutation.isPending}
+        title={t("deleteCouponTitle")}
+        description={t("deleteCouponDescription")}
+      />
     </>
   );
 };

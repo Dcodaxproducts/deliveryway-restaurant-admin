@@ -1,6 +1,7 @@
 "use client";
 
-import { BarChart3, Edit, Loader2, Trash2 } from "lucide-react";
+import { BarChart3, Edit, GripVertical, Loader2, Trash2 } from "lucide-react";
+import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -26,6 +27,8 @@ type AdminDealsTableProps = {
   error: Error | null;
   onDelete: (deal: AdminDeal) => void;
   onStats: (deal: AdminDeal) => void;
+  onReorder?: (fromId: string, toId: string) => void;
+  reordering?: boolean;
 };
 
 export default function AdminDealsTable({
@@ -34,11 +37,14 @@ export default function AdminDealsTable({
   error,
   onDelete,
   onStats,
+  onReorder,
+  reordering = false,
 }: AdminDealsTableProps) {
   const router = useRouter();
   const t = useTranslations("deals");
   const commonT = useTranslations("common");
   const { resolveCurrency } = useCurrency(deals[0]?.restaurantId);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -64,6 +70,7 @@ export default function AdminDealsTable({
         <table className="w-full table-fixed text-left">
           <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
             <tr>
+              <th className="w-10 px-2 py-3" aria-label={t("sortDeals")} />
               <th className="w-[22%] px-4 py-3 font-semibold">{t("deal")}</th>
               <th className="w-[14%] px-4 py-3 font-semibold">{t("dealType")}</th>
               <th className="w-[11%] px-4 py-3 font-semibold">{t("fixedPrice")}</th>
@@ -78,7 +85,26 @@ export default function AdminDealsTable({
           </thead>
           <tbody className="divide-y divide-gray-100">
             {deals.map((deal) => (
-              <tr key={deal.id} className="hover:bg-gray-50/70">
+              <tr
+                key={deal.id}
+                draggable={Boolean(onReorder) && !reordering}
+                onDragStart={() => setDraggedId(deal.id)}
+                onDragEnd={() => setDraggedId(null)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => {
+                  if (draggedId && draggedId !== deal.id) {
+                    onReorder?.(draggedId, deal.id);
+                  }
+                  setDraggedId(null);
+                }}
+                className={draggedId === deal.id ? "bg-primary/5 opacity-60" : "hover:bg-gray-50/70"}
+              >
+                <td className="px-2 py-4 align-top">
+                  <GripVertical
+                    className="mt-2 size-4 cursor-grab text-gray-400"
+                    aria-hidden
+                  />
+                </td>
                 <td className="px-4 py-4 align-top">
                   <div className="flex min-w-0 items-start gap-3">
                     {deal.thumbnailUrl || deal.imageUrl ? (
@@ -160,8 +186,22 @@ export default function AdminDealsTable({
 
       <div className="divide-y divide-gray-100 lg:hidden">
         {deals.map((deal) => (
-          <div key={deal.id} className="space-y-4 p-4">
+          <div
+            key={deal.id}
+            draggable={Boolean(onReorder) && !reordering}
+            onDragStart={() => setDraggedId(deal.id)}
+            onDragEnd={() => setDraggedId(null)}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={() => {
+              if (draggedId && draggedId !== deal.id) {
+                onReorder?.(draggedId, deal.id);
+              }
+              setDraggedId(null);
+            }}
+            className="space-y-4 p-4"
+          >
             <div className="flex items-start justify-between gap-3">
+              <GripVertical className="mt-2 size-4 shrink-0 cursor-grab text-gray-400" />
               <div className="flex min-w-0 items-start gap-3">
                 {deal.thumbnailUrl || deal.imageUrl ? (
                   <Image

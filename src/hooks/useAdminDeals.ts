@@ -9,6 +9,7 @@ import {
   getAdminDeal,
   getAdminDeals,
   getAdminDealStats,
+  reorderAdminDeals,
   updateAdminDeal,
 } from "@/services/admin-deals";
 import { getApiErrorMessage } from "@/lib/errors";
@@ -125,6 +126,17 @@ export function useDeleteAdminDeal() {
     },
     onError: (error) => {
       toast.error(getApiErrorMessage(error, "Unable to delete deal."));
+    },
+  });
+}
+
+export function useReorderAdminDeals() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: reorderAdminDeals,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminDealsQueryKeys.all });
     },
   });
 }

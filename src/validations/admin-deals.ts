@@ -35,6 +35,8 @@ const categoryRuleSchema = z.object({
     z.number().int().min(1, "Item limit must be at least 1.")
   ),
   variationId: optionalText,
+  includedMenuItemIds: z.array(z.string()).default([]),
+  excludedMenuItemIds: z.array(z.string()).default([]),
 });
 
 const optionalImageUrlSchema = thumbnailUrlSchema.optional().default("");
@@ -80,7 +82,7 @@ export const adminDealFormSchema = z
     startsAt: optionalDateTimeLocalSchema,
     expiresAt: optionalDateTimeLocalSchema,
     dealSelectionMode: z.enum(["FIXED_ITEMS", "FLEXIBLE_ITEMS"]),
-    dealSourceType: z.enum(["ITEMS", "CATEGORIES"]),
+    dealSourceType: z.enum(["ITEMS", "CATEGORIES", "BOTH"]),
     dealRequiredQuantity: requiredQuantitySchema,
     scopeMenuItemIds: z.array(z.string()).default([]),
     scopeCategoryIds: z.array(z.string()).default([]),
@@ -136,17 +138,6 @@ export const adminDealFormSchema = z
         });
       }
 
-      if (
-        values.dealRequiredQuantity &&
-        values.scopeMenuItemIds.length < values.dealRequiredQuantity
-      ) {
-        context.addIssue({
-          code: "custom",
-          path: ["scopeMenuItemIds"],
-          message: "Selected menu items must be at least the required quantity.",
-        });
-      }
-
       if (values.scopeCategoryIds.length > 0) {
         context.addIssue({
           code: "custom",
@@ -179,13 +170,38 @@ export const adminDealFormSchema = z
       });
     }
 
-    if (values.scopeMenuItemIds.length > 0) {
+    if (
+      values.dealSourceType === "CATEGORIES" &&
+      values.scopeMenuItemIds.length > 0
+    ) {
       context.addIssue({
         code: "custom",
         path: ["scopeMenuItemIds"],
         message: "Menu item scope must be empty for category-based deals.",
       });
     }
+
+    if (
+      values.dealSourceType === "BOTH" &&
+      values.scopeMenuItemIds.length < 1
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["scopeMenuItemIds"],
+        message: "Select at least one required item for a mixed deal.",
+      });
+    }
+
+    selectedRules.forEach((rule, index) => {
+      const excluded = new Set(rule.excludedMenuItemIds);
+      if (rule.includedMenuItemIds.some((id) => excluded.has(id))) {
+        context.addIssue({
+          code: "custom",
+          path: ["scopeCategoryRules", index],
+          message: "An item cannot be both included and excluded.",
+        });
+      }
+    });
   });
 
 const buildBasePayload = (values: AdminDealFormValues): AdminDealCreatePayload => {
@@ -217,7 +233,10 @@ const buildBasePayload = (values: AdminDealFormValues): AdminDealCreatePayload =
     return payload;
   }
 
-  if (values.dealSourceType === "CATEGORIES") {
+  if (
+    values.dealSourceType === "CATEGORIES" ||
+    values.dealSourceType === "BOTH"
+  ) {
     const selectedCategoryIds = new Set(values.scopeCategoryIds);
     const scopeCategories = values.scopeCategoryRules
       .filter((rule) => selectedCategoryIds.has(rule.menuCategoryId))
@@ -225,14 +244,23 @@ const buildBasePayload = (values: AdminDealFormValues): AdminDealCreatePayload =
         menuCategoryId: rule.menuCategoryId,
         itemLimit: Number(rule.itemLimit ?? 1),
         ...(rule.variationId ? { variationId: rule.variationId } : {}),
+        ...(rule.includedMenuItemIds?.length
+          ? { includedMenuItemIds: rule.includedMenuItemIds }
+          : {}),
+        ...(rule.excludedMenuItemIds?.length
+          ? { excludedMenuItemIds: rule.excludedMenuItemIds }
+          : {}),
       }));
     const dealRequiredQuantity = scopeCategories.reduce(
       (total, rule) => total + rule.itemLimit,
       0
-    );
+    ) + (values.dealSourceType === "BOTH" ? values.scopeMenuItemIds.length : 0);
 
     payload.dealRequiredQuantity = dealRequiredQuantity;
     payload.scopeCategories = scopeCategories;
+    if (values.dealSourceType === "BOTH") {
+      payload.scopeMenuItemIds = values.scopeMenuItemIds;
+    }
     return payload;
   }
 
@@ -260,7 +288,7 @@ export const buildAdminDealUpdatePayload = (
   if (values.dealSelectionMode === "FIXED_ITEMS" || values.dealSourceType === "ITEMS") {
     payload.scopeCategoryIds = [];
     payload.scopeCategories = [];
-  } else {
+  } else if (values.dealSourceType === "CATEGORIES") {
     payload.scopeMenuItemIds = [];
   }
 
