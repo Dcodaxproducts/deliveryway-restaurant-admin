@@ -130,6 +130,9 @@ export type AdminInvoiceDetailsParams = BaseReportParams & {
 };
 
 export type GeneratedInvoiceKind = "ORDER" | "SUBSCRIPTION" | "WEEKLY_PAYOUT";
+export type GeneratedInvoicePdfParams = BaseReportParams & {
+  kind?: GeneratedInvoiceKind | string;
+};
 
 export type GeneratedInvoiceStatus = "ISSUED" | "SENT";
 
@@ -326,7 +329,7 @@ export const getGeneratedInvoices = async (
 
 export const downloadGeneratedInvoicePdf = async (
   invoiceId: string,
-  params?: BaseReportParams,
+  params?: GeneratedInvoicePdfParams,
 ) => {
   const response = await api.get(
     `/admin/reports/generated-invoices/${invoiceId}/pdf`,

@@ -122,7 +122,7 @@ export function GeneratedInvoiceHistoryTable({
 
   const handleDownload = async (
     invoice: GeneratedInvoice,
-    params: { restaurantId?: string; branchId?: string },
+    params: { restaurantId?: string; branchId?: string; kind?: string },
   ) => {
     setDownloadingInvoiceId(invoice.id);
 
@@ -145,7 +145,7 @@ export function GeneratedInvoiceHistoryTable({
 
   const handleView = async (
     invoice: GeneratedInvoice,
-    params: { restaurantId?: string; branchId?: string },
+    params: { restaurantId?: string; branchId?: string; kind?: string },
   ) => {
     setViewingInvoiceId(invoice.id);
     const openedWindow = window.open("", "_blank");
@@ -221,6 +221,7 @@ export function GeneratedInvoiceHistoryTable({
               const actionParams = {
                 restaurantId: invoiceRestaurantId,
                 branchId: invoiceBranchId,
+                kind: invoice.kind || undefined,
               };
 
               return (
