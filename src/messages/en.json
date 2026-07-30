@@ -260,9 +260,7 @@
     "temporaryUnavailableWithPeriod": "Search is temporarily unavailable."
   },
   "auth": {
-    "try": "Try",
-    "saasTitle": "SaaS Based Food Delivery",
-    "buildBusiness": "to build your business",
+    "welcomeTitle": "Welcome to DeliveryWay",
     "loginSubtitle": "Digitalize your business and empowering growth",
     "loginAs": "Login as",
     "roleRequired": "Role-aware access",

@@ -234,10 +234,7 @@ function LoginFormContent() {
     <AuthPageShell>
       <div className="w-full max-w-[420px] py-8 sm:py-10">
         <h1 className="text-center text-[26px] font-semibold">
-          {t("try")} <br />
-          <span className="text-primary">{t("saasTitle")}</span>
-          <br />
-          {t("buildBusiness")}
+          {t("welcomeTitle")}
         </h1>
 
         <p className="mt-3 text-center text-sm text-gray-400">
