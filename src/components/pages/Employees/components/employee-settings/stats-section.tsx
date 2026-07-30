@@ -14,6 +14,7 @@ type EmployeeStats = {
   totalEmployees?: number;
   activeEmployees?: number;
   inactiveEmployees?: number;
+  totalRoles?: number;
   roleBreakdown?: EmployeeRoleBreakdown[];
 };
 
@@ -27,7 +28,7 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
   const totalEmployees = stats?.totalEmployees ?? 0;
   const activeEmployees = stats?.activeEmployees ?? 0;
   const inactiveEmployees = stats?.inactiveEmployees ?? 0;
-  const totalRoles = stats?.roleBreakdown?.length ?? 0;
+  const totalRoles = stats?.totalRoles ?? stats?.roleBreakdown?.length ?? 0;
   const roleBreakdown = stats?.roleBreakdown ?? [];
 
   const cards = [

@@ -2,11 +2,25 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildPosCheckoutPayload,
+  getPosAvailablePaymentMethods,
   hasGuestDeliveryAddress,
   normalizePosCustomer,
 } from "./pos-checkout-payload";
 
 describe("pos checkout payload", () => {
+  it("reads only effective payment methods from the cart quote", () => {
+    expect(
+      getPosAvailablePaymentMethods({
+        data: {
+          quote: {
+            availablePaymentMethods: ["COD", "STRIPE", "UNKNOWN", "COD"],
+          },
+        },
+      }),
+    ).toEqual(["COD", "STRIPE"]);
+    expect(getPosAvailablePaymentMethods({ data: {} })).toEqual([]);
+  });
+
   it("builds registered customer checkout payload without guest fields", () => {
     const payload = buildPosCheckoutPayload({
       customer: { id: "customer-1", isGuest: false },

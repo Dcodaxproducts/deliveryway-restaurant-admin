@@ -254,11 +254,11 @@ export const menuItems: MenuItem[] = [
       {
         title: "Invoice History",
         labelKey: "invoiceHistory",
-        href: "/reports?tab=invoice-history",
+        href: "/orders?tab=invoice-history",
         icon: ReceiptText,
         section: "main",
         roles: allAdminRoles,
-        permissionAccesses: ["reports-payouts"],
+        permissionAccesses: ["order-management"],
       },
     ],
   },

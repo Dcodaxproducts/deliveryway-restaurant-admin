@@ -10,7 +10,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ import {
   useApplyCartCoupon,
   useCheckoutCart,
   useClearCart,
+  useCreateCustomerAddress,
   useDeleteCartDeal,
   useDeleteCartItem,
   useGetCart,
@@ -42,6 +43,7 @@ import {
 import {
   buildPosCheckoutPayload,
   emptyGuestDeliveryAddress,
+  getPosAvailablePaymentMethods,
   getPosCustomerName,
   getOptionalNonNegativeNumber,
   getOptionalPositiveNumber,
@@ -56,18 +58,17 @@ import {
 import { GuestAddressLocationPicker } from "@/components/pages/Pos/components/pos/GuestAddressLocationPicker";
 
 const POS_LAST_SELECTION_STORAGE_KEY = "posAddToCartLastSelection";
-const POS_PAYMENT_METHODS: PosPaymentMethod[] = [
-  "COD",
-  "CARD_ON_DELIVERY",
-  "STRIPE",
-  "PAYPAL",
-  "EASYPAISA",
-  "JAZZCASH",
-  "BANK_TRANSFER",
-  "WALLET",
-];
-
 type UnknownRecord = Record<string, unknown>;
+
+type PosCustomerAddress = {
+  id: string;
+  street?: string | null;
+  area?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  isDefault?: boolean;
+};
 
 const isRecord = (value: unknown): value is UnknownRecord =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -124,8 +125,11 @@ export default function PosCart() {
   const [customerNote, setCustomerNote] = useState("");
   const [guestDeliveryAddress, setGuestDeliveryAddress] =
     useState<GuestDeliveryAddress>(() => emptyGuestDeliveryAddress());
+  const [newCustomerAddress, setNewCustomerAddress] =
+    useState<GuestDeliveryAddress>(() => emptyGuestDeliveryAddress());
+  const [showNewCustomerAddress, setShowNewCustomerAddress] = useState(false);
 
-  const [addresses, setAddresses] = useState<any[]>([]);
+  const [addresses, setAddresses] = useState<PosCustomerAddress[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
 
   const [customerId, setCustomerId] = useState<string | null>(null);
@@ -165,8 +169,13 @@ export default function PosCart() {
   const removeCouponMutation = useRemoveCartCoupon();
   const quoteCartMutation = useQuoteCart();
   const checkoutMutation = useCheckoutCart();
+  const createCustomerAddressMutation = useCreateCustomerAddress();
   const loading = cartQuery.isLoading;
   const loadingAddresses = addressesQuery.isLoading;
+  const availablePaymentMethods = useMemo(
+    () => getPosAvailablePaymentMethods(cartQuery.data),
+    [cartQuery.data],
+  );
 
   useEffect(() => {
     setCartItems(formatPosCartItems(cartQuery.data));
@@ -196,6 +205,15 @@ export default function PosCart() {
   }, [cartQuery.data]);
 
   useEffect(() => {
+    if (
+      availablePaymentMethods.length > 0 &&
+      !availablePaymentMethods.includes(paymentMethod)
+    ) {
+      setPaymentMethod(availablePaymentMethods[0]);
+    }
+  }, [availablePaymentMethods, paymentMethod]);
+
+  useEffect(() => {
     const list = addressesQuery.data?.data || [];
     setAddresses(list);
     if (list.length > 0) setSelectedAddress(list[0].id);
@@ -217,6 +235,35 @@ export default function PosCart() {
     setSelectedCustomer((current) =>
       current ? { ...current, [field]: value } : current,
     );
+  };
+
+  const updateNewCustomerAddress = (
+    field: keyof GuestDeliveryAddress,
+    value: string,
+  ) => {
+    setNewCustomerAddress((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleCreateCustomerAddress = async () => {
+    if (!customerId || !hasGuestDeliveryAddress(newCustomerAddress)) {
+      toast.error(t("completeAddress"));
+      return;
+    }
+
+    try {
+      const response = await createCustomerAddressMutation.mutateAsync({
+        customerId,
+        branchId,
+        address: newCustomerAddress,
+      });
+      const createdAddressId = getString(getCartData(response), "id");
+      setNewCustomerAddress(emptyGuestDeliveryAddress());
+      setShowNewCustomerAddress(false);
+      if (createdAddressId) setSelectedAddress(createdAddressId);
+      toast.success(t("addressCreated"));
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, t("addressCreateFailed")));
+    }
   };
 
   const getResponseMessage = (res: unknown, fallback: string) => {
@@ -854,11 +901,11 @@ setSelectedAddress(null);
                 </div>
               ) : loadingAddresses ? (
                 <p className="text-sm text-gray-400">{commonT("loading")}</p>
-              ) : addresses.length === 0 ? (
-                <p className="text-sm text-red-500">{t("noAddressFound")}</p>
               ) : (
-                <div className="space-y-2">
-                  {addresses.map((addr) => (
+                <div className="space-y-3">
+                  {addresses.length === 0 ? (
+                    <p className="text-sm text-red-500">{t("noAddressFound")}</p>
+                  ) : addresses.map((addr) => (
                     <label key={addr.id} className="flex gap-2 border p-2 rounded-md cursor-pointer">
                       <input
                         type="radio"
@@ -885,6 +932,91 @@ setSelectedAddress(null);
                       </div>
                     </label>
                   ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setShowNewCustomerAddress((current) => !current)}
+                  >
+                    {showNewCustomerAddress
+                      ? t("cancelNewAddress")
+                      : t("addNewAddress")}
+                  </Button>
+                  {showNewCustomerAddress ? (
+                    <div className="space-y-2 rounded-md border p-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          value={newCustomerAddress.street}
+                          onChange={(event) =>
+                            updateNewCustomerAddress("street", event.target.value)
+                          }
+                          placeholder={t("guestAddressStreet")}
+                          className="h-10 rounded-md border px-3 text-sm"
+                        />
+                        <input
+                          value={newCustomerAddress.area}
+                          onChange={(event) =>
+                            updateNewCustomerAddress("area", event.target.value)
+                          }
+                          placeholder={t("guestAddressArea")}
+                          className="h-10 rounded-md border px-3 text-sm"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          value={newCustomerAddress.postalCode}
+                          onChange={(event) =>
+                            updateNewCustomerAddress(
+                              "postalCode",
+                              event.target.value,
+                            )
+                          }
+                          placeholder={t("guestAddressPostalCode")}
+                          className="h-10 rounded-md border px-3 text-sm"
+                        />
+                        <input
+                          value={newCustomerAddress.city}
+                          onChange={(event) =>
+                            updateNewCustomerAddress("city", event.target.value)
+                          }
+                          placeholder={t("guestAddressCity")}
+                          className="h-10 rounded-md border px-3 text-sm"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          value={newCustomerAddress.state}
+                          onChange={(event) =>
+                            updateNewCustomerAddress("state", event.target.value)
+                          }
+                          placeholder={t("guestAddressState")}
+                          className="h-10 rounded-md border px-3 text-sm"
+                        />
+                        <input
+                          value={newCustomerAddress.country}
+                          onChange={(event) =>
+                            updateNewCustomerAddress("country", event.target.value)
+                          }
+                          placeholder={t("guestAddressCountry")}
+                          className="h-10 rounded-md border px-3 text-sm"
+                        />
+                      </div>
+                      <GuestAddressLocationPicker
+                        address={newCustomerAddress}
+                        onChange={updateNewCustomerAddress}
+                      />
+                      <Button
+                        type="button"
+                        className="w-full"
+                        disabled={createCustomerAddressMutation.isPending}
+                        onClick={handleCreateCustomerAddress}
+                      >
+                        {createCustomerAddressMutation.isPending
+                          ? t("savingAddress")
+                          : t("saveAddress")}
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -898,8 +1030,11 @@ setSelectedAddress(null);
                 setPaymentMethod(event.target.value as PosPaymentMethod)
               }
               className="h-10 w-full rounded-md border bg-white px-3 text-sm"
+              disabled={availablePaymentMethods.length === 0}
             >
-              {POS_PAYMENT_METHODS.map((method) => (
+              {availablePaymentMethods.length === 0 ? (
+                <option value={paymentMethod}>{t("noPaymentMethods")}</option>
+              ) : availablePaymentMethods.map((method) => (
                 <option key={method} value={method}>
                   {t(`paymentMethods.${method}`)}
                 </option>

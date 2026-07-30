@@ -11,6 +11,19 @@ export type PosPaymentMethod =
   | "WALLET"
   | string;
 
+export const POS_PAYMENT_METHODS: PosPaymentMethod[] = [
+  "COD",
+  "CARD_ON_DELIVERY",
+  "STRIPE",
+  "PAYPAL",
+  "EASYPAISA",
+  "JAZZCASH",
+  "BANK_TRANSFER",
+  "WALLET",
+];
+
+const posPaymentMethodSet = new Set(POS_PAYMENT_METHODS);
+
 export type PosCustomer = {
   id: string;
   firstName?: string;
@@ -74,6 +87,26 @@ const getRecord = (value: unknown): RawCustomerRecord | null => {
 
 const getString = (value: unknown) => {
   return typeof value === "string" ? value : "";
+};
+
+export const getPosAvailablePaymentMethods = (
+  payload: unknown,
+): PosPaymentMethod[] => {
+  const root = getRecord(payload);
+  const data = getRecord(root?.data) ?? root;
+  const quote = getRecord(data?.quote);
+  const rawMethods =
+    quote?.availablePaymentMethods ?? data?.availablePaymentMethods;
+
+  if (!Array.isArray(rawMethods)) return [];
+
+  return [
+    ...new Set(
+      rawMethods
+        .map((method) => getString(method).trim().toUpperCase())
+        .filter((method) => posPaymentMethodSet.has(method)),
+    ),
+  ];
 };
 
 const trimAddress = (address?: GuestDeliveryAddress | null): GuestDeliveryAddress => ({

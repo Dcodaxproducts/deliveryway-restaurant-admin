@@ -4,6 +4,7 @@ import {
   applyCartCoupon,
   checkoutCart,
   clearCart,
+  createCustomerAddress,
   deleteCartDeal,
   deleteCartItem,
   getCart,
@@ -35,6 +36,19 @@ export const useGetCustomerAddresses = (customerId?: string | null) => {
     queryKey: posQueryKeys.addresses(customerId),
     queryFn: () => getCustomerAddresses(customerId as string),
     enabled: Boolean(customerId),
+  });
+};
+
+export const useCreateCustomerAddress = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createCustomerAddress,
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: posQueryKeys.addresses(variables.customerId),
+      });
+    },
   });
 };
 

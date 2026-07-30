@@ -86,7 +86,7 @@ export default function AdminDealMenuItemSelector({
       emptyTitle={t("emptyTitle")}
       selectedCountLabel={t("selectedCount", { count: value.length })}
       clearLabel={t("clear")}
-      helpText={helpText || t("help")}
+      helpText={helpText}
       loadMoreHint={t("loadMoreHint")}
       showingCountLabel={t("showingCount", {
         count: options.length.toLocaleString(),

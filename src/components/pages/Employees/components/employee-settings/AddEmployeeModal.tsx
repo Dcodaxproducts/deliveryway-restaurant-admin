@@ -59,6 +59,9 @@ type RestaurantOption = {
 type EmployeeInitialData = Partial<StaffModalValues> & {
   id?: string;
   restaurantAccess?: RestaurantAccessScope | null;
+  plainPassword?: string | null;
+  temporaryPassword?: string | null;
+  generatedPassword?: string | null;
 };
 
 type StaffMutationPayload = StaffValues & {
@@ -199,7 +202,12 @@ export default function EmployeeInvitationModal({
       initialData
         ? {
             email: initialData.email ?? "",
-            password: "",
+            password:
+              initialData.plainPassword ??
+              initialData.temporaryPassword ??
+              initialData.generatedPassword ??
+              initialData.password ??
+              "",
             firstName: initialData.firstName ?? "",
             lastName: initialData.lastName ?? "",
             staffRoleId: initialData.staffRoleId ?? "",

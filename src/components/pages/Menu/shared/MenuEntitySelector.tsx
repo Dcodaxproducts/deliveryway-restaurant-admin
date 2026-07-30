@@ -17,7 +17,7 @@ type MenuEntitySelectorProps<TOption extends { id: string; name: string }> = {
   emptyTitle: string;
   selectedCountLabel: string;
   clearLabel: string;
-  helpText: string;
+  helpText?: string;
   loadMoreHint?: string;
   showingCountLabel?: string;
   error?: string;
@@ -176,9 +176,11 @@ export default function MenuEntitySelector<
         </div>
       ) : null}
 
-      <p className={error ? "text-xs text-primary" : "text-xs text-gray-500"}>
-        {error || helpText}
-      </p>
+      {error || helpText ? (
+        <p className={error ? "text-xs text-primary" : "text-xs text-gray-500"}>
+          {error || helpText}
+        </p>
+      ) : null}
     </div>
   );
 }

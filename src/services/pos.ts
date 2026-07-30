@@ -1,5 +1,6 @@
 import { api } from "@/lib/axios";
 import type {
+  GuestDeliveryAddress,
   PosCartSettingsPayload,
   PosCheckoutPayload,
   PosOrderType,
@@ -12,6 +13,30 @@ export const getCart = async (customerId: string) => {
 
 export const getCustomerAddresses = async (customerId: string) => {
   const { data } = await api.get("/addresses", { params: { customerId } });
+  return data;
+};
+
+export const createCustomerAddress = async ({
+  customerId,
+  branchId,
+  address,
+}: {
+  customerId: string;
+  branchId?: string | null;
+  address: GuestDeliveryAddress;
+}) => {
+  const { data } = await api.post("/addresses", {
+    customerId,
+    ...(branchId ? { branchId } : {}),
+    street: address.street,
+    houseNumber: address.area,
+    postalCode: address.postalCode,
+    city: address.city,
+    state: address.state,
+    country: address.country,
+    lat: address.lat,
+    lng: address.lng,
+  });
   return data;
 };
 
