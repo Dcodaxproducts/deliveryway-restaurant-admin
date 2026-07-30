@@ -16,6 +16,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
 import { getClientStorageItem, removeClientStorageItem } from "@/services/storage";
 import { getApiErrorMessage } from "@/lib/errors";
+import { getLocalTodayDateTimeInputValue } from "@/lib/date-input";
 import { useGetCustomer } from "@/hooks/useCustomers";
 import {
   useApplyCartCoupon,
@@ -1065,6 +1066,7 @@ setSelectedAddress(null);
               <input
                 value={scheduledOrderTime}
                 onChange={(event) => setScheduledOrderTime(event.target.value)}
+                min={getLocalTodayDateTimeInputValue()}
                 type="datetime-local"
                 className="h-10 w-full rounded-md border px-3 text-sm"
               />
