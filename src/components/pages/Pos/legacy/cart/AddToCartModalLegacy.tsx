@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Loader2, Minus, Plus, ShoppingCart } from "lucide-react";
+import { Loader2, Minus, Plus, ShoppingCart, User } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useHttpClient } from "@/hooks/useHttpClient";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,6 +22,7 @@ import {
   flattenPosAddToCartModifierSelections,
 } from "@/components/pages/Pos/legacy/cart/add-to-cart-payload";
 import {
+  filterRegisteredPosCustomers,
   getPosCustomerOptionLabel,
   resolvePosBranchSelection,
 } from "@/components/pages/Pos/legacy/cart/pos-selection";
@@ -118,6 +119,49 @@ type ModifierLink = {
 };
 
 type SelectedModifiersMap = Record<string, SelectedModifier[]>;
+
+const PosCustomerIdentity = ({
+  customer,
+  compact = false,
+}: {
+  customer: any;
+  compact?: boolean;
+}) => {
+  const name = String(customer?.fullName || customer?.email || "Customer");
+  const email = String(customer?.email || "").trim();
+  const avatarUrl = String(customer?.profile?.avatarUrl || "").trim();
+  const hasRemoteAvatar =
+    avatarUrl.startsWith("https://") || avatarUrl.startsWith("http://");
+
+  return (
+    <div className="flex min-w-0 items-center gap-2.5">
+      <div
+        className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-gray-400 ${
+          compact ? "h-7 w-7" : "h-9 w-9"
+        }`}
+      >
+        {hasRemoteAvatar ? (
+          <Image
+            src={avatarUrl}
+            alt=""
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        ) : (
+          <User size={compact ? 14 : 16} />
+        )}
+      </div>
+
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium text-gray-900">{name}</p>
+        {email ? (
+          <p className="truncate text-xs text-gray-500">{email}</p>
+        ) : null}
+      </div>
+    </div>
+  );
+};
 
 type VariationOption = {
   id: string;
@@ -986,7 +1030,10 @@ export default function AddToCartModal({
       if (parsedSelection?.branch?.id) {
         setSelectedBranch(parsedSelection.branch);
       }
-      if (parsedSelection?.customer?.id) {
+      if (
+        parsedSelection?.customer?.id &&
+        parsedSelection.customer.isGuest !== true
+      ) {
         setSelectedCustomer(parsedSelection.customer);
       }
     } catch {
@@ -1059,7 +1106,7 @@ export default function AddToCartModal({
     }
 
     const res = await get(`/v1/admin/users/customers?${params.toString()}`);
-    const raw = normalizeApiList(res);
+    const raw = filterRegisteredPosCustomers(normalizeApiList(res));
 
     return {
       data: raw.map((customer: any) => ({
@@ -1067,7 +1114,6 @@ export default function AddToCartModal({
         fullName: getPosCustomerOptionLabel(
           customer,
           t("customer"),
-          t("guestCustomer"),
         ),
       })),
       meta: res?.data?.meta || res?.meta,
@@ -1601,6 +1647,12 @@ export default function AddToCartModal({
                 placeholder={t("selectCustomerPlaceholder")}
                 searchPlaceholder={t("searchPlaceholder")}
                 noResultsText={t("noResultsFound")}
+                renderOption={(customer) => (
+                  <PosCustomerIdentity customer={customer} />
+                )}
+                renderValue={(customer) => (
+                  <PosCustomerIdentity customer={customer} compact />
+                )}
               />
             </div>
           </div>

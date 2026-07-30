@@ -4,14 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import { FaPen, FaTrash } from "react-icons/fa";
 import {
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
   Filter,
   FlaskConical,
+  GripVertical,
   Loader2,
   PlusCircle,
   RefreshCcw,
   Search,
   ShieldAlert,
-  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -29,16 +31,21 @@ import {
   useCreateAllergenAdditiveTemplate,
   useDeleteAllergenAdditiveTemplate,
   useGetAllergenAdditiveTemplates,
+  useUpdateAllergenAdditiveTemplates,
   useUpdateSingleAllergenAdditiveTemplate,
 } from "@/hooks/useAllergen";
 import { useTranslations } from "next-intl";
+import {
+  moveAllergenTemplate,
+  moveAllergenTemplateByOffset,
+} from "./allergen-template-order";
 
 const PAGE_LIMIT = 10;
 
 type TemplateType = "allergens" | "additives";
 type TemplateFilter = "all" | TemplateType;
 type SortOrder = "ASC" | "DESC";
-type SortBy = "code" | "label" | "type";
+type SortBy = "manual" | "code" | "label" | "type";
 
 type TemplateItem = {
   code: string;
@@ -61,31 +68,24 @@ const TYPE_FILTER_OPTIONS: Array<{
 ];
 
 const SORT_OPTIONS: Array<{
-  label: string;
   value: SortBy;
 }> = [
   {
-    label: "Code",
+    value: "manual",
+  },
+  {
     value: "code",
   },
   {
-    label: "Label",
     value: "label",
   },
   {
-    label: "Type",
     value: "type",
   },
 ];
 
 const getTypeLabel = (type: TemplateType) => {
   return type === "allergens" ? "Allergen" : "Additive";
-};
-
-const getTypeDescription = (type: TemplateType) => {
-  return type === "allergens"
-    ? "Allergen templates are used to identify food allergens like gluten, milk, eggs, nuts, or soy."
-    : "Additive templates are used to identify additives like colorants, preservatives, antioxidants, or sweeteners.";
 };
 
 const extractTemplateItems = (response: any): TemplateItem[] => {
@@ -147,6 +147,8 @@ const sortTemplates = (
   sortBy: SortBy,
   sortOrder: SortOrder
 ) => {
+  if (sortBy === "manual") return [...items];
+
   return [...items].sort((a, b) => {
     if (sortBy === "type") {
       const typeRank: Record<TemplateType, number> = {
@@ -157,7 +159,11 @@ const sortTemplates = (
       const result =
         typeResult !== 0
           ? typeResult
-          : normalizeText(a.code).localeCompare(normalizeText(b.code));
+          : normalizeText(a.code).localeCompare(
+              normalizeText(b.code),
+              undefined,
+              { numeric: true, sensitivity: "base" },
+            );
 
       return sortOrder === "ASC" ? result : -result;
     }
@@ -168,7 +174,10 @@ const sortTemplates = (
     const bValue =
       normalizeText(b?.[sortBy] || "");
 
-    const result = aValue.localeCompare(bValue);
+    const result = aValue.localeCompare(bValue, undefined, {
+      numeric: true,
+      sensitivity: "base",
+    });
 
     return sortOrder === "ASC" ? result : -result;
   });
@@ -185,8 +194,12 @@ export default function AllergenTable() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [typeFilter, setTypeFilter] = useState<TemplateFilter>("all");
-  const [sortBy, setSortBy] = useState<SortBy>("code");
+  const [sortBy, setSortBy] = useState<SortBy>("manual");
   const [sortOrder, setSortOrder] = useState<SortOrder>("ASC");
+  const [manualItems, setManualItems] = useState<TemplateItem[]>([]);
+  const [draggedTemplateKey, setDraggedTemplateKey] = useState<string | null>(
+    null,
+  );
 
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<TemplateItem | null>(null);
@@ -215,9 +228,18 @@ export default function AllergenTable() {
   const { mutate: deleteTemplate, isPending: isDeleting } =
     useDeleteAllergenAdditiveTemplate();
 
-  const allItems = useMemo(() => {
-    return extractTemplateItems(response);
-  }, [response]);
+  const { mutate: persistTemplateOrder, isPending: isReordering } =
+    useUpdateAllergenAdditiveTemplates();
+
+  const responseItems = useMemo(
+    () => extractTemplateItems(response),
+    [response],
+  );
+  const allItems = manualItems;
+
+  useEffect(() => {
+    setManualItems(responseItems);
+  }, [responseItems]);
 
   const allergenCount = useMemo(() => {
     return allItems.filter((item) => item.type === "allergens").length;
@@ -244,6 +266,7 @@ export default function AllergenTable() {
     return t("helperAdditives");
   };
   const getSortLabel = (value: SortBy) => {
+    if (value === "manual") return t("manualOrder");
     if (value === "code") return t("code");
     if (value === "label") return t("label");
     return commonT("type");
@@ -290,8 +313,11 @@ export default function AllergenTable() {
     search.trim() ||
       debouncedSearch ||
       typeFilter !== "all" ||
-      sortBy !== "code" ||
+      sortBy !== "manual" ||
       sortOrder !== "ASC"
+  );
+  const canReorderTemplates = Boolean(
+    canMutateTemplates && sortBy === "manual" && !debouncedSearch,
   );
 
   const shouldShowInitialLoader = isLoading && allItems.length === 0;
@@ -346,7 +372,7 @@ export default function AllergenTable() {
     setSearch("");
     setDebouncedSearch("");
     setTypeFilter("all");
-    setSortBy("code");
+    setSortBy("manual");
     setSortOrder("ASC");
     setPage(1);
 
@@ -421,10 +447,56 @@ export default function AllergenTable() {
     );
   };
 
+  const saveTemplateOrder = (nextItems: TemplateItem[]) => {
+    if (!restaurantId || nextItems === manualItems) return;
+
+    setManualItems(nextItems);
+
+    persistTemplateOrder(
+      {
+        restaurantId,
+        allergens: nextItems
+          .filter((item) => item.type === "allergens")
+          .map(({ code, label }) => ({ code, label })),
+        additives: nextItems
+          .filter((item) => item.type === "additives")
+          .map(({ code, label }) => ({ code, label })),
+      },
+      {
+        onError: () => setManualItems(responseItems),
+      },
+    );
+  };
+
+  const handleTemplateDrop = (targetKey: string) => {
+    if (!draggedTemplateKey || !canReorderTemplates || isReordering) return;
+
+    saveTemplateOrder(
+      moveAllergenTemplate(manualItems, draggedTemplateKey, targetKey),
+    );
+    setDraggedTemplateKey(null);
+  };
+
+  const handleTemplateMove = (
+    item: TemplateItem,
+    offset: -1 | 1,
+  ) => {
+    if (!canReorderTemplates || isReordering) return;
+
+    saveTemplateOrder(
+      moveAllergenTemplateByOffset(
+        manualItems,
+        `${item.type}-${item.code}`,
+        offset,
+      ),
+    );
+  };
+
   const SkeletonRow = () => (
     <tr>
-      <td colSpan={5} className="px-4 py-5">
-        <div className="grid animate-pulse grid-cols-[1fr_2fr_0.8fr_0.8fr_0.5fr] gap-4">
+      <td colSpan={6} className="px-4 py-5">
+        <div className="grid animate-pulse grid-cols-[0.4fr_1fr_2fr_0.8fr_0.8fr_0.5fr] gap-4">
+          <div className="h-4 rounded bg-gray-200" />
           <div className="h-4 rounded bg-gray-200" />
           <div className="h-4 rounded bg-gray-200" />
           <div className="h-4 rounded bg-gray-200" />
@@ -575,7 +647,10 @@ export default function AllergenTable() {
 
           <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs text-gray-500">
             <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-              {t("showingCount", { shown: paginatedItems.length, total: filteredItems.length })}
+              {t("showingCount", {
+                visible: paginatedItems.length,
+                total: filteredItems.length,
+              })}
             </span>
 
             {shouldShowRefreshing ? (
@@ -668,11 +743,12 @@ export default function AllergenTable() {
 
             <select
               value={sortOrder}
+              disabled={sortBy === "manual"}
               onChange={(event) => {
                 setSortOrder(event.target.value as SortOrder);
                 setPage(1);
               }}
-              className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-3 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+              className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-3 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:text-gray-400"
             >
               <option value="ASC">ASC</option>
               <option value="DESC">DESC</option>
@@ -705,15 +781,24 @@ export default function AllergenTable() {
         </div>
       ) : null}
 
+      {sortBy === "manual" ? (
+        <p className="mb-3 text-xs text-gray-500">
+          {t("manualOrderHelp")}
+        </p>
+      ) : null}
+
       <div className="hidden w-full max-w-full overflow-hidden rounded-[18px] border border-gray-100 bg-white shadow-sm md:block">
         <table className="w-full table-fixed text-sm">
           <thead>
             <tr className="border-b bg-[#FAFAFA] text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <th className="w-[20%] px-4 py-4">{t("code")}</th>
-              <th className="w-[42%] px-4 py-4">{t("label")}</th>
+              <th className="w-[8%] px-4 py-4 text-center">
+                <span className="sr-only">{t("manualOrder")}</span>
+              </th>
+              <th className="w-[17%] px-4 py-4">{t("code")}</th>
+              <th className="w-[35%] px-4 py-4">{t("label")}</th>
               <th className="w-[18%] px-4 py-4 text-center">{commonT("type")}</th>
               <th className="w-[10%] px-4 py-4 text-center">{t("usage")}</th>
-              <th className="w-[10%] px-4 py-4 text-center">{commonT("actions")}</th>
+              <th className="w-[12%] px-4 py-4 text-center">{commonT("actions")}</th>
             </tr>
           </thead>
 
@@ -724,16 +809,56 @@ export default function AllergenTable() {
               ))
             ) : shouldShowEmpty ? (
               <tr>
-                <td colSpan={5}>
+                <td colSpan={6}>
                   <EmptyState />
                 </td>
               </tr>
             ) : (
-              paginatedItems.map((item) => (
+              paginatedItems.map((item) => {
+                const itemKey = `${item.type}-${item.code}`;
+
+                return (
                 <tr
-                  key={`${item.type}-${item.code}`}
-                  className="border-b border-gray-100 transition hover:bg-[#FAFAFA]"
+                  key={itemKey}
+                  draggable={canReorderTemplates && !isReordering}
+                  onDragStart={() => setDraggedTemplateKey(itemKey)}
+                  onDragOver={(event) => {
+                    if (canReorderTemplates) event.preventDefault();
+                  }}
+                  onDrop={() => handleTemplateDrop(itemKey)}
+                  onDragEnd={() => setDraggedTemplateKey(null)}
+                  className={`border-b border-gray-100 transition hover:bg-[#FAFAFA] ${
+                    draggedTemplateKey === itemKey
+                      ? "bg-primary/5 opacity-60"
+                      : ""
+                  }`}
                 >
+                  <td className="px-4 py-4">
+                    <div className="flex items-center justify-center gap-0.5">
+                      <button
+                        type="button"
+                        disabled={!canReorderTemplates || isReordering}
+                        onKeyDown={(event) => {
+                          if (event.key === "ArrowUp") {
+                            event.preventDefault();
+                            handleTemplateMove(item, -1);
+                          }
+
+                          if (event.key === "ArrowDown") {
+                            event.preventDefault();
+                            handleTemplateMove(item, 1);
+                          }
+                        }}
+                        className="cursor-grab rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
+                        aria-label={t("dragAria", {
+                          code: item.code,
+                          label: item.label,
+                        })}
+                      >
+                        <GripVertical size={16} />
+                      </button>
+                    </div>
+                  </td>
                   <td className="px-4 py-4">
                     <div className="inline-flex max-w-full rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                       <span className="truncate">{item.code || "-"}</span>
@@ -782,7 +907,8 @@ export default function AllergenTable() {
                     </div>
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>
@@ -802,9 +928,19 @@ export default function AllergenTable() {
             <EmptyState />
           </div>
         ) : (
-          paginatedItems.map((item) => (
+          paginatedItems.map((item) => {
+            const itemKey = `${item.type}-${item.code}`;
+
+            return (
             <div
-              key={`${item.type}-${item.code}`}
+              key={itemKey}
+              draggable={canReorderTemplates && !isReordering}
+              onDragStart={() => setDraggedTemplateKey(itemKey)}
+              onDragOver={(event) => {
+                if (canReorderTemplates) event.preventDefault();
+              }}
+              onDrop={() => handleTemplateDrop(itemKey)}
+              onDragEnd={() => setDraggedTemplateKey(null)}
               className="w-full max-w-full overflow-hidden rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm"
             >
               <div className="flex min-w-0 items-start justify-between gap-3">
@@ -828,6 +964,24 @@ export default function AllergenTable() {
               <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
                 <button
                   type="button"
+                  disabled={!canReorderTemplates || isReordering}
+                  onClick={() => handleTemplateMove(item, -1)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-gray-200 text-gray-500 disabled:cursor-not-allowed disabled:opacity-30"
+                  aria-label={t("moveUpAria", { label: item.label })}
+                >
+                  <ArrowUp size={15} />
+                </button>
+                <button
+                  type="button"
+                  disabled={!canReorderTemplates || isReordering}
+                  onClick={() => handleTemplateMove(item, 1)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-gray-200 text-gray-500 disabled:cursor-not-allowed disabled:opacity-30"
+                  aria-label={t("moveDownAria", { label: item.label })}
+                >
+                  <ArrowDown size={15} />
+                </button>
+                <button
+                  type="button"
                   disabled={!canMutateTemplates}
                   onClick={() => openEditModal(item)}
                   className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
@@ -847,7 +1001,8 @@ export default function AllergenTable() {
                 </button>
               </div>
             </div>
-          ))
+            );
+          })
         )}
 
         <div className="w-full max-w-full overflow-hidden">

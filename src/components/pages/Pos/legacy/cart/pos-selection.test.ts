@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  filterRegisteredPosCustomers,
   getPosCustomerOptionLabel,
   resolvePosBranchSelection,
 } from "./pos-selection";
@@ -21,18 +22,25 @@ describe("POS selection helpers", () => {
     );
   });
 
-  it("identifies ambiguous and guest customers clearly", () => {
+  it("uses only the customer name for the compact selector label", () => {
     expect(
       getPosCustomerOptionLabel(
         {
           id: "customer-123",
-          email: "guest@example.com",
-          isGuest: true,
+          email: "alex@example.com",
           profile: { firstName: "Alex", lastName: "Smith" },
         },
         "Customer",
-        "Guest",
       ),
-    ).toBe("Alex Smith · Guest · guest@example.com · #customer-123");
+    ).toBe("Alex Smith");
+  });
+
+  it("excludes guest customer records from POS selection", () => {
+    expect(
+      filterRegisteredPosCustomers([
+        { id: "registered", email: "member@example.com", isGuest: false },
+        { id: "guest", email: "guest@example.com", isGuest: true },
+      ]).map((customer) => customer.id),
+    ).toEqual(["registered"]);
   });
 });

@@ -11,6 +11,7 @@ type PosCustomerOption = {
     firstName?: string | null;
     lastName?: string | null;
     phone?: string | null;
+    avatarUrl?: string | null;
   } | null;
 };
 
@@ -28,7 +29,6 @@ export const resolvePosBranchSelection = <T extends PosBranchOption>(
 export const getPosCustomerOptionLabel = (
   customer: PosCustomerOption,
   fallbackLabel: string,
-  guestLabel: string,
 ) => {
   const fullName = [
     customer.profile?.firstName?.trim(),
@@ -36,12 +36,12 @@ export const getPosCustomerOptionLabel = (
   ]
     .filter(Boolean)
     .join(" ");
-  const contact =
-    customer.profile?.phone?.trim() || customer.email?.trim() || "";
-  const identity = customer.id?.trim() ? `#${customer.id.trim()}` : "";
-  const guest = customer.isGuest ? guestLabel : "";
 
-  return [fullName || fallbackLabel, guest, contact, identity]
-    .filter(Boolean)
-    .join(" · ");
+  return fullName || customer.email?.trim() || fallbackLabel;
 };
+
+export const filterRegisteredPosCustomers = <
+  T extends PosCustomerOption,
+>(
+  customers: T[],
+) => customers.filter((customer) => customer.isGuest !== true);

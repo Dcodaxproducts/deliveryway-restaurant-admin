@@ -23,15 +23,15 @@ import {
 } from "@/lib/number-input";
 import { useTranslations } from "next-intl";
 import { resolveMenuRestaurantId } from "@/lib/menu-restaurant-scope";
+import {
+  normalizeLabelOptions,
+  normalizeTemplateOptions,
+  type MenuMetadataOption,
+} from "./metadata-options";
 
 type Field = keyof z.infer<typeof schema>;
 
-type OptionItem = {
-  value?: string;
-  code?: string;
-  label: string;
-  displayLabel?: string;
-};
+type OptionItem = MenuMetadataOption;
 
 const schema = z.object({
   prepTimeMinutes: z.string().optional(),
@@ -62,58 +62,6 @@ const normalizeArray = (value: any): string[] => {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
-};
-
-const normalizeLabelOptions = (response: any): OptionItem[] => {
-  const candidates = [
-    response?.data?.labels,
-    response?.data?.items,
-    response?.data?.data?.labels,
-    response?.data?.data?.items,
-    response?.data?.data,
-    response?.labels,
-    response?.items,
-    response?.data,
-    response,
-  ];
-
-  const raw = candidates.find((candidate) => Array.isArray(candidate));
-
-  if (!Array.isArray(raw)) return [];
-
-  return raw
-    .map((item) => ({
-      value: String(item?.value || "").trim(),
-      label: String(item?.label || item?.value || "").trim(),
-    }))
-    .filter((item) => item.value && item.label);
-};
-
-const normalizeTemplateOptions = (
-  response: any,
-  templateType: "allergens" | "additives",
-): OptionItem[] => {
-  const candidates = [
-    response?.data?.[templateType],
-    response?.data?.data?.[templateType],
-    response?.[templateType],
-    response?.data?.templates?.[templateType],
-    response?.templates?.[templateType],
-  ];
-
-  const raw = candidates.find((candidate) => Array.isArray(candidate));
-
-  if (!Array.isArray(raw)) return [];
-
-  return raw
-    .map((item) => ({
-      code: String(item?.code || "").trim(),
-      label: String(item?.label || item?.code || "").trim(),
-      displayLabel: `${String(item?.code || "").trim()} — ${String(
-        item?.label || item?.code || "",
-      ).trim()}`,
-    }))
-    .filter((item) => item.code && item.label);
 };
 
 const createLocalFetchOptions =
@@ -164,6 +112,7 @@ const createSelectedOptions = ({
     return {
       [valueKey]: selectedValue,
       label: selectedValue,
+      displayLabel: selectedValue,
     };
   });
 };
@@ -957,7 +906,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
               }
               placeholder={t("selectAdditiveCodes")}
               fetchOptions={fetchAdditiveOptions}
-              labelKey="label"
+              labelKey="displayLabel"
               valueKey="code"
               maxSelectedLabelCount={3}
             />

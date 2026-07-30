@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { Check, ChevronDown, Loader2, Search } from "lucide-react";
 
 interface Props {
@@ -15,6 +16,8 @@ interface Props {
   valueKey?: string;
   searchPlaceholder?: string;
   noResultsText?: string;
+  renderOption?: (option: any) => ReactNode;
+  renderValue?: (option: any) => ReactNode;
 }
 
 export default function AsyncSelect({
@@ -26,6 +29,8 @@ export default function AsyncSelect({
   valueKey = "id",
   searchPlaceholder = "Search...",
   noResultsText = "No results found",
+  renderOption,
+  renderValue,
 }: Props) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
@@ -110,9 +115,9 @@ export default function AsyncSelect({
         onClick={() => setOpen((p) => !p)}
         className="flex h-[44px] w-full items-center justify-between rounded-lg border border-[#BBBBBB] bg-white px-3 text-sm"
       >
-        <span className={value ? "text-gray-900" : "text-gray-400"}>
-          {value ? value[labelKey] : placeholder}
-        </span>
+        <div className={`min-w-0 flex-1 text-left ${value ? "text-gray-900" : "text-gray-400"}`}>
+          {value ? renderValue?.(value) ?? value[labelKey] : placeholder}
+        </div>
 
         <ChevronDown size={16} />
       </button>
@@ -157,7 +162,9 @@ export default function AsyncSelect({
                       : "hover:bg-gray-100"
                   }`}
                 >
-                  {opt[labelKey]}
+                  <div className="min-w-0 flex-1">
+                    {renderOption?.(opt) ?? opt[labelKey]}
+                  </div>
                   {selected && <Check size={14} />}
                 </div>
               );

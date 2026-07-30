@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import CategoryInfiniteSelect from "@/components/common/CategoryInfiniteSelect";
@@ -17,6 +18,7 @@ import {
   Copy,
   Filter,
   GripVertical,
+  ImageOff,
   Loader2,
   MoreVertical,
   RefreshCcw,
@@ -34,6 +36,53 @@ import { useTranslations } from "next-intl";
 const PAGE_LIMIT = 10;
 
 type MenuItemStatusFilter = "active" | "inactive";
+
+function MenuItemThumbnail({
+  imageUrl,
+  name,
+  size,
+}: {
+  imageUrl?: string | null;
+  name: string;
+  size: "small" | "large";
+}) {
+  const [failed, setFailed] = useState(false);
+  const normalizedImageUrl = imageUrl?.trim() || "";
+
+  useEffect(() => {
+    setFailed(false);
+  }, [normalizedImageUrl]);
+
+  const sizeClass =
+    size === "small"
+      ? "h-10 w-10 rounded-[10px]"
+      : "h-20 w-20 rounded-[14px]";
+
+  if (!normalizedImageUrl || failed) {
+    return (
+      <div
+        className={`flex shrink-0 items-center justify-center border border-dashed border-gray-200 bg-gray-50 text-gray-300 ${sizeClass}`}
+        role="img"
+        aria-label={`${name} has no image`}
+      >
+        <ImageOff size={size === "small" ? 16 : 24} strokeWidth={1.7} />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative shrink-0 overflow-hidden border ${sizeClass}`}>
+      <Image
+        src={normalizedImageUrl}
+        alt={name}
+        fill
+        className="object-cover"
+        unoptimized
+        onError={() => setFailed(true)}
+      />
+    </div>
+  );
+}
 
 const STATUS_FILTER_OPTIONS: Array<{
   value: MenuItemStatusFilter;
@@ -759,11 +808,10 @@ export default function MenuItemsTable({ refetchKey }: any) {
 
                   <td className="px-2 py-4">
                     <div className="flex items-center gap-3">
-                      <img
-                        src={item.imageUrl || "https://via.placeholder.com/40"}
-                        alt={item.name || t("imageAlt")}
-                        className="h-10 w-10 rounded-[10px] border object-cover"
-                        loading="lazy"
+                      <MenuItemThumbnail
+                        imageUrl={item.imageUrl}
+                        name={item.name || t("imageAlt")}
+                        size="small"
                       />
 
                       <div className="min-w-0">
@@ -919,11 +967,10 @@ export default function MenuItemsTable({ refetchKey }: any) {
               </div>
 
               <div className="flex gap-4">
-                <img
-                  src={item.imageUrl || "https://via.placeholder.com/80"}
-                  alt={item.name || t("imageAlt")}
-                  className="h-20 w-20 rounded-[14px] object-cover"
-                  loading="lazy"
+                <MenuItemThumbnail
+                  imageUrl={item.imageUrl}
+                  name={item.name || t("imageAlt")}
+                  size="large"
                 />
 
                 <div className="flex flex-1 flex-col justify-between">
