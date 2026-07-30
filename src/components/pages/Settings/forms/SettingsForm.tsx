@@ -28,6 +28,7 @@ import {
   useUpdateRestaurantPaymentMethods,
 } from "@/hooks/useRestaurantPaymentManagement";
 import { getApiErrorMessage } from "@/lib/errors";
+import { hasStaffPermission } from "@/lib/auth";
 import {
   PAYMENT_METHOD_LABELS,
   type PaymentMethodCode,
@@ -106,7 +107,7 @@ type SettingsFormProps = {
 export default function SettingsForm({
   variant = "global",
 }: SettingsFormProps) {
-  const { isBranchAdmin, isRestaurantAdmin, restaurantId } = useAuth();
+  const { isBranchAdmin, isRestaurantAdmin, restaurantId, user } = useAuth();
   const { currency, formatMoney } = useCurrency();
   const { handleSubmit, register, setValue, watch } =
     useForm<SettingsFormValues>({
@@ -132,13 +133,34 @@ export default function SettingsForm({
   };
 
   if (variant === "payments") {
+    const hasStaffPaymentAccess = hasStaffPermission(user, [
+      "payment-settings",
+    ]);
+    const canViewPaymentMethods =
+      isRestaurantAdmin || hasStaffPaymentAccess;
+    const canViewWallet =
+      isRestaurantAdmin || isBranchAdmin || hasStaffPaymentAccess;
+    const canUpdatePaymentMethods =
+      isRestaurantAdmin ||
+      hasStaffPermission(user, ["payment-settings"], ["update", "write"]);
+    const canRequestPayout =
+      isRestaurantAdmin ||
+      isBranchAdmin ||
+      hasStaffPermission(user, ["payment-settings"], ["create", "write"]);
+
     return (
       <div className="space-y-[24px] rounded-[14px] bg-white p-4 lg:p-[30px]">
-        {isRestaurantAdmin ? (
-          <RestaurantPaymentMethodsSection restaurantId={restaurantId} />
+        {canViewPaymentMethods ? (
+          <RestaurantPaymentMethodsSection
+            restaurantId={restaurantId}
+            canEdit={canUpdatePaymentMethods}
+          />
         ) : null}
-        {isRestaurantAdmin || isBranchAdmin ? (
-          <RestaurantWalletPayoutSection restaurantId={restaurantId} />
+        {canViewWallet ? (
+          <RestaurantWalletPayoutSection
+            restaurantId={restaurantId}
+            canRequestPayout={canRequestPayout}
+          />
         ) : (
           <p className="rounded-[10px] bg-amber-50 px-4 py-3 text-sm text-amber-700">
             Payment settings are available for restaurant and branch admins.
@@ -378,8 +400,10 @@ export default function SettingsForm({
 
 function RestaurantPaymentMethodsSection({
   restaurantId,
+  canEdit,
 }: {
   restaurantId?: string | null;
+  canEdit: boolean;
 }) {
   const managementQuery = useRestaurantPaymentManagement(restaurantId);
   const updateMethods = useUpdateRestaurantPaymentMethods();
@@ -453,6 +477,7 @@ function RestaurantPaymentMethodsSection({
                   type="checkbox"
                   checked={selectedMethods.includes(method)}
                   onChange={() => toggleMethod(method)}
+                  disabled={!canEdit}
                   className="size-4 accent-primary"
                 />
                 {PAYMENT_METHOD_LABELS[method]}
@@ -472,6 +497,7 @@ function RestaurantPaymentMethodsSection({
           id="payment-method-note"
           value={note}
           onChange={(event) => setNote(event.target.value)}
+          disabled={!canEdit}
           placeholder="Optional checkout instructions"
           className="min-h-[76px] border-[#BBBBBB] focus:border-primary"
         />
@@ -498,7 +524,7 @@ function RestaurantPaymentMethodsSection({
               },
             });
           }}
-          disabled={!canSave}
+          disabled={!canEdit || !canSave}
           className="h-[44px] rounded-[10px]"
         >
           {updateMethods.isPending ? (
@@ -513,8 +539,10 @@ function RestaurantPaymentMethodsSection({
 
 function RestaurantWalletPayoutSection({
   restaurantId,
+  canRequestPayout,
 }: {
   restaurantId?: string | null;
+  canRequestPayout: boolean;
 }) {
   const walletQuery = useRestaurantWallet(restaurantId);
   const payoutRequestsQuery = useRestaurantPayoutRequests(restaurantId);
@@ -534,6 +562,7 @@ function RestaurantWalletPayoutSection({
   const [note, setNote] = useState("");
   const parsedAmount = Number(amount);
   const canSubmit =
+    canRequestPayout &&
     Boolean(restaurantId) &&
     Number.isFinite(parsedAmount) &&
     parsedAmount > 0 &&

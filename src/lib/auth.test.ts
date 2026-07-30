@@ -258,6 +258,29 @@ describe("auth helpers", () => {
     expect(isStaffRouteAllowed(user, "/menu/deals")).toBe(true);
   });
 
+  it("keeps Payment Settings nested controls operation-aware", () => {
+    const user = normalizeUser({
+      id: "payment-staff",
+      role: "STAFF",
+      actorType: "STAFF",
+      tenantId: "tenant-1",
+      restaurantAccess: { restaurantIds: ["restaurant-1"] },
+      staffRole: {
+        permissions: [
+          { access: "payment-settings", operations: ["read", "update"] },
+        ],
+      },
+    });
+
+    expect(isStaffRouteAllowed(user, "/payment-settings")).toBe(true);
+    expect(
+      hasStaffPermission(user, ["payment-settings"], ["update"]),
+    ).toBe(true);
+    expect(
+      hasStaffPermission(user, ["payment-settings"], ["create"]),
+    ).toBe(false);
+  });
+
   it("normalizes all-restaurants staff access claims", () => {
     const user = normalizeUser({
       id: "staff-all-restaurants",

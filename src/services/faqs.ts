@@ -1,6 +1,33 @@
 import { api } from "@/lib/axios";
 import { FaqValues } from "@/validations/faqs";
 
+type FaqRecord = FaqValues & {
+  id?: string;
+  _id?: string;
+};
+
+const asRecord = (value: unknown): Record<string, unknown> | null =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+
+export const extractFaqItems = (response: unknown): FaqRecord[] => {
+  if (Array.isArray(response)) {
+    return response.filter(
+      (item): item is FaqRecord => asRecord(item) !== null,
+    );
+  }
+
+  const root = asRecord(response);
+  const data = asRecord(root?.data);
+  const candidates = [data?.items, root?.items, root?.data];
+  const items = candidates.find(Array.isArray);
+
+  return Array.isArray(items)
+    ? items.filter((item): item is FaqRecord => asRecord(item) !== null)
+    : [];
+};
+
 /**
  * ==============================
  * CUSTOMER APP FAQ APIS
@@ -43,22 +70,16 @@ export const getFaqList = async (
 
 /**
  * Get single FAQ
- * Since you did not share GET /restaurants/:id/customer-app-faqs/:faqId,
- * this fetches the full list and finds one item locally.
- * Replace this later if single-get API exists.
+ * The API returns FAQ records under data.items.
  */
 export const getFaq = async (restaurantId: string, faqId: string) => {
   const { data } = await api.get(
     `/restaurants/${restaurantId}/customer-app-faqs`
   );
 
-  const faq =
-    data?.data?.find?.((item: any) => item.id === faqId) ||
-    data?.data?.find?.((item: any) => item._id === faqId) ||
-    data?.find?.((item: any) => item.id === faqId) ||
-    data?.find?.((item: any) => item._id === faqId);
-
-  return faq;
+  return extractFaqItems(data).find(
+    (item) => item.id === faqId || item._id === faqId,
+  );
 };
 
 /**
