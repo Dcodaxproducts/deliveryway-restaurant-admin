@@ -8,6 +8,8 @@ export const getLocalTodayInputValue = () => {
 export const getLocalTodayDateTimeInputValue = () =>
   `${getLocalTodayInputValue()}T00:00`;
 
+export const DATE_TIME_24_HOUR_INPUT_LANG = "en-GB";
+
 export const getStartOfToday = () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);

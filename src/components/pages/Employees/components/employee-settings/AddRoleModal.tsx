@@ -278,7 +278,7 @@ export function AddRoleModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[520px] rounded-[20px] p-6">
+      <DialogContent className="h-[calc(100vh-2rem)] max-h-[760px] max-w-[520px] overflow-y-auto rounded-[20px] p-6">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">
             {isEditMode ? t("roleModal.editTitle") : t("roleModal.addTitle")}

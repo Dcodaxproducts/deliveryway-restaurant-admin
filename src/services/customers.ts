@@ -38,8 +38,10 @@ export const getCustomersList = async (params?: CustomerListParams) => {
 /**
  * Get single customer details
  */
-export const getCustomer = async (id: string) => {
-  const { data } = await api.get(`/admin/users/customers/${id}`);
+export const getCustomer = async (id: string, restaurantId?: string) => {
+  const { data } = await api.get(`/admin/users/customers/${id}`, {
+    params: restaurantId ? { restaurantId } : undefined,
+  });
   return data.data ?? data;
 };
 
@@ -73,7 +75,7 @@ export const updateCustomerStatus = async (
  * Route shared at /admin/users/{id}
  */
 export const deleteCustomer = async (id: string) => {
-  const { data } = await api.delete(`/admin/users/${id}`);
+  const { data } = await api.delete(`/admin/users/customers/${id}`);
   return data.data ?? data;
 };
 

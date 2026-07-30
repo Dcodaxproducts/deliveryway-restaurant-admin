@@ -9,6 +9,19 @@ type OrderPaymentSource = {
   paymentOptions?: PaymentOptions | null;
 };
 
+type OrderAddressSource = {
+  orderType?: string | null;
+  deliveryAddress?: DeliveryAddress | null;
+  branch?: { name?: string | null } | null;
+};
+
+type OrderAddressLabels = {
+  addressPending: string;
+  dineIn: string;
+  noBranch: string;
+  takeawayOrder: string;
+};
+
 const paymentMethodLabels: Record<string, string> = {
   COD: "Cash on delivery",
   CARD_ON_DELIVERY: "Card on delivery",
@@ -97,6 +110,40 @@ export const formatDeliveryAddress = (address?: DeliveryAddress | null) => {
   const lineTwo = remainingParts.slice(3).join(", ");
 
   return cleanParts([lineOne, lineTwo]).join("\n") || null;
+};
+
+export const getOrderAddressPreview = (
+  order: OrderAddressSource,
+  labels: OrderAddressLabels,
+) => {
+  const orderType = order.orderType?.toUpperCase();
+  const branchName = order.branch?.name || labels.noBranch;
+
+  if (orderType === "DINE_IN") {
+    return {
+      primary: labels.dineIn,
+      secondary: branchName,
+      full: branchName,
+    };
+  }
+
+  if (orderType !== "DELIVERY") {
+    return {
+      primary: labels.takeawayOrder,
+      secondary: branchName,
+      full: branchName,
+    };
+  }
+
+  const formattedAddress = formatDeliveryAddress(order.deliveryAddress);
+  const [primaryAddress, ...secondaryAddress] =
+    formattedAddress?.split("\n") ?? [];
+
+  return {
+    primary: primaryAddress || labels.addressPending,
+    secondary: secondaryAddress.join(", ") || branchName,
+    full: formattedAddress || labels.addressPending,
+  };
 };
 
 export const getMapsUrl = (address?: DeliveryAddress | null) => {

@@ -25,7 +25,7 @@ import {
 import { ClickTooltip } from "@/components/common/ClickTooltip";
 import TableSkeleton from "@/components/common/TableSkeleton";
 import SortHeader from "@/components/common/sort-header";
-import { formatDeliveryAddress } from "@/components/pages/Orders/components/orders/details/order-details-utils";
+import { getOrderAddressPreview } from "@/components/pages/Orders/components/orders/details/order-details-utils";
 import { OrderStatusUpdateDialog } from "@/components/pages/Orders/components/orders/OrderStatusUpdateDialog";
 import { OrderStatusProgressDialog } from "@/components/pages/Orders/components/orders/OrderStatusProgressDialog";
 import { PaymentStatusUpdateDialog } from "@/components/pages/Orders/components/orders/PaymentStatusUpdateDialog";
@@ -152,24 +152,6 @@ export function OrdersTable({
     if (normalizedType === "POS") return "POS";
 
     return orderType ? orderType.replaceAll("_", " ") : "-";
-  };
-  const getAddressPreview = (order: OrdersTableRow) => {
-    if (order.orderType !== "DELIVERY") {
-      return {
-        primary: t("takeawayOrder"),
-        secondary: order.branch?.name || t("noBranch"),
-        full: order.branch?.name || t("noBranch"),
-      };
-    }
-
-    const formattedAddress = formatDeliveryAddress(order.deliveryAddress);
-    const [primaryAddress, ...secondaryAddress] = formattedAddress?.split("\n") ?? [];
-
-    return {
-      primary: primaryAddress || t("addressPending"),
-      secondary: secondaryAddress.join(", ") || order.branch?.name || t("noBranch"),
-      full: formattedAddress || t("addressPending"),
-    };
   };
   const getStatusActionLabel = (order: OrdersTableRow) => {
     const nextStatus = getNextOrderStatus(order);
@@ -383,7 +365,12 @@ export function OrdersTable({
       paymentStatus,
       orderType,
     } = order;
-    const addressPreview = getAddressPreview(order);
+    const addressPreview = getOrderAddressPreview(order, {
+      addressPending: t("addressPending"),
+      dineIn: t("dineIn"),
+      noBranch: t("noBranch"),
+      takeawayOrder: t("takeawayOrder"),
+    });
     const canUpdateStatus = Boolean(getNextOrderStatus(order));
     const canSendOutForDelivery = canSendDeliveryOrderOutDirectly(order);
     const canUseExternalDriver = canUseExternalDeliveryFulfillment(order);

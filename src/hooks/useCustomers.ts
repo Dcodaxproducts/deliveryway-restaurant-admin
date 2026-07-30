@@ -72,10 +72,10 @@ export const useGetCustomersList = (params?: {
   });
 };
 
-export const useGetCustomer = (id: string) => {
+export const useGetCustomer = (id: string, restaurantId?: string) => {
   return useQuery({
-    queryKey: ["customer", id],
-    queryFn: () => getCustomer(id),
+    queryKey: ["customer", id, restaurantId],
+    queryFn: () => getCustomer(id, restaurantId),
     enabled: !!id,
   });
 };

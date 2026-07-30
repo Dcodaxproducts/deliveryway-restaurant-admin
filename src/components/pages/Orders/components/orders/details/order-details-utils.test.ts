@@ -4,6 +4,7 @@ import {
   formatDeliveryAddress,
   formatPaymentMethod,
   getMapsUrl,
+  getOrderAddressPreview,
   getSelectedPaymentMethod,
 } from "@/components/pages/Orders/components/orders/details/order-details-utils";
 
@@ -83,5 +84,26 @@ describe("order details utils", () => {
       "https://www.google.com/maps?q=33.6135745,73.1320974"
     );
     expect(getMapsUrl({ street: "No coordinates" })).toBeNull();
+  });
+
+  it("shows dine in instead of takeaway in the address column", () => {
+    expect(
+      getOrderAddressPreview(
+        {
+          orderType: "DINE_IN",
+          branch: { name: "American Corner" },
+        },
+        {
+          addressPending: "Address pending",
+          dineIn: "Dine in",
+          noBranch: "No branch",
+          takeawayOrder: "Takeaway Order",
+        }
+      )
+    ).toEqual({
+      primary: "Dine in",
+      secondary: "American Corner",
+      full: "American Corner",
+    });
   });
 });

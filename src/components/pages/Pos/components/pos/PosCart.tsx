@@ -16,7 +16,10 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
 import { getClientStorageItem, removeClientStorageItem } from "@/services/storage";
 import { getApiErrorMessage } from "@/lib/errors";
-import { getLocalTodayDateTimeInputValue } from "@/lib/date-input";
+import {
+  DATE_TIME_24_HOUR_INPUT_LANG,
+  getLocalTodayDateTimeInputValue,
+} from "@/lib/date-input";
 import { useGetCustomer } from "@/hooks/useCustomers";
 import {
   useApplyCartCoupon,
@@ -157,7 +160,10 @@ export default function PosCart() {
   }, []);
   const cartQuery = useGetCart(customerId);
   const addressesQuery = useGetCustomerAddresses(customerId);
-  const customerDetailQuery = useGetCustomer(customerId || "");
+  const customerDetailQuery = useGetCustomer(
+    customerId || "",
+    restaurantId || undefined,
+  );
   const updateQuantityMutation = useUpdateCartItemQuantity();
   const updateDealQuantityMutation = useUpdateCartDealQuantity();
   const deleteCartItemMutation = useDeleteCartItem();
@@ -1067,6 +1073,7 @@ setSelectedAddress(null);
                 value={scheduledOrderTime}
                 onChange={(event) => setScheduledOrderTime(event.target.value)}
                 min={getLocalTodayDateTimeInputValue()}
+                lang={DATE_TIME_24_HOUR_INPUT_LANG}
                 type="datetime-local"
                 className="h-10 w-full rounded-md border px-3 text-sm"
               />
