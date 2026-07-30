@@ -610,7 +610,6 @@ export default function AdminDealForm({
                       noForcedVariation: t("noForcedVariation"),
                       clearForcedVariation: t("clearForcedVariation"),
                       categoryFallback: t("categoryFallback"),
-                      includedItems: t("includedItems"),
                       excludedItems: t("excludedItems"),
                     }}
                     onChange={field.onChange}
@@ -671,7 +670,6 @@ type CategoryRulesEditorProps = {
     noForcedVariation: string;
     clearForcedVariation: string;
     categoryFallback: string;
-    includedItems: string;
     excludedItems: string;
   };
   onChange: (rules: AdminDealCategoryRuleFormValues[]) => void;
@@ -793,39 +791,21 @@ function CategoryRulesEditor({
                 </div>
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-xs">{labels.includedItems}</Label>
-                  <AdminDealMenuItemSelector
-                    value={rule.includedMenuItemIds ?? []}
-                    onChange={(includedMenuItemIds) =>
-                      updateRule(categoryId, {
-                        includedMenuItemIds,
-                        excludedMenuItemIds: (
-                          rule.excludedMenuItemIds ?? []
-                        ).filter((id) => !includedMenuItemIds.includes(id)),
-                      })
-                    }
-                    restaurantId={restaurantId}
-                    categoryId={categoryId}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">{labels.excludedItems}</Label>
-                  <AdminDealMenuItemSelector
-                    value={rule.excludedMenuItemIds ?? []}
-                    onChange={(excludedMenuItemIds) =>
-                      updateRule(categoryId, {
-                        excludedMenuItemIds,
-                        includedMenuItemIds: (
-                          rule.includedMenuItemIds ?? []
-                        ).filter((id) => !excludedMenuItemIds.includes(id)),
-                      })
-                    }
-                    restaurantId={restaurantId}
-                    categoryId={categoryId}
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label className="text-xs">{labels.excludedItems}</Label>
+                <AdminDealMenuItemSelector
+                  value={rule.excludedMenuItemIds ?? []}
+                  onChange={(excludedMenuItemIds) =>
+                    updateRule(categoryId, {
+                      excludedMenuItemIds,
+                      includedMenuItemIds: (
+                        rule.includedMenuItemIds ?? []
+                      ).filter((id) => !excludedMenuItemIds.includes(id)),
+                    })
+                  }
+                  restaurantId={restaurantId}
+                  categoryId={categoryId}
+                />
               </div>
             </div>
           );
