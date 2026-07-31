@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildPosCustomerSearchParams,
   filterRegisteredPosCustomers,
   getPosCustomerDisplayId,
   getPosCustomerOptionLabel,
@@ -43,6 +44,19 @@ describe("POS selection helpers", () => {
         { id: "guest", email: "guest@example.com", isGuest: true },
       ]).map((customer) => customer.id),
     ).toEqual(["registered"]);
+  });
+
+  it("fetches the restaurant customer list without the empty server-side guest filter", () => {
+    const params = buildPosCustomerSearchParams({
+      restaurantId: "restaurant-1",
+      page: 2,
+      search: "Alex",
+    });
+
+    expect(params.get("restaurantId")).toBe("restaurant-1");
+    expect(params.get("page")).toBe("2");
+    expect(params.get("search")).toBe("Alex");
+    expect(params.has("isGuest")).toBe(false);
   });
 
   it("builds a stable compact customer ID from the searchable user ID", () => {

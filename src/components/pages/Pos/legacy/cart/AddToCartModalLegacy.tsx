@@ -22,6 +22,7 @@ import {
   flattenPosAddToCartModifierSelections,
 } from "@/components/pages/Pos/legacy/cart/add-to-cart-payload";
 import {
+  buildPosCustomerSearchParams,
   filterRegisteredPosCustomers,
   getPosCustomerDisplayId,
   getPosCustomerOptionLabel,
@@ -1100,15 +1101,11 @@ export default function AddToCartModal({
   const fetchCustomers = async ({ search, page }: any) => {
     if (!restaurantId) return { data: [], meta: {} };
 
-    const params = new URLSearchParams({
+    const params = buildPosCustomerSearchParams({
       restaurantId: String(restaurantId),
-      page: String(page || 1),
-      isGuest: "false",
+      page: page || 1,
+      search: search ? String(search) : undefined,
     });
-
-    if (search) {
-      params.set("search", String(search));
-    }
 
     const res = await get(`/v1/admin/users/customers?${params.toString()}`);
     const raw = filterRegisteredPosCustomers(normalizeApiList(res));

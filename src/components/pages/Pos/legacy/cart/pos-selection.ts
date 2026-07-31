@@ -15,6 +15,27 @@ type PosCustomerOption = {
   } | null;
 };
 
+export const buildPosCustomerSearchParams = ({
+  restaurantId,
+  page,
+  search,
+}: {
+  restaurantId: string;
+  page: number;
+  search?: string;
+}) => {
+  const params = new URLSearchParams({
+    restaurantId,
+    page: String(page),
+  });
+
+  if (search) {
+    params.set("search", search);
+  }
+
+  return params;
+};
+
 export const resolvePosBranchSelection = <T extends PosBranchOption>(
   branches: T[],
   selectedId?: string | null,
