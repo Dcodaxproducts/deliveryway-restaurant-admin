@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildPosCheckoutPayload,
   getPosAvailablePaymentMethods,
+  getConfiguredPosPaymentMethods,
   hasGuestDeliveryAddress,
   normalizePosCustomer,
 } from "./pos-checkout-payload";
@@ -19,6 +20,25 @@ describe("pos checkout payload", () => {
       }),
     ).toEqual(["COD", "STRIPE"]);
     expect(getPosAvailablePaymentMethods({ data: {} })).toEqual([]);
+    expect(
+      getPosAvailablePaymentMethods({ data: {} }, ["COD", "PAYPAL"]),
+    ).toEqual(["COD", "PAYPAL"]);
+    expect(
+      getPosAvailablePaymentMethods(
+        { data: { quote: { availablePaymentMethods: [] } } },
+        ["COD"],
+      ),
+    ).toEqual([]);
+  });
+
+  it("intersects platform, restaurant, and branch payment settings", () => {
+    expect(
+      getConfiguredPosPaymentMethods({
+        platformMethods: ["COD", "STRIPE", "PAYPAL"],
+        restaurantMethods: ["COD", "PAYPAL"],
+        branchMethods: ["PAYPAL"],
+      }),
+    ).toEqual(["PAYPAL"]);
   });
 
   it("builds registered customer checkout payload without guest fields", () => {

@@ -91,6 +91,7 @@ const getString = (value: unknown) => {
 
 export const getPosAvailablePaymentMethods = (
   payload: unknown,
+  configuredMethods: readonly string[] = [],
 ): PosPaymentMethod[] => {
   const root = getRecord(payload);
   const data = getRecord(root?.data) ?? root;
@@ -98,18 +99,46 @@ export const getPosAvailablePaymentMethods = (
   const rawMethods =
     quote?.availablePaymentMethods ?? data?.availablePaymentMethods;
 
-  if (!Array.isArray(rawMethods)) return [];
+  const methods = Array.isArray(rawMethods) ? rawMethods : configuredMethods;
 
   return [
     ...new Set(
-      rawMethods
+      methods
         .map((method) => getString(method).trim().toUpperCase())
         .filter((method) => posPaymentMethodSet.has(method)),
     ),
   ];
 };
 
-const trimAddress = (address?: GuestDeliveryAddress | null): GuestDeliveryAddress => ({
+export const getConfiguredPosPaymentMethods = ({
+  platformMethods,
+  restaurantMethods,
+  branchMethods,
+}: {
+  platformMethods: readonly string[];
+  restaurantMethods: readonly string[];
+  branchMethods?: readonly string[];
+}): PosPaymentMethod[] => {
+  const restaurantSet = new Set(
+    restaurantMethods.map((method) => method.toUpperCase()),
+  );
+  const branchSet = branchMethods
+    ? new Set(branchMethods.map((method) => method.toUpperCase()))
+    : null;
+
+  return platformMethods
+    .map((method) => method.toUpperCase())
+    .filter(
+      (method): method is PosPaymentMethod =>
+        posPaymentMethodSet.has(method) &&
+        restaurantSet.has(method) &&
+        (!branchSet || branchSet.has(method)),
+    );
+};
+
+const trimAddress = (
+  address?: GuestDeliveryAddress | null,
+): GuestDeliveryAddress => ({
   street: String(address?.street ?? "").trim(),
   area: String(address?.area ?? "").trim(),
   postalCode: String(address?.postalCode ?? "").trim(),
@@ -194,12 +223,12 @@ export const hasGuestDeliveryAddress = (
 
   return Boolean(
     trimmed.street &&
-      trimmed.postalCode &&
-      trimmed.city &&
-      trimmed.state &&
-      trimmed.country &&
-      isValidLatitude(trimmed.lat) &&
-      isValidLongitude(trimmed.lng),
+    trimmed.postalCode &&
+    trimmed.city &&
+    trimmed.state &&
+    trimmed.country &&
+    isValidLatitude(trimmed.lat) &&
+    isValidLongitude(trimmed.lng),
   );
 };
 

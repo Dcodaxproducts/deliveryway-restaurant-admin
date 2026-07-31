@@ -380,6 +380,9 @@
   },
   "orders": {
     "title": "Orders",
+    "notificationSoundOn": "Order notification sound on",
+    "notificationSoundOff": "Order notification sound off",
+    "printingSettings": "Printing settings",
     "description": "View and manage all orders here",
     "newOrderReceived": "New order received: {order}",
     "ordersUpdatedRealtime": "The orders list was updated in real time.",

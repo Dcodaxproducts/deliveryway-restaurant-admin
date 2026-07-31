@@ -14,13 +14,18 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
-import { getClientStorageItem, removeClientStorageItem } from "@/services/storage";
+import {
+  getClientStorageItem,
+  removeClientStorageItem,
+} from "@/services/storage";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
   DATE_TIME_24_HOUR_INPUT_LANG,
   getLocalTodayDateTimeInputValue,
 } from "@/lib/date-input";
 import { useGetCustomer } from "@/hooks/useCustomers";
+import { useGetBranchForEdit } from "@/hooks/useBranches";
+import { useRestaurantPaymentManagement } from "@/hooks/useRestaurantPaymentManagement";
 import {
   useApplyCartCoupon,
   useCheckoutCart,
@@ -48,6 +53,7 @@ import {
   buildPosCheckoutPayload,
   emptyGuestDeliveryAddress,
   getPosAvailablePaymentMethods,
+  getConfiguredPosPaymentMethods,
   getPosCustomerName,
   getOptionalNonNegativeNumber,
   getOptionalPositiveNumber,
@@ -137,7 +143,9 @@ export default function PosCart() {
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
 
   const [customerId, setCustomerId] = useState<string | null>(null);
-  const [selectedCustomer, setSelectedCustomer] = useState<PosCustomer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<PosCustomer | null>(
+    null,
+  );
 
   useEffect(() => {
     const id = getClientStorageItem("activeCustomerId");
@@ -148,7 +156,9 @@ export default function PosCart() {
 
     try {
       const parsedSelection = JSON.parse(rawSelection);
-      const normalizedCustomer = normalizePosCustomer(parsedSelection?.customer);
+      const normalizedCustomer = normalizePosCustomer(
+        parsedSelection?.customer,
+      );
 
       if (normalizedCustomer) {
         setSelectedCustomer(normalizedCustomer);
@@ -159,6 +169,8 @@ export default function PosCart() {
     }
   }, []);
   const cartQuery = useGetCart(customerId);
+  const branchQuery = useGetBranchForEdit(branchId);
+  const paymentManagementQuery = useRestaurantPaymentManagement(restaurantId);
   const addressesQuery = useGetCustomerAddresses(customerId);
   const customerDetailQuery = useGetCustomer(
     customerId || "",
@@ -179,9 +191,22 @@ export default function PosCart() {
   const createCustomerAddressMutation = useCreateCustomerAddress();
   const loading = cartQuery.isLoading;
   const loadingAddresses = addressesQuery.isLoading;
+  const configuredPaymentMethods = useMemo(() => {
+    const management = paymentManagementQuery.data;
+    const branchMethods = branchQuery.data?.settings?.allowedPaymentMethods;
+
+    if (!management) return [];
+
+    return getConfiguredPosPaymentMethods({
+      platformMethods: management.activePlatformPaymentMethods,
+      restaurantMethods: management.allowedPaymentMethods,
+      branchMethods: Array.isArray(branchMethods) ? branchMethods : undefined,
+    });
+  }, [branchQuery.data, paymentManagementQuery.data]);
   const availablePaymentMethods = useMemo(
-    () => getPosAvailablePaymentMethods(cartQuery.data),
-    [cartQuery.data],
+    () =>
+      getPosAvailablePaymentMethods(cartQuery.data, configuredPaymentMethods),
+    [cartQuery.data, configuredPaymentMethods],
   );
 
   useEffect(() => {
@@ -235,10 +260,7 @@ export default function PosCart() {
   }, [customerDetailQuery.data]);
 
   const isGuestCustomer = selectedCustomer?.isGuest === true;
-  const updateGuestContact = (
-    field: "email" | "phone",
-    value: string,
-  ) => {
+  const updateGuestContact = (field: "email" | "phone", value: string) => {
     setSelectedCustomer((current) =>
       current ? { ...current, [field]: value } : current,
     );
@@ -338,9 +360,7 @@ export default function PosCart() {
     if (!item || !customerId) return;
 
     const newQty =
-      type === "inc"
-        ? item.quantity + 1
-        : Math.max(1, item.quantity - 1);
+      type === "inc" ? item.quantity + 1 : Math.max(1, item.quantity - 1);
 
     try {
       if (item.type === "DEAL") {
@@ -361,8 +381,8 @@ export default function PosCart() {
         prev.map((i) =>
           i.id === id
             ? { ...i, quantity: newQty, lineTotal: i.unitPrice * newQty }
-            : i
-        )
+            : i,
+        ),
       );
     } catch {
       toast.error(t("toast.failedUpdateQuantity"));
@@ -399,7 +419,7 @@ export default function PosCart() {
       removeClientStorageItem("activeCustomerId");
       removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
       setAddresses([]);
-setSelectedAddress(null);
+      setSelectedAddress(null);
       setSelectedCustomer(null);
       setCustomerId(null);
       setCustomerNote("");
@@ -414,12 +434,14 @@ setSelectedAddress(null);
     }
   };
 
-
   const setOrderTypeApi = async () => {
     if (!customerId) return false;
 
     try {
-      const res = await setOrderTypeMutation.mutateAsync({ customerId, orderType });
+      const res = await setOrderTypeMutation.mutateAsync({
+        customerId,
+        orderType,
+      });
 
       if (!res || res.error) {
         toast.error(getResponseMessage(res, t("toast.failedSetOrderType")));
@@ -445,7 +467,10 @@ setSelectedAddress(null);
     if (!customerId) return false;
 
     try {
-      const res = await setAddressMutation.mutateAsync({ customerId, deliveryAddressId: selectedAddress });
+      const res = await setAddressMutation.mutateAsync({
+        customerId,
+        deliveryAddressId: selectedAddress,
+      });
 
       if (!res || res.error) {
         toast.error(getResponseMessage(res, t("toast.failedSetAddress")));
@@ -652,7 +677,6 @@ setSelectedAddress(null);
 
   return (
     <div className="w-full bg-white rounded-xl border p-4 flex flex-col gap-4">
-
       <Collapsible defaultOpen>
         <CollapsibleTrigger className="flex justify-between w-full text-sm font-medium">
           {t("cartList")}
@@ -674,8 +698,10 @@ setSelectedAddress(null);
           ) : (
             <div className="space-y-3">
               {cartItems.map((item) => (
-                <div key={item.id} className="flex gap-3 border p-2 rounded-md items-center">
-
+                <div
+                  key={item.id}
+                  className="flex gap-3 border p-2 rounded-md items-center"
+                >
                   <div className="w-12 h-12 relative rounded-md overflow-hidden">
                     <Image
                       src={item.img || "/placeholder.png"}
@@ -706,7 +732,9 @@ setSelectedAddress(null);
                           <span>× {item.quantity}</span>
                         </div>
                       ) : (
-                        <p>{formatMoney(item.unitPrice)} × {item.quantity}</p>
+                        <p>
+                          {formatMoney(item.unitPrice)} × {item.quantity}
+                        </p>
                       )}
                     </div>
                     {item.modifiers.length > 0 ? (
@@ -716,8 +744,8 @@ setSelectedAddress(null);
                             key={`${item.id}-${modifier.id || modifierIndex}`}
                             className="text-[11px] leading-4 text-gray-400"
                           >
-                            {modifier.name} + {formatMoney(modifier.unitPrice)} ×{" "}
-                            {modifier.quantity}
+                            {modifier.name} + {formatMoney(modifier.unitPrice)}{" "}
+                            × {modifier.quantity}
                           </p>
                         ))}
                       </div>
@@ -725,12 +753,20 @@ setSelectedAddress(null);
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button onClick={() => updateQuantity(item.id, "dec")}>-</button>
+                    <button onClick={() => updateQuantity(item.id, "dec")}>
+                      -
+                    </button>
                     <span>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, "inc")}>+</button>
-                    <button onClick={() => deleteItem(item.id)} className="text-red-500 text-xs">✕</button>
+                    <button onClick={() => updateQuantity(item.id, "inc")}>
+                      +
+                    </button>
+                    <button
+                      onClick={() => deleteItem(item.id)}
+                      className="text-red-500 text-xs"
+                    >
+                      ✕
+                    </button>
                   </div>
-
                 </div>
               ))}
             </div>
@@ -813,7 +849,7 @@ setSelectedAddress(null);
                   type="checkbox"
                   checked={orderType === "TAKEAWAY"}
                   onChange={() => void handleOrderTypeChange("TAKEAWAY")}
-                   className="accent-primary cursor-pointer"
+                  className="accent-primary cursor-pointer"
                 />
                 {t("pickup")}
               </label>
@@ -823,7 +859,7 @@ setSelectedAddress(null);
                   type="checkbox"
                   checked={orderType === "DELIVERY"}
                   onChange={() => void handleOrderTypeChange("DELIVERY")}
-                   className="accent-primary cursor-pointer"
+                  className="accent-primary cursor-pointer"
                 />
                 {t("delivery")}
               </label>
@@ -833,7 +869,7 @@ setSelectedAddress(null);
                   type="checkbox"
                   checked={orderType === "DINE_IN"}
                   onChange={() => void handleOrderTypeChange("DINE_IN")}
-                   className="accent-primary cursor-pointer"
+                  className="accent-primary cursor-pointer"
                 />
                 {t("dineIn")}
               </label>
@@ -895,7 +931,10 @@ setSelectedAddress(null);
                     <input
                       value={guestDeliveryAddress.country}
                       onChange={(event) =>
-                        updateGuestDeliveryAddress("country", event.target.value)
+                        updateGuestDeliveryAddress(
+                          "country",
+                          event.target.value,
+                        )
                       }
                       placeholder={t("guestAddressCountry")}
                       className="h-10 w-full rounded-md border px-3 text-sm"
@@ -911,39 +950,46 @@ setSelectedAddress(null);
               ) : (
                 <div className="space-y-3">
                   {addresses.length === 0 ? (
-                    <p className="text-sm text-red-500">{t("noAddressFound")}</p>
-                  ) : addresses.map((addr) => (
-                    <label key={addr.id} className="flex gap-2 border p-2 rounded-md cursor-pointer">
-                      <input
-                        type="radio"
-                        checked={selectedAddress === addr.id}
-                        onChange={() => setSelectedAddress(addr.id)}
-                         className="accent-primary cursor-pointer"
-                      />
-                      <div>
-                      <p className="text-sm font-medium">
-  {addr.street}
-</p>
+                    <p className="text-sm text-red-500">
+                      {t("noAddressFound")}
+                    </p>
+                  ) : (
+                    addresses.map((addr) => (
+                      <label
+                        key={addr.id}
+                        className="flex gap-2 border p-2 rounded-md cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          checked={selectedAddress === addr.id}
+                          onChange={() => setSelectedAddress(addr.id)}
+                          className="accent-primary cursor-pointer"
+                        />
+                        <div>
+                          <p className="text-sm font-medium">{addr.street}</p>
 
-<p className="text-xs text-gray-500">
-  {[addr.area, addr.city, addr.state, addr.country]
-    .filter(Boolean)
-    .join(", ")}
-</p>
+                          <p className="text-xs text-gray-500">
+                            {[addr.area, addr.city, addr.state, addr.country]
+                              .filter(Boolean)
+                              .join(", ")}
+                          </p>
 
-{addr.isDefault && (
-  <span className="text-[10px] text-primary font-medium">
-    {t("defaultAddress")}
-  </span>
-)}
-                      </div>
-                    </label>
-                  ))}
+                          {addr.isDefault && (
+                            <span className="text-[10px] text-primary font-medium">
+                              {t("defaultAddress")}
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                    ))
+                  )}
                   <Button
                     type="button"
                     variant="outline"
                     className="w-full"
-                    onClick={() => setShowNewCustomerAddress((current) => !current)}
+                    onClick={() =>
+                      setShowNewCustomerAddress((current) => !current)
+                    }
                   >
                     {showNewCustomerAddress
                       ? t("cancelNewAddress")
@@ -955,7 +1001,10 @@ setSelectedAddress(null);
                         <input
                           value={newCustomerAddress.street}
                           onChange={(event) =>
-                            updateNewCustomerAddress("street", event.target.value)
+                            updateNewCustomerAddress(
+                              "street",
+                              event.target.value,
+                            )
                           }
                           placeholder={t("guestAddressStreet")}
                           className="h-10 rounded-md border px-3 text-sm"
@@ -994,7 +1043,10 @@ setSelectedAddress(null);
                         <input
                           value={newCustomerAddress.state}
                           onChange={(event) =>
-                            updateNewCustomerAddress("state", event.target.value)
+                            updateNewCustomerAddress(
+                              "state",
+                              event.target.value,
+                            )
                           }
                           placeholder={t("guestAddressState")}
                           className="h-10 rounded-md border px-3 text-sm"
@@ -1002,7 +1054,10 @@ setSelectedAddress(null);
                         <input
                           value={newCustomerAddress.country}
                           onChange={(event) =>
-                            updateNewCustomerAddress("country", event.target.value)
+                            updateNewCustomerAddress(
+                              "country",
+                              event.target.value,
+                            )
                           }
                           placeholder={t("guestAddressCountry")}
                           className="h-10 rounded-md border px-3 text-sm"
@@ -1041,11 +1096,13 @@ setSelectedAddress(null);
             >
               {availablePaymentMethods.length === 0 ? (
                 <option value={paymentMethod}>{t("noPaymentMethods")}</option>
-              ) : availablePaymentMethods.map((method) => (
-                <option key={method} value={method}>
-                  {t(`paymentMethods.${method}`)}
-                </option>
-              ))}
+              ) : (
+                availablePaymentMethods.map((method) => (
+                  <option key={method} value={method}>
+                    {t(`paymentMethods.${method}`)}
+                  </option>
+                ))
+              )}
             </select>
           </div>
 
@@ -1150,14 +1207,16 @@ setSelectedAddress(null);
             type="button"
             variant="outline"
             onClick={() => void refreshQuote()}
-            disabled={quoteCartMutation.isPending || updateCartSettingsMutation.isPending}
+            disabled={
+              quoteCartMutation.isPending ||
+              updateCartSettingsMutation.isPending
+            }
             className="h-10 w-full"
           >
             {quoteCartMutation.isPending || updateCartSettingsMutation.isPending
               ? commonT("loading")
               : t("refreshTotals")}
           </Button>
-
         </CollapsibleContent>
       </Collapsible>
 
@@ -1232,7 +1291,6 @@ setSelectedAddress(null);
       >
         {placingOrder ? t("placing") : t("placeOrder")}
       </Button>
-
     </div>
   );
 }

@@ -380,6 +380,9 @@
   },
   "orders": {
     "title": "Bestellungen",
+    "notificationSoundOn": "Bestellbenachrichtigungston an",
+    "notificationSoundOff": "Bestellbenachrichtigungston aus",
+    "printingSettings": "Druckeinstellungen",
     "description": "Alle Bestellungen hier anzeigen und verwalten",
     "newOrderReceived": "Neue Bestellung eingegangen: {order}",
     "ordersUpdatedRealtime": "Die Bestellliste wurde in Echtzeit aktualisiert.",
