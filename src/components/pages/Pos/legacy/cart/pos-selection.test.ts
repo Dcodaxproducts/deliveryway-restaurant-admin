@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   filterRegisteredPosCustomers,
+  getPosCustomerDisplayId,
   getPosCustomerOptionLabel,
   resolvePosBranchSelection,
 } from "./pos-selection";
@@ -42,5 +43,10 @@ describe("POS selection helpers", () => {
         { id: "guest", email: "guest@example.com", isGuest: true },
       ]).map((customer) => customer.id),
     ).toEqual(["registered"]);
+  });
+
+  it("builds a stable compact customer ID from the searchable user ID", () => {
+    expect(getPosCustomerDisplayId("cm1234567890abcdef")).toBe("90ABCDEF");
+    expect(getPosCustomerDisplayId("customer-1")).toBe("STOMER-1");
   });
 });

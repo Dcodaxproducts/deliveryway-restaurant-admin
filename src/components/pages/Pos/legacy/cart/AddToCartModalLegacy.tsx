@@ -23,6 +23,7 @@ import {
 } from "@/components/pages/Pos/legacy/cart/add-to-cart-payload";
 import {
   filterRegisteredPosCustomers,
+  getPosCustomerDisplayId,
   getPosCustomerOptionLabel,
   resolvePosBranchSelection,
 } from "@/components/pages/Pos/legacy/cart/pos-selection";
@@ -129,6 +130,7 @@ const PosCustomerIdentity = ({
 }) => {
   const name = String(customer?.fullName || customer?.email || "Customer");
   const email = String(customer?.email || "").trim();
+  const displayId = getPosCustomerDisplayId(customer?.id);
   const avatarUrl = String(customer?.profile?.avatarUrl || "").trim();
   const hasRemoteAvatar =
     avatarUrl.startsWith("https://") || avatarUrl.startsWith("http://");
@@ -155,9 +157,11 @@ const PosCustomerIdentity = ({
 
       <div className="min-w-0">
         <p className="truncate text-sm font-medium text-gray-900">{name}</p>
-        {email ? (
-          <p className="truncate text-xs text-gray-500">{email}</p>
-        ) : null}
+        <p className="truncate text-xs text-gray-500">
+          {[displayId ? `ID ${displayId}` : "", email]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
       </div>
     </div>
   );
@@ -1099,6 +1103,7 @@ export default function AddToCartModal({
     const params = new URLSearchParams({
       restaurantId: String(restaurantId),
       page: String(page || 1),
+      isGuest: "false",
     });
 
     if (search) {
@@ -1630,7 +1635,7 @@ export default function AddToCartModal({
                 labelKey="name"
                 valueKey="id"
                 placeholder={t("selectBranchPlaceholder")}
-                searchPlaceholder={t("customerSearchPlaceholder")}
+                searchPlaceholder={t("searchPlaceholder")}
                 noResultsText={t("noResultsFound")}
               />
             </div>
@@ -1645,7 +1650,7 @@ export default function AddToCartModal({
                 labelKey="fullName"
                 valueKey="id"
                 placeholder={t("selectCustomerPlaceholder")}
-                searchPlaceholder={t("searchPlaceholder")}
+                searchPlaceholder={t("customerSearchPlaceholder")}
                 noResultsText={t("noResultsFound")}
                 renderOption={(customer) => (
                   <PosCustomerIdentity customer={customer} />

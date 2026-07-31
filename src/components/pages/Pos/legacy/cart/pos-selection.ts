@@ -40,6 +40,12 @@ export const getPosCustomerOptionLabel = (
   return fullName || customer.email?.trim() || fallbackLabel;
 };
 
+export const getPosCustomerDisplayId = (customerId?: string | null) => {
+  const normalizedId = customerId?.trim();
+
+  return normalizedId ? normalizedId.slice(-8).toUpperCase() : "";
+};
+
 export const filterRegisteredPosCustomers = <
   T extends PosCustomerOption,
 >(
