@@ -1,6 +1,8 @@
 import type { StatItem } from "@/types/stats";
+import { formatMoney } from "@/lib/currency";
 
-export type OrderTab = "all" | "delivery" | "pickup" | "reservations" | "group" | "invoice-history";
+export type OrderTab =
+  "all" | "delivery" | "pickup" | "reservations" | "group" | "invoice-history";
 
 export interface Order {
   id: string;
@@ -19,11 +21,21 @@ export interface Order {
 const countByStatus = (list: any[] | undefined, status: string) =>
   list?.find((item: any) => item.status?.toUpperCase() === status)?.count ?? 0;
 
-type Translate = (key: string, values?: Record<string, string | number>) => string;
+type Translate = (
+  key: string,
+  values?: Record<string, string | number>,
+) => string;
 
-export const buildOrderStats = (orderStats: any, t: Translate): StatItem[] => {
+export const buildOrderStats = (
+  orderStats: any,
+  t: Translate,
+  currency?: string | null,
+): StatItem[] => {
   const paidOrders = countByStatus(orderStats?.paymentStatusBreakdown, "PAID");
-  const cancelledOrders = countByStatus(orderStats?.statusBreakdown, "CANCELLED");
+  const cancelledOrders = countByStatus(
+    orderStats?.statusBreakdown,
+    "CANCELLED",
+  );
 
   return [
     {
@@ -37,21 +49,29 @@ export const buildOrderStats = (orderStats: any, t: Translate): StatItem[] => {
     {
       _id: "total-revenue",
       title: t("totalRevenue"),
-      value: `${Number(orderStats?.totalRevenue ?? 0).toLocaleString()}`,
+      value: formatMoney(Number(orderStats?.totalRevenue ?? 0), currency),
       icon: "revenue",
       iconStyle: "default",
       trend: {
         direction: "up",
-        percentage: t("averagePrefix", { value: Number(orderStats?.averageOrderValue ?? 0).toLocaleString() }),
+        percentage: t("averagePrefix", {
+          value: formatMoney(
+            Number(orderStats?.averageOrderValue ?? 0),
+            currency,
+          ),
+        }),
       },
     },
     {
       _id: "average-order-value",
       title: t("averageOrderValue"),
-      value: `${Number(orderStats?.averageOrderValue ?? 0).toLocaleString()}`,
+      value: formatMoney(Number(orderStats?.averageOrderValue ?? 0), currency),
       icon: "completed",
       iconStyle: "default",
-      trend: { direction: "up", percentage: t("paidCount", { count: paidOrders }) },
+      trend: {
+        direction: "up",
+        percentage: t("paidCount", { count: paidOrders }),
+      },
     },
     {
       _id: "cancelled-orders",
@@ -67,29 +87,48 @@ export const buildOrderStats = (orderStats: any, t: Translate): StatItem[] => {
   ] as StatItem[];
 };
 
-export const getOrdersHeaderContent = (tab: OrderTab, isBranchAdmin: boolean, t: Translate) => {
+export const getOrdersHeaderContent = (
+  tab: OrderTab,
+  isBranchAdmin: boolean,
+  t: Translate,
+) => {
   switch (tab) {
     case "all":
       return {
         title: isBranchAdmin ? t("branchAllOrders") : t("allOrders"),
-        description: isBranchAdmin ? t("branchAllOrdersDescription") : t("allOrdersDescription"),
+        description: isBranchAdmin
+          ? t("branchAllOrdersDescription")
+          : t("allOrdersDescription"),
       };
     case "delivery":
       return {
         title: isBranchAdmin ? t("branchDeliveryOrders") : t("deliveryOrders"),
-        description: isBranchAdmin ? t("deliveryDescription") : t("description"),
+        description: isBranchAdmin
+          ? t("deliveryDescription")
+          : t("description"),
       };
     case "pickup":
       return {
         title: isBranchAdmin ? t("branchPickupOrders") : t("pickupOrders"),
-        description: isBranchAdmin ? t("pickupDescription") : t("pickupOrdersDescription"),
+        description: isBranchAdmin
+          ? t("pickupDescription")
+          : t("pickupOrdersDescription"),
       };
     case "reservations":
-      return { title: t("reservationsTitle"), description: t("reservationsDescription") };
+      return {
+        title: t("reservationsTitle"),
+        description: t("reservationsDescription"),
+      };
     case "group":
-      return { title: t("groupOrderSummaryTitle"), description: t("groupOrderSummaryDescription") };
+      return {
+        title: t("groupOrderSummaryTitle"),
+        description: t("groupOrderSummaryDescription"),
+      };
     case "invoice-history":
-      return { title: t("invoiceHistory"), description: t("invoiceHistoryDescription") };
+      return {
+        title: t("invoiceHistory"),
+        description: t("invoiceHistoryDescription"),
+      };
     default:
       return { title: t("orderList"), description: t("orderListDescription") };
   }
@@ -102,5 +141,6 @@ export const mapReservationToOrder = (reservation: any): Order => ({
   reservationDate: reservation.reservationDate,
   guestCount: reservation.guestCount,
   isReservation: true,
-  customerName: `${reservation.customer?.firstName || ""} ${reservation.customer?.lastName || ""}`.trim(),
+  customerName:
+    `${reservation.customer?.firstName || ""} ${reservation.customer?.lastName || ""}`.trim(),
 });

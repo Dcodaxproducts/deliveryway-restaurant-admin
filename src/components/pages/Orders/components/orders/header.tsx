@@ -1,29 +1,37 @@
-"use client"
+"use client";
 
-import { Download } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Header from "@/components/common/PageHeader"
-import { formatDateTime24 } from "@/lib/date-time-format"
-import { useTranslations } from "next-intl"
-import type { Order } from "@/types/orders"
+import { BellRing, Download, Printer } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Header from "@/components/common/PageHeader";
+import { formatDateTime24 } from "@/lib/date-time-format";
+import { useTranslations } from "next-intl";
+import type { Order } from "@/types/orders";
+import { useEffect, useState } from "react";
+import {
+  ORDER_SOUND_SETTING_EVENT,
+  ORDER_SOUND_STORAGE_KEY,
+} from "@/hooks/useRealtimeOrderNotifications";
+import Link from "next/link";
 
 interface HeaderProps {
-  title: string
-  description: string
-  orders: Order[]
+  title: string;
+  description: string;
+  orders: Order[];
 }
 
-export function OrdersHeader({
-  title,
-  description,
-  orders,
-}: HeaderProps) {
-  const common = useTranslations("common")
-  const ordersT = useTranslations("orders")
+export function OrdersHeader({ title, description, orders }: HeaderProps) {
+  const common = useTranslations("common");
+  const ordersT = useTranslations("orders");
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  useEffect(() => {
+    setSoundEnabled(
+      window.localStorage.getItem(ORDER_SOUND_STORAGE_KEY) !== "false",
+    );
+  }, []);
 
   //  CSV GENERATOR
   const handleExport = () => {
-    if (!orders || orders.length === 0) return
+    if (!orders || orders.length === 0) return;
 
     const headers = [
       ordersT("orderId"),
@@ -36,7 +44,7 @@ export function OrdersHeader({
       ordersT("paymentStatus"),
       ordersT("amount"),
       ordersT("date"),
-    ]
+    ];
 
     const rows = orders.map((o) => [
       o.id,
@@ -48,27 +56,24 @@ export function OrdersHeader({
       o.paymentMethod || "",
       o.paymentStatus || "",
       o.totalAmount ?? 0,
-      o.createdAt
-        ? formatDateTime24({ value: o.createdAt })
-        : "",
-    ])
+      o.createdAt ? formatDateTime24({ value: o.createdAt }) : "",
+    ]);
 
-    const csvContent =
-      [headers, ...rows]
-        .map((row) => row.map((val) => `"${val}"`).join(","))
-        .join("\n")
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((val) => `"${val}"`).join(","))
+      .join("\n");
 
     //  CREATE FILE
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
 
-    const link = document.createElement("a")
-    link.href = url
-    link.setAttribute("download", `orders-${Date.now()}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `orders-${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <>
@@ -76,6 +81,32 @@ export function OrdersHeader({
         <Header title={title} description={description} />
 
         <div className="flex sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            aria-pressed={soundEnabled}
+            onClick={() => {
+              const next = !soundEnabled;
+              setSoundEnabled(next);
+              window.localStorage.setItem(
+                ORDER_SOUND_STORAGE_KEY,
+                String(next),
+              );
+              window.dispatchEvent(new Event(ORDER_SOUND_SETTING_EVENT));
+            }}
+            className="w-fit gap-2"
+          >
+            <BellRing size={18} />
+            {soundEnabled
+              ? ordersT("notificationSoundOn")
+              : ordersT("notificationSoundOff")}
+          </Button>
+          <Button asChild variant="outline" className="w-fit gap-2">
+            <Link href="/auto-printing">
+              <Printer size={18} />
+              {ordersT("printingSettings")}
+            </Link>
+          </Button>
           <Button
             onClick={handleExport}
             variant="outline"
@@ -87,5 +118,5 @@ export function OrdersHeader({
         </div>
       </div>
     </>
-  )
+  );
 }

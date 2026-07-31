@@ -2,7 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo } from "react";
-import { Controller, useForm, useWatch, type FieldErrors } from "react-hook-form";
+import {
+  Controller,
+  useForm,
+  useWatch,
+  type FieldErrors,
+} from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
@@ -35,9 +40,16 @@ import {
   normalizeDetail,
   normalizeSelectedOptions,
 } from "@/components/pages/Promotions/utils/option-normalizers";
-import { promotionSchema, type PromotionFormValues } from "@/validations/promotions";
+import {
+  promotionSchema,
+  type PromotionFormValues,
+} from "@/validations/promotions";
 import { getOptionalThumbnailUrl } from "@/validations/thumbnail-url";
-import { FIELD_ERROR_CLASS, INPUT_BASE_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
+import {
+  FIELD_ERROR_CLASS,
+  INPUT_BASE_CLASS,
+  MUTED_TEXT_SM_CLASS,
+} from "@/components/common/common-classes";
 
 const defaultValues: PromotionFormValues = {
   code: "",
@@ -84,9 +96,10 @@ const toISOStringOrNull = (value: string) => {
   return date.toISOString();
 };
 
-const toNumber = (value: string) => {
+const toOptionalNumber = (value: string) => {
+  if (!value.trim()) return undefined;
   const number = Number(value);
-  return Number.isFinite(number) ? number : 0;
+  return Number.isFinite(number) ? number : undefined;
 };
 
 type AddNewPromotionProps = {
@@ -103,10 +116,11 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
   const { user, restaurantId, isBranchAdmin } = useAuth();
   const authBranchId = user?.branchId ?? "";
 
-  const { control, handleSubmit, reset, setValue } = useForm<PromotionFormValues>({
-    resolver: zodResolver(promotionSchema),
-    defaultValues,
-  });
+  const { control, handleSubmit, reset, setValue } =
+    useForm<PromotionFormValues>({
+      resolver: zodResolver(promotionSchema),
+      defaultValues,
+    });
 
   const values = useWatch({ control }) as PromotionFormValues;
 
@@ -122,17 +136,23 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
   const submitting = createMutation.isPending || updateMutation.isPending;
   const pageTitle = isEditMode ? t("updatePromotion") : t("addNewPromotion");
   const validationMessages: Record<string, string> = {
-    "Discount value must be greater than 0.": t("validation.discountValueGreaterThanZero"),
+    "Discount value must be greater than 0.": t(
+      "validation.discountValueGreaterThanZero",
+    ),
     "Offer title is required.": t("validation.offerTitleRequired"),
     "Discount value is required.": t("validation.discountValueRequired"),
     "Start date is required.": t("validation.startDateRequired"),
-    "Percentage discount cannot be greater than 100.": t("validation.percentageDiscountMax"),
+    "Percentage discount cannot be greater than 100.": t(
+      "validation.percentageDiscountMax",
+    ),
     "Expiry date is required.": t("validation.expiryDateRequired"),
     "Expiry date must be after start date.": t("validation.expiryAfterStart"),
   };
   const translateValidation = (message?: string) =>
-    message ? validationMessages[message] ?? message : undefined;
-  const showTranslatedValidationError = (errors: FieldErrors<PromotionFormValues>) => {
+    message ? (validationMessages[message] ?? message) : undefined;
+  const showTranslatedValidationError = (
+    errors: FieldErrors<PromotionFormValues>,
+  ) => {
     const firstError = Object.values(errors).find((error) => error?.message);
     if (typeof firstError?.message === "string") {
       toast.error(translateValidation(firstError.message));
@@ -140,7 +160,8 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
   };
 
   useEffect(() => {
-    if (isEditMode || !isBranchAdmin || !authBranchId || values.branchId) return;
+    if (isEditMode || !isBranchAdmin || !authBranchId || values.branchId)
+      return;
     setValue("branchId", authBranchId, { shouldDirty: false });
   }, [authBranchId, isBranchAdmin, isEditMode, setValue, values.branchId]);
 
@@ -151,8 +172,10 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
     if (!detail) return;
 
     const detailAutoApply = Boolean(detail.autoApply ?? !detail.code);
-    const detailApplyMode = detail.applyMode === "SCOPED_ITEMS" ? "SCOPED_ITEMS" : "ORDER_TOTAL";
-    const branchId = getString(detail, "branchId") ?? getOptionId(detail.branch);
+    const detailApplyMode =
+      detail.applyMode === "SCOPED_ITEMS" ? "SCOPED_ITEMS" : "ORDER_TOTAL";
+    const branchId =
+      getString(detail, "branchId") ?? getOptionId(detail.branch);
 
     reset({
       code: getString(detail, "code") ?? "",
@@ -163,7 +186,8 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
           ? detail.audience
           : "BOTH",
       thumbnailUrl: getString(detail, "thumbnailUrl") ?? "",
-      discountType: detail.discountType === "PERCENTAGE" ? "PERCENTAGE" : "FLAT",
+      discountType:
+        detail.discountType === "PERCENTAGE" ? "PERCENTAGE" : "FLAT",
       discountValue: String(detail.discountValue ?? ""),
       maxDiscountAmount: String(detail.maxDiscountAmount ?? ""),
       minOrderAmount: String(detail.minOrderAmount ?? ""),
@@ -234,11 +258,21 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
   };
 
   const payload = useMemo(() => {
-    const scopeMenuItemIds = values.applyMode === "SCOPED_ITEMS" ? getIds(values.selectedMenuItems) : [];
-    const scopeCategoryIds = values.applyMode === "SCOPED_ITEMS" ? getIds(values.selectedCategories) : [];
+    const scopeMenuItemIds =
+      values.applyMode === "SCOPED_ITEMS"
+        ? getIds(values.selectedMenuItems)
+        : [];
+    const scopeCategoryIds =
+      values.applyMode === "SCOPED_ITEMS"
+        ? getIds(values.selectedCategories)
+        : [];
     const trimmedCode = values.code.trim();
     const thumbnailUrl = getOptionalThumbnailUrl(values.thumbnailUrl);
     const shouldAutoApply = values.autoApply || !trimmedCode;
+    const maxDiscountAmount = toOptionalNumber(values.maxDiscountAmount);
+    const minOrderAmount = toOptionalNumber(values.minOrderAmount);
+    const maxUses = toOptionalNumber(values.maxUses);
+    const maxUsesPerCustomer = toOptionalNumber(values.maxUsesPerCustomer);
 
     return {
       ...(isEditMode
@@ -253,11 +287,11 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
       restaurantId,
       branchId: selectedBranchId || undefined,
       discountType: values.discountType,
-      discountValue: toNumber(values.discountValue),
-      maxDiscountAmount: toNumber(values.maxDiscountAmount),
-      minOrderAmount: toNumber(values.minOrderAmount),
-      maxUses: toNumber(values.maxUses),
-      maxUsesPerCustomer: toNumber(values.maxUsesPerCustomer),
+      discountValue: toOptionalNumber(values.discountValue) ?? 0,
+      ...(maxDiscountAmount !== undefined ? { maxDiscountAmount } : {}),
+      ...(minOrderAmount !== undefined ? { minOrderAmount } : {}),
+      ...(maxUses !== undefined ? { maxUses } : {}),
+      ...(maxUsesPerCustomer !== undefined ? { maxUsesPerCustomer } : {}),
       startsAt: toISOStringOrNull(values.startsAt),
       expiresAt: toISOStringOrNull(values.expiresAt),
       scopeMenuItemId: scopeMenuItemIds[0] ?? null,
@@ -312,7 +346,11 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
 
   return (
     <PageWrapper title={pageTitle}>
-      <form onSubmit={handleSubmit(onSubmit, showTranslatedValidationError)} className="space-y-8" noValidate>
+      <form
+        onSubmit={handleSubmit(onSubmit, showTranslatedValidationError)}
+        className="space-y-8"
+        noValidate
+      >
         <Section label={t("forms.setupBasicInfo")}>
           {/* Branch selection is intentionally hidden for now.
           <div className="space-y-2">
@@ -394,7 +432,9 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                   className="h-[52px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-base outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 >
                   <option value="BOTH">{t("forms.audienceBoth")}</option>
-                  <option value="REGISTERED">{t("forms.audienceRegistered")}</option>
+                  <option value="REGISTERED">
+                    {t("forms.audienceRegistered")}
+                  </option>
                   <option value="GUEST">{t("forms.audienceGuests")}</option>
                 </select>
                 <p className={MUTED_TEXT_SM_CLASS}>{t("forms.audienceHelp")}</p>
@@ -424,9 +464,16 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
             render={({ field }) => (
               <div className="rounded-xl border border-primary/10 bg-primary/5 p-4">
                 <label className="flex items-start gap-3 text-sm text-gray-700">
-                  <Checkbox checked={field.value} onCheckedChange={(checked) => field.onChange(Boolean(checked))} />
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={(checked) =>
+                      field.onChange(Boolean(checked))
+                    }
+                  />
                   <span>
-                    <span className="block font-medium text-gray-900">{t("forms.autoApplyPromotion")}</span>
+                    <span className="block font-medium text-gray-900">
+                      {t("forms.autoApplyPromotion")}
+                    </span>
                     <span className="mt-1 block text-xs leading-5 text-gray-500">
                       {t("forms.autoApplyPromotionHelp")}
                     </span>
@@ -466,7 +513,9 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                     className="h-[52px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-base outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                   >
                     <option value="FLAT">{t("forms.flatDiscount")}</option>
-                    <option value="PERCENTAGE">{t("forms.percentageDiscount")}</option>
+                    <option value="PERCENTAGE">
+                      {t("forms.percentageDiscount")}
+                    </option>
                   </select>
                 </div>
               )}
@@ -569,7 +618,11 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                     onBlur={field.onBlur}
                     className={INPUT_BASE_CLASS}
                   />
-                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
+                  {fieldState.error?.message ? (
+                    <p className={FIELD_ERROR_CLASS}>
+                      {translateValidation(fieldState.error.message)}
+                    </p>
+                  ) : null}
                 </div>
               )}
             />
@@ -588,7 +641,11 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                     onBlur={field.onBlur}
                     className={INPUT_BASE_CLASS}
                   />
-                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
+                  {fieldState.error?.message ? (
+                    <p className={FIELD_ERROR_CLASS}>
+                      {translateValidation(fieldState.error.message)}
+                    </p>
+                  ) : null}
                 </div>
               )}
             />
@@ -599,7 +656,12 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
             name="isActive"
             render={({ field }) => (
               <label className="flex items-center gap-2 text-sm text-gray-600">
-                <Checkbox checked={field.value} onCheckedChange={(checked) => field.onChange(Boolean(checked))} />
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={(checked) =>
+                    field.onChange(Boolean(checked))
+                  }
+                />
                 {t("forms.activePromotion")}
               </label>
             )}
@@ -619,8 +681,12 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                   onBlur={field.onBlur}
                   className="h-[44px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 >
-                  <option value="ORDER_TOTAL">{t("forms.orderTotalMode")}</option>
-                  <option value="SCOPED_ITEMS">{t("forms.scopedItemsMode")}</option>
+                  <option value="ORDER_TOTAL">
+                    {t("forms.orderTotalMode")}
+                  </option>
+                  <option value="SCOPED_ITEMS">
+                    {t("forms.scopedItemsMode")}
+                  </option>
                 </select>
                 <p className={MUTED_TEXT_SM_CLASS}>
                   {t("forms.applyModeHelp")}
@@ -636,7 +702,9 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                 name="selectedMenuItems"
                 render={({ field }) => (
                   <div className="space-y-2">
-                    <Label className="text-[16px]">{t("forms.selectFoodItems")}</Label>
+                    <Label className="text-[16px]">
+                      {t("forms.selectFoodItems")}
+                    </Label>
                     <p className={MUTED_TEXT_SM_CLASS}>
                       {t("forms.selectFoodItemsHelp")}
                     </p>
@@ -649,7 +717,11 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                       valueKey="id"
                     />
                     {field.value.length > 0 ? (
-                      <button type="button" onClick={() => field.onChange([])} className="text-sm text-primary">
+                      <button
+                        type="button"
+                        onClick={() => field.onChange([])}
+                        className="text-sm text-primary"
+                      >
                         {t("forms.clearSelectedFoodItems")}
                       </button>
                     ) : null}
@@ -662,7 +734,9 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                 name="selectedCategories"
                 render={({ field }) => (
                   <div className="space-y-2">
-                    <Label className="text-[16px]">{t("forms.selectFoodCategories")}</Label>
+                    <Label className="text-[16px]">
+                      {t("forms.selectFoodCategories")}
+                    </Label>
                     <p className={MUTED_TEXT_SM_CLASS}>
                       {t("forms.selectFoodCategoriesHelp")}
                     </p>
@@ -675,7 +749,11 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                       valueKey="id"
                     />
                     {field.value.length > 0 ? (
-                      <button type="button" onClick={() => field.onChange([])} className="text-sm text-primary">
+                      <button
+                        type="button"
+                        onClick={() => field.onChange([])}
+                        className="text-sm text-primary"
+                      >
                         {t("forms.clearSelectedCategories")}
                       </button>
                     ) : null}
@@ -684,7 +762,9 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
               />
             </>
           ) : (
-            <div className={`rounded-xl border border-gray-100 bg-gray-50 p-4 ${MUTED_TEXT_SM_CLASS}`}>
+            <div
+              className={`rounded-xl border border-gray-100 bg-gray-50 p-4 ${MUTED_TEXT_SM_CLASS}`}
+            >
               {t("forms.orderTotalScopeNotice")}
             </div>
           )}

@@ -2,7 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
-import { Controller, useForm, type FieldErrors } from "react-hook-form";
+import {
+  Controller,
+  useForm,
+  useWatch,
+  type FieldErrors,
+} from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -21,15 +26,24 @@ import { useAuth } from "@/hooks/useAuth";
 import { getStoredAuth } from "@/lib/auth";
 import {
   cleanPayload,
+  getIds,
   getString,
   normalizeApiArray,
   normalizeApiRecords,
+  normalizeSelectedOptions,
 } from "@/components/pages/Promotions/utils/option-normalizers";
 import { couponSchema, type CouponFormValues } from "@/validations/promotions";
 import { useGetBranches } from "@/hooks/useBranches";
-import { useGetMenuItems } from "@/hooks/useMenus";
-import { useCreateCoupon, useGetCoupons, useUpdateCoupon } from "@/hooks/usePromotions";
+import {
+  useCreateCoupon,
+  useGetCoupons,
+  useUpdateCoupon,
+} from "@/hooks/usePromotions";
 import { getLocalTodayDateTimeInputValue } from "@/lib/date-input";
+import AsyncMultiSelect from "@/components/ui/AsyncMultiSelect";
+import { getMenuItems } from "@/services/menu/menu.api";
+import { getMenuCategories } from "@/services/menu/categories/menu-categories.api";
+import { Label } from "@/components/ui/label";
 
 const defaultValues: CouponFormValues = {
   code: "",
@@ -39,13 +53,15 @@ const defaultValues: CouponFormValues = {
   startsAt: "",
   expiresAt: "",
   description: "",
+  audience: "BOTH",
+  applyMode: "ORDER_TOTAL",
   branchId: "",
   maxDiscountAmount: "",
   minOrderAmount: "",
   maxUses: "",
   maxUsesPerCustomer: "",
-  scopeMenuItemId: "",
-  scopeCategoryId: "",
+  selectedMenuItems: [],
+  selectedCategories: [],
 };
 
 const formatDate = (date: string) => {
@@ -74,20 +90,23 @@ export default function AddNewCoupon() {
   const [saving, setSaving] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [couponId, setCouponId] = useState("");
-  const [loadedValues, setLoadedValues] = useState<CouponFormValues>(defaultValues);
+  const [loadedValues, setLoadedValues] =
+    useState<CouponFormValues>(defaultValues);
 
-
-  const { control, handleSubmit, reset, setValue } = useForm<CouponFormValues>({
+  const { control, handleSubmit, reset } = useForm<CouponFormValues>({
     resolver: zodResolver(couponSchema),
     defaultValues,
   });
+  const values = useWatch({ control }) as CouponFormValues;
   const validationMessages: Record<string, string> = {
     "Coupon code is required.": t("validation.couponCodeRequired"),
     "Coupon title is required.": t("validation.couponTitleRequired"),
   };
   const translateValidation = (message?: string) =>
-    message ? validationMessages[message] ?? message : undefined;
-  const showTranslatedValidationError = (errors: FieldErrors<CouponFormValues>) => {
+    message ? (validationMessages[message] ?? message) : undefined;
+  const showTranslatedValidationError = (
+    errors: FieldErrors<CouponFormValues>,
+  ) => {
     const firstError = Object.values(errors).find((error) => error?.message);
     if (typeof firstError?.message === "string") {
       toast.error(translateValidation(firstError.message));
@@ -100,13 +119,12 @@ export default function AddNewCoupon() {
   };
 
   const restaurantId = useMemo(() => {
-    return authRestaurantId || user?.restaurantId || getStoredRestaurantId() || "";
+    return (
+      authRestaurantId || user?.restaurantId || getStoredRestaurantId() || ""
+    );
   }, [authRestaurantId, user?.restaurantId]);
 
   const { data: branchResponse } = useGetBranches({
-    restaurantId: restaurantId || undefined,
-  });
-  const { data: itemResponse } = useGetMenuItems({
     restaurantId: restaurantId || undefined,
   });
   const { data: couponResponse } = useGetCoupons({
@@ -115,7 +133,6 @@ export default function AddNewCoupon() {
   });
 
   const branches = normalizeApiArray(branchResponse);
-  const items = normalizeApiArray(itemResponse);
 
   useEffect(() => {
     if (!couponCode) return;
@@ -129,18 +146,34 @@ export default function AddNewCoupon() {
     const nextValues: CouponFormValues = {
       code: getString(coupon, "code") ?? "",
       title: getString(coupon, "title") ?? "",
-      discountType: coupon.discountType === "PERCENTAGE" ? "PERCENTAGE" : "FLAT",
+      discountType:
+        coupon.discountType === "PERCENTAGE" ? "PERCENTAGE" : "FLAT",
       discountValue: String(coupon.discountValue ?? ""),
       startsAt: formatDate(getString(coupon, "startsAt") ?? ""),
       expiresAt: formatDate(getString(coupon, "expiresAt") ?? ""),
       description: getString(coupon, "description") ?? "",
+      audience: coupon.audience === "REGISTERED" ? "REGISTERED" : "BOTH",
+      applyMode:
+        coupon.applyMode === "SCOPED_ITEMS" ? "SCOPED_ITEMS" : "ORDER_TOTAL",
       branchId: getString(coupon, "branchId") ?? "",
       maxDiscountAmount: String(coupon.maxDiscountAmount ?? ""),
       minOrderAmount: String(coupon.minOrderAmount ?? ""),
       maxUses: String(coupon.maxUses ?? ""),
       maxUsesPerCustomer: String(coupon.maxUsesPerCustomer ?? ""),
-      scopeMenuItemId: getString(coupon, "scopeMenuItemId") ?? "",
-      scopeCategoryId: getString(coupon, "scopeCategoryId") ?? "",
+      selectedMenuItems: normalizeSelectedOptions({
+        records: coupon.scopeMenuItems,
+        ids: coupon.scopeMenuItemIds,
+        singleRecord: coupon.scopeMenuItem,
+        singleId: getString(coupon, "scopeMenuItemId"),
+        fallbackLabel: "Menu Item",
+      }),
+      selectedCategories: normalizeSelectedOptions({
+        records: coupon.scopeCategories,
+        ids: coupon.scopeCategoryIds,
+        singleRecord: coupon.scopeCategory,
+        singleId: getString(coupon, "scopeCategoryId"),
+        fallbackLabel: "Category",
+      }),
     };
 
     setCouponId(nextCouponId);
@@ -148,11 +181,33 @@ export default function AddNewCoupon() {
     reset(nextValues);
   }, [couponCode, couponResponse, reset]);
 
-  const handleItemSelect = (id: string) => {
-    const item = items.find((currentItem) => currentItem.id === id);
-    setValue("scopeMenuItemId", id);
-    setValue("scopeCategoryId", item?.categoryId || "");
-  };
+  const fetchMenuItemOptions = ({
+    search,
+    page,
+  }: {
+    search: string;
+    page: number;
+  }) =>
+    getMenuItems({
+      page,
+      limit: 10,
+      search,
+      restaurantId: restaurantId || undefined,
+    });
+
+  const fetchCategoryOptions = ({
+    search,
+    page,
+  }: {
+    search: string;
+    page: number;
+  }) =>
+    getMenuCategories({
+      page,
+      limit: 10,
+      search,
+      restaurantId: restaurantId || undefined,
+    });
 
   const resetCouponForm = () => {
     reset(isEdit ? loadedValues : defaultValues);
@@ -173,6 +228,14 @@ export default function AddNewCoupon() {
 
     setSaving(true);
 
+    const scopeMenuItemIds =
+      values.applyMode === "SCOPED_ITEMS"
+        ? getIds(values.selectedMenuItems)
+        : [];
+    const scopeCategoryIds =
+      values.applyMode === "SCOPED_ITEMS"
+        ? getIds(values.selectedCategories)
+        : [];
     const payload = cleanPayload({
       ...values,
       ...(isEdit ? {} : { restaurantId }),
@@ -184,6 +247,10 @@ export default function AddNewCoupon() {
       minOrderAmount: toOptionalNumber(values.minOrderAmount),
       maxUses: toOptionalNumber(values.maxUses),
       maxUsesPerCustomer: toOptionalNumber(values.maxUsesPerCustomer),
+      scopeMenuItemIds,
+      scopeCategoryIds,
+      scopeMenuItemId: scopeMenuItemIds[0],
+      scopeCategoryId: scopeCategoryIds[0],
     });
 
     try {
@@ -193,7 +260,9 @@ export default function AddNewCoupon() {
         await createCouponMutation.mutateAsync(payload);
       }
 
-      toast.success(isEdit ? t("toasts.couponUpdated") : t("toasts.couponCreated"));
+      toast.success(
+        isEdit ? t("toasts.couponUpdated") : t("toasts.couponCreated"),
+      );
       router.push("/promotion-management");
     } finally {
       setSaving(false);
@@ -202,7 +271,11 @@ export default function AddNewCoupon() {
 
   return (
     <PageWrapper title={isEdit ? t("updateCoupon") : t("addNewCoupon")}>
-      <form onSubmit={handleSubmit(onSubmit, showTranslatedValidationError)} className="space-y-8" noValidate>
+      <form
+        onSubmit={handleSubmit(onSubmit, showTranslatedValidationError)}
+        className="space-y-8"
+        noValidate
+      >
         <Section label={t("forms.setupBasicInfo")}>
           <Controller
             control={control}
@@ -238,7 +311,36 @@ export default function AddNewCoupon() {
             control={control}
             name="maxUses"
             render={({ field }) => (
-              <FormInput label={t("forms.maxUses")} type="number" value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
+              <FormInput
+                label={t("forms.maxUses")}
+                type="number"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="audience"
+            render={({ field }) => (
+              <div className="space-y-2">
+                <Label>{t("forms.audience")}</Label>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="BOTH">
+                      {t("forms.audienceBoth")}
+                    </SelectItem>
+                    <SelectItem value="REGISTERED">
+                      {t("forms.audienceRegistered")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             )}
           />
         </Section>
@@ -254,7 +356,9 @@ export default function AddNewCoupon() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="FLAT">{t("forms.flatAmount")}</SelectItem>
-                  <SelectItem value="PERCENTAGE">{t("forms.percentage")}</SelectItem>
+                  <SelectItem value="PERCENTAGE">
+                    {t("forms.percentage")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -278,7 +382,14 @@ export default function AddNewCoupon() {
             control={control}
             name="startsAt"
             render={({ field }) => (
-              <FormInput label={t("forms.startsAt")} type="datetime-local" min={minimumDateTime} value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
+              <FormInput
+                label={t("forms.startsAt")}
+                type="datetime-local"
+                min={minimumDateTime}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
             )}
           />
 
@@ -286,7 +397,14 @@ export default function AddNewCoupon() {
             control={control}
             name="expiresAt"
             render={({ field }) => (
-              <FormInput label={t("forms.expiresAt")} type="datetime-local" min={minimumDateTime} value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
+              <FormInput
+                label={t("forms.expiresAt")}
+                type="datetime-local"
+                min={minimumDateTime}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
             )}
           />
         </Section>
@@ -315,22 +433,62 @@ export default function AddNewCoupon() {
         <Section label={t("forms.applyToOptional")}>
           <Controller
             control={control}
-            name="scopeMenuItemId"
+            name="applyMode"
             render={({ field }) => (
-              <Select value={field.value} onValueChange={handleItemSelect}>
+              <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="h-10">
-                  <SelectValue placeholder={t("forms.selectItem")} />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {items.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.name}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="ORDER_TOTAL">
+                    {t("forms.orderTotalMode")}
+                  </SelectItem>
+                  <SelectItem value="SCOPED_ITEMS">
+                    {t("forms.scopedItemsMode")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             )}
           />
+
+          {values.applyMode === "SCOPED_ITEMS" ? (
+            <>
+              <Controller
+                control={control}
+                name="selectedMenuItems"
+                render={({ field }) => (
+                  <div className="space-y-2">
+                    <Label>{t("forms.selectFoodItems")}</Label>
+                    <AsyncMultiSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder={t("forms.selectFoodItemsPlaceholder")}
+                      fetchOptions={fetchMenuItemOptions}
+                      labelKey="name"
+                      valueKey="id"
+                    />
+                  </div>
+                )}
+              />
+              <Controller
+                control={control}
+                name="selectedCategories"
+                render={({ field }) => (
+                  <div className="space-y-2">
+                    <Label>{t("forms.selectFoodCategories")}</Label>
+                    <AsyncMultiSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder={t("forms.selectFoodCategoriesPlaceholder")}
+                      fetchOptions={fetchCategoryOptions}
+                      labelKey="name"
+                      valueKey="id"
+                    />
+                  </div>
+                )}
+              />
+            </>
+          ) : null}
         </Section>
 
         <Section label={t("forms.advanced")}>

@@ -8,15 +8,17 @@ const applyModeSchema = z.enum(["ORDER_TOTAL", "SCOPED_ITEMS"]);
 
 const optionalStringSchema = z.string();
 const positiveNumberStringSchema = (message: string) =>
-  z.string().min(1, message).refine((value) => Number(value) > 0, {
-    message: "Discount value must be greater than 0.",
-  });
+  z
+    .string()
+    .min(1, message)
+    .refine((value) => Number(value) > 0, {
+      message: "Discount value must be greater than 0.",
+    });
 
 const getDateBoundary = (value: string, boundary: "start" | "end") => {
   const [year, month, day] = value.split("-").map(Number);
-  const date = year && month && day
-    ? new Date(year, month - 1, day)
-    : new Date(value);
+  const date =
+    year && month && day ? new Date(year, month - 1, day) : new Date(value);
 
   if (Number.isNaN(date.getTime())) return null;
 
@@ -44,17 +46,20 @@ export const promotionSchema = z
     maxUsesPerCustomer: optionalStringSchema,
     startsAt: z.string().min(1, "Start date is required."),
     expiresAt: optionalStringSchema,
-    applyMode: applyModeSchema,
+    applyMode: applyModeSchema.default("ORDER_TOTAL"),
     autoApply: z.boolean(),
     isActive: z.boolean(),
     assignPermanently: z.boolean(),
     branchId: optionalStringSchema,
     selectedBranch: z.custom<SelectOption | null>().optional(),
-    selectedMenuItems: z.custom<SelectOption[]>(),
-    selectedCategories: z.custom<SelectOption[]>(),
+    selectedMenuItems: z.custom<SelectOption[]>().default([]),
+    selectedCategories: z.custom<SelectOption[]>().default([]),
   })
   .superRefine((value, ctx) => {
-    if (value.discountType === "PERCENTAGE" && Number(value.discountValue) > 100) {
+    if (
+      value.discountType === "PERCENTAGE" &&
+      Number(value.discountValue) > 100
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["discountValue"],
@@ -91,6 +96,7 @@ export const happyHourSchema = z
     code: optionalStringSchema,
     title: z.string().trim().min(1, "Happy hour title is required."),
     description: optionalStringSchema,
+    audience: z.enum(["REGISTERED", "BOTH"]).default("BOTH"),
     discountType: discountTypeSchema,
     discountValue: positiveNumberStringSchema("Discount value is required."),
     maxDiscountAmount: optionalStringSchema,
@@ -100,14 +106,20 @@ export const happyHourSchema = z
     startsAt: z.string().min(1, "Start date is required."),
     expiresAt: z.string().min(1, "Expiry date is required."),
     isActive: z.boolean(),
-    activeDays: z.array(z.number()).min(1, "Please select at least one active day."),
+    applyMode: applyModeSchema.default("ORDER_TOTAL"),
+    activeDays: z
+      .array(z.number())
+      .min(1, "Please select at least one active day."),
     dailyStartTime: z.string().min(1, "Daily start time is required."),
     dailyEndTime: z.string().min(1, "Daily end time is required."),
-    selectedMenuItem: z.custom<SelectOption | null>().optional(),
-    selectedCategory: z.custom<SelectOption | null>().optional(),
+    selectedMenuItems: z.custom<SelectOption[]>().default([]),
+    selectedCategories: z.custom<SelectOption[]>().default([]),
   })
   .superRefine((value, ctx) => {
-    if (value.discountType === "PERCENTAGE" && Number(value.discountValue) > 100) {
+    if (
+      value.discountType === "PERCENTAGE" &&
+      Number(value.discountValue) > 100
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["discountValue"],
@@ -115,8 +127,12 @@ export const happyHourSchema = z
       });
     }
 
-    const happyHourStart = value.startsAt ? getDateBoundary(value.startsAt, "start") : null;
-    const happyHourEnd = value.expiresAt ? getDateBoundary(value.expiresAt, "end") : null;
+    const happyHourStart = value.startsAt
+      ? getDateBoundary(value.startsAt, "start")
+      : null;
+    const happyHourEnd = value.expiresAt
+      ? getDateBoundary(value.expiresAt, "end")
+      : null;
 
     if (happyHourStart && happyHourEnd && happyHourEnd <= happyHourStart) {
       ctx.addIssue({
@@ -126,7 +142,11 @@ export const happyHourSchema = z
       });
     }
 
-    if (value.dailyStartTime && value.dailyEndTime && value.dailyEndTime <= value.dailyStartTime) {
+    if (
+      value.dailyStartTime &&
+      value.dailyEndTime &&
+      value.dailyEndTime <= value.dailyStartTime
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["dailyEndTime"],
@@ -145,13 +165,15 @@ export const couponSchema = z.object({
   startsAt: optionalStringSchema,
   expiresAt: optionalStringSchema,
   description: optionalStringSchema,
+  audience: z.enum(["REGISTERED", "BOTH"]).default("BOTH"),
+  applyMode: applyModeSchema.default("ORDER_TOTAL"),
   branchId: optionalStringSchema,
   maxDiscountAmount: optionalStringSchema,
   minOrderAmount: optionalStringSchema,
   maxUses: optionalStringSchema,
   maxUsesPerCustomer: optionalStringSchema,
-  scopeMenuItemId: optionalStringSchema,
-  scopeCategoryId: optionalStringSchema,
+  selectedMenuItems: z.custom<SelectOption[]>().default([]),
+  selectedCategories: z.custom<SelectOption[]>().default([]),
 });
 
 export type CouponFormValues = z.infer<typeof couponSchema>;

@@ -12,6 +12,7 @@ import Header from "@/components/common/PageHeader";
 import RevenueAnalytics from "@/components/pages/Dashboard/components/dashboard/revenue-trend-section";
 import TabButton from "@/components/ui/TabButton";
 import OrdersGraph from "@/components/pages/Reports/components/graphs/orders-graph";
+import type { TrendRange } from "@/components/pages/Reports/components/graphs/orders-graph";
 import { GeneratedInvoiceHistoryTable } from "@/components/pages/Orders/components/orders/GeneratedInvoiceHistoryTable";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -50,6 +51,18 @@ export default function Orders() {
     : undefined;
 
   const [activeTab, setActiveTab] = useState<ReportTab>("financial");
+  const [range, setRange] = useState<TrendRange>("daily");
+  const reportDateRange = useMemo(() => {
+    const now = new Date();
+    const from = new Date(now);
+    from.setHours(0, 0, 0, 0);
+    if (range === "weekly") from.setDate(from.getDate() - 6);
+    if (range === "monthly") from.setDate(1);
+    return {
+      fromDate: from.toISOString(),
+      toDate: now.toISOString(),
+    };
+  }, [range]);
   useEffect(() => {
     const requestedTab = searchParams.get("tab");
     if (
@@ -64,13 +77,21 @@ export default function Orders() {
     data: financialReportResponse,
     isLoading: financialLoading,
     isFetching: financialFetching,
-  } = useGetFinancialReport(scopedReportParams);
+  } = useGetFinancialReport(
+    scopedReportParams
+      ? { ...scopedReportParams, ...reportDateRange }
+      : undefined,
+  );
 
   const {
     data: ordersReportResponse,
     isLoading: ordersLoading,
     isFetching: ordersFetching,
-  } = useGetOrdersReport(scopedReportParams);
+  } = useGetOrdersReport(
+    scopedReportParams
+      ? { ...scopedReportParams, ...reportDateRange }
+      : undefined,
+  );
   const subscriptionInvoicesQuery = useGetGeneratedInvoices(
     {
       restaurantId: restaurantId || undefined,
@@ -231,7 +252,7 @@ export default function Orders() {
               className="xl:grid-cols-4"
             />
 
-            <RevenueAnalytics />
+            <RevenueAnalytics range={range} onRangeChange={setRange} />
           </>
         ) : (
           <>
@@ -241,7 +262,7 @@ export default function Orders() {
               className="xl:grid-cols-4"
             />
 
-            <OrdersGraph />
+            <OrdersGraph range={range} onRangeChange={setRange} />
           </>
         )}
       </div>

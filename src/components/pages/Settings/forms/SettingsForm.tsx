@@ -136,13 +136,9 @@ export default function SettingsForm({
     const hasStaffPaymentAccess = hasStaffPermission(user, [
       "payment-settings",
     ]);
-    const canViewPaymentMethods =
-      isRestaurantAdmin || hasStaffPaymentAccess;
+    const canViewPaymentMethods = isRestaurantAdmin || hasStaffPaymentAccess;
     const canViewWallet =
       isRestaurantAdmin || isBranchAdmin || hasStaffPaymentAccess;
-    const canUpdatePaymentMethods =
-      isRestaurantAdmin ||
-      hasStaffPermission(user, ["payment-settings"], ["update", "write"]);
     const canRequestPayout =
       isRestaurantAdmin ||
       isBranchAdmin ||
@@ -153,7 +149,7 @@ export default function SettingsForm({
         {canViewPaymentMethods ? (
           <RestaurantPaymentMethodsSection
             restaurantId={restaurantId}
-            canEdit={canUpdatePaymentMethods}
+            canEdit={false}
           />
         ) : null}
         {canViewWallet ? (
@@ -444,8 +440,7 @@ function RestaurantPaymentMethodsSection({
             Accepted payment methods
           </h2>
           <p className="mt-1 text-sm text-gray">
-            Choose which platform-enabled payment methods customers can use at
-            this restaurant.
+            Payment methods enabled by Super Admin for this restaurant.
           </p>
         </div>
       </div>
@@ -491,17 +486,19 @@ function RestaurantPaymentMethodsSection({
         )
       ) : null}
 
-      <div className={formGroupClassName}>
-        <Label htmlFor="payment-method-note">Customer payment note</Label>
-        <Textarea
-          id="payment-method-note"
-          value={note}
-          onChange={(event) => setNote(event.target.value)}
-          disabled={!canEdit}
-          placeholder="Optional checkout instructions"
-          className="min-h-[76px] border-[#BBBBBB] focus:border-primary"
-        />
-      </div>
+      {canEdit ? (
+        <div className={formGroupClassName}>
+          <Label htmlFor="payment-method-note">Customer payment note</Label>
+          <Textarea
+            id="payment-method-note"
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            disabled={!canEdit}
+            placeholder="Optional checkout instructions"
+            className="min-h-[76px] border-[#BBBBBB] focus:border-primary"
+          />
+        </div>
+      ) : null}
 
       {selectedMethods.length === 0 && activeMethods.length > 0 ? (
         <p className="text-sm font-medium text-red-600">
@@ -509,30 +506,32 @@ function RestaurantPaymentMethodsSection({
         </p>
       ) : null}
 
-      <div className="flex justify-end">
-        <Button
-          type="button"
-          onClick={() => {
-            if (!restaurantId || !canSave) return;
+      {canEdit ? (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            onClick={() => {
+              if (!restaurantId || !canSave) return;
 
-            updateMethods.mutate({
-              restaurantId,
-              payload: {
-                allowedPaymentMethods: selectedMethods,
-                walletEnabled: selectedMethods.includes("WALLET"),
-                note: note.trim(),
-              },
-            });
-          }}
-          disabled={!canEdit || !canSave}
-          className="h-[44px] rounded-[10px]"
-        >
-          {updateMethods.isPending ? (
-            <Loader2 className="mr-2 size-4 animate-spin" />
-          ) : null}
-          Save Payment Methods
-        </Button>
-      </div>
+              updateMethods.mutate({
+                restaurantId,
+                payload: {
+                  allowedPaymentMethods: selectedMethods,
+                  walletEnabled: selectedMethods.includes("WALLET"),
+                  note: note.trim(),
+                },
+              });
+            }}
+            disabled={!canEdit || !canSave}
+            className="h-[44px] rounded-[10px]"
+          >
+            {updateMethods.isPending ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : null}
+            Save Payment Methods
+          </Button>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -15,9 +15,12 @@ import { GeneratedInvoiceHistoryTable } from "@/components/pages/Orders/componen
 import { useAuth } from "@/hooks/useAuth";
 import PaginationSection from "@/components/common/pagination";
 import { sortData } from "@/lib/sort-data";
-import { useGetOrdersStats } from "@/hooks/useDashboard";
 import { useOrders } from "@/hooks/useOrders";
-import { useGetGeneratedInvoices } from "@/hooks/useReports";
+import {
+  useGetGeneratedInvoices,
+  useGetOrdersReport,
+} from "@/hooks/useReports";
+import { useCurrency } from "@/hooks/useCurrency";
 import {
   buildOrderStats,
   getOrdersHeaderContent,
@@ -71,23 +74,7 @@ export function OrdersPage() {
   const { user, branchId, isBranchAdmin } = useAuth();
   const restaurantId = user?.restaurantId;
   const scopedBranchId = isBranchAdmin ? branchId || undefined : undefined;
-
-  const {
-    data: orderStatsResponse,
-    isLoading: isOrderStatsLoading,
-    isFetching: isOrderStatsFetching,
-  } = useGetOrdersStats(
-    restaurantId
-      ? {
-          restaurantId,
-          ...(scopedBranchId ? { branchId: scopedBranchId } : {}),
-        }
-      : undefined,
-  );
-
-  const orderStats = orderStatsResponse?.data;
-
-  const dynamicStats = buildOrderStats(orderStats, t);
+  const { currency } = useCurrency(restaurantId);
 
   const orderType =
     activeTab === "delivery"
@@ -97,6 +84,41 @@ export function OrdersPage() {
         : undefined;
   const orderKind = activeTab === "group" ? "group-orders" : "order";
   const isInvoiceHistoryTab = activeTab === "invoice-history";
+  const reportDateRange = useMemo(() => {
+    const now = new Date();
+    if (scheduleFilter === "TODAY_SCHEDULED") {
+      const from = new Date(now);
+      const to = new Date(now);
+      from.setHours(0, 0, 0, 0);
+      to.setHours(23, 59, 59, 999);
+      return { fromDate: from.toISOString(), toDate: to.toISOString() };
+    }
+    if (scheduleFilter === "CUSTOM_RANGE") {
+      const from = scheduleRange.from ? new Date(scheduleRange.from) : null;
+      const to = scheduleRange.to ? new Date(scheduleRange.to) : null;
+      from?.setHours(0, 0, 0, 0);
+      to?.setHours(23, 59, 59, 999);
+      return {
+        ...(from ? { fromDate: from.toISOString() } : {}),
+        ...(to ? { toDate: to.toISOString() } : {}),
+      };
+    }
+    return {};
+  }, [scheduleFilter, scheduleRange]);
+  const orderReportQuery = useGetOrdersReport(
+    restaurantId && !isInvoiceHistoryTab
+      ? {
+          restaurantId,
+          branchId: scopedBranchId,
+          orderType,
+          kind: orderKind,
+          status: status !== "ALL" ? status : undefined,
+          ...reportDateRange,
+        }
+      : undefined,
+  );
+  const orderStats = orderReportQuery.data?.data;
+  const dynamicStats = buildOrderStats(orderStats, t, currency);
 
   const ordersQuery = useOrders({
     restaurantId: restaurantId || undefined,
@@ -194,7 +216,7 @@ export function OrdersPage() {
       <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6">
         <StatsSection
           stats={dynamicStats}
-          loading={isOrderStatsLoading || isOrderStatsFetching}
+          loading={orderReportQuery.isLoading || orderReportQuery.isFetching}
           className="xl:grid-cols-4"
         />
 

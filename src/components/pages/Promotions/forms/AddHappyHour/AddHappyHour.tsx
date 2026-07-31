@@ -2,7 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo } from "react";
-import { Controller, useForm, useWatch, type FieldErrors } from "react-hook-form";
+import {
+  Controller,
+  useForm,
+  useWatch,
+  type FieldErrors,
+} from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
@@ -16,7 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Time24Picker } from "@/components/ui/time-24-picker";
 import PageWrapper from "@/components/pages/Promotions/forms/PageWrapper";
 import Section from "@/components/pages/Promotions/forms/Section";
-import AsyncSelect from "@/components/ui/AsyncSelect";
+import AsyncMultiSelect from "@/components/ui/AsyncMultiSelect";
 
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -30,18 +35,26 @@ import { getMenuCategories } from "@/services/menu/categories/menu-categories.ap
 import { getApiErrorMessage } from "@/lib/errors";
 import { getLocalTodayInputValue } from "@/lib/date-input";
 import {
-  getOptionId,
+  getIds,
   getString,
   normalizeDetail,
   normalizeSelectedOptions,
 } from "@/components/pages/Promotions/utils/option-normalizers";
-import { happyHourSchema, type HappyHourFormValues } from "@/validations/promotions";
-import { FIELD_ERROR_CLASS, INPUT_BASE_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
+import {
+  happyHourSchema,
+  type HappyHourFormValues,
+} from "@/validations/promotions";
+import {
+  FIELD_ERROR_CLASS,
+  INPUT_BASE_CLASS,
+  MUTED_TEXT_SM_CLASS,
+} from "@/components/common/common-classes";
 
 const defaultValues: HappyHourFormValues = {
   code: "",
   title: "",
   description: "",
+  audience: "BOTH",
   discountType: "FLAT",
   discountValue: "",
   maxDiscountAmount: "",
@@ -51,11 +64,12 @@ const defaultValues: HappyHourFormValues = {
   startsAt: "",
   expiresAt: "",
   isActive: true,
+  applyMode: "ORDER_TOTAL",
   activeDays: [0, 1, 2, 3, 4, 5, 6],
   dailyStartTime: "",
   dailyEndTime: "",
-  selectedMenuItem: null,
-  selectedCategory: null,
+  selectedMenuItems: [],
+  selectedCategories: [],
 };
 
 const toDateInput = (value?: string | null) => {
@@ -88,9 +102,10 @@ const toDateISOStringOrNull = (value: string, boundary: "start" | "end") => {
   return date.toISOString();
 };
 
-const toNumber = (value: string) => {
+const toOptionalNumber = (value: string) => {
+  if (!value.trim()) return undefined;
   const number = Number(value);
-  return Number.isFinite(number) ? number : 0;
+  return Number.isFinite(number) ? number : undefined;
 };
 
 export default function AddHappyHour() {
@@ -104,7 +119,7 @@ export default function AddHappyHour() {
   const { user, restaurantId } = useAuth();
   const branchId = user?.branchId ?? "";
 
-  const { control, handleSubmit, reset, setValue } = useForm<HappyHourFormValues>({
+  const { control, handleSubmit, reset } = useForm<HappyHourFormValues>({
     resolver: zodResolver(happyHourSchema),
     defaultValues,
   });
@@ -132,21 +147,29 @@ export default function AddHappyHour() {
     { label: t("days.saturday"), value: 6 },
   ];
   const validationMessages: Record<string, string> = {
-    "Discount value must be greater than 0.": t("validation.discountValueGreaterThanZero"),
+    "Discount value must be greater than 0.": t(
+      "validation.discountValueGreaterThanZero",
+    ),
     "Discount value is required.": t("validation.discountValueRequired"),
     "Start date is required.": t("validation.startDateRequired"),
-    "Percentage discount cannot be greater than 100.": t("validation.percentageDiscountMax"),
+    "Percentage discount cannot be greater than 100.": t(
+      "validation.percentageDiscountMax",
+    ),
     "Expiry date is required.": t("validation.expiryDateRequired"),
     "Expiry date must be after start date.": t("validation.expiryAfterStart"),
     "Happy hour title is required.": t("validation.happyHourTitleRequired"),
     "Please select at least one active day.": t("validation.activeDayRequired"),
     "Daily start time is required.": t("validation.dailyStartRequired"),
     "Daily end time is required.": t("validation.dailyEndRequired"),
-    "Daily end time must be after daily start time.": t("validation.dailyEndAfterStart"),
+    "Daily end time must be after daily start time.": t(
+      "validation.dailyEndAfterStart",
+    ),
   };
   const translateValidation = (message?: string) =>
-    message ? validationMessages[message] ?? message : undefined;
-  const showTranslatedValidationError = (errors: FieldErrors<HappyHourFormValues>) => {
+    message ? (validationMessages[message] ?? message) : undefined;
+  const showTranslatedValidationError = (
+    errors: FieldErrors<HappyHourFormValues>,
+  ) => {
     const firstError = Object.values(errors).find((error) => error?.message);
     if (typeof firstError?.message === "string") {
       toast.error(translateValidation(firstError.message));
@@ -163,7 +186,9 @@ export default function AddHappyHour() {
       code: getString(detail, "code") ?? "",
       title: getString(detail, "title") ?? "",
       description: getString(detail, "description") ?? "",
-      discountType: detail.discountType === "PERCENTAGE" ? "PERCENTAGE" : "FLAT",
+      audience: detail.audience === "REGISTERED" ? "REGISTERED" : "BOTH",
+      discountType:
+        detail.discountType === "PERCENTAGE" ? "PERCENTAGE" : "FLAT",
       discountValue: String(detail.discountValue ?? ""),
       maxDiscountAmount: String(detail.maxDiscountAmount ?? ""),
       minOrderAmount: String(detail.minOrderAmount ?? ""),
@@ -172,24 +197,30 @@ export default function AddHappyHour() {
       startsAt: toDateInput(getString(detail, "startsAt")),
       expiresAt: toDateInput(getString(detail, "expiresAt")),
       isActive: Boolean(detail.isActive),
+      applyMode:
+        detail.applyMode === "SCOPED_ITEMS" ? "SCOPED_ITEMS" : "ORDER_TOTAL",
       activeDays:
         Array.isArray(detail.activeDays) && detail.activeDays.length > 0
-          ? detail.activeDays.filter((day): day is number => typeof day === "number")
+          ? detail.activeDays.filter(
+              (day): day is number => typeof day === "number",
+            )
           : [0, 1, 2, 3, 4, 5, 6],
       dailyStartTime: getString(detail, "dailyStartTime") ?? "",
       dailyEndTime: getString(detail, "dailyEndTime") ?? "",
-      selectedMenuItem:
-        normalizeSelectedOptions({
-          singleRecord: detail.scopeMenuItem,
-          singleId: getString(detail, "scopeMenuItemId"),
-          fallbackLabel: "Menu Item",
-        })[0] ?? null,
-      selectedCategory:
-        normalizeSelectedOptions({
-          singleRecord: detail.scopeCategory,
-          singleId: getString(detail, "scopeCategoryId"),
-          fallbackLabel: "Category",
-        })[0] ?? null,
+      selectedMenuItems: normalizeSelectedOptions({
+        records: detail.scopeMenuItems,
+        ids: detail.scopeMenuItemIds,
+        singleRecord: detail.scopeMenuItem,
+        singleId: getString(detail, "scopeMenuItemId"),
+        fallbackLabel: "Menu Item",
+      }),
+      selectedCategories: normalizeSelectedOptions({
+        records: detail.scopeCategories,
+        ids: detail.scopeCategoryIds,
+        singleRecord: detail.scopeCategory,
+        singleId: getString(detail, "scopeCategoryId"),
+        fallbackLabel: "Category",
+      }),
     });
   }, [detailResponse, isEditMode, reset]);
 
@@ -226,22 +257,39 @@ export default function AddHappyHour() {
   const payload = useMemo(() => {
     const trimmedCode = values.code.trim();
 
+    const maxDiscountAmount = toOptionalNumber(values.maxDiscountAmount);
+    const minOrderAmount = toOptionalNumber(values.minOrderAmount);
+    const maxUses = toOptionalNumber(values.maxUses);
+    const maxUsesPerCustomer = toOptionalNumber(values.maxUsesPerCustomer);
+    const scopeMenuItemIds =
+      values.applyMode === "SCOPED_ITEMS"
+        ? getIds(values.selectedMenuItems)
+        : [];
+    const scopeCategoryIds =
+      values.applyMode === "SCOPED_ITEMS"
+        ? getIds(values.selectedCategories)
+        : [];
+
     return {
       ...(trimmedCode ? { code: trimmedCode } : {}),
       title: values.title.trim(),
       description: values.description.trim(),
       restaurantId,
       branchId: branchId || null,
+      audience: values.audience,
       discountType: values.discountType,
-      discountValue: toNumber(values.discountValue),
-      maxDiscountAmount: toNumber(values.maxDiscountAmount),
-      minOrderAmount: toNumber(values.minOrderAmount),
-      maxUses: toNumber(values.maxUses),
-      maxUsesPerCustomer: toNumber(values.maxUsesPerCustomer),
+      discountValue: toOptionalNumber(values.discountValue) ?? 0,
+      ...(maxDiscountAmount !== undefined ? { maxDiscountAmount } : {}),
+      ...(minOrderAmount !== undefined ? { minOrderAmount } : {}),
+      ...(maxUses !== undefined ? { maxUses } : {}),
+      ...(maxUsesPerCustomer !== undefined ? { maxUsesPerCustomer } : {}),
       startsAt: toDateISOStringOrNull(values.startsAt, "start"),
       expiresAt: toDateISOStringOrNull(values.expiresAt, "end"),
-      scopeMenuItemId: getOptionId(values.selectedMenuItem) || null,
-      scopeCategoryId: getOptionId(values.selectedCategory) || null,
+      applyMode: values.applyMode,
+      scopeMenuItemIds,
+      scopeCategoryIds,
+      scopeMenuItemId: scopeMenuItemIds[0] ?? null,
+      scopeCategoryId: scopeCategoryIds[0] ?? null,
       isActive: values.isActive,
       activeDays: values.activeDays,
       dailyStartTime: values.dailyStartTime,
@@ -282,14 +330,23 @@ export default function AddHappyHour() {
 
   return (
     <PageWrapper title={pageTitle}>
-      <form onSubmit={handleSubmit(onSubmit, showTranslatedValidationError)} className="space-y-8" noValidate>
+      <form
+        onSubmit={handleSubmit(onSubmit, showTranslatedValidationError)}
+        className="space-y-8"
+        noValidate
+      >
         <Controller
           control={control}
           name="isActive"
           render={({ field }) => (
             <div className="mb-6 flex items-center justify-between">
-              <p className="text-sm text-gray-600">{t("forms.happyHourActivePrompt")}</p>
-              <Switch checked={field.value} onCheckedChange={(checked) => field.onChange(Boolean(checked))} />
+              <p className="text-sm text-gray-600">
+                {t("forms.happyHourActivePrompt")}
+              </p>
+              <Switch
+                checked={field.value}
+                onCheckedChange={(checked) => field.onChange(Boolean(checked))}
+              />
             </div>
           )}
         />
@@ -344,6 +401,26 @@ export default function AddHappyHour() {
             )}
           />
 
+          <Controller
+            control={control}
+            name="audience"
+            render={({ field }) => (
+              <div className="space-y-2">
+                <Label>{t("forms.audience")}</Label>
+                <select
+                  value={field.value}
+                  onChange={field.onChange}
+                  className="h-[44px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-sm"
+                >
+                  <option value="BOTH">{t("forms.audienceBoth")}</option>
+                  <option value="REGISTERED">
+                    {t("forms.audienceRegistered")}
+                  </option>
+                </select>
+              </div>
+            )}
+          />
+
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <Controller
               control={control}
@@ -359,7 +436,11 @@ export default function AddHappyHour() {
                     onBlur={field.onBlur}
                     className={INPUT_BASE_CLASS}
                   />
-                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
+                  {fieldState.error?.message ? (
+                    <p className={FIELD_ERROR_CLASS}>
+                      {translateValidation(fieldState.error.message)}
+                    </p>
+                  ) : null}
                 </div>
               )}
             />
@@ -378,7 +459,11 @@ export default function AddHappyHour() {
                     onBlur={field.onBlur}
                     className={INPUT_BASE_CLASS}
                   />
-                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
+                  {fieldState.error?.message ? (
+                    <p className={FIELD_ERROR_CLASS}>
+                      {translateValidation(fieldState.error.message)}
+                    </p>
+                  ) : null}
                 </div>
               )}
             />
@@ -389,19 +474,28 @@ export default function AddHappyHour() {
             name="activeDays"
             render={({ field, fieldState }) => (
               <div className="space-y-3">
-                <Label className="text-[15px] font-medium">{t("forms.activeDays")}</Label>
+                <Label className="text-[15px] font-medium">
+                  {t("forms.activeDays")}
+                </Label>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {days.map((day) => {
                     const checked = field.value.includes(day.value);
                     return (
-                      <label key={day.value} className="flex items-center gap-2 text-sm text-gray-600">
+                      <label
+                        key={day.value}
+                        className="flex items-center gap-2 text-sm text-gray-600"
+                      >
                         <Checkbox
                           checked={checked}
                           onCheckedChange={() => {
                             field.onChange(
                               checked
-                                ? field.value.filter((item) => item !== day.value)
-                                : [...field.value, day.value].sort((a, b) => a - b)
+                                ? field.value.filter(
+                                    (item) => item !== day.value,
+                                  )
+                                : [...field.value, day.value].sort(
+                                    (a, b) => a - b,
+                                  ),
                             );
                           }}
                         />
@@ -410,7 +504,11 @@ export default function AddHappyHour() {
                     );
                   })}
                 </div>
-                {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
+                {fieldState.error?.message ? (
+                  <p className={FIELD_ERROR_CLASS}>
+                    {translateValidation(fieldState.error.message)}
+                  </p>
+                ) : null}
               </div>
             )}
           />
@@ -429,7 +527,11 @@ export default function AddHappyHour() {
                     required
                     error={fieldState.error?.message}
                   />
-                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
+                  {fieldState.error?.message ? (
+                    <p className={FIELD_ERROR_CLASS}>
+                      {translateValidation(fieldState.error.message)}
+                    </p>
+                  ) : null}
                 </div>
               )}
             />
@@ -447,7 +549,11 @@ export default function AddHappyHour() {
                     required
                     error={fieldState.error?.message}
                   />
-                  {fieldState.error?.message ? <p className={FIELD_ERROR_CLASS}>{translateValidation(fieldState.error.message)}</p> : null}
+                  {fieldState.error?.message ? (
+                    <p className={FIELD_ERROR_CLASS}>
+                      {translateValidation(fieldState.error.message)}
+                    </p>
+                  ) : null}
                 </div>
               )}
             />
@@ -469,7 +575,9 @@ export default function AddHappyHour() {
                     className="h-[52px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-base outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                   >
                     <option value="FLAT">{t("forms.flatDiscount")}</option>
-                    <option value="PERCENTAGE">{t("forms.percentageDiscount")}</option>
+                    <option value="PERCENTAGE">
+                      {t("forms.percentageDiscount")}
+                    </option>
                   </select>
                 </div>
               )}
@@ -561,55 +669,64 @@ export default function AddHappyHour() {
         <Section label={t("forms.happyHourScope")}>
           <Controller
             control={control}
-            name="selectedMenuItem"
+            name="applyMode"
             render={({ field }) => (
               <div className="space-y-2">
-                <Label className="text-[16px]">{t("forms.selectFoodItem")}</Label>
-                <AsyncSelect
+                <Label>{t("forms.applyMode")}</Label>
+                <select
                   value={field.value}
-                  onChange={(value) => {
-                    field.onChange(value);
-                    setValue("selectedCategory", null);
-                  }}
-                  placeholder={t("forms.selectFoodItemPlaceholder")}
-                  fetchOptions={fetchMenuItemOptions}
-                  labelKey="name"
-                  valueKey="id"
-                />
-                {field.value ? (
-                  <button type="button" onClick={() => field.onChange(null)} className="text-sm text-primary">
-                    {t("forms.clearSelectedFoodItem")}
-                  </button>
-                ) : null}
+                  onChange={field.onChange}
+                  className="h-[44px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-sm"
+                >
+                  <option value="ORDER_TOTAL">
+                    {t("forms.orderTotalMode")}
+                  </option>
+                  <option value="SCOPED_ITEMS">
+                    {t("forms.scopedItemsMode")}
+                  </option>
+                </select>
               </div>
             )}
           />
 
-          <Controller
-            control={control}
-            name="selectedCategory"
-            render={({ field }) => (
-              <div className="space-y-2">
-                <Label className="text-[16px]">{t("forms.selectFoodCategory")}</Label>
-                <AsyncSelect
-                  value={field.value}
-                  onChange={(value) => {
-                    field.onChange(value);
-                    setValue("selectedMenuItem", null);
-                  }}
-                  placeholder={t("forms.selectFoodCategoryPlaceholder")}
-                  fetchOptions={fetchCategoryOptions}
-                  labelKey="name"
-                  valueKey="id"
-                />
-                {field.value ? (
-                  <button type="button" onClick={() => field.onChange(null)} className="text-sm text-primary">
-                    {t("forms.clearSelectedCategory")}
-                  </button>
-                ) : null}
-              </div>
-            )}
-          />
+          {values.applyMode === "SCOPED_ITEMS" ? (
+            <>
+              <Controller
+                control={control}
+                name="selectedMenuItems"
+                render={({ field }) => (
+                  <div className="space-y-2">
+                    <Label>{t("forms.selectFoodItems")}</Label>
+                    <AsyncMultiSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder={t("forms.selectFoodItemsPlaceholder")}
+                      fetchOptions={fetchMenuItemOptions}
+                      labelKey="name"
+                      valueKey="id"
+                    />
+                  </div>
+                )}
+              />
+              <Controller
+                control={control}
+                name="selectedCategories"
+                render={({ field }) => (
+                  <div className="space-y-2">
+                    <Label>{t("forms.selectFoodCategories")}</Label>
+                    <AsyncMultiSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder={t("forms.selectFoodCategoriesPlaceholder")}
+                      fetchOptions={fetchCategoryOptions}
+                      labelKey="name"
+                      valueKey="id"
+                    />
+                  </div>
+                )}
+              />
+            </>
+          ) : null}
 
           <p className={MUTED_TEXT_SM_CLASS}>{t("forms.happyHourScopeHelp")}</p>
         </Section>

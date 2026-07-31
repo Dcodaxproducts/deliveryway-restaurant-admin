@@ -19,7 +19,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useGetRevenueTrend } from "@/hooks/useDashboard";
 import { formatMoney } from "@/lib/currency";
 
-type TrendRange = "daily" | "weekly" | "monthly";
+export type TrendRange = "daily" | "weekly" | "monthly";
 
 type RevenuePoint = {
   key: string;
@@ -28,10 +28,23 @@ type RevenuePoint = {
   cumulativeTotal: number;
 };
 
-const RevenueGraph = () => {
-  const { restaurantId, branchId, isBranchAdmin, loading: authLoading } = useAuth();
+const RevenueGraph = ({
+  range: controlledRange,
+  onRangeChange,
+}: {
+  range?: TrendRange;
+  onRangeChange?: (range: TrendRange) => void;
+} = {}) => {
+  const {
+    restaurantId,
+    branchId,
+    isBranchAdmin,
+    loading: authLoading,
+  } = useAuth();
   const { currency: fallbackCurrency } = useCurrency(restaurantId);
-  const [range, setRange] = useState<TrendRange>("daily");
+  const [localRange, setLocalRange] = useState<TrendRange>("daily");
+  const range = controlledRange ?? localRange;
+  const setRange = onRangeChange ?? setLocalRange;
 
   const {
     data: revenueTrendResponse,
@@ -46,7 +59,7 @@ const RevenueGraph = () => {
           ...(isBranchAdmin && branchId ? { branchId } : {}),
           range,
         }
-      : undefined
+      : undefined,
   );
 
   const trendData = revenueTrendResponse?.data;
@@ -55,7 +68,14 @@ const RevenueGraph = () => {
   const totalRevenueInRange = Number(trendData?.totalRevenueInRange || 0);
   const currentRange = trendData?.range || range;
 
-  const chartData = useMemo<Array<{ key: string; day: string; revenue: number; cumulativeTotal: number }>>(() => {
+  const chartData = useMemo<
+    Array<{
+      key: string;
+      day: string;
+      revenue: number;
+      cumulativeTotal: number;
+    }>
+  >(() => {
     return (
       trendData?.points?.map((point: RevenuePoint) => ({
         key: point.key,
@@ -168,12 +188,24 @@ const RevenueGraph = () => {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <defs>
-                <linearGradient id="revenuePurpleGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="revenuePurpleGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop offset="0%" stopColor="#6366F1" stopOpacity={0.35} />
                   <stop offset="100%" stopColor="#6366F1" stopOpacity={0} />
                 </linearGradient>
 
-                <linearGradient id="revenueRedGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="revenueRedGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop offset="0%" stopColor="#D41414" stopOpacity={0.3} />
                   <stop offset="100%" stopColor="#D41414" stopOpacity={0} />
                 </linearGradient>

@@ -17,6 +17,22 @@ type OrderCreatedPayload = {
   branchId: string;
 };
 
+type OrderStatusPayload = {
+  id: string;
+  status: string;
+  restaurantId: string;
+  branchId: string;
+};
+
+export const ORDER_SOUND_STORAGE_KEY = "deliveryways.orderSound.enabled";
+export const ORDER_SOUND_SETTING_EVENT = "deliveryways:order-sound-setting";
+export const isPendingOrderAlertStatus = (status?: string | null) =>
+  ["PAYMENT_PENDING", "PLACED"].includes(
+    String(status || "")
+      .trim()
+      .toUpperCase(),
+  );
+
 const MAX_SEEN_ORDER_IDS = 100;
 
 export const getOrderTrackingSocketUrl = () =>
@@ -67,6 +83,7 @@ export function useRealtimeOrderNotifications() {
   const router = useRouter();
   const orders = useTranslations("orders");
   const seenOrderIds = useRef(new Set<string>());
+  const ringingOrders = useRef(new Map<string, number>());
   const { token, restaurantId, branchId, isBranchAdmin, isRestaurantAdmin } =
     useAuth();
 
@@ -104,6 +121,30 @@ export function useRealtimeOrderNotifications() {
       void queryClient.invalidateQueries({ queryKey: ["orders"] });
       void queryClient.invalidateQueries({ queryKey: ["notifications"] });
     };
+    const soundEnabled = () =>
+      window.localStorage.getItem(ORDER_SOUND_STORAGE_KEY) !== "false";
+    const stopOrderAlert = (orderId: string) => {
+      const interval = ringingOrders.current.get(orderId);
+      if (interval !== undefined) window.clearInterval(interval);
+      ringingOrders.current.delete(orderId);
+      toast.dismiss(`new-order-${orderId}`);
+    };
+    const stopAllOrderAlerts = () => {
+      [...ringingOrders.current.keys()].forEach(stopOrderAlert);
+    };
+    const startOrderAlert = (orderId: string) => {
+      stopOrderAlert(orderId);
+      if (!soundEnabled()) return;
+      playNewOrderSound();
+      ringingOrders.current.set(
+        orderId,
+        window.setInterval(playNewOrderSound, 3_000),
+      );
+    };
+    const handleSoundSetting = () => {
+      if (!soundEnabled()) stopAllOrderAlerts();
+    };
+    window.addEventListener(ORDER_SOUND_SETTING_EVENT, handleSoundSetting);
 
     socket.on("connect", refreshOrderData);
 
@@ -128,7 +169,7 @@ export function useRealtimeOrderNotifications() {
       refreshOrderData();
 
       try {
-        playNewOrderSound();
+        startOrderAlert(payload.id);
       } catch {
         // Audio alerts are best-effort and can be blocked by browser policy.
       }
@@ -158,6 +199,7 @@ export function useRealtimeOrderNotifications() {
           order: payload.id.slice(-8),
         }),
         {
+          id: `new-order-${payload.id}`,
           description: orders("ordersUpdatedRealtime"),
           duration: Number.POSITIVE_INFINITY,
           action: {
@@ -168,7 +210,23 @@ export function useRealtimeOrderNotifications() {
       );
     });
 
+    socket.on("order.status.updated", (payload: OrderStatusPayload) => {
+      if (
+        !payload?.id ||
+        payload.restaurantId !== restaurantId ||
+        (isBranchAdmin && payload.branchId !== branchId)
+      ) {
+        return;
+      }
+      refreshOrderData();
+      if (!isPendingOrderAlertStatus(payload.status)) {
+        stopOrderAlert(payload.id);
+      }
+    });
+
     return () => {
+      window.removeEventListener(ORDER_SOUND_SETTING_EVENT, handleSoundSetting);
+      stopAllOrderAlerts();
       socket.disconnect();
     };
   }, [

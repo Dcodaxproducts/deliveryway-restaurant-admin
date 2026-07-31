@@ -47,6 +47,7 @@ export type HappyHourPayload = {
   code?: string;
   title: string;
   description?: string;
+  audience?: "REGISTERED" | "BOTH";
   restaurantId?: string | null;
   branchId?: string | null;
 
@@ -90,7 +91,7 @@ const buildPromotionParams = (params?: PromotionQueryParams) => {
  * Overview
  */
 export const getAdminPromotionsOverview = async (
-  params?: PromotionQueryParams
+  params?: PromotionQueryParams,
 ) => {
   const response = await api.get("/admin/promotions/overview", {
     params: buildPromotionParams(params),
@@ -103,7 +104,7 @@ export const getAdminPromotionsOverview = async (
  * Campaigns
  */
 export const getAdminPromotionCampaigns = async (
-  params?: PromotionQueryParams
+  params?: PromotionQueryParams,
 ) => {
   const response = await api.get("/admin/promotions/campaigns", {
     params: buildPromotionParams(params),
@@ -113,7 +114,7 @@ export const getAdminPromotionCampaigns = async (
 };
 export const getAdminPromotionCampaignDetail = async (
   id: string,
-  params?: PromotionQueryParams
+  params?: PromotionQueryParams,
 ) => {
   const response = await api.get(`/admin/promotions/campaigns/${id}`, {
     params: buildPromotionParams(params),
@@ -122,7 +123,7 @@ export const getAdminPromotionCampaignDetail = async (
   return response.data;
 };
 export const createAdminPromotionCampaign = async (
-  payload: PromotionCampaignPayload
+  payload: PromotionCampaignPayload,
 ) => {
   const response = await api.post("/admin/promotions/campaigns", payload);
 
@@ -130,7 +131,7 @@ export const createAdminPromotionCampaign = async (
 };
 export const updateAdminPromotionCampaign = async (
   id: string,
-  payload: Partial<PromotionCampaignPayload>
+  payload: Partial<PromotionCampaignPayload>,
 ) => {
   const { restaurantId, branchId, ...body } = payload;
 
@@ -146,7 +147,7 @@ export const updateAdminPromotionCampaign = async (
 
 export const deleteAdminPromotionCampaign = async (
   id: string,
-  params?: PromotionQueryParams
+  params?: PromotionQueryParams,
 ) => {
   const response = await api.delete(`/admin/promotions/campaigns/${id}`, {
     params: buildPromotionParams(params),
@@ -167,7 +168,7 @@ export const getAdminHappyHours = async (params?: PromotionQueryParams) => {
 
 export const getAdminHappyHourDetail = async (
   id: string,
-  params?: PromotionQueryParams
+  params?: PromotionQueryParams,
 ) => {
   const response = await api.get(`/admin/promotions/happy-hours/${id}`, {
     params: buildPromotionParams(params),
@@ -177,7 +178,6 @@ export const getAdminHappyHourDetail = async (
 };
 
 export const createAdminHappyHour = async (payload: HappyHourPayload) => {
-  
   const response = await api.post("/admin/promotions/happy-hours", payload);
 
   return response.data;
@@ -185,17 +185,19 @@ export const createAdminHappyHour = async (payload: HappyHourPayload) => {
 
 export const updateAdminHappyHour = async (
   id: string,
-  payload: Partial<HappyHourPayload>
+  payload: Partial<HappyHourPayload>,
 ) => {
- 
-  const response = await api.patch(`/admin/promotions/happy-hours/${id}`, payload);
+  const response = await api.patch(
+    `/admin/promotions/happy-hours/${id}`,
+    payload,
+  );
 
   return response.data;
 };
 
 export const deleteAdminHappyHour = async (
   id: string,
-  params?: PromotionQueryParams
+  params?: PromotionQueryParams,
 ) => {
   const response = await api.delete(`/admin/promotions/happy-hours/${id}`, {
     params: buildPromotionParams(params),
@@ -219,6 +221,8 @@ export type CouponPayload = {
   startsAt?: string;
   expiresAt?: string;
   description?: string;
+  audience?: "REGISTERED" | "BOTH";
+  applyMode?: "ORDER_TOTAL" | "SCOPED_ITEMS";
   branchId?: string;
   maxDiscountAmount?: number;
   minOrderAmount?: number;
@@ -226,6 +230,8 @@ export type CouponPayload = {
   maxUsesPerCustomer?: number;
   scopeMenuItemId?: string;
   scopeCategoryId?: string;
+  scopeMenuItemIds?: string[];
+  scopeCategoryIds?: string[];
   restaurantId?: string;
 };
 
@@ -253,7 +259,10 @@ export const createCoupon = async (payload: Partial<CouponPayload>) => {
   return response.data;
 };
 
-export const updateCoupon = async (id: string, payload: Partial<CouponPayload>) => {
+export const updateCoupon = async (
+  id: string,
+  payload: Partial<CouponPayload>,
+) => {
   const body = { ...payload };
   delete body.restaurantId;
 
@@ -268,7 +277,7 @@ export const deleteCoupon = async (id: string) => {
 
 export const updateCouponStatus = async (
   code: string,
-  payload: CouponStatusPayload
+  payload: CouponStatusPayload,
 ) => {
   const response = await api.patch(`/coupons/${code}/status`, payload);
   return response.data;

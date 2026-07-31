@@ -7,6 +7,7 @@ vi.mock("@/lib/constants", () => ({
 import {
   buildOrderTrackingSocketAuth,
   getOrderTrackingSocketUrl,
+  isPendingOrderAlertStatus,
 } from "./useRealtimeOrderNotifications";
 
 describe("getOrderTrackingSocketUrl", () => {
@@ -14,6 +15,14 @@ describe("getOrderTrackingSocketUrl", () => {
     expect(getOrderTrackingSocketUrl()).toBe(
       "https://api.delivery-way.de/orders-tracking",
     );
+  });
+});
+
+describe("isPendingOrderAlertStatus", () => {
+  it("rings only while an order awaits acceptance", () => {
+    expect(isPendingOrderAlertStatus("PLACED")).toBe(true);
+    expect(isPendingOrderAlertStatus("CONFIRMED")).toBe(false);
+    expect(isPendingOrderAlertStatus("REJECTED")).toBe(false);
   });
 });
 
