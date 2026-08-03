@@ -3309,6 +3309,11 @@
     "queueName": "Warteschlangenname",
     "queueNamePlaceholder": "z. B. kitchen-printer-queue",
     "connect": "Verbinden",
+    "installedPrinters": "Installierte Drucker",
+    "qzTrayHint": "QZ Tray muss auf diesem Computer installiert und gestartet sein.",
+    "scanPrinters": "Drucker suchen",
+    "selectPrinter": "Installierten Drucker auswählen",
+    "testPrint": "Testdruck",
     "printSettings": "Druckeinstellungen",
     "printingEnabled": "Drucken aktiviert",
     "printCopies": "Druckkopien",
@@ -3321,7 +3326,15 @@
     "toast": {
       "restaurantMissing": "Restaurant-ID fehlt.",
       "updated": "Druckeinstellungen erfolgreich aktualisiert.",
-      "failedUpdate": "Druckeinstellungen konnten nicht aktualisiert werden."
+      "failedUpdate": "Druckeinstellungen konnten nicht aktualisiert werden.",
+      "connectionTypeRequired": "Wählen Sie zuerst einen Verbindungstyp aus.",
+      "printerRequired": "Wählen Sie zuerst einen installierten Drucker aus.",
+      "queueRequired": "Geben Sie zuerst den Namen der Cloud-Druckwarteschlange ein.",
+      "noPrinters": "QZ Tray ist verbunden, aber es wurden keine installierten Drucker gefunden.",
+      "discoveryFailed": "Drucker konnten nicht gefunden werden. Installieren oder starten Sie QZ Tray und versuchen Sie es erneut.",
+      "printersFound": "{count} installierte(r) Drucker gefunden.",
+      "testPrintSent": "Testdruck wurde erfolgreich gesendet.",
+      "testPrintFailed": "Testdruck fehlgeschlagen."
     }
   }
 }
