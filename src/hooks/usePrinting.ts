@@ -3,9 +3,11 @@ import {
   getAdminPrintingLogs,
   getAdminPrintingSettings,
   getAdminPrintingStatus,
+  reportAdminPrinterEvent,
   updateAdminPrintingSettings,
   PrintingQueryParams,
   UpdatePrintingSettingsPayload,
+  ReportPrinterEventPayload,
 } from "@/services/printing/printing.api";
 
 export const printingQueryKeys = {
@@ -28,17 +30,10 @@ export const printingQueryKeys = {
     ] as const,
 
   logs: (params?: PrintingQueryParams) =>
-    [
-      "admin-printing",
-      "logs",
-      params?.restaurantId,
-      params?.branchId,
-    ] as const,
+    ["admin-printing", "logs", params?.restaurantId, params?.branchId] as const,
 };
 
-export const useGetAdminPrintingSettings = (
-  params?: PrintingQueryParams
-) => {
+export const useGetAdminPrintingSettings = (params?: PrintingQueryParams) => {
   return useQuery({
     queryKey: printingQueryKeys.settings(params),
     queryFn: () => getAdminPrintingSettings(params),
@@ -74,9 +69,7 @@ export const useUpdateAdminPrintingSettings = () => {
   });
 };
 
-export const useGetAdminPrintingStatus = (
-  params?: PrintingQueryParams
-) => {
+export const useGetAdminPrintingStatus = (params?: PrintingQueryParams) => {
   return useQuery({
     queryKey: printingQueryKeys.status(params),
     queryFn: () => getAdminPrintingStatus(params),
@@ -85,12 +78,31 @@ export const useGetAdminPrintingStatus = (
   });
 };
 
-export const useGetAdminPrintingLogs = (
-  params?: PrintingQueryParams
-) => {
+export const useGetAdminPrintingLogs = (params?: PrintingQueryParams) => {
   return useQuery({
     queryKey: printingQueryKeys.logs(params),
     queryFn: () => getAdminPrintingLogs(params),
     enabled: Boolean(params?.restaurantId),
+  });
+};
+
+export const useReportAdminPrinterEvent = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: ReportPrinterEventPayload) =>
+      reportAdminPrinterEvent(payload),
+    onSuccess: (_, variables) => {
+      const params = {
+        restaurantId: variables.restaurantId,
+        branchId: variables.branchId,
+      };
+      queryClient.invalidateQueries({
+        queryKey: printingQueryKeys.status(params),
+      });
+      queryClient.invalidateQueries({
+        queryKey: printingQueryKeys.logs(params),
+      });
+    },
   });
 };
