@@ -3,16 +3,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Check, ChevronDown, Loader2, RefreshCw } from "lucide-react";
+import { Check, ChevronDown, Loader2, Printer, RefreshCw } from "lucide-react";
 import FormInput from "@/components/forms/common/FormInput";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useGetAdminPrintingSettings,
   useGetAdminPrintingStatus,
+  useReportAdminPrinterEvent,
   useUpdateAdminPrintingSettings,
 } from "@/hooks/usePrinting";
 import { formatDateTime24 } from "@/lib/date-time-format";
 import { getApiErrorMessage } from "@/lib/errors";
+import {
+  discoverLocalPrinters,
+  printLocalTestTicket,
+} from "@/lib/local-printer";
+import { validatePrinterConnection } from "@/lib/printing-settings-validation";
 import type { PrintingConnectionType } from "@/services/printing";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
@@ -128,6 +134,7 @@ export default function AutoPrintingSettings({
 
   const { mutateAsync: updateSettings, isPending: updating } =
     useUpdateAdminPrintingSettings();
+  const { mutateAsync: reportPrinterEvent } = useReportAdminPrinterEvent();
 
   const apiSettings = settingsResponse?.data?.settings;
   const source = settingsResponse?.data?.source;
@@ -137,6 +144,9 @@ export default function AutoPrintingSettings({
   const health = statusResponse?.data?.health;
 
   const [form, setForm] = useState<PrintingSettings>(defaultSettings);
+  const [availablePrinters, setAvailablePrinters] = useState<string[]>([]);
+  const [discovering, setDiscovering] = useState(false);
+  const [testing, setTesting] = useState(false);
 
   const loading = authLoading || settingsLoading || statusLoading;
   const refreshing = settingsFetching || statusFetching;
@@ -186,9 +196,92 @@ export default function AutoPrintingSettings({
     await Promise.all([refetchSettings(), refetchStatus()]);
   };
 
+  const reportLocalEvent = async (
+    event: "discovery" | "connection" | "test_print",
+    status: "success" | "failed" | "warning",
+    message: string,
+    printerName?: string,
+  ) => {
+    if (!restaurantId) return;
+
+    try {
+      await reportPrinterEvent({
+        restaurantId,
+        branchId: effectiveBranchId || undefined,
+        event,
+        status,
+        message,
+        ...(printerName ? { printerName } : {}),
+      });
+    } catch {
+      // Local discovery and printing must still work if health reporting fails.
+    }
+  };
+
+  const handleDiscoverPrinters = async () => {
+    setDiscovering(true);
+
+    try {
+      const printers = await discoverLocalPrinters();
+      setAvailablePrinters(printers);
+
+      if (printers.length === 0) {
+        updateField("printerName", "");
+        await reportLocalEvent(
+          "discovery",
+          "warning",
+          "QZ Tray connected, but no installed printer queues were found.",
+        );
+        toast.error(t("toast.noPrinters"));
+        return;
+      }
+
+      if (!printers.includes(form.printerName)) {
+        updateField("printerName", printers[0]);
+      }
+      await reportLocalEvent(
+        "discovery",
+        "success",
+        `Discovered ${printers.length} local printer queue(s).`,
+      );
+      toast.success(t("toast.printersFound", { count: printers.length }));
+    } catch (error: unknown) {
+      setAvailablePrinters([]);
+      updateField("printerName", "");
+      const message = getApiErrorMessage(error, t("toast.discoveryFailed"));
+      await reportLocalEvent("discovery", "failed", message);
+      toast.error(message);
+    } finally {
+      setDiscovering(false);
+    }
+  };
+
+  const handleConnectionTypeChange = (connectionType: ConnectionType) => {
+    updateField("connectionType", connectionType);
+
+    if (connectionType === "CLOUD" || connectionType === "") {
+      setAvailablePrinters([]);
+      updateField("printerName", "");
+      return;
+    }
+
+    void handleDiscoverPrinters();
+  };
+
+  const isLocalConnection =
+    form.connectionType === "USB" ||
+    form.connectionType === "LAN" ||
+    form.connectionType === "BLUETOOTH";
+
   const handleSave = async () => {
     if (!restaurantId) {
       toast.error(t("toast.restaurantMissing"));
+      return;
+    }
+
+    const validationError = validatePrinterConnection(form);
+    if (validationError) {
+      toast.error(t(`toast.${validationError}`));
       return;
     }
 
@@ -210,9 +303,43 @@ export default function AutoPrintingSettings({
         queueName: form.queueName.trim() || null,
       });
 
+      if (isLocalConnection) {
+        await reportLocalEvent(
+          "connection",
+          "success",
+          "Local printer connection settings saved.",
+          form.printerName,
+        );
+      }
+
       toast.success(t("toast.updated"));
     } catch (error: unknown) {
       toast.error(getApiErrorMessage(error, t("toast.failedUpdate")));
+    }
+  };
+
+  const handleTestPrint = async () => {
+    if (!form.printerName.trim()) {
+      toast.error(t("toast.printerRequired"));
+      return;
+    }
+
+    setTesting(true);
+    try {
+      await printLocalTestTicket(form.printerName);
+      await reportLocalEvent(
+        "test_print",
+        "success",
+        "Test print completed successfully.",
+        form.printerName,
+      );
+      toast.success(t("toast.testPrintSent"));
+    } catch (error: unknown) {
+      const message = getApiErrorMessage(error, t("toast.testPrintFailed"));
+      await reportLocalEvent("test_print", "failed", message, form.printerName);
+      toast.error(message);
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -318,10 +445,7 @@ export default function AutoPrintingSettings({
             <select
               value={form.connectionType}
               onChange={(event) =>
-                updateField(
-                  "connectionType",
-                  event.target.value as ConnectionType,
-                )
+                handleConnectionTypeChange(event.target.value as ConnectionType)
               }
               className="h-11 w-full appearance-none rounded-[10px] border border-[#BBBBBB] px-4 pr-12 text-sm text-gray-500 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             >
@@ -338,48 +462,79 @@ export default function AutoPrintingSettings({
           </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-          <FormInput
-            label={t("printerName")}
-            placeholder={t("printerNamePlaceholder")}
-            value={form.printerName}
-            onChange={(value) => updateField("printerName", value)}
-          />
+        {isLocalConnection ? (
+          <div className="mb-6 rounded-xl border border-gray-200 p-4">
+            <div className="mb-3 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium">{t("installedPrinters")}</p>
+                <p className="text-xs text-gray-500">{t("qzTrayHint")}</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDiscoverPrinters}
+                disabled={discovering}
+              >
+                {discovering ? (
+                  <Loader2 size={16} className="mr-2 animate-spin" />
+                ) : (
+                  <RefreshCw size={16} className="mr-2" />
+                )}
+                {t("scanPrinters")}
+              </Button>
+            </div>
 
-          <FormInput
-            label={t("printerTarget")}
-            placeholder={t("printerTargetPlaceholder")}
-            value={form.printerTarget}
-            onChange={(value) => updateField("printerTarget", value)}
-          />
+            <select
+              aria-label={t("printerName")}
+              value={form.printerName}
+              onChange={(event) =>
+                updateField("printerName", event.target.value)
+              }
+              disabled={discovering || availablePrinters.length === 0}
+              className="h-11 w-full rounded-[10px] border border-[#BBBBBB] px-4 text-sm text-gray-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:bg-gray-100"
+            >
+              <option value="">{t("selectPrinter")}</option>
+              {availablePrinters.map((printer) => (
+                <option key={printer} value={printer}>
+                  {printer}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
 
-          <FormInput
-            label={t("deviceId")}
-            placeholder={t("deviceIdPlaceholder")}
-            value={form.deviceId}
-            onChange={(value) => updateField("deviceId", value)}
-          />
+        {form.connectionType === "CLOUD" ? (
+          <div className="mb-6">
+            <FormInput
+              label={t("queueName")}
+              placeholder={t("queueNamePlaceholder")}
+              value={form.queueName}
+              onChange={(value) => updateField("queueName", value)}
+            />
+          </div>
+        ) : null}
 
-          <FormInput
-            label={t("ipAddress")}
-            placeholder={t("ipAddressPlaceholder")}
-            value={form.ipAddress}
-            onChange={(value) => updateField("ipAddress", value)}
-          />
-
-          <FormInput
-            label={t("queueName")}
-            placeholder={t("queueNamePlaceholder")}
-            value={form.queueName}
-            onChange={(value) => updateField("queueName", value)}
-          />
-        </div>
-
-        <div className="flex justify-end">
+        <div className="flex flex-wrap justify-end gap-3">
+          {isLocalConnection ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleTestPrint}
+              disabled={testing || discovering || !form.printerName}
+              className="h-[40px] rounded-[12px] px-8"
+            >
+              {testing ? (
+                <Loader2 size={16} className="mr-2 animate-spin" />
+              ) : (
+                <Printer size={16} className="mr-2" />
+              )}
+              {t("testPrint")}
+            </Button>
+          ) : null}
           <Button
             type="button"
             onClick={handleSave}
-            disabled={updating}
+            disabled={updating || discovering || testing}
             className="h-[40px] rounded-[12px] bg-primary px-16 py-1.5 hover:bg-red-800"
           >
             {updating ? (

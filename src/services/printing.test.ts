@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/axios";
 import {
   getAdminPrintingSettings,
+  reportAdminPrinterEvent,
   updateAdminPrintingSettings,
 } from "@/services/printing";
 
@@ -10,6 +11,7 @@ vi.mock("@/lib/axios", () => ({
   api: {
     get: vi.fn(),
     patch: vi.fn(),
+    post: vi.fn(),
   },
 }));
 
@@ -19,6 +21,38 @@ describe("printing service", () => {
   beforeEach(() => {
     mockedApi.get.mockReset();
     mockedApi.patch.mockReset();
+    mockedApi.post.mockReset();
+  });
+
+  it("reports scoped local printer events", async () => {
+    mockedApi.post.mockResolvedValueOnce({
+      data: { data: { recorded: true } },
+    });
+
+    await reportAdminPrinterEvent({
+      restaurantId: "restaurant-1",
+      branchId: "branch-1",
+      event: "test_print",
+      status: "success",
+      message: "Test print completed",
+      printerName: "Kitchen USB",
+    });
+
+    expect(mockedApi.post).toHaveBeenCalledWith(
+      "/admin/printing/events",
+      {
+        event: "test_print",
+        status: "success",
+        message: "Test print completed",
+        printerName: "Kitchen USB",
+      },
+      {
+        params: {
+          restaurantId: "restaurant-1",
+          branchId: "branch-1",
+        },
+      },
+    );
   });
 
   it("scopes settings requests to the selected restaurant and branch", async () => {

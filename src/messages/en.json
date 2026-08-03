@@ -3160,6 +3160,11 @@
     "queueName": "Queue Name",
     "queueNamePlaceholder": "eg. kitchen-printer-queue",
     "connect": "Connect",
+    "installedPrinters": "Installed printers",
+    "qzTrayHint": "QZ Tray must be installed and running on this computer.",
+    "scanPrinters": "Scan printers",
+    "selectPrinter": "Select an installed printer",
+    "testPrint": "Test print",
     "printSettings": "Print Settings",
     "printingEnabled": "Printing Enabled",
     "printCopies": "Print Copies",
@@ -3172,7 +3177,15 @@
     "toast": {
       "restaurantMissing": "Restaurant ID is missing.",
       "updated": "Printing settings updated successfully.",
-      "failedUpdate": "Failed to update printing settings."
+      "failedUpdate": "Failed to update printing settings.",
+      "connectionTypeRequired": "Select a connection type first.",
+      "printerRequired": "Select an installed printer first.",
+      "queueRequired": "Enter a cloud print queue name first.",
+      "noPrinters": "QZ Tray connected, but no installed printers were found.",
+      "discoveryFailed": "Could not discover printers. Install or start QZ Tray and try again.",
+      "printersFound": "Found {count} installed printer(s).",
+      "testPrintSent": "Test print sent successfully.",
+      "testPrintFailed": "Test print failed."
     }
   }
 }
