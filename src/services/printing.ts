@@ -80,6 +80,13 @@ export type UpdatePrintingSettingsPayload = {
     queueName?: string | null;
   };
 
+export type ReportPrinterEventPayload = PrintingQueryParams & {
+  status: "success" | "failed" | "warning";
+  event: "discovery" | "connection" | "test_print";
+  message: string;
+  printerName?: string;
+};
+
 const buildPrintingParams = (params?: PrintingQueryParams) => {
   return {
     restaurantId: params?.restaurantId,
@@ -125,6 +132,17 @@ export const getAdminPrintingStatus = async (
 export const getAdminPrintingLogs = async (params?: PrintingQueryParams) => {
   const response = await api.get("/admin/printing/logs", {
     params: buildPrintingParams(params),
+  });
+
+  return response.data;
+};
+
+export const reportAdminPrinterEvent = async (
+  payload: ReportPrinterEventPayload,
+) => {
+  const { restaurantId, branchId, ...body } = payload;
+  const response = await api.post("/admin/printing/events", body, {
+    params: buildPrintingParams({ restaurantId, branchId }),
   });
 
   return response.data;
