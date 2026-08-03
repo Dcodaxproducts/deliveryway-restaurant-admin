@@ -157,23 +157,35 @@ export const happyHourSchema = z
 
 export type HappyHourFormValues = z.infer<typeof happyHourSchema>;
 
-export const couponSchema = z.object({
-  code: z.string().trim().min(1, "Coupon code is required."),
-  title: z.string().trim().min(1, "Coupon title is required."),
-  discountType: discountTypeSchema,
-  discountValue: optionalStringSchema,
-  startsAt: optionalStringSchema,
-  expiresAt: optionalStringSchema,
-  description: optionalStringSchema,
-  audience: z.enum(["REGISTERED", "BOTH"]).default("BOTH"),
-  applyMode: applyModeSchema.default("ORDER_TOTAL"),
-  branchId: optionalStringSchema,
-  maxDiscountAmount: optionalStringSchema,
-  minOrderAmount: optionalStringSchema,
-  maxUses: optionalStringSchema,
-  maxUsesPerCustomer: optionalStringSchema,
-  selectedMenuItems: z.custom<SelectOption[]>().default([]),
-  selectedCategories: z.custom<SelectOption[]>().default([]),
-});
+export const couponSchema = z
+  .object({
+    code: z.string().trim().min(1, "Coupon code is required."),
+    title: z.string().trim().min(1, "Coupon title is required."),
+    discountType: discountTypeSchema,
+    discountValue: z
+      .string()
+      .trim()
+      .min(1, "Discount value is required.")
+      .refine((value) => Number(value) > 0, "Discount value must be positive."),
+    startsAt: z.string().trim().min(1, "Start date is required."),
+    expiresAt: z.string().trim().min(1, "Expiry date is required."),
+    description: optionalStringSchema,
+    audience: z.enum(["REGISTERED", "BOTH"]).default("BOTH"),
+    applyMode: applyModeSchema.default("ORDER_TOTAL"),
+    branchId: optionalStringSchema,
+    maxDiscountAmount: optionalStringSchema,
+    minOrderAmount: optionalStringSchema,
+    maxUses: optionalStringSchema,
+    maxUsesPerCustomer: optionalStringSchema,
+    selectedMenuItems: z.custom<SelectOption[]>().default([]),
+    selectedCategories: z.custom<SelectOption[]>().default([]),
+  })
+  .refine(
+    (value) => new Date(value.expiresAt) > new Date(value.startsAt),
+    {
+      path: ["expiresAt"],
+      message: "Expiry date must be after start date.",
+    },
+  );
 
 export type CouponFormValues = z.infer<typeof couponSchema>;

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { happyHourSchema, promotionSchema } from "@/validations/promotions";
+import {
+  couponSchema,
+  happyHourSchema,
+  promotionSchema,
+} from "@/validations/promotions";
 
 const validPromotion = {
   code: "",
@@ -78,5 +82,45 @@ describe("happy hour validation", () => {
     });
 
     expect(result.success).toBe(true);
+  });
+});
+
+describe("coupon validation", () => {
+  const validCoupon = {
+    code: "SAVE10",
+    title: "Save ten",
+    discountType: "FLAT",
+    discountValue: "10",
+    startsAt: "2026-08-03T10:00",
+    expiresAt: "2026-08-04T10:00",
+    description: "",
+    audience: "BOTH",
+    applyMode: "ORDER_TOTAL",
+    branchId: "",
+    maxDiscountAmount: "",
+    minOrderAmount: "",
+    maxUses: "",
+    maxUsesPerCustomer: "",
+    selectedMenuItems: [],
+    selectedCategories: [],
+  };
+
+  it("requires the values that the coupon API requires", () => {
+    expect(couponSchema.safeParse(validCoupon).success).toBe(true);
+    expect(
+      couponSchema.safeParse({ ...validCoupon, discountValue: "" }).success,
+    ).toBe(false);
+    expect(
+      couponSchema.safeParse({ ...validCoupon, startsAt: "" }).success,
+    ).toBe(false);
+  });
+
+  it("rejects a coupon whose expiry is not after its start", () => {
+    expect(
+      couponSchema.safeParse({
+        ...validCoupon,
+        expiresAt: "2026-08-03T09:00",
+      }).success,
+    ).toBe(false);
   });
 });

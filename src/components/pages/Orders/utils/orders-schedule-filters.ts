@@ -35,17 +35,14 @@ export const isFutureOrder = (
   order: Pick<Order, "isScheduled" | "orderTime">,
   now: Date = new Date()
 ) => {
-  if (order.isScheduled) return true;
-
-  const orderTime = getOrderTimeDate(order);
-  return Boolean(orderTime && orderTime.getTime() > now.getTime());
+  if (Number.isNaN(now.getTime())) return false;
+  return order.isScheduled === true;
 };
 
 const isScheduledOrder = (
-  order: Pick<Order, "isScheduled" | "orderTime">,
-  now: Date
+  order: Pick<Order, "isScheduled" | "orderTime">
 ) => {
-  return Boolean(order.isScheduled || getOrderTimeDate(order) || isFutureOrder(order, now));
+  return order.isScheduled === true;
 };
 
 const isWithinRange = (
@@ -78,7 +75,7 @@ export const matchesOrdersScheduleFilter = (
   }
 
   if (filter === "TODAY_SCHEDULED") {
-    return isScheduledOrder(order, now) && isWithinRange(orderTime, {
+    return isScheduledOrder(order) && isWithinRange(orderTime, {
       from: now,
       to: now,
     });
@@ -86,7 +83,7 @@ export const matchesOrdersScheduleFilter = (
 
   if (filter === "PAST_SCHEDULED") {
     return Boolean(
-      isScheduledOrder(order, now) &&
+      isScheduledOrder(order) &&
         orderTime &&
         orderTime.getTime() < now.getTime()
     );

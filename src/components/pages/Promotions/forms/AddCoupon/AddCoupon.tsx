@@ -44,6 +44,7 @@ import AsyncMultiSelect from "@/components/ui/AsyncMultiSelect";
 import { getMenuItems } from "@/services/menu/menu.api";
 import { getMenuCategories } from "@/services/menu/categories/menu-categories.api";
 import { Label } from "@/components/ui/label";
+import { getApiErrorMessage } from "@/lib/errors";
 
 const defaultValues: CouponFormValues = {
   code: "",
@@ -101,6 +102,11 @@ export default function AddNewCoupon() {
   const validationMessages: Record<string, string> = {
     "Coupon code is required.": t("validation.couponCodeRequired"),
     "Coupon title is required.": t("validation.couponTitleRequired"),
+    "Discount value is required.": t("validation.discountValueRequired"),
+    "Discount value must be positive.": t("validation.discountValuePositive"),
+    "Start date is required.": t("validation.startDateRequired"),
+    "Expiry date is required.": t("validation.expiryDateRequired"),
+    "Expiry date must be after start date.": t("validation.expiryAfterStart"),
   };
   const translateValidation = (message?: string) =>
     message ? (validationMessages[message] ?? message) : undefined;
@@ -264,6 +270,8 @@ export default function AddNewCoupon() {
         isEdit ? t("toasts.couponUpdated") : t("toasts.couponCreated"),
       );
       router.push("/promotion-management");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, t("toasts.couponSaveFailed")));
     } finally {
       setSaving(false);
     }

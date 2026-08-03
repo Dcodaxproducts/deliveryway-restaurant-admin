@@ -25,7 +25,6 @@ import DeliveryHoursModal from "@/components/pages/Branches/components/DeliveryH
 import {
   useDeleteBranch,
   useActivateBranch,
-  useSuspendBranch,
   useUpdateBranchTemporaryClosure,
 } from "@/hooks/useBranches";
 import { useDeleteRestaurantMenu } from "@/hooks/useMenus";
@@ -68,7 +67,6 @@ export function BranchCard({
 
   const deleteMutation = useDeleteBranch();
   const activateMutation = useActivateBranch();
-  const suspendMutation = useSuspendBranch();
   const temporaryClosureMutation = useUpdateBranchTemporaryClosure();
   const deleteMenuMutation = useDeleteRestaurantMenu();
 
@@ -89,7 +87,8 @@ export function BranchCard({
     Store;
 
   const isBranchEntity = Boolean(openDialog) || branchAdminMode;
-  const canDelete = allowDelete && !authLoading && !isBranchAdmin;
+  const canDelete =
+    allowDelete && !authLoading && !isBranchAdmin && !isBranchEntity;
   const canUseLifecycleActions = allowLifecycleActions && !authLoading && !isBranchAdmin;
   const canUseMediaActions = isBranchEntity && showMediaActions;
 
@@ -134,16 +133,6 @@ export function BranchCard({
 
     try {
       await activateMutation.mutateAsync(id);
-    } catch (error) {
-      void error;
-    }
-  };
-
-  const handleSuspend = async () => {
-    if (!isActive) return;
-
-    try {
-      await suspendMutation.mutateAsync(id);
     } catch (error) {
       void error;
     }
@@ -221,12 +210,6 @@ export function BranchCard({
                   onClick: !isActive ? handleActivate : undefined,
                   className: isActive ? "opacity-50 pointer-events-none" : "",
                   icon: <Power size={16} />,
-                },
-                {
-                  label: t("suspend"),
-                  onClick: isActive ? handleSuspend : undefined,
-                  className: !isActive ? "opacity-50 pointer-events-none" : "",
-                  icon: <PauseCircle size={16} />,
                 },
               ]
             : []),

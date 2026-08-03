@@ -12,10 +12,10 @@ describe("orders schedule filters", () => {
     expect(isFutureOrder({ isScheduled: true }, now)).toBe(true);
   });
 
-  it("treats future orderTime as preorder when isScheduled is missing", () => {
+  it("does not infer preorder from a future operational orderTime", () => {
     expect(
       isFutureOrder({ orderTime: "2026-06-18T10:00:00.000Z" }, now)
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("filters today's scheduled orders by order time", () => {

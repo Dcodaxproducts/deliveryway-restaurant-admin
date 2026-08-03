@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { getStoredAuth } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/constants";
+import { getOrders } from "@/services/orders/orders.api";
 
 type OrderCreatedPayload = {
   id: string;
@@ -146,9 +147,7 @@ export function useRealtimeOrderNotifications() {
     };
     window.addEventListener(ORDER_SOUND_SETTING_EVENT, handleSoundSetting);
 
-    socket.on("connect", refreshOrderData);
-
-    socket.on("order.created", (payload: OrderCreatedPayload) => {
+    const alertNewOrder = (payload: OrderCreatedPayload) => {
       if (
         !payload?.id ||
         payload.restaurantId !== restaurantId ||
@@ -208,7 +207,39 @@ export function useRealtimeOrderNotifications() {
           },
         },
       );
+    };
+
+    const reconcilePendingOrders = async () => {
+      refreshOrderData();
+
+      try {
+        const response = await getOrders({
+          restaurantId,
+          ...(isBranchAdmin && branchId ? { branchId } : {}),
+          status: "PLACED",
+          page: 1,
+          limit: 100,
+          sortBy: "createdAt",
+          sortOrder: "asc",
+        });
+
+        response.data.forEach((order) => {
+          alertNewOrder({
+            id: order.id,
+            restaurantId,
+            branchId: order.branchId ?? branchId ?? "",
+          });
+        });
+      } catch {
+        // Socket-driven updates still work if reconciliation is unavailable.
+      }
+    };
+
+    socket.on("connect", () => {
+      void reconcilePendingOrders();
     });
+
+    socket.on("order.created", alertNewOrder);
 
     socket.on("order.status.updated", (payload: OrderStatusPayload) => {
       if (
