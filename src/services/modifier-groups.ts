@@ -36,7 +36,7 @@ const getOptionalString = (record: Record<string, unknown>, key: string) => {
 const getNumber = (
   record: Record<string, unknown>,
   key: string,
-  fallback: number
+  fallback: number,
 ) => {
   const value = record[key];
 
@@ -82,7 +82,7 @@ const normalizeModifierCategory = (category: unknown) => {
 };
 
 export const normalizeModifierGroupModifier = (
-  modifier: unknown
+  modifier: unknown,
 ): ModifierGroupModifier | null => {
   if (!isRecord(modifier)) return null;
 
@@ -108,7 +108,9 @@ export const normalizeModifierGroupModifier = (
   };
 };
 
-export const normalizeModifierGroup = (group: unknown): ModifierGroup | null => {
+export const normalizeModifierGroup = (
+  group: unknown,
+): ModifierGroup | null => {
   if (!isRecord(group)) return null;
 
   const id = getString(group, "id");
@@ -119,8 +121,8 @@ export const normalizeModifierGroup = (group: unknown): ModifierGroup | null => 
   const rawModifiers = Array.isArray(group.modifiers)
     ? group.modifiers
     : Array.isArray(group.groupModifiers)
-    ? group.groupModifiers
-    : [];
+      ? group.groupModifiers
+      : [];
 
   return {
     id,
@@ -129,12 +131,13 @@ export const normalizeModifierGroup = (group: unknown): ModifierGroup | null => 
     description: getNullableString(group, "description"),
     minSelect: getNumber(group, "minSelect", 0),
     maxSelect: getNumber(group, "maxSelect", 0),
+    includedSelect: getNumber(group, "includedSelect", 0),
     sortOrder: getOptionalNumber(group, "sortOrder"),
     isActive: getOptionalBoolean(group, "isActive"),
     modifiers: rawModifiers
       .map(normalizeModifierGroupModifier)
       .filter((modifier): modifier is ModifierGroupModifier =>
-        Boolean(modifier)
+        Boolean(modifier),
       ),
     createdAt: getOptionalString(group, "createdAt"),
     updatedAt: getOptionalString(group, "updatedAt"),
@@ -143,7 +146,7 @@ export const normalizeModifierGroup = (group: unknown): ModifierGroup | null => 
 
 const buildDefaultMeta = (
   dataLength: number,
-  params?: ModifierGroupListParams
+  params?: ModifierGroupListParams,
 ): ModifierGroupsMeta => ({
   page: params?.page ?? 1,
   limit: params?.limit ?? dataLength,
@@ -156,7 +159,7 @@ const buildDefaultMeta = (
 const normalizeMeta = (
   response: unknown,
   dataLength: number,
-  params?: ModifierGroupListParams
+  params?: ModifierGroupListParams,
 ): ModifierGroupsMeta => {
   const extracted = extractResponseMeta(response);
   const fallback = buildDefaultMeta(dataLength, params);
@@ -169,7 +172,7 @@ const normalizeMeta = (
   const totalPages = Number(
     extracted.totalPages ??
       extracted.pages ??
-      (limit > 0 ? Math.ceil(total / limit) : fallback.totalPages)
+      (limit > 0 ? Math.ceil(total / limit) : fallback.totalPages),
   );
 
   return {
@@ -191,7 +194,7 @@ const normalizeMeta = (
 
 export const normalizeModifierGroupsResponse = (
   response: unknown,
-  params?: ModifierGroupListParams
+  params?: ModifierGroupListParams,
 ): ModifierGroupsListResponse => {
   const data = extractResponseItems(response, "modifierGroups")
     .map(normalizeModifierGroup)
@@ -199,8 +202,7 @@ export const normalizeModifierGroupsResponse = (
   const record = isRecord(response) ? response : {};
 
   return {
-    success:
-      typeof record.success === "boolean" ? record.success : undefined,
+    success: typeof record.success === "boolean" ? record.success : undefined,
     data,
     meta: normalizeMeta(response, data.length, params),
     message: typeof record.message === "string" ? record.message : undefined,
@@ -208,7 +210,7 @@ export const normalizeModifierGroupsResponse = (
 };
 
 export const normalizeModifierGroupDetail = (
-  response: unknown
+  response: unknown,
 ): ModifierGroup | null => {
   if (isRecord(response) && "data" in response) {
     const data = response.data;
@@ -224,7 +226,7 @@ export const normalizeModifierGroupDetail = (
 };
 
 export const getModifierGroups = async (
-  params?: ModifierGroupListParams
+  params?: ModifierGroupListParams,
 ): Promise<ModifierGroupsListResponse> => {
   const response = await httpClient.get<unknown>(MODIFIER_GROUPS_ENDPOINT, {
     params: cleanParams(params),
@@ -235,13 +237,13 @@ export const getModifierGroups = async (
 
 export const getModifierGroup = async (
   id: string,
-  params?: Pick<ModifierGroupListParams, "restaurantId">
+  params?: Pick<ModifierGroupListParams, "restaurantId">,
 ): Promise<ModifierGroup | null> => {
   const response = await httpClient.get<unknown>(
     `${MODIFIER_GROUPS_ENDPOINT}/${id}`,
     {
       params: cleanParams(params),
-    }
+    },
   );
 
   return normalizeModifierGroupDetail(response);
@@ -250,16 +252,16 @@ export const getModifierGroup = async (
 export const createModifierGroup = (payload: ModifierGroupCreatePayload) =>
   httpClient.post<unknown, ModifierGroupCreatePayload>(
     MODIFIER_GROUPS_ENDPOINT,
-    payload
+    payload,
   );
 
 export const updateModifierGroup = (
   id: string,
-  payload: ModifierGroupUpdatePayload
+  payload: ModifierGroupUpdatePayload,
 ) =>
   httpClient.patch<unknown, ModifierGroupUpdatePayload>(
     `${MODIFIER_GROUPS_ENDPOINT}/${id}`,
-    payload
+    payload,
   );
 
 export const deleteModifierGroup = (id: string) =>
@@ -268,23 +270,24 @@ export const deleteModifierGroup = (id: string) =>
 export const attachModifierToGroup = (
   groupId: string,
   modifierId: string,
-  payload: AttachModifierToGroupPayload
+  payload: AttachModifierToGroupPayload,
 ) =>
   httpClient.post<unknown, AttachModifierToGroupPayload>(
     `${MODIFIER_GROUPS_ENDPOINT}/${groupId}/modifiers/${modifierId}`,
-    payload
+    payload,
   );
 
 export const normalizeDetachModifierFromGroupResponse = (
   response: unknown,
   groupId: string,
-  modifierId: string
+  modifierId: string,
 ): DetachModifierFromGroupResponse => {
-  const data = isRecord(response) && isRecord(response.data)
-    ? response.data
-    : isRecord(response)
-    ? response
-    : {};
+  const data =
+    isRecord(response) && isRecord(response.data)
+      ? response.data
+      : isRecord(response)
+        ? response
+        : {};
 
   return {
     modifierGroupId: getString(data, "modifierGroupId") || groupId,
@@ -294,11 +297,15 @@ export const normalizeDetachModifierFromGroupResponse = (
 
 export const detachModifierFromGroup = async (
   groupId: string,
-  modifierId: string
+  modifierId: string,
 ): Promise<DetachModifierFromGroupResponse> => {
   const response = await httpClient.delete<unknown>(
-    `${MODIFIER_GROUPS_ENDPOINT}/${groupId}/modifiers/${modifierId}`
+    `${MODIFIER_GROUPS_ENDPOINT}/${groupId}/modifiers/${modifierId}`,
   );
 
-  return normalizeDetachModifierFromGroupResponse(response, groupId, modifierId);
+  return normalizeDetachModifierFromGroupResponse(
+    response,
+    groupId,
+    modifierId,
+  );
 };

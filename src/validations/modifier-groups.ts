@@ -46,7 +46,7 @@ const numberFromInput = ({
             message: `Must be at least ${min}`,
           });
         }
-      })
+      }),
   );
 
 const modifierGroupBaseSchema = z.object({
@@ -62,6 +62,11 @@ const modifierGroupBaseSchema = z.object({
     min: 0,
     integer: true,
     defaultValue: 1,
+  }),
+  includedSelect: numberFromInput({
+    min: 0,
+    integer: true,
+    defaultValue: 0,
   }),
   sortOrder: numberFromInput({
     min: 0,
@@ -79,7 +84,15 @@ export const modifierGroupSchema = modifierGroupBaseSchema.superRefine(
         path: ["maxSelect"],
       });
     }
-  }
+
+    if (value.includedSelect > value.maxSelect) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Included selections cannot exceed maximum selection.",
+        path: ["includedSelect"],
+      });
+    }
+  },
 );
 
 export const updateModifierGroupSchema = modifierGroupBaseSchema
@@ -98,6 +111,18 @@ export const updateModifierGroupSchema = modifierGroupBaseSchema
         code: z.ZodIssueCode.custom,
         message: "Maximum selection cannot be less than minimum selection.",
         path: ["maxSelect"],
+      });
+    }
+
+    if (
+      typeof value.includedSelect === "number" &&
+      typeof value.maxSelect === "number" &&
+      value.includedSelect > value.maxSelect
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Included selections cannot exceed maximum selection.",
+        path: ["includedSelect"],
       });
     }
   });

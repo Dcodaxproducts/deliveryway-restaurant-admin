@@ -13,6 +13,7 @@ describe("modifier group validation", () => {
       description: "Pick your sauces",
       minSelect: 0,
       maxSelect: 3,
+      includedSelect: 1,
       sortOrder: 1,
     });
 
@@ -44,6 +45,20 @@ describe("modifier group validation", () => {
 
     expect(result.success).toBe(false);
     expect(result.error?.issues[0]?.path).toEqual(["maxSelect"]);
+  });
+
+  it("rejects included selections above maxSelect", () => {
+    const result = modifierGroupSchema.safeParse({
+      restaurantId: "restaurant-1",
+      name: "Choose Sauces",
+      minSelect: 0,
+      maxSelect: 2,
+      includedSelect: 3,
+      sortOrder: 1,
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(["includedSelect"]);
   });
 
   it("validates attach modifier payloads", () => {

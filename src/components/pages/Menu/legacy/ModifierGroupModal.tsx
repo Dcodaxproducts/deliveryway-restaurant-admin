@@ -39,6 +39,7 @@ type ModifierGroupForm = {
   description: string;
   minSelect: string;
   maxSelect: string;
+  includedSelect: string;
   sortOrder: string;
   isActive: boolean;
 };
@@ -55,6 +56,7 @@ const getDefaultForm = (): ModifierGroupForm => ({
   description: "",
   minSelect: "0",
   maxSelect: "1",
+  includedSelect: "0",
   sortOrder: "0",
   isActive: true,
 });
@@ -87,9 +89,18 @@ export function ModifierGroupModal({
       setForm({
         name: initialData.name || "",
         description: initialData.description || "",
-        minSelect: sanitizeNonNegativeNumber(String(initialData.minSelect ?? 0)),
-        maxSelect: sanitizeNonNegativeNumber(String(initialData.maxSelect ?? 1)),
-        sortOrder: sanitizeNonNegativeNumber(String(initialData.sortOrder ?? 0)),
+        minSelect: sanitizeNonNegativeNumber(
+          String(initialData.minSelect ?? 0),
+        ),
+        maxSelect: sanitizeNonNegativeNumber(
+          String(initialData.maxSelect ?? 1),
+        ),
+        includedSelect: sanitizeNonNegativeNumber(
+          String(initialData.includedSelect ?? 0),
+        ),
+        sortOrder: sanitizeNonNegativeNumber(
+          String(initialData.sortOrder ?? 0),
+        ),
         isActive: initialData.isActive ?? true,
       });
       return;
@@ -104,14 +115,14 @@ export function ModifierGroupModal({
 
   const handleChange = <K extends keyof ModifierGroupForm>(
     key: K,
-    value: ModifierGroupForm[K]
+    value: ModifierGroupForm[K],
   ) => {
     setForm((previous) => ({ ...previous, [key]: value }));
   };
 
   const handleNumberChange = (
-    key: "minSelect" | "maxSelect" | "sortOrder",
-    value: string
+    key: "minSelect" | "maxSelect" | "includedSelect" | "sortOrder",
+    value: string,
   ) => {
     handleChange(key, sanitizeNonNegativeNumber(value));
   };
@@ -137,6 +148,7 @@ export function ModifierGroupModal({
       description: form.description.trim() || undefined,
       minSelect: Number(form.minSelect),
       maxSelect: Number(form.maxSelect),
+      includedSelect: Number(form.includedSelect),
       sortOrder: Number(form.sortOrder),
     };
     const updatePayload = {
@@ -175,8 +187,8 @@ export function ModifierGroupModal({
       toast.error(
         getApiErrorMessage(
           error,
-          isEditMode ? t("updateFailed") : t("createFailed")
-        )
+          isEditMode ? t("updateFailed") : t("createFailed"),
+        ),
       );
     }
   };
@@ -226,6 +238,17 @@ export function ModifierGroupModal({
           />
 
           <InputField
+            label={t("includedSelect")}
+            type="number"
+            value={form.includedSelect}
+            onChange={(value) => handleNumberChange("includedSelect", value)}
+            onKeyDown={blockInvalidNumberKeys}
+            onPaste={blockNegativeNumberPaste}
+            min={0}
+            max={Number(form.maxSelect)}
+          />
+
+          <InputField
             label={t("sortOrder")}
             type="number"
             value={form.sortOrder}
@@ -257,11 +280,10 @@ export function ModifierGroupModal({
   );
 }
 
-interface InputFieldProps
-  extends Omit<
-    InputHTMLAttributes<HTMLInputElement>,
-    "onChange" | "value" | "type"
-  > {
+interface InputFieldProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "onChange" | "value" | "type"
+> {
   label: string;
   value: string | number;
   onChange: (value: string) => void;

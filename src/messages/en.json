@@ -1078,6 +1078,7 @@
       "groupName": "Group name",
       "minSelect": "Minimum selection",
       "maxSelect": "Maximum selection",
+      "includedSelect": "Selections included for free",
       "sortOrder": "Sort order",
       "required": "Required",
       "activeStatus": "Active",
@@ -1089,6 +1090,7 @@
       "maxNegative": "Maximum selection cannot be negative.",
       "sortNegative": "Sort order cannot be negative.",
       "maxLessThanMin": "Maximum selection cannot be less than minimum selection.",
+      "includedGreaterThanMax": "Included selections cannot exceed maximum selection.",
       "categoryRequired": "Category is required.",
       "updateFailed": "Unable to update modifier group.",
       "createFailed": "Unable to create modifier group.",
@@ -2936,6 +2938,7 @@
       "deleteDescription": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
     },
     "addToCart": {
+      "includedSelections": "{count, plural, one {# selection included} other {# selections included}}",
       "base": "Base",
       "customer": "Customer",
       "guestCustomer": "Guest",
