@@ -1082,6 +1082,7 @@
       "groupName": "Gruppenname",
       "minSelect": "Minimale Auswahl",
       "maxSelect": "Maximale Auswahl",
+      "includedSelect": "Kostenlos enthaltene Auswahl",
       "sortOrder": "Sortierung",
       "required": "Erforderlich",
       "activeStatus": "Aktiv",
@@ -1093,6 +1094,7 @@
       "maxNegative": "Maximale Auswahl darf nicht negativ sein.",
       "sortNegative": "Sortierung darf nicht negativ sein.",
       "maxLessThanMin": "Maximale Auswahl darf nicht kleiner als minimale Auswahl sein.",
+      "includedGreaterThanMax": "Die enthaltene Auswahl darf die maximale Auswahl nicht überschreiten.",
       "categoryRequired": "Kategorie ist erforderlich.",
       "updateFailed": "Modifier-Gruppe konnte nicht aktualisiert werden.",
       "createFailed": "Modifier-Gruppe konnte nicht erstellt werden.",
@@ -2953,6 +2955,7 @@
       "deleteDescription": "Moechten Sie \"{name}\" wirklich loeschen? Diese Aktion kann nicht rueckgaengig gemacht werden."
     },
     "addToCart": {
+      "includedSelections": "{count, plural, one {# Auswahl inklusive} other {# Auswahlen inklusive}}",
       "base": "Basis",
       "customer": "Kunde",
       "guestCustomer": "Gast",

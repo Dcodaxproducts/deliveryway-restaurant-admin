@@ -58,7 +58,7 @@ describe("modifier groups service", () => {
 
     expect(mockedPost).toHaveBeenCalledWith(
       "/menu/modifier-groups/group-1/modifiers/modifier-1",
-      { sortOrder: 2 }
+      { sortOrder: 2 },
     );
     expect(mockedPost.mock.calls[0]?.[0]).not.toContain("/api/v1");
   });
@@ -75,7 +75,7 @@ describe("modifier groups service", () => {
     const response = await detachModifierFromGroup("group-1", "modifier-1");
 
     expect(mockedDelete).toHaveBeenCalledWith(
-      "/menu/modifier-groups/group-1/modifiers/modifier-1"
+      "/menu/modifier-groups/group-1/modifiers/modifier-1",
     );
     expect(mockedDelete.mock.calls[0]?.[0]).not.toContain("/api/v1");
     expect(response).toEqual({
@@ -92,7 +92,7 @@ describe("modifier groups service", () => {
     const response = await detachModifierFromGroup("group-1", "modifier-1");
 
     expect(mockedDelete).toHaveBeenCalledWith(
-      "/menu/modifier-groups/group-1/modifiers/modifier-1"
+      "/menu/modifier-groups/group-1/modifiers/modifier-1",
     );
     expect(mockedDelete.mock.calls[0]?.[0]).not.toContain("/api/v1");
     expect(response).toEqual({
@@ -111,6 +111,7 @@ describe("modifier groups service", () => {
             name: "Choose Sauces",
             minSelect: 0,
             maxSelect: 3,
+            includedSelect: 1,
             modifiers: [
               {
                 id: "modifier-1",
@@ -169,6 +170,7 @@ describe("modifier groups service", () => {
       },
     });
     expect(response.data).toHaveLength(2);
+    expect(response.data[0]?.includedSelect).toBe(1);
     expect(response.data[0]?.modifiers).toEqual([
       {
         id: "modifier-1",

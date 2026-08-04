@@ -19,6 +19,7 @@ export type ModifierGroup = {
   description?: string | null;
   minSelect: number;
   maxSelect: number;
+  includedSelect?: number;
   sortOrder?: number;
   isActive?: boolean;
   modifiers?: ModifierGroupModifier[];
@@ -41,6 +42,7 @@ export type ModifierGroupCreatePayload = {
   description?: string | null;
   minSelect: number;
   maxSelect: number;
+  includedSelect?: number;
   sortOrder?: number;
 };
 
@@ -49,6 +51,7 @@ export type ModifierGroupUpdatePayload = {
   description?: string | null;
   minSelect?: number;
   maxSelect?: number;
+  includedSelect?: number;
   sortOrder?: number;
   isActive?: boolean;
 };

@@ -107,6 +107,7 @@ type ModifierGroup = {
   selectionType?: "SINGLE" | "MULTIPLE" | string;
   minSelect?: number;
   maxSelect?: number;
+  includedSelect?: number;
   isRequired?: boolean;
   sortOrder?: number;
   isActive?: boolean;
@@ -205,7 +206,9 @@ const normalizeApiList = (res: any) => {
 
 const getSelectedModifierQuantity = (modifiers: SelectedModifier[]) => {
   return modifiers.reduce((total, modifier) => {
-    return total + Math.max(1, Math.floor(toNumber(modifier.selectedQuantity, 1)));
+    return (
+      total + Math.max(1, Math.floor(toNumber(modifier.selectedQuantity, 1)))
+    );
   }, 0);
 };
 
@@ -526,6 +529,7 @@ const normalizeGroup = (group: any): ModifierGroup | null => {
     selectionType: group?.selectionType || "MULTIPLE",
     minSelect: group?.minSelect,
     maxSelect: group?.maxSelect,
+    includedSelect: Math.max(0, toNumber(group?.includedSelect, 0)),
     isRequired: Boolean(group?.isRequired),
     sortOrder: toNumber(group?.sortOrder, 0),
     isActive: group?.isActive !== false,
@@ -561,7 +565,9 @@ const getStandaloneItemModifiers = (
             priceDelta: override?.priceDelta,
           },
         ],
-        variationPriceOverrides: Array.isArray(rawModifier?.variationPriceOverrides)
+        variationPriceOverrides: Array.isArray(
+          rawModifier?.variationPriceOverrides,
+        )
           ? rawModifier.variationPriceOverrides
           : [],
       });
@@ -836,7 +842,11 @@ const formatModifierSelectionPrice = (
 const getPromotionInfo = (source: any) => {
   const happyHour = source?.happyHour;
 
-  if (happyHour && typeof happyHour === "object" && happyHour.isCurrentlyActive !== false) {
+  if (
+    happyHour &&
+    typeof happyHour === "object" &&
+    happyHour.isCurrentlyActive !== false
+  ) {
     return happyHour;
   }
 
@@ -846,11 +856,15 @@ const getPromotionInfo = (source: any) => {
 
   const discountValue = toNumber(promotion.discountValue, 0);
   const discountAmount = toNumber(promotion.discountAmount, 0);
-  const discountedPrice = toNumber(promotion.discountedPrice ?? promotion.discountedAmount, 0);
+  const discountedPrice = toNumber(
+    promotion.discountedPrice ?? promotion.discountedAmount,
+    0,
+  );
   const discountType = String(promotion.discountType || "").toUpperCase();
 
   if (
-    ((discountType === "PERCENTAGE" || discountType === "FLAT") && discountValue > 0) ||
+    ((discountType === "PERCENTAGE" || discountType === "FLAT") &&
+      discountValue > 0) ||
     discountAmount > 0 ||
     discountedPrice > 0
   ) {
@@ -882,12 +896,20 @@ const calculatePromotionDiscount = (originalPrice: number, promotion: any) => {
   return Math.min(Math.max(discountAmount, 0), originalPrice);
 };
 
-const getDiscountedBasePrice = (originalPrice: number, source: any, fallbackSource?: any) => {
-  const promotion = getPromotionInfo(source) || getPromotionInfo(fallbackSource);
+const getDiscountedBasePrice = (
+  originalPrice: number,
+  source: any,
+  fallbackSource?: any,
+) => {
+  const promotion =
+    getPromotionInfo(source) || getPromotionInfo(fallbackSource);
 
   if (!promotion) return originalPrice;
 
-  return Math.max(0, originalPrice - calculatePromotionDiscount(originalPrice, promotion));
+  return Math.max(
+    0,
+    originalPrice - calculatePromotionDiscount(originalPrice, promotion),
+  );
 };
 
 const getGroupValidation = (group: ModifierGroup) => {
@@ -959,7 +981,10 @@ export default function AddToCartModal({
   const { data: branchesData } = useGetBranches({
     restaurantId,
   });
-  const branches = useMemo(() => normalizeApiList(branchesData), [branchesData]);
+  const branches = useMemo(
+    () => normalizeApiList(branchesData),
+    [branchesData],
+  );
 
   const variations = useMemo(() => getItemVariations(item), [item]);
 
@@ -1003,19 +1028,47 @@ export default function AddToCartModal({
       : "/burgerTwo.jpg";
 
   const modifiersTotal = useMemo(() => {
-    return Object.values(selectedModifiers)
-      .flat()
-      .reduce((acc, modifier) => {
-        return (
-          acc +
-          getModifierEffectivePrice(modifier, item, selectedVariation) *
-            Math.max(1, Math.floor(toNumber(modifier.selectedQuantity, 1)))
+    return Object.entries(selectedModifiers).reduce(
+      (total, [groupId, modifiers]) => {
+        const group = visibleModifierLinks.find(
+          (link) => String(link.modifierGroup.id) === groupId,
+        )?.modifierGroup;
+        let remainingIncluded = Math.max(
+          0,
+          Math.floor(toNumber(group?.includedSelect, 0)),
         );
-      }, 0);
-  }, [selectedModifiers, item, selectedVariation]);
+
+        return (
+          total +
+          modifiers.reduce((groupTotal, modifier) => {
+            const modifierQuantity = Math.max(
+              1,
+              Math.floor(toNumber(modifier.selectedQuantity, 1)),
+            );
+            const includedQuantity = Math.min(
+              modifierQuantity,
+              remainingIncluded,
+            );
+            remainingIncluded -= includedQuantity;
+
+            return (
+              groupTotal +
+              getModifierEffectivePrice(modifier, item, selectedVariation) *
+                (modifierQuantity - includedQuantity)
+            );
+          }, 0)
+        );
+      },
+      0,
+    );
+  }, [selectedModifiers, item, selectedVariation, visibleModifierLinks]);
 
   const originalBasePrice = toNumber(selectedOption?.price, 0);
-  const discountedBasePrice = getDiscountedBasePrice(originalBasePrice, selectedVariation, item);
+  const discountedBasePrice = getDiscountedBasePrice(
+    originalBasePrice,
+    selectedVariation,
+    item,
+  );
   const hasDiscountedBasePrice = discountedBasePrice < originalBasePrice;
   const originalUnitPrice = originalBasePrice + modifiersTotal;
   const unitPrice = discountedBasePrice + modifiersTotal;
@@ -1032,7 +1085,9 @@ export default function AddToCartModal({
     setUseWalkIn(false);
 
     try {
-      const rawSelection = window.localStorage.getItem(POS_LAST_SELECTION_STORAGE_KEY);
+      const rawSelection = window.localStorage.getItem(
+        POS_LAST_SELECTION_STORAGE_KEY,
+      );
       if (!rawSelection) return;
 
       const parsedSelection = JSON.parse(rawSelection);
@@ -1124,10 +1179,7 @@ export default function AddToCartModal({
     return {
       data: raw.map((customer: any) => ({
         ...customer,
-        fullName: getPosCustomerOptionLabel(
-          customer,
-          t("customer"),
-        ),
+        fullName: getPosCustomerOptionLabel(customer, t("customer")),
       })),
       meta: res?.data?.meta || res?.meta,
     };
@@ -1135,7 +1187,8 @@ export default function AddToCartModal({
 
   const handleModifierToggle = (group: ModifierGroup, modifier: Modifier) => {
     const groupId = String(group.id);
-    const { minSelect, maxSelect, isRequired, selectionType } = getGroupValidation(group);
+    const { minSelect, maxSelect, isRequired, selectionType } =
+      getGroupValidation(group);
 
     setSelectedModifiers((prev) => {
       const current = prev[groupId] || [];
@@ -1238,7 +1291,10 @@ export default function AddToCartModal({
           ? Math.max(1, maxSelect - otherSelectedQuantity)
           : normalizedNextQuantity;
 
-      if (maxSelect && otherSelectedQuantity + normalizedNextQuantity > maxSelect) {
+      if (
+        maxSelect &&
+        otherSelectedQuantity + normalizedNextQuantity > maxSelect
+      ) {
         toast.error(
           t("toast.selectUpTo", {
             count: maxSelect,
@@ -1248,7 +1304,9 @@ export default function AddToCartModal({
       }
 
       const minAllowedQuantity =
-        minSelect > otherSelectedQuantity ? minSelect - otherSelectedQuantity : 1;
+        minSelect > otherSelectedQuantity
+          ? minSelect - otherSelectedQuantity
+          : 1;
       const clampedQuantity = Math.max(
         minAllowedQuantity,
         Math.min(normalizedNextQuantity, maxAllowedQuantity),
@@ -1379,10 +1437,7 @@ export default function AddToCartModal({
 
           if (!clearRes || clearRes?.error) {
             toast.error(
-              getApiErrorMessage(
-                clearRes,
-                t("toast.failedClearBeforeAdd"),
-              ),
+              getApiErrorMessage(clearRes, t("toast.failedClearBeforeAdd")),
             );
             return;
           }
@@ -1429,9 +1484,7 @@ export default function AddToCartModal({
     return (
       <div className="mt-6 space-y-4">
         <div>
-          <p className="text-sm font-semibold text-gray-900">
-            {t("addOns")}
-          </p>
+          <p className="text-sm font-semibold text-gray-900">{t("addOns")}</p>
           <p className="mt-0.5 text-xs text-gray-500">
             {t("addOnsDescription")}
           </p>
@@ -1444,6 +1497,10 @@ export default function AddToCartModal({
           const selectedQuantity = getSelectedModifierQuantity(selectedInGroup);
           const { minSelect, maxSelect, isRequired, selectionType } =
             getGroupValidation(group);
+          const includedSelect = Math.max(
+            0,
+            Math.floor(toNumber(group?.includedSelect, 0)),
+          );
 
           const groupModifiers = normalizeArray(group?.modifiers).filter(
             (modifier) => modifier?.isActive !== false,
@@ -1459,9 +1516,7 @@ export default function AddToCartModal({
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">
-                    {String(group?.id || "").startsWith(
-                      "standalone-modifiers-",
-                    )
+                    {String(group?.id || "").startsWith("standalone-modifiers-")
                       ? t("addOns")
                       : group?.name || t("options")}
                   </p>
@@ -1481,6 +1536,11 @@ export default function AddToCartModal({
                           ? t("selectAtLeast", { count: minSelect })
                           : t("optional")}
                   </p>
+                  {includedSelect > 0 ? (
+                    <p className="mt-1 text-xs font-medium text-primary">
+                      {t("includedSelections", { count: includedSelect })}
+                    </p>
+                  ) : null}
                 </div>
 
                 <span className="shrink-0 text-xs font-medium text-gray-500">
@@ -1512,12 +1572,34 @@ export default function AddToCartModal({
                     item,
                     selectedVariation,
                   );
+                  const modifierIndex = selectedInGroup.findIndex(
+                    (selected) => selected.id === modifier.id,
+                  );
+                  const previouslySelectedQuantity = selectedInGroup
+                    .slice(0, Math.max(0, modifierIndex))
+                    .reduce(
+                      (sum, selected) =>
+                        sum +
+                        Math.max(
+                          1,
+                          Math.floor(toNumber(selected.selectedQuantity, 1)),
+                        ),
+                      0,
+                    );
+                  const freeForModifier = checked
+                    ? Math.max(0, includedSelect - previouslySelectedQuantity)
+                    : 0;
+                  const chargedModifierQuantity = Math.max(
+                    0,
+                    selectedModifierQuantity - freeForModifier,
+                  );
 
                   const inputType =
                     selectionType === "SINGLE" || maxSelect === 1
                       ? "radio"
                       : "checkbox";
-                  const showQuantitySelector = checked && inputType === "checkbox";
+                  const showQuantitySelector =
+                    checked && inputType === "checkbox";
                   const disableIncrement = Boolean(
                     maxSelect && selectedQuantity >= maxSelect,
                   );
@@ -1550,7 +1632,9 @@ export default function AddToCartModal({
                                 handleModifierToggle(group, modifier);
                               }
                             }}
-                            onChange={() => handleModifierToggle(group, modifier)}
+                            onChange={() =>
+                              handleModifierToggle(group, modifier)
+                            }
                             className="mt-1 accent-[var(--primary)]"
                           />
 
@@ -1567,11 +1651,11 @@ export default function AddToCartModal({
                           </span>
                         </span>
 
-                        {effectivePrice !== 0 ? (
+                        {effectivePrice !== 0 && chargedModifierQuantity > 0 ? (
                           <span className="shrink-0 font-semibold text-primary">
                             {formatModifierSelectionPrice(
                               effectivePrice,
-                              selectedModifierQuantity,
+                              chargedModifierQuantity,
                               formatMoney,
                             )}
                           </span>
@@ -1594,7 +1678,9 @@ export default function AddToCartModal({
                                   selectedModifierQuantity - 1,
                                 )
                               }
-                              disabled={selectedModifierQuantity <= 1 || isSubmitting}
+                              disabled={
+                                selectedModifierQuantity <= 1 || isSubmitting
+                              }
                               className="flex h-7 w-7 items-center justify-center rounded-full text-gray-700 transition hover:bg-white hover:text-primary disabled:cursor-not-allowed disabled:opacity-35"
                               aria-label={`Decrease ${modifier.name} quantity`}
                             >
@@ -1749,9 +1835,7 @@ export default function AddToCartModal({
                         <div className="flex min-w-0 items-start gap-3">
                           <span
                             className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
-                              checked
-                                ? "border-primary"
-                                : "border-gray-300"
+                              checked ? "border-primary" : "border-gray-300"
                             }`}
                           >
                             {checked ? (
