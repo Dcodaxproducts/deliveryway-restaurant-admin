@@ -19,6 +19,7 @@ import {
   updateOrderStatus,
 } from "@/services/orders/orders.api";
 import type { OrderStatusUpdatePayload } from "@/types/orders";
+import { printAcceptedOrderIfConfigured } from "@/lib/accepted-order-printing";
 
 interface UseOrdersParams {
   page?: number;
@@ -179,6 +180,7 @@ export const useSendOrderInvoiceEmail = (messages?: {
 
 export const useUpdateOrderStatus = () => {
   const queryClient = useQueryClient();
+  const { restaurantId, branchId, isBranchAdmin } = useAuth();
 
   return useMutation({
     mutationFn: ({
@@ -188,12 +190,23 @@ export const useUpdateOrderStatus = () => {
       orderId: string;
       payload: OrderStatusUpdatePayload;
     }) => updateOrderStatus(orderId, payload),
-    onSuccess: (order) => {
+    onSuccess: (order, variables) => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({
         queryKey: ["orders", "detail", order.id],
       });
       toast.success("Order status updated");
+
+      if (variables.payload.status === "CONFIRMED" && restaurantId) {
+        void printAcceptedOrderIfConfigured({
+          orderId: order.id,
+          restaurantId,
+          branchId:
+            order.branchId ?? (isBranchAdmin ? branchId ?? undefined : undefined),
+        }).catch(() => {
+          toast.error("Order accepted, but automatic printing failed.");
+        });
+      }
     },
     onError: (error) => {
       toast.error(getApiErrorMessage(error, "Unable to update order status"));
