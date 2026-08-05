@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { getStoredAuth } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/constants";
+import { printAcceptedOrderIfConfigured } from "@/lib/accepted-order-printing";
 
 type OrderCreatedPayload = {
   id: string;
@@ -17,11 +18,8 @@ type OrderCreatedPayload = {
   branchId: string;
 };
 
-type OrderStatusPayload = {
-  id: string;
+type OrderStatusUpdatedPayload = OrderCreatedPayload & {
   status: string;
-  restaurantId: string;
-  branchId: string;
 };
 
 export const ORDER_SOUND_STORAGE_KEY = "deliveryways.orderSound.enabled";
@@ -32,6 +30,21 @@ export const isPendingOrderAlertStatus = (status?: string | null) =>
       .trim()
       .toUpperCase(),
   );
+
+export const isScopedOrderStatusUpdate = ({
+  payload,
+  restaurantId,
+  branchId,
+  isBranchAdmin,
+}: {
+  payload: OrderStatusUpdatedPayload;
+  restaurantId: string;
+  branchId?: string | null;
+  isBranchAdmin: boolean;
+}) =>
+  Boolean(payload?.id) &&
+  payload.restaurantId === restaurantId &&
+  (!isBranchAdmin || payload.branchId === branchId);
 
 const MAX_SEEN_ORDER_IDS = 100;
 
@@ -210,17 +223,35 @@ export function useRealtimeOrderNotifications() {
       );
     });
 
-    socket.on("order.status.updated", (payload: OrderStatusPayload) => {
+    socket.on("order.status.updated", (payload: OrderStatusUpdatedPayload) => {
       if (
-        !payload?.id ||
-        payload.restaurantId !== restaurantId ||
-        (isBranchAdmin && payload.branchId !== branchId)
+        !isScopedOrderStatusUpdate({
+          payload,
+          restaurantId,
+          branchId,
+          isBranchAdmin,
+        })
       ) {
         return;
       }
+
       refreshOrderData();
+      void queryClient.invalidateQueries({
+        queryKey: ["orders", "detail", payload.id],
+      });
+
       if (!isPendingOrderAlertStatus(payload.status)) {
         stopOrderAlert(payload.id);
+      }
+
+      if (payload.status === "CONFIRMED") {
+        void printAcceptedOrderIfConfigured({
+          orderId: payload.id,
+          restaurantId,
+          branchId: payload.branchId,
+        }).catch(() => {
+          toast.error("Order accepted, but automatic printing failed.");
+        });
       }
     });
 
