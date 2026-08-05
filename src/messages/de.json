@@ -3320,6 +3320,8 @@
     "scanPrinters": "Drucker suchen",
     "selectPrinter": "Installierten Drucker auswählen",
     "testPrint": "Testdruck",
+    "paperSize": "Papierformat",
+    "paperSizeHint": "Wählen Sie das im Drucker eingelegte Papier. Für Thermodrucker gibt es eigene Layouts für 80 mm und 58 mm.",
     "printSettings": "Druckeinstellungen",
     "printingEnabled": "Drucken aktiviert",
     "printCopies": "Druckkopien",

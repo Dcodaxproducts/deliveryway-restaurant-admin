@@ -19,7 +19,10 @@ import {
   printLocalTestTicket,
 } from "@/lib/local-printer";
 import { validatePrinterConnection } from "@/lib/printing-settings-validation";
-import type { PrintingConnectionType } from "@/services/printing";
+import type {
+  PrintingConnectionType,
+  PrintingPaperSize,
+} from "@/services/printing";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
@@ -36,6 +39,7 @@ type PrintingSettings = {
   printCustomerReceipt: boolean;
   printKitchenTicket: boolean;
   connectionType: ConnectionType;
+  paperSize: PrintingPaperSize;
   printerName: string;
   printerTarget: string;
   deviceId: string;
@@ -50,6 +54,7 @@ const defaultSettings: PrintingSettings = {
   printCustomerReceipt: false,
   printKitchenTicket: false,
   connectionType: "",
+  paperSize: "80MM",
   printerName: "",
   printerTarget: "",
   deviceId: "",
@@ -161,6 +166,7 @@ export default function AutoPrintingSettings({
       printCustomerReceipt: Boolean(apiSettings.printCustomerReceipt),
       printKitchenTicket: Boolean(apiSettings.printKitchenTicket),
       connectionType: apiSettings.connectionType || "",
+      paperSize: apiSettings.paperSize || "80MM",
       printerName: apiSettings.printerName || "",
       printerTarget: apiSettings.printerTarget || "",
       deviceId: apiSettings.deviceId || "",
@@ -296,6 +302,7 @@ export default function AutoPrintingSettings({
         printCustomerReceipt: form.printCustomerReceipt,
         printKitchenTicket: form.printKitchenTicket,
         connectionType: form.connectionType || null,
+        paperSize: form.paperSize,
         printerName: form.printerName.trim() || null,
         printerTarget: form.printerTarget.trim() || null,
         deviceId: form.deviceId.trim() || null,
@@ -326,7 +333,7 @@ export default function AutoPrintingSettings({
 
     setTesting(true);
     try {
-      await printLocalTestTicket(form.printerName);
+      await printLocalTestTicket(form.printerName, form.paperSize);
       await reportLocalEvent(
         "test_print",
         "success",
@@ -502,6 +509,23 @@ export default function AutoPrintingSettings({
             </select>
           </div>
         ) : null}
+
+        <div className="mb-6">
+          <label className="mb-2 block text-[16px]">{t("paperSize")}</label>
+          <select
+            value={form.paperSize}
+            onChange={(event) =>
+              updateField("paperSize", event.target.value as PrintingPaperSize)
+            }
+            className="h-11 w-full rounded-[10px] border border-[#BBBBBB] px-4 text-sm text-gray-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          >
+            <option value="80MM">80 mm</option>
+            <option value="58MM">58 mm</option>
+            <option value="A4">A4</option>
+            <option value="A5">A5</option>
+          </select>
+          <p className="mt-2 text-xs text-gray-500">{t("paperSizeHint")}</p>
+        </div>
 
         {form.connectionType === "CLOUD" ? (
           <div className="mb-6">

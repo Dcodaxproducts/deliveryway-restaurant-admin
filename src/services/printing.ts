@@ -6,6 +6,7 @@ export type PrintingQueryParams = {
 };
 
 export type PrintingConnectionType = "USB" | "LAN" | "BLUETOOTH" | "CLOUD";
+export type PrintingPaperSize = "A4" | "A5" | "80MM" | "58MM";
 
 export type AdminPrintingSettings = {
   enabled: boolean;
@@ -14,6 +15,7 @@ export type AdminPrintingSettings = {
   printCustomerReceipt: boolean;
   printKitchenTicket: boolean;
   connectionType: PrintingConnectionType | null;
+  paperSize: PrintingPaperSize;
   printerName: string | null;
   printerTarget: string | null;
   deviceId: string | null;
@@ -82,7 +84,7 @@ export type UpdatePrintingSettingsPayload = {
 
 export type ReportPrinterEventPayload = PrintingQueryParams & {
   status: "success" | "failed" | "warning";
-  event: "discovery" | "connection" | "test_print";
+  event: "discovery" | "connection" | "test_print" | "order_print";
   message: string;
   printerName?: string;
 };
