@@ -62,6 +62,8 @@ export const useCreateBranch = () => {
  * Get Branches List
  */
 export const useGetBranches = (params?: {
+  page?: number;
+  limit?: number;
   search?: string;
   sortOrder?: "ASC" | "DESC";
   withDeleted?: boolean;
@@ -73,6 +75,8 @@ export const useGetBranches = (params?: {
   return useQuery({
     queryKey: [
       "branches",
+      params?.page,
+      params?.limit,
       params?.search,
       params?.sortOrder,
       params?.withDeleted,
@@ -155,9 +159,7 @@ export const useForceDeleteBranch = () => {
     },
 
     onError: (error: unknown) => {
-      toast.error(
-        getApiErrorMessage(error, "Failed to force delete branch")
-      );
+      toast.error(getApiErrorMessage(error, "Failed to force delete branch"));
     },
   });
 };
@@ -177,9 +179,7 @@ export const useCreateBranchesBulk = () => {
     },
 
     onError: (error: unknown) => {
-      toast.error(
-        getApiErrorMessage(error, "Failed to create branches")
-      );
+      toast.error(getApiErrorMessage(error, "Failed to create branches"));
     },
   });
 };
@@ -218,9 +218,7 @@ export const useUpdateOpeningHours = () => {
     },
 
     onError: (error: unknown) => {
-      toast.error(
-        getApiErrorMessage(error, "Failed to update opening hours")
-      );
+      toast.error(getApiErrorMessage(error, "Failed to update opening hours"));
     },
   });
 };
@@ -250,14 +248,14 @@ export const useUpdateDeliveryHours = () => {
         queryKey: ["branch-delivery-hours", variables.branchId],
       });
       queryClient.invalidateQueries({ queryKey: ["branches"] });
-      queryClient.invalidateQueries({ queryKey: ["branches", variables.branchId] });
+      queryClient.invalidateQueries({
+        queryKey: ["branches", variables.branchId],
+      });
       toast.success("Delivery hours updated successfully!");
     },
 
     onError: (error: unknown) => {
-      toast.error(
-        getApiErrorMessage(error, "Failed to update delivery hours")
-      );
+      toast.error(getApiErrorMessage(error, "Failed to update delivery hours"));
     },
   });
 };
@@ -286,13 +284,17 @@ export const useUpdateBranchDeliveryTime = () => {
         queryKey: ["branch-delivery-time", variables.branchId],
       });
       queryClient.invalidateQueries({ queryKey: ["branches"] });
-      queryClient.invalidateQueries({ queryKey: ["branches", variables.branchId] });
-      queryClient.invalidateQueries({ queryKey: ["branches", "edit", variables.branchId] });
+      queryClient.invalidateQueries({
+        queryKey: ["branches", variables.branchId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["branches", "edit", variables.branchId],
+      });
       toast.success("Branch delivery time updated successfully!");
     },
     onError: (error: unknown) => {
       toast.error(
-        getApiErrorMessage(error, "Failed to update branch delivery time")
+        getApiErrorMessage(error, "Failed to update branch delivery time"),
       );
     },
   });
@@ -316,9 +318,7 @@ export const useSuspendBranch = () => {
     },
 
     onError: (error: unknown) => {
-      toast.error(
-        getApiErrorMessage(error, "Failed to suspend branch")
-      );
+      toast.error(getApiErrorMessage(error, "Failed to suspend branch"));
     },
   });
 };
@@ -335,9 +335,7 @@ export const useActivateBranch = () => {
     },
 
     onError: (error: unknown) => {
-      toast.error(
-        getApiErrorMessage(error, "Failed to activate branch")
-      );
+      toast.error(getApiErrorMessage(error, "Failed to activate branch"));
     },
   });
 };
@@ -371,14 +369,10 @@ export const useUpdateBranchImages = () => {
     },
 
     onError: (error: unknown) => {
-      toast.error(
-        getApiErrorMessage(error, "Failed to update images")
-      );
+      toast.error(getApiErrorMessage(error, "Failed to update images"));
     },
   });
 };
-
-
 
 export const useUpdateBranchTemporaryClosure = () => {
   const queryClient = useQueryClient();
@@ -399,20 +393,17 @@ export const useUpdateBranchTemporaryClosure = () => {
       toast.success(
         variables.payload.isClosed
           ? "Branch closed temporarily!"
-          : "Branch reopened successfully!"
+          : "Branch reopened successfully!",
       );
     },
 
     onError: (error: unknown) => {
       toast.error(
-        getApiErrorMessage(error, "Failed to update branch closure status")
+        getApiErrorMessage(error, "Failed to update branch closure status"),
       );
     },
   });
 };
-
-
-
 
 export const useGetBranchHolidayOpeningHours = (branchId?: string) => {
   return useQuery({
@@ -456,7 +447,7 @@ export const useUpdateBranchHolidayOpeningHours = () => {
 
     onError: (error: unknown) => {
       toast.error(
-        getApiErrorMessage(error, "Failed to update holiday opening hours")
+        getApiErrorMessage(error, "Failed to update holiday opening hours"),
       );
     },
   });
@@ -479,7 +470,9 @@ export const useUpdateBranchForEdit = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["branches"] });
       queryClient.invalidateQueries({ queryKey: ["branches", variables.id] });
-      queryClient.invalidateQueries({ queryKey: ["branches", "edit", variables.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["branches", "edit", variables.id],
+      });
     },
     onError: (error: unknown) => {
       toast.error(getApiErrorMessage(error, "Failed to update branch"));
