@@ -25,6 +25,7 @@ import {
   CreditCard,
   ReceiptText,
   Inbox,
+  PlugZap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { IconType } from "react-icons";
@@ -424,6 +425,15 @@ export const menuItems: MenuItem[] = [
     labelKey: "autoPrintingPos",
     href: "/auto-printing",
     icon: Printer,
+    section: "account",
+    roles: allAdminRoles,
+    permissionAccesses: ["auto-printing-pos"],
+  },
+  {
+    title: "WinOrder Integration",
+    labelKey: "winOrderIntegration",
+    href: "/integrations/winorder",
+    icon: PlugZap,
     section: "account",
     roles: allAdminRoles,
     permissionAccesses: ["auto-printing-pos"],
