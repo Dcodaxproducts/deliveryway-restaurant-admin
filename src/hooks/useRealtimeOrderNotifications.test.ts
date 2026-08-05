@@ -7,6 +7,7 @@ vi.mock("@/lib/constants", () => ({
 import {
   buildOrderTrackingSocketAuth,
   getOrderTrackingSocketUrl,
+  isScopedOrderStatusUpdate,
 } from "./useRealtimeOrderNotifications";
 
 describe("getOrderTrackingSocketUrl", () => {
@@ -42,5 +43,35 @@ describe("buildOrderTrackingSocketAuth", () => {
       token: "access-token",
       restaurantId: "restaurant-1",
     });
+  });
+});
+
+describe("isScopedOrderStatusUpdate", () => {
+  const payload = {
+    id: "order-1",
+    status: "CONFIRMED",
+    restaurantId: "restaurant-1",
+    branchId: "branch-1",
+  };
+
+  it("accepts the restaurant event for a restaurant admin", () => {
+    expect(
+      isScopedOrderStatusUpdate({
+        payload,
+        restaurantId: "restaurant-1",
+        isBranchAdmin: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("requires the matching branch for a branch admin", () => {
+    expect(
+      isScopedOrderStatusUpdate({
+        payload,
+        restaurantId: "restaurant-1",
+        branchId: "branch-2",
+        isBranchAdmin: true,
+      }),
+    ).toBe(false);
   });
 });
