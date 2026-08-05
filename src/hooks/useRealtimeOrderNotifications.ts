@@ -9,12 +9,32 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { getStoredAuth } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/constants";
+import { printAcceptedOrderIfConfigured } from "@/lib/accepted-order-printing";
 
 type OrderCreatedPayload = {
   id: string;
   restaurantId: string;
   branchId: string;
 };
+
+type OrderStatusUpdatedPayload = OrderCreatedPayload & {
+  status: string;
+};
+
+export const isScopedOrderStatusUpdate = ({
+  payload,
+  restaurantId,
+  branchId,
+  isBranchAdmin,
+}: {
+  payload: OrderStatusUpdatedPayload;
+  restaurantId: string;
+  branchId?: string | null;
+  isBranchAdmin: boolean;
+}) =>
+  Boolean(payload?.id) &&
+  payload.restaurantId === restaurantId &&
+  (!isBranchAdmin || payload.branchId === branchId);
 
 const MAX_SEEN_ORDER_IDS = 100;
 
@@ -79,6 +99,34 @@ export function useRealtimeOrderNotifications() {
         }),
         { description: orders("ordersUpdatedRealtime") },
       );
+    });
+
+    socket.on("order.status.updated", (payload: OrderStatusUpdatedPayload) => {
+      if (
+        !isScopedOrderStatusUpdate({
+          payload,
+          restaurantId,
+          branchId,
+          isBranchAdmin,
+        })
+      ) {
+        return;
+      }
+
+      void queryClient.invalidateQueries({ queryKey: ["orders"] });
+      void queryClient.invalidateQueries({
+        queryKey: ["orders", "detail", payload.id],
+      });
+
+      if (payload.status === "CONFIRMED") {
+        void printAcceptedOrderIfConfigured({
+          orderId: payload.id,
+          restaurantId,
+          branchId: payload.branchId,
+        }).catch(() => {
+          toast.error("Order accepted, but automatic printing failed.");
+        });
+      }
     });
 
     return () => {

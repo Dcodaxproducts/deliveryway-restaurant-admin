@@ -4,12 +4,45 @@ vi.mock("@/lib/constants", () => ({
   API_BASE_URL: "https://api.delivery-way.de/api/v1",
 }));
 
-import { getOrderTrackingSocketUrl } from "./useRealtimeOrderNotifications";
+import {
+  getOrderTrackingSocketUrl,
+  isScopedOrderStatusUpdate,
+} from "./useRealtimeOrderNotifications";
 
 describe("getOrderTrackingSocketUrl", () => {
   it("builds the Socket.IO namespace URL from the API origin", () => {
     expect(getOrderTrackingSocketUrl()).toBe(
       "https://api.delivery-way.de/orders-tracking",
     );
+  });
+});
+
+describe("isScopedOrderStatusUpdate", () => {
+  const payload = {
+    id: "order-1",
+    status: "CONFIRMED",
+    restaurantId: "restaurant-1",
+    branchId: "branch-1",
+  };
+
+  it("accepts the restaurant event for a restaurant admin", () => {
+    expect(
+      isScopedOrderStatusUpdate({
+        payload,
+        restaurantId: "restaurant-1",
+        isBranchAdmin: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("requires the matching branch for a branch admin", () => {
+    expect(
+      isScopedOrderStatusUpdate({
+        payload,
+        restaurantId: "restaurant-1",
+        branchId: "branch-2",
+        isBranchAdmin: true,
+      }),
+    ).toBe(false);
   });
 });
