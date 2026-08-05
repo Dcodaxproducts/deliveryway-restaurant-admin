@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   discoverLocalPrinters,
+  printLocalOrderTicket,
   printLocalTestTicket,
 } from "@/lib/local-printer";
 
@@ -44,12 +45,41 @@ describe("local printer bridge", () => {
     qzMocks.create.mockReturnValue({ printer: "Kitchen USB" });
     qzMocks.print.mockResolvedValue(undefined);
 
-    await printLocalTestTicket("Kitchen USB");
+    await printLocalTestTicket("Kitchen USB", "58MM");
 
     expect(qzMocks.connect).toHaveBeenCalledTimes(1);
     expect(qzMocks.create).toHaveBeenCalledWith("Kitchen USB", {
       jobName: "DeliveryWays printer test",
+      units: "mm",
+      size: { width: 58 },
+      margins: 0,
+      scaleContent: false,
     });
     expect(qzMocks.print).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ["A4", { width: 210, height: 297 }],
+    ["A5", { width: 148, height: 210 }],
+    ["80MM", { width: 80 }],
+    ["58MM", { width: 58 }],
+  ] as const)("prints an order using %s paper", async (paperSize, size) => {
+    qzMocks.create.mockReturnValue({ printer: "Kitchen USB" });
+    qzMocks.print.mockResolvedValue(undefined);
+
+    await printLocalOrderTicket({
+      printerName: "Kitchen USB",
+      paperSize,
+      ticket: { id: "order-1", orderNumber: "42", items: [] },
+    });
+
+    expect(qzMocks.create).toHaveBeenCalledWith(
+      "Kitchen USB",
+      expect.objectContaining({
+        jobName: "DeliveryWays order 42",
+        units: "mm",
+        size,
+      }),
+    );
   });
 });

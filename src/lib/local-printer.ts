@@ -1,3 +1,6 @@
+import { buildOrderTicketHtml, type OrderTicket } from "@/lib/order-ticket";
+import type { PrintingPaperSize } from "@/services/printing";
+
 const QZ_UNAVAILABLE_MESSAGE =
   "QZ Tray is not running. Install or start QZ Tray on this computer, then try again.";
 
@@ -15,6 +18,24 @@ const connectToQzTray = async () => {
   return qz;
 };
 
+const paperOptions: Record<PrintingPaperSize, { width: number; height?: number }> = {
+  A4: { width: 210, height: 297 },
+  A5: { width: 148, height: 210 },
+  "80MM": { width: 80 },
+  "58MM": { width: 58 },
+};
+
+const createPrintOptions = (
+  paperSize: PrintingPaperSize,
+  jobName: string,
+) => ({
+  jobName,
+  units: "mm" as const,
+  size: paperOptions[paperSize],
+  margins: 0,
+  scaleContent: false,
+});
+
 export const discoverLocalPrinters = async (): Promise<string[]> => {
   const qz = await connectToQzTray();
   const result = await qz.printers.find();
@@ -25,16 +46,20 @@ export const discoverLocalPrinters = async (): Promise<string[]> => {
   ].sort((left, right) => left.localeCompare(right));
 };
 
-export const printLocalTestTicket = async (printerName: string) => {
+export const printLocalTestTicket = async (
+  printerName: string,
+  paperSize: PrintingPaperSize = "80MM",
+) => {
   const selectedPrinter = printerName.trim();
   if (!selectedPrinter) {
     throw new Error("Select a printer before sending a test print.");
   }
 
   const qz = await connectToQzTray();
-  const config = qz.configs.create(selectedPrinter, {
-    jobName: "DeliveryWays printer test",
-  });
+  const config = qz.configs.create(
+    selectedPrinter,
+    createPrintOptions(paperSize, "DeliveryWays printer test"),
+  );
 
   await qz.print(config, [
     {
@@ -48,6 +73,39 @@ export const printLocalTestTicket = async (printerName: string) => {
         `<p>${new Date().toLocaleString()}</p>`,
         "</div>",
       ].join(""),
+    },
+  ]);
+};
+
+export const printLocalOrderTicket = async ({
+  printerName,
+  paperSize,
+  ticket,
+}: {
+  printerName: string;
+  paperSize: PrintingPaperSize;
+  ticket: OrderTicket;
+}) => {
+  const selectedPrinter = printerName.trim();
+  if (!selectedPrinter) {
+    throw new Error("Select a printer before printing an order.");
+  }
+
+  const qz = await connectToQzTray();
+  const config = qz.configs.create(
+    selectedPrinter,
+    createPrintOptions(
+      paperSize,
+      `DeliveryWays order ${ticket.orderNumber ?? ticket.id}`,
+    ),
+  );
+
+  await qz.print(config, [
+    {
+      type: "pixel",
+      format: "html",
+      flavor: "plain",
+      data: buildOrderTicketHtml(ticket, paperSize),
     },
   ]);
 };
