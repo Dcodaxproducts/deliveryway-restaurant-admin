@@ -10,7 +10,10 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { getStoredAuth } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/constants";
-import { printAcceptedOrderIfConfigured } from "@/lib/accepted-order-printing";
+import {
+  printAcceptedOrderIfConfigured,
+  printNewOrderIfConfigured,
+} from "@/lib/accepted-order-printing";
 
 type OrderCreatedPayload = {
   id: string;
@@ -180,6 +183,14 @@ export function useRealtimeOrderNotifications() {
       }
 
       refreshOrderData();
+
+      void printNewOrderIfConfigured({
+        orderId: payload.id,
+        restaurantId,
+        branchId: payload.branchId,
+      }).catch(() => {
+        toast.error("New order received, but automatic printing failed.");
+      });
 
       try {
         startOrderAlert(payload.id);

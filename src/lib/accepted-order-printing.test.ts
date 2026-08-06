@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { printAcceptedOrderIfConfigured } from "@/lib/accepted-order-printing";
+import {
+  printAcceptedOrderIfConfigured,
+  printNewOrderIfConfigured,
+} from "@/lib/accepted-order-printing";
 
 const mocks = vi.hoisted(() => ({
   getSettings: vi.fn(),
@@ -26,6 +29,7 @@ const enabledSettings = {
   data: {
     settings: {
       enabled: true,
+      autoPrintOnNewOrder: true,
       autoPrintOnStatusChange: true,
       printerName: "Kitchen USB",
       connectionType: "USB",
@@ -67,6 +71,66 @@ describe("accepted-order printing", () => {
     expect(mocks.report).toHaveBeenCalledWith(
       expect.objectContaining({ event: "order_print", status: "success" }),
     );
+  });
+
+  it("prints a new order when new-order printing is enabled", async () => {
+    mocks.getOrder.mockResolvedValue({
+      id: "new-order-1",
+      orderNumber: "AC-2",
+      items: [{ name: "Burger", quantity: 1 }],
+    });
+
+    await expect(
+      printNewOrderIfConfigured({
+        orderId: "new-order-1",
+        restaurantId: "restaurant-1",
+        branchId: "branch-1",
+      }),
+    ).resolves.toBe("printed");
+
+    expect(mocks.print).toHaveBeenCalledTimes(1);
+    expect(mocks.report).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "order_print",
+        status: "success",
+        message: "New order AC-2 printed automatically.",
+      }),
+    );
+  });
+
+  it("uses the new-order toggle independently from accepted-order printing", async () => {
+    mocks.getSettings.mockResolvedValue({
+      data: {
+        settings: {
+          ...enabledSettings.data.settings,
+          autoPrintOnNewOrder: false,
+          autoPrintOnStatusChange: true,
+        },
+      },
+    });
+
+    await expect(
+      printNewOrderIfConfigured({
+        orderId: "new-order-disabled",
+        restaurantId: "restaurant-1",
+      }),
+    ).resolves.toBe("skipped");
+    expect(mocks.getOrder).not.toHaveBeenCalled();
+    expect(mocks.print).not.toHaveBeenCalled();
+  });
+
+  it("deduplicates each order trigger without suppressing acceptance printing", async () => {
+    const input = {
+      orderId: "order-with-two-triggers",
+      restaurantId: "restaurant-1",
+      branchId: "branch-1",
+    };
+
+    await expect(printNewOrderIfConfigured(input)).resolves.toBe("printed");
+    await expect(printNewOrderIfConfigured(input)).resolves.toBe("skipped");
+    await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe("printed");
+    await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe("skipped");
+    expect(mocks.print).toHaveBeenCalledTimes(2);
   });
 
   it("suppresses a duplicate accepted-order print", async () => {

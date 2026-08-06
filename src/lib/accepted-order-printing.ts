@@ -7,15 +7,17 @@ import {
 } from "@/services/printing/printing.api";
 
 const MAX_PRINTED_ORDERS = 200;
-const printedAcceptedOrders = new Set<string>();
-const printingAcceptedOrders = new Set<string>();
+const printedOrderTriggers = new Set<string>();
+const printingOrderTriggers = new Set<string>();
+
+type AutoPrintTrigger = "NEW_ORDER" | "CONFIRMED";
 
 const rememberPrintedOrder = (key: string) => {
-  printedAcceptedOrders.add(key);
-  if (printedAcceptedOrders.size <= MAX_PRINTED_ORDERS) return;
+  printedOrderTriggers.add(key);
+  if (printedOrderTriggers.size <= MAX_PRINTED_ORDERS) return;
 
-  const oldestKey = printedAcceptedOrders.values().next().value;
-  if (oldestKey) printedAcceptedOrders.delete(oldestKey);
+  const oldestKey = printedOrderTriggers.values().next().value;
+  if (oldestKey) printedOrderTriggers.delete(oldestKey);
 };
 
 const reportOrderPrint = async ({
@@ -45,21 +47,23 @@ const reportOrderPrint = async ({
   }
 };
 
-export const printAcceptedOrderIfConfigured = async ({
+const printOrderIfConfigured = async ({
   orderId,
   restaurantId,
   branchId,
+  trigger,
 }: {
   orderId: string;
   restaurantId: string;
   branchId?: string;
+  trigger: AutoPrintTrigger;
 }): Promise<"printed" | "skipped"> => {
-  const key = `${orderId}:CONFIRMED`;
-  if (printedAcceptedOrders.has(key) || printingAcceptedOrders.has(key)) {
+  const key = `${orderId}:${trigger}`;
+  if (printedOrderTriggers.has(key) || printingOrderTriggers.has(key)) {
     return "skipped";
   }
 
-  printingAcceptedOrders.add(key);
+  printingOrderTriggers.add(key);
 
   let printerName: string | undefined;
   try {
@@ -70,9 +74,14 @@ export const printAcceptedOrderIfConfigured = async ({
     const settings = settingsResponse.data.settings;
     printerName = settings.printerName ?? undefined;
 
+    const triggerEnabled =
+      trigger === "NEW_ORDER"
+        ? settings.autoPrintOnNewOrder
+        : settings.autoPrintOnStatusChange;
+
     if (
       !settings.enabled ||
-      !settings.autoPrintOnStatusChange ||
+      !triggerEnabled ||
       !settings.printerName ||
       settings.connectionType === "CLOUD"
     ) {
@@ -93,7 +102,10 @@ export const printAcceptedOrderIfConfigured = async ({
       branchId,
       printerName,
       status: "success",
-      message: `Order ${ticket.orderNumber ?? ticket.id} printed after acceptance.`,
+      message:
+        trigger === "NEW_ORDER"
+          ? `New order ${ticket.orderNumber ?? ticket.id} printed automatically.`
+          : `Order ${ticket.orderNumber ?? ticket.id} printed after acceptance.`,
     });
     return "printed";
   } catch (error: unknown) {
@@ -107,6 +119,18 @@ export const printAcceptedOrderIfConfigured = async ({
     });
     throw error;
   } finally {
-    printingAcceptedOrders.delete(key);
+    printingOrderTriggers.delete(key);
   }
 };
+
+type OrderAutoPrintInput = {
+  orderId: string;
+  restaurantId: string;
+  branchId?: string;
+};
+
+export const printNewOrderIfConfigured = (input: OrderAutoPrintInput) =>
+  printOrderIfConfigured({ ...input, trigger: "NEW_ORDER" });
+
+export const printAcceptedOrderIfConfigured = (input: OrderAutoPrintInput) =>
+  printOrderIfConfigured({ ...input, trigger: "CONFIRMED" });
