@@ -74,11 +74,26 @@ describe("pos checkout payload", () => {
       paymentMethod: "COD",
       customerNote: "ring bell",
       guestContact: {
+        firstName: "Walk-in",
         email: "guest@example.com",
         phone: "+49123456789",
         privacyPolicyAccepted: true,
       },
     });
+  });
+
+  it("omits guest contact for walk-in takeaway without contact details", () => {
+    const payload = buildPosCheckoutPayload({
+      customer: {
+        id: "guest-1",
+        firstName: "Walk-in",
+        isGuest: true,
+      },
+      orderType: "TAKEAWAY",
+      paymentMethod: "COD",
+    });
+
+    expect(payload).toEqual({ paymentMethod: "COD" });
   });
 
   it("adds guest delivery address only for guest delivery checkout", () => {
@@ -163,6 +178,17 @@ describe("pos checkout payload", () => {
         phone: "+49123456789",
       },
     });
+  });
+
+  it("hides internal walk-in email addresses from POS staff", () => {
+    expect(
+      normalizePosCustomer({
+        id: "guest-1",
+        email: "pos-guest-123@deliveryways.local",
+        isGuest: true,
+        profile: { firstName: "Walk-in", lastName: "Customer" },
+      })?.email,
+    ).toBe("");
   });
 
   it("requires guest delivery address fields and coordinates", () => {

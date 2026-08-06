@@ -60,6 +60,8 @@ export type PosCheckoutPayload = {
   loyaltyPoints?: number;
   branchId?: string;
   guestContact?: {
+    firstName: string;
+    lastName?: string;
     email: string;
     phone: string;
     privacyPolicyAccepted: boolean;
@@ -87,6 +89,12 @@ const getRecord = (value: unknown): RawCustomerRecord | null => {
 
 const getString = (value: unknown) => {
   return typeof value === "string" ? value : "";
+};
+
+const getPublicCustomerEmail = (value: unknown) => {
+  const email = getString(value);
+
+  return email.toLowerCase().endsWith("@deliveryways.local") ? "" : email;
 };
 
 export const getPosAvailablePaymentMethods = (
@@ -188,7 +196,7 @@ export const normalizePosCustomer = (
     firstName: getString(record.firstName) || getString(profile?.firstName),
     lastName: getString(record.lastName) || getString(profile?.lastName),
     name: getString(record.name) || getString(record.fullName),
-    email: getString(record.email),
+    email: getPublicCustomerEmail(record.email),
     phone: getString(record.phone) || getString(profile?.phone),
     isGuest: record.isGuest === true,
     profile: profile
@@ -297,16 +305,28 @@ export const buildPosCheckoutPayload = ({
     payload.branchId = branchId;
   }
 
-  if (customer.isGuest) {
+  if (customer.isGuest && hasGuestContact(customer)) {
     payload.guestContact = {
+      firstName:
+        customer.firstName?.trim() ||
+        customer.profile?.firstName?.trim() ||
+        "Walk-in",
+      ...(customer.lastName?.trim() || customer.profile?.lastName?.trim()
+        ? {
+            lastName:
+              customer.lastName?.trim() ||
+              customer.profile?.lastName?.trim(),
+          }
+        : {}),
       email: customer.email?.trim() || "",
       phone: customer.phone?.trim() || "",
       privacyPolicyAccepted: true,
     };
 
-    if (orderType === "DELIVERY" && guestDeliveryAddress) {
-      payload.guestDeliveryAddress = trimAddress(guestDeliveryAddress);
-    }
+  }
+
+  if (customer.isGuest && orderType === "DELIVERY" && guestDeliveryAddress) {
+    payload.guestDeliveryAddress = trimAddress(guestDeliveryAddress);
   }
 
   return payload;

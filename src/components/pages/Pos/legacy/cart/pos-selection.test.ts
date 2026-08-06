@@ -46,7 +46,7 @@ describe("POS selection helpers", () => {
     ).toEqual(["registered"]);
   });
 
-  it("fetches the restaurant customer list without the empty server-side guest filter", () => {
+  it("fetches only registered restaurant customers before pagination", () => {
     const params = buildPosCustomerSearchParams({
       restaurantId: "restaurant-1",
       page: 2,
@@ -56,7 +56,7 @@ describe("POS selection helpers", () => {
     expect(params.get("restaurantId")).toBe("restaurant-1");
     expect(params.get("page")).toBe("2");
     expect(params.get("search")).toBe("Alex");
-    expect(params.has("isGuest")).toBe(false);
+    expect(params.get("isGuest")).toBe("false");
   });
 
   it("builds a stable compact customer ID from the searchable user ID", () => {

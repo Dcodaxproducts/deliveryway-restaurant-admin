@@ -593,7 +593,11 @@ export default function PosCart() {
       return toast.error(t("toast.customerDetailsRequired"));
     }
 
-    if (isGuestCustomer && !hasGuestContact(selectedCustomer)) {
+    if (
+      isGuestCustomer &&
+      orderType === "DELIVERY" &&
+      !hasGuestContact(selectedCustomer)
+    ) {
       return toast.error(t("toast.guestContactRequired"));
     }
 

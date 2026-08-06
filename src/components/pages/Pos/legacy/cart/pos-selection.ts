@@ -27,6 +27,7 @@ export const buildPosCustomerSearchParams = ({
   const params = new URLSearchParams({
     restaurantId,
     page: String(page),
+    isGuest: "false",
   });
 
   if (search) {

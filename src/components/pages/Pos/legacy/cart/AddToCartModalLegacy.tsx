@@ -949,6 +949,7 @@ export default function AddToCartModal({
   const [quantity, setQuantity] = useState(1);
   const [selectedBranch, setSelectedBranch] = useState<any>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [useWalkIn, setUseWalkIn] = useState(false);
   const [selectedOptionId, setSelectedOptionId] = useState<string>("base");
   const [selectedModifiers, setSelectedModifiers] =
     useState<SelectedModifiersMap>({});
@@ -1026,6 +1027,8 @@ export default function AddToCartModal({
     setQuantity(1);
     setSelectedOptionId(options[0]?.id || "base");
     setSelectedModifiers({});
+    setSelectedCustomer(null);
+    setUseWalkIn(false);
 
     try {
       const rawSelection = window.localStorage.getItem(POS_LAST_SELECTION_STORAGE_KEY);
@@ -1040,6 +1043,13 @@ export default function AddToCartModal({
         parsedSelection.customer.isGuest !== true
       ) {
         setSelectedCustomer(parsedSelection.customer);
+        setUseWalkIn(false);
+      } else if (
+        parsedSelection?.customer?.id &&
+        parsedSelection.customer.isGuest === true
+      ) {
+        setSelectedCustomer(parsedSelection.customer);
+        setUseWalkIn(true);
       }
     } catch {
       window.localStorage.removeItem(POS_LAST_SELECTION_STORAGE_KEY);
@@ -1305,15 +1315,33 @@ export default function AddToCartModal({
     return payload;
   };
 
-  const postCartItem = async () => {
+  const postCartItem = async (customerId: string) => {
     return post(
-      `/v1/cart/items?customerId=${selectedCustomer?.id}`,
+      `/v1/cart/items?customerId=${customerId}`,
       buildPayload(),
     );
   };
 
+  const createWalkInCustomer = async () => {
+    const response: any = await post("/v1/pos/orders/walk-in-customers", {
+      branchId: selectedBranch?.id,
+      guestName: "Walk-in Customer",
+    });
+    const customer = response?.data;
+
+    if (!customer?.id || response?.error) {
+      return null;
+    }
+
+    return {
+      ...customer,
+      email: "",
+      fullName: t("walkInCustomer"),
+    };
+  };
+
   const handleAddToCart = async () => {
-    if (!selectedCustomer?.id) {
+    if (!selectedCustomer?.id && !useWalkIn) {
       toast.error(t("toast.selectCustomer"));
       return;
     }
@@ -1330,12 +1358,22 @@ export default function AddToCartModal({
     try {
       setIsSubmitting(true);
 
-      let res: any = await postCartItem();
+      const activeCustomer =
+        useWalkIn && !selectedCustomer?.id
+          ? await createWalkInCustomer()
+          : selectedCustomer;
+
+      if (!activeCustomer?.id) {
+        toast.error(t("toast.failedCreateWalkIn"));
+        return;
+      }
+
+      let res: any = await postCartItem(activeCustomer.id);
 
       if (!res || res?.error) {
         if (isBranchCartConflictError(res)) {
           const clearRes = await del(
-            `/v1/cart?customerId=${selectedCustomer.id}`,
+            `/v1/cart?customerId=${activeCustomer.id}`,
           );
 
           if (!clearRes || clearRes?.error) {
@@ -1348,7 +1386,7 @@ export default function AddToCartModal({
             return;
           }
 
-          res = await postCartItem();
+          res = await postCartItem(activeCustomer.id);
         }
       }
 
@@ -1359,12 +1397,12 @@ export default function AddToCartModal({
 
       toast.success(t("toast.addedToCart"));
 
-      localStorage.setItem("activeCustomerId", selectedCustomer.id);
+      localStorage.setItem("activeCustomerId", activeCustomer.id);
       localStorage.setItem(
         POS_LAST_SELECTION_STORAGE_KEY,
         JSON.stringify({
           branch: selectedBranch,
-          customer: selectedCustomer,
+          customer: activeCustomer,
         }),
       );
 
@@ -1641,8 +1679,11 @@ export default function AddToCartModal({
               <p className="mb-2 text-sm font-medium">{t("selectCustomer")}</p>
 
               <AsyncSelect
-                value={selectedCustomer}
-                onChange={setSelectedCustomer}
+                value={useWalkIn ? null : selectedCustomer}
+                onChange={(customer) => {
+                  setSelectedCustomer(customer);
+                  setUseWalkIn(false);
+                }}
                 fetchOptions={fetchCustomers}
                 labelKey="fullName"
                 valueKey="id"
@@ -1656,6 +1697,22 @@ export default function AddToCartModal({
                   <PosCustomerIdentity customer={customer} compact />
                 )}
               />
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCustomer(null);
+                  setUseWalkIn(true);
+                }}
+                className={`mt-2 flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                  useWalkIn
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-primary/40"
+                }`}
+              >
+                <User size={16} />
+                {useWalkIn ? t("walkInSelected") : t("continueAsWalkIn")}
+              </button>
             </div>
           </div>
 
