@@ -46,7 +46,7 @@ export default function CategoriesTable({ refetchKey }: any) {
   const commonT = useTranslations("common");
   const { restaurantId, branchId, isBranchAdmin } = useAuth();
 const [statusFilter, setStatusFilter] = useState("all");
-const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
+const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
   const router = useRouter();
 
@@ -101,6 +101,7 @@ const {
   limit,
   search: debouncedSearch || undefined,
   restaurantId: restaurantId || undefined,
+  sortBy: "sortOrder",
   sortOrder,
 
   // only include inactive when "all" selected

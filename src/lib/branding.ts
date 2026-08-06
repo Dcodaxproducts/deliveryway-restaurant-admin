@@ -394,6 +394,7 @@ export const normalizeBrandingPayload = (input: unknown): RestaurantBrandingPayl
           menuCardStyle: getEnum(app, "menuCardStyle", menuCardStyles, defaults.restaurant.branding.app.menuCardStyle),
           showTagline: getBoolean(app, "showTagline", defaults.restaurant.branding.app.showTagline),
           showHeroBanner: getBoolean(app, "showHeroBanner", defaults.restaurant.branding.app.showHeroBanner),
+          showAppPromotion: getBoolean(app, "showAppPromotion", defaults.restaurant.branding.app.showAppPromotion),
           splashColor: getString(app, "splashColor", defaults.restaurant.branding.app.splashColor, isHexColor),
           statusBarColor: getString(app, "statusBarColor", defaults.restaurant.branding.app.statusBarColor, isHexColor),
           bottomNavColor: getString(app, "bottomNavColor", defaults.restaurant.branding.app.bottomNavColor, isHexColor),

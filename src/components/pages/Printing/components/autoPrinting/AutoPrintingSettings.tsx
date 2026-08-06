@@ -161,7 +161,7 @@ export default function AutoPrintingSettings({
 
     setForm({
       enabled: Boolean(apiSettings.enabled),
-      autoPrintOnNewOrder: Boolean(apiSettings.autoPrintOnNewOrder),
+      autoPrintOnNewOrder: false,
       autoPrintOnStatusChange: Boolean(apiSettings.autoPrintOnStatusChange),
       printCustomerReceipt: Boolean(apiSettings.printCustomerReceipt),
       printKitchenTicket: Boolean(apiSettings.printKitchenTicket),
@@ -297,7 +297,7 @@ export default function AutoPrintingSettings({
         branchId: effectiveBranchId || undefined,
 
         enabled: form.enabled,
-        autoPrintOnNewOrder: form.autoPrintOnNewOrder,
+        autoPrintOnNewOrder: false,
         autoPrintOnStatusChange: form.autoPrintOnStatusChange,
         printCustomerReceipt: form.printCustomerReceipt,
         printKitchenTicket: form.printKitchenTicket,
@@ -630,11 +630,7 @@ export default function AutoPrintingSettings({
         <div className="space-y-3">
           {[
             {
-              label: t("printNewOrdersAutomatically"),
-              key: "autoPrintOnNewOrder" as const,
-            },
-            {
-              label: t("printUpdatedOrders"),
+              label: t("printConfirmedOrdersAutomatically"),
               key: "autoPrintOnStatusChange" as const,
             },
           ].map((rule) => (

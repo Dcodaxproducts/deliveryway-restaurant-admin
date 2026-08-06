@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Ban, RefreshCw, Truck, XCircle } from "lucide-react";
+import { Ban, Loader2, Printer, RefreshCw, Truck, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { useSendOrderOutForDelivery, useSendOrderWithExternalDriver, useUpdateOrderStatus } from "@/hooks/useOrders";
@@ -18,10 +19,14 @@ import {
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
 import { OrderStatusUpdateDialog } from "@/components/pages/Orders/components/orders/OrderStatusUpdateDialog";
 import { OrderStatusProgressDialog } from "@/components/pages/Orders/components/orders/OrderStatusProgressDialog";
+import { useAuth } from "@/hooks/useAuth";
+import { printOrderManually } from "@/lib/accepted-order-printing";
 
 type OrderDetailsHeaderProps = {
   order: {
     id: string;
+    restaurantId?: string | null;
+    branchId?: string | null;
     orderType?: string | null;
     status: string;
     orderTime?: string;
@@ -42,9 +47,11 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
   const updateStatusMutation = useUpdateOrderStatus();
   const sendOutForDeliveryMutation = useSendOrderOutForDelivery();
   const externalDriverMutation = useSendOrderWithExternalDriver();
+  const { restaurantId: authRestaurantId, branchId: authBranchId } = useAuth();
 
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [progressOrder, setProgressOrder] = useState<OrderStatusProgressState | null>(null);
+  const [printing, setPrinting] = useState(false);
 
   const nextStatus = getNextOrderStatus(order);
   const statusLabel = ORDER_STATUS_LABEL_KEYS[order.status]
@@ -57,6 +64,16 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
     ? t(ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus])
     : common("updateStatus");
   const canUseTerminalActions = canTerminateOrderStatus(order);
+  const canPrint = [
+    "CONFIRMED",
+    "PREPARING",
+    "OUT_FOR_DELIVERY",
+    "READY_FOR_PICKUP",
+    "PICKED_UP",
+    "READY_TO_SERVE",
+    "SERVED",
+    "DELIVERED",
+  ].includes(order.status.toUpperCase());
 
   const breadcrumbParts = t("breadcrumbDetails").split(" / ");
 
@@ -117,6 +134,27 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
       status: updatedOrder.status ?? "OUT_FOR_DELIVERY",
     });
   };
+  const handlePrint = async () => {
+    const restaurantId = order.restaurantId || authRestaurantId;
+    if (!restaurantId) {
+      toast.error(t("printScopeUnavailable"));
+      return;
+    }
+
+    setPrinting(true);
+    try {
+      await printOrderManually({
+        orderId: order.id,
+        restaurantId,
+        branchId: order.branchId || authBranchId || undefined,
+      });
+      toast.success(t("orderPrinted"));
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : t("orderPrintFailed"));
+    } finally {
+      setPrinting(false);
+    }
+  };
 
   return (
     <>
@@ -144,6 +182,19 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
             <Truck size={16} className="sm:w-[18px] sm:h-[18px]" />
             {statusLabel}
           </Button>
+
+          {canPrint ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={printing}
+              onClick={() => void handlePrint()}
+              className="h-10 w-full justify-center gap-2 rounded-[10px] px-4 text-xs font-medium sm:w-auto sm:text-sm"
+            >
+              {printing ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />}
+              {t("printOrReprint")}
+            </Button>
+          ) : null}
 
           {canUpdateStatus ? (
             <Button

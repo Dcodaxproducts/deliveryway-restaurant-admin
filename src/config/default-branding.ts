@@ -46,6 +46,7 @@ export const DEFAULT_RESTAURANT_BRANDING_PAYLOAD: RestaurantBrandingPayload = {
         menuCardStyle: "image-top",
         showTagline: true,
         showHeroBanner: true,
+        showAppPromotion: true,
         splashColor: "#c1000a",
         statusBarColor: "#030401",
         bottomNavColor: "#F5F5F5",

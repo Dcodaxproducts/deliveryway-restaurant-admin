@@ -542,6 +542,10 @@
     "groupOrders": "Group Orders",
     "loadingDetails": "Loading order details...",
     "loadingOrder": "Loading order...",
+    "printOrReprint": "Print / Reprint",
+    "orderPrinted": "Order sent to the printer.",
+    "orderPrintFailed": "Order printing failed.",
+    "printScopeUnavailable": "The restaurant printer scope is unavailable.",
     "groupOrder": "Group Order",
     "groupOrderDescription": "Organizing {totalItems} items across {participants} participants.",
     "printLabel": "Print Label",
@@ -2712,6 +2716,8 @@
   "settings": {
     "storefrontTitle": "Storefront Settings",
     "storefrontDescription": "Manage restaurant profile, branding, assets, support contact, and customer-facing appearance.",
+    "appPromotionSection": "App download promotion",
+    "appPromotionSectionDescription": "Show the mobile app links and download promotion on the restaurant website.",
     "restaurantProfile": "Restaurant Profile",
     "customDomain": "Custom Domain",
     "displayOnly": "Display only",
@@ -3334,6 +3340,7 @@
     "orderPrintRules": "Order Print Rules",
     "printNewOrdersAutomatically": "Print New Orders Automatically",
     "printUpdatedOrders": "Print Updated Orders / Status Changes",
+    "printConfirmedOrdersAutomatically": "Auto-print confirmed orders",
     "saveSettings": "Save Settings",
     "toast": {
       "restaurantMissing": "Restaurant ID is missing.",

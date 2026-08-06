@@ -26,6 +26,7 @@ import PreviewSection from "@/components/pages/Settings/theme/components/theme-s
 import TypographySection from "@/components/pages/Settings/theme/components/theme-settings/typography-section";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { useBranding } from "@/hooks/useBranding";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
@@ -336,6 +337,24 @@ export function StorefrontSettingsPage() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <BrandAssetsSection register={register} setValue={setValue} values={watchedValues} getError={getError} />
           <ColorSchemeSection register={register} setValue={setValue} values={watchedValues} getError={getError} />
+        </div>
+        <div className={BRANDING_PANEL_CLASS}>
+          <div className="flex items-center justify-between gap-6">
+            <div>
+              <h3 className={BRANDING_SECTION_TITLE_CLASS}>{t("appPromotionSection")}</h3>
+              <p className="mt-2 text-sm text-gray-500">{t("appPromotionSectionDescription")}</p>
+            </div>
+            <Switch
+              checked={watchedValues.restaurant.branding.app.showAppPromotion}
+              onCheckedChange={(checked) =>
+                setValue("restaurant.branding.app.showAppPromotion", checked, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+              aria-label={t("appPromotionSection")}
+            />
+          </div>
         </div>
         <TypographySection register={register} values={watchedValues} getError={getError} />
         <PreviewSection values={watchedValues} />

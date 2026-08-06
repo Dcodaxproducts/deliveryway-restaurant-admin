@@ -10,7 +10,7 @@ const MAX_PRINTED_ORDERS = 200;
 const printedOrderTriggers = new Set<string>();
 const printingOrderTriggers = new Set<string>();
 
-type AutoPrintTrigger = "NEW_ORDER" | "CONFIRMED";
+type PrintTrigger = "CONFIRMED_AUTO" | "MANUAL";
 
 const rememberPrintedOrder = (key: string) => {
   printedOrderTriggers.add(key);
@@ -56,10 +56,14 @@ const printOrderIfConfigured = async ({
   orderId: string;
   restaurantId: string;
   branchId?: string;
-  trigger: AutoPrintTrigger;
+  trigger: PrintTrigger;
 }): Promise<"printed" | "skipped"> => {
   const key = `${orderId}:${trigger}`;
-  if (printedOrderTriggers.has(key) || printingOrderTriggers.has(key)) {
+  const shouldDedupe = trigger !== "MANUAL";
+  if (
+    printingOrderTriggers.has(key) ||
+    (shouldDedupe && printedOrderTriggers.has(key))
+  ) {
     return "skipped";
   }
 
@@ -74,17 +78,16 @@ const printOrderIfConfigured = async ({
     const settings = settingsResponse.data.settings;
     printerName = settings.printerName ?? undefined;
 
-    const triggerEnabled =
-      trigger === "NEW_ORDER"
-        ? settings.autoPrintOnNewOrder
-        : settings.autoPrintOnStatusChange;
+    const isAutomatic = trigger === "CONFIRMED_AUTO";
 
-    if (
-      !settings.enabled ||
-      !triggerEnabled ||
-      !settings.printerName ||
-      settings.connectionType === "CLOUD"
-    ) {
+    if (isAutomatic && (!settings.enabled || !settings.autoPrintOnStatusChange)) {
+      return "skipped";
+    }
+
+    if (!settings.printerName || settings.connectionType === "CLOUD") {
+      if (trigger === "MANUAL") {
+        throw new Error("Configure a local printer before printing this order.");
+      }
       return "skipped";
     }
 
@@ -96,16 +99,16 @@ const printOrderIfConfigured = async ({
       ticket,
     });
 
-    rememberPrintedOrder(key);
+    if (shouldDedupe) rememberPrintedOrder(key);
     await reportOrderPrint({
       restaurantId,
       branchId,
       printerName,
       status: "success",
       message:
-        trigger === "NEW_ORDER"
-          ? `New order ${ticket.orderNumber ?? ticket.id} printed automatically.`
-          : `Order ${ticket.orderNumber ?? ticket.id} printed after acceptance.`,
+        trigger === "MANUAL"
+          ? `Order ${ticket.orderNumber ?? ticket.id} printed manually.`
+          : `Order ${ticket.orderNumber ?? ticket.id} printed automatically after confirmation.`,
     });
     return "printed";
   } catch (error: unknown) {
@@ -129,8 +132,8 @@ type OrderAutoPrintInput = {
   branchId?: string;
 };
 
-export const printNewOrderIfConfigured = (input: OrderAutoPrintInput) =>
-  printOrderIfConfigured({ ...input, trigger: "NEW_ORDER" });
-
 export const printAcceptedOrderIfConfigured = (input: OrderAutoPrintInput) =>
-  printOrderIfConfigured({ ...input, trigger: "CONFIRMED" });
+  printOrderIfConfigured({ ...input, trigger: "CONFIRMED_AUTO" });
+
+export const printOrderManually = (input: OrderAutoPrintInput) =>
+  printOrderIfConfigured({ ...input, trigger: "MANUAL" });

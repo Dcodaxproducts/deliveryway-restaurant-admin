@@ -61,6 +61,7 @@ export const useGetMenuCategories = (params?: {
   parentCategoryId?: string;
   inactive?: boolean;
   includeInactive?: boolean;
+  sortBy?: "sortOrder" | "name" | "createdAt";
   sortOrder?: "ASC" | "DESC";
 }) => {
   return useQuery({
@@ -74,6 +75,7 @@ export const useGetMenuCategories = (params?: {
       params?.parentCategoryId,
       params?.inactive,
       params?.includeInactive,
+      params?.sortBy,
       params?.sortOrder,
     ],
     queryFn: () => getMenuCategories(params),

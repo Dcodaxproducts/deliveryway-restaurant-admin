@@ -76,6 +76,7 @@ const appOptionsSchema = z.object({
   menuCardStyle: z.enum(menuCardStyles),
   showTagline: z.boolean(),
   showHeroBanner: z.boolean(),
+  showAppPromotion: z.boolean(),
   splashColor: hexColorSchema,
   statusBarColor: hexColorSchema,
   bottomNavColor: hexColorSchema,

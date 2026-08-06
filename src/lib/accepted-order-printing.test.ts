@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   printAcceptedOrderIfConfigured,
-  printNewOrderIfConfigured,
+  printOrderManually,
 } from "@/lib/accepted-order-printing";
 
 const mocks = vi.hoisted(() => ({
@@ -73,64 +73,58 @@ describe("accepted-order printing", () => {
     );
   });
 
-  it("prints a new order when new-order printing is enabled", async () => {
-    mocks.getOrder.mockResolvedValue({
-      id: "new-order-1",
-      orderNumber: "AC-2",
-      items: [{ name: "Burger", quantity: 1 }],
-    });
-
-    await expect(
-      printNewOrderIfConfigured({
-        orderId: "new-order-1",
-        restaurantId: "restaurant-1",
-        branchId: "branch-1",
-      }),
-    ).resolves.toBe("printed");
-
-    expect(mocks.print).toHaveBeenCalledTimes(1);
-    expect(mocks.report).toHaveBeenCalledWith(
-      expect.objectContaining({
-        event: "order_print",
-        status: "success",
-        message: "New order AC-2 printed automatically.",
-      }),
-    );
-  });
-
-  it("uses the new-order toggle independently from accepted-order printing", async () => {
+  it("allows manual printing when automatic printing is disabled", async () => {
     mocks.getSettings.mockResolvedValue({
       data: {
         settings: {
           ...enabledSettings.data.settings,
+          enabled: false,
           autoPrintOnNewOrder: false,
-          autoPrintOnStatusChange: true,
+          autoPrintOnStatusChange: false,
         },
       },
     });
 
     await expect(
-      printNewOrderIfConfigured({
-        orderId: "new-order-disabled",
+      printOrderManually({
+        orderId: "manual-order",
         restaurantId: "restaurant-1",
       }),
-    ).resolves.toBe("skipped");
-    expect(mocks.getOrder).not.toHaveBeenCalled();
+    ).resolves.toBe("printed");
+    expect(mocks.print).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects manual printing when no local printer is configured", async () => {
+    mocks.getSettings.mockResolvedValue({
+      data: {
+        settings: {
+          ...enabledSettings.data.settings,
+          printerName: "",
+        },
+      },
+    });
+
+    await expect(
+      printOrderManually({
+        orderId: "manual-order-without-printer",
+        restaurantId: "restaurant-1",
+      }),
+    ).rejects.toThrow("Configure a local printer");
     expect(mocks.print).not.toHaveBeenCalled();
   });
 
-  it("deduplicates each order trigger without suppressing acceptance printing", async () => {
+  it("deduplicates automatic confirmation but permits manual reprints", async () => {
     const input = {
       orderId: "order-with-two-triggers",
       restaurantId: "restaurant-1",
       branchId: "branch-1",
     };
 
-    await expect(printNewOrderIfConfigured(input)).resolves.toBe("printed");
-    await expect(printNewOrderIfConfigured(input)).resolves.toBe("skipped");
     await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe("printed");
     await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe("skipped");
-    expect(mocks.print).toHaveBeenCalledTimes(2);
+    await expect(printOrderManually(input)).resolves.toBe("printed");
+    await expect(printOrderManually(input)).resolves.toBe("printed");
+    expect(mocks.print).toHaveBeenCalledTimes(3);
   });
 
   it("suppresses a duplicate accepted-order print", async () => {

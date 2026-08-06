@@ -542,6 +542,10 @@
     "groupOrders": "Gruppenbestellungen",
     "loadingDetails": "Bestelldetails werden geladen...",
     "loadingOrder": "Bestellung wird geladen...",
+    "printOrReprint": "Drucken / Erneut drucken",
+    "orderPrinted": "Bestellung wurde an den Drucker gesendet.",
+    "orderPrintFailed": "Bestellung konnte nicht gedruckt werden.",
+    "printScopeUnavailable": "Der Druckerbereich des Restaurants ist nicht verfügbar.",
     "groupOrder": "Gruppenbestellung",
     "groupOrderDescription": "Organisiert {totalItems} Artikel über {participants} Teilnehmer.",
     "printLabel": "Label drucken",
@@ -2712,6 +2716,8 @@
   "settings": {
     "storefrontTitle": "Storefront-Einstellungen",
     "storefrontDescription": "Restaurantprofil, Branding, Assets, Supportkontakt und kundenorientiertes Erscheinungsbild verwalten.",
+    "appPromotionSection": "App-Download-Werbung",
+    "appPromotionSectionDescription": "Mobile App-Links und Download-Werbung auf der Restaurant-Website anzeigen.",
     "restaurantProfile": "Restaurantprofil",
     "customDomain": "Custom Domain",
     "displayOnly": "Nur Anzeige",
@@ -3334,6 +3340,7 @@
     "orderPrintRules": "Druckregeln für Bestellungen",
     "printNewOrdersAutomatically": "Neue Bestellungen automatisch drucken",
     "printUpdatedOrders": "Aktualisierte Bestellungen / Statusänderungen drucken",
+    "printConfirmedOrdersAutomatically": "Bestätigte Bestellungen automatisch drucken",
     "saveSettings": "Einstellungen speichern",
     "toast": {
       "restaurantMissing": "Restaurant-ID fehlt.",
