@@ -141,6 +141,9 @@ export const normalizeOrderTicket = (value: unknown): OrderTicket => {
     readString(customer, "fullName") ??
     readString(customer, "name") ??
     fallbackCustomerName;
+  const normalizedCustomerName = customerName
+    ?.replace(/\s+Customer$/i, "")
+    .trim();
   const deliveryAddress = asRecord(order.deliveryAddress);
   const formattedAddress = deliveryAddress
     ? [
@@ -164,7 +167,7 @@ export const normalizeOrderTicket = (value: unknown): OrderTicket => {
     orderNumber: readString(order, "orderNumber"),
     orderType: readString(order, "orderType"),
     createdAt: readString(order, "createdAt"),
-    customerName,
+    customerName: normalizedCustomerName,
     customerEmail: readString(customer, "email"),
     customerPhone: readString(customer, "phone"),
     deliveryAddress: formattedAddress,
@@ -207,7 +210,10 @@ export const buildOrderTicketHtml = (
   const fontSize = compact ? "12px" : "15px";
   const orderLabel = ticket.orderNumber ?? ticket.id.slice(-8);
   const money = (value: number) =>
-    `${value.toFixed(2)} ${escapeHtml(ticket.currency ?? "")}`.trim();
+    `${new Intl.NumberFormat("de-DE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value)} ${escapeHtml(ticket.currency ?? "")}`.trim();
   const itemRows = ticket.items
     .map((item) => {
       const variation = item.variationName
@@ -233,7 +239,7 @@ export const buildOrderTicketHtml = (
     .join("");
   const total =
     typeof ticket.totalAmount === "number"
-      ? `${ticket.totalAmount.toFixed(2)} ${escapeHtml(ticket.currency ?? "")}`.trim()
+      ? money(ticket.totalAmount)
       : undefined;
   const amountRows = [
     ["Subtotal", ticket.subtotal],
@@ -245,15 +251,16 @@ export const buildOrderTicketHtml = (
     ["Loyalty discount", ticket.loyaltyDiscountAmount, true],
     ["Wallet applied", ticket.walletAppliedAmount, true],
   ]
-    .map(([label, value, subtract]) =>
-      typeof value === "number"
+    .map(([label, value, subtract], index) =>
+      typeof value === "number" && (index === 0 || value !== 0)
         ? `<div><span>${label}:</span><span style="float:right">${subtract ? "-" : ""}${money(value)}</span></div>`
         : "",
     )
     .join("");
-  const fulfillmentBanner = ticket.isScheduled && ticket.preOrderAt
-    ? `<div style="border:4px solid #000;padding:10px;margin:0 0 12px;text-align:center"><div style="font-size:1.55em;font-weight:900;letter-spacing:0.08em">PRE-ORDER / VORBESTELLUNG</div><div style="font-size:1.25em;font-weight:800;margin-top:4px">${escapeHtml(new Date(ticket.preOrderAt).toLocaleString())}</div></div>`
-    : '<div style="border:2px solid #000;padding:7px;margin:0 0 12px;text-align:center;font-size:1.2em;font-weight:800">ASAP / SOFORT</div>';
+  const fulfillmentBanner =
+    ticket.isScheduled && ticket.preOrderAt
+      ? `<div style="border:4px solid #000;padding:10px;margin:0 0 12px;text-align:center"><div style="font-size:1.55em;font-weight:900;letter-spacing:0.08em">PRE-ORDER / VORBESTELLUNG</div><div style="font-size:1.25em;font-weight:800;margin-top:4px">${escapeHtml(new Date(ticket.preOrderAt).toLocaleString())}</div></div>`
+      : '<div style="border:2px solid #000;padding:7px;margin:0 0 12px;text-align:center;font-size:1.2em;font-weight:800">ASAP / SOFORT</div>';
 
   return [
     `<div style="box-sizing:border-box;width:${getTicketWidth(paperSize)};font-family:Arial,sans-serif;font-size:${fontSize};color:#000">`,
@@ -262,12 +269,24 @@ export const buildOrderTicketHtml = (
     '<div style="font-size:1.4em;font-weight:700">DeliveryWays</div>',
     `<div>Order / Bestellung ${escapeHtml(orderLabel)}</div>`,
     "</div>",
-    ticket.orderType ? `<div><strong>Type:</strong> ${escapeHtml(ticket.orderType)}</div>` : "",
-    ticket.createdAt ? `<div><strong>Time:</strong> ${escapeHtml(new Date(ticket.createdAt).toLocaleString())}</div>` : "",
-    ticket.customerName ? `<div><strong>Customer:</strong> ${escapeHtml(ticket.customerName)}</div>` : "",
-    ticket.customerEmail ? `<div><strong>Email:</strong> ${escapeHtml(ticket.customerEmail)}</div>` : "",
-    ticket.customerPhone ? `<div><strong>Phone:</strong> ${escapeHtml(ticket.customerPhone)}</div>` : "",
-    ticket.deliveryAddress ? `<div><strong>Address:</strong> ${escapeHtml(ticket.deliveryAddress)}</div>` : "",
+    ticket.orderType
+      ? `<div><strong>Type:</strong> ${escapeHtml(ticket.orderType)}</div>`
+      : "",
+    ticket.createdAt
+      ? `<div><strong>Time:</strong> ${escapeHtml(new Date(ticket.createdAt).toLocaleString())}</div>`
+      : "",
+    ticket.customerName
+      ? `<div><strong>Customer:</strong> ${escapeHtml(ticket.customerName)}</div>`
+      : "",
+    ticket.customerEmail
+      ? `<div><strong>Email:</strong> ${escapeHtml(ticket.customerEmail)}</div>`
+      : "",
+    ticket.customerPhone
+      ? `<div><strong>Phone:</strong> ${escapeHtml(ticket.customerPhone)}</div>`
+      : "",
+    ticket.deliveryAddress
+      ? `<div><strong>Address:</strong> ${escapeHtml(ticket.deliveryAddress)}</div>`
+      : "",
     '<div style="border-top:1px dashed #000;margin:10px 0"></div>',
     '<div style="font-weight:700;margin-bottom:8px">Ordered items</div>',
     itemRows || "<div>No item details available</div>",
@@ -278,7 +297,9 @@ export const buildOrderTicketHtml = (
     total
       ? `<div style="border-top:2px solid #000;margin-top:10px;padding-top:8px;font-size:1.2em;font-weight:700">Total: ${total}</div>`
       : "",
-    ticket.paymentMethod ? `<div><strong>Payment method:</strong> ${escapeHtml(ticket.paymentMethod)}</div>` : "",
+    ticket.paymentMethod
+      ? `<div><strong>Payment method:</strong> ${escapeHtml(ticket.paymentMethod)}</div>`
+      : "",
     "</div>",
   ].join("");
 };

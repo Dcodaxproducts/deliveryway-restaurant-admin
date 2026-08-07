@@ -10,7 +10,7 @@ const MAX_PRINTED_ORDERS = 200;
 const printedOrderTriggers = new Set<string>();
 const printingOrderTriggers = new Set<string>();
 
-type AutoPrintTrigger = "NEW_ORDER" | "CONFIRMED";
+type OrderPrintTrigger = "NEW_ORDER" | "CONFIRMED" | "MANUAL";
 
 const rememberPrintedOrder = (key: string) => {
   printedOrderTriggers.add(key);
@@ -56,10 +56,13 @@ const printOrderIfConfigured = async ({
   orderId: string;
   restaurantId: string;
   branchId?: string;
-  trigger: AutoPrintTrigger;
+  trigger: OrderPrintTrigger;
 }): Promise<"printed" | "skipped"> => {
   const key = `${orderId}:${trigger}`;
-  if (printedOrderTriggers.has(key) || printingOrderTriggers.has(key)) {
+  if (
+    trigger !== "MANUAL" &&
+    (printedOrderTriggers.has(key) || printingOrderTriggers.has(key))
+  ) {
     return "skipped";
   }
 
@@ -75,9 +78,10 @@ const printOrderIfConfigured = async ({
     printerName = settings.printerName ?? undefined;
 
     const triggerEnabled =
-      trigger === "NEW_ORDER"
+      trigger === "MANUAL" ||
+      (trigger === "NEW_ORDER"
         ? settings.autoPrintOnNewOrder
-        : settings.autoPrintOnStatusChange;
+        : settings.autoPrintOnStatusChange);
 
     if (
       !settings.enabled ||
@@ -96,7 +100,7 @@ const printOrderIfConfigured = async ({
       ticket,
     });
 
-    rememberPrintedOrder(key);
+    if (trigger !== "MANUAL") rememberPrintedOrder(key);
     await reportOrderPrint({
       restaurantId,
       branchId,
@@ -105,11 +109,16 @@ const printOrderIfConfigured = async ({
       message:
         trigger === "NEW_ORDER"
           ? `New order ${ticket.orderNumber ?? ticket.id} printed automatically.`
-          : `Order ${ticket.orderNumber ?? ticket.id} printed after acceptance.`,
+          : trigger === "CONFIRMED"
+            ? `Order ${ticket.orderNumber ?? ticket.id} printed after acceptance.`
+            : `Order ${ticket.orderNumber ?? ticket.id} reprinted manually.`,
     });
     return "printed";
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Automatic order printing failed.";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Automatic order printing failed.";
     await reportOrderPrint({
       restaurantId,
       branchId,
@@ -134,3 +143,6 @@ export const printNewOrderIfConfigured = (input: OrderAutoPrintInput) =>
 
 export const printAcceptedOrderIfConfigured = (input: OrderAutoPrintInput) =>
   printOrderIfConfigured({ ...input, trigger: "CONFIRMED" });
+
+export const reprintOrder = (input: OrderAutoPrintInput) =>
+  printOrderIfConfigured({ ...input, trigger: "MANUAL" });

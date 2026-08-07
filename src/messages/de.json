@@ -2927,6 +2927,8 @@
     "makeReservation": "Reservierung erstellen",
     "placing": "Wird aufgegeben...",
     "placeOrder": "Bestellung aufgeben",
+    "reprintLastOrder": "Letzte Bestellung erneut drucken",
+    "orderReprinted": "Bestellung erneut gedruckt",
     "menuCard": {
       "uncategorized": "Nicht kategorisiert",
       "fallbackDescription": "Frisch zubereiteter Menueartikel.",
@@ -3009,6 +3011,8 @@
       "invalidLoyaltyPoints": "Treuepunkte muessen mindestens 1 sein",
       "checkoutFailed": "Checkout fehlgeschlagen",
       "orderPlaced": "Bestellung aufgegeben",
+      "orderPrintFailed": "Die Bestellung wurde aufgegeben, aber der Druck ist fehlgeschlagen.",
+      "orderPrintUnavailable": "Konfigurieren und aktivieren Sie einen lokalen Drucker, bevor Sie erneut drucken.",
       "orderFailed": "Bestellung fehlgeschlagen"
     }
   },

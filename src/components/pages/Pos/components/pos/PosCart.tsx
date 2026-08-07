@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { ChevronDown, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +16,7 @@ import { toast } from "sonner";
 import {
   getClientStorageItem,
   removeClientStorageItem,
+  setClientStorageItem,
 } from "@/services/storage";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
@@ -66,8 +66,14 @@ import {
   type PosOrderType,
 } from "@/components/pages/Pos/components/pos/pos-checkout-payload";
 import { GuestAddressLocationPicker } from "@/components/pages/Pos/components/pos/GuestAddressLocationPicker";
+import { POS_CART_UPDATED_EVENT } from "@/components/pages/Pos/legacy/cart/pos-selection";
+import {
+  printNewOrderIfConfigured,
+  reprintOrder,
+} from "@/lib/accepted-order-printing";
 
 const POS_LAST_SELECTION_STORAGE_KEY = "posAddToCartLastSelection";
+const POS_LAST_ORDER_STORAGE_KEY = "deliveryways:pos-last-order";
 type UnknownRecord = Record<string, unknown>;
 
 type PosCustomerAddress = {
@@ -119,7 +125,6 @@ const toIsoFromDatetimeLocal = (value?: string | null) => {
 export default function PosCart() {
   const t = useTranslations("pos");
   const commonT = useTranslations("common");
-  const router = useRouter();
   const { branchId, isBranchAdmin, restaurantId } = useAuth();
 
   const [cartItems, setCartItems] = useState<PosCartLineItem[]>([]);
@@ -146,26 +151,50 @@ export default function PosCart() {
   const [selectedCustomer, setSelectedCustomer] = useState<PosCustomer | null>(
     null,
   );
+  const [lastPlacedOrder, setLastPlacedOrder] = useState<{
+    id: string;
+    branchId?: string;
+  } | null>(null);
 
   useEffect(() => {
     const id = getClientStorageItem("activeCustomerId");
     setCustomerId(id);
 
     const rawSelection = getClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
-    if (!rawSelection) return;
+    if (rawSelection) {
+      try {
+        const parsedSelection = JSON.parse(rawSelection);
+        const normalizedCustomer = normalizePosCustomer(
+          parsedSelection?.customer,
+        );
+
+        if (normalizedCustomer) {
+          setSelectedCustomer(normalizedCustomer);
+          setCustomerId(normalizedCustomer.id);
+        }
+      } catch {
+        removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
+      }
+    }
+
+    const rawLastOrder = getClientStorageItem(POS_LAST_ORDER_STORAGE_KEY);
+    if (!rawLastOrder) return;
 
     try {
-      const parsedSelection = JSON.parse(rawSelection);
-      const normalizedCustomer = normalizePosCustomer(
-        parsedSelection?.customer,
-      );
-
-      if (normalizedCustomer) {
-        setSelectedCustomer(normalizedCustomer);
-        setCustomerId(normalizedCustomer.id);
+      const parsedLastOrder = JSON.parse(rawLastOrder) as {
+        id?: unknown;
+        branchId?: unknown;
+      };
+      if (typeof parsedLastOrder.id === "string") {
+        setLastPlacedOrder({
+          id: parsedLastOrder.id,
+          ...(typeof parsedLastOrder.branchId === "string"
+            ? { branchId: parsedLastOrder.branchId }
+            : {}),
+        });
       }
     } catch {
-      removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
+      removeClientStorageItem(POS_LAST_ORDER_STORAGE_KEY);
     }
   }, []);
   const cartQuery = useGetCart(customerId);
@@ -191,6 +220,26 @@ export default function PosCart() {
   const createCustomerAddressMutation = useCreateCustomerAddress();
   const loading = cartQuery.isLoading;
   const loadingAddresses = addressesQuery.isLoading;
+  const refetchCart = cartQuery.refetch;
+
+  useEffect(() => {
+    const handleCartUpdated = (event: Event) => {
+      const customer = normalizePosCustomer(
+        (event as CustomEvent<{ customer?: PosCustomer }>).detail?.customer,
+      );
+      if (!customer) return;
+
+      setSelectedCustomer(customer);
+      setCustomerId(customer.id);
+      if (customer.id === customerId) {
+        void refetchCart();
+      }
+    };
+
+    window.addEventListener(POS_CART_UPDATED_EVENT, handleCartUpdated);
+    return () =>
+      window.removeEventListener(POS_CART_UPDATED_EVENT, handleCartUpdated);
+  }, [customerId, refetchCart]);
   const configuredPaymentMethods = useMemo(() => {
     const management = paymentManagementQuery.data;
     const branchMethods = branchQuery.data?.settings?.allowedPaymentMethods;
@@ -662,13 +711,36 @@ export default function PosCart() {
         return toast.error(getResponseMessage(res, t("toast.checkoutFailed")));
       }
 
+      const orderData = getCartData(res);
+      const orderId = getString(orderData, "id");
+      const orderBranchId =
+        getString(orderData, "branchId") || branchId || undefined;
+
       toast.success(t("toast.orderPlaced"));
+      if (orderId) {
+        const lastOrder = {
+          id: orderId,
+          ...(orderBranchId ? { branchId: orderBranchId } : {}),
+        };
+        setLastPlacedOrder(lastOrder);
+        setClientStorageItem(
+          POS_LAST_ORDER_STORAGE_KEY,
+          JSON.stringify(lastOrder),
+        );
+
+        if (restaurantId) {
+          void printNewOrderIfConfigured({
+            orderId,
+            restaurantId,
+            branchId: orderBranchId,
+          }).catch(() => toast.error(t("toast.orderPrintFailed")));
+        }
+      }
       await clearCart();
       removeClientStorageItem("activeCustomerId");
       removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
       setAddresses([]);
       setSelectedAddress(null);
-      router.push("/orders");
     } catch (err) {
       toast.error(getApiErrorMessage(err, t("toast.orderFailed")));
     } finally {
@@ -1295,6 +1367,27 @@ export default function PosCart() {
       >
         {placingOrder ? t("placing") : t("placeOrder")}
       </Button>
+      {lastPlacedOrder && restaurantId ? (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() =>
+            void reprintOrder({
+              orderId: lastPlacedOrder.id,
+              restaurantId,
+              branchId: lastPlacedOrder.branchId,
+            })
+              .then((result) => {
+                if (result === "printed") toast.success(t("orderReprinted"));
+                else toast.error(t("toast.orderPrintUnavailable"));
+              })
+              .catch(() => toast.error(t("toast.orderPrintFailed")))
+          }
+          className="h-10 w-full"
+        >
+          {t("reprintLastOrder")}
+        </Button>
+      ) : null}
     </div>
   );
 }

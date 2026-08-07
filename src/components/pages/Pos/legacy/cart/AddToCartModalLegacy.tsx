@@ -26,6 +26,7 @@ import {
   filterRegisteredPosCustomers,
   getPosCustomerDisplayId,
   getPosCustomerOptionLabel,
+  POS_CART_UPDATED_EVENT,
   resolvePosBranchSelection,
 } from "@/components/pages/Pos/legacy/cart/pos-selection";
 
@@ -1409,7 +1410,11 @@ export default function AddToCartModal({
       setQuantity(1);
       setSelectedModifiers({});
       onOpenChange(false);
-      window.location.reload();
+      window.dispatchEvent(
+        new CustomEvent(POS_CART_UPDATED_EVENT, {
+          detail: { customer: activeCustomer },
+        }),
+      );
     } catch (err: any) {
       void err;
       toast.error(err?.message || t("toast.failedAddToCart"));

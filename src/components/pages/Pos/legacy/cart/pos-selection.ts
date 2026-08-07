@@ -15,6 +15,8 @@ type PosCustomerOption = {
   } | null;
 };
 
+export const POS_CART_UPDATED_EVENT = "deliveryways:pos-cart-updated";
+
 export const buildPosCustomerSearchParams = ({
   restaurantId,
   page,
@@ -45,7 +47,12 @@ export const resolvePosBranchSelection = <T extends PosBranchOption>(
     ? branches.find((branch) => branch.id === selectedId)
     : undefined;
 
-  return selected ?? branches.find((branch) => branch.isMain === true) ?? branches[0] ?? null;
+  return (
+    selected ??
+    branches.find((branch) => branch.isMain === true) ??
+    branches[0] ??
+    null
+  );
 };
 
 export const getPosCustomerOptionLabel = (
@@ -68,8 +75,6 @@ export const getPosCustomerDisplayId = (customerId?: string | null) => {
   return normalizedId ? normalizedId.slice(-8).toUpperCase() : "";
 };
 
-export const filterRegisteredPosCustomers = <
-  T extends PosCustomerOption,
->(
+export const filterRegisteredPosCustomers = <T extends PosCustomerOption>(
   customers: T[],
 ) => customers.filter((customer) => customer.isGuest !== true);

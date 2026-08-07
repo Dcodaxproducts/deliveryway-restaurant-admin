@@ -85,7 +85,19 @@ describe("order ticket", () => {
     expect(html).toContain("Payment method:</strong> CASH_ON_DELIVERY");
     expect(html).toContain("Ring the bell");
     expect(html).toContain("PRE-ORDER / VORBESTELLUNG");
+    expect(html).toContain("25,40 EUR");
+    expect(html).not.toContain("Wallet applied:");
     expect(html).not.toContain("Not scheduled");
+  });
+
+  it("removes the synthetic Customer surname", () => {
+    const ticket = normalizeOrderTicket({
+      id: "guest-order",
+      customer: { fullName: "Bilal Customer" },
+      items: [],
+    });
+
+    expect(ticket.customerName).toBe("Bilal");
   });
 
   it("marks immediate tickets as ASAP", () => {

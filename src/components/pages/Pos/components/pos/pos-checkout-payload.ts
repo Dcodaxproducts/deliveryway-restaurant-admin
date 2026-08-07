@@ -63,7 +63,7 @@ export type PosCheckoutPayload = {
     firstName: string;
     lastName?: string;
     email: string;
-    phone: string;
+    phone?: string;
     privacyPolicyAccepted: boolean;
   };
   guestDeliveryAddress?: GuestDeliveryAddress;
@@ -224,6 +224,9 @@ export const hasGuestContact = (customer?: PosCustomer | null) => {
   return Boolean(customer?.email?.trim() && customer?.phone?.trim());
 };
 
+const hasGuestEmail = (customer?: PosCustomer | null) =>
+  Boolean(customer?.email?.trim());
+
 export const hasGuestDeliveryAddress = (
   address?: GuestDeliveryAddress | null,
 ) => {
@@ -305,24 +308,23 @@ export const buildPosCheckoutPayload = ({
     payload.branchId = branchId;
   }
 
-  if (customer.isGuest && hasGuestContact(customer)) {
+  if (customer.isGuest && hasGuestEmail(customer)) {
+    const lastName =
+      customer.lastName?.trim() || customer.profile?.lastName?.trim() || "";
     payload.guestContact = {
       firstName:
         customer.firstName?.trim() ||
         customer.profile?.firstName?.trim() ||
         "Walk-in",
-      ...(customer.lastName?.trim() || customer.profile?.lastName?.trim()
+      ...(lastName && lastName.toLowerCase() !== "customer"
         ? {
-            lastName:
-              customer.lastName?.trim() ||
-              customer.profile?.lastName?.trim(),
+            lastName,
           }
         : {}),
       email: customer.email?.trim() || "",
-      phone: customer.phone?.trim() || "",
+      ...(customer.phone?.trim() ? { phone: customer.phone.trim() } : {}),
       privacyPolicyAccepted: true,
     };
-
   }
 
   if (customer.isGuest && orderType === "DELIVERY" && guestDeliveryAddress) {

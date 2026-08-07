@@ -33,6 +33,7 @@ export default function AsyncSelect({
   renderValue,
 }: Props) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const requestSequenceRef = useRef(0);
 
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState<any[]>([]);
@@ -49,6 +50,8 @@ export default function AsyncSelect({
   };
 
   const loadOptions = async (reset = false, nextSearch?: string) => {
+    const requestSequence = ++requestSequenceRef.current;
+
     try {
       setLoading(true);
 
@@ -59,35 +62,38 @@ export default function AsyncSelect({
 
       const data = normalize(res);
 
+      if (requestSequence !== requestSequenceRef.current) return;
+
       setOptions((prev) => (reset ? data : [...prev, ...data]));
       setHasMore(data.length > 0);
 
       if (reset) setPage(1);
     } catch {
+      if (requestSequence !== requestSequenceRef.current) return;
       setHasMore(false);
     } finally {
-      setLoading(false);
+      if (requestSequence === requestSequenceRef.current) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    if (!open) return;
-    loadOptions(true);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      requestSequenceRef.current += 1;
+      return;
+    }
 
     const t = setTimeout(() => {
       loadOptions(true, search);
-    }, 300);
+    }, search ? 300 : 0);
 
     return () => clearTimeout(t);
-  }, [search]);
+  }, [open, search]);
 
   useEffect(() => {
     if (open && page > 1) loadOptions(false);
-  }, [page]);
+  }, [open, page]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -115,8 +121,10 @@ export default function AsyncSelect({
         onClick={() => setOpen((p) => !p)}
         className="flex h-[44px] w-full items-center justify-between rounded-lg border border-[#BBBBBB] bg-white px-3 text-sm"
       >
-        <div className={`min-w-0 flex-1 text-left ${value ? "text-gray-900" : "text-gray-400"}`}>
-          {value ? renderValue?.(value) ?? value[labelKey] : placeholder}
+        <div
+          className={`min-w-0 flex-1 text-left ${value ? "text-gray-900" : "text-gray-400"}`}
+        >
+          {value ? (renderValue?.(value) ?? value[labelKey]) : placeholder}
         </div>
 
         <ChevronDown size={16} />
@@ -125,7 +133,6 @@ export default function AsyncSelect({
       {/* DROPDOWN */}
       {open && (
         <div className="absolute z-50 mt-2 w-full rounded-xl border bg-white shadow-lg">
-          
           <div className="p-2 border-b">
             <div className="flex items-center gap-2 border rounded px-2 h-[36px]">
               <Search size={14} />

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   printAcceptedOrderIfConfigured,
   printNewOrderIfConfigured,
+  reprintOrder,
 } from "@/lib/accepted-order-printing";
 
 const mocks = vi.hoisted(() => ({
@@ -128,8 +129,32 @@ describe("accepted-order printing", () => {
 
     await expect(printNewOrderIfConfigured(input)).resolves.toBe("printed");
     await expect(printNewOrderIfConfigured(input)).resolves.toBe("skipped");
-    await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe("printed");
-    await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe("skipped");
+    await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe(
+      "printed",
+    );
+    await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe(
+      "skipped",
+    );
+    expect(mocks.print).toHaveBeenCalledTimes(2);
+  });
+
+  it("allows explicit reprints even when automatic printing is disabled", async () => {
+    mocks.getSettings.mockResolvedValue({
+      data: {
+        settings: {
+          ...enabledSettings.data.settings,
+          autoPrintOnNewOrder: false,
+          autoPrintOnStatusChange: false,
+        },
+      },
+    });
+    const input = {
+      orderId: "manual-reprint-order",
+      restaurantId: "restaurant-1",
+    };
+
+    await expect(reprintOrder(input)).resolves.toBe("printed");
+    await expect(reprintOrder(input)).resolves.toBe("printed");
     expect(mocks.print).toHaveBeenCalledTimes(2);
   });
 
@@ -141,8 +166,12 @@ describe("accepted-order printing", () => {
       branchId: "branch-1",
     };
 
-    await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe("printed");
-    await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe("skipped");
+    await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe(
+      "printed",
+    );
+    await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe(
+      "skipped",
+    );
     expect(mocks.print).toHaveBeenCalledTimes(1);
   });
 
@@ -178,7 +207,9 @@ describe("accepted-order printing", () => {
       "QZ unavailable",
     );
     mocks.print.mockResolvedValue(undefined);
-    await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe("printed");
+    await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe(
+      "printed",
+    );
     expect(mocks.report).toHaveBeenCalledWith(
       expect.objectContaining({ status: "failed", message: "QZ unavailable" }),
     );

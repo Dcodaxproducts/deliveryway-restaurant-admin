@@ -82,6 +82,26 @@ describe("pos checkout payload", () => {
     });
   });
 
+  it("uses a guest email without inventing a Customer surname or phone", () => {
+    const payload = buildPosCheckoutPayload({
+      customer: {
+        id: "guest-1",
+        firstName: "Bilal",
+        lastName: "Customer",
+        email: "bilal@example.com",
+        isGuest: true,
+      },
+      orderType: "TAKEAWAY",
+      paymentMethod: "COD",
+    });
+
+    expect(payload.guestContact).toEqual({
+      firstName: "Bilal",
+      email: "bilal@example.com",
+      privacyPolicyAccepted: true,
+    });
+  });
+
   it("omits guest contact for walk-in takeaway without contact details", () => {
     const payload = buildPosCheckoutPayload({
       customer: {

@@ -19,6 +19,7 @@ type OrderCreatedPayload = {
   id: string;
   restaurantId: string;
   branchId: string;
+  source?: "STOREFRONT" | "POS";
 };
 
 type OrderStatusUpdatedPayload = OrderCreatedPayload & {
@@ -183,6 +184,10 @@ export function useRealtimeOrderNotifications() {
       }
 
       refreshOrderData();
+
+      if (payload.source === "POS") {
+        return;
+      }
 
       void printNewOrderIfConfigured({
         orderId: payload.id,

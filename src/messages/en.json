@@ -2927,6 +2927,8 @@
     "makeReservation": "Make Reservation",
     "placing": "Placing...",
     "placeOrder": "Place Order",
+    "reprintLastOrder": "Reprint last order",
+    "orderReprinted": "Order reprinted",
     "menuCard": {
       "uncategorized": "Uncategorized",
       "fallbackDescription": "Freshly prepared menu item.",
@@ -3009,6 +3011,8 @@
       "invalidLoyaltyPoints": "Loyalty points must be at least 1",
       "checkoutFailed": "Checkout failed",
       "orderPlaced": "Order placed",
+      "orderPrintFailed": "The order was placed, but printing failed.",
+      "orderPrintUnavailable": "Configure and enable a local printer before reprinting.",
       "orderFailed": "Order failed"
     }
   },
