@@ -17,7 +17,7 @@ export type CustomDomainStatus = {
   verified: boolean;
   verifiedAt?: string | null;
   dns: {
-    type: "CNAME";
+    type: "A";
     host: string;
     hostLabel: string;
     target: string;
@@ -44,7 +44,7 @@ export const getCustomDomainStatus = async (
     verifiedAt:
       typeof data.verifiedAt === "string" ? data.verifiedAt : null,
     dns: {
-      type: "CNAME",
+      type: "A",
       host: String(dns.host ?? data.customDomain ?? ""),
       hostLabel: String(dns.hostLabel ?? ""),
       target: String(dns.target ?? ""),

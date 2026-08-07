@@ -179,16 +179,11 @@ export function StorefrontSettingsPage() {
     customDomain === savedCustomDomain &&
     (domainStatus?.verified === true ||
       Boolean(watchedValues?.restaurant?.customDomainVerifiedAt));
-  const configuredCnameTarget =
-    process.env.NEXT_PUBLIC_CUSTOM_DOMAIN_CNAME_TARGET?.trim() ||
-    process.env.NEXT_PUBLIC_CUSTOMER_APP_BASE_DOMAIN?.trim() ||
-    "delivery-way.de";
-  const cnameTarget =
+  const dnsInstructions =
     domainStatus &&
-    domainStatus.customDomain === customDomain &&
-    domainStatus.dns.target
-      ? domainStatus.dns.target
-      : configuredCnameTarget;
+    domainStatus.customDomain === customDomain
+      ? domainStatus.dns
+      : null;
   const fallbackStorefrontAddress = restaurantSubdomain
     ? `https://${restaurantSubdomain}.${
         process.env.NEXT_PUBLIC_CUSTOMER_APP_BASE_DOMAIN?.trim() ||
@@ -384,7 +379,7 @@ export function StorefrontSettingsPage() {
                   </label>
                   <Input
                     id="restaurant-custom-domain"
-                    placeholder="orders.yourrestaurant.com"
+                    placeholder="yourrestaurant.com"
                     aria-invalid={Boolean(
                       getError("restaurant.customDomain"),
                     )}
@@ -409,18 +404,21 @@ export function StorefrontSettingsPage() {
                         <dt className="font-medium text-gray-500">
                           {t("customDomainGuideType")}
                         </dt>
-                        <dd className="font-semibold text-[#030401]">CNAME</dd>
+                        <dd className="font-semibold text-[#030401]">
+                          {dnsInstructions?.type ?? "A"}
+                        </dd>
                         <dt className="font-medium text-gray-500">
                           {t("customDomainGuideHost")}
                         </dt>
                         <dd className="break-all font-semibold text-[#030401]">
-                          {customDomain}
+                          {dnsInstructions?.hostLabel ?? "@"}
                         </dd>
                         <dt className="font-medium text-gray-500">
                           {t("customDomainGuideTarget")}
                         </dt>
                         <dd className="break-all font-semibold text-[#030401]">
-                          {cnameTarget}
+                          {dnsInstructions?.target ??
+                            t("customDomainGuideSaveFirst")}
                         </dd>
                       </dl>
                       <p className="mt-3 text-xs leading-5 text-gray-600">

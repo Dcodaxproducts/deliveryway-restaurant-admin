@@ -119,27 +119,27 @@ describe("branding service", () => {
     it("returns the exact DNS instructions from the restaurant endpoint", async () => {
       mockedHttpClient.get.mockResolvedValueOnce({
         data: {
-          customDomain: "orders.example.com",
+          customDomain: "example.com",
           verified: false,
           verifiedAt: null,
           dns: {
-            type: "CNAME",
-            host: "orders.example.com",
-            hostLabel: "orders",
-            target: "storefront.delivery-way.de",
+            type: "A",
+            host: "example.com",
+            hostLabel: "@",
+            target: "203.0.113.10",
           },
         },
       });
 
       await expect(getCustomDomainStatus("restaurant-1")).resolves.toEqual({
-        customDomain: "orders.example.com",
+        customDomain: "example.com",
         verified: false,
         verifiedAt: null,
         dns: {
-          type: "CNAME",
-          host: "orders.example.com",
-          hostLabel: "orders",
-          target: "storefront.delivery-way.de",
+          type: "A",
+          host: "example.com",
+          hostLabel: "@",
+          target: "203.0.113.10",
         },
       });
       expect(mockedHttpClient.get).toHaveBeenCalledWith(
