@@ -251,16 +251,19 @@ export const buildOrderTicketHtml = (
         : "",
     )
     .join("");
+  const fulfillmentBanner = ticket.isScheduled && ticket.preOrderAt
+    ? `<div style="border:4px solid #000;padding:10px;margin:0 0 12px;text-align:center"><div style="font-size:1.55em;font-weight:900;letter-spacing:0.08em">PRE-ORDER / VORBESTELLUNG</div><div style="font-size:1.25em;font-weight:800;margin-top:4px">${escapeHtml(new Date(ticket.preOrderAt).toLocaleString())}</div></div>`
+    : '<div style="border:2px solid #000;padding:7px;margin:0 0 12px;text-align:center;font-size:1.2em;font-weight:800">ASAP / SOFORT</div>';
 
   return [
     `<div style="box-sizing:border-box;width:${getTicketWidth(paperSize)};font-family:Arial,sans-serif;font-size:${fontSize};color:#000">`,
+    fulfillmentBanner,
     '<div style="text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px">',
     '<div style="font-size:1.4em;font-weight:700">DeliveryWays</div>',
     `<div>Order / Bestellung ${escapeHtml(orderLabel)}</div>`,
     "</div>",
     ticket.orderType ? `<div><strong>Type:</strong> ${escapeHtml(ticket.orderType)}</div>` : "",
     ticket.createdAt ? `<div><strong>Time:</strong> ${escapeHtml(new Date(ticket.createdAt).toLocaleString())}</div>` : "",
-    `<div><strong>Pre-order:</strong> ${ticket.isScheduled && ticket.preOrderAt ? escapeHtml(new Date(ticket.preOrderAt).toLocaleString()) : "Not scheduled"}</div>`,
     ticket.customerName ? `<div><strong>Customer:</strong> ${escapeHtml(ticket.customerName)}</div>` : "",
     ticket.customerEmail ? `<div><strong>Email:</strong> ${escapeHtml(ticket.customerEmail)}</div>` : "",
     ticket.customerPhone ? `<div><strong>Phone:</strong> ${escapeHtml(ticket.customerPhone)}</div>` : "",

@@ -84,7 +84,18 @@ describe("order ticket", () => {
     expect(html).toContain("Service charge:");
     expect(html).toContain("Payment method:</strong> CASH_ON_DELIVERY");
     expect(html).toContain("Ring the bell");
+    expect(html).toContain("PRE-ORDER / VORBESTELLUNG");
     expect(html).not.toContain("Not scheduled");
+  });
+
+  it("marks immediate tickets as ASAP", () => {
+    const html = buildOrderTicketHtml(
+      { id: "order-immediate", isScheduled: false, items: [] },
+      "80MM",
+    );
+
+    expect(html).toContain("ASAP / SOFORT");
+    expect(html).not.toContain("PRE-ORDER / VORBESTELLUNG");
   });
 
   it.each([

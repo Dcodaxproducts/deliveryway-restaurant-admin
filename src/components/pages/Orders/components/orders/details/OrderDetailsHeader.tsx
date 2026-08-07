@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Ban, RefreshCw, Truck, XCircle } from "lucide-react";
+import { Ban, CalendarClock, RefreshCw, Truck, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,8 @@ import {
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
 import { OrderStatusUpdateDialog } from "@/components/pages/Orders/components/orders/OrderStatusUpdateDialog";
 import { OrderStatusProgressDialog } from "@/components/pages/Orders/components/orders/OrderStatusProgressDialog";
+import { isFutureOrder } from "@/components/pages/Orders/utils/orders-schedule-filters";
+import { formatDateTime24 } from "@/lib/date-time-format";
 
 type OrderDetailsHeaderProps = {
   order: {
@@ -57,6 +59,13 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
     ? t(ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus])
     : common("updateStatus");
   const canUseTerminalActions = canTerminateOrderStatus(order);
+  const isPreorder = isFutureOrder({
+    isScheduled: order.isScheduled === true,
+    orderTime: order.orderTime,
+  });
+  const scheduledTime = isPreorder
+    ? formatDateTime24({ value: order.orderTime })
+    : null;
 
   const breadcrumbParts = t("breadcrumbDetails").split(" / ");
 
@@ -120,6 +129,19 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
 
   return (
     <>
+      {isPreorder && scheduledTime ? (
+        <div className="mb-5 flex items-center gap-3 rounded-xl border-2 border-red-600 bg-red-50 px-4 py-3 text-red-900 shadow-sm" role="status">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-red-600 text-white">
+            <CalendarClock size={24} />
+          </span>
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.16em]">
+              {t("preorder")}
+            </p>
+            <p className="text-lg font-extrabold sm:text-xl">{scheduledTime}</p>
+          </div>
+        </div>
+      ) : null}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         {/* Left Section */}
         <div className="flex flex-col gap-1">

@@ -389,7 +389,14 @@ export function OrdersTable({
       sendInvoiceEmailMutation.variables?.orderId === id;
 
     return (
-    <TableRow key={id} className="border-none h-[70px]">
+    <TableRow
+      key={id}
+      className={
+        activeTab !== "reservations" && isPreorder
+          ? "h-[70px] border-l-4 border-l-red-600 bg-red-50/80 hover:bg-red-50"
+          : "h-[70px] border-none"
+      }
+    >
       <TableCell>
         <Checkbox />
       </TableCell>
@@ -428,11 +435,15 @@ export function OrdersTable({
               {orderTimeLabel ? (
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                   {isPreorder ? (
-                    <Badge className="border-primary/20 bg-primary/10 text-primary">
+                    <Badge className="border-red-700 bg-red-600 font-extrabold uppercase tracking-wide text-white shadow-sm hover:bg-red-600">
                       <CalendarClock size={12} />
                       {t("preorder")}
                     </Badge>
-                  ) : null}
+                  ) : (
+                    <Badge className="border-emerald-200 bg-emerald-50 font-bold uppercase tracking-wide text-emerald-700 hover:bg-emerald-50">
+                      {t("asap")}
+                    </Badge>
+                  )}
                   <span
                     className="inline-flex max-w-full items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
                     title={formatDateTime24({ value: orderTime })}
