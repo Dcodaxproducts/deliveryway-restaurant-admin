@@ -50,12 +50,11 @@ describe("local printer bridge", () => {
     expect(qzMocks.connect).toHaveBeenCalledTimes(1);
     expect(qzMocks.create).toHaveBeenCalledWith("Kitchen USB", {
       jobName: "DeliveryWays printer test",
-      units: "mm",
-      size: { width: 58 },
-      margins: 0,
-      scaleContent: false,
+      encoding: "ISO-8859-1",
     });
-    expect(qzMocks.print).toHaveBeenCalledTimes(1);
+    expect(qzMocks.print).toHaveBeenCalledWith({ printer: "Kitchen USB" }, [
+      expect.objectContaining({ type: "raw", format: "command" }),
+    ]);
   });
 
   it.each([
@@ -73,13 +72,26 @@ describe("local printer bridge", () => {
       ticket: { id: "order-1", orderNumber: "42", items: [] },
     });
 
-    expect(qzMocks.create).toHaveBeenCalledWith(
-      "Kitchen USB",
-      expect.objectContaining({
+    if (paperSize === "58MM" || paperSize === "80MM") {
+      expect(qzMocks.create).toHaveBeenCalledWith("Kitchen USB", {
         jobName: "DeliveryWays order 42",
-        units: "mm",
-        size,
-      }),
-    );
+        encoding: "ISO-8859-1",
+      });
+      expect(qzMocks.print).toHaveBeenCalledWith({ printer: "Kitchen USB" }, [
+        expect.objectContaining({ type: "raw", format: "command" }),
+      ]);
+    } else {
+      expect(qzMocks.create).toHaveBeenCalledWith(
+        "Kitchen USB",
+        expect.objectContaining({
+          jobName: "DeliveryWays order 42",
+          units: "mm",
+          size,
+        }),
+      );
+      expect(qzMocks.print).toHaveBeenCalledWith({ printer: "Kitchen USB" }, [
+        expect.objectContaining({ type: "pixel", format: "html" }),
+      ]);
+    }
   });
 });

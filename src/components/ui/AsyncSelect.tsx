@@ -49,15 +49,19 @@ export default function AsyncSelect({
     return [];
   };
 
-  const loadOptions = async (reset = false, nextSearch?: string) => {
+  const loadOptions = async (
+    requestedPage: number,
+    requestedSearch: string,
+    reset: boolean,
+  ) => {
     const requestSequence = ++requestSequenceRef.current;
 
     try {
       setLoading(true);
 
       const res = await fetchOptions({
-        search: nextSearch ?? search,
-        page: reset ? 1 : page,
+        search: requestedSearch,
+        page: requestedPage,
       });
 
       const data = normalize(res);
@@ -67,7 +71,7 @@ export default function AsyncSelect({
       setOptions((prev) => (reset ? data : [...prev, ...data]));
       setHasMore(data.length > 0);
 
-      if (reset) setPage(1);
+      setPage(requestedPage);
     } catch {
       if (requestSequence !== requestSequenceRef.current) return;
       setHasMore(false);
@@ -81,19 +85,19 @@ export default function AsyncSelect({
   useEffect(() => {
     if (!open) {
       requestSequenceRef.current += 1;
+      setPage(1);
       return;
     }
 
-    const t = setTimeout(() => {
-      loadOptions(true, search);
-    }, search ? 300 : 0);
+    const t = setTimeout(
+      () => {
+        void loadOptions(1, search, true);
+      },
+      search ? 300 : 0,
+    );
 
     return () => clearTimeout(t);
   }, [open, search]);
-
-  useEffect(() => {
-    if (open && page > 1) loadOptions(false);
-  }, [open, page]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -109,7 +113,9 @@ export default function AsyncSelect({
   const handleScroll = (e: any) => {
     const el = e.currentTarget;
     if (el.scrollHeight - el.scrollTop <= el.clientHeight + 20) {
-      if (hasMore && !loading) setPage((p) => p + 1);
+      if (hasMore && !loading) {
+        void loadOptions(page + 1, search, false);
+      }
     }
   };
 

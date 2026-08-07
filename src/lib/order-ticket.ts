@@ -148,6 +148,7 @@ export const normalizeOrderTicket = (value: unknown): OrderTicket => {
   const formattedAddress = deliveryAddress
     ? [
         readString(deliveryAddress, "street"),
+        readString(deliveryAddress, "houseNumber"),
         readString(deliveryAddress, "area"),
         [
           readString(deliveryAddress, "postalCode"),
@@ -302,4 +303,100 @@ export const buildOrderTicketHtml = (
       : "",
     "</div>",
   ].join("");
+};
+
+const toReceiptAscii = (value: string) =>
+  value
+    .replaceAll("ä", "ae")
+    .replaceAll("ö", "oe")
+    .replaceAll("ü", "ue")
+    .replaceAll("Ä", "Ae")
+    .replaceAll("Ö", "Oe")
+    .replaceAll("Ü", "Ue")
+    .replaceAll("ß", "ss")
+    .replaceAll("€", "EUR")
+    .normalize("NFKD")
+    .replace(/[^\x00-\x7F]/g, "");
+
+export const buildOrderTicketEscPos = (
+  ticket: OrderTicket,
+  paperSize: Extract<PrintingPaperSize, "58MM" | "80MM">,
+) => {
+  const width = paperSize === "58MM" ? 32 : 42;
+  const separator = "-".repeat(width);
+  const money = (value: number) =>
+    `${new Intl.NumberFormat("de-DE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value)} ${ticket.currency ?? ""}`.trim();
+  const lines: string[] = [
+    "\x1B\x40",
+    "\x1B\x61\x01",
+    "\x1B\x45\x01",
+    ticket.isScheduled ? "PRE-ORDER / VORBESTELLUNG" : "ASAP / SOFORT",
+    "\x1B\x45\x00",
+    ...(ticket.isScheduled && ticket.preOrderAt
+      ? [new Date(ticket.preOrderAt).toLocaleString()]
+      : []),
+    "DeliveryWays",
+    `Order / Bestellung ${ticket.orderNumber ?? ticket.id.slice(-8)}`,
+    "\x1B\x61\x00",
+    separator,
+  ];
+
+  const details = [
+    ticket.orderType ? `Type: ${ticket.orderType}` : "",
+    ticket.createdAt
+      ? `Time: ${new Date(ticket.createdAt).toLocaleString()}`
+      : "",
+    ticket.customerName ? `Customer: ${ticket.customerName}` : "",
+    ticket.customerEmail ? `Email: ${ticket.customerEmail}` : "",
+    ticket.customerPhone ? `Phone: ${ticket.customerPhone}` : "",
+    ticket.deliveryAddress ? `Address: ${ticket.deliveryAddress}` : "",
+  ].filter(Boolean);
+  lines.push(...details, separator, "ORDERED ITEMS");
+
+  if (ticket.items.length === 0) lines.push("No item details available");
+  ticket.items.forEach((item) => {
+    lines.push(
+      `${item.quantity} x ${item.name}${item.variationName ? ` (${item.variationName})` : ""}`,
+    );
+    item.modifiers.forEach((modifier) =>
+      lines.push(`  + ${modifier.name} x ${modifier.quantity}`),
+    );
+    if (item.note) lines.push(`  Note: ${item.note}`);
+    if (typeof item.lineTotal === "number") {
+      lines.push(`  ${money(item.lineTotal)}`);
+    }
+  });
+  if (ticket.customerNote)
+    lines.push(separator, `Note: ${ticket.customerNote}`);
+
+  const amounts: Array<[string, number | undefined, boolean?]> = [
+    ["Subtotal", ticket.subtotal],
+    ["Tax", ticket.taxAmount],
+    ["Delivery fee", ticket.deliveryFee],
+    ["Service charge", ticket.serviceChargeAmount],
+    ["Tip", ticket.tipAmount],
+    ["Discount", ticket.discountAmount, true],
+    ["Loyalty discount", ticket.loyaltyDiscountAmount, true],
+    ["Wallet applied", ticket.walletAppliedAmount, true],
+  ];
+  lines.push(separator);
+  amounts.forEach(([label, value, subtract], index) => {
+    if (typeof value === "number" && (index === 0 || value !== 0)) {
+      lines.push(`${label}: ${subtract ? "-" : ""}${money(value)}`);
+    }
+  });
+  if (typeof ticket.totalAmount === "number") {
+    lines.push(
+      "\x1B\x45\x01",
+      `TOTAL: ${money(ticket.totalAmount)}`,
+      "\x1B\x45\x00",
+    );
+  }
+  if (ticket.paymentMethod) lines.push(`Payment: ${ticket.paymentMethod}`);
+  lines.push("\n\n\n", "\x1D\x56\x00");
+
+  return toReceiptAscii(lines.join("\n"));
 };

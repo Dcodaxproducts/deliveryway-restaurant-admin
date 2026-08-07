@@ -1,4 +1,8 @@
-import { buildOrderTicketHtml, type OrderTicket } from "@/lib/order-ticket";
+import {
+  buildOrderTicketEscPos,
+  buildOrderTicketHtml,
+  type OrderTicket,
+} from "@/lib/order-ticket";
 import type { PrintingPaperSize } from "@/services/printing";
 
 const QZ_UNAVAILABLE_MESSAGE =
@@ -18,17 +22,17 @@ const connectToQzTray = async () => {
   return qz;
 };
 
-const paperOptions: Record<PrintingPaperSize, { width: number; height?: number }> = {
+const paperOptions: Record<
+  PrintingPaperSize,
+  { width: number; height?: number }
+> = {
   A4: { width: 210, height: 297 },
   A5: { width: 148, height: 210 },
   "80MM": { width: 80 },
   "58MM": { width: 58 },
 };
 
-const createPrintOptions = (
-  paperSize: PrintingPaperSize,
-  jobName: string,
-) => ({
+const createPrintOptions = (paperSize: PrintingPaperSize, jobName: string) => ({
   jobName,
   units: "mm" as const,
   size: paperOptions[paperSize],
@@ -56,25 +60,43 @@ export const printLocalTestTicket = async (
   }
 
   const qz = await connectToQzTray();
+  const thermal = paperSize === "58MM" || paperSize === "80MM";
   const config = qz.configs.create(
     selectedPrinter,
-    createPrintOptions(paperSize, "DeliveryWays printer test"),
+    thermal
+      ? {
+          jobName: "DeliveryWays printer test",
+          encoding: "ISO-8859-1",
+        }
+      : createPrintOptions(paperSize, "DeliveryWays printer test"),
   );
 
-  await qz.print(config, [
-    {
-      type: "pixel",
-      format: "html",
-      flavor: "plain",
-      data: [
-        "<div style='font-family: sans-serif; padding: 16px'>",
-        "<h2>DeliveryWays</h2>",
-        "<p>Printer connection test successful.</p>",
-        `<p>${new Date().toLocaleString()}</p>`,
-        "</div>",
-      ].join(""),
-    },
-  ]);
+  await qz.print(
+    config,
+    thermal
+      ? [
+          {
+            type: "raw",
+            format: "command",
+            flavor: "plain",
+            data: `\x1B\x40\x1B\x61\x01\x1B\x45\x01DeliveryWays\n\x1B\x45\x00Printer connection test successful.\n${new Date().toLocaleString()}\n\n\n\x1D\x56\x00`,
+          },
+        ]
+      : [
+          {
+            type: "pixel",
+            format: "html",
+            flavor: "plain",
+            data: [
+              "<div style='font-family: sans-serif; padding: 16px'>",
+              "<h2>DeliveryWays</h2>",
+              "<p>Printer connection test successful.</p>",
+              `<p>${new Date().toLocaleString()}</p>`,
+              "</div>",
+            ].join(""),
+          },
+        ],
+  );
 };
 
 export const printLocalOrderTicket = async ({
@@ -92,20 +114,38 @@ export const printLocalOrderTicket = async ({
   }
 
   const qz = await connectToQzTray();
+  const thermal = paperSize === "58MM" || paperSize === "80MM";
   const config = qz.configs.create(
     selectedPrinter,
-    createPrintOptions(
-      paperSize,
-      `DeliveryWays order ${ticket.orderNumber ?? ticket.id}`,
-    ),
+    thermal
+      ? {
+          jobName: `DeliveryWays order ${ticket.orderNumber ?? ticket.id}`,
+          encoding: "ISO-8859-1",
+        }
+      : createPrintOptions(
+          paperSize,
+          `DeliveryWays order ${ticket.orderNumber ?? ticket.id}`,
+        ),
   );
 
-  await qz.print(config, [
-    {
-      type: "pixel",
-      format: "html",
-      flavor: "plain",
-      data: buildOrderTicketHtml(ticket, paperSize),
-    },
-  ]);
+  await qz.print(
+    config,
+    thermal
+      ? [
+          {
+            type: "raw",
+            format: "command",
+            flavor: "plain",
+            data: buildOrderTicketEscPos(ticket, paperSize),
+          },
+        ]
+      : [
+          {
+            type: "pixel",
+            format: "html",
+            flavor: "plain",
+            data: buildOrderTicketHtml(ticket, paperSize),
+          },
+        ],
+  );
 };

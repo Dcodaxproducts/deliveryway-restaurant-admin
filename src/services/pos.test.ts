@@ -62,7 +62,8 @@ describe("pos cart service", () => {
       branchId: "branch-1",
       address: {
         street: "Main Street",
-        area: "12",
+        houseNumber: "12",
+        area: "Mitte",
         postalCode: "10115",
         city: "Berlin",
         state: "Berlin",
@@ -77,6 +78,7 @@ describe("pos cart service", () => {
       branchId: "branch-1",
       street: "Main Street",
       houseNumber: "12",
+      area: "Mitte",
       postalCode: "10115",
       city: "Berlin",
       state: "Berlin",

@@ -17,6 +17,11 @@ type PosCustomerOption = {
 
 export const POS_CART_UPDATED_EVENT = "deliveryways:pos-cart-updated";
 
+export type PosCartUpdatedDetail = {
+  customer?: PosCustomerOption;
+  preserveDraft?: boolean;
+};
+
 export const buildPosCustomerSearchParams = ({
   restaurantId,
   page,

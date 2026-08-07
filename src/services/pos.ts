@@ -29,7 +29,8 @@ export const createCustomerAddress = async ({
     customerId,
     ...(branchId ? { branchId } : {}),
     street: address.street,
-    houseNumber: address.area,
+    houseNumber: address.houseNumber,
+    area: address.area,
     postalCode: address.postalCode,
     city: address.city,
     state: address.state,
@@ -49,7 +50,10 @@ export const updateCartItemQuantity = async ({
   itemId: string;
   quantity: number;
 }) => {
-  const { data } = await api.patch(`/cart/items/${itemId}?customerId=${customerId}`, { quantity });
+  const { data } = await api.patch(
+    `/cart/items/${itemId}?customerId=${customerId}`,
+    { quantity },
+  );
   return data;
 };
 
@@ -62,17 +66,36 @@ export const updateCartDealQuantity = async ({
   dealTargetId: string;
   quantity: number;
 }) => {
-  const { data } = await api.patch(`/cart/deals/${encodeURIComponent(dealTargetId)}?customerId=${customerId}`, { quantity });
+  const { data } = await api.patch(
+    `/cart/deals/${encodeURIComponent(dealTargetId)}?customerId=${customerId}`,
+    { quantity },
+  );
   return data;
 };
 
-export const deleteCartItem = async ({ customerId, itemId }: { customerId: string; itemId: string }) => {
-  const { data } = await api.delete(`/cart/items/${itemId}?customerId=${customerId}`);
+export const deleteCartItem = async ({
+  customerId,
+  itemId,
+}: {
+  customerId: string;
+  itemId: string;
+}) => {
+  const { data } = await api.delete(
+    `/cart/items/${itemId}?customerId=${customerId}`,
+  );
   return data;
 };
 
-export const deleteCartDeal = async ({ customerId, dealTargetId }: { customerId: string; dealTargetId: string }) => {
-  const { data } = await api.delete(`/cart/deals/${encodeURIComponent(dealTargetId)}?customerId=${customerId}`);
+export const deleteCartDeal = async ({
+  customerId,
+  dealTargetId,
+}: {
+  customerId: string;
+  dealTargetId: string;
+}) => {
+  const { data } = await api.delete(
+    `/cart/deals/${encodeURIComponent(dealTargetId)}?customerId=${customerId}`,
+  );
   return data;
 };
 
@@ -88,7 +111,10 @@ export const setCartOrderType = async ({
   customerId: string;
   orderType: PosOrderType;
 }) => {
-  const { data } = await api.patch(`/cart/order-type?customerId=${customerId}`, { orderType });
+  const { data } = await api.patch(
+    `/cart/order-type?customerId=${customerId}`,
+    { orderType },
+  );
   return data;
 };
 
@@ -110,7 +136,9 @@ export const setCartAddress = async ({
   customerId: string;
   deliveryAddressId: string;
 }) => {
-  const { data } = await api.patch(`/cart/address?customerId=${customerId}`, { deliveryAddressId });
+  const { data } = await api.patch(`/cart/address?customerId=${customerId}`, {
+    deliveryAddressId,
+  });
   return data;
 };
 
@@ -144,6 +172,9 @@ export const checkoutCart = async ({
   customerId: string;
   payload: PosCheckoutPayload;
 }) => {
-  const { data } = await api.post(`/cart/checkout?customerId=${customerId}`, payload);
+  const { data } = await api.post(
+    `/cart/checkout?customerId=${customerId}`,
+    payload,
+  );
   return data;
 };

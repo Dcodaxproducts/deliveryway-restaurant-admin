@@ -41,6 +41,7 @@ export type PosCustomer = {
 
 export type GuestDeliveryAddress = {
   street: string;
+  houseNumber: string;
   area?: string;
   postalCode: string;
   city: string;
@@ -72,7 +73,7 @@ export type PosCheckoutPayload = {
 export type PosCartSettingsPayload = {
   orderType?: PosOrderType;
   paymentMethod?: PosPaymentMethod;
-  orderTime?: string;
+  orderTime?: string | null;
   scheduledDeliveryAt?: string;
   tipAmount?: number;
   customerNote?: string | null;
@@ -148,6 +149,7 @@ const trimAddress = (
   address?: GuestDeliveryAddress | null,
 ): GuestDeliveryAddress => ({
   street: String(address?.street ?? "").trim(),
+  houseNumber: String(address?.houseNumber ?? "").trim(),
   area: String(address?.area ?? "").trim(),
   postalCode: String(address?.postalCode ?? "").trim(),
   city: String(address?.city ?? "").trim(),
@@ -171,6 +173,7 @@ export const isValidLongitude = (value?: string | null) => {
 
 export const emptyGuestDeliveryAddress = (): GuestDeliveryAddress => ({
   street: "",
+  houseNumber: "",
   area: "",
   postalCode: "",
   city: "",
@@ -234,6 +237,7 @@ export const hasGuestDeliveryAddress = (
 
   return Boolean(
     trimmed.street &&
+    trimmed.houseNumber &&
     trimmed.postalCode &&
     trimmed.city &&
     trimmed.state &&

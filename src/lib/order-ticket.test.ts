@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { buildOrderTicketHtml, normalizeOrderTicket } from "@/lib/order-ticket";
+import {
+  buildOrderTicketEscPos,
+  buildOrderTicketHtml,
+  normalizeOrderTicket,
+} from "@/lib/order-ticket";
 
 describe("order ticket", () => {
   it("normalizes order details and escapes customer-provided content", () => {
@@ -43,7 +47,8 @@ describe("order ticket", () => {
         phone: "+49 123",
       },
       deliveryAddress: {
-        street: "Main Street 1",
+        street: "Main Street",
+        houseNumber: "1A",
         postalCode: "10115",
         city: "Berlin",
         country: "DE",
@@ -77,7 +82,7 @@ describe("order ticket", () => {
     const html = buildOrderTicketHtml(ticket, "80MM");
 
     expect(html).toContain("ada@example.com");
-    expect(html).toContain("Main Street 1, 10115 Berlin, DE");
+    expect(html).toContain("Main Street, 1A, 10115 Berlin, DE");
     expect(html).toContain("Extra cheese × 2");
     expect(html).toContain("Special instructions: No onions");
     expect(html).toContain("Delivery fee:");
@@ -108,6 +113,26 @@ describe("order ticket", () => {
 
     expect(html).toContain("ASAP / SOFORT");
     expect(html).not.toContain("PRE-ORDER / VORBESTELLUNG");
+  });
+
+  it("builds a non-empty ESC/POS receipt for thermal printers", () => {
+    const receipt = buildOrderTicketEscPos(
+      {
+        id: "order-thermal",
+        orderNumber: "42",
+        isScheduled: false,
+        totalAmount: 12.5,
+        currency: "EUR",
+        items: [{ name: "Wrap", quantity: 1, modifiers: [] }],
+      },
+      "80MM",
+    );
+
+    expect(receipt).toContain("\x1B\x40");
+    expect(receipt).toContain("ASAP / SOFORT");
+    expect(receipt).toContain("1 x Wrap");
+    expect(receipt).toContain("TOTAL: 12,50 EUR");
+    expect(receipt).toContain("\x1D\x56\x00");
   });
 
   it.each([

@@ -128,7 +128,8 @@ describe("pos checkout payload", () => {
       paymentMethod: "COD",
       guestDeliveryAddress: {
         street: " Main Street 1 ",
-        area: "12",
+        houseNumber: " 12 ",
+        area: " Mitte ",
         postalCode: " 12345 ",
         city: " Berlin ",
         state: "Berlin",
@@ -140,7 +141,8 @@ describe("pos checkout payload", () => {
 
     expect(payload.guestDeliveryAddress).toEqual({
       street: "Main Street 1",
-      area: "12",
+      houseNumber: "12",
+      area: "Mitte",
       postalCode: "12345",
       city: "Berlin",
       state: "Berlin",
@@ -215,6 +217,7 @@ describe("pos checkout payload", () => {
     expect(
       hasGuestDeliveryAddress({
         street: "Main Street 1",
+        houseNumber: "12",
         postalCode: "12345",
         city: "Berlin",
         state: "Berlin",
@@ -227,6 +230,7 @@ describe("pos checkout payload", () => {
     expect(
       hasGuestDeliveryAddress({
         street: "Main Street 1",
+        houseNumber: "12",
         postalCode: "",
         city: "Berlin",
         state: "Berlin",
@@ -241,6 +245,7 @@ describe("pos checkout payload", () => {
     expect(
       hasGuestDeliveryAddress({
         street: "Main Street 1",
+        houseNumber: "12",
         postalCode: "12345",
         city: "Berlin",
         state: "Berlin",
@@ -253,6 +258,7 @@ describe("pos checkout payload", () => {
     expect(
       hasGuestDeliveryAddress({
         street: "Main Street 1",
+        houseNumber: "12",
         postalCode: "12345",
         city: "Berlin",
         state: "Berlin",
@@ -265,6 +271,7 @@ describe("pos checkout payload", () => {
     expect(
       hasGuestDeliveryAddress({
         street: "Main Street 1",
+        houseNumber: "12",
         postalCode: "12345",
         city: "Berlin",
         state: "Berlin",

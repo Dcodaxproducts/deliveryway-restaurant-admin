@@ -2,7 +2,19 @@
 
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Ban, CalendarClock, CreditCard, Download, Eye, Mail, MoreHorizontal, RefreshCw, Truck, XCircle } from "lucide-react";
+import {
+  Ban,
+  CalendarClock,
+  CreditCard,
+  Download,
+  Eye,
+  Mail,
+  MoreHorizontal,
+  Printer,
+  RefreshCw,
+  Truck,
+  XCircle,
+} from "lucide-react";
 import EmptyState from "@/components/common/EmptyState";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -35,8 +47,15 @@ import {
 } from "@/components/pages/Orders/utils/orders-schedule-filters";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
-import { useDownloadOrderInvoicePdf, useSendOrderInvoiceEmail, useSendOrderOutForDelivery, useSendOrderWithExternalDriver, useUpdateOrderStatus } from "@/hooks/useOrders";
+import {
+  useDownloadOrderInvoicePdf,
+  useSendOrderInvoiceEmail,
+  useSendOrderOutForDelivery,
+  useSendOrderWithExternalDriver,
+  useUpdateOrderStatus,
+} from "@/hooks/useOrders";
 import { formatDateTime24 } from "@/lib/date-time-format";
+import { reprintOrder } from "@/lib/accepted-order-printing";
 import { getOrderById } from "@/services/orders/orders.api";
 import {
   canDirectlyUpdateOrderStatus,
@@ -94,7 +113,8 @@ const formatOrderTime = (value?: string) => {
   });
 };
 
-const normalizeOrderType = (value?: string | null) => value?.toUpperCase() ?? "";
+const normalizeOrderType = (value?: string | null) =>
+  value?.toUpperCase() ?? "";
 
 interface OrdersTableProps {
   orders: OrdersTableRow[];
@@ -111,7 +131,7 @@ export function OrdersTable({
   sortKey,
   sortDir,
   onSort,
-  activeTab
+  activeTab,
 }: OrdersTableProps) {
   const router = useRouter();
   const { role, user } = useAuth();
@@ -119,11 +139,13 @@ export function OrdersTable({
   const common = useTranslations("common");
   const t = useTranslations("orders");
   const [statusOrder, setStatusOrder] = useState<OrdersTableRow | null>(null);
-  const [progressOrder, setProgressOrder] = useState<OrderStatusProgressState | null>(null);
+  const [progressOrder, setProgressOrder] =
+    useState<OrderStatusProgressState | null>(null);
   const [paymentStatusOrder, setPaymentStatusOrder] =
     useState<PaymentStatusDialogState | null>(null);
   const [loadingPaymentStatusOrderId, setLoadingPaymentStatusOrderId] =
     useState<string | null>(null);
+  const [printingOrderId, setPrintingOrderId] = useState<string | null>(null);
   const updateStatusMutation = useUpdateOrderStatus();
   const sendOutForDeliveryMutation = useSendOrderOutForDelivery();
   const externalDriverMutation = useSendOrderWithExternalDriver();
@@ -136,7 +158,9 @@ export function OrdersTable({
     error: t("invoiceEmailFailed"),
   });
   const canUpdatePaymentStatusRole =
-    role === "BUSINESS_ADMIN" || role === "SUPER_ADMIN" || role === "BRANCH_ADMIN";
+    role === "BUSINESS_ADMIN" ||
+    role === "SUPER_ADMIN" ||
+    role === "BRANCH_ADMIN";
   const getStatusLabel = (status?: string) =>
     status && ORDER_STATUS_LABEL_KEYS[status]
       ? t(ORDER_STATUS_LABEL_KEYS[status])
@@ -160,8 +184,12 @@ export function OrdersTable({
       ? t(ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus])
       : common("updateStatus");
   };
-  const getPaymentStatusTransaction = (order: Pick<OrdersTableRow, "transactions">) =>
-    order.transactions?.find((transaction) => transaction.type === "CHARGE" && transaction.id);
+  const getPaymentStatusTransaction = (
+    order: Pick<OrdersTableRow, "transactions">,
+  ) =>
+    order.transactions?.find(
+      (transaction) => transaction.type === "CHARGE" && transaction.id,
+    );
   const handleStatusAction = async (order: OrdersTableRow) => {
     const nextStatus = getNextOrderStatus(order);
 
@@ -191,7 +219,7 @@ export function OrdersTable({
   };
   const handleTerminalStatusAction = async (
     order: OrdersTableRow,
-    status: "CANCELLED" | "REJECTED"
+    status: "CANCELLED" | "REJECTED",
   ) => {
     const updatedOrder = await updateStatusMutation.mutateAsync({
       orderId: order.id,
@@ -242,6 +270,25 @@ export function OrdersTable({
         branchId: order.branchId ?? undefined,
       },
     });
+  };
+
+  const handlePrintReceiptAction = async (order: OrdersTableRow) => {
+    if (!user?.restaurantId || printingOrderId) return;
+
+    setPrintingOrderId(order.id);
+    try {
+      const result = await reprintOrder({
+        orderId: order.id,
+        restaurantId: user.restaurantId,
+        branchId: order.branchId ?? undefined,
+      });
+      if (result === "printed") toast.success(t("receiptPrinted"));
+      else toast.error(t("receiptPrintUnavailable"));
+    } catch {
+      toast.error(t("receiptPrintFailed"));
+    } finally {
+      setPrintingOrderId(null);
+    }
   };
 
   const handlePaymentStatusAction = async (order: OrdersTableRow) => {
@@ -306,332 +353,430 @@ export function OrdersTable({
 
   if (!orders || orders.length === 0) {
     return (
-      <EmptyState
-        title={t("emptyTitle")}
-        description={t("emptyDescription")}
-      />
+      <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
     );
   }
 
   const getOrderRoute = ({ id, isGroupOrder }: OrdersTableRow) =>
-    isGroupOrder
-      ? `/orders/group/${id}`
-      : `/orders/details/${id}`;
+    isGroupOrder ? `/orders/group/${id}` : `/orders/details/${id}`;
 
   return (
     <div className="space-y-4">
-
       <div className="hidden max-w-full overflow-hidden lg:block">
         <Table className="table-fixed">
-         <TableHeader>
-  <TableRow className="border-none">
-    <TableHead className="w-10">
-      <Checkbox />
-    </TableHead>
+          <TableHeader>
+            <TableRow className="border-none">
+              <TableHead className="w-10">
+                <Checkbox />
+              </TableHead>
 
-    {activeTab === "reservations" ? (
-      <>
-        <SortHeader label={t("reservationId")} sortKey="id" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label={t("customer")} sortKey="customerName" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label={t("guests")} sortKey="guestCount" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label={t("reservationDate")} sortKey="reservationDate" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-        <SortHeader label={t("statusLabel")} sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} />
-      </>
-    ) : (
-      <>
-        <SortHeader label={t("date")} sortKey="createdAt" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[19%]" />
-        <SortHeader label={t("orderType")} sortKey="orderType" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[12%]" />
-        <TableHead className="w-[22%]">{t("address")}</TableHead>
-        <SortHeader label={t("amount")} sortKey="totalAmount" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[12%]" />
-        <SortHeader label={t("statusLabel")} sortKey="status" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[13%]" />
-        <SortHeader label={t("paymentStatus")} sortKey="paymentStatus" activeKey={sortKey} direction={sortDir} onSort={onSort} className="w-[14%]" />
-      </>
-    )}
-
-    <TableHead className="w-20 text-center">{common("actions")}</TableHead>
-  </TableRow>
-</TableHeader>
-
-        <TableBody>
-  {orders.map((order) => {
-    const {
-      id,
-      customerName,
-      guestCount,
-      reservationDate,
-      status,
-      createdAt,
-      totalAmount,
-      paymentStatus,
-      orderType,
-    } = order;
-    const addressPreview = getOrderAddressPreview(order, {
-      addressPending: t("addressPending"),
-      dineIn: t("dineIn"),
-      noBranch: t("noBranch"),
-      takeawayOrder: t("takeawayOrder"),
-    });
-    const canUpdateStatus = Boolean(getNextOrderStatus(order));
-    const canSendOutForDelivery = canSendDeliveryOrderOutDirectly(order);
-    const canUseExternalDriver = canUseExternalDeliveryFulfillment(order);
-    const canUseTerminalActions = canTerminateOrderStatus(order);
-    const orderTime = getOrderTimeDate(order);
-    const orderTimeLabel = formatOrderTime(order.orderTime);
-    const isPreorder = isFutureOrder(order);
-    const canUpdatePaymentStatus =
-      canUpdatePaymentStatusRole && paymentStatus !== "REFUNDED";
-    const paymentStatusLoading = loadingPaymentStatusOrderId === id;
-    const invoiceDownloading =
-      downloadInvoiceMutation.isPending &&
-      downloadInvoiceMutation.variables?.orderId === id;
-    const invoiceEmailSending =
-      sendInvoiceEmailMutation.isPending &&
-      sendInvoiceEmailMutation.variables?.orderId === id;
-
-    return (
-    <TableRow
-      key={id}
-      className={
-        activeTab !== "reservations" && isPreorder
-          ? "h-[70px] border-l-4 border-l-red-600 bg-red-50/80 hover:bg-red-50"
-          : "h-[70px] border-none"
-      }
-    >
-      <TableCell>
-        <Checkbox />
-      </TableCell>
-
-      {activeTab === "reservations" ? (
-        <>
-          <TableCell className="px-4 text-gray-500">
-            <span className="block max-w-full truncate" title={id}>
-              {id}
-            </span>
-          </TableCell>
-
-          <TableCell className="px-4 text-gray-600">
-            {customerName?.trim() || "-"}
-          </TableCell>
-
-          <TableCell className="px-4">
-            {guestCount}
-          </TableCell>
-
-          <TableCell className="px-4 text-gray-500">
-            {formatDateTime24({ value: reservationDate })}
-          </TableCell>
-
-          <TableCell className="px-4">
-            <span className="text-yellow-600 font-medium">
-              {getStatusLabel(status)}
-            </span>
-          </TableCell>
-        </>
-      ) : (
-        <>
-          <TableCell className="px-4 text-gray-500 whitespace-normal">
-            <div className="space-y-2">
-              <p>{formatShortDate(createdAt)}</p>
-              {orderTimeLabel ? (
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  {isPreorder ? (
-                    <Badge className="border-red-700 bg-red-600 font-extrabold uppercase tracking-wide text-white shadow-sm hover:bg-red-600">
-                      <CalendarClock size={12} />
-                      {t("preorder")}
-                    </Badge>
-                  ) : (
-                    <Badge className="border-emerald-200 bg-emerald-50 font-bold uppercase tracking-wide text-emerald-700 hover:bg-emerald-50">
-                      {t("asap")}
-                    </Badge>
-                  )}
-                  <span
-                    className="inline-flex max-w-full items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
-                    title={formatDateTime24({ value: orderTime })}
-                  >
-                    <CalendarClock size={12} />
-                    <span className="truncate">{orderTimeLabel}</span>
-                  </span>
-                </div>
-              ) : (
-                <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500">
-                  {t("asap")}
-                </span>
-              )}
-            </div>
-          </TableCell>
-
-          <TableCell className="px-3">
-            <Badge
-              className="max-w-full border-primary/20 bg-primary/10 text-primary"
-              title={getOrderTypeLabel(orderType)}
-            >
-              <span className="truncate">{getOrderTypeLabel(orderType)}</span>
-            </Badge>
-          </TableCell>
-
-          <TableCell className="px-4 whitespace-normal">
-            <ClickTooltip
-              content={
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    {t("address")}
-                  </p>
-                  <p className="whitespace-pre-line break-words font-medium leading-6 text-gray-800">
-                    {addressPreview.full}
-                  </p>
-                </div>
-              }
-            >
-              <button
-                type="button"
-                className="block w-full min-w-0 cursor-pointer rounded-md text-left outline-none transition-colors hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-primary/40"
-                aria-label={addressPreview.full}
-              >
-                <span className="block truncate font-medium text-gray-700">
-                  {addressPreview.primary}
-                </span>
-                <span className="block truncate text-sm text-gray-500">
-                  {addressPreview.secondary}
-                </span>
-              </button>
-            </ClickTooltip>
-          </TableCell>
-
-          <TableCell className="px-4 font-medium text-green-600">
-            <span className="block truncate">{formatMoney(totalAmount)}</span>
-          </TableCell>
-
-          <TableCell className="px-4">
-            <span className="block truncate text-sm font-medium text-yellow-600">
-              {getStatusLabel(status)}
-            </span>
-          </TableCell>
-
-          <TableCell className="px-4">
-            <Badge className="max-w-full border-gray-200 bg-gray-100 text-gray-700">
-              <span className="truncate">{paymentStatus ? paymentStatus.replaceAll("_", " ") : "-"}</span>
-            </Badge>
-          </TableCell>
-        </>
-      )}
-
-      <TableCell className="px-4">
-        <div className="flex items-center justify-center gap-2 text-gray-500">
-          <button
-            type="button"
-            className="p-2 hover:text-primary"
-            onClick={() => router.push(getOrderRoute(order))}
-            aria-label={t("viewOrderDetails")}
-          >
-            <Eye size={18} />
-          </button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="p-2 hover:text-primary"
-                aria-label={t("orderActions")}
-              >
-                <MoreHorizontal size={18} />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem onClick={() => router.push(getOrderRoute(order))}>
-                <Eye size={16} />
-                {common("viewDetails")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={invoiceDownloading}
-                onClick={() => handleDownloadInvoiceAction(order)}
-              >
-                <Download size={16} />
-                {invoiceDownloading ? t("downloadingInvoice") : t("downloadInvoice")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={invoiceEmailSending}
-                onClick={() => handleSendInvoiceEmailAction(order)}
-              >
-                <Mail size={16} />
-                {invoiceEmailSending ? t("sendingInvoiceEmail") : t("sendInvoiceEmail")}
-              </DropdownMenuItem>
-              {canUpdateStatus ? (
-                <DropdownMenuItem
-                  disabled={updateStatusMutation.isPending}
-                  onClick={() => {
-                    void handleStatusAction(order);
-                  }}
-                >
-                  <RefreshCw size={16} />
-                  {getStatusActionLabel(order)}
-                </DropdownMenuItem>
-              ) : null}
-              {canSendOutForDelivery ? (
-                <DropdownMenuItem
-                  disabled={sendOutForDeliveryMutation.isPending}
-                  onClick={() => {
-                    void handleSendOutForDeliveryAction(order);
-                  }}
-                >
-                  <Truck size={16} />
-                  {t("sendOutForDeliveryDirect")}
-                </DropdownMenuItem>
-              ) : null}
-              {canUseExternalDriver ? (
-                <DropdownMenuItem
-                  disabled={externalDriverMutation.isPending}
-                  onClick={() => {
-                    void handleExternalDriverAction(order);
-                  }}
-                >
-                  <Truck size={16} />
-                  {t("externalDriver")}
-                </DropdownMenuItem>
-              ) : null}
-              {canUpdatePaymentStatus ? (
-                <DropdownMenuItem
-                  disabled={paymentStatusLoading}
-                  onClick={() => {
-                    void handlePaymentStatusAction(order);
-                  }}
-                >
-                  <CreditCard size={16} />
-                  {paymentStatusLoading ? t("loadingPaymentStatus") : t("updatePaymentStatus")}
-                </DropdownMenuItem>
-              ) : null}
-              {canUseTerminalActions ? (
+              {activeTab === "reservations" ? (
                 <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    disabled={updateStatusMutation.isPending}
-                    variant="destructive"
-                    onClick={() => {
-                      void handleTerminalStatusAction(order, "CANCELLED");
-                    }}
-                  >
-                    <XCircle size={16} />
-                    {t(ORDER_TERMINAL_ACTION_LABEL_KEYS.CANCELLED)}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    disabled={updateStatusMutation.isPending}
-                    variant="destructive"
-                    onClick={() => {
-                      void handleTerminalStatusAction(order, "REJECTED");
-                    }}
-                  >
-                    <Ban size={16} />
-                    {t(ORDER_TERMINAL_ACTION_LABEL_KEYS.REJECTED)}
-                  </DropdownMenuItem>
+                  <SortHeader
+                    label={t("reservationId")}
+                    sortKey="id"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={onSort}
+                  />
+                  <SortHeader
+                    label={t("customer")}
+                    sortKey="customerName"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={onSort}
+                  />
+                  <SortHeader
+                    label={t("guests")}
+                    sortKey="guestCount"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={onSort}
+                  />
+                  <SortHeader
+                    label={t("reservationDate")}
+                    sortKey="reservationDate"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={onSort}
+                  />
+                  <SortHeader
+                    label={t("statusLabel")}
+                    sortKey="status"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={onSort}
+                  />
                 </>
-              ) : null}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </TableCell>
-    </TableRow>
-  );
-  })}
-</TableBody>
+              ) : (
+                <>
+                  <SortHeader
+                    label={t("date")}
+                    sortKey="createdAt"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={onSort}
+                    className="w-[19%]"
+                  />
+                  <SortHeader
+                    label={t("orderType")}
+                    sortKey="orderType"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={onSort}
+                    className="w-[12%]"
+                  />
+                  <TableHead className="w-[22%]">{t("address")}</TableHead>
+                  <SortHeader
+                    label={t("amount")}
+                    sortKey="totalAmount"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={onSort}
+                    className="w-[12%]"
+                  />
+                  <SortHeader
+                    label={t("statusLabel")}
+                    sortKey="status"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={onSort}
+                    className="w-[13%]"
+                  />
+                  <SortHeader
+                    label={t("paymentStatus")}
+                    sortKey="paymentStatus"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={onSort}
+                    className="w-[14%]"
+                  />
+                </>
+              )}
+
+              <TableHead className="w-20 text-center">
+                {common("actions")}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+
+          <TableBody>
+            {orders.map((order) => {
+              const {
+                id,
+                customerName,
+                guestCount,
+                reservationDate,
+                status,
+                createdAt,
+                totalAmount,
+                paymentStatus,
+                orderType,
+              } = order;
+              const addressPreview = getOrderAddressPreview(order, {
+                addressPending: t("addressPending"),
+                dineIn: t("dineIn"),
+                noBranch: t("noBranch"),
+                takeawayOrder: t("takeawayOrder"),
+              });
+              const canUpdateStatus = Boolean(getNextOrderStatus(order));
+              const canSendOutForDelivery =
+                canSendDeliveryOrderOutDirectly(order);
+              const canUseExternalDriver =
+                canUseExternalDeliveryFulfillment(order);
+              const canUseTerminalActions = canTerminateOrderStatus(order);
+              const orderTime = getOrderTimeDate(order);
+              const orderTimeLabel = formatOrderTime(order.orderTime);
+              const isPreorder = isFutureOrder(order);
+              const canUpdatePaymentStatus =
+                canUpdatePaymentStatusRole && paymentStatus !== "REFUNDED";
+              const paymentStatusLoading = loadingPaymentStatusOrderId === id;
+              const invoiceDownloading =
+                downloadInvoiceMutation.isPending &&
+                downloadInvoiceMutation.variables?.orderId === id;
+              const invoiceEmailSending =
+                sendInvoiceEmailMutation.isPending &&
+                sendInvoiceEmailMutation.variables?.orderId === id;
+
+              return (
+                <TableRow
+                  key={id}
+                  className={
+                    activeTab !== "reservations" && isPreorder
+                      ? "h-[70px] border-l-4 border-l-red-600 bg-red-50/80 hover:bg-red-50"
+                      : "h-[70px] border-none"
+                  }
+                >
+                  <TableCell>
+                    <Checkbox />
+                  </TableCell>
+
+                  {activeTab === "reservations" ? (
+                    <>
+                      <TableCell className="px-4 text-gray-500">
+                        <span className="block max-w-full truncate" title={id}>
+                          {id}
+                        </span>
+                      </TableCell>
+
+                      <TableCell className="px-4 text-gray-600">
+                        {customerName?.trim() || "-"}
+                      </TableCell>
+
+                      <TableCell className="px-4">{guestCount}</TableCell>
+
+                      <TableCell className="px-4 text-gray-500">
+                        {formatDateTime24({ value: reservationDate })}
+                      </TableCell>
+
+                      <TableCell className="px-4">
+                        <span className="text-yellow-600 font-medium">
+                          {getStatusLabel(status)}
+                        </span>
+                      </TableCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableCell className="px-4 text-gray-500 whitespace-normal">
+                        <div className="space-y-2">
+                          <p>{formatShortDate(createdAt)}</p>
+                          {orderTimeLabel ? (
+                            <div className="flex min-w-0 flex-wrap items-center gap-2">
+                              {isPreorder ? (
+                                <Badge className="border-red-700 bg-red-600 font-extrabold uppercase tracking-wide text-white shadow-sm hover:bg-red-600">
+                                  <CalendarClock size={12} />
+                                  {t("preorder")}
+                                </Badge>
+                              ) : (
+                                <Badge className="border-emerald-200 bg-emerald-50 font-bold uppercase tracking-wide text-emerald-700 hover:bg-emerald-50">
+                                  {t("asap")}
+                                </Badge>
+                              )}
+                              <span
+                                className="inline-flex max-w-full items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
+                                title={formatDateTime24({ value: orderTime })}
+                              >
+                                <CalendarClock size={12} />
+                                <span className="truncate">
+                                  {orderTimeLabel}
+                                </span>
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500">
+                              {t("asap")}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="px-3">
+                        <Badge
+                          className="max-w-full border-primary/20 bg-primary/10 text-primary"
+                          title={getOrderTypeLabel(orderType)}
+                        >
+                          <span className="truncate">
+                            {getOrderTypeLabel(orderType)}
+                          </span>
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="px-4 whitespace-normal">
+                        <ClickTooltip
+                          content={
+                            <div className="space-y-2">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                                {t("address")}
+                              </p>
+                              <p className="whitespace-pre-line break-words font-medium leading-6 text-gray-800">
+                                {addressPreview.full}
+                              </p>
+                            </div>
+                          }
+                        >
+                          <button
+                            type="button"
+                            className="block w-full min-w-0 cursor-pointer rounded-md text-left outline-none transition-colors hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-primary/40"
+                            aria-label={addressPreview.full}
+                          >
+                            <span className="block truncate font-medium text-gray-700">
+                              {addressPreview.primary}
+                            </span>
+                            <span className="block truncate text-sm text-gray-500">
+                              {addressPreview.secondary}
+                            </span>
+                          </button>
+                        </ClickTooltip>
+                      </TableCell>
+
+                      <TableCell className="px-4 font-medium text-green-600">
+                        <span className="block truncate">
+                          {formatMoney(totalAmount)}
+                        </span>
+                      </TableCell>
+
+                      <TableCell className="px-4">
+                        <span className="block truncate text-sm font-medium text-yellow-600">
+                          {getStatusLabel(status)}
+                        </span>
+                      </TableCell>
+
+                      <TableCell className="px-4">
+                        <Badge className="max-w-full border-gray-200 bg-gray-100 text-gray-700">
+                          <span className="truncate">
+                            {paymentStatus
+                              ? paymentStatus.replaceAll("_", " ")
+                              : "-"}
+                          </span>
+                        </Badge>
+                      </TableCell>
+                    </>
+                  )}
+
+                  <TableCell className="px-4">
+                    <div className="flex items-center justify-center gap-2 text-gray-500">
+                      <button
+                        type="button"
+                        className="p-2 hover:text-primary"
+                        onClick={() => router.push(getOrderRoute(order))}
+                        aria-label={t("viewOrderDetails")}
+                      >
+                        <Eye size={18} />
+                      </button>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className="p-2 hover:text-primary"
+                            aria-label={t("orderActions")}
+                          >
+                            <MoreHorizontal size={18} />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuItem
+                            onClick={() => router.push(getOrderRoute(order))}
+                          >
+                            <Eye size={16} />
+                            {common("viewDetails")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={invoiceDownloading}
+                            onClick={() => handleDownloadInvoiceAction(order)}
+                          >
+                            <Download size={16} />
+                            {invoiceDownloading
+                              ? t("downloadingInvoice")
+                              : t("downloadInvoice")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={invoiceEmailSending}
+                            onClick={() => handleSendInvoiceEmailAction(order)}
+                          >
+                            <Mail size={16} />
+                            {invoiceEmailSending
+                              ? t("sendingInvoiceEmail")
+                              : t("sendInvoiceEmail")}
+                          </DropdownMenuItem>
+                          {activeTab !== "reservations" ? (
+                            <DropdownMenuItem
+                              disabled={printingOrderId === id}
+                              onClick={() =>
+                                void handlePrintReceiptAction(order)
+                              }
+                            >
+                              <Printer size={16} />
+                              {printingOrderId === id
+                                ? t("printingReceipt")
+                                : t("printReceipt")}
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canUpdateStatus ? (
+                            <DropdownMenuItem
+                              disabled={updateStatusMutation.isPending}
+                              onClick={() => {
+                                void handleStatusAction(order);
+                              }}
+                            >
+                              <RefreshCw size={16} />
+                              {getStatusActionLabel(order)}
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canSendOutForDelivery ? (
+                            <DropdownMenuItem
+                              disabled={sendOutForDeliveryMutation.isPending}
+                              onClick={() => {
+                                void handleSendOutForDeliveryAction(order);
+                              }}
+                            >
+                              <Truck size={16} />
+                              {t("sendOutForDeliveryDirect")}
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canUseExternalDriver ? (
+                            <DropdownMenuItem
+                              disabled={externalDriverMutation.isPending}
+                              onClick={() => {
+                                void handleExternalDriverAction(order);
+                              }}
+                            >
+                              <Truck size={16} />
+                              {t("externalDriver")}
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canUpdatePaymentStatus ? (
+                            <DropdownMenuItem
+                              disabled={paymentStatusLoading}
+                              onClick={() => {
+                                void handlePaymentStatusAction(order);
+                              }}
+                            >
+                              <CreditCard size={16} />
+                              {paymentStatusLoading
+                                ? t("loadingPaymentStatus")
+                                : t("updatePaymentStatus")}
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canUseTerminalActions ? (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                disabled={updateStatusMutation.isPending}
+                                variant="destructive"
+                                onClick={() => {
+                                  void handleTerminalStatusAction(
+                                    order,
+                                    "CANCELLED",
+                                  );
+                                }}
+                              >
+                                <XCircle size={16} />
+                                {t(ORDER_TERMINAL_ACTION_LABEL_KEYS.CANCELLED)}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                disabled={updateStatusMutation.isPending}
+                                variant="destructive"
+                                onClick={() => {
+                                  void handleTerminalStatusAction(
+                                    order,
+                                    "REJECTED",
+                                  );
+                                }}
+                              >
+                                <Ban size={16} />
+                                {t(ORDER_TERMINAL_ACTION_LABEL_KEYS.REJECTED)}
+                              </DropdownMenuItem>
+                            </>
+                          ) : null}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
         </Table>
       </div>
 

@@ -9,7 +9,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
@@ -66,7 +66,10 @@ import {
   type PosOrderType,
 } from "@/components/pages/Pos/components/pos/pos-checkout-payload";
 import { GuestAddressLocationPicker } from "@/components/pages/Pos/components/pos/GuestAddressLocationPicker";
-import { POS_CART_UPDATED_EVENT } from "@/components/pages/Pos/legacy/cart/pos-selection";
+import {
+  POS_CART_UPDATED_EVENT,
+  type PosCartUpdatedDetail,
+} from "@/components/pages/Pos/legacy/cart/pos-selection";
 import {
   printNewOrderIfConfigured,
   reprintOrder,
@@ -79,6 +82,7 @@ type UnknownRecord = Record<string, unknown>;
 type PosCustomerAddress = {
   id: string;
   street?: string | null;
+  houseNumber?: string | null;
   area?: string | null;
   city?: string | null;
   state?: string | null;
@@ -131,6 +135,9 @@ export default function PosCart() {
   const [placingOrder, setPlacingOrder] = useState(false);
 
   const [orderType, setOrderType] = useState<PosOrderType>("TAKEAWAY");
+  const [orderTiming, setOrderTiming] = useState<"INSTANT" | "SCHEDULED">(
+    "INSTANT",
+  );
   const [paymentMethod, setPaymentMethod] = useState<PosPaymentMethod>("COD");
   const [scheduledOrderTime, setScheduledOrderTime] = useState("");
   const [tipAmount, setTipAmount] = useState("");
@@ -155,6 +162,7 @@ export default function PosCart() {
     id: string;
     branchId?: string;
   } | null>(null);
+  const preserveDraftCustomerIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const id = getClientStorageItem("activeCustomerId");
@@ -224,10 +232,13 @@ export default function PosCart() {
 
   useEffect(() => {
     const handleCartUpdated = (event: Event) => {
-      const customer = normalizePosCustomer(
-        (event as CustomEvent<{ customer?: PosCustomer }>).detail?.customer,
-      );
+      const detail = (event as CustomEvent<PosCartUpdatedDetail>).detail;
+      const customer = normalizePosCustomer(detail?.customer);
       if (!customer) return;
+
+      if (detail?.preserveDraft) {
+        preserveDraftCustomerIdRef.current = customer.id;
+      }
 
       setSelectedCustomer(customer);
       setCustomerId(customer.id);
@@ -264,6 +275,15 @@ export default function PosCart() {
 
   useEffect(() => {
     const data = getCartData(cartQuery.data);
+    if (
+      customerId &&
+      preserveDraftCustomerIdRef.current === customerId &&
+      Object.keys(data).length > 0
+    ) {
+      preserveDraftCustomerIdRef.current = null;
+      return;
+    }
+
     const nextOrderType = getString(data, "orderType");
     const nextPaymentMethod = getString(data, "paymentMethod");
 
@@ -279,11 +299,13 @@ export default function PosCart() {
       setPaymentMethod(nextPaymentMethod);
     }
 
-    setScheduledOrderTime(toDatetimeLocalValue(getString(data, "orderTime")));
+    const nextOrderTime = toDatetimeLocalValue(getString(data, "orderTime"));
+    setOrderTiming(nextOrderTime ? "SCHEDULED" : "INSTANT");
+    setScheduledOrderTime(nextOrderTime);
     setCustomerNote(getString(data, "customerNote") || getString(data, "note"));
     setTipAmount(getNumberString(data, "tipAmount"));
     setCouponCode(getString(data, "couponCode"));
-  }, [cartQuery.data]);
+  }, [cartQuery.data, customerId]);
 
   useEffect(() => {
     if (
@@ -477,7 +499,9 @@ export default function PosCart() {
       setWalletAmount("");
       setLoyaltyPoints("");
       setScheduledOrderTime("");
+      setOrderTiming("INSTANT");
       setGuestDeliveryAddress(emptyGuestDeliveryAddress());
+      preserveDraftCustomerIdRef.current = null;
     } catch {
       toast.error(t("toast.failedClearCart"));
     }
@@ -536,12 +560,15 @@ export default function PosCart() {
   const updateCartSettingsApi = async () => {
     if (!customerId) return false;
 
-    const orderTime = toIsoFromDatetimeLocal(scheduledOrderTime);
+    const orderTime =
+      orderTiming === "SCHEDULED"
+        ? toIsoFromDatetimeLocal(scheduledOrderTime)
+        : null;
     const normalizedTipAmount = getOptionalNonNegativeNumber(tipAmount);
     const payload = {
       orderType,
       paymentMethod,
-      ...(orderTime ? { orderTime } : {}),
+      orderTime,
       ...(normalizedTipAmount !== undefined
         ? { tipAmount: normalizedTipAmount }
         : {}),
@@ -658,8 +685,11 @@ export default function PosCart() {
       return toast.error(t("toast.guestDeliveryAddressRequired"));
     }
 
-    const orderTime = toIsoFromDatetimeLocal(scheduledOrderTime);
-    if (scheduledOrderTime.trim() && !orderTime) {
+    const orderTime =
+      orderTiming === "SCHEDULED"
+        ? toIsoFromDatetimeLocal(scheduledOrderTime)
+        : null;
+    if (orderTiming === "SCHEDULED" && !orderTime) {
       return toast.error(t("toast.invalidOrderTime"));
     }
 
@@ -695,7 +725,7 @@ export default function PosCart() {
         payload: buildPosCheckoutPayload({
           customer: selectedCustomer,
           orderType,
-          orderTime: orderTime ?? new Date().toISOString(),
+          orderTime,
           paymentMethod,
           walletAmount:
             paymentMethod === "WALLET" ? normalizedWalletAmount : undefined,
@@ -716,7 +746,7 @@ export default function PosCart() {
       const orderBranchId =
         getString(orderData, "branchId") || branchId || undefined;
 
-      toast.success(t("toast.orderPlaced"));
+      toast.success(t("toast.orderPlaced"), { duration: 2_000 });
       if (orderId) {
         const lastOrder = {
           id: orderId,
@@ -967,6 +997,17 @@ export default function PosCart() {
                     className="h-10 w-full rounded-md border px-3 text-sm"
                   />
                   <input
+                    value={guestDeliveryAddress.houseNumber}
+                    onChange={(event) =>
+                      updateGuestDeliveryAddress(
+                        "houseNumber",
+                        event.target.value,
+                      )
+                    }
+                    placeholder={t("guestAddressHouseNumber")}
+                    className="h-10 w-full rounded-md border px-3 text-sm"
+                  />
+                  <input
                     value={guestDeliveryAddress.area}
                     onChange={(event) =>
                       updateGuestDeliveryAddress("area", event.target.value)
@@ -1045,7 +1086,13 @@ export default function PosCart() {
                           <p className="text-sm font-medium">{addr.street}</p>
 
                           <p className="text-xs text-gray-500">
-                            {[addr.area, addr.city, addr.state, addr.country]
+                            {[
+                              addr.houseNumber,
+                              addr.area,
+                              addr.city,
+                              addr.state,
+                              addr.country,
+                            ]
                               .filter(Boolean)
                               .join(", ")}
                           </p>
@@ -1083,6 +1130,17 @@ export default function PosCart() {
                             )
                           }
                           placeholder={t("guestAddressStreet")}
+                          className="h-10 rounded-md border px-3 text-sm"
+                        />
+                        <input
+                          value={newCustomerAddress.houseNumber}
+                          onChange={(event) =>
+                            updateNewCustomerAddress(
+                              "houseNumber",
+                              event.target.value,
+                            )
+                          }
+                          placeholder={t("guestAddressHouseNumber")}
                           className="h-10 rounded-md border px-3 text-sm"
                         />
                         <input
@@ -1197,21 +1255,44 @@ export default function PosCart() {
             </div>
           ) : null}
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <p className="text-xs text-gray-400 mb-2">
-                {t("scheduledOrderTime")}
-              </p>
-              <input
-                value={scheduledOrderTime}
-                onChange={(event) => setScheduledOrderTime(event.target.value)}
-                min={getLocalTodayDateTimeInputValue()}
-                lang={DATE_TIME_24_HOUR_INPUT_LANG}
-                type="datetime-local"
-                className="h-10 w-full rounded-md border px-3 text-sm"
-              />
+          <div className="space-y-2">
+            <p className="text-xs text-gray-400">{t("orderTiming")}</p>
+            <div className="grid grid-cols-2 gap-2">
+              {(["INSTANT", "SCHEDULED"] as const).map((timing) => (
+                <button
+                  key={timing}
+                  type="button"
+                  onClick={() => setOrderTiming(timing)}
+                  className={`h-10 rounded-md border text-sm font-medium transition-colors ${
+                    orderTiming === timing
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-gray-200 bg-white text-gray-600"
+                  }`}
+                >
+                  {t(timing === "INSTANT" ? "instantOrder" : "scheduledOrder")}
+                </button>
+              ))}
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {orderTiming === "SCHEDULED" ? (
+              <div>
+                <p className="text-xs text-gray-400 mb-2">
+                  {t("scheduledOrderTime")}
+                </p>
+                <input
+                  value={scheduledOrderTime}
+                  onChange={(event) =>
+                    setScheduledOrderTime(event.target.value)
+                  }
+                  min={getLocalTodayDateTimeInputValue()}
+                  lang={DATE_TIME_24_HOUR_INPUT_LANG}
+                  type="datetime-local"
+                  className="h-10 w-full rounded-md border px-3 text-sm"
+                />
+              </div>
+            ) : null}
             <div>
               <p className="text-xs text-gray-400 mb-2">{t("tipAmount")}</p>
               <input
@@ -1371,21 +1452,22 @@ export default function PosCart() {
         <Button
           type="button"
           variant="outline"
-          onClick={() =>
+          onClick={() => {
+            toast.dismiss();
             void reprintOrder({
               orderId: lastPlacedOrder.id,
               restaurantId,
               branchId: lastPlacedOrder.branchId,
             })
               .then((result) => {
-                if (result === "printed") toast.success(t("orderReprinted"));
-                else toast.error(t("toast.orderPrintUnavailable"));
+                if (result === "printed") toast.success(t("receiptPrinted"));
+                else toast.error(t("toast.receiptPrintUnavailable"));
               })
-              .catch(() => toast.error(t("toast.orderPrintFailed")))
-          }
+              .catch(() => toast.error(t("toast.receiptPrintFailed")));
+          }}
           className="h-10 w-full"
         >
-          {t("reprintLastOrder")}
+          {t("reprintReceipt")}
         </Button>
       ) : null}
     </div>

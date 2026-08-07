@@ -205,7 +205,9 @@ const normalizeApiList = (res: any) => {
 
 const getSelectedModifierQuantity = (modifiers: SelectedModifier[]) => {
   return modifiers.reduce((total, modifier) => {
-    return total + Math.max(1, Math.floor(toNumber(modifier.selectedQuantity, 1)));
+    return (
+      total + Math.max(1, Math.floor(toNumber(modifier.selectedQuantity, 1)))
+    );
   }, 0);
 };
 
@@ -561,7 +563,9 @@ const getStandaloneItemModifiers = (
             priceDelta: override?.priceDelta,
           },
         ],
-        variationPriceOverrides: Array.isArray(rawModifier?.variationPriceOverrides)
+        variationPriceOverrides: Array.isArray(
+          rawModifier?.variationPriceOverrides,
+        )
           ? rawModifier.variationPriceOverrides
           : [],
       });
@@ -836,7 +840,11 @@ const formatModifierSelectionPrice = (
 const getPromotionInfo = (source: any) => {
   const happyHour = source?.happyHour;
 
-  if (happyHour && typeof happyHour === "object" && happyHour.isCurrentlyActive !== false) {
+  if (
+    happyHour &&
+    typeof happyHour === "object" &&
+    happyHour.isCurrentlyActive !== false
+  ) {
     return happyHour;
   }
 
@@ -846,11 +854,15 @@ const getPromotionInfo = (source: any) => {
 
   const discountValue = toNumber(promotion.discountValue, 0);
   const discountAmount = toNumber(promotion.discountAmount, 0);
-  const discountedPrice = toNumber(promotion.discountedPrice ?? promotion.discountedAmount, 0);
+  const discountedPrice = toNumber(
+    promotion.discountedPrice ?? promotion.discountedAmount,
+    0,
+  );
   const discountType = String(promotion.discountType || "").toUpperCase();
 
   if (
-    ((discountType === "PERCENTAGE" || discountType === "FLAT") && discountValue > 0) ||
+    ((discountType === "PERCENTAGE" || discountType === "FLAT") &&
+      discountValue > 0) ||
     discountAmount > 0 ||
     discountedPrice > 0
   ) {
@@ -882,12 +894,20 @@ const calculatePromotionDiscount = (originalPrice: number, promotion: any) => {
   return Math.min(Math.max(discountAmount, 0), originalPrice);
 };
 
-const getDiscountedBasePrice = (originalPrice: number, source: any, fallbackSource?: any) => {
-  const promotion = getPromotionInfo(source) || getPromotionInfo(fallbackSource);
+const getDiscountedBasePrice = (
+  originalPrice: number,
+  source: any,
+  fallbackSource?: any,
+) => {
+  const promotion =
+    getPromotionInfo(source) || getPromotionInfo(fallbackSource);
 
   if (!promotion) return originalPrice;
 
-  return Math.max(0, originalPrice - calculatePromotionDiscount(originalPrice, promotion));
+  return Math.max(
+    0,
+    originalPrice - calculatePromotionDiscount(originalPrice, promotion),
+  );
 };
 
 const getGroupValidation = (group: ModifierGroup) => {
@@ -959,7 +979,10 @@ export default function AddToCartModal({
   const { data: branchesData } = useGetBranches({
     restaurantId,
   });
-  const branches = useMemo(() => normalizeApiList(branchesData), [branchesData]);
+  const branches = useMemo(
+    () => normalizeApiList(branchesData),
+    [branchesData],
+  );
 
   const variations = useMemo(() => getItemVariations(item), [item]);
 
@@ -1015,7 +1038,11 @@ export default function AddToCartModal({
   }, [selectedModifiers, item, selectedVariation]);
 
   const originalBasePrice = toNumber(selectedOption?.price, 0);
-  const discountedBasePrice = getDiscountedBasePrice(originalBasePrice, selectedVariation, item);
+  const discountedBasePrice = getDiscountedBasePrice(
+    originalBasePrice,
+    selectedVariation,
+    item,
+  );
   const hasDiscountedBasePrice = discountedBasePrice < originalBasePrice;
   const originalUnitPrice = originalBasePrice + modifiersTotal;
   const unitPrice = discountedBasePrice + modifiersTotal;
@@ -1032,7 +1059,9 @@ export default function AddToCartModal({
     setUseWalkIn(false);
 
     try {
-      const rawSelection = window.localStorage.getItem(POS_LAST_SELECTION_STORAGE_KEY);
+      const rawSelection = window.localStorage.getItem(
+        POS_LAST_SELECTION_STORAGE_KEY,
+      );
       if (!rawSelection) return;
 
       const parsedSelection = JSON.parse(rawSelection);
@@ -1124,10 +1153,7 @@ export default function AddToCartModal({
     return {
       data: raw.map((customer: any) => ({
         ...customer,
-        fullName: getPosCustomerOptionLabel(
-          customer,
-          t("customer"),
-        ),
+        fullName: getPosCustomerOptionLabel(customer, t("customer")),
       })),
       meta: res?.data?.meta || res?.meta,
     };
@@ -1135,7 +1161,8 @@ export default function AddToCartModal({
 
   const handleModifierToggle = (group: ModifierGroup, modifier: Modifier) => {
     const groupId = String(group.id);
-    const { minSelect, maxSelect, isRequired, selectionType } = getGroupValidation(group);
+    const { minSelect, maxSelect, isRequired, selectionType } =
+      getGroupValidation(group);
 
     setSelectedModifiers((prev) => {
       const current = prev[groupId] || [];
@@ -1238,7 +1265,10 @@ export default function AddToCartModal({
           ? Math.max(1, maxSelect - otherSelectedQuantity)
           : normalizedNextQuantity;
 
-      if (maxSelect && otherSelectedQuantity + normalizedNextQuantity > maxSelect) {
+      if (
+        maxSelect &&
+        otherSelectedQuantity + normalizedNextQuantity > maxSelect
+      ) {
         toast.error(
           t("toast.selectUpTo", {
             count: maxSelect,
@@ -1248,7 +1278,9 @@ export default function AddToCartModal({
       }
 
       const minAllowedQuantity =
-        minSelect > otherSelectedQuantity ? minSelect - otherSelectedQuantity : 1;
+        minSelect > otherSelectedQuantity
+          ? minSelect - otherSelectedQuantity
+          : 1;
       const clampedQuantity = Math.max(
         minAllowedQuantity,
         Math.min(normalizedNextQuantity, maxAllowedQuantity),
@@ -1318,7 +1350,7 @@ export default function AddToCartModal({
 
   const postCartItem = async (customerId: string) => {
     return post(
-      `/v1/cart/items?customerId=${customerId}`,
+      `/v1/cart/items?customerId=${customerId}&compact=true`,
       buildPayload(),
     );
   };
@@ -1379,10 +1411,7 @@ export default function AddToCartModal({
 
           if (!clearRes || clearRes?.error) {
             toast.error(
-              getApiErrorMessage(
-                clearRes,
-                t("toast.failedClearBeforeAdd"),
-              ),
+              getApiErrorMessage(clearRes, t("toast.failedClearBeforeAdd")),
             );
             return;
           }
@@ -1412,7 +1441,7 @@ export default function AddToCartModal({
       onOpenChange(false);
       window.dispatchEvent(
         new CustomEvent(POS_CART_UPDATED_EVENT, {
-          detail: { customer: activeCustomer },
+          detail: { customer: activeCustomer, preserveDraft: true },
         }),
       );
     } catch (err: any) {
@@ -1429,9 +1458,7 @@ export default function AddToCartModal({
     return (
       <div className="mt-6 space-y-4">
         <div>
-          <p className="text-sm font-semibold text-gray-900">
-            {t("addOns")}
-          </p>
+          <p className="text-sm font-semibold text-gray-900">{t("addOns")}</p>
           <p className="mt-0.5 text-xs text-gray-500">
             {t("addOnsDescription")}
           </p>
@@ -1459,9 +1486,7 @@ export default function AddToCartModal({
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">
-                    {String(group?.id || "").startsWith(
-                      "standalone-modifiers-",
-                    )
+                    {String(group?.id || "").startsWith("standalone-modifiers-")
                       ? t("addOns")
                       : group?.name || t("options")}
                   </p>
@@ -1517,7 +1542,8 @@ export default function AddToCartModal({
                     selectionType === "SINGLE" || maxSelect === 1
                       ? "radio"
                       : "checkbox";
-                  const showQuantitySelector = checked && inputType === "checkbox";
+                  const showQuantitySelector =
+                    checked && inputType === "checkbox";
                   const disableIncrement = Boolean(
                     maxSelect && selectedQuantity >= maxSelect,
                   );
@@ -1550,7 +1576,9 @@ export default function AddToCartModal({
                                 handleModifierToggle(group, modifier);
                               }
                             }}
-                            onChange={() => handleModifierToggle(group, modifier)}
+                            onChange={() =>
+                              handleModifierToggle(group, modifier)
+                            }
                             className="mt-1 accent-[var(--primary)]"
                           />
 
@@ -1594,7 +1622,9 @@ export default function AddToCartModal({
                                   selectedModifierQuantity - 1,
                                 )
                               }
-                              disabled={selectedModifierQuantity <= 1 || isSubmitting}
+                              disabled={
+                                selectedModifierQuantity <= 1 || isSubmitting
+                              }
                               className="flex h-7 w-7 items-center justify-center rounded-full text-gray-700 transition hover:bg-white hover:text-primary disabled:cursor-not-allowed disabled:opacity-35"
                               aria-label={`Decrease ${modifier.name} quantity`}
                             >
@@ -1636,8 +1666,8 @@ export default function AddToCartModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] max-w-[560px] overflow-auto rounded-2xl p-0">
-        <div className="relative h-[190px] overflow-hidden bg-gray-100">
+      <DialogContent className="flex max-h-[calc(100dvh-1rem)] max-w-[560px] flex-col overflow-hidden rounded-2xl p-0 sm:max-h-[90dvh]">
+        <div className="relative h-[120px] shrink-0 overflow-hidden bg-gray-100 sm:h-[145px]">
           <Image
             src={image}
             alt={item?.name || t("menuItem")}
@@ -1648,9 +1678,9 @@ export default function AddToCartModal({
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
 
-          <div className="absolute bottom-4 left-5 right-5">
+          <div className="absolute bottom-3 left-4 right-12 sm:left-5">
             <DialogHeader>
-              <DialogTitle className="line-clamp-2 text-left text-2xl font-bold text-white">
+              <DialogTitle className="line-clamp-2 text-left text-xl font-bold text-white sm:text-2xl">
                 {item?.name}
               </DialogTitle>
             </DialogHeader>
@@ -1663,8 +1693,8 @@ export default function AddToCartModal({
           </div>
         </div>
 
-        <div className="p-6">
-          <div className="grid gap-4 sm:grid-cols-2">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 pb-3 sm:p-5">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <p className="mb-2 text-sm font-medium">{t("selectBranch")}</p>
 
@@ -1749,9 +1779,7 @@ export default function AddToCartModal({
                         <div className="flex min-w-0 items-start gap-3">
                           <span
                             className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
-                              checked
-                                ? "border-primary"
-                                : "border-gray-300"
+                              checked ? "border-primary" : "border-gray-300"
                             }`}
                           >
                             {checked ? (
@@ -1786,8 +1814,10 @@ export default function AddToCartModal({
           ) : null}
 
           {renderModifierGroups()}
+        </div>
 
-          <div className="mt-6 flex items-center justify-between rounded-2xl bg-gray-50 p-4">
+        <div className="shrink-0 border-t border-gray-100 bg-white p-4 shadow-[0_-8px_24px_rgba(15,23,42,0.08)]">
+          <div className="mb-3 flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5">
             <div>
               <span className="text-sm font-semibold text-gray-900">
                 {t("quantity")}
@@ -1834,9 +1864,9 @@ export default function AddToCartModal({
             </div>
           </div>
 
-          <div className="mt-6">
+          <div>
             <Button
-              className="h-12 w-full rounded-full bg-primary px-6 text-white hover:bg-primary/90"
+              className="h-12 w-full rounded-xl bg-primary px-6 text-white hover:bg-primary/90"
               onClick={handleAddToCart}
               disabled={isSubmitting}
             >
