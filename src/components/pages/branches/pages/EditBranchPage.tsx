@@ -31,6 +31,7 @@ import {
   type EditTab,
 } from "@/components/pages/branches/forms/EditBranchForm";
 import { useTranslations } from "next-intl";
+import { updateBranchNotificationSettings } from "@/services/branches";
 
 type StepConfig = {
   key: EditTab;
@@ -115,14 +116,23 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
       return false;
     }
 
+    const { notificationSettings, ...branchSettings } = fullSettings;
+
     await updateBranchMutation.mutateAsync({
       id: branchId as string,
       data: buildBranchPatchPayload(
         branchData as BranchFormData,
-        fullSettings,
+        branchSettings,
         {
           includeBranchAdmin: !isBranchAdmin,
         },
+      ),
+    });
+
+    await updateBranchNotificationSettings(branchId as string, {
+      emailAddress: notificationSettings?.emailAddress?.trim() || undefined,
+      enabled: Boolean(
+        notificationSettings?.notificationTypes?.newOrder?.email,
       ),
     });
 

@@ -30,6 +30,63 @@ describe("order ticket", () => {
     expect(html).not.toContain("<script>");
   });
 
+  it("prints complete order, modifier, scheduling, fee, and payment details", () => {
+    const ticket = normalizeOrderTicket({
+      id: "order-complete",
+      orderType: "DELIVERY",
+      createdAt: "2026-08-07T10:00:00.000Z",
+      orderTime: "2026-08-08T18:30:00.000Z",
+      isScheduled: true,
+      customer: {
+        fullName: "Ada Lovelace",
+        email: "ada@example.com",
+        phone: "+49 123",
+      },
+      deliveryAddress: {
+        street: "Main Street 1",
+        postalCode: "10115",
+        city: "Berlin",
+        country: "DE",
+      },
+      customerNote: "Ring the bell",
+      paymentMethod: "CASH_ON_DELIVERY",
+      subtotal: 20,
+      taxAmount: 1.4,
+      deliveryFee: 2.5,
+      serviceChargeAmount: 1,
+      tipAmount: 2,
+      discountAmount: 1,
+      loyaltyDiscountAmount: 0.5,
+      walletAppliedAmount: 0,
+      totalAmount: 25.4,
+      currency: "EUR",
+      items: [
+        {
+          menuItemName: "Pizza",
+          variationName: "Large",
+          quantity: 1,
+          lineTotal: 20,
+          note: "No onions",
+          snapshotModifiers: {
+            modifiers: [{ name: "Extra cheese", quantity: 2 }],
+          },
+        },
+      ],
+    });
+
+    const html = buildOrderTicketHtml(ticket, "80MM");
+
+    expect(html).toContain("ada@example.com");
+    expect(html).toContain("Main Street 1, 10115 Berlin, DE");
+    expect(html).toContain("Extra cheese × 2");
+    expect(html).toContain("Special instructions: No onions");
+    expect(html).toContain("Delivery fee:");
+    expect(html).toContain("Service charge:");
+    expect(html).toContain("Payment method:</strong> CASH_ON_DELIVERY");
+    expect(html).toContain("Ring the bell");
+    expect(html).not.toContain("Not scheduled");
+  });
+
   it.each([
     ["A4", "190mm"],
     ["A5", "132mm"],

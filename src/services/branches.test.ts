@@ -6,6 +6,7 @@ import {
   getDeliveryHours,
   normalizeBranchDeliveryTime,
   updateBranch,
+  updateBranchNotificationSettings,
   updateBranchDeliveryTime,
   updateDeliveryHours,
   updateBranchHolidayOpeningHours,
@@ -97,6 +98,23 @@ describe("branches service", () => {
     expect(mockedApi.patch).not.toHaveBeenCalledWith(
       "/api/v1/branches/branch-1",
       payload
+    );
+  });
+
+  it("updates order notifications through the scoped endpoint", async () => {
+    mockedApi.patch.mockResolvedValueOnce({ data: { success: true } });
+
+    await updateBranchNotificationSettings("branch-1", {
+      emailAddress: "info@webandco.de",
+      enabled: true,
+    });
+
+    expect(mockedApi.patch).toHaveBeenCalledWith(
+      "/branches/branch-1/notification-settings",
+      {
+        emailAddress: "info@webandco.de",
+        enabled: true,
+      },
     );
   });
 

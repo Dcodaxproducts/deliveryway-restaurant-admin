@@ -133,6 +133,17 @@ export const updateBranch = async (
   return data;
 };
 
+export const updateBranchNotificationSettings = async (
+  id: string,
+  payload: { emailAddress?: string; enabled: boolean },
+) => {
+  const { data } = await api.patch(
+    `/branches/${id}/notification-settings`,
+    payload,
+  );
+  return data;
+};
+
 export const deleteBranch = async (id: string) => {
   const { data } = await api.delete(`/branches/${id}`);
   return data;

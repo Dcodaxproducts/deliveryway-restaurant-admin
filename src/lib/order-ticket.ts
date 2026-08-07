@@ -9,6 +9,8 @@ type TicketItem = {
   name: string;
   variationName?: string;
   quantity: number;
+  lineTotal?: number;
+  note?: string;
   modifiers: TicketModifier[];
 };
 
@@ -18,8 +20,21 @@ export type OrderTicket = {
   orderType?: string;
   createdAt?: string;
   customerName?: string;
+  customerEmail?: string;
   customerPhone?: string;
+  deliveryAddress?: string;
   customerNote?: string;
+  preOrderAt?: string;
+  isScheduled?: boolean;
+  paymentMethod?: string;
+  subtotal?: number;
+  taxAmount?: number;
+  deliveryFee?: number;
+  serviceChargeAmount?: number;
+  tipAmount?: number;
+  discountAmount?: number;
+  loyaltyDiscountAmount?: number;
+  walletAppliedAmount?: number;
   totalAmount?: number;
   currency?: string;
   items: TicketItem[];
@@ -41,10 +56,14 @@ const readNumber = (
   fallback?: number,
 ) => {
   const value = record?.[key];
-  return typeof value === "number" && Number.isFinite(value)
-    ? value
+  const parsed = typeof value === "string" ? Number(value) : value;
+  return typeof parsed === "number" && Number.isFinite(parsed)
+    ? parsed
     : fallback;
 };
+
+const readBoolean = (record: Record<string, unknown> | null, key: string) =>
+  typeof record?.[key] === "boolean" ? record[key] : undefined;
 
 const escapeHtml = (value: string) =>
   value
@@ -54,16 +73,34 @@ const escapeHtml = (value: string) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
-const normalizeModifiers = (value: unknown): TicketModifier[] =>
-  Array.isArray(value)
-    ? value.flatMap((entry) => {
-        const modifier = asRecord(entry);
-        const name = readString(modifier, "name");
-        return name
-          ? [{ name, quantity: readNumber(modifier, "quantity", 1) ?? 1 }]
-          : [];
-      })
-    : [];
+const normalizeModifiers = (value: unknown): TicketModifier[] => {
+  const values = Array.isArray(value)
+    ? value
+    : asRecord(value)
+      ? Object.values(asRecord(value) ?? {})
+      : [];
+
+  return values.flatMap((entry) => {
+    if (Array.isArray(entry)) return normalizeModifiers(entry);
+
+    const modifier = asRecord(entry);
+    if (!modifier) return [];
+
+    const name = readString(modifier, "name");
+    const nested = Object.values(modifier).flatMap((nestedValue) =>
+      typeof nestedValue === "object" && nestedValue !== null
+        ? normalizeModifiers(nestedValue)
+        : [],
+    );
+
+    return [
+      ...(name
+        ? [{ name, quantity: readNumber(modifier, "quantity", 1) ?? 1 }]
+        : []),
+      ...nested,
+    ];
+  });
+};
 
 const normalizeItems = (value: unknown): TicketItem[] =>
   Array.isArray(value)
@@ -77,7 +114,12 @@ const normalizeItems = (value: unknown): TicketItem[] =>
                 name,
                 variationName: readString(item, "variationName"),
                 quantity: readNumber(item, "quantity", 1) ?? 1,
-                modifiers: normalizeModifiers(item?.snapshotModifiers),
+                lineTotal: readNumber(item, "lineTotal"),
+                note: readString(item, "note"),
+                modifiers: normalizeModifiers([
+                  item?.snapshotModifiers,
+                  item?.snapshotSections,
+                ]),
               },
             ]
           : [];
@@ -99,6 +141,23 @@ export const normalizeOrderTicket = (value: unknown): OrderTicket => {
     readString(customer, "fullName") ??
     readString(customer, "name") ??
     fallbackCustomerName;
+  const deliveryAddress = asRecord(order.deliveryAddress);
+  const formattedAddress = deliveryAddress
+    ? [
+        readString(deliveryAddress, "street"),
+        readString(deliveryAddress, "area"),
+        [
+          readString(deliveryAddress, "postalCode"),
+          readString(deliveryAddress, "city"),
+        ]
+          .filter(Boolean)
+          .join(" "),
+        readString(deliveryAddress, "state"),
+        readString(deliveryAddress, "country"),
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : undefined;
 
   return {
     id,
@@ -106,14 +165,29 @@ export const normalizeOrderTicket = (value: unknown): OrderTicket => {
     orderType: readString(order, "orderType"),
     createdAt: readString(order, "createdAt"),
     customerName,
+    customerEmail: readString(customer, "email"),
     customerPhone: readString(customer, "phone"),
+    deliveryAddress: formattedAddress,
     customerNote: readString(order, "customerNote"),
+    preOrderAt: readString(order, "orderTime"),
+    isScheduled: readBoolean(order, "isScheduled"),
+    paymentMethod: readString(order, "paymentMethod"),
+    subtotal: readNumber(order, "subtotal"),
+    taxAmount: readNumber(order, "taxAmount"),
+    deliveryFee: readNumber(order, "deliveryFee"),
+    serviceChargeAmount: readNumber(order, "serviceChargeAmount"),
+    tipAmount: readNumber(order, "tipAmount"),
+    discountAmount: readNumber(order, "discountAmount"),
+    loyaltyDiscountAmount: readNumber(order, "loyaltyDiscountAmount"),
+    walletAppliedAmount: readNumber(order, "walletAppliedAmount"),
     totalAmount: readNumber(order, "totalAmount"),
     currency: readString(order, "currency"),
     items: normalizeItems(
-      Array.isArray(order.displayItems) && order.displayItems.length > 0
-        ? order.displayItems
-        : order.items,
+      Array.isArray(order.items) && order.items.length > 0
+        ? order.items
+        : Array.isArray(order.itemsPreview) && order.itemsPreview.length > 0
+          ? order.itemsPreview
+          : order.displayItems,
     ),
   };
 };
@@ -132,6 +206,8 @@ export const buildOrderTicketHtml = (
   const compact = paperSize === "58MM" || paperSize === "80MM";
   const fontSize = compact ? "12px" : "15px";
   const orderLabel = ticket.orderNumber ?? ticket.id.slice(-8);
+  const money = (value: number) =>
+    `${value.toFixed(2)} ${escapeHtml(ticket.currency ?? "")}`.trim();
   const itemRows = ticket.items
     .map((item) => {
       const variation = item.variationName
@@ -145,13 +221,36 @@ export const buildOrderTicketHtml = (
             )
             .join("<br>")}</div>`
         : "";
-      return `<div style="margin:0 0 8px"><strong>${item.quantity} × ${escapeHtml(item.name)}</strong>${variation}${modifiers}</div>`;
+      const lineTotal =
+        typeof item.lineTotal === "number"
+          ? `<span style="float:right">${money(item.lineTotal)}</span>`
+          : "";
+      const note = item.note
+        ? `<div style="padding-left:12px;font-weight:700">Special instructions: ${escapeHtml(item.note)}</div>`
+        : "";
+      return `<div style="margin:0 0 8px">${lineTotal}<strong>${item.quantity} × ${escapeHtml(item.name)}</strong>${variation}${modifiers}${note}</div>`;
     })
     .join("");
   const total =
     typeof ticket.totalAmount === "number"
       ? `${ticket.totalAmount.toFixed(2)} ${escapeHtml(ticket.currency ?? "")}`.trim()
       : undefined;
+  const amountRows = [
+    ["Subtotal", ticket.subtotal],
+    ["Tax", ticket.taxAmount],
+    ["Delivery fee", ticket.deliveryFee],
+    ["Service charge", ticket.serviceChargeAmount],
+    ["Tip", ticket.tipAmount],
+    ["Discount", ticket.discountAmount, true],
+    ["Loyalty discount", ticket.loyaltyDiscountAmount, true],
+    ["Wallet applied", ticket.walletAppliedAmount, true],
+  ]
+    .map(([label, value, subtract]) =>
+      typeof value === "number"
+        ? `<div><span>${label}:</span><span style="float:right">${subtract ? "-" : ""}${money(value)}</span></div>`
+        : "",
+    )
+    .join("");
 
   return [
     `<div style="box-sizing:border-box;width:${getTicketWidth(paperSize)};font-family:Arial,sans-serif;font-size:${fontSize};color:#000">`,
@@ -161,16 +260,22 @@ export const buildOrderTicketHtml = (
     "</div>",
     ticket.orderType ? `<div><strong>Type:</strong> ${escapeHtml(ticket.orderType)}</div>` : "",
     ticket.createdAt ? `<div><strong>Time:</strong> ${escapeHtml(new Date(ticket.createdAt).toLocaleString())}</div>` : "",
+    `<div><strong>Pre-order:</strong> ${ticket.isScheduled && ticket.preOrderAt ? escapeHtml(new Date(ticket.preOrderAt).toLocaleString()) : "Not scheduled"}</div>`,
     ticket.customerName ? `<div><strong>Customer:</strong> ${escapeHtml(ticket.customerName)}</div>` : "",
+    ticket.customerEmail ? `<div><strong>Email:</strong> ${escapeHtml(ticket.customerEmail)}</div>` : "",
     ticket.customerPhone ? `<div><strong>Phone:</strong> ${escapeHtml(ticket.customerPhone)}</div>` : "",
+    ticket.deliveryAddress ? `<div><strong>Address:</strong> ${escapeHtml(ticket.deliveryAddress)}</div>` : "",
     '<div style="border-top:1px dashed #000;margin:10px 0"></div>',
+    '<div style="font-weight:700;margin-bottom:8px">Ordered items</div>',
     itemRows || "<div>No item details available</div>",
     ticket.customerNote
       ? `<div style="border:1px solid #000;padding:6px;margin-top:10px"><strong>Note:</strong> ${escapeHtml(ticket.customerNote)}</div>`
       : "",
+    `<div style="border-top:1px dashed #000;margin-top:10px;padding-top:8px">${amountRows}</div>`,
     total
       ? `<div style="border-top:2px solid #000;margin-top:10px;padding-top:8px;font-size:1.2em;font-weight:700">Total: ${total}</div>`
       : "",
+    ticket.paymentMethod ? `<div><strong>Payment method:</strong> ${escapeHtml(ticket.paymentMethod)}</div>` : "",
     "</div>",
   ].join("");
 };
