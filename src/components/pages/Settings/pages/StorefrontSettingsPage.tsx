@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { FieldPath } from "react-hook-form";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Globe2, LockKeyhole } from "lucide-react";
+import { Globe2 } from "lucide-react";
 import { toast } from "sonner";
 
 import Container from "@/components/common/Container";
@@ -28,6 +28,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useBranding } from "@/hooks/useBranding";
 import { getApiErrorMessage } from "@/lib/errors";
+import {
+  getCustomDomainStatus,
+  type CustomDomainStatus,
+} from "@/services/branding";
 import {
   type BrandingFormValues,
   restaurantBrandingPayloadSchema,
@@ -150,6 +154,8 @@ export function StorefrontSettingsPage() {
     isBrandingSaving,
     brandingError,
   } = useBranding();
+  const [domainStatus, setDomainStatus] =
+    useState<CustomDomainStatus | null>(null);
   const {
     register,
     handleSubmit,
@@ -166,10 +172,61 @@ export function StorefrontSettingsPage() {
 
   const watchedValues = useWatch({ control }) as BrandingFormValues;
   const hasUnsavedChanges = formState.isDirty;
+  const restaurantSubdomain = watchedValues?.restaurant?.subdomain?.trim();
+  const customDomain = watchedValues?.restaurant?.customDomain?.trim();
+  const savedCustomDomain = savedBranding.restaurant.customDomain?.trim();
+  const customDomainVerified =
+    customDomain === savedCustomDomain &&
+    (domainStatus?.verified === true ||
+      Boolean(watchedValues?.restaurant?.customDomainVerifiedAt));
+  const configuredCnameTarget =
+    process.env.NEXT_PUBLIC_CUSTOM_DOMAIN_CNAME_TARGET?.trim() ||
+    process.env.NEXT_PUBLIC_CUSTOMER_APP_BASE_DOMAIN?.trim() ||
+    "delivery-way.de";
+  const cnameTarget =
+    domainStatus &&
+    domainStatus.customDomain === customDomain &&
+    domainStatus.dns.target
+      ? domainStatus.dns.target
+      : configuredCnameTarget;
+  const fallbackStorefrontAddress = restaurantSubdomain
+    ? `https://${restaurantSubdomain}.${
+        process.env.NEXT_PUBLIC_CUSTOMER_APP_BASE_DOMAIN?.trim() ||
+        "delivery-way.de"
+      }`
+    : "";
+  const storefrontAddress =
+    customDomain && customDomainVerified
+      ? `https://${customDomain}`
+      : fallbackStorefrontAddress;
 
   useEffect(() => {
     reset(savedBranding);
   }, [reset, savedBranding]);
+
+  useEffect(() => {
+    const restaurantId = savedBranding.restaurant.id?.trim();
+    const savedCustomDomain = savedBranding.restaurant.customDomain?.trim();
+
+    if (!restaurantId || !savedCustomDomain) {
+      setDomainStatus(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    void getCustomDomainStatus(restaurantId)
+      .then((status) => {
+        if (!cancelled) setDomainStatus(status);
+      })
+      .catch(() => {
+        if (!cancelled) setDomainStatus(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [savedBranding.restaurant.customDomain, savedBranding.restaurant.id]);
 
   const getError = useCallback(
     (name: FieldPath<BrandingFormValues>) => getFieldState(name, formState).error?.message,
@@ -294,28 +351,93 @@ export function StorefrontSettingsPage() {
                     <Globe2 className="h-6 w-6" />
                   </div>
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-base font-semibold text-[#030401]">
-                        {t("customDomain")}
-                      </p>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                        <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
-                        {t("displayOnly")}
-                      </span>
-                    </div>
+                    <p className="text-base font-semibold text-[#030401]">
+                      {t("customDomain")}
+                    </p>
                     <p className="mt-2 text-sm leading-5 text-gray-500">
-                      {t("customDomainManaged")}
+                      {customDomain
+                        ? customDomainVerified
+                          ? t("customDomainVerified")
+                          : t("customDomainPendingVerification")
+                        : t("customDomainFallbackDescription")}
                     </p>
                   </div>
                 </div>
-                <Input
-                  id="restaurant-custom-domain"
-                  readOnly
-                  aria-readonly="true"
-                  aria-label={t("customDomain")}
-                  className={`${BRANDING_INPUT_CLASS} mt-6 h-[58px] bg-white px-5 font-semibold text-[#030401] read-only:cursor-text`}
-                  {...register("restaurant.customDomain")}
-                />
+
+                {fallbackStorefrontAddress ? (
+                  <div className="mt-5 rounded-[14px] border border-gray-200 bg-white px-4 py-3">
+                    <p className="text-xs font-medium text-gray-500">
+                      {t("customDomainDefaultStorefront")}
+                    </p>
+                    <p className="break-all text-sm font-semibold text-[#030401]">
+                      {fallbackStorefrontAddress}
+                    </p>
+                  </div>
+                ) : null}
+
+                <div className="mt-5">
+                  <label
+                    htmlFor="restaurant-custom-domain"
+                    className={BRANDING_LABEL_CLASS}
+                  >
+                    {t("customDomain")}
+                  </label>
+                  <Input
+                    id="restaurant-custom-domain"
+                    placeholder="orders.yourrestaurant.com"
+                    aria-invalid={Boolean(
+                      getError("restaurant.customDomain"),
+                    )}
+                    className={BRANDING_INPUT_CLASS}
+                    {...register("restaurant.customDomain")}
+                  />
+                  {getError("restaurant.customDomain") ? (
+                    <p className={BRANDING_ERROR_CLASS}>
+                      {getError("restaurant.customDomain")}
+                    </p>
+                  ) : null}
+
+                  {customDomain ? (
+                    <div className="mt-4 rounded-[14px] border border-primary/20 bg-primary/5 p-4">
+                      <p className="text-sm font-semibold text-[#030401]">
+                        {t("customDomainGuideTitle")}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-gray-600">
+                        {t("customDomainGuideIntro")}
+                      </p>
+                      <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-[12px] border border-primary/10 bg-white p-3 text-xs">
+                        <dt className="font-medium text-gray-500">
+                          {t("customDomainGuideType")}
+                        </dt>
+                        <dd className="font-semibold text-[#030401]">CNAME</dd>
+                        <dt className="font-medium text-gray-500">
+                          {t("customDomainGuideHost")}
+                        </dt>
+                        <dd className="break-all font-semibold text-[#030401]">
+                          {customDomain}
+                        </dd>
+                        <dt className="font-medium text-gray-500">
+                          {t("customDomainGuideTarget")}
+                        </dt>
+                        <dd className="break-all font-semibold text-[#030401]">
+                          {cnameTarget}
+                        </dd>
+                      </dl>
+                      <p className="mt-3 text-xs leading-5 text-gray-600">
+                        {t("customDomainGuideProviderHint")}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-gray-600">
+                        {t("customDomainGuideActivation")}
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {storefrontAddress ? (
+                    <p className="mt-2 break-all text-xs text-gray-500">
+                      {t("customDomainActiveStorefront")}: {storefrontAddress}
+                    </p>
+                  ) : null}
+                </div>
               </div>
             </div>
             {profileTextAreas.map(renderTextAreaField)}

@@ -12,6 +12,46 @@ const getRestaurantEndpoint = (restaurantId: string) =>
 
 const getCustomerHomeEndpoint = () => "/customer-app/home";
 
+export type CustomDomainStatus = {
+  customDomain: string;
+  verified: boolean;
+  verifiedAt?: string | null;
+  dns: {
+    type: "CNAME";
+    host: string;
+    hostLabel: string;
+    target: string;
+  };
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+export const getCustomDomainStatus = async (
+  restaurantId: string,
+): Promise<CustomDomainStatus> => {
+  const response = await httpClient.get<unknown>(
+    `${getRestaurantEndpoint(restaurantId)}/custom-domain-status`,
+  );
+  const root = isRecord(response) ? response : {};
+  const nestedData = isRecord(root.data) ? root.data : root;
+  const data = isRecord(nestedData.data) ? nestedData.data : nestedData;
+  const dns = isRecord(data.dns) ? data.dns : {};
+
+  return {
+    customDomain: String(data.customDomain ?? ""),
+    verified: data.verified === true,
+    verifiedAt:
+      typeof data.verifiedAt === "string" ? data.verifiedAt : null,
+    dns: {
+      type: "CNAME",
+      host: String(dns.host ?? data.customDomain ?? ""),
+      hostLabel: String(dns.hostLabel ?? ""),
+      target: String(dns.target ?? ""),
+    },
+  };
+};
+
 export type BrandingReadSource = "restaurant" | "customer-home";
 
 type BrandingReadOptions = {

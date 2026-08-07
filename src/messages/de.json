@@ -2720,6 +2720,8 @@
     "customDomainPendingVerification": "Gespeichert, aber erst nach Verifizierung von Domaininhaberschaft und DNS aktiv.",
     "customDomainFallbackDescription": "Es ist noch keine Custom Domain konfiguriert, daher können Kunden die generierte Storefront-Adresse verwenden.",
     "customDomainFallbackHint": "Generiert aus der aktuellen App-Domain und dem Restaurant-Slug.",
+    "customDomainDefaultStorefront": "Standard-Storefront",
+    "customDomainActiveStorefront": "Aktive Storefront",
     "customDomainGuideTitle": "Custom Domain verbinden",
     "customDomainGuideIntro": "Fügen Sie bei dem DNS-Anbieter, der diese Domain verwaltet, den folgenden Eintrag hinzu:",
     "customDomainGuideType": "Typ",

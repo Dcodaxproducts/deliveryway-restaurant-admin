@@ -4,6 +4,7 @@ import { DEFAULT_RESTAURANT_BRANDING_PAYLOAD } from "@/config/default-branding";
 import { httpClient } from "@/lib/axios";
 import {
   getBrandingSettings,
+  getCustomDomainStatus,
   resetBrandingSettings,
   saveBrandingSettings,
 } from "@/services/branding";
@@ -111,6 +112,39 @@ describe("branding service", () => {
       expect(result.restaurant.slug).toBe("envelope-restaurant");
       expect(result.restaurant.customDomain).toBe("orders.example.com");
       expect(result.restaurant.branding.theme.primaryColor).toBe("#E4002B");
+    });
+  });
+
+  describe("getCustomDomainStatus", () => {
+    it("returns the exact DNS instructions from the restaurant endpoint", async () => {
+      mockedHttpClient.get.mockResolvedValueOnce({
+        data: {
+          customDomain: "orders.example.com",
+          verified: false,
+          verifiedAt: null,
+          dns: {
+            type: "CNAME",
+            host: "orders.example.com",
+            hostLabel: "orders",
+            target: "storefront.delivery-way.de",
+          },
+        },
+      });
+
+      await expect(getCustomDomainStatus("restaurant-1")).resolves.toEqual({
+        customDomain: "orders.example.com",
+        verified: false,
+        verifiedAt: null,
+        dns: {
+          type: "CNAME",
+          host: "orders.example.com",
+          hostLabel: "orders",
+          target: "storefront.delivery-way.de",
+        },
+      });
+      expect(mockedHttpClient.get).toHaveBeenCalledWith(
+        "/restaurants/restaurant-1/custom-domain-status",
+      );
     });
   });
 
