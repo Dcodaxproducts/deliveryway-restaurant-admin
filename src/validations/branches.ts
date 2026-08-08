@@ -140,7 +140,9 @@ export const ServiceChargeSchema = z
 
 const BranchSettingsBaseSchema = z.object({
   allowedOrderTypes: z.array(OrderTypeEnum),
-  allowedPaymentMethods: z.array(PaymentMethodEnum),
+  allowedPaymentMethods: z
+    .array(PaymentMethodEnum)
+    .min(1, "Select at least one payment method"),
   deliveryConfig: DeliveryConfigSchema,
   automation: AutomationSchema,
   taxation: TaxationSchema,
