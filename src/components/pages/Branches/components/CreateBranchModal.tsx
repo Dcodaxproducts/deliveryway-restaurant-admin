@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import {
   Controller,
   useForm,
@@ -20,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import {
   CARD_PANEL_CLASS,
@@ -38,6 +40,11 @@ import {
 } from "@/validations/branches";
 import { DEFAULT_ALLOWED_PAYMENT_METHODS } from "@/components/pages/branches/forms/EditBranchForm/edit-branch.defaults";
 import { useTranslations } from "next-intl";
+import { useRestaurantPaymentManagement } from "@/hooks/useRestaurantPaymentManagement";
+import {
+  PAYMENT_METHOD_LABELS,
+  type PaymentMethodCode,
+} from "@/types/payment-methods";
 
 interface CreateBranchModalProps {
   hasExistingBranches?: boolean;
@@ -127,7 +134,8 @@ const buildCreateBranchSettings = (
   tableReservationsEnabled: settings?.tableReservationsEnabled ?? false,
   tableReservationAutoAccept: settings?.tableReservationAutoAccept ?? false,
   tableCount: settings?.tableCount ?? 0,
-  allowedPaymentMethods: DEFAULT_ALLOWED_PAYMENT_METHODS,
+  allowedPaymentMethods:
+    settings?.allowedPaymentMethods ?? DEFAULT_ALLOWED_PAYMENT_METHODS,
 });
 
 type FieldConfig = {
@@ -197,6 +205,20 @@ export function CreateBranchModal({
   const commonT = useTranslations("common");
   const { user } = useAuth();
   const createBranchMutation = useCreateBranch();
+  const paymentManagementQuery = useRestaurantPaymentManagement(
+    user?.restaurantId,
+    open,
+  );
+  const availablePaymentMethods = useMemo(() => {
+    const activeMethods = new Set(
+      paymentManagementQuery.data?.activePlatformPaymentMethods ?? [],
+    );
+
+    return (paymentManagementQuery.data?.allowedPaymentMethods ?? []).filter(
+      (method) => activeMethods.has(method),
+    );
+  }, [paymentManagementQuery.data]);
+  const availablePaymentMethodsKey = availablePaymentMethods.join("|");
 
   const {
     control,
@@ -215,6 +237,20 @@ export function CreateBranchModal({
       reset(defaultValues);
     }
   }, [open, reset]);
+
+  useEffect(() => {
+    if (!open || !paymentManagementQuery.data) return;
+
+    setValue("settings.allowedPaymentMethods", availablePaymentMethods, {
+      shouldValidate: true,
+    });
+  }, [
+    availablePaymentMethods,
+    availablePaymentMethodsKey,
+    open,
+    paymentManagementQuery.data,
+    setValue,
+  ]);
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -368,6 +404,82 @@ export function CreateBranchModal({
             <hr className="border-gray-200 my-2" />
 
             <div className="space-y-3">
+              <div>
+                <h4 className="text-sm font-medium text-gray-900">
+                  {t("allowedPaymentMethods")}
+                </h4>
+                <p className="mt-1 text-xs text-gray-500">
+                  {t("allowedPaymentMethodsDescription")}
+                </p>
+              </div>
+
+              {paymentManagementQuery.isLoading ? (
+                <div className="flex min-h-16 items-center justify-center text-gray-500">
+                  <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+                  <span className="ml-2 text-sm">
+                    {t("loadingAllowedPaymentMethods")}
+                  </span>
+                </div>
+              ) : null}
+              {paymentManagementQuery.isError ? (
+                <div className="flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                  <AlertCircle
+                    className="mt-0.5 size-4 shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span>{t("allowedPaymentMethodsLoadFailed")}</span>
+                </div>
+              ) : null}
+              {!paymentManagementQuery.isLoading &&
+              !paymentManagementQuery.isError &&
+              availablePaymentMethods.length === 0 ? (
+                <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                  {t("noAllowedPaymentMethods")}
+                </div>
+              ) : null}
+              {availablePaymentMethods.length > 0 ? (
+                <Controller
+                  control={control}
+                  name="settings.allowedPaymentMethods"
+                  render={({ field }) => (
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {availablePaymentMethods.map((method) => {
+                        const selected = field.value?.includes(method) ?? false;
+
+                        return (
+                          <label
+                            key={method}
+                            className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm font-medium text-gray-700"
+                          >
+                            <Checkbox
+                              checked={selected}
+                              onCheckedChange={() => {
+                                const current = (field.value ?? []) as PaymentMethodCode[];
+                                field.onChange(
+                                  selected
+                                    ? current.filter((entry) => entry !== method)
+                                    : [...current, method],
+                                );
+                              }}
+                            />
+                            {PAYMENT_METHOD_LABELS[method]}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                />
+              ) : null}
+              {errors.settings?.allowedPaymentMethods?.message ? (
+                <p className={FIELD_ERROR_CLASS}>
+                  {errors.settings.allowedPaymentMethods.message}
+                </p>
+              ) : null}
+            </div>
+
+            <hr className="border-gray-200 my-2" />
+
+            <div className="space-y-3">
               <h4 className="text-sm font-medium text-gray-900">
                 {t("tableReservationSettings")}
               </h4>
@@ -490,7 +602,12 @@ export function CreateBranchModal({
             <Button
               type="submit"
               className="px-8 py-2 rounded-[10px] bg-primary hover:bg-primary/90 text-[17px]"
-              disabled={createBranchMutation.isPending}
+              disabled={
+                createBranchMutation.isPending ||
+                paymentManagementQuery.isLoading ||
+                paymentManagementQuery.isError ||
+                availablePaymentMethods.length === 0
+              }
             >
               {createBranchMutation.isPending
                 ? t("creating")

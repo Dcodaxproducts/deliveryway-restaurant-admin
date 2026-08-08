@@ -173,10 +173,15 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
       const deliveryConfig = normalizeDeliveryConfigForApi(
         settings.deliveryConfig,
       );
-      const validationError =
-        activeTab === "delivery"
+      const paymentMethodValidationError =
+        Array.isArray(settings.allowedPaymentMethods) &&
+        settings.allowedPaymentMethods.length > 0
+          ? null
+          : t("allowedPaymentMethodsRequired");
+      const validationError = paymentMethodValidationError ??
+        (activeTab === "delivery"
           ? getDeliveryConfigValidationError(deliveryConfig)
-          : getBranchSettingsValidationError(settings);
+          : getBranchSettingsValidationError(settings));
 
       if (validationError) {
         toast.error(validationError);

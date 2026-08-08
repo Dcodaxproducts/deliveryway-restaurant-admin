@@ -1,6 +1,5 @@
 import { api } from "@/lib/axios";
 import { parseSchema } from "@/lib/zod-errors";
-import { PAYMENT_METHOD_CODES } from "@/types/payment-methods";
 import {
   BranchValues,
   BulkBranchSchema,
@@ -74,8 +73,6 @@ const hasServiceChargeSetting = (settings: BranchSettings | undefined) =>
   Boolean(settings) &&
   Object.prototype.hasOwnProperty.call(settings, "serviceCharge");
 
-const defaultAllowedPaymentMethods = [...PAYMENT_METHOD_CODES];
-
 const branchSettingsPatchBlocklist = [
   "deliveryIntervalMinutes",
   "pickupIntervalMinutes",
@@ -119,14 +116,10 @@ export const updateBranch = async (
     nextPayload.settings = {
       ...sanitizeBranchSettingsForPatch(existingBranch.settings),
       ...sanitizeBranchSettingsForPatch(payload.settings),
-      allowedPaymentMethods: defaultAllowedPaymentMethods,
       serviceCharge: payload.settings?.serviceCharge,
     };
   } else if (payload.settings) {
-    nextPayload.settings = {
-      ...sanitizeBranchSettingsForPatch(payload.settings),
-      allowedPaymentMethods: defaultAllowedPaymentMethods,
-    };
+    nextPayload.settings = sanitizeBranchSettingsForPatch(payload.settings);
   }
 
   const { data } = await api.patch(`/branches/${id}`, nextPayload);

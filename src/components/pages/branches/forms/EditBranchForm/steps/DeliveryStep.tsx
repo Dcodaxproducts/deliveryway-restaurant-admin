@@ -18,15 +18,13 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
-  PAYMENT_METHOD_CODES,
   PAYMENT_METHOD_LABELS,
+  type PaymentMethodCode,
 } from "@/types/payment-methods";
 import { normalizeDecimalInput } from "@/lib/decimal";
+import { useRestaurantPaymentManagement } from "@/hooks/useRestaurantPaymentManagement";
 
 const ORDER_TYPES = ["DELIVERY", "TAKEAWAY", "DINE_IN"];
-const PAYMENT_METHODS = [...PAYMENT_METHOD_CODES];
-const SHOW_ALLOWED_PAYMENT_METHODS = false;
-
 type DeliveryMode = "RADIUS" | "ZONE" | "ZONE_BANDS" | "POSTAL_CODE";
 type LatLngKey = "lat" | "lng";
 
@@ -216,6 +214,62 @@ export default function EditBranchStepTwo({ data, setData }: any) {
   const branchMarkerRef = useRef<any>(null);
 
   const safeData = data || {};
+
+  const paymentManagementQuery = useRestaurantPaymentManagement(
+    safeData.restaurantId,
+  );
+  const availablePaymentMethods = useMemo(() => {
+    const activeMethods = new Set(
+      paymentManagementQuery.data?.activePlatformPaymentMethods ?? [],
+    );
+
+    return (paymentManagementQuery.data?.allowedPaymentMethods ?? []).filter(
+      (method) => activeMethods.has(method),
+    );
+  }, [paymentManagementQuery.data]);
+  const availablePaymentMethodsKey = availablePaymentMethods.join("|");
+
+  useEffect(() => {
+    if (!paymentManagementQuery.data) return;
+
+    const availableMethods = new Set<PaymentMethodCode>(
+      availablePaymentMethods,
+    );
+    setData((current: any) => {
+      const currentSettings = current?.settings || {};
+      const currentMethods = Array.isArray(
+        currentSettings.allowedPaymentMethods,
+      )
+        ? currentSettings.allowedPaymentMethods.filter(
+            (method: unknown): method is PaymentMethodCode =>
+              typeof method === "string" &&
+              availableMethods.has(method as PaymentMethodCode),
+          )
+        : [];
+      const nextMethods: PaymentMethodCode[] =
+        currentMethods.length > 0 ? currentMethods : availablePaymentMethods;
+
+      if (
+        nextMethods.length === currentMethods.length &&
+        nextMethods.every((method, index) => method === currentMethods[index])
+      ) {
+        return current;
+      }
+
+      return {
+        ...current,
+        settings: {
+          ...currentSettings,
+          allowedPaymentMethods: nextMethods,
+        },
+      };
+    });
+  }, [
+    availablePaymentMethods,
+    availablePaymentMethodsKey,
+    paymentManagementQuery.data,
+    setData,
+  ]);
 
   const settings = safeData.settings || {};
   const delivery = settings.deliveryConfig || {};
@@ -1241,10 +1295,34 @@ export default function EditBranchStepTwo({ data, setData }: any) {
         </div>
       </Section>
 
-      {SHOW_ALLOWED_PAYMENT_METHODS ? (
-        <Section label={t("allowedPaymentMethods")}>
+      <Section label={t("allowedPaymentMethods")}>
+        <p className="mb-3 text-sm text-gray-500">
+          {t("allowedPaymentMethodsDescription")}
+        </p>
+        {paymentManagementQuery.isLoading ? (
+          <div className="flex min-h-20 items-center justify-center text-gray-500">
+            <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+            <span className="ml-2 text-sm">
+              {t("loadingAllowedPaymentMethods")}
+            </span>
+          </div>
+        ) : null}
+        {paymentManagementQuery.isError ? (
+          <div className="flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+            <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span>{t("allowedPaymentMethodsLoadFailed")}</span>
+          </div>
+        ) : null}
+        {!paymentManagementQuery.isLoading &&
+        !paymentManagementQuery.isError &&
+        availablePaymentMethods.length === 0 ? (
+          <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            {t("noAllowedPaymentMethods")}
+          </div>
+        ) : null}
+        {availablePaymentMethods.length > 0 ? (
           <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {PAYMENT_METHODS.map((method) => (
+            {availablePaymentMethods.map((method) => (
               <label
                 key={method}
                 className="flex min-w-0 cursor-pointer items-center gap-3 rounded-[12px] border border-gray-200 bg-white px-3 py-3 transition-colors hover:border-primary/30 hover:bg-primary/5"
@@ -1261,8 +1339,14 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               </label>
             ))}
           </div>
-        </Section>
-      ) : null}
+        ) : null}
+        {availablePaymentMethods.length > 0 &&
+        !settings.allowedPaymentMethods?.length ? (
+          <p className="mt-3 text-sm font-medium text-red-600">
+            {t("allowedPaymentMethodsRequired")}
+          </p>
+        ) : null}
+      </Section>
 
       <Section label={t("deliveryConfiguration")}>
         <div className="min-w-0 space-y-6">
