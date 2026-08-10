@@ -10,6 +10,7 @@ export type GetNotificationsParams = {
   restaurantId: string;
   branchId?: string;
   status?: "pending" | "seen";
+  channel?: "IN_APP" | "EMAIL" | "PUSH";
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
