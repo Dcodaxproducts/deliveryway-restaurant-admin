@@ -35,7 +35,7 @@ export const isFutureOrder = (
   order: Pick<Order, "isScheduled" | "orderTime">,
   now: Date = new Date()
 ) => {
-  if (order.isScheduled) return true;
+  if (typeof order.isScheduled === "boolean") return order.isScheduled;
 
   const orderTime = getOrderTimeDate(order);
   return Boolean(orderTime && orderTime.getTime() > now.getTime());
@@ -45,7 +45,9 @@ const isScheduledOrder = (
   order: Pick<Order, "isScheduled" | "orderTime">,
   now: Date
 ) => {
-  return Boolean(order.isScheduled || getOrderTimeDate(order) || isFutureOrder(order, now));
+  if (typeof order.isScheduled === "boolean") return order.isScheduled;
+
+  return Boolean(getOrderTimeDate(order) || isFutureOrder(order, now));
 };
 
 const isWithinRange = (

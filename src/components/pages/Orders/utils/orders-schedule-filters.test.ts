@@ -18,6 +18,21 @@ describe("orders schedule filters", () => {
     ).toBe(true);
   });
 
+  it("keeps an explicit ASAP order out of preorders when its ready time is in the future", () => {
+    const asapOrder = {
+      isScheduled: false,
+      orderTime: "2026-06-18T10:00:00.000Z",
+    };
+
+    expect(isFutureOrder(asapOrder, now)).toBe(false);
+    expect(
+      matchesOrdersScheduleFilter(asapOrder, "PREORDERS", {}, now)
+    ).toBe(false);
+    expect(
+      matchesOrdersScheduleFilter(asapOrder, "TODAY_SCHEDULED", {}, now)
+    ).toBe(false);
+  });
+
   it("filters today's scheduled orders by order time", () => {
     expect(
       matchesOrdersScheduleFilter(
