@@ -33,6 +33,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrentScope } from "@/hooks/useCurrentScope";
 import { useGetBranches } from "@/hooks/useBranches";
 import { getApiErrorMessage } from "@/lib/errors";
+import { parseWinOrderStoreId } from "@/lib/winorder-store-id";
 import { getStringValue, isRecord } from "@/lib/auth";
 import {
   createWinOrderConnection,
@@ -139,6 +140,7 @@ export default function WinOrderSettingsPage() {
     enabled: Boolean(selectedBranchId),
   });
   const connection = connectionQuery.data?.data ?? null;
+  const parsedStoreId = parseWinOrderStoreId(storeId);
   const mappingsQuery = useQuery({
     queryKey: ["winorder", "mappings", selectedBranchId],
     queryFn: () => getWinOrderMappings(selectedBranchId),
@@ -209,23 +211,31 @@ export default function WinOrderSettingsPage() {
     ) => {
       if (!selectedBranchId) throw new Error(t("selectBranch"));
       if (action === "create") {
+        if (parsedStoreId === null) throw new Error(t("storeIdRequired"));
         return createWinOrderConnection({
           branchId: selectedBranchId,
-          storeId: storeId ? Number(storeId) : undefined,
+          storeId: parsedStoreId,
           storeName: storeName || undefined,
         });
       }
       if (action === "rotate")
         return rotateWinOrderCredentials(selectedBranchId);
       if (action === "toggle" && connection) {
+        if (!connection.isEnabled && parsedStoreId === null) {
+          throw new Error(t("storeIdRequired"));
+        }
         return updateWinOrderConnection(selectedBranchId, {
           isEnabled: !connection.isEnabled,
+          ...(!connection.isEnabled && parsedStoreId !== null
+            ? { storeId: parsedStoreId }
+            : {}),
         });
       }
       if (action === "retry")
         return retryFailedWinOrderExports(selectedBranchId);
+      if (parsedStoreId === null) throw new Error(t("storeIdRequired"));
       await updateWinOrderConnection(selectedBranchId, {
-        storeId: storeId ? Number(storeId) : undefined,
+        storeId: parsedStoreId,
         storeName: storeName || undefined,
       });
       const catalogMappings = Object.entries(catalogDraft)
@@ -266,6 +276,7 @@ export default function WinOrderSettingsPage() {
     "",
   );
   const endpoint = `${endpointBase}${connection?.endpointPath ?? "/winorder"}`;
+  const oneTimeEndpoint = `${endpointBase}${oneTimeCredentials?.endpointPath ?? "/winorder"}`;
   const missingCount = mappingsQuery.data?.data.missingCatalogKeys.length ?? 0;
   const failedCount = healthQuery.data?.data.exportCounts.FAILED ?? 0;
 
@@ -325,7 +336,8 @@ export default function WinOrderSettingsPage() {
             </CardTitle>
             <CardDescription>{t("passwordOnce")}</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
+          <CardContent className="grid gap-4 md:grid-cols-3">
+            <CredentialField label={t("endpoint")} value={oneTimeEndpoint} />
             <CredentialField
               label={t("username")}
               value={oneTimeCredentials.username}
@@ -376,8 +388,15 @@ export default function WinOrderSettingsPage() {
                   onChange={(e) => setStoreId(e.target.value)}
                   disabled={!canEdit}
                   type="number"
+                  min={0}
+                  step={1}
+                  required
+                  aria-invalid={Boolean(storeId && parsedStoreId === null)}
                   className="mt-2"
                 />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("storeIdHelp")}
+                </p>
               </div>
               <div>
                 <Label htmlFor="store-name">{t("storeName")}</Label>
@@ -393,7 +412,9 @@ export default function WinOrderSettingsPage() {
             <div className="flex flex-wrap items-center gap-3 border-t pt-5">
               {!connection ? (
                 <Button
-                  disabled={!canEdit || mutation.isPending}
+                  disabled={
+                    !canEdit || mutation.isPending || parsedStoreId === null
+                  }
                   onClick={() => mutation.mutate("create")}
                 >
                   <KeyRound />
@@ -420,7 +441,9 @@ export default function WinOrderSettingsPage() {
                     {t("rotate")}
                   </Button>
                   <Button
-                    disabled={!canEdit || mutation.isPending}
+                    disabled={
+                      !canEdit || mutation.isPending || parsedStoreId === null
+                    }
                     onClick={() => mutation.mutate("save")}
                   >
                     <Save />

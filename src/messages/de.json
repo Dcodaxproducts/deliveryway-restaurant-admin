@@ -3269,6 +3269,8 @@
     "connectionHelp": "Dies sind separate Maschinen-Zugangsdaten und keine Admin-Anmeldedaten.",
     "endpoint": "WinOrder-URL",
     "storeId": "WinOrder-Filial-ID",
+    "storeIdHelp": "Wird vom WinOrder-Einrichtungsassistenten benötigt und in die filialbezogene Webservice-URL eingefügt.",
+    "storeIdRequired": "Geben Sie eine gültige WinOrder-Filial-ID ein, bevor Sie fortfahren.",
     "storeName": "WinOrder-Filialname",
     "generateCredentials": "Zugangsdaten erzeugen",
     "enabled": "Verbindung aktiviert",

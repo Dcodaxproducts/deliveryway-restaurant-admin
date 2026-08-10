@@ -86,7 +86,7 @@ export const getWinOrderConnection = (branchId: string) =>
 
 export const createWinOrderConnection = (payload: {
   branchId: string;
-  storeId?: number;
+  storeId: number;
   storeName?: string;
 }) =>
   httpClient.post<ApiResponse<WinOrderConnection>, typeof payload>(

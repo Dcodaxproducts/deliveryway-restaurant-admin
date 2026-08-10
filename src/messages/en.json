@@ -3269,6 +3269,8 @@
     "connectionHelp": "These are dedicated machine credentials, separate from every admin login.",
     "endpoint": "WinOrder URL",
     "storeId": "WinOrder store ID",
+    "storeIdHelp": "Required by the WinOrder setup wizard and included in the store-specific Webservice URL.",
+    "storeIdRequired": "Enter a valid WinOrder store ID before continuing.",
     "storeName": "WinOrder store name",
     "generateCredentials": "Generate credentials",
     "enabled": "Connection enabled",
