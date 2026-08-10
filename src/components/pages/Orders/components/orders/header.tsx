@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import {
   ORDER_SOUND_SETTING_EVENT,
   ORDER_SOUND_STORAGE_KEY,
+  unlockOrderNotificationSound,
 } from "@/hooks/useRealtimeOrderNotifications";
 import Link from "next/link";
 
@@ -92,6 +93,9 @@ export function OrdersHeader({ title, description, orders }: HeaderProps) {
                 ORDER_SOUND_STORAGE_KEY,
                 String(next),
               );
+              if (next) {
+                void unlockOrderNotificationSound();
+              }
               window.dispatchEvent(new Event(ORDER_SOUND_SETTING_EVENT));
             }}
             className="w-fit gap-2"

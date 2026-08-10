@@ -16,6 +16,7 @@ export default function NotificationBell() {
     canViewNotifications && restaurantId
       ? {
           restaurantId,
+          channel: "IN_APP" as const,
           ...(isBranchAdmin && branchId ? { branchId } : {}),
         }
       : undefined,

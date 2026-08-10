@@ -69,7 +69,13 @@ export const buildOrderTrackingSocketAuth = ({
   ...(branchId ? { branchId } : {}),
 });
 
-const playNewOrderSound = () => {
+let orderSoundAudioContext: AudioContext | null = null;
+
+const getOrderSoundAudioContext = () => {
+  if (orderSoundAudioContext && orderSoundAudioContext.state !== "closed") {
+    return orderSoundAudioContext;
+  }
+
   const AudioContextClass =
     window.AudioContext ??
     (
@@ -78,9 +84,33 @@ const playNewOrderSound = () => {
       }
     ).webkitAudioContext;
 
-  if (!AudioContextClass) return;
+  if (!AudioContextClass) return null;
 
-  const context = new AudioContextClass();
+  orderSoundAudioContext = new AudioContextClass();
+  return orderSoundAudioContext;
+};
+
+export const unlockOrderNotificationSound = async () => {
+  const context = getOrderSoundAudioContext();
+
+  if (!context) return false;
+
+  if (context.state === "suspended") {
+    try {
+      await context.resume();
+    } catch {
+      return false;
+    }
+  }
+
+  return context.state === "running";
+};
+
+export const playNewOrderSound = async () => {
+  const context = getOrderSoundAudioContext();
+
+  if (!context || !(await unlockOrderNotificationSound())) return;
+
   const oscillator = context.createOscillator();
   const gain = context.createGain();
   oscillator.frequency.setValueAtTime(880, context.currentTime);
@@ -90,9 +120,6 @@ const playNewOrderSound = () => {
   gain.connect(context.destination);
   oscillator.start();
   oscillator.stop(context.currentTime + 0.45);
-  oscillator.addEventListener("ended", () => {
-    void context.close();
-  });
 };
 
 export function useRealtimeOrderNotifications() {
@@ -152,16 +179,30 @@ export function useRealtimeOrderNotifications() {
     const startOrderAlert = (orderId: string) => {
       stopOrderAlert(orderId);
       if (!soundEnabled()) return;
-      playNewOrderSound();
+      void playNewOrderSound();
       ringingOrders.current.set(
         orderId,
-        window.setInterval(playNewOrderSound, 3_000),
+        window.setInterval(() => void playNewOrderSound(), 3_000),
       );
     };
     const handleSoundSetting = () => {
-      if (!soundEnabled()) stopAllOrderAlerts();
+      if (!soundEnabled()) {
+        stopAllOrderAlerts();
+        return;
+      }
+
+      void unlockOrderNotificationSound();
+    };
+    const unlockSoundFromUserGesture = () => {
+      window.removeEventListener("pointerdown", unlockSoundFromUserGesture);
+      window.removeEventListener("keydown", unlockSoundFromUserGesture);
+      if (soundEnabled()) {
+        void unlockOrderNotificationSound();
+      }
     };
     window.addEventListener(ORDER_SOUND_SETTING_EVENT, handleSoundSetting);
+    window.addEventListener("pointerdown", unlockSoundFromUserGesture);
+    window.addEventListener("keydown", unlockSoundFromUserGesture);
 
     socket.on("connect", refreshOrderData);
 
@@ -273,6 +314,8 @@ export function useRealtimeOrderNotifications() {
 
     return () => {
       window.removeEventListener(ORDER_SOUND_SETTING_EVENT, handleSoundSetting);
+      window.removeEventListener("pointerdown", unlockSoundFromUserGesture);
+      window.removeEventListener("keydown", unlockSoundFromUserGesture);
       stopAllOrderAlerts();
       socket.disconnect();
     };

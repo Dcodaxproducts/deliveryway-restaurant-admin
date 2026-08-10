@@ -70,6 +70,7 @@ export const notificationQueryKeys = {
       params?.restaurantId,
       params?.branchId,
       params?.status,
+      params?.channel,
     ] as const,
   summary: (params?: GetNotificationsParams) =>
     [
@@ -77,6 +78,7 @@ export const notificationQueryKeys = {
       "summary",
       params?.restaurantId,
       params?.branchId,
+      params?.channel,
     ] as const,
 };
 

@@ -21,17 +21,6 @@ vi.mock("@/lib/axios", () => ({
 }));
 
 const mockedApi = vi.mocked(api);
-const allPaymentMethods = [
-  "COD",
-  "CARD_ON_DELIVERY",
-  "STRIPE",
-  "PAYPAL",
-  "EASYPAISA",
-  "JAZZCASH",
-  "BANK_TRANSFER",
-  "WALLET",
-];
-
 describe("branches service", () => {
   beforeEach(() => {
     mockedApi.get.mockReset();
@@ -68,7 +57,6 @@ describe("branches service", () => {
     expect(mockedApi.patch).toHaveBeenCalledWith("/branches/branch-1", {
       settings: {
         allowedOrderTypes: ["DELIVERY"],
-        allowedPaymentMethods: allPaymentMethods,
         customSetting: "keep-me",
         serviceCharge: {
           isEnabled: true,
@@ -135,9 +123,24 @@ describe("branches service", () => {
 
     expect(mockedApi.patch).toHaveBeenCalledWith("/branches/branch-1", {
       settings: {
-        allowedPaymentMethods: allPaymentMethods,
         customSetting: "keep-me",
         deliveryTime: 45,
+      },
+    });
+  });
+
+  it("preserves the exact branch payment method subset", async () => {
+    mockedApi.patch.mockResolvedValueOnce({ data: { success: true } });
+
+    await updateBranch("branch-1", {
+      settings: {
+        allowedPaymentMethods: ["COD", "STRIPE"],
+      },
+    });
+
+    expect(mockedApi.patch).toHaveBeenCalledWith("/branches/branch-1", {
+      settings: {
+        allowedPaymentMethods: ["COD", "STRIPE"],
       },
     });
   });
