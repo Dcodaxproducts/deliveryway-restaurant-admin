@@ -1,8 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo } from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { useEffect } from "react";
 import {
   Controller,
   useForm,
@@ -21,7 +20,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import {
   FIELD_ERROR_CLASS,
@@ -39,11 +37,6 @@ import {
 } from "@/validations/branches";
 import { DEFAULT_ALLOWED_PAYMENT_METHODS } from "@/components/pages/branches/forms/EditBranchForm/edit-branch.defaults";
 import { useTranslations } from "next-intl";
-import { useRestaurantPaymentManagement } from "@/hooks/useRestaurantPaymentManagement";
-import {
-  PAYMENT_METHOD_LABELS,
-  type PaymentMethodCode,
-} from "@/types/payment-methods";
 
 interface CreateBranchModalProps {
   hasExistingBranches?: boolean;
@@ -223,20 +216,6 @@ export function CreateBranchModal({
   const commonT = useTranslations("common");
   const { user } = useAuth();
   const createBranchMutation = useCreateBranch();
-  const paymentManagementQuery = useRestaurantPaymentManagement(
-    user?.restaurantId,
-    open,
-  );
-  const availablePaymentMethods = useMemo(() => {
-    const activeMethods = new Set(
-      paymentManagementQuery.data?.activePlatformPaymentMethods ?? [],
-    );
-
-    return (paymentManagementQuery.data?.allowedPaymentMethods ?? []).filter(
-      (method) => activeMethods.has(method),
-    );
-  }, [paymentManagementQuery.data]);
-  const availablePaymentMethodsKey = availablePaymentMethods.join("|");
 
   const {
     control,
@@ -255,20 +234,6 @@ export function CreateBranchModal({
       reset(defaultValues);
     }
   }, [open, reset]);
-
-  useEffect(() => {
-    if (!open || !paymentManagementQuery.data) return;
-
-    setValue("settings.allowedPaymentMethods", availablePaymentMethods, {
-      shouldValidate: true,
-    });
-  }, [
-    availablePaymentMethods,
-    availablePaymentMethodsKey,
-    open,
-    paymentManagementQuery.data,
-    setValue,
-  ]);
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -432,157 +397,90 @@ export function CreateBranchModal({
               </div>
             </section>
 
-            <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/50 sm:p-6">
-              <div>
-                <h4 className="text-sm font-medium text-gray-900">
-                  {t("allowedPaymentMethods")}
-                </h4>
-                <p className="mt-1 text-xs text-gray-500">
-                  {t("allowedPaymentMethodsDescription")}
-                </p>
-              </div>
-
-              {paymentManagementQuery.isLoading ? (
-                <div className="flex min-h-16 items-center justify-center text-gray-500">
-                  <Loader2 className="size-5 animate-spin" aria-hidden="true" />
-                  <span className="ml-2 text-sm">
-                    {t("loadingAllowedPaymentMethods")}
-                  </span>
-                </div>
-              ) : null}
-              {paymentManagementQuery.isError ? (
-                <div className="flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
-                  <AlertCircle
-                    className="mt-0.5 size-4 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <span>{t("allowedPaymentMethodsLoadFailed")}</span>
-                </div>
-              ) : null}
-              {!paymentManagementQuery.isLoading &&
-              !paymentManagementQuery.isError &&
-              availablePaymentMethods.length === 0 ? (
-                <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                  {t("noAllowedPaymentMethods")}
-                </div>
-              ) : null}
-              {availablePaymentMethods.length > 0 ? (
-                <Controller
-                  control={control}
-                  name="settings.allowedPaymentMethods"
-                  render={({ field }) => (
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      {availablePaymentMethods.map((method) => {
-                        const selected = field.value?.includes(method) ?? false;
-
-                        return (
-                          <label
-                            key={method}
-                            className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm font-medium text-gray-700"
-                          >
-                            <Checkbox
-                              checked={selected}
-                              onCheckedChange={() => {
-                                const current = (field.value ?? []) as PaymentMethodCode[];
-                                field.onChange(
-                                  selected
-                                    ? current.filter((entry) => entry !== method)
-                                    : [...current, method],
-                                );
-                              }}
-                            />
-                            {PAYMENT_METHOD_LABELS[method]}
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
-                />
-              ) : null}
-              {errors.settings?.allowedPaymentMethods?.message ? (
-                <p className={FIELD_ERROR_CLASS}>
-                  {errors.settings.allowedPaymentMethods.message}
-                </p>
-              ) : null}
-            </section>
-
             <div className="grid gap-5 lg:grid-cols-2">
               <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/50 sm:p-6">
                 <h4 className="text-base font-semibold text-slate-950">
                   {t("tableReservationSettings")}
                 </h4>
 
-              <div className="flex items-center justify-between gap-4 rounded-xl bg-slate-50 px-4 py-3">
-                <div>
+                <div className="flex items-center justify-between gap-4 rounded-xl bg-slate-50 px-4 py-3">
+                  <div>
+                    <Label
+                      htmlFor="create-branch-table-reservations"
+                      className="text-sm"
+                    >
+                      {t("enableTableReservations")}
+                    </Label>
+                    <p className="text-xs text-gray-500">
+                      {t("allowTableReservations")}
+                    </p>
+                  </div>
+                  <Controller
+                    control={control}
+                    name="settings.tableReservationsEnabled"
+                    render={({ field }) => (
+                      <Switch
+                        id="create-branch-table-reservations"
+                        checked={field.value ?? false}
+                        onCheckedChange={field.onChange}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                    )}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between gap-4 rounded-xl bg-slate-50 px-4 py-3">
+                  <div>
+                    <Label
+                      htmlFor="create-branch-auto-accept-reservations"
+                      className="text-sm"
+                    >
+                      {t("autoAcceptReservations")}
+                    </Label>
+                    <p className="text-xs text-gray-500">
+                      {t("autoAcceptReservationsHelper")}
+                    </p>
+                  </div>
+                  <Controller
+                    control={control}
+                    name="settings.tableReservationAutoAccept"
+                    render={({ field }) => (
+                      <Switch
+                        id="create-branch-auto-accept-reservations"
+                        checked={field.value ?? false}
+                        onCheckedChange={field.onChange}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-1 rounded-xl bg-slate-50 px-4 py-3">
                   <Label
-                    htmlFor="create-branch-table-reservations"
+                    htmlFor="create-branch-table-count"
                     className="text-sm"
                   >
-                    {t("enableTableReservations")}
+                    {t("tableCount")}
                   </Label>
+                  <Input
+                    id="create-branch-table-count"
+                    type="number"
+                    min={0}
+                    className={`${INPUT_CLASS} bg-white`}
+                    aria-invalid={Boolean(errors.settings?.tableCount?.message)}
+                    {...register("settings.tableCount", {
+                      valueAsNumber: true,
+                    })}
+                  />
                   <p className="text-xs text-gray-500">
-                    {t("allowTableReservations")}
+                    {t("tableCountHelper")}
                   </p>
+                  {errors.settings?.tableCount?.message ? (
+                    <p className={FIELD_ERROR_CLASS}>
+                      {errors.settings.tableCount.message}
+                    </p>
+                  ) : null}
                 </div>
-                <Controller
-                  control={control}
-                  name="settings.tableReservationsEnabled"
-                  render={({ field }) => (
-                    <Switch
-                      id="create-branch-table-reservations"
-                      checked={field.value ?? false}
-                      onCheckedChange={field.onChange}
-                      className="data-[state=checked]:bg-primary"
-                    />
-                  )}
-                />
-              </div>
-
-              <div className="flex items-center justify-between gap-4 rounded-xl bg-slate-50 px-4 py-3">
-                <div>
-                  <Label
-                    htmlFor="create-branch-auto-accept-reservations"
-                    className="text-sm"
-                  >
-                    {t("autoAcceptReservations")}
-                  </Label>
-                  <p className="text-xs text-gray-500">
-                    {t("autoAcceptReservationsHelper")}
-                  </p>
-                </div>
-                <Controller
-                  control={control}
-                  name="settings.tableReservationAutoAccept"
-                  render={({ field }) => (
-                    <Switch
-                      id="create-branch-auto-accept-reservations"
-                      checked={field.value ?? false}
-                      onCheckedChange={field.onChange}
-                      className="data-[state=checked]:bg-primary"
-                    />
-                  )}
-                />
-              </div>
-
-              <div className="space-y-1 rounded-xl bg-slate-50 px-4 py-3">
-                <Label htmlFor="create-branch-table-count" className="text-sm">
-                  {t("tableCount")}
-                </Label>
-                <Input
-                  id="create-branch-table-count"
-                  type="number"
-                  min={0}
-                  className={`${INPUT_CLASS} bg-white`}
-                  aria-invalid={Boolean(errors.settings?.tableCount?.message)}
-                  {...register("settings.tableCount", { valueAsNumber: true })}
-                />
-                <p className="text-xs text-gray-500">{t("tableCountHelper")}</p>
-                {errors.settings?.tableCount?.message ? (
-                  <p className={FIELD_ERROR_CLASS}>
-                    {errors.settings.tableCount.message}
-                  </p>
-                ) : null}
-              </div>
               </section>
 
               <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/50 sm:p-6">
@@ -609,12 +507,7 @@ export function CreateBranchModal({
             <Button
               type="submit"
               className="h-11 rounded-xl bg-primary px-8 text-base hover:bg-primary/90 active:scale-[0.98]"
-              disabled={
-                createBranchMutation.isPending ||
-                paymentManagementQuery.isLoading ||
-                paymentManagementQuery.isError ||
-                availablePaymentMethods.length === 0
-              }
+              disabled={createBranchMutation.isPending}
             >
               {createBranchMutation.isPending
                 ? t("creating")

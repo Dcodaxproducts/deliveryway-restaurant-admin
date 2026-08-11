@@ -17,12 +17,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import {
-  PAYMENT_METHOD_LABELS,
-  type PaymentMethodCode,
-} from "@/types/payment-methods";
 import { normalizeDecimalInput } from "@/lib/decimal";
-import { useRestaurantPaymentManagement } from "@/hooks/useRestaurantPaymentManagement";
 
 const ORDER_TYPES = ["DELIVERY", "TAKEAWAY", "DINE_IN"];
 type DeliveryMode = "RADIUS" | "ZONE" | "ZONE_BANDS" | "POSTAL_CODE";
@@ -179,16 +174,31 @@ const createPolygonAroundCenter = (center: LatLngPoint, sizeKm = 1) => {
   const halfLngOffset = safeSizeKm / 2 / lngDivider;
 
   return [
-    { lat: formatCoordinate(lat - halfLatOffset), lng: formatCoordinate(lng - halfLngOffset) },
-    { lat: formatCoordinate(lat + halfLatOffset), lng: formatCoordinate(lng - halfLngOffset) },
-    { lat: formatCoordinate(lat + halfLatOffset), lng: formatCoordinate(lng + halfLngOffset) },
-    { lat: formatCoordinate(lat - halfLatOffset), lng: formatCoordinate(lng + halfLngOffset) },
+    {
+      lat: formatCoordinate(lat - halfLatOffset),
+      lng: formatCoordinate(lng - halfLngOffset),
+    },
+    {
+      lat: formatCoordinate(lat + halfLatOffset),
+      lng: formatCoordinate(lng - halfLngOffset),
+    },
+    {
+      lat: formatCoordinate(lat + halfLatOffset),
+      lng: formatCoordinate(lng + halfLngOffset),
+    },
+    {
+      lat: formatCoordinate(lat - halfLatOffset),
+      lng: formatCoordinate(lng + halfLngOffset),
+    },
   ];
 };
 
 const getZoneValidPoints = (zone: any) => {
   const polygon = Array.isArray(zone?.polygon) ? zone.polygon : [];
-  return polygon.map(getValidPoint).filter(Boolean) as { lat: number; lng: number }[];
+  return polygon.map(getValidPoint).filter(Boolean) as {
+    lat: number;
+    lng: number;
+  }[];
 };
 
 export default function EditBranchStepTwo({ data, setData }: any) {
@@ -214,62 +224,6 @@ export default function EditBranchStepTwo({ data, setData }: any) {
   const branchMarkerRef = useRef<any>(null);
 
   const safeData = data || {};
-
-  const paymentManagementQuery = useRestaurantPaymentManagement(
-    safeData.restaurantId,
-  );
-  const availablePaymentMethods = useMemo(() => {
-    const activeMethods = new Set(
-      paymentManagementQuery.data?.activePlatformPaymentMethods ?? [],
-    );
-
-    return (paymentManagementQuery.data?.allowedPaymentMethods ?? []).filter(
-      (method) => activeMethods.has(method),
-    );
-  }, [paymentManagementQuery.data]);
-  const availablePaymentMethodsKey = availablePaymentMethods.join("|");
-
-  useEffect(() => {
-    if (!paymentManagementQuery.data) return;
-
-    const availableMethods = new Set<PaymentMethodCode>(
-      availablePaymentMethods,
-    );
-    setData((current: any) => {
-      const currentSettings = current?.settings || {};
-      const currentMethods = Array.isArray(
-        currentSettings.allowedPaymentMethods,
-      )
-        ? currentSettings.allowedPaymentMethods.filter(
-            (method: unknown): method is PaymentMethodCode =>
-              typeof method === "string" &&
-              availableMethods.has(method as PaymentMethodCode),
-          )
-        : [];
-      const nextMethods: PaymentMethodCode[] =
-        currentMethods.length > 0 ? currentMethods : availablePaymentMethods;
-
-      if (
-        nextMethods.length === currentMethods.length &&
-        nextMethods.every((method, index) => method === currentMethods[index])
-      ) {
-        return current;
-      }
-
-      return {
-        ...current,
-        settings: {
-          ...currentSettings,
-          allowedPaymentMethods: nextMethods,
-        },
-      };
-    });
-  }, [
-    availablePaymentMethods,
-    availablePaymentMethodsKey,
-    paymentManagementQuery.data,
-    setData,
-  ]);
 
   const settings = safeData.settings || {};
   const delivery = settings.deliveryConfig || {};
@@ -337,7 +291,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
             ...zone,
             [key]: value,
           }
-        : zone
+        : zone,
     );
 
     updateDeliveryConfig("zones", nextZones);
@@ -373,17 +327,21 @@ export default function EditBranchStepTwo({ data, setData }: any) {
   };
 
   const removeZone = (index: number) => {
-    const nextZones = zones.filter((_: any, zoneIndex: number) => zoneIndex !== index);
+    const nextZones = zones.filter(
+      (_: any, zoneIndex: number) => zoneIndex !== index,
+    );
 
     updateDeliveryConfig("zones", nextZones);
-    setActiveZoneIndex((prev) => Math.max(0, Math.min(prev, nextZones.length - 1)));
+    setActiveZoneIndex((prev) =>
+      Math.max(0, Math.min(prev, nextZones.length - 1)),
+    );
   };
 
   const updateZonePoint = (
     zoneIndex: number,
     pointIndex: number,
     key: LatLngKey,
-    value: string | number
+    value: string | number,
   ) => {
     const nextZones = zones.map((zone: any, currentZoneIndex: number) => {
       if (currentZoneIndex !== zoneIndex) return zone;
@@ -398,7 +356,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                 ...point,
                 [key]: String(value),
               }
-            : point
+            : point,
         ),
       };
     });
@@ -439,7 +397,8 @@ export default function EditBranchStepTwo({ data, setData }: any) {
       return {
         ...zone,
         polygon: polygon.filter(
-          (_: any, currentPointIndex: number) => currentPointIndex !== pointIndex
+          (_: any, currentPointIndex: number) =>
+            currentPointIndex !== pointIndex,
         ),
       };
     });
@@ -481,7 +440,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
             ...zone,
             polygon,
           }
-        : zone
+        : zone,
     );
 
     updateDeliveryConfig("zones", nextZones);
@@ -562,11 +521,15 @@ export default function EditBranchStepTwo({ data, setData }: any) {
   const fitActiveZoneOnMap = () => {
     if (!window.google?.maps || !mapInstanceRef.current) return;
 
-    const zone = zones[Math.min(activeZoneIndex, Math.max(0, zones.length - 1))];
+    const zone =
+      zones[Math.min(activeZoneIndex, Math.max(0, zones.length - 1))];
     const points = getZoneValidPoints(zone);
 
     if (!points.length) {
-      panMapToPoint(branchCoordinates || DEFAULT_MAP_CENTER, branchCoordinates ? 14 : 12);
+      panMapToPoint(
+        branchCoordinates || DEFAULT_MAP_CENTER,
+        branchCoordinates ? 14 : 12,
+      );
       return;
     }
 
@@ -624,7 +587,9 @@ export default function EditBranchStepTwo({ data, setData }: any) {
       if (status === "OK" && results?.[0]) {
         applyMapPlace(results[0]);
       } else {
-        setMapSearchError("No matching location found. Try a more specific address.");
+        setMapSearchError(
+          "No matching location found. Try a more specific address.",
+        );
       }
 
       setMapSearchLoading(false);
@@ -645,7 +610,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
             ...band,
             [key]: value,
           }
-        : band
+        : band,
     );
 
     updateDeliveryConfig("zoneBands", nextBands);
@@ -674,7 +639,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
   const removeZoneBand = (index: number) => {
     updateDeliveryConfig(
       "zoneBands",
-      zoneBands.filter((_: any, bandIndex: number) => bandIndex !== index)
+      zoneBands.filter((_: any, bandIndex: number) => bandIndex !== index),
     );
   };
 
@@ -685,7 +650,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
             ...rule,
             [key]: value,
           }
-        : rule
+        : rule,
     );
 
     updateDeliveryConfig("postalCodeRules", nextRules);
@@ -715,7 +680,9 @@ export default function EditBranchStepTwo({ data, setData }: any) {
   const removePostalRule = (index: number) => {
     updateDeliveryConfig(
       "postalCodeRules",
-      postalCodeRules.filter((_: any, ruleIndex: number) => ruleIndex !== index)
+      postalCodeRules.filter(
+        (_: any, ruleIndex: number) => ruleIndex !== index,
+      ),
     );
   };
 
@@ -828,8 +795,18 @@ export default function EditBranchStepTwo({ data, setData }: any) {
         const lng = position?.lng?.();
 
         if (Number.isFinite(Number(lat)) && Number.isFinite(Number(lng))) {
-          updateZonePoint(activeZoneIndex, pointIndex, "lat", Number(lat).toFixed(6));
-          updateZonePoint(activeZoneIndex, pointIndex, "lng", Number(lng).toFixed(6));
+          updateZonePoint(
+            activeZoneIndex,
+            pointIndex,
+            "lat",
+            Number(lat).toFixed(6),
+          );
+          updateZonePoint(
+            activeZoneIndex,
+            pointIndex,
+            "lng",
+            Number(lng).toFixed(6),
+          );
         }
       });
 
@@ -867,13 +844,13 @@ export default function EditBranchStepTwo({ data, setData }: any) {
       setMapsReady(false);
       setMapsLoading(false);
       setMapsError(
-        "Google Maps API key is missing. Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in env."
+        "Google Maps API key is missing. Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in env.",
       );
       return;
     }
 
     const existingScript = document.getElementById(
-      GOOGLE_MAPS_SCRIPT_ID
+      GOOGLE_MAPS_SCRIPT_ID,
     ) as HTMLScriptElement | null;
 
     const handleLoad = () => {
@@ -907,7 +884,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
     const script = document.createElement("script");
     script.id = GOOGLE_MAPS_SCRIPT_ID;
     script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
-      GOOGLE_MAPS_API_KEY
+      GOOGLE_MAPS_API_KEY,
     )}&libraries=places`;
     script.async = true;
     script.defer = true;
@@ -935,7 +912,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
       {
         fields: ["formatted_address", "geometry", "name", "place_id"],
         types: ["geocode"],
-      }
+      },
     );
 
     mapAutocompleteRef.current.addListener("place_changed", () => {
@@ -951,7 +928,9 @@ export default function EditBranchStepTwo({ data, setData }: any) {
 
     return () => {
       if (window.google?.maps?.event && mapAutocompleteRef.current) {
-        window.google.maps.event.clearInstanceListeners(mapAutocompleteRef.current);
+        window.google.maps.event.clearInstanceListeners(
+          mapAutocompleteRef.current,
+        );
       }
 
       mapAutocompleteRef.current = null;
@@ -966,15 +945,18 @@ export default function EditBranchStepTwo({ data, setData }: any) {
     if (!window.google?.maps?.Map) return;
 
     if (!mapInstanceRef.current) {
-      mapInstanceRef.current = new window.google.maps.Map(mapContainerRef.current, {
-        center: mapCenter,
-        zoom: branchCoordinates ? 14 : 12,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: true,
-        clickableIcons: false,
-        draggableCursor: deliveryMode === "ZONE" ? "crosshair" : undefined,
-      });
+      mapInstanceRef.current = new window.google.maps.Map(
+        mapContainerRef.current,
+        {
+          center: mapCenter,
+          zoom: branchCoordinates ? 14 : 12,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: true,
+          clickableIcons: false,
+          draggableCursor: deliveryMode === "ZONE" ? "crosshair" : undefined,
+        },
+      );
     }
 
     mapInstanceRef.current.setOptions({
@@ -1004,7 +986,8 @@ export default function EditBranchStepTwo({ data, setData }: any) {
       const lat = event?.latLng?.lat?.();
       const lng = event?.latLng?.lng?.();
 
-      if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return;
+      if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng)))
+        return;
 
       const point = {
         lat: formatCoordinate(Number(lat)),
@@ -1032,7 +1015,10 @@ export default function EditBranchStepTwo({ data, setData }: any) {
 
     return () => {
       if (window.google?.maps?.event && mapInstanceRef.current) {
-        window.google.maps.event.clearListeners(mapInstanceRef.current, "click");
+        window.google.maps.event.clearListeners(
+          mapInstanceRef.current,
+          "click",
+        );
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1054,7 +1040,10 @@ export default function EditBranchStepTwo({ data, setData }: any) {
   const renderDeliveryMap = () => {
     if (!shouldShowMap) return null;
 
-    const safeActiveZoneIndex = Math.min(activeZoneIndex, Math.max(0, zones.length - 1));
+    const safeActiveZoneIndex = Math.min(
+      activeZoneIndex,
+      Math.max(0, zones.length - 1),
+    );
     const activeZone = zones[safeActiveZoneIndex];
     const activeZonePoints = Array.isArray(activeZone?.polygon)
       ? activeZone.polygon
@@ -1065,7 +1054,9 @@ export default function EditBranchStepTwo({ data, setData }: any) {
         <div className="flex flex-col gap-3 border-b border-gray-200 bg-white px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gray-900">
-              {deliveryMode === "RADIUS" ? t("radiusMapPreview") : t("polygonZoneBuilder")}
+              {deliveryMode === "RADIUS"
+                ? t("radiusMapPreview")
+                : t("polygonZoneBuilder")}
             </p>
             <p className="mt-1 text-xs text-gray-500">
               {deliveryMode === "RADIUS"
@@ -1077,13 +1068,19 @@ export default function EditBranchStepTwo({ data, setData }: any) {
           {deliveryMode === "ZONE" && zones.length > 0 ? (
             <select
               value={safeActiveZoneIndex}
-              onChange={(event) => setActiveZoneIndex(Number(event.target.value))}
+              onChange={(event) =>
+                setActiveZoneIndex(Number(event.target.value))
+              }
               className="h-10 w-full min-w-0 rounded-full border border-gray-200 bg-white px-4 text-sm outline-none focus:border-primary lg:w-auto"
             >
               {zones.map((zone: any, index: number) => (
                 <option key={`zone-select-${index}`} value={index}>
                   {zone?.name || t("zoneIndex", { index: index + 1 })} ·{" "}
-                  {t("pointsCount", { count: Array.isArray(zone?.polygon) ? zone.polygon.length : 0 })}
+                  {t("pointsCount", {
+                    count: Array.isArray(zone?.polygon)
+                      ? zone.polygon.length
+                      : 0,
+                  })}
                 </option>
               ))}
             </select>
@@ -1218,7 +1215,8 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                 <div className="absolute left-3 right-3 top-3 z-10 rounded-2xl bg-white/95 px-4 py-3 text-xs text-gray-600 shadow-sm ring-1 ring-gray-200 sm:left-4 sm:right-auto sm:top-4 sm:max-w-[280px]">
                   <p className="font-semibold text-gray-900">
                     {t("activeZone")}:{" "}
-                    {activeZone?.name || t("zoneIndex", { index: safeActiveZoneIndex + 1 })}
+                    {activeZone?.name ||
+                      t("zoneIndex", { index: safeActiveZoneIndex + 1 })}
                   </p>
                   <p className="mt-1">
                     {t("activeZonePoints", { count: activeZonePoints.length })}
@@ -1276,7 +1274,6 @@ export default function EditBranchStepTwo({ data, setData }: any) {
     );
   };
 
-
   if (!data) return null;
 
   return (
@@ -1287,65 +1284,14 @@ export default function EditBranchStepTwo({ data, setData }: any) {
             <label key={type} className="flex items-center gap-2">
               <Checkbox
                 checked={settings.allowedOrderTypes?.includes(type)}
-                onCheckedChange={() => toggleArrayValue("allowedOrderTypes", type)}
+                onCheckedChange={() =>
+                  toggleArrayValue("allowedOrderTypes", type)
+                }
               />
               <span className="text-sm">{formatLabel(type)}</span>
             </label>
           ))}
         </div>
-      </Section>
-
-      <Section label={t("allowedPaymentMethods")}>
-        <p className="mb-3 text-sm text-gray-500">
-          {t("allowedPaymentMethodsDescription")}
-        </p>
-        {paymentManagementQuery.isLoading ? (
-          <div className="flex min-h-20 items-center justify-center text-gray-500">
-            <Loader2 className="size-5 animate-spin" aria-hidden="true" />
-            <span className="ml-2 text-sm">
-              {t("loadingAllowedPaymentMethods")}
-            </span>
-          </div>
-        ) : null}
-        {paymentManagementQuery.isError ? (
-          <div className="flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
-            <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            <span>{t("allowedPaymentMethodsLoadFailed")}</span>
-          </div>
-        ) : null}
-        {!paymentManagementQuery.isLoading &&
-        !paymentManagementQuery.isError &&
-        availablePaymentMethods.length === 0 ? (
-          <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
-            {t("noAllowedPaymentMethods")}
-          </div>
-        ) : null}
-        {availablePaymentMethods.length > 0 ? (
-          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {availablePaymentMethods.map((method) => (
-              <label
-                key={method}
-                className="flex min-w-0 cursor-pointer items-center gap-3 rounded-[12px] border border-gray-200 bg-white px-3 py-3 transition-colors hover:border-primary/30 hover:bg-primary/5"
-              >
-                <Checkbox
-                  checked={settings.allowedPaymentMethods?.includes(method)}
-                  onCheckedChange={() =>
-                    toggleArrayValue("allowedPaymentMethods", method)
-                  }
-                />
-                <span className="min-w-0 break-words text-sm font-medium leading-5 text-gray-700">
-                  {PAYMENT_METHOD_LABELS[method] ?? formatLabel(method)}
-                </span>
-              </label>
-            ))}
-          </div>
-        ) : null}
-        {availablePaymentMethods.length > 0 &&
-        !settings.allowedPaymentMethods?.length ? (
-          <p className="mt-3 text-sm font-medium text-red-600">
-            {t("allowedPaymentMethodsRequired")}
-          </p>
-        ) : null}
       </Section>
 
       <Section label={t("deliveryConfiguration")}>
@@ -1389,7 +1335,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               onChange={(val) =>
                 updateDeliveryConfig(
                   "deliveryFee",
-                  val ? normalizeDecimalInput(val) : 0
+                  val ? normalizeDecimalInput(val) : 0,
                 )
               }
             />
@@ -1400,7 +1346,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               onChange={(val) =>
                 updateDeliveryConfig(
                   "radiusKm",
-                  val ? normalizeDecimalInput(val) : 0
+                  val ? normalizeDecimalInput(val) : 0,
                 )
               }
             />
@@ -1411,7 +1357,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               onChange={(val) =>
                 updateDeliveryConfig(
                   "minOrderAmount",
-                  val ? normalizeDecimalInput(val) : 0
+                  val ? normalizeDecimalInput(val) : 0,
                 )
               }
             />
@@ -1422,7 +1368,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               onChange={(val) =>
                 updateDeliveryConfig(
                   "freeDeliveryThreshold",
-                  val ? normalizeDecimalInput(val) : 0
+                  val ? normalizeDecimalInput(val) : 0,
                 )
               }
             />
@@ -1491,7 +1437,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updateZoneBand(
                             index,
                             "fromKm",
-                            val ? normalizeDecimalInput(val) : 0
+                            val ? normalizeDecimalInput(val) : 0,
                           )
                         }
                       />
@@ -1503,7 +1449,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updateZoneBand(
                             index,
                             "toKm",
-                            val ? normalizeDecimalInput(val) : 0
+                            val ? normalizeDecimalInput(val) : 0,
                           )
                         }
                       />
@@ -1515,7 +1461,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updateZoneBand(
                             index,
                             "deliveryFee",
-                            val ? normalizeDecimalInput(val) : 0
+                            val ? normalizeDecimalInput(val) : 0,
                           )
                         }
                       />
@@ -1527,7 +1473,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updateZoneBand(
                             index,
                             "minOrderAmount",
-                            val ? normalizeDecimalInput(val) : 0
+                            val ? normalizeDecimalInput(val) : 0,
                           )
                         }
                       />
@@ -1539,7 +1485,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updateZoneBand(
                             index,
                             "freeDeliveryThreshold",
-                            val ? normalizeDecimalInput(val) : 0
+                            val ? normalizeDecimalInput(val) : 0,
                           )
                         }
                       />
@@ -1669,7 +1615,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                             updateZone(
                               zoneIndex,
                               "deliveryFee",
-                              val ? normalizeDecimalInput(val) : 0
+                              val ? normalizeDecimalInput(val) : 0,
                             )
                           }
                         />
@@ -1681,7 +1627,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                             updateZone(
                               zoneIndex,
                               "minOrderAmount",
-                              val ? normalizeDecimalInput(val) : 0
+                              val ? normalizeDecimalInput(val) : 0,
                             )
                           }
                         />
@@ -1693,7 +1639,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                             updateZone(
                               zoneIndex,
                               "freeDeliveryThreshold",
-                              val ? normalizeDecimalInput(val) : 0
+                              val ? normalizeDecimalInput(val) : 0,
                             )
                           }
                         />
@@ -1739,7 +1685,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                                       zoneIndex,
                                       pointIndex,
                                       "lat",
-                                      event.target.value
+                                      event.target.value,
                                     )
                                   }
                                   placeholder={t("latitude")}
@@ -1755,7 +1701,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                                       zoneIndex,
                                       pointIndex,
                                       "lng",
-                                      event.target.value
+                                      event.target.value,
                                     )
                                   }
                                   placeholder={t("longitude")}
@@ -1832,7 +1778,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updatePostalRule(
                             index,
                             "deliveryFee",
-                            val ? normalizeDecimalInput(val) : 0
+                            val ? normalizeDecimalInput(val) : 0,
                           )
                         }
                       />
@@ -1844,7 +1790,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updatePostalRule(
                             index,
                             "minOrderAmount",
-                            val ? normalizeDecimalInput(val) : 0
+                            val ? normalizeDecimalInput(val) : 0,
                           )
                         }
                       />
@@ -1856,7 +1802,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                           updatePostalRule(
                             index,
                             "freeDeliveryThreshold",
-                            val ? normalizeDecimalInput(val) : 0
+                            val ? normalizeDecimalInput(val) : 0,
                           )
                         }
                       />
@@ -1902,7 +1848,10 @@ export default function EditBranchStepTwo({ data, setData }: any) {
             <Checkbox
               checked={Boolean(settings.automation?.autoAcceptOrders)}
               onCheckedChange={(val) =>
-                update(["settings", "automation", "autoAcceptOrders"], val === true)
+                update(
+                  ["settings", "automation", "autoAcceptOrders"],
+                  val === true,
+                )
               }
             />
           </label>
@@ -1914,7 +1863,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
               onChange={(val) =>
                 update(
                   ["settings", "automation", "estimatedPrepTime"],
-                  val ? Number(val) : 0
+                  val ? Number(val) : 0,
                 )
               }
             />

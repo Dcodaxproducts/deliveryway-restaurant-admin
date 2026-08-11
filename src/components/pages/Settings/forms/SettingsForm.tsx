@@ -27,7 +27,7 @@ import {
 } from "@/hooks/useRestaurantPaymentManagement";
 import { getApiErrorMessage } from "@/lib/errors";
 import { hasStaffPermission } from "@/lib/auth";
-import { RestaurantBranchPaymentMethodsSection } from "@/components/pages/Settings/components/RestaurantBranchPaymentMethodsSection";
+import { RestaurantPaymentMethodsSection } from "@/components/pages/Settings/components/RestaurantPaymentMethodsSection";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
@@ -142,7 +142,7 @@ export default function SettingsForm({
     return (
       <div className="space-y-[24px] rounded-[14px] bg-white p-4 lg:p-[30px]">
         {canViewPaymentMethods ? (
-          <RestaurantBranchPaymentMethodsSection
+          <RestaurantPaymentMethodsSection
             restaurantId={restaurantId}
             canEdit={isRestaurantAdmin}
           />

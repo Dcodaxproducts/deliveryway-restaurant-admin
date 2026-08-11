@@ -22,6 +22,7 @@ export type RestaurantPaymentManagement = {
   restaurantId: string | null;
   activePlatformPaymentMethods: PaymentMethodCode[];
   allowedPaymentMethods: PaymentMethodCode[];
+  customerPaymentMethods: PaymentMethodCode[];
   walletEnabled: boolean;
   paymentMethodsNote: string;
   estimatedAvailableBalance: number | null;
@@ -69,9 +70,7 @@ export type CreateRestaurantPayoutRequestPayload = {
 };
 
 export type UpdateRestaurantPaymentMethodsPayload = {
-  allowedPaymentMethods: PaymentMethodCode[];
-  walletEnabled: boolean;
-  note?: string;
+  customerPaymentMethods: PaymentMethodCode[];
 };
 
 export type RestaurantPayoutProvider = "STRIPE" | "PAYPAL";
@@ -283,11 +282,15 @@ export const normalizeRestaurantPaymentManagement = (
   const walletEnabled =
     getBoolean(methodSettings.walletEnabled) ||
     allowedPaymentMethods.includes("WALLET");
+  const customerPaymentMethods = normalizePaymentMethods(
+    methodSettings.customerPaymentMethods ?? allowedPaymentMethods,
+  ).filter((method) => allowedPaymentMethods.includes(method));
 
   return {
     restaurantId: getString(data.restaurantId ?? restaurant.id),
     activePlatformPaymentMethods,
     allowedPaymentMethods,
+    customerPaymentMethods,
     walletEnabled,
     estimatedAvailableBalance: getNumber(
       paymentSummary.estimatedAvailableBalance ??
@@ -325,7 +328,7 @@ export const updateRestaurantPaymentMethods = (
   payload: UpdateRestaurantPaymentMethodsPayload,
 ) =>
   httpClient.patch<unknown, UpdateRestaurantPaymentMethodsPayload>(
-    `/payments/restaurants/${restaurantId}/methods`,
+    `/payments/restaurants/${restaurantId}/customer-methods`,
     payload,
   );
 

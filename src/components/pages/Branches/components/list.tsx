@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { BranchCard } from "@/components/cards/BranchCard";
 import EmptyState from "@/components/common/EmptyState";
-import BranchDetailsModal from "./BranchDetails/BranchDetailsModal";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 
 interface Props {
   branches?: any[];
@@ -13,18 +12,9 @@ interface Props {
 
 export default function BranchesList({ branches = [], loading }: Props) {
   const commonT = useTranslations("common");
-  const [isModalOpen, setIsModalOpen] = useState(false);
- const [selectedBranch, setSelectedBranch] = useState<any | null>(null);
+  const router = useRouter();
 
-const openDialog = (branchId: string) => {
-  const branch = branches.find(({ id }) => id === branchId);
-  setSelectedBranch(branch ?? null);
-  setIsModalOpen(true);
-};
-
-  const closeDialog = () => setIsModalOpen(false);
-
-    if (loading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-between bg-white rounded-[14px] border border-gray-200 px-4 py-4 animate-pulse">
         <div className="flex items-center gap-4">
@@ -45,8 +35,7 @@ const openDialog = (branchId: string) => {
     );
   }
 
-
-  if (!branches || branches.length === 0  && !loading) {
+  if (!branches || (branches.length === 0 && !loading)) {
     return (
       <EmptyState
         title={commonT("emptyBranchesTitle")}
@@ -57,27 +46,23 @@ const openDialog = (branchId: string) => {
 
   return (
     <div className="space-y-3 min-h-[40vh]">
-      {branches.map(({ id, name, isActive, availability, isMain, coverImage, logoUrl }) => (
-      <BranchCard
-  key={id}
-  id={id}
-  name={name}
-  isActive={isActive}
-  availability={availability}
-  loading={loading}
-  isDefault={isMain}
-  itemsCount={0}
-  openDialog={openDialog}
-  coverImage={coverImage}
-  logoUrl={logoUrl}
-/>
-      ))}
-
-     <BranchDetailsModal
-  isOpen={isModalOpen}
-  closeDialog={closeDialog}
-  branch={selectedBranch}
-/>
+      {branches.map(
+        ({ id, name, isActive, availability, isMain, coverImage, logoUrl }) => (
+          <BranchCard
+            key={id}
+            id={id}
+            name={name}
+            isActive={isActive}
+            availability={availability}
+            loading={loading}
+            isDefault={isMain}
+            itemsCount={0}
+            openDialog={(branchId) => router.push(`/branches/${branchId}`)}
+            coverImage={coverImage}
+            logoUrl={logoUrl}
+          />
+        ),
+      )}
     </div>
   );
 }

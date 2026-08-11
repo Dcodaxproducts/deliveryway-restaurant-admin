@@ -35,7 +35,7 @@ export const useRestaurantPaymentManagement = (
     enabled: Boolean(restaurantId) && enabled,
   });
 
-export const useUpdateRestaurantPaymentMethods = () => {
+export const useUpdateRestaurantCustomerPaymentMethods = () => {
   const queryClient = useQueryClient();
 
   return useMutation({

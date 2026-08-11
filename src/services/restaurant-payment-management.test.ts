@@ -41,7 +41,7 @@ describe("restaurant payment management service", () => {
     await getRestaurantPaymentManagement("restaurant-1");
 
     expect(mockedHttpClient.get).toHaveBeenCalledWith(
-      "/payments/restaurants/restaurant-1/management"
+      "/payments/restaurants/restaurant-1/management",
     );
   });
 
@@ -60,7 +60,7 @@ describe("restaurant payment management service", () => {
     const result = await getRestaurantWallet("restaurant-1");
 
     expect(mockedHttpClient.get).toHaveBeenCalledWith(
-      "/payments/restaurants/restaurant-1/wallet"
+      "/payments/restaurants/restaurant-1/wallet",
     );
     expect(result).toMatchObject({
       type: "RESTAURANT_WALLET",
@@ -88,7 +88,7 @@ describe("restaurant payment management service", () => {
     const result = await getRestaurantPayoutRequests("restaurant-1");
 
     expect(mockedHttpClient.get).toHaveBeenCalledWith(
-      "/payments/restaurants/restaurant-1/payout-requests"
+      "/payments/restaurants/restaurant-1/payout-requests",
     );
     expect(result).toEqual([
       expect.objectContaining({
@@ -126,7 +126,7 @@ describe("restaurant payment management service", () => {
           accountNumber: "1234567890",
         },
         note: "Please transfer payout",
-      }
+      },
     );
   });
 
@@ -168,6 +168,7 @@ describe("restaurant payment management service", () => {
       restaurantId: "restaurant-1",
       activePlatformPaymentMethods: ["COD", "STRIPE"],
       allowedPaymentMethods: ["COD", "WALLET"],
+      customerPaymentMethods: ["COD", "WALLET"],
       walletEnabled: true,
       estimatedAvailableBalance: 1250.5,
       currency: "PKR",
@@ -203,6 +204,7 @@ describe("restaurant payment management service", () => {
             ],
             restaurantMethods: {
               allowedPaymentMethods: ["COD", "PAYPAL", "WALLET"],
+              customerPaymentMethods: ["COD", "PAYPAL"],
               walletEnabled: true,
               note: "Allow wallet",
             },
@@ -253,6 +255,7 @@ describe("restaurant payment management service", () => {
         "JAZZCASH",
       ],
       allowedPaymentMethods: ["COD", "PAYPAL", "WALLET"],
+      customerPaymentMethods: ["COD", "PAYPAL"],
       walletEnabled: true,
       paymentMethodsNote: "Allow wallet",
       estimatedAvailableBalance: 42.39,
