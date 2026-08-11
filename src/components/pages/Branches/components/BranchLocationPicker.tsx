@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { AlertCircle, Loader2, MapPin, Search } from "lucide-react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
+import { AlertCircle, LocateFixed, Loader2, MapPin, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Label } from "@/components/ui/label";
@@ -139,6 +145,24 @@ const getAddressComponent = (
   name: "long_name" | "short_name" = "long_name"
 ) => components?.find((component) => component.types.includes(type))?.[name] ?? "";
 
+const hasAddressComponent = (
+  place: GooglePlaceResult,
+  type: string,
+) => Boolean(getAddressComponent(place.address_components, type));
+
+export const selectBestGeocodeResult = (results: GooglePlaceResult[]) =>
+  [...results].sort((left, right) => {
+    const score = (place: GooglePlaceResult) =>
+      Number(hasAddressComponent(place, "route")) * 8 +
+      Number(hasAddressComponent(place, "street_number")) * 4 +
+      Number(hasAddressComponent(place, "postal_code")) * 3 +
+      Number(hasAddressComponent(place, "locality")) * 2 +
+      Number(hasAddressComponent(place, "postal_town")) * 2 +
+      Number(Boolean(place.formatted_address));
+
+    return score(right) - score(left);
+  })[0];
+
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const getFirstAddressLine = (place: GooglePlaceResult) =>
@@ -164,8 +188,11 @@ export const mapPlaceToAddressFields = (
   const streetNumber = getAddressComponent(place.address_components, "street_number");
   const route = getAddressComponent(place.address_components, "route");
   const neighborhood = getAddressComponent(place.address_components, "neighborhood");
-  const sublocality = getAddressComponent(place.address_components, "sublocality");
+  const sublocality =
+    getAddressComponent(place.address_components, "sublocality_level_1") ||
+    getAddressComponent(place.address_components, "sublocality");
   const locality = getAddressComponent(place.address_components, "locality");
+  const postalTown = getAddressComponent(place.address_components, "postal_town");
   const adminArea = getAddressComponent(place.address_components, "administrative_area_level_1");
   const country = getAddressComponent(place.address_components, "country");
   const postalCode = getAddressComponent(place.address_components, "postal_code");
@@ -177,9 +204,16 @@ export const mapPlaceToAddressFields = (
   return {
     street: route || fallbackStreet,
     shopNumber: streetNumber,
-    area: neighborhood || sublocality,
+    area:
+      neighborhood ||
+      sublocality ||
+      getAddressComponent(place.address_components, "administrative_area_level_3"),
     postalCode,
-    city: locality || getAddressComponent(place.address_components, "administrative_area_level_2"),
+    city:
+      locality ||
+      postalTown ||
+      getAddressComponent(place.address_components, "administrative_area_level_2") ||
+      sublocality,
     state: adminArea,
     country,
     lat: String(point.lat),
@@ -235,12 +269,13 @@ export function BranchLocationPicker({
     initialPoint ? `${initialPoint.lat}, ${initialPoint.lng}` : ""
   );
   const [searchLoading, setSearchLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [selectedPoint, setSelectedPoint] = useState<LatLngNumberPoint | null>(
     initialPoint
   );
 
-  const applyPlace = (place: GooglePlaceResult) => {
+  const applyPlace = useCallback((place: GooglePlaceResult) => {
     const location = place.geometry?.location;
 
     if (!location) {
@@ -273,9 +308,9 @@ export function BranchLocationPicker({
         });
       }
     }
-  };
+  }, [markerTitle, onAddressFieldsChange, t]);
 
-  const reverseGeocodePoint = (point: LatLngNumberPoint) => {
+  const reverseGeocodePoint = useCallback((point: LatLngNumberPoint) => {
     const maps = getGoogleMaps();
 
     if (!maps?.Geocoder) {
@@ -288,9 +323,11 @@ export function BranchLocationPicker({
 
     const geocoder = new maps.Geocoder();
     geocoder.geocode({ location: point }, (results: GooglePlaceResult[] | null, status: string) => {
-      if (status === "OK" && results?.[0]) {
+      const bestResult = results ? selectBestGeocodeResult(results) : undefined;
+
+      if (status === "OK" && bestResult) {
         applyPlace({
-          ...results[0],
+          ...bestResult,
           geometry: {
             location: {
               lat: () => point.lat,
@@ -310,6 +347,35 @@ export function BranchLocationPicker({
 
       setSearchLoading(false);
     });
+  }, [applyPlace, onAddressFieldsChange]);
+
+  const handleCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setSearchError(t("currentLocationUnsupported"));
+      return;
+    }
+
+    setLocationLoading(true);
+    setSearchError("");
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setLocationLoading(false);
+        reverseGeocodePoint({
+          lat: Number(coords.latitude.toFixed(6)),
+          lng: Number(coords.longitude.toFixed(6)),
+        });
+      },
+      () => {
+        setLocationLoading(false);
+        setSearchError(t("currentLocationFailed"));
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 60_000,
+        timeout: 15_000,
+      },
+    );
   };
 
   const handleMapSearch = () => {
@@ -402,7 +468,7 @@ export function BranchLocationPicker({
         lng: Number(latLng.lng().toFixed(6)),
       });
     });
-  }, [initialPoint, mapsReady, markerTitle, t]);
+  }, [initialPoint, mapsReady, markerTitle, reverseGeocodePoint, t]);
 
   useEffect(() => {
     const maps = getGoogleMaps();
@@ -433,7 +499,7 @@ export function BranchLocationPicker({
 
       autocompleteRef.current = null;
     };
-  }, [mapsReady]);
+  }, [applyPlace, mapsReady]);
 
   useEffect(() => {
     return () => {
@@ -445,7 +511,7 @@ export function BranchLocationPicker({
   return (
     <div className="min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
       <div className="border-b border-gray-200 bg-white p-4">
-        <div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
           <div className="min-w-0">
             <Label htmlFor={inputId} className="mb-1 block text-xs font-medium text-gray-500">
               {t("searchAreaAddress")}
@@ -481,6 +547,22 @@ export function BranchLocationPicker({
           <div className="flex min-w-0 items-end">
             <button
               type="button"
+              onClick={handleCurrentLocation}
+              disabled={locationLoading || !mapsReady}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto"
+            >
+              {locationLoading ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <LocateFixed size={15} />
+              )}
+              {t("useCurrentLocation")}
+            </button>
+          </div>
+
+          <div className="flex min-w-0 items-end">
+            <button
+              type="button"
               onClick={handleMapSearch}
               disabled={searchLoading || !mapsReady}
               className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-primary px-4 text-sm font-medium text-primary transition hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto"
@@ -501,7 +583,7 @@ export function BranchLocationPicker({
 
       {mapsReady ? (
         <>
-          <div ref={mapContainerRef} className="h-[320px] w-full" />
+          <div ref={mapContainerRef} className="h-[280px] w-full sm:h-[320px]" />
           <div className="flex flex-col gap-2 border-t border-gray-200 bg-white px-4 py-3 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
             <span>{t("selectBranchLocationOnMap")}</span>
             <span className="min-w-0 break-words font-medium text-gray-700 sm:shrink-0">

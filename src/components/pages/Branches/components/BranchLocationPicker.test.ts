@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { mapPlaceToAddressFields } from "@/components/pages/Branches/components/BranchLocationPicker";
+import {
+  mapPlaceToAddressFields,
+  selectBestGeocodeResult,
+} from "@/components/pages/Branches/components/BranchLocationPicker";
 
 describe("mapPlaceToAddressFields", () => {
   it("separates Google street_number into shopNumber and keeps street as route", () => {
@@ -50,5 +53,47 @@ describe("mapPlaceToAddressFields", () => {
 
     expect(fields.street).toBe("Example Street");
     expect(fields.shopNumber).toBe("40");
+  });
+
+  it("uses postal town and sublocality fallbacks for complete address autofill", () => {
+    const fields = mapPlaceToAddressFields(
+      {
+        address_components: [
+          { long_name: "12", short_name: "12", types: ["street_number"] },
+          { long_name: "High Road", short_name: "High Rd", types: ["route"] },
+          { long_name: "Wembley", short_name: "Wembley", types: ["postal_town"] },
+          {
+            long_name: "Alperton",
+            short_name: "Alperton",
+            types: ["sublocality_level_1"],
+          },
+          { long_name: "HA0 1AA", short_name: "HA0 1AA", types: ["postal_code"] },
+        ],
+      },
+      { lat: 51.54, lng: -0.29 },
+    );
+
+    expect(fields.city).toBe("Wembley");
+    expect(fields.area).toBe("Alperton");
+    expect(fields.postalCode).toBe("HA0 1AA");
+  });
+
+  it("prefers a street-level reverse-geocode result over a plus-code result", () => {
+    const plusCodeResult = {
+      address_components: [
+        { long_name: "Islamabad", short_name: "Islamabad", types: ["locality"] },
+      ],
+      formatted_address: "P2H5+GH Islamabad",
+    };
+    const streetResult = {
+      address_components: [
+        { long_name: "12", short_name: "12", types: ["street_number"] },
+        { long_name: "Street 8", short_name: "Street 8", types: ["route"] },
+        { long_name: "44000", short_name: "44000", types: ["postal_code"] },
+      ],
+      formatted_address: "Street 8, Islamabad",
+    };
+
+    expect(selectBestGeocodeResult([plusCodeResult, streetResult])).toBe(streetResult);
   });
 });

@@ -24,7 +24,6 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  CARD_PANEL_CLASS,
   FIELD_ERROR_CLASS,
   MUTED_TEXT_SM_CLASS,
 } from "@/components/common/common-classes";
@@ -169,15 +168,34 @@ const branchFieldConfigs: FieldConfig[] = [
 ];
 
 const adminFieldConfigs: FieldConfig[] = [
-  { name: "branchAdmin.firstName", placeholderKey: "firstName" },
-  { name: "branchAdmin.lastName", placeholderKey: "lastName" },
-  { name: "branchAdmin.email", placeholderKey: "email" },
+  {
+    name: "branchAdmin.firstName",
+    labelKey: "firstName",
+    placeholderKey: "firstName",
+  },
+  {
+    name: "branchAdmin.lastName",
+    labelKey: "lastName",
+    placeholderKey: "lastName",
+  },
+  {
+    name: "branchAdmin.email",
+    labelKey: "email",
+    placeholderKey: "email",
+    type: "email",
+  },
   {
     name: "branchAdmin.password",
+    labelKey: "password",
     placeholderKey: "password",
     type: "password",
   },
-  { name: "branchAdmin.phone", placeholderKey: "phone" },
+  {
+    name: "branchAdmin.phone",
+    labelKey: "phone",
+    placeholderKey: "phone",
+    type: "tel",
+  },
 ];
 
 const getErrorMessage = (
@@ -349,61 +367,72 @@ export function CreateBranchModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-[760px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
-        <DialogHeader className="space-y-1">
-          <DialogTitle className="text-xl font-semibold">
+      <DialogContent className="flex max-h-[calc(100dvh-2rem)] max-w-[1120px] flex-col gap-0 overflow-hidden rounded-[24px] border-0 bg-white p-0 shadow-2xl shadow-slate-900/15">
+        <DialogHeader className="shrink-0 border-b border-slate-200 bg-gradient-to-br from-primary/[0.08] via-white to-orange-50/70 px-6 py-5 pr-16 sm:px-8 sm:py-6">
+          <DialogTitle className="text-2xl font-semibold tracking-[-0.02em] text-slate-950">
             {t("createBranch")}
           </DialogTitle>
           <p className={MUTED_TEXT_SM_CLASS}>{t("createDescription")}</p>
         </DialogHeader>
 
-        <form noValidate onSubmit={handleSubmit(onSubmit)}>
-          <div className={`mt-4 ${CARD_PANEL_CLASS} space-y-4`}>
-            {branchNameFieldConfig
-              ? renderBranchField(branchNameFieldConfig)
-              : null}
+        <form
+          className="flex min-h-0 flex-1 flex-col"
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto bg-slate-50/80 px-4 py-5 sm:px-8 sm:py-6">
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/50 sm:p-6">
+              <div className="mb-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                {branchNameFieldConfig
+                  ? renderBranchField(branchNameFieldConfig)
+                  : null}
 
-            <div className="space-y-2">
-              <div>
-                <h4 className="text-sm font-medium text-gray-900">
-                  {t("createBranchLocation")}
-                </h4>
-                <p className="mt-1 text-xs text-gray-500">
-                  {t("createBranchLocationDescription")}
-                </p>
-              </div>
-              <BranchLocationPicker
-                inputId="create-branch-map-search"
-                markerTitle={t("createBranchLocation")}
-                onAddressFieldsChange={handleLocationFieldsChange}
-              />
-            </div>
-
-            {addressFieldConfigs.map(renderBranchField)}
-
-            {!hasExistingBranches ? (
-              <div className="flex items-center justify-between">
-                <Label htmlFor="create-branch-is-main" className="text-sm">
-                  {t("mainBranch")}
-                </Label>
-                <Controller
-                  control={control}
-                  name="isMain"
-                  render={({ field }) => (
-                    <Switch
-                      id="create-branch-is-main"
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      className="data-[state=checked]:bg-primary"
+                {!hasExistingBranches ? (
+                  <div className="flex h-[44px] min-w-[180px] items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4">
+                    <Label
+                      htmlFor="create-branch-is-main"
+                      className="text-sm font-medium text-slate-700"
+                    >
+                      {t("mainBranch")}
+                    </Label>
+                    <Controller
+                      control={control}
+                      name="isMain"
+                      render={({ field }) => (
+                        <Switch
+                          id="create-branch-is-main"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="data-[state=checked]:bg-primary"
+                        />
+                      )}
                     />
-                  )}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">
+                    {t("createBranchLocation")}
+                  </h4>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {t("createBranchLocationDescription")}
+                  </p>
+                </div>
+                <BranchLocationPicker
+                  inputId="create-branch-map-search"
+                  markerTitle={t("createBranchLocation")}
+                  onAddressFieldsChange={handleLocationFieldsChange}
                 />
               </div>
-            ) : null}
 
-            <hr className="border-gray-200 my-2" />
+              <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {addressFieldConfigs.map(renderBranchField)}
+              </div>
+            </section>
 
-            <div className="space-y-3">
+            <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/50 sm:p-6">
               <div>
                 <h4 className="text-sm font-medium text-gray-900">
                   {t("allowedPaymentMethods")}
@@ -475,16 +504,15 @@ export function CreateBranchModal({
                   {errors.settings.allowedPaymentMethods.message}
                 </p>
               ) : null}
-            </div>
+            </section>
 
-            <hr className="border-gray-200 my-2" />
+            <div className="grid gap-5 lg:grid-cols-2">
+              <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/50 sm:p-6">
+                <h4 className="text-base font-semibold text-slate-950">
+                  {t("tableReservationSettings")}
+                </h4>
 
-            <div className="space-y-3">
-              <h4 className="text-sm font-medium text-gray-900">
-                {t("tableReservationSettings")}
-              </h4>
-
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4 rounded-xl bg-slate-50 px-4 py-3">
                 <div>
                   <Label
                     htmlFor="create-branch-table-reservations"
@@ -510,7 +538,7 @@ export function CreateBranchModal({
                 />
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4 rounded-xl bg-slate-50 px-4 py-3">
                 <div>
                   <Label
                     htmlFor="create-branch-auto-accept-reservations"
@@ -536,7 +564,7 @@ export function CreateBranchModal({
                 />
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1 rounded-xl bg-slate-50 px-4 py-3">
                 <Label htmlFor="create-branch-table-count" className="text-sm">
                   {t("tableCount")}
                 </Label>
@@ -544,7 +572,7 @@ export function CreateBranchModal({
                   id="create-branch-table-count"
                   type="number"
                   min={0}
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} bg-white`}
                   aria-invalid={Boolean(errors.settings?.tableCount?.message)}
                   {...register("settings.tableCount", { valueAsNumber: true })}
                 />
@@ -555,45 +583,24 @@ export function CreateBranchModal({
                   </p>
                 ) : null}
               </div>
-            </div>
+              </section>
 
-            <hr className="border-gray-200 my-2" />
-
-            <h4 className="text-sm font-medium text-gray-900">
-              {t("branchAdminInfo")}
-            </h4>
-
-            {adminFieldConfigs.map((config) => {
-              const { name, placeholderKey, type } = config;
-              const errorMessage = getErrorMessage(errors, name);
-              const fieldId = `create-branch-${name.replace(/\./g, "-")}`;
-
-              return (
-                <div key={name} className="space-y-1">
-                  <Label htmlFor={fieldId} className="sr-only">
-                    {t(placeholderKey)}
-                  </Label>
-                  <Input
-                    id={fieldId}
-                    type={type}
-                    placeholder={t(placeholderKey)}
-                    className={INPUT_CLASS}
-                    aria-invalid={Boolean(errorMessage)}
-                    {...register(name)}
-                  />
-                  {errorMessage ? (
-                    <p className={FIELD_ERROR_CLASS}>{errorMessage}</p>
-                  ) : null}
+              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/50 sm:p-6">
+                <h4 className="text-base font-semibold text-slate-950">
+                  {t("branchAdminInfo")}
+                </h4>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  {adminFieldConfigs.map(renderBranchField)}
                 </div>
-              );
-            })}
+              </section>
+            </div>
           </div>
 
-          <div className="mt-6 flex items-center justify-center gap-3">
+          <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-8">
             <Button
               type="button"
-              variant="ghost"
-              className="text-gray-700 text-[17px]"
+              variant="outline"
+              className="h-11 rounded-xl border-slate-300 px-6 text-slate-700"
               onClick={() => handleOpenChange(false)}
             >
               {commonT("cancel")}
@@ -601,7 +608,7 @@ export function CreateBranchModal({
 
             <Button
               type="submit"
-              className="px-8 py-2 rounded-[10px] bg-primary hover:bg-primary/90 text-[17px]"
+              className="h-11 rounded-xl bg-primary px-8 text-base hover:bg-primary/90 active:scale-[0.98]"
               disabled={
                 createBranchMutation.isPending ||
                 paymentManagementQuery.isLoading ||
