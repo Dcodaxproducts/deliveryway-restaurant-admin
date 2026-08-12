@@ -52,18 +52,18 @@ describe("local printer bridge", () => {
       jobName: "DeliveryWays printer test",
       units: "mm",
       size: { width: 58 },
-      margins: 0,
+      margins: 4,
       scaleContent: false,
     });
     expect(qzMocks.print).toHaveBeenCalledTimes(1);
   });
 
   it.each([
-    ["A4", { width: 210, height: 297 }],
-    ["A5", { width: 148, height: 210 }],
-    ["80MM", { width: 80 }],
-    ["58MM", { width: 58 }],
-  ] as const)("prints an order using %s paper", async (paperSize, size) => {
+    ["A4", { width: 210, height: 297 }, 10],
+    ["A5", { width: 148, height: 210 }, 8],
+    ["80MM", { width: 80 }, 4],
+    ["58MM", { width: 58 }, 4],
+  ] as const)("prints an order using %s paper", async (paperSize, size, margins) => {
     qzMocks.create.mockReturnValue({ printer: "Kitchen USB" });
     qzMocks.print.mockResolvedValue(undefined);
 
@@ -79,6 +79,7 @@ describe("local printer bridge", () => {
         jobName: "DeliveryWays order 42",
         units: "mm",
         size,
+        margins,
       }),
     );
   });
