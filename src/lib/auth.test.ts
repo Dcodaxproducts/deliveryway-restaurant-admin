@@ -56,6 +56,23 @@ describe("auth helpers", () => {
     ).toBe(false);
   });
 
+  it("lets a business admin without restaurants enter the dashboard", () => {
+    const user = normalizeUser({
+      id: "owner-1",
+      email: "owner@example.com",
+      role: "BUSINESS_ADMIN",
+      restaurantId: null,
+    });
+
+    expect(
+      shouldRequireRestaurantSelection({
+        user,
+        totalRestaurants: 0,
+        selectionCompleted: false,
+      }),
+    ).toBe(false);
+  });
+
   it("normalizes restaurant id from a branch admin branch relationship", () => {
     const user = normalizeUser({
       id: "branch-admin-1",

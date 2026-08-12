@@ -148,6 +148,7 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
       page: restaurantPage,
       limit: RESTAURANT_PICKER_LIMIT,
       search: debouncedRestaurantSearch || undefined,
+      includeInactive: true,
     },
     Boolean(token && user?.id && canSwitchRestaurant(user)),
   );
@@ -188,7 +189,6 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
         : totalPages > 0
           ? restaurantPage < totalPages
           : rows.length >= RESTAURANT_PICKER_LIMIT;
-    const userTenantId = user?.tenantId ?? null;
     const allowedStaffIds = new Set(staffRestaurantIds);
     const filtered = rows.reduce<RestaurantOption[]>((acc, row) => {
       if (!isRecord(row)) return acc;
@@ -200,8 +200,6 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
       const tenant = getRecordValue(row, "tenant");
       const tenantId =
         getStringValue(row, "tenantId") ?? getStringValue(tenant, "id") ?? null;
-
-      if (userTenantId && tenantId && tenantId !== userTenantId) return acc;
 
       acc.push({
         id,

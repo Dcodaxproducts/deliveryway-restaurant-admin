@@ -701,9 +701,5 @@ export const shouldRequireRestaurantSelection = ({
     return false;
   }
 
-  if (!user.restaurantId) {
-    return true;
-  }
-
   return isRestaurantAdminRole(user.role) && totalRestaurants > 1;
 };
