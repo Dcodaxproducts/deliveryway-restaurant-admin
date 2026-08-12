@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { getStoredAuth } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/constants";
+import { claimPendingOrderNotifications } from "@/services/notifications";
 import {
   printAcceptedOrderIfConfigured,
   printNewOrderIfConfigured,
@@ -204,9 +205,7 @@ export function useRealtimeOrderNotifications() {
     window.addEventListener("pointerdown", unlockSoundFromUserGesture);
     window.addEventListener("keydown", unlockSoundFromUserGesture);
 
-    socket.on("connect", refreshOrderData);
-
-    socket.on("order.created", (payload: OrderCreatedPayload) => {
+    const handleOrderCreated = (payload: OrderCreatedPayload) => {
       if (
         !payload?.id ||
         payload.restaurantId !== restaurantId ||
@@ -235,7 +234,7 @@ export function useRealtimeOrderNotifications() {
         restaurantId,
         branchId: payload.branchId,
       }).catch(() => {
-        toast.error("New order received, but automatic printing failed.");
+        toast.error(orders("newOrderAutoPrintFailed"));
       });
 
       try {
@@ -278,7 +277,34 @@ export function useRealtimeOrderNotifications() {
           },
         },
       );
+    };
+
+    socket.on("connect", () => {
+      refreshOrderData();
+      void claimPendingOrderNotifications({
+        restaurantId,
+        channel: "IN_APP",
+        ...(isBranchAdmin && branchId ? { branchId } : {}),
+      })
+        .then((response) => {
+          response.data.forEach((notification) => {
+            const order = notification.order;
+            if (!order?.id) return;
+
+            handleOrderCreated({
+              id: order.id,
+              restaurantId: order.restaurantId ?? restaurantId,
+              branchId: order.branchId ?? branchId ?? "",
+              source: "STOREFRONT",
+            });
+          });
+        })
+        .catch(() => {
+          // Realtime delivery remains active if backlog claiming is unavailable.
+        });
     });
+
+    socket.on("order.created", handleOrderCreated);
 
     socket.on("order.status.updated", (payload: OrderStatusUpdatedPayload) => {
       if (
@@ -307,7 +333,7 @@ export function useRealtimeOrderNotifications() {
           restaurantId,
           branchId: payload.branchId,
         }).catch(() => {
-          toast.error("Order accepted, but automatic printing failed.");
+          toast.error(orders("acceptedOrderAutoPrintFailed"));
         });
       }
     });

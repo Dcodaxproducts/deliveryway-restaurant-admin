@@ -11,9 +11,11 @@ vi.mock("@/lib/axios", () => ({
 }));
 
 import {
+  claimPendingOrderNotifications,
   getNotificationSummary,
   getNotifications,
   markAllNotificationsSeen,
+  markNotificationSeen,
   normalizeNotificationsResponse,
 } from "./notifications";
 
@@ -68,6 +70,39 @@ describe("restaurant admin notification feed", () => {
       "/notifications/seen-all",
       undefined,
       { params: inAppScope },
+    );
+  });
+
+  it("claims offline pending orders for the first logged-in operator", async () => {
+    apiPostMock.mockResolvedValue({
+      data: {
+        data: [
+          {
+            id: "notification-1",
+            type: "ORDER_PLACED",
+            order: { id: "order-1", status: "PLACED" },
+          },
+        ],
+      },
+    });
+
+    const result = await claimPendingOrderNotifications(inAppScope);
+
+    expect(apiPostMock).toHaveBeenCalledWith(
+      "/notifications/claim-pending-orders",
+      undefined,
+      { params: inAppScope },
+    );
+    expect(result.data[0]?.order?.id).toBe("order-1");
+  });
+
+  it("marks one opened notification as seen", async () => {
+    apiPostMock.mockResolvedValue({ data: { data: { id: "notification-1" } } });
+
+    await markNotificationSeen("notification-1");
+
+    expect(apiPostMock).toHaveBeenCalledWith(
+      "/notifications/notification-1/seen",
     );
   });
 });

@@ -46,4 +46,24 @@ describe("mergeRestaurantBillingInvoices", () => {
       description: "translated:headers.billingDescription",
     });
   });
+
+  it("shows net Stripe and PayPal receipts separately", () => {
+    const stats = buildFinancialStats(
+      {
+        paymentMethodRevenue: [
+          { paymentMethod: "STRIPE", received: 120, netReceived: 100 },
+          { paymentMethod: "PAYPAL", received: 80, netReceived: 75 },
+        ],
+      },
+      "EUR",
+      (key) => key,
+    );
+
+    expect(
+      stats.find((item) => item._id === "financial-stripe-received")?.value,
+    ).toContain("100");
+    expect(
+      stats.find((item) => item._id === "financial-paypal-received")?.value,
+    ).toContain("75");
+  });
 });

@@ -59,6 +59,7 @@ export const useUpdateNotificationSettings = () => {
 import {
   getNotifications,
   getNotificationSummary,
+  markNotificationSeen,
   markAllNotificationsSeen,
   type GetNotificationsParams,
 } from "@/services/notifications";
@@ -102,6 +103,17 @@ export const useMarkAllNotificationsSeen = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: markAllNotificationsSeen,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+};
+
+export const useMarkNotificationSeen = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: markNotificationSeen,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },

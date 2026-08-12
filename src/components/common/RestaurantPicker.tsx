@@ -30,6 +30,7 @@ type RestaurantOption = {
 };
 
 const RESTAURANT_PICKER_LIMIT = 20;
+const getRestaurantIdentifier = (id: string) => `#${id.slice(-6)}`;
 
 const getResponseRows = (response: unknown) => {
   if (!isRecord(response)) return [];
@@ -206,7 +207,8 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
     const staffFallbackOptions = staffRestaurantIds
       .filter((id) => !knownIds.has(id))
       .map((id) => {
-        const restaurant = staffRestaurantDetails[staffRestaurantIds.indexOf(id)];
+        const restaurant =
+          staffRestaurantDetails[staffRestaurantIds.indexOf(id)];
 
         return {
           id,
@@ -368,7 +370,7 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
             type="search"
             value={restaurantSearch}
             onChange={(event) => setRestaurantSearch(event.target.value)}
-            placeholder="Search restaurants..."
+            placeholder={t("searchRestaurants")}
             className="mb-2 h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm outline-none transition focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
           />
 
@@ -389,6 +391,7 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
               <button
                 key={restaurant.id}
                 onClick={() => handleSelectRestaurant(restaurant)}
+                title={`${restaurant.name ?? restaurant.id} · ${restaurant.id}`}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all ${
                   selectedRestaurant?.id === restaurant.id
                     ? "bg-primary/5 text-primary"
@@ -403,7 +406,12 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
                     logoUrl={restaurant.logoUrl}
                     name={restaurant.name}
                   />
-                  <span className="truncate">{restaurant.name}</span>
+                  <span className="min-w-0 text-left">
+                    <span className="block truncate">{restaurant.name}</span>
+                    <span className="block truncate text-[10px] font-medium text-gray-400">
+                      {getRestaurantIdentifier(restaurant.id)}
+                    </span>
+                  </span>
                 </span>
 
                 {selectedRestaurant?.id === restaurant.id && (
@@ -414,7 +422,7 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
 
             {isFetching && restaurants.length > 0 ? (
               <div className="py-2 text-center text-xs text-gray-400">
-                Loading more restaurants...
+                {t("loadingMoreRestaurants")}
               </div>
             ) : null}
 

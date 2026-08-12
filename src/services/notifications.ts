@@ -53,6 +53,16 @@ const normalizeNotification = (value: unknown): AdminNotification | null => {
 
   if (!id) return null;
 
+  const order = isRecord(value.order)
+    ? {
+        id: getString(value.order, "id"),
+        restaurantId: getString(value.order, "restaurantId") || undefined,
+        branchId: getString(value.order, "branchId") || undefined,
+        status: getString(value.order, "status") || undefined,
+        paymentStatus: getString(value.order, "paymentStatus") || undefined,
+      }
+    : null;
+
   return {
     id,
     type,
@@ -63,7 +73,24 @@ const normalizeNotification = (value: unknown): AdminNotification | null => {
     seen: getBoolean(value, "seen") ?? getBoolean(value, "isSeen"),
     createdAt: getOptionalString(value, "createdAt"),
     metadata: normalizeMetadata(value.metadata),
+    order: order?.id ? order : null,
   };
+};
+
+export const claimPendingOrderNotifications = async (
+  params: GetNotificationsParams,
+): Promise<AdminNotificationsResponse> => {
+  const { data } = await api.post(
+    "/notifications/claim-pending-orders",
+    undefined,
+    { params },
+  );
+  return normalizeNotificationsResponse(data);
+};
+
+export const markNotificationSeen = async (notificationId: string) => {
+  const { data } = await api.post(`/notifications/${notificationId}/seen`);
+  return data;
 };
 
 export const normalizeNotificationsResponse = (

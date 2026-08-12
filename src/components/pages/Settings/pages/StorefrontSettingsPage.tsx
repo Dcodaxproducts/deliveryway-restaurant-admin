@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import type { FieldPath } from "react-hook-form";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Globe2 } from "lucide-react";
 import { toast } from "sonner";
 
 import Container from "@/components/common/Container";
@@ -29,10 +28,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useBranding } from "@/hooks/useBranding";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
-  getCustomDomainStatus,
-  type CustomDomainStatus,
-} from "@/services/branding";
-import {
   type BrandingFormValues,
   restaurantBrandingPayloadSchema,
 } from "@/validations/branding";
@@ -40,65 +35,66 @@ import { useTranslations } from "next-intl";
 
 type TextFieldConfig = {
   id: string;
-  label: string;
+  labelKey: string;
   name: FieldPath<BrandingFormValues>;
-  placeholder: string;
+  placeholderKey: string;
   inputMode?: "email" | "text" | "url" | "tel";
 };
 
 type TextAreaFieldConfig = {
   id: string;
-  label: string;
+  labelKey: string;
   name: FieldPath<BrandingFormValues>;
-  placeholder: string;
+  placeholderKey: string;
 };
 
-const textareaClassName = "min-h-[112px] rounded-[12px] border-gray-200 focus:ring-primary";
+const textareaClassName =
+  "min-h-[112px] rounded-[12px] border-gray-200 focus:ring-primary";
 
 const profileFields: TextFieldConfig[] = [
   {
     id: "restaurant-name",
-    label: "Restaurant Name",
+    labelKey: "restaurantName",
     name: "restaurant.name",
-    placeholder: "Deliveryway Restaurant",
+    placeholderKey: "restaurantNamePlaceholder",
   },
   {
     id: "restaurant-tagline",
-    label: "Tagline",
+    labelKey: "tagline",
     name: "restaurant.tagline",
-    placeholder: "Fast, reliable restaurant delivery",
+    placeholderKey: "taglinePlaceholder",
   },
 ];
 
 const profileTextAreas: TextAreaFieldConfig[] = [
   {
     id: "restaurant-bio",
-    label: "Restaurant Bio",
+    labelKey: "restaurantBio",
     name: "restaurant.bio",
-    placeholder: "Describe the restaurant experience for customers.",
+    placeholderKey: "restaurantBioPlaceholder",
   },
 ];
 
 const supportFields: TextFieldConfig[] = [
   {
     id: "support-email",
-    label: "Support Email",
+    labelKey: "supportEmail",
     name: "restaurant.supportContact.email",
-    placeholder: "support@example.com",
+    placeholderKey: "supportEmailPlaceholder",
     inputMode: "email",
   },
   {
     id: "support-phone",
-    label: "Support Phone",
+    labelKey: "supportPhone",
     name: "restaurant.supportContact.phone",
-    placeholder: "+1 555 0100",
+    placeholderKey: "supportPhonePlaceholder",
     inputMode: "tel",
   },
   {
     id: "support-whatsapp",
-    label: "WhatsApp",
+    labelKey: "whatsapp",
     name: "restaurant.supportContact.whatsapp",
-    placeholder: "+1 555 0100",
+    placeholderKey: "supportPhonePlaceholder",
     inputMode: "tel",
   },
 ];
@@ -106,37 +102,37 @@ const supportFields: TextFieldConfig[] = [
 const socialFields: TextFieldConfig[] = [
   {
     id: "website-url",
-    label: "Website",
+    labelKey: "website",
     name: "restaurant.socialMedia.website",
-    placeholder: "https://restaurant.example.com",
+    placeholderKey: "websitePlaceholder",
     inputMode: "url",
   },
   {
     id: "facebook-url",
-    label: "Facebook",
+    labelKey: "facebook",
     name: "restaurant.socialMedia.facebook",
-    placeholder: "https://facebook.com/restaurant",
+    placeholderKey: "facebookPlaceholder",
     inputMode: "url",
   },
   {
     id: "instagram-url",
-    label: "Instagram",
+    labelKey: "instagram",
     name: "restaurant.socialMedia.instagram",
-    placeholder: "https://instagram.com/restaurant",
+    placeholderKey: "instagramPlaceholder",
     inputMode: "url",
   },
   {
     id: "x-url",
-    label: "X",
+    labelKey: "xSocial",
     name: "restaurant.socialMedia.x",
-    placeholder: "https://x.com/restaurant",
+    placeholderKey: "xSocialPlaceholder",
     inputMode: "url",
   },
   {
     id: "tiktok-url",
-    label: "TikTok",
+    labelKey: "tiktok",
     name: "restaurant.socialMedia.tiktok",
-    placeholder: "https://tiktok.com/@restaurant",
+    placeholderKey: "tiktokPlaceholder",
     inputMode: "url",
   },
 ];
@@ -154,8 +150,6 @@ export function StorefrontSettingsPage() {
     isBrandingSaving,
     brandingError,
   } = useBranding();
-  const [domainStatus, setDomainStatus] =
-    useState<CustomDomainStatus | null>(null);
   const {
     register,
     handleSubmit,
@@ -172,121 +166,103 @@ export function StorefrontSettingsPage() {
 
   const watchedValues = useWatch({ control }) as BrandingFormValues;
   const hasUnsavedChanges = formState.isDirty;
-  const restaurantSubdomain = watchedValues?.restaurant?.subdomain?.trim();
-  const customDomain = watchedValues?.restaurant?.customDomain?.trim();
-  const savedCustomDomain = savedBranding.restaurant.customDomain?.trim();
-  const customDomainVerified =
-    customDomain === savedCustomDomain &&
-    (domainStatus?.verified === true ||
-      Boolean(watchedValues?.restaurant?.customDomainVerifiedAt));
-  const dnsInstructions =
-    domainStatus &&
-    domainStatus.customDomain === customDomain
-      ? domainStatus.dns
-      : null;
-  const fallbackStorefrontAddress = restaurantSubdomain
-    ? `https://${restaurantSubdomain}.${
-        process.env.NEXT_PUBLIC_CUSTOMER_APP_BASE_DOMAIN?.trim() ||
-        "delivery-way.de"
-      }`
-    : "";
-  const storefrontAddress =
-    customDomain && customDomainVerified
-      ? `https://${customDomain}`
-      : fallbackStorefrontAddress;
 
   useEffect(() => {
     reset(savedBranding);
   }, [reset, savedBranding]);
 
-  useEffect(() => {
-    const restaurantId = savedBranding.restaurant.id?.trim();
-    const savedCustomDomain = savedBranding.restaurant.customDomain?.trim();
-
-    if (!restaurantId || !savedCustomDomain) {
-      setDomainStatus(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    void getCustomDomainStatus(restaurantId)
-      .then((status) => {
-        if (!cancelled) setDomainStatus(status);
-      })
-      .catch(() => {
-        if (!cancelled) setDomainStatus(null);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [savedBranding.restaurant.customDomain, savedBranding.restaurant.id]);
-
   const getError = useCallback(
-    (name: FieldPath<BrandingFormValues>) => getFieldState(name, formState).error?.message,
-    [formState, getFieldState]
+    (name: FieldPath<BrandingFormValues>) =>
+      getFieldState(name, formState).error?.message,
+    [formState, getFieldState],
   );
   const isBrandingBusy = isBrandingLoading || isBrandingSaving;
   const onSubmit = async (values: BrandingFormValues) => {
     try {
       await saveBranding(values);
-      toast.success("Branding settings saved.");
+      toast.success(t("brandingSaved"));
     } catch (error) {
-      toast.error(getApiErrorMessage(error, "Unable to save branding settings."));
+      toast.error(
+        getApiErrorMessage(error, t("brandingSaveFailed")),
+      );
     }
   };
 
   const handleApplyPreview = () => {
     updateBrandingDraft(watchedValues);
-    toast.success("Preview applied. Save to keep these branding changes.");
+    toast.success(t("previewApplied"));
   };
 
   const handleDiscardChanges = () => {
     reset(savedBranding);
     updateBrandingDraft(savedBranding);
-    toast.success("Unsaved branding changes discarded.");
+    toast.success(t("brandingChangesDiscarded"));
   };
 
   const handleResetBranding = async () => {
     try {
       await resetBranding();
-      toast.success("Branding settings reset to defaults.");
+      toast.success(t("brandingReset"));
     } catch (error) {
-      toast.error(getApiErrorMessage(error, "Unable to reset branding settings."));
+      toast.error(
+        getApiErrorMessage(error, t("brandingResetFailed")),
+      );
     }
   };
 
-  const renderTextField = ({ id, label, name, placeholder, inputMode = "text" }: TextFieldConfig) => (
+  const renderTextField = ({
+    id,
+    labelKey,
+    name,
+    placeholderKey,
+    inputMode = "text",
+  }: TextFieldConfig) => (
     <div key={name}>
       <label htmlFor={id} className={BRANDING_LABEL_CLASS}>
-        {label}
+        {t(labelKey)}
       </label>
       <Input
         id={id}
-        type={inputMode === "email" ? "email" : inputMode === "url" ? "url" : inputMode === "tel" ? "tel" : "text"}
-        placeholder={placeholder}
+        type={
+          inputMode === "email"
+            ? "email"
+            : inputMode === "url"
+              ? "url"
+              : inputMode === "tel"
+                ? "tel"
+                : "text"
+        }
+        placeholder={t(placeholderKey)}
         aria-invalid={Boolean(getError(name))}
         className={BRANDING_INPUT_CLASS}
         {...register(name)}
       />
-      {getError(name) ? <p className={BRANDING_ERROR_CLASS}>{getError(name)}</p> : null}
+      {getError(name) ? (
+        <p className={BRANDING_ERROR_CLASS}>{getError(name)}</p>
+      ) : null}
     </div>
   );
 
-  const renderTextAreaField = ({ id, label, name, placeholder }: TextAreaFieldConfig) => (
+  const renderTextAreaField = ({
+    id,
+    labelKey,
+    name,
+    placeholderKey,
+  }: TextAreaFieldConfig) => (
     <div key={name} className="md:col-span-2">
       <label htmlFor={id} className={BRANDING_LABEL_CLASS}>
-        {label}
+        {t(labelKey)}
       </label>
       <Textarea
         id={id}
-        placeholder={placeholder}
+        placeholder={t(placeholderKey)}
         aria-invalid={Boolean(getError(name))}
         className={textareaClassName}
         {...register(name)}
       />
-      {getError(name) ? <p className={BRANDING_ERROR_CLASS}>{getError(name)}</p> : null}
+      {getError(name) ? (
+        <p className={BRANDING_ERROR_CLASS}>{getError(name)}</p>
+      ) : null}
     </div>
   );
 
@@ -330,134 +306,61 @@ export function StorefrontSettingsPage() {
           >
             {common("reset")}
           </button>
-          <button type="submit" className={BRANDING_PRIMARY_BUTTON_CLASS} disabled={!isBrandingReady || isBrandingBusy}>
+          <button
+            type="submit"
+            className={BRANDING_PRIMARY_BUTTON_CLASS}
+            disabled={!isBrandingReady || isBrandingBusy}
+          >
             {isBrandingSaving ? common("saving") : t("saveBranding")}
           </button>
         </div>
 
         <div className={BRANDING_PANEL_CLASS}>
-          <h3 className={BRANDING_SECTION_TITLE_CLASS}>{t("restaurantProfile")}</h3>
+          <h3 className={BRANDING_SECTION_TITLE_CLASS}>
+            {t("restaurantProfile")}
+          </h3>
           <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
             {profileFields.map(renderTextField)}
-            <div className="md:col-span-2">
-              <div className="rounded-[18px] border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-5 shadow-sm sm:p-6">
-                <div className="flex min-w-0 gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[16px] bg-primary/10 text-primary">
-                    <Globe2 className="h-6 w-6" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-base font-semibold text-[#030401]">
-                      {t("customDomain")}
-                    </p>
-                    <p className="mt-2 text-sm leading-5 text-gray-500">
-                      {customDomain
-                        ? customDomainVerified
-                          ? t("customDomainVerified")
-                          : t("customDomainPendingVerification")
-                        : t("customDomainFallbackDescription")}
-                    </p>
-                  </div>
-                </div>
-
-                {fallbackStorefrontAddress ? (
-                  <div className="mt-5 rounded-[14px] border border-gray-200 bg-white px-4 py-3">
-                    <p className="text-xs font-medium text-gray-500">
-                      {t("customDomainDefaultStorefront")}
-                    </p>
-                    <p className="break-all text-sm font-semibold text-[#030401]">
-                      {fallbackStorefrontAddress}
-                    </p>
-                  </div>
-                ) : null}
-
-                <div className="mt-5">
-                  <label
-                    htmlFor="restaurant-custom-domain"
-                    className={BRANDING_LABEL_CLASS}
-                  >
-                    {t("customDomain")}
-                  </label>
-                  <Input
-                    id="restaurant-custom-domain"
-                    placeholder="yourrestaurant.com"
-                    aria-invalid={Boolean(
-                      getError("restaurant.customDomain"),
-                    )}
-                    className={BRANDING_INPUT_CLASS}
-                    {...register("restaurant.customDomain")}
-                  />
-                  {getError("restaurant.customDomain") ? (
-                    <p className={BRANDING_ERROR_CLASS}>
-                      {getError("restaurant.customDomain")}
-                    </p>
-                  ) : null}
-
-                  {customDomain ? (
-                    <div className="mt-4 rounded-[14px] border border-primary/20 bg-primary/5 p-4">
-                      <p className="text-sm font-semibold text-[#030401]">
-                        {t("customDomainGuideTitle")}
-                      </p>
-                      <p className="mt-1 text-xs leading-5 text-gray-600">
-                        {t("customDomainGuideIntro")}
-                      </p>
-                      <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-[12px] border border-primary/10 bg-white p-3 text-xs">
-                        <dt className="font-medium text-gray-500">
-                          {t("customDomainGuideType")}
-                        </dt>
-                        <dd className="font-semibold text-[#030401]">
-                          {dnsInstructions?.type ?? "A"}
-                        </dd>
-                        <dt className="font-medium text-gray-500">
-                          {t("customDomainGuideHost")}
-                        </dt>
-                        <dd className="break-all font-semibold text-[#030401]">
-                          {dnsInstructions?.hostLabel ?? "@"}
-                        </dd>
-                        <dt className="font-medium text-gray-500">
-                          {t("customDomainGuideTarget")}
-                        </dt>
-                        <dd className="break-all font-semibold text-[#030401]">
-                          {dnsInstructions?.target ??
-                            t("customDomainGuideSaveFirst")}
-                        </dd>
-                      </dl>
-                      <p className="mt-3 text-xs leading-5 text-gray-600">
-                        {t("customDomainGuideProviderHint")}
-                      </p>
-                      <p className="mt-1 text-xs leading-5 text-gray-600">
-                        {t("customDomainGuideActivation")}
-                      </p>
-                    </div>
-                  ) : null}
-
-                  {storefrontAddress ? (
-                    <p className="mt-2 break-all text-xs text-gray-500">
-                      {t("customDomainActiveStorefront")}: {storefrontAddress}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-            </div>
             {profileTextAreas.map(renderTextAreaField)}
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <div className={BRANDING_PANEL_CLASS}>
-            <h3 className={BRANDING_SECTION_TITLE_CLASS}>{t("supportContact")}</h3>
-            <div className="mt-6 space-y-6">{supportFields.map(renderTextField)}</div>
+            <h3 className={BRANDING_SECTION_TITLE_CLASS}>
+              {t("supportContact")}
+            </h3>
+            <div className="mt-6 space-y-6">
+              {supportFields.map(renderTextField)}
+            </div>
           </div>
           <div className={BRANDING_PANEL_CLASS}>
             <h3 className={BRANDING_SECTION_TITLE_CLASS}>{t("socialMedia")}</h3>
-            <div className="mt-6 space-y-6">{socialFields.map(renderTextField)}</div>
+            <div className="mt-6 space-y-6">
+              {socialFields.map(renderTextField)}
+            </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <BrandAssetsSection register={register} setValue={setValue} values={watchedValues} getError={getError} />
-          <ColorSchemeSection register={register} setValue={setValue} values={watchedValues} getError={getError} />
+          <BrandAssetsSection
+            register={register}
+            setValue={setValue}
+            values={watchedValues}
+            getError={getError}
+          />
+          <ColorSchemeSection
+            register={register}
+            setValue={setValue}
+            values={watchedValues}
+            getError={getError}
+          />
         </div>
-        <TypographySection register={register} values={watchedValues} getError={getError} />
+        <TypographySection
+          register={register}
+          values={watchedValues}
+          getError={getError}
+        />
         <PreviewSection values={watchedValues} />
       </form>
     </Container>

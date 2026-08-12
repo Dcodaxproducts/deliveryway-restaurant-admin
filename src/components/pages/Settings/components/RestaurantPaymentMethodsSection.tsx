@@ -1,31 +1,26 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Banknote,
   Check,
   CreditCard,
   Landmark,
-  Loader2,
   ShieldCheck,
   Store,
   WalletCards,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import {
-  useRestaurantPaymentManagement,
-  useUpdateRestaurantCustomerPaymentMethods,
-} from "@/hooks/useRestaurantPaymentManagement";
+import { useRestaurantPaymentManagement } from "@/hooks/useRestaurantPaymentManagement";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
   PAYMENT_METHOD_LABELS,
   type PaymentMethodCode,
 } from "@/types/payment-methods";
+import { useTranslations } from "next-intl";
 
 type RestaurantPaymentMethodsSectionProps = {
   restaurantId?: string | null;
-  canEdit: boolean;
 };
 
 const methodIcons: Record<PaymentMethodCode, typeof CreditCard> = {
@@ -41,13 +36,9 @@ const methodIcons: Record<PaymentMethodCode, typeof CreditCard> = {
 
 export function RestaurantPaymentMethodsSection({
   restaurantId,
-  canEdit,
 }: RestaurantPaymentMethodsSectionProps) {
+  const t = useTranslations("branches");
   const managementQuery = useRestaurantPaymentManagement(restaurantId);
-  const updateMethods = useUpdateRestaurantCustomerPaymentMethods();
-  const [selectedMethods, setSelectedMethods] = useState<PaymentMethodCode[]>(
-    [],
-  );
 
   const availableMethods = useMemo(
     () => managementQuery.data?.allowedPaymentMethods ?? [],
@@ -57,29 +48,6 @@ export function RestaurantPaymentMethodsSection({
     () => managementQuery.data?.customerPaymentMethods ?? [],
     [managementQuery.data?.customerPaymentMethods],
   );
-
-  useEffect(() => {
-    setSelectedMethods(savedMethods);
-  }, [savedMethods]);
-
-  const toggleMethod = (method: PaymentMethodCode) => {
-    if (!canEdit) return;
-    setSelectedMethods((current) =>
-      current.includes(method)
-        ? current.filter((entry) => entry !== method)
-        : [...current, method],
-    );
-  };
-
-  const hasChanges =
-    [...selectedMethods].sort().join("|") !==
-    [...savedMethods].sort().join("|");
-  const canSave =
-    Boolean(restaurantId) &&
-    canEdit &&
-    selectedMethods.length > 0 &&
-    hasChanges &&
-    !updateMethods.isPending;
 
   return (
     <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
@@ -91,21 +59,19 @@ export function RestaurantPaymentMethodsSection({
             </span>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                Restaurant-wide checkout
+                {t("restaurantWideCheckout")}
               </p>
               <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
-                Customer payment methods
+                {t("customerPaymentMethods")}
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Choose from the methods made available by Super Admin. Your
-                selection applies to this restaurant and every branch
-                automatically.
+                {t("customerPaymentMethodsReadOnlyDescription")}
               </p>
             </div>
           </div>
           <div className="inline-flex w-fit items-center gap-2 rounded-[10px] bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200">
             <ShieldCheck size={15} aria-hidden="true" />
-            All branches inherit this setup
+            {t("allBranchesInheritPaymentSetup")}
           </div>
         </div>
       </header>
@@ -126,7 +92,7 @@ export function RestaurantPaymentMethodsSection({
           <p className="rounded-[12px] border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
             {getApiErrorMessage(
               managementQuery.error,
-              "Unable to load payment settings.",
+              t("paymentMethodsLoadFailed"),
             )}
           </p>
         ) : null}
@@ -140,11 +106,10 @@ export function RestaurantPaymentMethodsSection({
               aria-hidden="true"
             />
             <p className="mt-2 text-sm font-semibold text-amber-950">
-              No payment methods are available yet
+              {t("noPaymentMethodsAvailable")}
             </p>
             <p className="mt-1 text-sm text-amber-800">
-              Super Admin must make at least one method available to this
-              restaurant.
+              {t("superAdminAssignsPaymentMethods")}
             </p>
           </div>
         ) : null}
@@ -152,17 +117,13 @@ export function RestaurantPaymentMethodsSection({
         {availableMethods.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {availableMethods.map((method) => {
-              const checked = selectedMethods.includes(method);
+              const checked = savedMethods.includes(method);
               const Icon = methodIcons[method];
 
               return (
-                <button
+                <div
                   key={method}
-                  type="button"
-                  onClick={() => toggleMethod(method)}
-                  disabled={!canEdit}
-                  aria-pressed={checked}
-                  className={`group flex min-h-24 items-center gap-4 rounded-[16px] border p-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-default ${
+                  className={`group flex min-h-24 items-center gap-4 rounded-[16px] border p-4 text-left ${
                     checked
                       ? "border-primary/30 bg-primary/[0.045] shadow-[0_8px_24px_rgba(204,0,0,0.07)]"
                       : "border-slate-200 bg-slate-50/70 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white"
@@ -179,8 +140,8 @@ export function RestaurantPaymentMethodsSection({
                     </span>
                     <span className="mt-1 block text-xs text-slate-500">
                       {checked
-                        ? "Shown at customer checkout"
-                        : "Hidden from customer checkout"}
+                        ? t("shownAtCustomerCheckout")
+                        : t("hiddenFromCustomerCheckout")}
                     </span>
                   </span>
                   <span
@@ -188,44 +149,20 @@ export function RestaurantPaymentMethodsSection({
                   >
                     <Check size={14} aria-hidden="true" />
                   </span>
-                </button>
+                </div>
               );
             })}
           </div>
         ) : null}
 
-        {selectedMethods.length === 0 && availableMethods.length > 0 ? (
-          <p className="mt-4 text-sm font-medium text-red-600">
-            Select at least one payment method for customer checkout.
-          </p>
-        ) : null}
-
         {availableMethods.length > 0 ? (
-          <footer className="mt-6 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <footer className="mt-6 border-t border-slate-200 pt-5">
             <p className="text-sm text-slate-500">
-              {selectedMethods.length} of {availableMethods.length} methods
-              visible to customers
+              {t("paymentMethodsVisibleCount", {
+                enabled: savedMethods.length,
+                total: availableMethods.length,
+              })}
             </p>
-            <Button
-              type="button"
-              size="lg"
-              onClick={() => {
-                if (!restaurantId || !canSave) return;
-                updateMethods.mutate({
-                  restaurantId,
-                  payload: { customerPaymentMethods: selectedMethods },
-                });
-              }}
-              disabled={!canSave}
-              className="h-12 w-full rounded-[12px] px-6 font-semibold shadow-[0_8px_20px_rgba(204,0,0,0.18)] active:scale-[0.98] sm:w-auto"
-            >
-              {updateMethods.isPending ? (
-                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Check className="size-4" aria-hidden="true" />
-              )}
-              Save restaurant methods
-            </Button>
           </footer>
         ) : null}
       </div>

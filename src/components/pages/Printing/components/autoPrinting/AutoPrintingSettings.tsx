@@ -198,6 +198,25 @@ export default function AutoPrintingSettings({
     }));
   };
 
+  const handlePrintingEnabledChange = (enabled: boolean) => {
+    setForm((previous) => ({
+      ...previous,
+      enabled,
+      autoPrintOnNewOrder:
+        enabled &&
+        !previous.autoPrintOnNewOrder &&
+        !previous.autoPrintOnStatusChange
+          ? true
+          : previous.autoPrintOnNewOrder,
+      printKitchenTicket:
+        enabled &&
+        !previous.printKitchenTicket &&
+        !previous.printCustomerReceipt
+          ? true
+          : previous.printKitchenTicket,
+    }));
+  };
+
   const handleRefresh = async () => {
     await Promise.all([refetchSettings(), refetchStatus()]);
   };
@@ -528,7 +547,10 @@ export default function AutoPrintingSettings({
         </div>
 
         {form.connectionType === "CLOUD" ? (
-          <div className="mb-6">
+          <div className="mb-6 space-y-3">
+            <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              {t("cloudQueueNotice")}
+            </p>
             <FormInput
               label={t("queueName")}
               placeholder={t("queueNamePlaceholder")}
@@ -581,7 +603,7 @@ export default function AutoPrintingSettings({
             <span className="text-sm font-medium">{t("printingEnabled")}</span>
             <Switch
               checked={form.enabled}
-              onCheckedChange={(checked) => updateField("enabled", checked)}
+              onCheckedChange={handlePrintingEnabledChange}
             />
           </div>
 

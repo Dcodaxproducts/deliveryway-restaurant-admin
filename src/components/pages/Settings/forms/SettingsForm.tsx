@@ -142,10 +142,7 @@ export default function SettingsForm({
     return (
       <div className="space-y-[24px] rounded-[14px] bg-white p-4 lg:p-[30px]">
         {canViewPaymentMethods ? (
-          <RestaurantPaymentMethodsSection
-            restaurantId={restaurantId}
-            canEdit={isRestaurantAdmin}
-          />
+          <RestaurantPaymentMethodsSection restaurantId={restaurantId} />
         ) : null}
         {canViewWallet ? (
           <RestaurantWalletPayoutSection

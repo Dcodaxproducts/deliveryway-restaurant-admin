@@ -1,12 +1,22 @@
 import type { PrintingConnectionType } from "@/services/printing";
 
 export type PrinterValidationError =
-  "connectionTypeRequired" | "printerRequired" | "queueRequired";
+  | "connectionTypeRequired"
+  | "printerRequired"
+  | "queueRequired"
+  | "cloudAutoPrintUnsupported"
+  | "printRuleRequired"
+  | "printCopyRequired";
 
 export const validatePrinterConnection = (settings: {
   connectionType: PrintingConnectionType | "";
   printerName: string;
   queueName: string;
+  enabled?: boolean;
+  autoPrintOnNewOrder?: boolean;
+  autoPrintOnStatusChange?: boolean;
+  printCustomerReceipt?: boolean;
+  printKitchenTicket?: boolean;
 }): PrinterValidationError | null => {
   if (!settings.connectionType) {
     return "connectionTypeRequired";
@@ -18,6 +28,26 @@ export const validatePrinterConnection = (settings: {
 
   if (settings.connectionType === "CLOUD" && !settings.queueName.trim()) {
     return "queueRequired";
+  }
+
+  if (settings.enabled && settings.connectionType === "CLOUD") {
+    return "cloudAutoPrintUnsupported";
+  }
+
+  if (
+    settings.enabled &&
+    !settings.autoPrintOnNewOrder &&
+    !settings.autoPrintOnStatusChange
+  ) {
+    return "printRuleRequired";
+  }
+
+  if (
+    settings.enabled &&
+    !settings.printCustomerReceipt &&
+    !settings.printKitchenTicket
+  ) {
+    return "printCopyRequired";
   }
 
   return null;

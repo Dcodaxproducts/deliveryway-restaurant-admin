@@ -17,6 +17,13 @@ export type AdminNotification = {
   seen?: boolean;
   createdAt?: string | null;
   metadata?: AdminNotificationMetadata | null;
+  order?: {
+    id: string;
+    restaurantId?: string;
+    branchId?: string;
+    status?: string;
+    paymentStatus?: string;
+  } | null;
 };
 
 export type AdminNotificationsResponse = {

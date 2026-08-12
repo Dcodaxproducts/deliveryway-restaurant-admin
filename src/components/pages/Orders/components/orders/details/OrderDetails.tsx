@@ -159,7 +159,10 @@ type OrderDetails = {
   coupon?: { code?: string | null; title?: string | null } | null;
   customer?: Customer | null;
   availablePaymentMethods?: string[] | null;
-  paymentOptions?: { selected?: string | null; available?: string[] | null } | null;
+  paymentOptions?: {
+    selected?: string | null;
+    available?: string[] | null;
+  } | null;
   isGroupOrder?: boolean | null;
   groupOrderInviteCode?: string | null;
   participantCount?: number | null;
@@ -205,7 +208,10 @@ const getRefundableAmounts = (transactions: Transaction[]) => {
     .filter((transaction) => transaction.type === "CHARGE")
     .reduce((sum, transaction) => sum + getTransactionAmount(transaction), 0);
   const refundedAmount = transactions
-    .filter((transaction) => transaction.type === "REFUND" && transaction.status === "REFUNDED")
+    .filter(
+      (transaction) =>
+        transaction.type === "REFUND" && transaction.status === "REFUNDED",
+    )
     .reduce((sum, transaction) => sum + getTransactionAmount(transaction), 0);
 
   return {
@@ -241,7 +247,9 @@ function DetailCard({
   className?: string;
 }) {
   return (
-    <section className={`rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5 ${className}`}>
+    <section
+      className={`rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5 ${className}`}
+    >
       {children}
     </section>
   );
@@ -263,7 +271,9 @@ function SectionTitle({
       </span>
       <div>
         <h3 className="text-base font-semibold text-gray-950">{title}</h3>
-        {description ? <p className="mt-1 text-xs leading-5 text-gray-500">{description}</p> : null}
+        {description ? (
+          <p className="mt-1 text-xs leading-5 text-gray-500">{description}</p>
+        ) : null}
       </div>
     </div>
   );
@@ -272,7 +282,9 @@ function SectionTitle({
 function InfoRow({ label, value }: { label: string; value?: React.ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-gray-100 py-3 last:border-b-0">
-      <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-gray-400">{label}</span>
+      <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-gray-400">
+        {label}
+      </span>
       <span className="min-w-0 max-w-[65%] break-words text-right text-sm font-semibold text-gray-900 [overflow-wrap:anywhere]">
         {value || "-"}
       </span>
@@ -283,7 +295,9 @@ function InfoRow({ label, value }: { label: string; value?: React.ReactNode }) {
 const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   const t = useTranslations("orders");
   const { role } = useAuth();
-  const { resolveCurrency: resolveDisplayCurrency } = useCurrency(order.restaurantId);
+  const { resolveCurrency: resolveDisplayCurrency } = useCurrency(
+    order.restaurantId,
+  );
   const refundMutation = useRefundPaymentTransaction(order.id);
   const paymentStatusMutation = useUpdatePaymentTransactionStatus(order.id);
   const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
@@ -291,16 +305,22 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   const [refundAmount, setRefundAmount] = useState("");
   const [refundNote, setRefundNote] = useState(t("refundNote"));
   const [isRefundConfirming, setIsRefundConfirming] = useState(false);
-  const [isPaymentStatusDialogOpen, setIsPaymentStatusDialogOpen] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<AdminPaymentStatus>("PAID");
-  const [paymentStatusNote, setPaymentStatusNote] = useState(t("paymentStatusNote"));
-  const [isPaymentStatusConfirming, setIsPaymentStatusConfirming] = useState(false);
+  const [isPaymentStatusDialogOpen, setIsPaymentStatusDialogOpen] =
+    useState(false);
+  const [paymentStatus, setPaymentStatus] =
+    useState<AdminPaymentStatus>("PAID");
+  const [paymentStatusNote, setPaymentStatusNote] = useState(
+    t("paymentStatusNote"),
+  );
+  const [isPaymentStatusConfirming, setIsPaymentStatusConfirming] =
+    useState(false);
   const items = order.items || [];
   const couponCode = order.coupon?.code?.trim() || "";
   const couponTitle = order.coupon?.title?.trim() || "";
   const displayItems = order.displayItems?.length ? order.displayItems : items;
   const hasBackendDealRows = displayItems.some(isDealItem);
-  const shouldShowInferredDeal = /^DEAL-/i.test(couponCode) && !hasBackendDealRows && items.length > 0;
+  const shouldShowInferredDeal =
+    /^DEAL-/i.test(couponCode) && !hasBackendDealRows && items.length > 0;
   const selectedPaymentMethod = getSelectedPaymentMethod(order);
   const paymentLabel = formatPaymentMethod(selectedPaymentMethod);
   const selectedPaymentMethodKey = selectedPaymentMethod?.toUpperCase();
@@ -309,31 +329,36 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   const transactions = order.transactions || [];
   const latestTransaction = transactions[0];
   const paymentStatusTransaction = transactions.find(
-    (transaction) => transaction.type === "CHARGE" && transaction.id
+    (transaction) => transaction.type === "CHARGE" && transaction.id,
   );
   const refundableTransaction = transactions.find(
-    (transaction) => transaction.type === "CHARGE" && transaction.status === "PAID"
+    (transaction) =>
+      transaction.type === "CHARGE" && transaction.status === "PAID",
   );
   const { chargeAmount, refundedAmount, remainingRefundableAmount } =
     getRefundableAmounts(transactions);
   const canRefundRole = role === "BUSINESS_ADMIN" || role === "SUPER_ADMIN";
   const canUpdatePaymentStatusRole =
-    role === "BUSINESS_ADMIN" || role === "SUPER_ADMIN" || role === "BRANCH_ADMIN";
+    role === "BUSINESS_ADMIN" ||
+    role === "SUPER_ADMIN" ||
+    role === "BRANCH_ADMIN";
   const canUpdatePaymentStatus = Boolean(
     canUpdatePaymentStatusRole &&
-      paymentStatusTransaction?.id &&
-      order.paymentStatus !== "REFUNDED"
+    paymentStatusTransaction?.id &&
+    order.paymentStatus !== "REFUNDED",
   );
   const canRefund = Boolean(
     canRefundRole && refundableTransaction?.id && remainingRefundableAmount > 0,
   );
-  const statusLabel = order.status && ORDER_STATUS_LABEL_KEYS[order.status]
-    ? t(ORDER_STATUS_LABEL_KEYS[order.status])
-    : formatStatus(order.status);
-  const paymentMethods = order.paymentOptions?.available || order.availablePaymentMethods || [];
+  const statusLabel =
+    order.status && ORDER_STATUS_LABEL_KEYS[order.status]
+      ? t(ORDER_STATUS_LABEL_KEYS[order.status])
+      : formatStatus(order.status);
+  const paymentMethods =
+    order.paymentOptions?.available || order.availablePaymentMethods || [];
   const primaryCurrency = resolveDisplayCurrency(
     order.currency,
-    latestTransaction?.currency
+    latestTransaction?.currency,
   );
   const parsedRefundAmount = Number(refundAmount);
   const partialAmountInvalid =
@@ -384,11 +409,12 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
 
   const renderIncludedDealItems = (includedItems: OrderItem[]) => (
     <div className="mt-3 rounded-xl bg-gray-50 p-3">
-      <p className="text-xs font-semibold text-gray-600">Includes:</p>
+      <p className="text-xs font-semibold text-gray-600">{t("includes")}:</p>
       <div className="mt-2 grid gap-2 sm:grid-cols-2">
         {includedItems.map((includedItem, itemIndex) => {
           const modifiers = includedItem.snapshotModifiers || [];
-          const itemImage = includedItem.imageUrl || includedItem.menuItem?.imageUrl || "/burgerOne.jpg";
+          const itemImage =
+            includedItem.imageUrl || includedItem.menuItem?.imageUrl;
           const quantity = includedItem.quantity ?? 1;
 
           return (
@@ -396,21 +422,29 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
               key={`${includedItem.id || itemIndex}`}
               className="flex items-center gap-2 rounded-lg bg-white p-2 shadow-sm ring-1 ring-gray-100"
             >
-              <Image
-                src={itemImage}
-                alt={getIncludedDealItemName(includedItem, t("itemFallback"))}
-                width={44}
-                height={44}
-                className="size-11 shrink-0 rounded-lg object-cover"
-                unoptimized
-              />
+              {itemImage ? (
+                <Image
+                  src={itemImage}
+                  alt={getIncludedDealItemName(includedItem, t("itemFallback"))}
+                  width={44}
+                  height={44}
+                  className="size-11 shrink-0 rounded-lg object-cover"
+                  unoptimized
+                />
+              ) : null}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-semibold text-gray-800">
-                  {quantity}× {getIncludedDealItemName(includedItem, t("itemFallback"))}
+                  {quantity}×{" "}
+                  {getIncludedDealItemName(includedItem, t("itemFallback"))}
                 </p>
                 {modifiers.length ? (
                   <p className="mt-0.5 truncate text-[11px] text-gray-500">
-                    {modifiers.map((modifier) => `${modifier.name} x${modifier.quantity ?? 1}`).join(", ")}
+                    {modifiers
+                      .map(
+                        (modifier) =>
+                          `${modifier.name} x${modifier.quantity ?? 1}`,
+                      )
+                      .join(", ")}
                   </p>
                 ) : null}
               </div>
@@ -437,37 +471,54 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
     quantity?: number | null;
     imageUrl?: string | null;
     includedItems: OrderItem[];
-  }) => (
-    <div
-      key={keyValue}
-      className="rounded-2xl border border-primary/15 bg-white p-3 shadow-sm"
-    >
-      <div className="flex items-center gap-4">
-        <Image
-          src={imageUrl || includedItems.find((item) => item.imageUrl || item.menuItem?.imageUrl)?.imageUrl || includedItems.find((item) => item.menuItem?.imageUrl)?.menuItem?.imageUrl || "/burgerOne.jpg"}
-          alt={title}
-          width={76}
-          height={76}
-          className="size-[76px] shrink-0 rounded-[12px] object-cover"
-          unoptimized
-        />
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-primary">
-              Deal
-            </span>
-            {code ? <span className="text-xs font-medium text-gray-500">Deal code: {code}</span> : null}
-          </div>
-          <h4 className="text-base font-medium text-gray-900">{title}</h4>
-          <div className="flex items-end justify-between gap-4">
-            <p className="text-base font-medium text-primary">{formatMoney(total, primaryCurrency)}</p>
-            <p className="text-sm text-gray-700">{t("qty")}: {quantity ?? 1}</p>
+  }) => {
+    const resolvedImageUrl =
+      imageUrl ||
+      includedItems.find((item) => item.imageUrl)?.imageUrl ||
+      includedItems.find((item) => item.menuItem?.imageUrl)?.menuItem?.imageUrl;
+
+    return (
+      <div
+        key={keyValue}
+        className="rounded-2xl border border-primary/15 bg-white p-3 shadow-sm"
+      >
+        <div className="flex items-center gap-4">
+          {resolvedImageUrl ? (
+            <Image
+              src={resolvedImageUrl}
+              alt={title}
+              width={76}
+              height={76}
+              className="size-[76px] shrink-0 rounded-[12px] object-cover"
+              unoptimized
+            />
+          ) : null}
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-primary">
+                {t("deal")}
+              </span>
+              {code ? (
+                <span className="text-xs font-medium text-gray-500">
+                  {t("dealCode")}: {code}
+                </span>
+              ) : null}
+            </div>
+            <h4 className="text-base font-medium text-gray-900">{title}</h4>
+            <div className="flex items-end justify-between gap-4">
+              <p className="text-base font-medium text-primary">
+                {formatMoney(total, primaryCurrency)}
+              </p>
+              <p className="text-sm text-gray-700">
+                {t("qty")}: {quantity ?? 1}
+              </p>
+            </div>
           </div>
         </div>
+        {includedItems.length ? renderIncludedDealItems(includedItems) : null}
       </div>
-      {includedItems.length ? renderIncludedDealItems(includedItems) : null}
-    </div>
-  );
+    );
+  };
 
   const openRefundDialog = () => {
     if (!refundableTransaction?.id || refundMutation.isPending) return;
@@ -487,30 +538,33 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
       return;
     }
 
-    const amount =
-      refundMode === "partial" ? Number(refundAmount) : undefined;
+    const amount = refundMode === "partial" ? Number(refundAmount) : undefined;
 
-    refundMutation.mutate({
-      paymentId: refundableTransaction.id,
-      amount,
-      note: refundNote.trim(),
-    }, {
-      onSuccess: () => {
-        setIsRefundDialogOpen(false);
-        setIsRefundConfirming(false);
+    refundMutation.mutate(
+      {
+        paymentId: refundableTransaction.id,
+        amount,
+        note: refundNote.trim(),
       },
-    });
+      {
+        onSuccess: () => {
+          setIsRefundDialogOpen(false);
+          setIsRefundConfirming(false);
+        },
+      },
+    );
   };
 
   const openPaymentStatusDialog = () => {
-    if (!paymentStatusTransaction?.id || paymentStatusMutation.isPending) return;
+    if (!paymentStatusTransaction?.id || paymentStatusMutation.isPending)
+      return;
 
     setPaymentStatus(
       order.paymentStatus === "FAILED"
         ? "FAILED"
         : order.paymentStatus === "CANCELLED"
           ? "CANCELLED"
-          : "PAID"
+          : "PAID",
     );
     setPaymentStatusNote(t("paymentStatusNote"));
     setIsPaymentStatusConfirming(false);
@@ -536,7 +590,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
           setIsPaymentStatusDialogOpen(false);
           setIsPaymentStatusConfirming(false);
         },
-      }
+      },
     );
   };
 
@@ -570,13 +624,19 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
                       {t("restaurant")}
                     </p>
-                    <h2 className="mt-1 text-2xl font-bold">{order.restaurant?.name || "-"}</h2>
-                    <p className="mt-1 text-sm text-white/75">{order.branch?.name || t("noBranch")}</p>
+                    <h2 className="mt-1 text-2xl font-bold">
+                      {order.restaurant?.name || "-"}
+                    </h2>
+                    <p className="mt-1 text-sm text-white/75">
+                      {order.branch?.name || t("noBranch")}
+                    </p>
                   </div>
                 </div>
                 <div className="rounded-2xl bg-white/10 px-4 py-3 backdrop-blur">
                   <p className="text-xs text-white/70">{t("deliveryTime")}</p>
-                  <p className="mt-1 text-lg font-bold">{formatDate(order.orderTime)}</p>
+                  <p className="mt-1 text-lg font-bold">
+                    {formatDate(order.orderTime)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -589,85 +649,126 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
               description={t("itemsOverviewDescription")}
             />
             <div className="space-y-3">
-              {shouldShowInferredDeal ? renderDealCard({
-                keyValue: "inferred-deal",
-                title: couponTitle || "Deal",
-                code: couponCode,
-                total: order.subtotal ?? items.reduce((total, item) => {
-                  const fallbackTotal = getAmountNumber(item.unitPrice) * getAmountNumber(item.quantity);
-                  return total + getAmountNumber(item.lineTotal ?? fallbackTotal);
-                }, 0),
-                quantity: order.itemCount ?? items.length,
-                includedItems: items,
-              }) : displayItems.map((item, index) => {
-                if (isDealItem(item)) {
-                  const includedItems = item.items?.length ? item.items : item.includedItems || [];
-                  const dealTotal = item.lineTotal ?? includedItems.reduce((total, includedItem) => {
-                    const fallbackTotal = getAmountNumber(includedItem.unitPrice) * getAmountNumber(includedItem.quantity);
-                    return total + getAmountNumber(includedItem.lineTotal ?? fallbackTotal);
-                  }, 0);
+              {shouldShowInferredDeal
+                ? renderDealCard({
+                    keyValue: "inferred-deal",
+                    title: couponTitle || "Deal",
+                    code: couponCode,
+                    total:
+                      order.subtotal ??
+                      items.reduce((total, item) => {
+                        const fallbackTotal =
+                          getAmountNumber(item.unitPrice) *
+                          getAmountNumber(item.quantity);
+                        return (
+                          total +
+                          getAmountNumber(item.lineTotal ?? fallbackTotal)
+                        );
+                      }, 0),
+                    quantity: order.itemCount ?? items.length,
+                    includedItems: items,
+                  })
+                : displayItems.map((item, index) => {
+                    if (isDealItem(item)) {
+                      const includedItems = item.items?.length
+                        ? item.items
+                        : item.includedItems || [];
+                      const dealTotal =
+                        item.lineTotal ??
+                        includedItems.reduce((total, includedItem) => {
+                          const fallbackTotal =
+                            getAmountNumber(includedItem.unitPrice) *
+                            getAmountNumber(includedItem.quantity);
+                          return (
+                            total +
+                            getAmountNumber(
+                              includedItem.lineTotal ?? fallbackTotal,
+                            )
+                          );
+                        }, 0);
 
-                  return renderDealCard({
-                    keyValue: `deal-${item.dealId || item.id || index}`,
-                    title: item.menuItemName || item.name || couponTitle || "Deal",
-                    code: item.dealId,
-                    total: dealTotal,
-                    quantity: item.quantity,
-                    imageUrl: item.imageUrl || item.menuItem?.imageUrl,
-                    includedItems,
-                  });
-                }
+                      return renderDealCard({
+                        keyValue: `deal-${item.dealId || item.id || index}`,
+                        title:
+                          item.menuItemName ||
+                          item.name ||
+                          couponTitle ||
+                          "Deal",
+                        code: item.dealId,
+                        total: dealTotal,
+                        quantity: item.quantity,
+                        imageUrl: item.imageUrl || item.menuItem?.imageUrl,
+                        includedItems,
+                      });
+                    }
 
-                const imageUrl = item.menuItem?.imageUrl || item.imageUrl || "/burgerOne.jpg";
-                const modifiers = item.snapshotModifiers || [];
+                    const imageUrl = item.menuItem?.imageUrl || item.imageUrl;
+                    const modifiers = item.snapshotModifiers || [];
 
-                return (
-                  <div key={item.id || index} className="rounded-2xl border border-gray-100 bg-gray-50/60 p-3">
-                    <div className="flex gap-4">
-                      <Image
-                        src={imageUrl}
-                        alt={item.menuItemName || t("itemFallback")}
-                        width={64}
-                        height={64}
-                        className="size-16 rounded-xl object-cover"
-                        unoptimized
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <p className="text-xs font-semibold uppercase text-primary">
-                              {item.menuItem?.category?.name || t("itemFallback")}
-                            </p>
-                            <h4 className="mt-1 font-semibold text-gray-950">{item.menuItemName || t("itemFallback")}</h4>
-                            <p className="text-xs text-gray-500">{item.variationName || "-"}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-bold text-gray-950">{formatMoney(item.lineTotal, primaryCurrency)}</p>
-                            <p className="text-xs text-gray-500">
-                              {item.quantity ?? 0} x {formatMoney(item.unitPrice, primaryCurrency)}
-                            </p>
+                    return (
+                      <div
+                        key={item.id || index}
+                        className="rounded-2xl border border-gray-100 bg-gray-50/60 p-3"
+                      >
+                        <div className="flex gap-4">
+                          {imageUrl ? (
+                            <Image
+                              src={imageUrl}
+                              alt={item.menuItemName || t("itemFallback")}
+                              width={64}
+                              height={64}
+                              className="size-16 rounded-xl object-cover"
+                              unoptimized
+                            />
+                          ) : null}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <div>
+                                <p className="text-xs font-semibold uppercase text-primary">
+                                  {item.menuItem?.category?.name ||
+                                    t("itemFallback")}
+                                </p>
+                                <h4 className="mt-1 font-semibold text-gray-950">
+                                  {item.menuItemName || t("itemFallback")}
+                                </h4>
+                                <p className="text-xs text-gray-500">
+                                  {item.variationName || "-"}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-bold text-gray-950">
+                                  {formatMoney(item.lineTotal, primaryCurrency)}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {item.quantity ?? 0} x{" "}
+                                  {formatMoney(item.unitPrice, primaryCurrency)}
+                                </p>
+                              </div>
+                            </div>
+
+                            {modifiers.length ? (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {modifiers.map((modifier, modifierIndex) => (
+                                  <span
+                                    key={`${modifier.name}-${modifierIndex}`}
+                                    className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-100"
+                                  >
+                                    {modifier.name} x{modifier.quantity ?? 1}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : null}
+
+                            {item.note ? (
+                              <p className="mt-3 text-xs text-gray-500">
+                                {item.note}
+                              </p>
+                            ) : null}
                           </div>
                         </div>
-
-                        {modifiers.length ? (
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {modifiers.map((modifier, modifierIndex) => (
-                              <span
-                                key={`${modifier.name}-${modifierIndex}`}
-                                className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-100"
-                              >
-                                {modifier.name} x{modifier.quantity ?? 1}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
-
-                        {item.note ? <p className="mt-3 text-xs text-gray-500">{item.note}</p> : null}
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
+                    );
+                  })}
             </div>
           </DetailCard>
 
@@ -676,8 +777,12 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {timeline.map(([label, date]) => (
                 <div key={label} className="rounded-2xl bg-gray-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{label}</p>
-                  <p className="mt-2 text-sm font-semibold text-gray-900">{formatDate(date)}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    {label}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-gray-900">
+                    {formatDate(date)}
+                  </p>
                 </div>
               ))}
             </div>
@@ -686,18 +791,32 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
 
         <div className="space-y-6">
           <DetailCard>
-            <SectionTitle icon={<CalendarClock size={19} />} title={t("orderOverview")} />
+            <SectionTitle
+              icon={<CalendarClock size={19} />}
+              title={t("orderOverview")}
+            />
             {metadata.map(([label, value]) => (
               <InfoRow key={label} label={label} value={value} />
             ))}
           </DetailCard>
 
           <DetailCard>
-            <SectionTitle icon={<Truck size={19} />} title={t("deliveryDetails")} />
-            <InfoRow label={t("deliveryOtp")} value={order.deliveryOtp || "-"} />
-            <InfoRow label={t("deliveryman")} value={order.deliveryman?.name || order.deliverymanId || "-"} />
+            <SectionTitle
+              icon={<Truck size={19} />}
+              title={t("deliveryDetails")}
+            />
+            <InfoRow
+              label={t("deliveryOtp")}
+              value={order.deliveryOtp || "-"}
+            />
+            <InfoRow
+              label={t("deliveryman")}
+              value={order.deliveryman?.name || order.deliverymanId || "-"}
+            />
             <div className="pt-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("deliveryAddress")}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                {t("deliveryAddress")}
+              </p>
               <p className="mt-2 whitespace-pre-line text-sm font-semibold leading-6 text-gray-900">
                 {deliveryAddress || t("takeawayOrder")}
               </p>
@@ -721,24 +840,45 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
           </DetailCard>
 
           <DetailCard>
-            <SectionTitle icon={<UserRound size={19} />} title={t("customer")} />
-            <InfoRow label={t("customerName")} value={order.customer?.fullName || "-"} />
+            <SectionTitle
+              icon={<UserRound size={19} />}
+              title={t("customer")}
+            />
+            <InfoRow
+              label={t("customerName")}
+              value={order.customer?.fullName || "-"}
+            />
             <InfoRow label={t("phone")} value={order.customer?.phone || "-"} />
             <InfoRow label={t("email")} value={order.customer?.email || "-"} />
-            <InfoRow label={t("guestCustomer")} value={order.customer?.isGuest ? t("yes") : t("no")} />
-            <InfoRow label={t("customerNote")} value={order.customerNote || t("noOrderNote")} />
+            <InfoRow
+              label={t("guestCustomer")}
+              value={order.customer?.isGuest ? t("yes") : t("no")}
+            />
+            <InfoRow
+              label={t("customerNote")}
+              value={order.customerNote || t("noOrderNote")}
+            />
           </DetailCard>
 
           <DetailCard>
-            <SectionTitle icon={<CreditCard size={19} />} title={t("payment")} />
-            <InfoRow label={t("selectedPaymentMethod")} value={paymentLabel || t("notAvailable")} />
-            <InfoRow label={t("paymentStatus")} value={formatStatus(order.paymentStatus)} />
+            <SectionTitle
+              icon={<CreditCard size={19} />}
+              title={t("payment")}
+            />
+            <InfoRow
+              label={t("selectedPaymentMethod")}
+              value={paymentLabel || t("notAvailable")}
+            />
+            <InfoRow
+              label={t("paymentStatus")}
+              value={formatStatus(order.paymentStatus)}
+            />
             {paymentStatusTransaction?.id ? (
               <InfoRow
                 label={t("paymentAttempt")}
                 value={`${formatStatus(paymentStatusTransaction.status)} · ${formatMoney(
                   paymentStatusTransaction.amount,
-                  paymentStatusTransaction.currency || primaryCurrency
+                  paymentStatusTransaction.currency || primaryCurrency,
                 )}`}
               />
             ) : null}
@@ -767,56 +907,107 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                 className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 ring-1 ring-red-100 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 <RotateCcw className="size-4" />
-                {refundMutation.isPending ? t("refundingPayment") : t("refundPayment")}
+                {refundMutation.isPending
+                  ? t("refundingPayment")
+                  : t("refundPayment")}
               </button>
             ) : null}
             <div className="py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("availablePaymentMethods")}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                {t("availablePaymentMethods")}
+              </p>
               <div className="mt-2 flex flex-wrap gap-2">
-                {paymentMethods.length ? paymentMethods.map((method) => (
-                  <span key={method} className="rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-600 ring-1 ring-gray-100">
-                    {formatPaymentMethod(method)}
-                  </span>
-                )) : <span className="text-sm font-semibold text-gray-900">-</span>}
+                {paymentMethods.length ? (
+                  paymentMethods.map((method) => (
+                    <span
+                      key={method}
+                      className="rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-600 ring-1 ring-gray-100"
+                    >
+                      {formatPaymentMethod(method)}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm font-semibold text-gray-900">-</span>
+                )}
               </div>
             </div>
           </DetailCard>
 
           {order.coupon ? (
             <DetailCard>
-              <SectionTitle icon={<TicketPercent size={19} />} title={t("coupon")} />
-              <InfoRow label={t("couponCode")} value={order.coupon.code || "-"} />
-              <InfoRow label={t("couponTitle")} value={order.coupon.title || "-"} />
+              <SectionTitle
+                icon={<TicketPercent size={19} />}
+                title={t("coupon")}
+              />
+              <InfoRow
+                label={t("couponCode")}
+                value={order.coupon.code || "-"}
+              />
+              <InfoRow
+                label={t("couponTitle")}
+                value={order.coupon.title || "-"}
+              />
             </DetailCard>
           ) : null}
 
           <DetailCard>
-            <SectionTitle icon={<Banknote size={19} />} title={t("orderSummary")} />
+            <SectionTitle
+              icon={<Banknote size={19} />}
+              title={t("orderSummary")}
+            />
             {totals.map(([label, amount]) => (
-              <InfoRow key={label} label={label} value={formatMoney(amount, primaryCurrency)} />
+              <InfoRow
+                key={label}
+                label={label}
+                value={formatMoney(amount, primaryCurrency)}
+              />
             ))}
           </DetailCard>
 
           <DetailCard>
-            <SectionTitle icon={<WalletCards size={19} />} title={t("transactions")} />
+            <SectionTitle
+              icon={<WalletCards size={19} />}
+              title={t("transactions")}
+            />
             <div className="space-y-3">
-              {transactions.length ? transactions.map((transaction, index) => (
-                <div key={transaction.id || index} className="rounded-2xl bg-gray-50 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-bold text-gray-950">{formatPaymentMethod(transaction.paymentMethod)}</p>
-                      <p className="mt-1 text-xs text-gray-500">{formatStatus(transaction.type)} · {formatDate(transaction.createdAt)}</p>
+              {transactions.length ? (
+                transactions.map((transaction, index) => (
+                  <div
+                    key={transaction.id || index}
+                    className="rounded-2xl bg-gray-50 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-bold text-gray-950">
+                          {formatPaymentMethod(transaction.paymentMethod)}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {formatStatus(transaction.type)} ·{" "}
+                          {formatDate(transaction.createdAt)}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-primary ring-1 ring-gray-100">
+                        {formatStatus(transaction.status)}
+                      </span>
                     </div>
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-primary ring-1 ring-gray-100">
-                      {formatStatus(transaction.status)}
-                    </span>
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                      <span className="text-xs text-gray-500">
+                        {transaction.providerRef ||
+                          transaction.note ||
+                          t("notAvailable")}
+                      </span>
+                      <span className="text-sm font-bold text-gray-950">
+                        {formatMoney(
+                          transaction.amount,
+                          transaction.currency || primaryCurrency,
+                        )}
+                      </span>
+                    </div>
                   </div>
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <span className="text-xs text-gray-500">{transaction.providerRef || transaction.note || t("notAvailable")}</span>
-                    <span className="text-sm font-bold text-gray-950">{formatMoney(transaction.amount, transaction.currency || primaryCurrency)}</span>
-                  </div>
-                </div>
-              )) : <p className="text-sm text-gray-500">{t("noTransactions")}</p>}
+                ))
+              ) : (
+                <p className="text-sm text-gray-500">{t("noTransactions")}</p>
+              )}
             </div>
           </DetailCard>
         </div>
@@ -825,7 +1016,9 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
       <Dialog open={isRefundDialogOpen} onOpenChange={setIsRefundDialogOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl border-gray-100 p-0 sm:max-w-xl">
           <DialogHeader className="border-b border-gray-100 px-6 py-5">
-            <DialogTitle className="text-xl text-gray-950">{t("refundDialogTitle")}</DialogTitle>
+            <DialogTitle className="text-xl text-gray-950">
+              {t("refundDialogTitle")}
+            </DialogTitle>
             <DialogDescription className="text-sm leading-6 text-gray-500">
               {t("refundDialogDescription")}
             </DialogDescription>
@@ -834,19 +1027,25 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
           <div className="space-y-5 px-6 py-5">
             <div className="grid gap-3 rounded-2xl bg-gray-50 p-4 sm:grid-cols-3">
               <div>
-                <p className="text-xs font-semibold uppercase text-gray-400">{t("chargedAmount")}</p>
+                <p className="text-xs font-semibold uppercase text-gray-400">
+                  {t("chargedAmount")}
+                </p>
                 <p className="mt-1 text-sm font-bold text-gray-950">
                   {formatMoney(chargeAmount, primaryCurrency)}
                 </p>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase text-gray-400">{t("refundedAmount")}</p>
+                <p className="text-xs font-semibold uppercase text-gray-400">
+                  {t("refundedAmount")}
+                </p>
                 <p className="mt-1 text-sm font-bold text-gray-950">
                   {formatMoney(refundedAmount, primaryCurrency)}
                 </p>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase text-gray-400">{t("remainingRefundable")}</p>
+                <p className="text-xs font-semibold uppercase text-gray-400">
+                  {t("remainingRefundable")}
+                </p>
                 <p className="mt-1 text-sm font-bold text-gray-950">
                   {formatMoney(remainingRefundableAmount, primaryCurrency)}
                 </p>
@@ -868,7 +1067,9 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                 }`}
               >
                 <p className="text-sm font-bold">{t("fullRefund")}</p>
-                <p className="mt-1 text-xs leading-5">{t("fullRefundDescription")}</p>
+                <p className="mt-1 text-xs leading-5">
+                  {t("fullRefundDescription")}
+                </p>
               </button>
               <button
                 type="button"
@@ -883,13 +1084,18 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                 }`}
               >
                 <p className="text-sm font-bold">{t("partialRefund")}</p>
-                <p className="mt-1 text-xs leading-5">{t("partialRefundDescription")}</p>
+                <p className="mt-1 text-xs leading-5">
+                  {t("partialRefundDescription")}
+                </p>
               </button>
             </div>
 
             {refundMode === "partial" ? (
               <div className="space-y-2">
-                <label htmlFor="refund-amount" className="text-sm font-semibold text-gray-900">
+                <label
+                  htmlFor="refund-amount"
+                  className="text-sm font-semibold text-gray-900"
+                >
                   {t("refundAmount")}
                 </label>
                 <Input
@@ -909,13 +1115,19 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                 {partialAmountInvalid ? (
                   <p className="text-xs font-medium text-red-600">
                     {t("refundAmountHelp", {
-                      amount: formatMoney(remainingRefundableAmount, primaryCurrency),
+                      amount: formatMoney(
+                        remainingRefundableAmount,
+                        primaryCurrency,
+                      ),
                     })}
                   </p>
                 ) : (
                   <p className="text-xs text-gray-500">
                     {t("refundAmountHelp", {
-                      amount: formatMoney(remainingRefundableAmount, primaryCurrency),
+                      amount: formatMoney(
+                        remainingRefundableAmount,
+                        primaryCurrency,
+                      ),
                     })}
                   </p>
                 )}
@@ -923,7 +1135,10 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
             ) : null}
 
             <div className="space-y-2">
-              <label htmlFor="refund-note" className="text-sm font-semibold text-gray-900">
+              <label
+                htmlFor="refund-note"
+                className="text-sm font-semibold text-gray-900"
+              >
                 {t("refundReason")}
               </label>
               <Textarea
@@ -942,7 +1157,9 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
               <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800">
                 {t("refundFinalConfirm", {
                   amount: formatMoney(
-                    refundMode === "partial" ? parsedRefundAmount : remainingRefundableAmount,
+                    refundMode === "partial"
+                      ? parsedRefundAmount
+                      : remainingRefundableAmount,
                     primaryCurrency,
                   ),
                 })}
@@ -966,7 +1183,11 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
               disabled={refundSubmitDisabled}
               className="h-10 rounded-xl bg-red-600 text-white hover:bg-red-700"
             >
-              {refundMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
+              {refundMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <RotateCcw className="size-4" />
+              )}
               {refundMutation.isPending
                 ? t("refundingPayment")
                 : isRefundConfirming
@@ -1017,7 +1238,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                   <p className="mt-1 text-sm font-bold text-gray-950">
                     {formatMoney(
                       paymentStatusTransaction?.amount,
-                      paymentStatusTransaction?.currency || primaryCurrency
+                      paymentStatusTransaction?.currency || primaryCurrency,
                     )}
                   </p>
                 </div>
@@ -1032,7 +1253,10 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
             ) : null}
 
             <div className="space-y-2">
-              <label htmlFor="payment-status" className="text-sm font-semibold text-gray-900">
+              <label
+                htmlFor="payment-status"
+                className="text-sm font-semibold text-gray-900"
+              >
                 {t("newPaymentStatus")}
               </label>
               <Select
@@ -1042,7 +1266,10 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                   setIsPaymentStatusConfirming(false);
                 }}
               >
-                <SelectTrigger id="payment-status" className="h-11 rounded-xl border-gray-200">
+                <SelectTrigger
+                  id="payment-status"
+                  className="h-11 rounded-xl border-gray-200"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1056,7 +1283,10 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="payment-status-note" className="text-sm font-semibold text-gray-900">
+              <label
+                htmlFor="payment-status-note"
+                className="text-sm font-semibold text-gray-900"
+              >
                 {t("paymentStatusReason")}
               </label>
               <Textarea

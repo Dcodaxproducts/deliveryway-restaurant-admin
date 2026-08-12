@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo } from "react";
 import { useForm, type Path, type UseFormRegisterReturn } from "react-hook-form";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -73,6 +74,7 @@ export const buildNotificationFormValues = (
 };
 
 export default function NotificationForm() {
+  const t = useTranslations("notifications");
   const { data, isLoading } = useGetNotificationSettings();
   const mutation = useUpdateNotificationSettings();
 
@@ -207,10 +209,10 @@ export default function NotificationForm() {
             <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-foreground">
-                  Notification Types
+                  {t("typesTitle")}
                 </h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Choose which active channels should receive each notification.
+                  {t("typesDescription")}
                 </p>
               </div>
 
@@ -220,7 +222,7 @@ export default function NotificationForm() {
                   gridTemplateColumns: `minmax(220px, 1.5fr) repeat(${visibleChannels.length}, minmax(90px, 1fr))`,
                 }}
               >
-                <div>Notification Type</div>
+                <div>{t("type")}</div>
                 {visibleChannels.map((channel) => (
                   <div key={channel} className="text-center">
                     {formatLabel(channel)}
@@ -243,7 +245,7 @@ export default function NotificationForm() {
                   ))
                 ) : (
                   <div className="py-8 text-sm text-muted-foreground">
-                    No notification types available.
+                    {t("noTypesAvailable")}
                   </div>
                 )}
               </div>

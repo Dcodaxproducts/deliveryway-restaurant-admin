@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  CheckCircle,
-  UserPlus,
-  DollarSign,
-  Bell,
-} from "lucide-react";
+import { CheckCircle, UserPlus, DollarSign, Bell } from "lucide-react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import {
@@ -14,6 +9,8 @@ import {
 } from "@/components/pages/Notifications/utils/notification-formatters";
 import { formatTime24 } from "@/lib/date-time-format";
 import type { AdminNotification } from "@/types/notifications";
+import { useMarkNotificationSeen } from "@/hooks/useNotifications";
+import { useTranslations } from "next-intl";
 
 interface Props {
   notifications: AdminNotification[];
@@ -31,7 +28,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> => {
 
 const getNestedString = (
   source: unknown,
-  keys: string[]
+  keys: string[],
 ): string | undefined => {
   if (!isRecord(source)) return undefined;
 
@@ -59,7 +56,7 @@ const extractOrderIdFromText = (text: string): string | undefined => {
 
 const extractOrderId = (
   rawNotification: AdminNotification,
-  formattedNotification: ReturnType<typeof formatAdminNotification>
+  formattedNotification: ReturnType<typeof formatAdminNotification>,
 ): string | undefined => {
   const directOrderId =
     getNestedString(rawNotification, ["orderId"]) ||
@@ -86,10 +83,9 @@ const extractOrderId = (
   return extractOrderIdFromText(searchableText);
 };
 
-export default function Notifications({
-  notifications,
-  loading,
-}: Props) {
+export default function Notifications({ notifications, loading }: Props) {
+  const t = useTranslations("notifications");
+  const markSeen = useMarkNotificationSeen();
   const getIcon = (category: NotificationCategory) => {
     switch (category) {
       case "reservation":
@@ -118,14 +114,12 @@ export default function Notifications({
 
   return (
     <div className="space-y-4">
-      {loading && (
-        <p className="text-sm text-gray-400">Loading notifications...</p>
-      )}
+      {loading && <p className="text-sm text-gray-400">{t("loading")}</p>}
 
       {!loading && notifications.length === 0 && (
         <div className="flex flex-col items-center justify-center py-10 text-center">
           <Bell className="mb-3 text-gray-300" size={40} />
-          <p className="text-sm text-gray-500">No notifications found</p>
+          <p className="text-sm text-gray-500">{t("empty")}</p>
         </div>
       )}
 
@@ -151,7 +145,10 @@ export default function Notifications({
 
               <span className="shrink-0 whitespace-nowrap text-xs text-gray-400">
                 {notification.createdAt
-                  ? formatTime24({ value: notification.createdAt, fallback: "" })
+                  ? formatTime24({
+                      value: notification.createdAt,
+                      fallback: "",
+                    })
                   : ""}
               </span>
             </CardContent>
@@ -160,6 +157,9 @@ export default function Notifications({
           return (
             <Card
               key={notification.id}
+              onClick={() => {
+                if (!notification.seen) markSeen.mutate(notification.id);
+              }}
               className={`bg-white shadow-sm transition-all hover:shadow-lg ${
                 notification.href ? "cursor-pointer" : ""
               }`}

@@ -42,4 +42,43 @@ describe("printer settings validation", () => {
       }),
     ).toBeNull();
   });
+
+  it("requires a complete automatic-print configuration when enabled", () => {
+    expect(
+      validatePrinterConnection({
+        connectionType: "USB",
+        printerName: "Kitchen USB",
+        queueName: "",
+        enabled: true,
+        autoPrintOnNewOrder: false,
+        autoPrintOnStatusChange: false,
+        printKitchenTicket: true,
+      }),
+    ).toBe("printRuleRequired");
+
+    expect(
+      validatePrinterConnection({
+        connectionType: "USB",
+        printerName: "Kitchen USB",
+        queueName: "",
+        enabled: true,
+        autoPrintOnNewOrder: true,
+        printKitchenTicket: false,
+        printCustomerReceipt: false,
+      }),
+    ).toBe("printCopyRequired");
+  });
+
+  it("does not claim cloud queues support browser auto-printing", () => {
+    expect(
+      validatePrinterConnection({
+        connectionType: "CLOUD",
+        printerName: "",
+        queueName: "future-queue",
+        enabled: true,
+        autoPrintOnNewOrder: true,
+        printKitchenTicket: true,
+      }),
+    ).toBe("cloudAutoPrintUnsupported");
+  });
 });

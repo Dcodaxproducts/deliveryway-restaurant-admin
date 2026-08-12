@@ -70,6 +70,15 @@ const getCountByKey = (
   );
 };
 
+const getPaymentMethodRevenue = (financialData: any, paymentMethod: string) => {
+  const entry = financialData?.paymentMethodRevenue?.find(
+    (item: any) =>
+      String(item?.paymentMethod || "").toUpperCase() === paymentMethod,
+  );
+
+  return Number(entry?.netReceived ?? entry?.received ?? 0);
+};
+
 export const buildFinancialStats = (
   financialData: any,
   currency: string,
@@ -100,6 +109,24 @@ export const buildFinancialStats = (
         title: t("stats.netRevenue"),
         value: formatCurrency(financialData?.netRevenue ?? 0, currency),
         icon: "store",
+      },
+      {
+        _id: "financial-stripe-received",
+        title: t("stats.stripeReceived"),
+        value: formatCurrency(
+          getPaymentMethodRevenue(financialData, "STRIPE"),
+          currency,
+        ),
+        icon: "completed",
+      },
+      {
+        _id: "financial-paypal-received",
+        title: t("stats.paypalReceived"),
+        value: formatCurrency(
+          getPaymentMethodRevenue(financialData, "PAYPAL"),
+          currency,
+        ),
+        icon: "completed",
       },
       {
         _id: "financial-average-order-value",
