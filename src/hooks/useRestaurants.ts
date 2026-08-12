@@ -13,6 +13,7 @@ export type RestaurantsListParams = {
   page?: number;
   limit?: number;
   search?: string;
+  includeInactive?: boolean;
 };
 
 export const restaurantQueryKeys = {

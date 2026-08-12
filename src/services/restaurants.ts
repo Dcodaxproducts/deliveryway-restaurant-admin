@@ -98,6 +98,7 @@ export const getRestaurants = async (params?: {
   page?: number;
   limit?: number;
   search?: string;
+  includeInactive?: boolean;
 }) => {
   const { data } = await api.get("/restaurants", { params });
   return data;

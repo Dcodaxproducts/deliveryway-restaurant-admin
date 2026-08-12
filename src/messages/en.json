@@ -136,6 +136,7 @@
     "selectRestaurantToContinue": "Select a restaurant to continue",
     "searchRestaurants": "Search restaurants...",
     "loadingMoreRestaurants": "Loading more restaurants...",
+    "noMatchingRestaurants": "No restaurants match your search.",
     "logoutAndLogin": "Log out & go to login",
     "continue": "Continue",
     "cuisines": "Cuisines",

@@ -1,7 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useQueries } from "@tanstack/react-query";
@@ -79,10 +79,9 @@ const getRestaurantName = (restaurant: unknown, fallback: string) => {
 
 export default function ContextGate() {
   const t = useTranslations("common");
-  const router = useRouter();
   const pathname = usePathname();
 
-  const { user, loading, setUser, token, logout } = useAuthContext();
+  const { user, loading, setUser, token } = useAuthContext();
 
   const [open, setOpen] = useState(false);
   const [restaurants, setRestaurants] = useState<RestaurantOption[]>([]);
@@ -93,6 +92,9 @@ export default function ContextGate() {
     useState("");
   const [restaurantPage, setRestaurantPage] = useState(1);
   const [hasMoreRestaurants, setHasMoreRestaurants] = useState(false);
+  const [availableRestaurantCount, setAvailableRestaurantCount] = useState<
+    number | null
+  >(null);
   const [selectionCompletedForUserId, setSelectionCompletedForUserId] =
     useState<string | null>(null);
   const staffRestaurantIds = useMemo(() => getStaffRestaurantIds(user), [user]);
@@ -108,11 +110,16 @@ export default function ContextGate() {
   const staffRestaurantDetailsKey = JSON.stringify(
     staffRestaurantQueries.map((query) => query.data ?? null),
   );
-  const { data: restaurantsResponse, isFetching } = useGetRestaurants(
+  const {
+    data: restaurantsResponse,
+    isFetching,
+    isSuccess,
+  } = useGetRestaurants(
     {
       page: restaurantPage,
       limit: RESTAURANT_SELECTOR_LIMIT,
       search: debouncedRestaurantSearch || undefined,
+      includeInactive: true,
     },
     Boolean(token && user?.id && !isBranchAdminRole(user.role)),
   );
@@ -139,6 +146,7 @@ export default function ContextGate() {
       setOpen(false);
       setSelectedRestaurant(null);
       setSelectionCompletedForUserId(null);
+      setAvailableRestaurantCount(null);
       return;
     }
 
@@ -149,14 +157,15 @@ export default function ContextGate() {
       return;
     }
 
-    const rows = getResponseRows(restaurantsResponse);
-    const meta = getResponseMeta(restaurantsResponse);
-    const totalRestaurants = Number(meta?.total ?? rows.length);
+    if (availableRestaurantCount === null) {
+      setOpen(false);
+      return;
+    }
 
     setOpen(
       shouldRequireRestaurantSelection({
         user,
-        totalRestaurants,
+        totalRestaurants: availableRestaurantCount,
         selectionCompleted: selectionCompletedForUserId === user.id,
       }),
     );
@@ -165,8 +174,55 @@ export default function ContextGate() {
     loading,
     token,
     pathname,
-    restaurantsResponse,
+    availableRestaurantCount,
     selectionCompletedForUserId,
+  ]);
+
+  useEffect(() => {
+    if (!isSuccess || restaurantPage !== 1 || debouncedRestaurantSearch) {
+      return;
+    }
+
+    const rows = getResponseRows(restaurantsResponse);
+    const meta = getResponseMeta(restaurantsResponse);
+    const totalRestaurants = Number(meta?.total ?? rows.length);
+
+    setAvailableRestaurantCount(totalRestaurants);
+
+    if (
+      totalRestaurants !== 1 ||
+      rows.length !== 1 ||
+      !user ||
+      user.restaurantId
+    ) {
+      return;
+    }
+
+    const restaurant = rows[0];
+    if (!isRecord(restaurant)) return;
+
+    const restaurantId = getStringValue(restaurant, "id");
+    if (!restaurantId) return;
+
+    setUser((current) =>
+      current
+        ? { ...current, restaurantId, branchId: null }
+        : current,
+    );
+
+    const stored = getStoredAuth() || {};
+    if (stored.user) {
+      stored.user.restaurantId = restaurantId;
+      stored.user.branchId = null;
+      saveStoredAuth(stored);
+    }
+  }, [
+    debouncedRestaurantSearch,
+    isSuccess,
+    restaurantPage,
+    restaurantsResponse,
+    setUser,
+    user,
   ]);
 
   useEffect(() => {
@@ -195,7 +251,6 @@ export default function ContextGate() {
         : totalPages > 0
           ? restaurantPage < totalPages
           : rows.length >= RESTAURANT_SELECTOR_LIMIT;
-    const userTenantId = user?.tenantId ?? null;
     const allowedStaffIds = new Set(staffRestaurantIds);
     const filtered = rows.reduce<RestaurantOption[]>((acc, row) => {
       if (!isRecord(row)) return acc;
@@ -207,8 +262,6 @@ export default function ContextGate() {
       const tenant = getRecordValue(row, "tenant");
       const tenantId =
         getStringValue(row, "tenantId") ?? getStringValue(tenant, "id") ?? null;
-
-      if (userTenantId && tenantId && tenantId !== userTenantId) return acc;
 
       acc.push({
         id,
@@ -369,19 +422,8 @@ export default function ContextGate() {
           ) : null}
 
           {!isFetching && restaurants.length === 0 ? (
-            <div className="space-y-3 py-6 text-center text-sm text-gray-500">
-              <p>{t("noRestaurants")}</p>
-              <p>{t("requestRestaurant")}</p>
-
-              <button
-                onClick={() => {
-                  logout();
-                  router.push("/login");
-                }}
-                className="mt-2 rounded-lg bg-red-500 px-4 py-2 text-sm text-white hover:bg-red-600"
-              >
-                {t("logoutAndLogin")}
-              </button>
+            <div className="py-6 text-center text-sm text-gray-500">
+              {t("noMatchingRestaurants")}
             </div>
           ) : null}
         </div>
