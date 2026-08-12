@@ -68,6 +68,7 @@ export function OrdersFilters({
 
   const statuses = [
     { label: t("allStatus"), value: "ALL" },
+    { label: t("status.PAYMENT_PENDING"), value: "PAYMENT_PENDING" },
     { label: t("status.PLACED"), value: "PLACED" },
     { label: t("status.CONFIRMED"), value: "CONFIRMED" },
     { label: t("status.PREPARING"), value: "PREPARING" },

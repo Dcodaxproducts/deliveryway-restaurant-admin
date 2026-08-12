@@ -666,3 +666,23 @@ export const getScopedQueryParams = (user?: AuthUser | null) => {
 export const canSwitchRestaurant = (user?: AuthUser | null) => {
   return Boolean(user && !isBranchAdminRole(user.role));
 };
+
+export const shouldRequireRestaurantSelection = ({
+  user,
+  totalRestaurants,
+  selectionCompleted,
+}: {
+  user?: AuthUser | null;
+  totalRestaurants: number;
+  selectionCompleted: boolean;
+}) => {
+  if (!user || isBranchAdminRole(user.role) || selectionCompleted) {
+    return false;
+  }
+
+  if (!user.restaurantId) {
+    return true;
+  }
+
+  return isRestaurantAdminRole(user.role) && totalRestaurants > 1;
+};

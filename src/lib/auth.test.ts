@@ -11,9 +11,51 @@ import {
   normalizePermissionAccess,
   normalizePermissionOperation,
   normalizeUser,
+  shouldRequireRestaurantSelection,
 } from "@/lib/auth";
 
 describe("auth helpers", () => {
+  it("requires a fresh restaurant choice for multi-restaurant business admins", () => {
+    const user = normalizeUser({
+      id: "owner-1",
+      email: "owner@example.com",
+      role: "BUSINESS_ADMIN",
+      restaurantId: "restaurant-1",
+    });
+
+    expect(
+      shouldRequireRestaurantSelection({
+        user,
+        totalRestaurants: 2,
+        selectionCompleted: false,
+      }),
+    ).toBe(true);
+    expect(
+      shouldRequireRestaurantSelection({
+        user,
+        totalRestaurants: 2,
+        selectionCompleted: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("keeps a single-restaurant business admin in the selected workspace", () => {
+    const user = normalizeUser({
+      id: "owner-1",
+      email: "owner@example.com",
+      role: "BUSINESS_ADMIN",
+      restaurantId: "restaurant-1",
+    });
+
+    expect(
+      shouldRequireRestaurantSelection({
+        user,
+        totalRestaurants: 1,
+        selectionCompleted: false,
+      }),
+    ).toBe(false);
+  });
+
   it("normalizes restaurant id from a branch admin branch relationship", () => {
     const user = normalizeUser({
       id: "branch-admin-1",

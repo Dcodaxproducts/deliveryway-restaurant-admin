@@ -506,6 +506,7 @@
     "guests": "Guests",
     "reservationDate": "Reservation Date",
     "status": {
+      "PAYMENT_PENDING": "Payment pending",
       "PLACED": "Placed",
       "CONFIRMED": "Confirmed",
       "PREPARING": "Preparing",
@@ -527,6 +528,8 @@
     "cancelledCount": "{count} Cancelled",
     "branchAllOrders": "Branch All Orders",
     "allOrders": "All Orders",
+    "paymentPendingOrders": "Pending Payments",
+    "paymentPendingOrdersDescription": "Review online-payment orders that are waiting for payment confirmation.",
     "branchAllOrdersDescription": "View all delivery and pickup orders for your branch.",
     "allOrdersDescription": "View all delivery and pickup orders across your restaurant.",
     "branchDeliveryOrders": "Branch Delivery Orders",

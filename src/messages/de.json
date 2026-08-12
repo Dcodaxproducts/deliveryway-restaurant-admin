@@ -506,6 +506,7 @@
     "guests": "Gäste",
     "reservationDate": "Reservierungsdatum",
     "status": {
+      "PAYMENT_PENDING": "Zahlung ausstehend",
       "PLACED": "Platziert",
       "CONFIRMED": "Bestätigt",
       "PREPARING": "In Vorbereitung",
@@ -527,6 +528,8 @@
     "cancelledCount": "{count} storniert",
     "branchAllOrders": "Alle Filialbestellungen",
     "allOrders": "Alle Bestellungen",
+    "paymentPendingOrders": "Ausstehende Zahlungen",
+    "paymentPendingOrdersDescription": "Online-Zahlungsbestellungen anzeigen, die auf eine Zahlungsbestätigung warten.",
     "branchAllOrdersDescription": "Alle Liefer- und Abholbestellungen Ihrer Filiale anzeigen.",
     "allOrdersDescription": "Alle Liefer- und Abholbestellungen Ihres Restaurants anzeigen.",
     "branchDeliveryOrders": "Filial-Lieferbestellungen",

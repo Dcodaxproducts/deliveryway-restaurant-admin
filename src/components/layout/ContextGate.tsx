@@ -18,6 +18,7 @@ import {
   isRecord,
   isStaffRole,
   saveStoredAuth,
+  shouldRequireRestaurantSelection,
 } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -92,6 +93,8 @@ export default function ContextGate() {
     useState("");
   const [restaurantPage, setRestaurantPage] = useState(1);
   const [hasMoreRestaurants, setHasMoreRestaurants] = useState(false);
+  const [selectionCompletedForUserId, setSelectionCompletedForUserId] =
+    useState<string | null>(null);
   const staffRestaurantIds = useMemo(() => getStaffRestaurantIds(user), [user]);
   const staffRestaurantQueries = useQueries({
     queries: staffRestaurantIds.map((id) => ({
@@ -111,7 +114,7 @@ export default function ContextGate() {
       limit: RESTAURANT_SELECTOR_LIMIT,
       search: debouncedRestaurantSearch || undefined,
     },
-    Boolean(open && Boolean(token)),
+    Boolean(token && user?.id && !isBranchAdminRole(user.role)),
   );
 
   useEffect(() => {
@@ -134,6 +137,8 @@ export default function ContextGate() {
   useEffect(() => {
     if (pathname === "/login") {
       setOpen(false);
+      setSelectedRestaurant(null);
+      setSelectionCompletedForUserId(null);
       return;
     }
 
@@ -144,13 +149,41 @@ export default function ContextGate() {
       return;
     }
 
-    if (isBranchAdminRole(user.role)) {
-      setOpen(false);
-      return;
-    }
+    const rows = getResponseRows(restaurantsResponse);
+    const meta = getResponseMeta(restaurantsResponse);
+    const totalRestaurants = Number(meta?.total ?? rows.length);
 
-    setOpen(!user.restaurantId);
-  }, [user, loading, token, pathname]);
+    setOpen(
+      shouldRequireRestaurantSelection({
+        user,
+        totalRestaurants,
+        selectionCompleted: selectionCompletedForUserId === user.id,
+      }),
+    );
+  }, [
+    user,
+    loading,
+    token,
+    pathname,
+    restaurantsResponse,
+    selectionCompletedForUserId,
+  ]);
+
+  useEffect(() => {
+    if (!open || !user?.restaurantId) return;
+
+    const selectionIsAvailable = restaurants.some(
+      (restaurant) => restaurant.id === selectedRestaurant?.id,
+    );
+    if (selectionIsAvailable) return;
+
+    const currentRestaurant = restaurants.find(
+      (restaurant) => restaurant.id === user.restaurantId,
+    );
+    if (currentRestaurant) {
+      setSelectedRestaurant(currentRestaurant);
+    }
+  }, [open, restaurants, selectedRestaurant, user?.restaurantId]);
 
   useEffect(() => {
     const rows = getResponseRows(restaurantsResponse);
@@ -230,7 +263,7 @@ export default function ContextGate() {
   };
 
   const handleConfirm = () => {
-    if (!selectedRestaurant) {
+    if (!selectedRestaurant || !user) {
       toast.error(t("selectRestaurantRequired"));
       return;
     }
@@ -256,6 +289,7 @@ export default function ContextGate() {
     }
 
     toast.success(t("workspaceSelected"));
+    setSelectionCompletedForUserId(user.id);
     setOpen(false);
   };
 

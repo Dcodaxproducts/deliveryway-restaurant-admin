@@ -36,6 +36,7 @@ import type { Order } from "@/types/orders";
 
 const orderTabs = new Set<OrderTab>([
   "all",
+  "payment-pending",
   "delivery",
   "pickup",
   "reservations",
@@ -84,6 +85,12 @@ export function OrdersPage() {
         : undefined;
   const orderKind = activeTab === "group" ? "group-orders" : "order";
   const isInvoiceHistoryTab = activeTab === "invoice-history";
+  const effectiveStatus =
+    activeTab === "payment-pending"
+      ? "PAYMENT_PENDING"
+      : status !== "ALL"
+        ? status
+        : undefined;
   const reportDateRange = useMemo(() => {
     const now = new Date();
     if (scheduleFilter === "TODAY_SCHEDULED") {
@@ -112,7 +119,7 @@ export function OrdersPage() {
           branchId: scopedBranchId,
           orderType,
           kind: orderKind,
-          status: status !== "ALL" ? status : undefined,
+          status: effectiveStatus,
           ...reportDateRange,
         }
       : undefined,
@@ -124,7 +131,7 @@ export function OrdersPage() {
     restaurantId: restaurantId || undefined,
     branchId: scopedBranchId,
     search: search || undefined,
-    status: status !== "ALL" ? status : undefined,
+    status: effectiveStatus,
     sortOrder,
     page,
     limit,
@@ -227,6 +234,14 @@ export function OrdersPage() {
             onClick={() => handleTabChange("all")}
           >
             {t("allOrders")}
+          </TabButton>
+
+          <TabButton
+            active={activeTab === "payment-pending"}
+            tone="accent"
+            onClick={() => handleTabChange("payment-pending")}
+          >
+            {t("paymentPendingOrders")}
           </TabButton>
 
           <TabButton

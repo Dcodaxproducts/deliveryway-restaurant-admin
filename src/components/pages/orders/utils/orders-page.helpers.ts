@@ -2,7 +2,13 @@ import type { StatItem } from "@/types/stats";
 import { formatMoney } from "@/lib/currency";
 
 export type OrderTab =
-  "all" | "delivery" | "pickup" | "reservations" | "group" | "invoice-history";
+  | "all"
+  | "payment-pending"
+  | "delivery"
+  | "pickup"
+  | "reservations"
+  | "group"
+  | "invoice-history";
 
 export interface Order {
   id: string;
@@ -106,6 +112,11 @@ export const getOrdersHeaderContent = (
         description: isBranchAdmin
           ? t("deliveryDescription")
           : t("description"),
+      };
+    case "payment-pending":
+      return {
+        title: t("paymentPendingOrders"),
+        description: t("paymentPendingOrdersDescription"),
       };
     case "pickup":
       return {
