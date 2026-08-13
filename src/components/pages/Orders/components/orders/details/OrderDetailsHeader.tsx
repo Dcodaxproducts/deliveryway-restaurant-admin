@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Ban, CalendarClock, RefreshCw, Truck, XCircle } from "lucide-react";
+import { Ban, CalendarClock, Printer, RefreshCw, Truck, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 import { useSendOrderOutForDelivery, useSendOrderWithExternalDriver, useUpdateOrderStatus } from "@/hooks/useOrders";
+import { reprintOrder } from "@/lib/accepted-order-printing";
 import {
   canDirectlyUpdateOrderStatus,
   canSendDeliveryOrderOutDirectly,
@@ -24,6 +27,8 @@ import { formatDateTime24 } from "@/lib/date-time-format";
 type OrderDetailsHeaderProps = {
   order: {
     id: string;
+    restaurantId?: string | null;
+    branchId?: string | null;
     orderType?: string | null;
     status: string;
     orderTime?: string;
@@ -41,11 +46,13 @@ type OrderStatusProgressState = {
 const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
   const t = useTranslations("orders");
   const common = useTranslations("common");
+  const { user } = useAuth();
   const updateStatusMutation = useUpdateOrderStatus();
   const sendOutForDeliveryMutation = useSendOrderOutForDelivery();
   const externalDriverMutation = useSendOrderWithExternalDriver();
 
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [isReprinting, setIsReprinting] = useState(false);
   const [progressOrder, setProgressOrder] = useState<OrderStatusProgressState | null>(null);
 
   const nextStatus = getNextOrderStatus(order);
@@ -126,6 +133,25 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
       status: updatedOrder.status ?? "OUT_FOR_DELIVERY",
     });
   };
+  const handleReprintAction = async () => {
+    const restaurantId = order.restaurantId ?? user?.restaurantId;
+    if (!restaurantId || isReprinting) return;
+
+    setIsReprinting(true);
+    try {
+      const result = await reprintOrder({
+        orderId: order.id,
+        restaurantId,
+        branchId: order.branchId ?? undefined,
+      });
+      if (result === "printed") toast.success(t("orderReprinted"));
+      else toast.error(t("orderPrintUnavailable"));
+    } catch {
+      toast.error(t("orderPrintFailed"));
+    } finally {
+      setIsReprinting(false);
+    }
+  };
 
   return (
     <>
@@ -165,6 +191,19 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
           >
             <Truck size={16} className="sm:w-[18px] sm:h-[18px]" />
             {statusLabel}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isReprinting || !(order.restaurantId ?? user?.restaurantId)}
+            onClick={() => {
+              void handleReprintAction();
+            }}
+            className="w-full sm:w-auto justify-center rounded-[10px] h-10 text-xs sm:text-sm font-medium px-4 flex items-center gap-2"
+          >
+            <Printer size={16} />
+            {isReprinting ? t("reprintingOrder") : t("reprintOrder")}
           </Button>
 
           {canUpdateStatus ? (

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Ban, CalendarClock, CreditCard, Download, Eye, Mail, MoreHorizontal, RefreshCw, Truck, XCircle } from "lucide-react";
+import { Ban, CalendarClock, CreditCard, Download, Eye, Mail, MoreHorizontal, Printer, RefreshCw, Truck, XCircle } from "lucide-react";
 import EmptyState from "@/components/common/EmptyState";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useDownloadOrderInvoicePdf, useSendOrderInvoiceEmail, useSendOrderOutForDelivery, useSendOrderWithExternalDriver, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { formatDateTime24 } from "@/lib/date-time-format";
+import { reprintOrder } from "@/lib/accepted-order-printing";
 import { getOrderById } from "@/services/orders/orders.api";
 import {
   canDirectlyUpdateOrderStatus,
@@ -124,6 +125,7 @@ export function OrdersTable({
     useState<PaymentStatusDialogState | null>(null);
   const [loadingPaymentStatusOrderId, setLoadingPaymentStatusOrderId] =
     useState<string | null>(null);
+  const [reprintingOrderId, setReprintingOrderId] = useState<string | null>(null);
   const updateStatusMutation = useUpdateOrderStatus();
   const sendOutForDeliveryMutation = useSendOrderOutForDelivery();
   const externalDriverMutation = useSendOrderWithExternalDriver();
@@ -242,6 +244,26 @@ export function OrdersTable({
         branchId: order.branchId ?? undefined,
       },
     });
+  };
+
+  const handleReprintAction = async (order: OrdersTableRow) => {
+    const restaurantId = user?.restaurantId;
+    if (!restaurantId || reprintingOrderId) return;
+
+    setReprintingOrderId(order.id);
+    try {
+      const result = await reprintOrder({
+        orderId: order.id,
+        restaurantId,
+        branchId: order.branchId ?? undefined,
+      });
+      if (result === "printed") toast.success(t("orderReprinted"));
+      else toast.error(t("orderPrintUnavailable"));
+    } catch {
+      toast.error(t("orderPrintFailed"));
+    } finally {
+      setReprintingOrderId(null);
+    }
   };
 
   const handlePaymentStatusAction = async (order: OrdersTableRow) => {
@@ -387,6 +409,7 @@ export function OrdersTable({
     const invoiceEmailSending =
       sendInvoiceEmailMutation.isPending &&
       sendInvoiceEmailMutation.variables?.orderId === id;
+    const isReprinting = reprintingOrderId === id;
 
     return (
     <TableRow
@@ -541,6 +564,17 @@ export function OrdersTable({
                 <Eye size={16} />
                 {common("viewDetails")}
               </DropdownMenuItem>
+              {activeTab !== "reservations" ? (
+                <DropdownMenuItem
+                  disabled={Boolean(reprintingOrderId) || !user?.restaurantId}
+                  onClick={() => {
+                    void handleReprintAction(order);
+                  }}
+                >
+                  <Printer size={16} />
+                  {isReprinting ? t("reprintingOrder") : t("reprintOrder")}
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuItem
                 disabled={invoiceDownloading}
                 onClick={() => handleDownloadInvoiceAction(order)}
