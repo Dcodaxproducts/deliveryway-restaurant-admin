@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import type { FieldPath, UseFormRegister, UseFormSetValue } from "react-hook-form";
-import { Link2, Upload, X } from "lucide-react";
+import { Image as ImageIcon, Upload, X } from "lucide-react";
 
-import { Input } from "@/components/ui/input";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import type { BrandingFormValues } from "@/validations/branding";
 
 import {
   BRANDING_ERROR_COMPACT_CLASS,
-  BRANDING_INPUT_CLASS,
   BRANDING_LABEL_COMPACT_CLASS,
   BRANDING_SMALL_ACTION_BUTTON_CLASS,
 } from "./branding-form-classes";
@@ -50,9 +48,7 @@ export default function FileUploader({
   const previewValue = localPreviewUrl ?? trimmedValue;
   const fileInputId = `${id}-file`;
   const allTargetNames = [name, ...linkedNames];
-  const registeredField = register(name, {
-    onBlur: ({ target }) => updateAssetFields(target.value),
-  });
+  const registeredField = register(name);
 
   useEffect(() => {
     return () => {
@@ -125,7 +121,7 @@ export default function FileUploader({
   return (
     <div className="space-y-3">
       <div className="space-y-[4px]">
-        <label htmlFor={id} className={BRANDING_LABEL_COMPACT_CLASS}>
+        <label htmlFor={fileInputId} className={BRANDING_LABEL_COMPACT_CLASS}>
           {title}
         </label>
         <p className={helperClassName}>{recommendation}</p>
@@ -140,18 +136,11 @@ export default function FileUploader({
               style={{ backgroundImage: `url(${previewValue})` }}
             />
           ) : (
-            <Link2 className="text-gray" />
+            <ImageIcon className="text-gray" />
           )}
         </div>
         <div className="space-y-2">
-          <Input
-            id={id}
-            type="url"
-            placeholder="https://example.com/brand-image.png"
-            aria-invalid={Boolean(error)}
-            className={BRANDING_INPUT_CLASS}
-            {...registeredField}
-          />
+          <input type="hidden" {...registeredField} />
           <input
             ref={fileInputRef}
             id={fileInputId}

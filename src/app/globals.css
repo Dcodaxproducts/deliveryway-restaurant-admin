@@ -114,6 +114,10 @@
 }
 
 @layer base {
+  html {
+    font-size: 15px;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
@@ -131,6 +135,14 @@
   h5,
   h6 {
     font-family: var(--brand-heading-font-family);
+  }
+}
+
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
   }
 }
 

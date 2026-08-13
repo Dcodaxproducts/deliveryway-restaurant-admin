@@ -21,11 +21,9 @@ import { useTranslations } from "next-intl";
 
 import {
   FIELD_ERROR_CLASS,
-  INPUT_BASE_CLASS,
   MUTED_TEXT_SM_CLASS,
 } from "@/components/common/common-classes";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFileUpload } from "@/hooks/useFileUpload";
 
@@ -36,7 +34,6 @@ type ImageUploadFieldProps<TFieldValues extends FieldValues> = {
   error?: string;
   setValue: UseFormSetValue<TFieldValues>;
   onValueChange?: (value: string) => void;
-  placeholder?: string;
   helperText?: string;
   previewAlt?: string;
   disabled?: boolean;
@@ -55,8 +52,7 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
   error,
   setValue,
   onValueChange,
-  placeholder = "https://cdn.example.com/image.jpg or /uploads/image.jpg",
-  helperText = "Upload an image or paste an existing image URL.",
+  helperText = "Upload a PNG, JPG, or WEBP image.",
   previewAlt = "Image preview",
   disabled = false,
 }: ImageUploadFieldProps<TFieldValues>) {
@@ -244,22 +240,13 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
         )}
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Input
-          id={inputId}
-          type="url"
-          value={currentValue}
-          placeholder={placeholder}
-          disabled={isDisabled}
-          onChange={(event) => updateValue(event.target.value)}
-          className={INPUT_BASE_CLASS}
-        />
+      <div className="flex justify-end">
         <Button
           type="button"
           variant="outline"
           onClick={openFilePicker}
           disabled={isDisabled}
-          className="h-[44px] shrink-0 rounded-lg px-4"
+          className="h-10 shrink-0 rounded-lg px-4"
         >
           {uploading ? (
             <Loader2 size={16} className="mr-2 animate-spin" />
@@ -272,6 +259,7 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
 
       <input
         ref={fileInputRef}
+        id={inputId}
         type="file"
         accept="image/*"
         onChange={handleFileChange}
