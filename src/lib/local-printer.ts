@@ -25,6 +25,13 @@ const paperOptions: Record<PrintingPaperSize, { width: number; height?: number }
   "58MM": { width: 58 },
 };
 
+const paperMargins: Record<PrintingPaperSize, number> = {
+  A4: 10,
+  A5: 8,
+  "80MM": 4,
+  "58MM": 4,
+};
+
 const createPrintOptions = (
   paperSize: PrintingPaperSize,
   jobName: string,
@@ -32,7 +39,7 @@ const createPrintOptions = (
   jobName,
   units: "mm" as const,
   size: paperOptions[paperSize],
-  margins: 0,
+  margins: paperMargins[paperSize],
   scaleContent: false,
 });
 

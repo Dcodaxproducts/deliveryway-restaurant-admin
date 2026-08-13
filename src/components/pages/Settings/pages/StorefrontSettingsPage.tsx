@@ -5,6 +5,7 @@ import type { FieldPath } from "react-hook-form";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { BadgeCheck, Clock3, Globe2, LockKeyhole } from "lucide-react";
 
 import Container from "@/components/common/Container";
 import Header from "@/components/common/PageHeader";
@@ -26,6 +27,8 @@ import TypographySection from "@/components/pages/Settings/theme/components/them
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useBranding } from "@/hooks/useBranding";
+import { buildGeneratedStorefrontUrl } from "@/lib/branding";
+import { API_BASE_URL } from "@/lib/constants";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
   type BrandingFormValues,
@@ -166,6 +169,20 @@ export function StorefrontSettingsPage() {
 
   const watchedValues = useWatch({ control }) as BrandingFormValues;
   const hasUnsavedChanges = formState.isDirty;
+  const generatedStorefrontUrl = buildGeneratedStorefrontUrl(
+    savedBranding.restaurant.subdomain,
+    API_BASE_URL,
+  );
+  const customDomain = savedBranding.restaurant.customDomain?.trim() ?? "";
+  const customStorefrontUrl = customDomain
+    ? `https://${customDomain.replace(/^https?:\/\//, "")}`
+    : "";
+  const customDomainVerified = Boolean(
+    customDomain && savedBranding.restaurant.customDomainVerifiedAt,
+  );
+  const activeStorefrontUrl = customDomainVerified
+    ? customStorefrontUrl
+    : generatedStorefrontUrl;
 
   useEffect(() => {
     reset(savedBranding);
@@ -316,6 +333,55 @@ export function StorefrontSettingsPage() {
         </div>
 
         <div className={BRANDING_PANEL_CLASS}>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <span className="rounded-xl bg-primary/10 p-2.5 text-primary">
+                <Globe2 className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div>
+                <h3 className={BRANDING_SECTION_TITLE_CLASS}>
+                  {t("storefrontDomains")}
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  {t("customDomainManaged")}
+                </p>
+              </div>
+            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+              <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
+              {t("displayOnly")}
+            </span>
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            <StorefrontDomainItem
+              label={t("customDomainDefaultStorefront")}
+              value={generatedStorefrontUrl}
+              href={generatedStorefrontUrl}
+            />
+            <StorefrontDomainItem
+              label={t("customDomain")}
+              value={customDomain || t("notConfigured")}
+              href={customStorefrontUrl || undefined}
+              status={
+                customDomain
+                  ? customDomainVerified
+                    ? t("domainVerified")
+                    : t("domainPending")
+                  : undefined
+              }
+              verified={customDomainVerified}
+            />
+            <StorefrontDomainItem
+              label={t("customDomainActiveStorefront")}
+              value={activeStorefrontUrl}
+              href={activeStorefrontUrl}
+              activeLabel={t("active")}
+            />
+          </div>
+        </div>
+
+        <div className={BRANDING_PANEL_CLASS}>
           <h3 className={BRANDING_SECTION_TITLE_CLASS}>
             {t("restaurantProfile")}
           </h3>
@@ -364,5 +430,64 @@ export function StorefrontSettingsPage() {
         <PreviewSection values={watchedValues} />
       </form>
     </Container>
+  );
+}
+
+function StorefrontDomainItem({
+  label,
+  value,
+  href,
+  status,
+  verified = false,
+  activeLabel,
+}: {
+  label: string;
+  value: string;
+  href?: string;
+  status?: string;
+  verified?: boolean;
+  activeLabel?: string;
+}) {
+  return (
+    <div className="rounded-[14px] border border-gray-200 bg-gray-50/70 p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+          {label}
+        </p>
+        {activeLabel ? (
+          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+            {activeLabel}
+          </span>
+        ) : null}
+      </div>
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-2 block break-all text-sm font-semibold text-gray-900 underline decoration-gray-300 underline-offset-4 hover:text-primary"
+        >
+          {value}
+        </a>
+      ) : (
+        <p className="mt-2 break-all text-sm font-semibold text-gray-700">
+          {value}
+        </p>
+      )}
+      {status ? (
+        <p
+          className={`mt-2 flex items-center gap-1.5 text-xs ${
+            verified ? "text-emerald-700" : "text-amber-700"
+          }`}
+        >
+          {verified ? (
+            <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
+          ) : (
+            <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
+          )}
+          {status}
+        </p>
+      ) : null}
+    </div>
   );
 }

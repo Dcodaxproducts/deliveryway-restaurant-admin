@@ -45,6 +45,22 @@ const knownBackendBrandingKeys = new Set<string>([
 const hexColorPattern = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const radiusPattern = /^(?:0|\d+(?:\.\d+)?)(?:px|rem)$/;
 
+export const buildGeneratedStorefrontUrl = (
+  subdomain: string,
+  apiBaseUrl: string,
+) => {
+  const normalizedSubdomain = subdomain.trim();
+  if (!normalizedSubdomain) return "";
+
+  try {
+    const apiHost = new URL(apiBaseUrl).hostname;
+    const storefrontHost = apiHost.replace(/^api\./, "");
+    return `https://${normalizedSubdomain}.${storefrontHost}`;
+  } catch {
+    return "";
+  }
+};
+
 const cloneDefaultPayload = (): RestaurantBrandingPayload =>
   structuredClone(DEFAULT_RESTAURANT_BRANDING_PAYLOAD);
 

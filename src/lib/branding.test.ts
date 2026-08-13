@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_RESTAURANT_BRANDING_PAYLOAD } from "@/config/default-branding";
 import {
   brandingPayloadToCssVariables,
+  buildGeneratedStorefrontUrl,
   buildRestaurantBrandingPatchPayload,
   getReadableTextColor,
   normalizeBrandingApiResponse,
@@ -13,6 +14,21 @@ const defaultRestaurant = DEFAULT_RESTAURANT_BRANDING_PAYLOAD.restaurant;
 const defaultTheme = defaultRestaurant.branding.theme;
 
 describe("branding helpers", () => {
+  it("builds environment-aware generated storefront URLs", () => {
+    expect(
+      buildGeneratedStorefrontUrl(
+        "american-corner",
+        "https://api.dev.delivery-way.de/api/v1",
+      ),
+    ).toBe("https://american-corner.dev.delivery-way.de");
+    expect(
+      buildGeneratedStorefrontUrl(
+        "american-corner",
+        "https://api.delivery-way.de/api/v1",
+      ),
+    ).toBe("https://american-corner.delivery-way.de");
+  });
+
   it("normalizes partial payload over defaults", () => {
     const payload = normalizeBrandingPayload({
       restaurant: {

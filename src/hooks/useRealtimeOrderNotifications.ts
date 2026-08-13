@@ -29,6 +29,14 @@ type OrderStatusUpdatedPayload = OrderCreatedPayload & {
 
 export const ORDER_SOUND_STORAGE_KEY = "deliveryways.orderSound.enabled";
 export const ORDER_SOUND_SETTING_EVENT = "deliveryways:order-sound-setting";
+export const ORDER_ALERT_DISMISS_EVENT = "deliveryways:order-alert-dismiss";
+export const silenceOrderAlert = (orderId: string) => {
+  if (typeof window === "undefined" || !orderId.trim()) return;
+
+  window.dispatchEvent(
+    new CustomEvent(ORDER_ALERT_DISMISS_EVENT, { detail: { orderId } }),
+  );
+};
 export const isPendingOrderAlertStatus = (status?: string | null) =>
   ["PAYMENT_PENDING", "PLACED"].includes(
     String(status || "")
@@ -168,10 +176,13 @@ export function useRealtimeOrderNotifications() {
     };
     const soundEnabled = () =>
       window.localStorage.getItem(ORDER_SOUND_STORAGE_KEY) !== "false";
-    const stopOrderAlert = (orderId: string) => {
+    const stopOrderSound = (orderId: string) => {
       const interval = ringingOrders.current.get(orderId);
       if (interval !== undefined) window.clearInterval(interval);
       ringingOrders.current.delete(orderId);
+    };
+    const stopOrderAlert = (orderId: string) => {
+      stopOrderSound(orderId);
       toast.dismiss(`new-order-${orderId}`);
     };
     const stopAllOrderAlerts = () => {
@@ -202,6 +213,15 @@ export function useRealtimeOrderNotifications() {
       }
     };
     window.addEventListener(ORDER_SOUND_SETTING_EVENT, handleSoundSetting);
+    const handleOrderAlertDismiss = (event: Event) => {
+      const orderId = (event as CustomEvent<{ orderId?: string }>).detail
+        ?.orderId;
+      if (orderId) stopOrderAlert(orderId);
+    };
+    window.addEventListener(
+      ORDER_ALERT_DISMISS_EVENT,
+      handleOrderAlertDismiss,
+    );
     window.addEventListener("pointerdown", unlockSoundFromUserGesture);
     window.addEventListener("keydown", unlockSoundFromUserGesture);
 
@@ -257,6 +277,7 @@ export function useRealtimeOrderNotifications() {
           },
         );
         desktopNotification.onclick = () => {
+          stopOrderAlert(payload.id);
           window.focus();
           router.push(`/orders/details/${payload.id}`);
           desktopNotification.close();
@@ -273,8 +294,12 @@ export function useRealtimeOrderNotifications() {
           duration: Number.POSITIVE_INFINITY,
           action: {
             label: orders("viewOrderDetails"),
-            onClick: () => router.push(`/orders/details/${payload.id}`),
+            onClick: () => {
+              stopOrderAlert(payload.id);
+              router.push(`/orders/details/${payload.id}`);
+            },
           },
+          onDismiss: () => stopOrderSound(payload.id),
         },
       );
     };
@@ -340,6 +365,10 @@ export function useRealtimeOrderNotifications() {
 
     return () => {
       window.removeEventListener(ORDER_SOUND_SETTING_EVENT, handleSoundSetting);
+      window.removeEventListener(
+        ORDER_ALERT_DISMISS_EVENT,
+        handleOrderAlertDismiss,
+      );
       window.removeEventListener("pointerdown", unlockSoundFromUserGesture);
       window.removeEventListener("keydown", unlockSoundFromUserGesture);
       stopAllOrderAlerts();

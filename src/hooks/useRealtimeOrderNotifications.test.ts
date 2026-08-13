@@ -10,6 +10,7 @@ import {
   isPendingOrderAlertStatus,
   isScopedOrderStatusUpdate,
   playNewOrderSound,
+  silenceOrderAlert,
   unlockOrderNotificationSound,
 } from "./useRealtimeOrderNotifications";
 
@@ -84,6 +85,23 @@ describe("isScopedOrderStatusUpdate", () => {
         isBranchAdmin: true,
       }),
     ).toBe(false);
+  });
+});
+
+describe("silenceOrderAlert", () => {
+  it("dispatches the order-specific dismiss event", () => {
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal("window", { dispatchEvent });
+
+    silenceOrderAlert("order-1");
+
+    expect(dispatchEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "deliveryways:order-alert-dismiss",
+        detail: { orderId: "order-1" },
+      }),
+    );
+    vi.unstubAllGlobals();
   });
 });
 
