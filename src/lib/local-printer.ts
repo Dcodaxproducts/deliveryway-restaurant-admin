@@ -1,5 +1,9 @@
-import { buildOrderTicketHtml, type OrderTicket } from "@/lib/order-ticket";
-import type { PrintingPaperSize } from "@/services/printing";
+import {
+  buildOrderTicketEscPos,
+  buildOrderTicketHtml,
+  type OrderTicket,
+} from "@/lib/order-ticket";
+import type { PrintingMode, PrintingPaperSize } from "@/services/printing";
 
 const QZ_UNAVAILABLE_MESSAGE =
   "QZ Tray is not running. Install or start QZ Tray on this computer, then try again.";
@@ -35,13 +39,26 @@ const paperMargins: Record<PrintingPaperSize, number> = {
 const createPrintOptions = (
   paperSize: PrintingPaperSize,
   jobName: string,
+  printMode: PrintingMode,
 ) => ({
   jobName,
-  units: "mm" as const,
-  size: paperOptions[paperSize],
-  margins: paperMargins[paperSize],
-  scaleContent: false,
+  ...(printMode === "ESC_POS"
+    ? { encoding: "CP858" }
+    : {
+        units: "mm" as const,
+        size: paperOptions[paperSize],
+        margins: paperMargins[paperSize],
+        scaleContent: false,
+      }),
 });
+
+function assertEscPosPaper(
+  paperSize: PrintingPaperSize,
+): asserts paperSize is Extract<PrintingPaperSize, "58MM" | "80MM"> {
+  if (paperSize !== "58MM" && paperSize !== "80MM") {
+    throw new Error("ESC/POS printing requires 58 mm or 80 mm paper.");
+  }
+}
 
 export const discoverLocalPrinters = async (): Promise<string[]> => {
   const qz = await connectToQzTray();
@@ -56,6 +73,7 @@ export const discoverLocalPrinters = async (): Promise<string[]> => {
 export const printLocalTestTicket = async (
   printerName: string,
   paperSize: PrintingPaperSize = "80MM",
+  printMode: PrintingMode = "PIXEL_HTML",
 ) => {
   const selectedPrinter = printerName.trim();
   if (!selectedPrinter) {
@@ -65,8 +83,30 @@ export const printLocalTestTicket = async (
   const qz = await connectToQzTray();
   const config = qz.configs.create(
     selectedPrinter,
-    createPrintOptions(paperSize, "DeliveryWays printer test"),
+    createPrintOptions(paperSize, "DeliveryWays printer test", printMode),
   );
+
+  if (printMode === "ESC_POS") {
+    assertEscPosPaper(paperSize);
+    await qz.print(config, [
+      {
+        type: "raw",
+        format: "command",
+        flavor: "plain",
+        data: [
+          "\x1b@",
+          "\x1bt\x13",
+          "\x1ba\x01",
+          "\x1d!\x11",
+          "DeliveryWays\n",
+          "\x1d!\x00",
+          "ESC/POS printer test successful.\n",
+          `${new Date().toLocaleString()}\n\n\n\n`,
+        ].join(""),
+      },
+    ]);
+    return;
+  }
 
   await qz.print(config, [
     {
@@ -87,10 +127,12 @@ export const printLocalTestTicket = async (
 export const printLocalOrderTicket = async ({
   printerName,
   paperSize,
+  printMode = "PIXEL_HTML",
   ticket,
 }: {
   printerName: string;
   paperSize: PrintingPaperSize;
+  printMode?: PrintingMode;
   ticket: OrderTicket;
 }) => {
   const selectedPrinter = printerName.trim();
@@ -104,8 +146,22 @@ export const printLocalOrderTicket = async ({
     createPrintOptions(
       paperSize,
       `DeliveryWays order ${ticket.orderNumber ?? ticket.id}`,
+      printMode,
     ),
   );
+
+  if (printMode === "ESC_POS") {
+    assertEscPosPaper(paperSize);
+    await qz.print(config, [
+      {
+        type: "raw",
+        format: "command",
+        flavor: "plain",
+        data: buildOrderTicketEscPos(ticket, paperSize),
+      },
+    ]);
+    return;
+  }
 
   await qz.print(config, [
     {

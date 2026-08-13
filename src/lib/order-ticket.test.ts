@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { buildOrderTicketHtml, normalizeOrderTicket } from "@/lib/order-ticket";
+import {
+  buildOrderTicketEscPos,
+  buildOrderTicketHtml,
+  normalizeOrderTicket,
+} from "@/lib/order-ticket";
 
 describe("order ticket", () => {
   it("normalizes order details and escapes customer-provided content", () => {
@@ -119,5 +123,37 @@ describe("order ticket", () => {
     expect(
       buildOrderTicketHtml({ id: "order-1", items: [] }, paperSize),
     ).toContain(`width:${width}`);
+  });
+});
+
+describe("buildOrderTicketEscPos", () => {
+  it("builds a complete 58 mm native ticket", () => {
+    const output = buildOrderTicketEscPos(
+      {
+        id: "order-12345678",
+        orderNumber: "42",
+        customerName: "Jörg Weiß",
+        paymentMethod: "CASH",
+        subtotal: 10,
+        totalAmount: 12.5,
+        currency: "EUR",
+        items: [
+          {
+            name: "Döner",
+            quantity: 1,
+            modifiers: [{ name: "Käse", quantity: 1 }],
+          },
+        ],
+      },
+      "58MM",
+    );
+
+    expect(output).toContain("\x1b@");
+    expect(output).toContain("Order / Bestellung 42");
+    expect(output).toContain("Jörg Weiß");
+    expect(output).toContain("1 x Döner");
+    expect(output).toContain("+ Käse x 1");
+    expect(output).toContain("TOTAL:");
+    expect(output).toContain("Payment method: CASH");
   });
 });

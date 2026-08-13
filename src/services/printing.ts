@@ -7,6 +7,7 @@ export type PrintingQueryParams = {
 
 export type PrintingConnectionType = "USB" | "LAN" | "BLUETOOTH" | "CLOUD";
 export type PrintingPaperSize = "A4" | "A5" | "80MM" | "58MM";
+export type PrintingMode = "PIXEL_HTML" | "ESC_POS";
 
 export type AdminPrintingSettings = {
   enabled: boolean;
@@ -16,6 +17,7 @@ export type AdminPrintingSettings = {
   printKitchenTicket: boolean;
   connectionType: PrintingConnectionType | null;
   paperSize: PrintingPaperSize;
+  printMode: PrintingMode;
   printerName: string | null;
   printerTarget: string | null;
   deviceId: string | null;

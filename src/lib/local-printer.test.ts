@@ -83,4 +83,47 @@ describe("local printer bridge", () => {
       }),
     );
   });
+
+  it("prints a native ESC/POS order using CP858 encoding", async () => {
+    qzMocks.create.mockReturnValue({ printer: "Generic / Text Only" });
+    qzMocks.print.mockResolvedValue(undefined);
+
+    await printLocalOrderTicket({
+      printerName: "Generic / Text Only",
+      paperSize: "58MM",
+      printMode: "ESC_POS",
+      ticket: {
+        id: "order-1",
+        orderNumber: "42",
+        customerName: "Jörg Weiß",
+        totalAmount: 12.5,
+        currency: "EUR",
+        items: [{ name: "Döner", quantity: 1, modifiers: [] }],
+      },
+    });
+
+    expect(qzMocks.create).toHaveBeenCalledWith("Generic / Text Only", {
+      jobName: "DeliveryWays order 42",
+      encoding: "CP858",
+    });
+    expect(qzMocks.print).toHaveBeenCalledWith(
+      { printer: "Generic / Text Only" },
+      [
+        expect.objectContaining({
+          type: "raw",
+          format: "command",
+          flavor: "plain",
+          data: expect.stringContaining("Jörg Weiß"),
+        }),
+      ],
+    );
+  });
+
+  it("rejects ESC/POS mode for sheet paper", async () => {
+    qzMocks.create.mockReturnValue({ printer: "Kitchen USB" });
+
+    await expect(
+      printLocalTestTicket("Kitchen USB", "A4", "ESC_POS"),
+    ).rejects.toThrow("ESC/POS printing requires 58 mm or 80 mm paper");
+  });
 });

@@ -303,3 +303,168 @@ export const buildOrderTicketHtml = (
     "</div>",
   ].join("");
 };
+
+const ESC = "\x1b";
+const GS = "\x1d";
+
+const wrapText = (value: string, columns: number) => {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let line = "";
+
+  for (const word of words) {
+    if (word.length > columns) {
+      if (line) {
+        lines.push(line);
+        line = "";
+      }
+      for (let index = 0; index < word.length; index += columns) {
+        lines.push(word.slice(index, index + columns));
+      }
+      continue;
+    }
+
+    const candidate = line ? `${line} ${word}` : word;
+    if (candidate.length <= columns) {
+      line = candidate;
+    } else {
+      lines.push(line);
+      line = word;
+    }
+  }
+
+  if (line) lines.push(line);
+  return lines;
+};
+
+const formatEscPosAmount = (
+  label: string,
+  value: string,
+  columns: number,
+) => {
+  const spacing = columns - label.length - value.length;
+  return spacing > 0
+    ? `${label}${" ".repeat(spacing)}${value}`
+    : `${label}\n${value.padStart(columns)}`;
+};
+
+export const buildOrderTicketEscPos = (
+  ticket: OrderTicket,
+  paperSize: Extract<PrintingPaperSize, "58MM" | "80MM">,
+) => {
+  const columns = paperSize === "58MM" ? 32 : 48;
+  const orderLabel = ticket.orderNumber ?? ticket.id.slice(-8);
+  const money = (value: number) =>
+    `${new Intl.NumberFormat("de-DE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value)} ${ticket.currency ?? ""}`.trim();
+  const lines: string[] = [
+    `${ESC}@`,
+    `${ESC}t\x13`,
+    `${ESC}a\x01`,
+    `${GS}!\x11`,
+    "DeliveryWays\n",
+    `${GS}!\x00`,
+    `Order / Bestellung ${orderLabel}\n`,
+    `${ESC}a\x00`,
+    `${"=".repeat(columns)}\n`,
+  ];
+
+  if (ticket.isScheduled && ticket.preOrderAt) {
+    lines.push(`${ESC}E\x01PRE-ORDER / VORBESTELLUNG${ESC}E\x00\n`);
+    lines.push(`${new Date(ticket.preOrderAt).toLocaleString()}\n`);
+  } else {
+    lines.push(`${ESC}E\x01ASAP / SOFORT${ESC}E\x00\n`);
+  }
+
+  const details = [
+    ticket.orderType ? `Type: ${ticket.orderType}` : undefined,
+    ticket.createdAt
+      ? `Time: ${new Date(ticket.createdAt).toLocaleString()}`
+      : undefined,
+    ticket.customerName ? `Customer: ${ticket.customerName}` : undefined,
+    ticket.customerEmail ? `Email: ${ticket.customerEmail}` : undefined,
+    ticket.customerPhone ? `Phone: ${ticket.customerPhone}` : undefined,
+    ticket.deliveryAddress ? `Address: ${ticket.deliveryAddress}` : undefined,
+  ].filter((value): value is string => Boolean(value));
+
+  for (const detail of details) {
+    for (const line of wrapText(detail, columns)) lines.push(`${line}\n`);
+  }
+
+  lines.push(`${"-".repeat(columns)}\n`);
+  lines.push(`${ESC}E\x01Ordered items${ESC}E\x00\n`);
+
+  if (ticket.items.length === 0) {
+    lines.push("No item details available\n");
+  }
+
+  for (const item of ticket.items) {
+    const itemLabel = `${item.quantity} x ${item.name}${item.variationName ? ` (${item.variationName})` : ""}`;
+    for (const line of wrapText(itemLabel, columns)) {
+      lines.push(`${ESC}E\x01${line}${ESC}E\x00\n`);
+    }
+    for (const modifier of item.modifiers) {
+      for (const line of wrapText(
+        `  + ${modifier.name} x ${modifier.quantity}`,
+        columns,
+      )) {
+        lines.push(`${line}\n`);
+      }
+    }
+    if (item.note) {
+      for (const line of wrapText(`  Note: ${item.note}`, columns)) {
+        lines.push(`${line}\n`);
+      }
+    }
+    if (typeof item.lineTotal === "number") {
+      lines.push(`${money(item.lineTotal).padStart(columns)}\n`);
+    }
+  }
+
+  if (ticket.customerNote) {
+    lines.push(`${"-".repeat(columns)}\n`);
+    for (const line of wrapText(`Note: ${ticket.customerNote}`, columns)) {
+      lines.push(`${ESC}E\x01${line}${ESC}E\x00\n`);
+    }
+  }
+
+  lines.push(`${"-".repeat(columns)}\n`);
+  const amounts: Array<[string, number | undefined, boolean?]> = [
+    ["Subtotal", ticket.subtotal],
+    ["Tax", ticket.taxAmount],
+    ["Delivery fee", ticket.deliveryFee],
+    ["Service charge", ticket.serviceChargeAmount],
+    ["Tip", ticket.tipAmount],
+    ["Discount", ticket.discountAmount, true],
+    ["Loyalty discount", ticket.loyaltyDiscountAmount, true],
+    ["Wallet applied", ticket.walletAppliedAmount, true],
+  ];
+
+  amounts.forEach(([label, value, subtract], index) => {
+    if (typeof value !== "number" || (index !== 0 && value === 0)) return;
+    lines.push(
+      `${formatEscPosAmount(`${label}:`, `${subtract ? "-" : ""}${money(value)}`, columns)}\n`,
+    );
+  });
+
+  if (typeof ticket.totalAmount === "number") {
+    lines.push(`${ESC}E\x01`);
+    lines.push(
+      `${formatEscPosAmount("TOTAL:", money(ticket.totalAmount), columns)}\n`,
+    );
+    lines.push(`${ESC}E\x00`);
+  }
+  if (ticket.paymentMethod) {
+    for (const line of wrapText(
+      `Payment method: ${ticket.paymentMethod}`,
+      columns,
+    )) {
+      lines.push(`${line}\n`);
+    }
+  }
+
+  lines.push("\n\n\n\n");
+  return lines.join("");
+};

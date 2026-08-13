@@ -21,6 +21,7 @@ import {
 import { validatePrinterConnection } from "@/lib/printing-settings-validation";
 import type {
   PrintingConnectionType,
+  PrintingMode,
   PrintingPaperSize,
 } from "@/services/printing";
 import { toast } from "sonner";
@@ -40,6 +41,7 @@ type PrintingSettings = {
   printKitchenTicket: boolean;
   connectionType: ConnectionType;
   paperSize: PrintingPaperSize;
+  printMode: PrintingMode;
   printerName: string;
   printerTarget: string;
   deviceId: string;
@@ -55,6 +57,7 @@ const defaultSettings: PrintingSettings = {
   printKitchenTicket: false,
   connectionType: "",
   paperSize: "80MM",
+  printMode: "PIXEL_HTML",
   printerName: "",
   printerTarget: "",
   deviceId: "",
@@ -167,6 +170,7 @@ export default function AutoPrintingSettings({
       printKitchenTicket: Boolean(apiSettings.printKitchenTicket),
       connectionType: apiSettings.connectionType || "",
       paperSize: apiSettings.paperSize || "80MM",
+      printMode: apiSettings.printMode || "PIXEL_HTML",
       printerName: apiSettings.printerName || "",
       printerTarget: apiSettings.printerTarget || "",
       deviceId: apiSettings.deviceId || "",
@@ -262,7 +266,7 @@ export default function AutoPrintingSettings({
       }
 
       if (!printers.includes(form.printerName)) {
-        updateField("printerName", printers[0]);
+        handlePrinterSelection(printers[0]);
       }
       await reportLocalEvent(
         "discovery",
@@ -291,6 +295,34 @@ export default function AutoPrintingSettings({
     }
 
     void handleDiscoverPrinters();
+  };
+
+  const handlePrinterSelection = (printerName: string) => {
+    setForm((previous) => ({
+      ...previous,
+      printerName,
+      ...(/generic\s*\/\s*text only/i.test(printerName)
+        ? {
+            printMode: "ESC_POS" as const,
+            paperSize:
+              previous.paperSize === "A4" || previous.paperSize === "A5"
+                ? ("80MM" as const)
+                : previous.paperSize,
+          }
+        : {}),
+    }));
+  };
+
+  const handlePrintModeChange = (printMode: PrintingMode) => {
+    setForm((previous) => ({
+      ...previous,
+      printMode,
+      paperSize:
+        printMode === "ESC_POS" &&
+        (previous.paperSize === "A4" || previous.paperSize === "A5")
+          ? "80MM"
+          : previous.paperSize,
+    }));
   };
 
   const isLocalConnection =
@@ -322,6 +354,7 @@ export default function AutoPrintingSettings({
         printKitchenTicket: form.printKitchenTicket,
         connectionType: form.connectionType || null,
         paperSize: form.paperSize,
+        printMode: form.printMode,
         printerName: form.printerName.trim() || null,
         printerTarget: form.printerTarget.trim() || null,
         deviceId: form.deviceId.trim() || null,
@@ -352,7 +385,11 @@ export default function AutoPrintingSettings({
 
     setTesting(true);
     try {
-      await printLocalTestTicket(form.printerName, form.paperSize);
+      await printLocalTestTicket(
+        form.printerName,
+        form.paperSize,
+        form.printMode,
+      );
       await reportLocalEvent(
         "test_print",
         "success",
@@ -513,9 +550,7 @@ export default function AutoPrintingSettings({
             <select
               aria-label={t("printerName")}
               value={form.printerName}
-              onChange={(event) =>
-                updateField("printerName", event.target.value)
-              }
+              onChange={(event) => handlePrinterSelection(event.target.value)}
               disabled={discovering || availablePrinters.length === 0}
               className="h-11 w-full rounded-[10px] border border-[#BBBBBB] px-4 text-sm text-gray-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:bg-gray-100"
             >
@@ -526,6 +561,27 @@ export default function AutoPrintingSettings({
                 </option>
               ))}
             </select>
+          </div>
+        ) : null}
+
+        {isLocalConnection ? (
+          <div className="mb-6">
+            <label className="mb-2 block text-[16px]">{t("printMode")}</label>
+            <select
+              value={form.printMode}
+              onChange={(event) =>
+                handlePrintModeChange(event.target.value as PrintingMode)
+              }
+              className="h-11 w-full rounded-[10px] border border-[#BBBBBB] px-4 text-sm text-gray-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            >
+              <option value="ESC_POS">{t("printModeEscPos")}</option>
+              <option value="PIXEL_HTML">{t("printModePixelHtml")}</option>
+            </select>
+            <p className="mt-2 text-xs text-gray-500">
+              {form.printMode === "ESC_POS"
+                ? t("printModeEscPosHint")
+                : t("printModePixelHtmlHint")}
+            </p>
           </div>
         ) : null}
 
@@ -540,8 +596,12 @@ export default function AutoPrintingSettings({
           >
             <option value="80MM">80 mm</option>
             <option value="58MM">58 mm</option>
-            <option value="A4">A4</option>
-            <option value="A5">A5</option>
+            <option value="A4" disabled={form.printMode === "ESC_POS"}>
+              A4
+            </option>
+            <option value="A5" disabled={form.printMode === "ESC_POS"}>
+              A5
+            </option>
           </select>
           <p className="mt-2 text-xs text-gray-500">{t("paperSizeHint")}</p>
         </div>

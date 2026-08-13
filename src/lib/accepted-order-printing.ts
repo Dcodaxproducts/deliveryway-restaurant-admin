@@ -97,6 +97,7 @@ const printOrderIfConfigured = async ({
     await printLocalOrderTicket({
       printerName: settings.printerName,
       paperSize: settings.paperSize ?? "80MM",
+      printMode: settings.printMode ?? "PIXEL_HTML",
       ticket,
     });
 
