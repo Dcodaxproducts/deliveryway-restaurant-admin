@@ -120,9 +120,13 @@ describe("order ticket", () => {
     ["80MM", "72mm"],
     ["58MM", "50mm"],
   ] as const)("renders %s content width", (paperSize, width) => {
-    expect(
-      buildOrderTicketHtml({ id: "order-1", items: [] }, paperSize),
-    ).toContain(`width:${width}`);
+    const html = buildOrderTicketHtml(
+      { id: "order-1", items: [] },
+      paperSize,
+    );
+
+    expect(html).toContain(`width:${width}`);
+    expect(html).toContain("padding-right:4mm");
   });
 });
 
