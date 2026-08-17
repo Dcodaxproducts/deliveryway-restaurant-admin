@@ -51,6 +51,10 @@ describe("restaurant payment management service", () => {
         wallet: {
           type: "RESTAURANT_WALLET",
           balance: "900",
+          ledgerBalance: "900",
+          grossCollectedAmount: "900",
+          commissionLiabilityAmount: "90",
+          availablePayoutBalance: "810",
           currency: "PKR",
           customerWalletExposure: { totalBalance: 250 },
         },
@@ -65,6 +69,10 @@ describe("restaurant payment management service", () => {
     expect(result).toMatchObject({
       type: "RESTAURANT_WALLET",
       balance: 900,
+      ledgerBalance: 900,
+      grossCollectedAmount: 900,
+      commissionLiabilityAmount: 90,
+      availablePayoutBalance: 810,
       currency: "PKR",
       customerWalletExposure: { totalBalance: 250 },
     });

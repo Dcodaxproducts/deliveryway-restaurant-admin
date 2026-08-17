@@ -415,6 +415,7 @@ function RestaurantWalletPayoutSection({
     Boolean(restaurantId) &&
     Number.isFinite(parsedAmount) &&
     parsedAmount > 0 &&
+    parsedAmount <= (walletQuery.data?.availablePayoutBalance ?? 0) &&
     bankName.trim().length > 0 &&
     accountTitle.trim().length > 0 &&
     accountNumber.trim().length > 0 &&
@@ -475,9 +476,9 @@ function RestaurantWalletPayoutSection({
             </h2>
           </div>
           <p className="text-sm text-gray">
-            Review the restaurant wallet balance and request a manual bank
-            payout. Wallet deductions happen only after Super Admin marks a
-            payout as paid.
+            Review gross collections, platform commission, and the amount
+            currently available for payout. Wallet deductions happen only
+            after Super Admin marks a payout as paid.
           </p>
         </div>
         <Button
@@ -512,15 +513,15 @@ function RestaurantWalletPayoutSection({
         </p>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <PaymentSummaryCard
           icon={<Wallet size={18} />}
-          label="Wallet balance"
+          label="Available payout"
           value={
             walletQuery.isLoading
               ? "Loading..."
               : formatOptionalMoney(
-                  walletQuery.data?.balance ?? null,
+                  walletQuery.data?.availablePayoutBalance ?? null,
                   walletCurrency,
                   formatCurrency,
                 )
@@ -528,8 +529,21 @@ function RestaurantWalletPayoutSection({
         />
         <PaymentSummaryCard
           icon={<CreditCard size={18} />}
-          label="Wallet type"
-          value={walletQuery.data?.type || "Restaurant wallet"}
+          label="Gross collected"
+          value={formatOptionalMoney(
+            walletQuery.data?.grossCollectedAmount ?? null,
+            walletCurrency,
+            formatCurrency,
+          )}
+        />
+        <PaymentSummaryCard
+          icon={<Info size={18} />}
+          label="Platform commission"
+          value={formatOptionalMoney(
+            walletQuery.data?.commissionLiabilityAmount ?? null,
+            walletCurrency,
+            formatCurrency,
+          )}
         />
         <PaymentSummaryCard
           icon={<Info size={18} />}

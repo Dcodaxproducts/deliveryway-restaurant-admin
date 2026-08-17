@@ -37,6 +37,10 @@ export type RestaurantPaymentManagement = {
 export type RestaurantWallet = {
   type: string | null;
   balance: number | null;
+  ledgerBalance: number | null;
+  grossCollectedAmount: number | null;
+  commissionLiabilityAmount: number | null;
+  availablePayoutBalance: number | null;
   currency: string | null;
   customerWalletExposure: RecordValue;
 };
@@ -177,6 +181,12 @@ const normalizeWallet = (response: unknown): RestaurantWallet => {
     type: getString(wallet.type, "RESTAURANT_WALLET"),
     balance: getNumber(
       wallet.balance ?? wallet.availableBalance ?? wallet.amount,
+    ),
+    ledgerBalance: getNumber(wallet.ledgerBalance ?? wallet.balance),
+    grossCollectedAmount: getNumber(wallet.grossCollectedAmount),
+    commissionLiabilityAmount: getNumber(wallet.commissionLiabilityAmount),
+    availablePayoutBalance: getNumber(
+      wallet.availablePayoutBalance ?? wallet.availableBalance ?? wallet.balance,
     ),
     currency: getString(wallet.currency ?? data.currency),
     customerWalletExposure: firstRecord(
