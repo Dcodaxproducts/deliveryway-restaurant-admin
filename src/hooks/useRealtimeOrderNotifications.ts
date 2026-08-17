@@ -15,6 +15,7 @@ import {
   printAcceptedOrderIfConfigured,
   printNewOrderIfConfigured,
 } from "@/lib/accepted-order-printing";
+import { buildAutoOpenOrderPath } from "@/lib/new-order-navigation";
 
 type OrderCreatedPayload = {
   id: string;
@@ -25,6 +26,10 @@ type OrderCreatedPayload = {
 
 type OrderStatusUpdatedPayload = OrderCreatedPayload & {
   status: string;
+};
+
+type HandleOrderCreatedOptions = {
+  autoOpen?: boolean;
 };
 
 export const ORDER_SOUND_STORAGE_KEY = "deliveryways.orderSound.enabled";
@@ -225,7 +230,10 @@ export function useRealtimeOrderNotifications() {
     window.addEventListener("pointerdown", unlockSoundFromUserGesture);
     window.addEventListener("keydown", unlockSoundFromUserGesture);
 
-    const handleOrderCreated = (payload: OrderCreatedPayload) => {
+    const handleOrderCreated = (
+      payload: OrderCreatedPayload,
+      options: HandleOrderCreatedOptions = {},
+    ) => {
       if (
         !payload?.id ||
         payload.restaurantId !== restaurantId ||
@@ -302,6 +310,10 @@ export function useRealtimeOrderNotifications() {
           onDismiss: () => stopOrderSound(payload.id),
         },
       );
+
+      if (options.autoOpen !== false) {
+        router.push(buildAutoOpenOrderPath(payload.id));
+      }
     };
 
     socket.on("connect", () => {
@@ -316,12 +328,15 @@ export function useRealtimeOrderNotifications() {
             const order = notification.order;
             if (!order?.id) return;
 
-            handleOrderCreated({
-              id: order.id,
-              restaurantId: order.restaurantId ?? restaurantId,
-              branchId: order.branchId ?? branchId ?? "",
-              source: "STOREFRONT",
-            });
+            handleOrderCreated(
+              {
+                id: order.id,
+                restaurantId: order.restaurantId ?? restaurantId,
+                branchId: order.branchId ?? branchId ?? "",
+                source: "STOREFRONT",
+              },
+              { autoOpen: false },
+            );
           });
         })
         .catch(() => {

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Ban, CalendarClock, Printer, RefreshCw, Truck, XCircle } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -46,12 +47,15 @@ type OrderStatusProgressState = {
 const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
   const t = useTranslations("orders");
   const common = useTranslations("common");
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const updateStatusMutation = useUpdateOrderStatus();
   const sendOutForDeliveryMutation = useSendOrderOutForDelivery();
   const externalDriverMutation = useSendOrderWithExternalDriver();
 
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const handledAutoOpen = useRef(false);
   const [isReprinting, setIsReprinting] = useState(false);
   const [progressOrder, setProgressOrder] = useState<OrderStatusProgressState | null>(null);
 
@@ -73,6 +77,21 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
   const scheduledTime = isPreorder
     ? formatDateTime24({ value: order.orderTime })
     : null;
+
+  useEffect(() => {
+    if (
+      handledAutoOpen.current ||
+      searchParams.get("acceptOrder") !== "1"
+    ) {
+      return;
+    }
+
+    handledAutoOpen.current = true;
+    router.replace(`/orders/details/${order.id}`, { scroll: false });
+    if (nextStatus && !canDirectlyUpdateOrderStatus(order)) {
+      setStatusDialogOpen(true);
+    }
+  }, [nextStatus, order, router, searchParams]);
 
   const breadcrumbParts = t("breadcrumbDetails").split(" / ");
 

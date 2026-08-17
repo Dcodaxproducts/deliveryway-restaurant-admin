@@ -4,6 +4,7 @@ vi.mock("@/lib/constants", () => ({
   API_BASE_URL: "https://api.delivery-way.de/api/v1",
 }));
 
+import { buildAutoOpenOrderPath } from "@/lib/new-order-navigation";
 import {
   buildOrderTrackingSocketAuth,
   getOrderTrackingSocketUrl,
@@ -18,6 +19,14 @@ describe("getOrderTrackingSocketUrl", () => {
   it("builds the Socket.IO namespace URL from the API origin", () => {
     expect(getOrderTrackingSocketUrl()).toBe(
       "https://api.delivery-way.de/orders-tracking",
+    );
+  });
+});
+
+describe("new order navigation", () => {
+  it("requests the acceptance dialog on the order details route", () => {
+    expect(buildAutoOpenOrderPath("order-123")).toBe(
+      "/orders/details/order-123?acceptOrder=1",
     );
   });
 });
