@@ -30,7 +30,7 @@ describe("WinOrder service", () => {
     vi.mocked(httpClient.post).mockResolvedValue({ data: {}, message: "ok" });
 
     await getWinOrderConnection("branch-1");
-    await createWinOrderConnection({ branchId: "branch-1", storeId: 4 });
+    await createWinOrderConnection({ branchId: "branch-1" });
     await rotateWinOrderCredentials("branch-1");
 
     expect(httpClient.get).toHaveBeenCalledWith(
@@ -39,7 +39,7 @@ describe("WinOrder service", () => {
     expect(httpClient.post).toHaveBeenNthCalledWith(
       1,
       "/admin/integrations/winorder/connections",
-      { branchId: "branch-1", storeId: 4 },
+      { branchId: "branch-1" },
     );
     expect(httpClient.post).toHaveBeenNthCalledWith(
       2,

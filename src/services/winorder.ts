@@ -9,6 +9,7 @@ export type WinOrderConnection = {
   storeName: string | null;
   isEnabled: boolean;
   endpointPath: string;
+  storeSpecificEndpointPath?: string | null;
   lastPollAt: string | null;
   lastSuccessfulCallbackAt: string | null;
   lastErrorAt: string | null;
@@ -86,7 +87,7 @@ export const getWinOrderConnection = (branchId: string) =>
 
 export const createWinOrderConnection = (payload: {
   branchId: string;
-  storeId: number;
+  storeId?: number;
   storeName?: string;
 }) =>
   httpClient.post<ApiResponse<WinOrderConnection>, typeof payload>(
@@ -96,7 +97,11 @@ export const createWinOrderConnection = (payload: {
 
 export const updateWinOrderConnection = (
   branchId: string,
-  payload: { storeId?: number; storeName?: string; isEnabled?: boolean },
+  payload: {
+    storeId?: number | null;
+    storeName?: string;
+    isEnabled?: boolean;
+  },
 ) =>
   httpClient.patch<ApiResponse<WinOrderConnection>, typeof payload>(
     `${base}/connections/${branchId}`,

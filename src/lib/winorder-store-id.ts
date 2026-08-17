@@ -5,3 +5,6 @@ export const parseWinOrderStoreId = (value: string): number | null => {
   const storeId = Number(normalized);
   return Number.isInteger(storeId) && storeId >= 0 ? storeId : null;
 };
+
+export const isInvalidWinOrderStoreId = (value: string): boolean =>
+  Boolean(value.trim()) && parseWinOrderStoreId(value) === null;

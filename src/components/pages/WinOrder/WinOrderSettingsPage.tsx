@@ -33,7 +33,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrentScope } from "@/hooks/useCurrentScope";
 import { useGetBranches } from "@/hooks/useBranches";
 import { getApiErrorMessage } from "@/lib/errors";
-import { parseWinOrderStoreId } from "@/lib/winorder-store-id";
+import {
+  isInvalidWinOrderStoreId,
+  parseWinOrderStoreId,
+} from "@/lib/winorder-store-id";
 import { getStringValue, isRecord } from "@/lib/auth";
 import {
   createWinOrderConnection,
@@ -71,6 +74,15 @@ const paymentMethods: WinOrderPaymentMethod[] = [
   "BANK_TRANSFER",
   "WALLET",
 ];
+
+const defaultPaymentLabels: Partial<
+  Record<WinOrderPaymentMethod, string>
+> = {
+  COD: "Barzahlung",
+  STRIPE: "Über DeliveryWay online bezahlt",
+  PAYPAL: "Über DeliveryWay online bezahlt",
+  WALLET: "Über DeliveryWay online bezahlt",
+};
 
 const readBranches = (response: unknown): BranchOption[] => {
   if (!isRecord(response)) return [];
@@ -141,6 +153,7 @@ export default function WinOrderSettingsPage() {
   });
   const connection = connectionQuery.data?.data ?? null;
   const parsedStoreId = parseWinOrderStoreId(storeId);
+  const invalidStoreId = isInvalidWinOrderStoreId(storeId);
   const mappingsQuery = useQuery({
     queryKey: ["winorder", "mappings", selectedBranchId],
     queryFn: () => getWinOrderMappings(selectedBranchId),
@@ -211,29 +224,23 @@ export default function WinOrderSettingsPage() {
     ) => {
       if (!selectedBranchId) throw new Error(t("selectBranch"));
       if (action === "create") {
-        if (parsedStoreId === null) throw new Error(t("storeIdRequired"));
+        if (invalidStoreId) throw new Error(t("storeIdInvalid"));
         return createWinOrderConnection({
           branchId: selectedBranchId,
-          storeId: parsedStoreId,
+          ...(parsedStoreId === null ? {} : { storeId: parsedStoreId }),
           storeName: storeName || undefined,
         });
       }
       if (action === "rotate")
         return rotateWinOrderCredentials(selectedBranchId);
       if (action === "toggle" && connection) {
-        if (!connection.isEnabled && parsedStoreId === null) {
-          throw new Error(t("storeIdRequired"));
-        }
         return updateWinOrderConnection(selectedBranchId, {
           isEnabled: !connection.isEnabled,
-          ...(!connection.isEnabled && parsedStoreId !== null
-            ? { storeId: parsedStoreId }
-            : {}),
         });
       }
       if (action === "retry")
         return retryFailedWinOrderExports(selectedBranchId);
-      if (parsedStoreId === null) throw new Error(t("storeIdRequired"));
+      if (invalidStoreId) throw new Error(t("storeIdInvalid"));
       await updateWinOrderConnection(selectedBranchId, {
         storeId: parsedStoreId,
         storeName: storeName || undefined,
@@ -247,6 +254,7 @@ export default function WinOrderSettingsPage() {
           externalArticleName: value.name.trim() || localKey,
         }));
       const payments = paymentMethods.flatMap((paymentMethod) => {
+        if (paymentMethod === "COD") return [];
         const externalLabel = paymentDraft[paymentMethod]?.trim();
         return externalLabel ? [{ paymentMethod, externalLabel }] : [];
       });
@@ -390,8 +398,7 @@ export default function WinOrderSettingsPage() {
                   type="number"
                   min={0}
                   step={1}
-                  required
-                  aria-invalid={Boolean(storeId && parsedStoreId === null)}
+                  aria-invalid={invalidStoreId}
                   className="mt-2"
                 />
                 <p className="mt-2 text-xs text-muted-foreground">
@@ -412,9 +419,7 @@ export default function WinOrderSettingsPage() {
             <div className="flex flex-wrap items-center gap-3 border-t pt-5">
               {!connection ? (
                 <Button
-                  disabled={
-                    !canEdit || mutation.isPending || parsedStoreId === null
-                  }
+                  disabled={!canEdit || mutation.isPending || invalidStoreId}
                   onClick={() => mutation.mutate("create")}
                 >
                   <KeyRound />
@@ -441,9 +446,7 @@ export default function WinOrderSettingsPage() {
                     {t("rotate")}
                   </Button>
                   <Button
-                    disabled={
-                      !canEdit || mutation.isPending || parsedStoreId === null
-                    }
+                    disabled={!canEdit || mutation.isPending || invalidStoreId}
                     onClick={() => mutation.mutate("save")}
                   >
                     <Save />
@@ -504,9 +507,15 @@ export default function WinOrderSettingsPage() {
                     <Input
                       id={`payment-${method}`}
                       className="mt-2"
-                      placeholder={t("winOrderLabel")}
-                      value={paymentDraft[method] ?? ""}
-                      disabled={!canEdit}
+                      placeholder={
+                        defaultPaymentLabels[method] ?? t("winOrderLabel")
+                      }
+                      value={
+                        method === "COD"
+                          ? defaultPaymentLabels.COD
+                          : (paymentDraft[method] ?? "")
+                      }
+                      disabled={!canEdit || method === "COD"}
                       onChange={(event) =>
                         setPaymentDraft((current) => ({
                           ...current,

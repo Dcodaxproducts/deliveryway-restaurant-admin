@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { parseWinOrderStoreId } from "@/lib/winorder-store-id";
+import {
+  isInvalidWinOrderStoreId,
+  parseWinOrderStoreId,
+} from "@/lib/winorder-store-id";
 
 describe("parseWinOrderStoreId", () => {
   it("accepts non-negative integer Store IDs", () => {
@@ -14,4 +17,11 @@ describe("parseWinOrderStoreId", () => {
       expect(parseWinOrderStoreId(value)).toBeNull();
     },
   );
+
+  it("allows an empty optional Store ID but rejects invalid values", () => {
+    expect(isInvalidWinOrderStoreId("")).toBe(false);
+    expect(isInvalidWinOrderStoreId("  ")).toBe(false);
+    expect(isInvalidWinOrderStoreId("41")).toBe(false);
+    expect(isInvalidWinOrderStoreId("store-1")).toBe(true);
+  });
 });
