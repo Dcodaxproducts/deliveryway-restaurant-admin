@@ -546,4 +546,44 @@ describe("menu item modifier required payload", () => {
       },
     ]);
   });
+
+  it("hydrates only the edited item's modifier prices from shared variations", () => {
+    const otherItemOverrides = Array.from({ length: 11 }, (_, index) => ({
+      menuItemId: `item-${index + 2}`,
+      variationId: "variation-small",
+      modifierId: "modifier-cheese",
+      priceDelta: 0,
+    }));
+    const form = getInitialForm("restaurant-1", {
+      id: "item-1",
+      name: "Pizza",
+      variationPriceOverrides: [
+        {
+          variationId: "variation-small",
+          price: 12,
+          variation: {
+            id: "variation-small",
+            modifierPriceOverrides: [
+              {
+                menuItemId: "item-1",
+                variationId: "variation-small",
+                modifierId: "modifier-cheese",
+                priceDelta: 1.5,
+              },
+              ...otherItemOverrides,
+            ],
+          },
+        },
+      ],
+    });
+
+    expect(form.variationPriceOverrides).toEqual([
+      expect.objectContaining({
+        variationId: "variation-small",
+        modifierPriceOverrides: [
+          { modifierId: "modifier-cheese", priceDelta: "1.5" },
+        ],
+      }),
+    ]);
+  });
 });
