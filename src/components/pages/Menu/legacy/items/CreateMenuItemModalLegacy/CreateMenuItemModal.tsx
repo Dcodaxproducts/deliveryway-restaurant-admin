@@ -477,16 +477,36 @@ const normalizeVariationPriceOverrides = ({
   };
 
   const getNestedModifierOverrides = (entry: any) => {
-    const directNested = normalizeNestedModifierPriceOverrides(
+    const normalizeScopedOverrides = (value: unknown) => {
+      const scopedOverrides = normalizeArray(value).filter((override) => {
+        const overrideMenuItemId = override?.menuItemId;
+
+        if (!overrideMenuItemId) return true;
+
+        return (
+          Boolean(menuItemId) &&
+          String(overrideMenuItemId) === String(menuItemId)
+        );
+      });
+      const sharedOverrides = normalizeNestedModifierPriceOverrides(
+        scopedOverrides.filter((override) => !override?.menuItemId)
+      );
+      const itemOverrides = normalizeNestedModifierPriceOverrides(
+        scopedOverrides.filter((override) => override?.menuItemId)
+      );
+
+      return mergeModifierOverrides(sharedOverrides, itemOverrides);
+    };
+    const directNested = normalizeScopedOverrides(
       entry?.modifierPriceOverrides
     );
 
-    const variationNested = normalizeNestedModifierPriceOverrides(
+    const variationNested = normalizeScopedOverrides(
       entry?.variation?.modifierPriceOverrides ||
         entry?.menuVariation?.modifierPriceOverrides
     );
 
-    const sourceNested = normalizeNestedModifierPriceOverrides(
+    const sourceNested = normalizeScopedOverrides(
       getVariationSource(entry)?.modifierPriceOverrides
     );
 
