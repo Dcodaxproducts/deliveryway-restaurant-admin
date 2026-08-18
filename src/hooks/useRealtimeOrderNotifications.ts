@@ -10,6 +10,10 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { getStoredAuth } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/constants";
+import {
+  getNewOrderToastId,
+  shouldDismissNewOrderToast,
+} from "@/hooks/realtime-order-state";
 import { claimPendingOrderNotifications } from "@/services/notifications";
 import {
   printAcceptedOrderIfConfigured,
@@ -63,6 +67,11 @@ export const isScopedOrderStatusUpdate = ({
   Boolean(payload?.id) &&
   payload.restaurantId === restaurantId &&
   (!isBranchAdmin || payload.branchId === branchId);
+
+type OrderUpdatedPayload = OrderCreatedPayload & {
+  status: string;
+  paymentStatus: string;
+};
 
 const MAX_SEEN_ORDER_IDS = 100;
 
@@ -188,7 +197,7 @@ export function useRealtimeOrderNotifications() {
     };
     const stopOrderAlert = (orderId: string) => {
       stopOrderSound(orderId);
-      toast.dismiss(`new-order-${orderId}`);
+      toast.dismiss(getNewOrderToastId(orderId));
     };
     const stopAllOrderAlerts = () => {
       [...ringingOrders.current.keys()].forEach(stopOrderAlert);
@@ -297,7 +306,7 @@ export function useRealtimeOrderNotifications() {
           order: payload.id.slice(-8),
         }),
         {
-          id: `new-order-${payload.id}`,
+          id: getNewOrderToastId(payload.id),
           description: orders("ordersUpdatedRealtime"),
           duration: Number.POSITIVE_INFINITY,
           action: {
@@ -375,6 +384,26 @@ export function useRealtimeOrderNotifications() {
         }).catch(() => {
           toast.error(orders("acceptedOrderAutoPrintFailed"));
         });
+      }
+    });
+
+    socket.on("order.updated", (payload: OrderUpdatedPayload) => {
+      if (
+        !payload?.id ||
+        payload.restaurantId !== restaurantId ||
+        (isBranchAdmin && payload.branchId !== branchId)
+      ) {
+        return;
+      }
+
+      void queryClient.invalidateQueries({ queryKey: ["orders"] });
+      void queryClient.invalidateQueries({
+        queryKey: ["orders", "detail", payload.id],
+      });
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+
+      if (shouldDismissNewOrderToast(payload.status)) {
+        toast.dismiss(getNewOrderToastId(payload.id));
       }
     });
 

@@ -16,6 +16,7 @@ import AsyncSelect from "@/components/ui/AsyncSelect";
 import { useHttpClient } from "@/hooks/useHttpClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useMenuItemTaxTypes } from "@/hooks/useTaxTypes";
+import { resolveDefaultTaxTypeCode } from "@/types/tax-types";
 import {
   blockInvalidNumberKeys,
   blockNegativeNumberPaste,
@@ -330,12 +331,10 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
   useEffect(() => {
     if (form?.taxTypeCode || !activeTaxTypes.length) return;
 
-    const defaultTaxType =
-      activeTaxTypes.find((taxType) => taxType.isDefault) ?? activeTaxTypes[0];
+    const defaultTaxTypeCode = resolveDefaultTaxTypeCode(activeTaxTypes);
+    if (!defaultTaxTypeCode) return;
 
-    if (!defaultTaxType?.code) return;
-
-    updateForm("taxTypeCode", defaultTaxType.code);
+    updateForm("taxTypeCode", defaultTaxTypeCode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTaxTypes, form?.taxTypeCode]);
 

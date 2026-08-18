@@ -37,7 +37,7 @@ describe("order details utils", () => {
         country: "Pakistan",
       })
     ).toBe(
-      "Ghauri Town Phase 5, 46330, Zone IV, Islamabad Capital Territory\nPakistan"
+      "Ghauri Town Phase 5, 46330 Zone IV\nIslamabad Capital Territory, Pakistan"
     );
   });
 
@@ -52,7 +52,7 @@ describe("order details utils", () => {
         country: "Pakistan",
       })
     ).toBe(
-      "Ghauri Town, House 12, 46330, Islamabad\nPakistan"
+      "Ghauri Town House 12, 46330 Islamabad\nPakistan"
     );
   });
 
@@ -69,7 +69,22 @@ describe("order details utils", () => {
         country: "Pakistan",
       })
     ).toBe(
-      "Main Boulevard, Shop 7, 54000, Lahore\nGulberg, Punjab, Pakistan, Near main gate"
+      "Main Boulevard Shop 7, 54000 Lahore\nGulberg, Punjab, Pakistan, Near main gate"
+    );
+  });
+
+  it("formats a German delivery address without commas inside address pairs", () => {
+    expect(
+      formatDeliveryAddress({
+        street: "Herwarthstr.",
+        houseNumber: "44",
+        postalCode: "45476",
+        city: "Mülheim an der Ruhr",
+        state: "Nordrhein-Westfalen",
+        country: "Deutschland",
+      })
+    ).toBe(
+      "Herwarthstr. 44, 45476 Mülheim an der Ruhr\nNordrhein-Westfalen, Deutschland"
     );
   });
 

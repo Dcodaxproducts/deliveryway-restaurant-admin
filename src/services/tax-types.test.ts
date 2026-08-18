@@ -5,7 +5,10 @@ import {
   getMenuItemTaxTypes,
   MENU_ITEM_TAX_TYPES_ENDPOINT,
 } from "@/services/tax-types";
-import { normalizeTaxTypesResponse } from "@/types/tax-types";
+import {
+  normalizeTaxTypesResponse,
+  resolveDefaultTaxTypeCode,
+} from "@/types/tax-types";
 
 vi.mock("@/lib/axios", () => ({
   httpClient: {
@@ -112,5 +115,26 @@ describe("tax types service", () => {
         isDefault: true,
       },
     ]);
+  });
+
+  it("selects the active platform default for new menu items", () => {
+    expect(
+      resolveDefaultTaxTypeCode([
+        {
+          code: "STANDARD",
+          label: "Standard tax",
+          percentage: 19,
+          isActive: true,
+          isDefault: false,
+        },
+        {
+          code: "REDUCED",
+          label: "Reduced tax",
+          percentage: 7,
+          isActive: true,
+          isDefault: true,
+        },
+      ])
+    ).toBe("REDUCED");
   });
 });

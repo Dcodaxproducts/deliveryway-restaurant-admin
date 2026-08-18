@@ -485,6 +485,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
   };
 
   const buildReorderPayload = (items: any[]) => ({
+    ...(categoryId ? { categoryId } : {}),
     items: items.map((item, index) => ({
       id: String(item.id),
       sortOrder: index + 1,

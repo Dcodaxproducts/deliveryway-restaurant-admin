@@ -4,6 +4,11 @@ vi.mock("@/lib/constants", () => ({
   API_BASE_URL: "https://api.delivery-way.de/api/v1",
 }));
 
+import {
+  getNewOrderToastId,
+  shouldDismissNewOrderToast,
+} from "@/hooks/realtime-order-state";
+
 import { buildAutoOpenOrderPath } from "@/lib/new-order-navigation";
 import {
   buildOrderTrackingSocketAuth,
@@ -20,6 +25,23 @@ describe("getOrderTrackingSocketUrl", () => {
     expect(getOrderTrackingSocketUrl()).toBe(
       "https://api.delivery-way.de/orders-tracking",
     );
+  });
+});
+
+describe("realtime order notification state", () => {
+  it("uses one stable popup id for immediate and scheduled order events", () => {
+    expect(getNewOrderToastId("order-immediate")).toBe(
+      "new-order:order-immediate",
+    );
+    expect(getNewOrderToastId("order-scheduled")).toBe(
+      "new-order:order-scheduled",
+    );
+  });
+
+  it("keeps a placed popup visible until another device changes status", () => {
+    expect(shouldDismissNewOrderToast("PLACED")).toBe(false);
+    expect(shouldDismissNewOrderToast("CONFIRMED")).toBe(true);
+    expect(shouldDismissNewOrderToast("CANCELLED")).toBe(true);
   });
 });
 
