@@ -9,11 +9,20 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { getStoredAuth } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/constants";
+import {
+  getNewOrderToastId,
+  shouldDismissNewOrderToast,
+} from "@/hooks/realtime-order-state";
 
 type OrderCreatedPayload = {
   id: string;
   restaurantId: string;
   branchId: string;
+};
+
+type OrderUpdatedPayload = OrderCreatedPayload & {
+  status: string;
+  paymentStatus: string;
 };
 
 const MAX_SEEN_ORDER_IDS = 100;
@@ -77,8 +86,31 @@ export function useRealtimeOrderNotifications() {
         orders("newOrderReceived", {
           order: payload.id.slice(-8),
         }),
-        { description: orders("ordersUpdatedRealtime") },
+        {
+          id: getNewOrderToastId(payload.id),
+          description: orders("ordersUpdatedRealtime"),
+        },
       );
+    });
+
+    socket.on("order.updated", (payload: OrderUpdatedPayload) => {
+      if (
+        !payload?.id ||
+        payload.restaurantId !== restaurantId ||
+        (isBranchAdmin && payload.branchId !== branchId)
+      ) {
+        return;
+      }
+
+      void queryClient.invalidateQueries({ queryKey: ["orders"] });
+      void queryClient.invalidateQueries({
+        queryKey: ["orders", "detail", payload.id],
+      });
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+
+      if (shouldDismissNewOrderToast(payload.status)) {
+        toast.dismiss(getNewOrderToastId(payload.id));
+      }
     });
 
     return () => {

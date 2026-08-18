@@ -74,3 +74,12 @@ export const normalizeTaxTypesResponse = (
     message: typeof record.message === "string" ? record.message : undefined,
   };
 };
+
+export const resolveDefaultTaxTypeCode = (taxTypes: TaxType[]) => {
+  const activeTaxTypes = taxTypes.filter((taxType) => taxType.isActive);
+  return (
+    activeTaxTypes.find((taxType) => taxType.isDefault)?.code ??
+    activeTaxTypes[0]?.code ??
+    ""
+  );
+};

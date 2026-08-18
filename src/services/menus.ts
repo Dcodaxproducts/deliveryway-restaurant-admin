@@ -355,6 +355,7 @@ export const duplicateMenuItem = async (menuItemId: string) => {
 };
 
 export const reorderMenuItems = async (payload: {
+  categoryId?: string;
   items: {
     id: string;
     sortOrder: number;

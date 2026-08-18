@@ -76,25 +76,26 @@ export const formatDeliveryAddress = (address?: DeliveryAddress | null) => {
     return address.address.trim();
   }
 
+  const streetLine = cleanParts([address.street, shopNumber]).join(" ");
+  const cityLine = cleanParts([address.postalCode, address.city]).join(" ");
+  const pairedValues = new Set(
+    cleanParts([address.street, shopNumber, address.postalCode, address.city]).map(
+      (part) => part.toLowerCase()
+    )
+  );
   const orderedParts = getUniqueParts(
     cleanParts([
-      address.street,
-      shopNumber,
-      address.postalCode,
-      address.city,
-      address.area,
-      address.state,
+      streetLine,
+      cityLine,
+      ...(cleanParts([address.area, address.state]).filter(
+        (part) => !pairedValues.has(part.toLowerCase())
+      )),
       address.country,
       address.address,
     ])
   );
-  const street = orderedParts[0] ?? "";
-  const streetSearch = street.toLowerCase();
-  const remainingParts = orderedParts.slice(1).filter(
-    (part) => !streetSearch.includes(part.toLowerCase())
-  );
-  const lineOne = cleanParts([street, ...remainingParts.slice(0, 3)]).join(", ");
-  const lineTwo = remainingParts.slice(3).join(", ");
+  const lineOne = orderedParts.slice(0, 2).join(", ");
+  const lineTwo = orderedParts.slice(2).join(", ");
 
   return cleanParts([lineOne, lineTwo]).join("\n") || null;
 };
