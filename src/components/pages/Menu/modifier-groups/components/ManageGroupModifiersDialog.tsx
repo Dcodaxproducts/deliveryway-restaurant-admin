@@ -32,8 +32,6 @@ import {
   sanitizeNonNegativeNumber,
 } from "@/lib/number-input";
 import { getApiErrorMessage } from "@/lib/errors";
-import { ADMIN_ROLES } from "@/lib/auth";
-import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import type {
   ModifierGroup,
@@ -68,8 +66,12 @@ export function ManageGroupModifiersDialog({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [sortOrders, setSortOrders] = useState<Record<string, string>>({});
-  const [attachingModifierId, setAttachingModifierId] = useState<string | null>(null);
-  const [detachingModifierId, setDetachingModifierId] = useState<string | null>(null);
+  const [attachingModifierId, setAttachingModifierId] = useState<string | null>(
+    null,
+  );
+  const [detachingModifierId, setDetachingModifierId] = useState<string | null>(
+    null,
+  );
   const [modifierToDetach, setModifierToDetach] =
     useState<ModifierGroupModifier | null>(null);
   const [localAttachedModifiers, setLocalAttachedModifiers] = useState<
@@ -84,13 +86,10 @@ export function ManageGroupModifiersDialog({
     isFetching: isGroupFetching,
     refetch: refetchGroup,
   } = useModifierGroup(groupId, { restaurantId });
-  const { role } = useAuth();
   const activeGroup = groupDetail ?? group;
-  const canDetachModifier =
-    role === "SUPER_ADMIN" || role === ADMIN_ROLES.BUSINESS_ADMIN;
   const initialGroupModifiers = useMemo(
     () => group?.modifiers ?? [],
-    [group?.modifiers]
+    [group?.modifiers],
   );
 
   useEffect(() => {
@@ -149,15 +148,15 @@ export function ManageGroupModifiersDialog({
 
   const modifiers = useMemo(
     () => modifiersResponse?.data ?? [],
-    [modifiersResponse?.data]
+    [modifiersResponse?.data],
   );
   const attachedModifiers = useMemo(
     () => localAttachedModifiers,
-    [localAttachedModifiers]
+    [localAttachedModifiers],
   );
   const attachedModifierIds = useMemo(
     () => new Set(attachedModifiers.map((modifier) => modifier.id)),
-    [attachedModifiers]
+    [attachedModifiers],
   );
 
   const pagination = useMemo(() => {
@@ -187,7 +186,8 @@ export function ManageGroupModifiersDialog({
   const handleAttach = async (modifier: Modifier) => {
     if (!groupId) return;
 
-    const sortOrder = sortOrders[modifier.id] ?? String(modifier.sortOrder ?? 0);
+    const sortOrder =
+      sortOrders[modifier.id] ?? String(modifier.sortOrder ?? 0);
     const parsed = attachModifierToGroupSchema.safeParse({
       modifierId: modifier.id,
       sortOrder,
@@ -218,13 +218,13 @@ export function ManageGroupModifiersDialog({
           category: modifier.category ?? null,
         };
         const existingIndex = previous.findIndex(
-          (attachedModifier) => attachedModifier.id === modifier.id
+          (attachedModifier) => attachedModifier.id === modifier.id,
         );
 
         if (existingIndex === -1) return [...previous, nextModifier];
 
         return previous.map((attachedModifier, index) =>
-          index === existingIndex ? nextModifier : attachedModifier
+          index === existingIndex ? nextModifier : attachedModifier,
         );
       });
       setSortOrders((previous) => {
@@ -253,8 +253,8 @@ export function ManageGroupModifiersDialog({
       setHasLocalAttachmentChanges(true);
       setLocalAttachedModifiers((previous) =>
         previous.filter(
-          (attachedModifier) => attachedModifier.id !== modifierToDetach.id
-        )
+          (attachedModifier) => attachedModifier.id !== modifierToDetach.id,
+        ),
       );
       setModifierToDetach(null);
       void refetchGroup();
@@ -303,7 +303,7 @@ export function ManageGroupModifiersDialog({
                     isDetaching={
                       isDetaching && detachingModifierId === modifier.id
                     }
-                    canDetach={canDetachModifier}
+                    canDetach
                     formatMoney={formatMoney}
                     onDetach={() => setModifierToDetach(modifier)}
                   />
@@ -524,7 +524,11 @@ function ModifierOption({
           onClick={onAttach}
           className="h-[38px] rounded-[10px] bg-primary px-4 text-white disabled:opacity-60"
         >
-          {attached ? t("attached") : isAttaching ? t("attaching") : t("attach")}
+          {attached
+            ? t("attached")
+            : isAttaching
+              ? t("attaching")
+              : t("attach")}
         </Button>
       </div>
     </div>

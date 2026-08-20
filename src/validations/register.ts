@@ -1,27 +1,34 @@
 import { z } from "zod";
 
-import { MAX_UPLOAD_FILE_SIZE_BYTES, MAX_UPLOAD_FILE_SIZE_MB } from "@/services/storage";
+import {
+  MAX_UPLOAD_FILE_SIZE_BYTES,
+  MAX_UPLOAD_FILE_SIZE_MB,
+} from "@/services/storage";
 
 /* ---------------- FILE SCHEMAS ---------------- */
 
 export const image2MB = z
   .any()
   .refine((file) => file instanceof File, "File is required")
-  .refine((file) => file?.size <= MAX_UPLOAD_FILE_SIZE_BYTES, `File must be less than ${MAX_UPLOAD_FILE_SIZE_MB}MB`)
   .refine(
-    (file) =>
-      ["image/png", "image/jpeg", "image/jpg"].includes(file?.type),
-    "Only PNG, JPG, JPEG allowed"
+    (file) => file?.size <= MAX_UPLOAD_FILE_SIZE_BYTES,
+    `File must be less than ${MAX_UPLOAD_FILE_SIZE_MB}MB`,
+  )
+  .refine(
+    (file) => ["image/png", "image/jpeg", "image/jpg"].includes(file?.type),
+    "Only PNG, JPG, JPEG allowed",
   );
 
 export const image1MB = z
   .any()
   .refine((file) => file instanceof File, "Image is required")
-  .refine((file) => file?.size <= MAX_UPLOAD_FILE_SIZE_BYTES, `Image must be less than ${MAX_UPLOAD_FILE_SIZE_MB}MB`)
   .refine(
-    (file) =>
-      ["image/png", "image/jpeg", "image/jpg"].includes(file?.type),
-    "Only PNG, JPG, JPEG allowed"
+    (file) => file?.size <= MAX_UPLOAD_FILE_SIZE_BYTES,
+    `Image must be less than ${MAX_UPLOAD_FILE_SIZE_MB}MB`,
+  )
+  .refine(
+    (file) => ["image/png", "image/jpeg", "image/jpg"].includes(file?.type),
+    "Only PNG, JPG, JPEG allowed",
   );
 
 /* ---------------- USER ---------------- */
@@ -37,10 +44,7 @@ export const userSchema = z.object({
     .min(1, "Last name is required")
     .min(2, "Last name must be at least 2 characters"),
 
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Invalid email format"),
+  email: z.string().min(1, "Email is required").email("Invalid email format"),
 
   phone: z
     .string()
@@ -73,17 +77,24 @@ export const restaurantSchema = z.object({
   slug: z
     .string()
     .min(1, "Slug is required")
-    .regex(/^[a-z0-9-]+$/, "Slug must contain lowercase letters, numbers, and hyphens only"),
+    .regex(
+      /^[a-z0-9-]+$/,
+      "Slug must contain lowercase letters, numbers, and hyphens only",
+    ),
 
   tagline: z.string().min(1, "Tagline is required"),
 
   supportContact: z.object({
-    email: z.string().min(1, "Support email is required").email("Invalid email"),
+    email: z
+      .string()
+      .min(1, "Support email is required")
+      .email("Invalid email"),
     phone: z.string().min(1, "Support phone is required"),
     whatsapp: z
       .string()
-      .min(1, "WhatsApp number is required")
-      .regex(/^\+?[0-9]{10,15}$/, "Invalid WhatsApp number"),
+      .regex(/^\+?[0-9]{10,15}$/, "Invalid WhatsApp number")
+      .or(z.literal(""))
+      .optional(),
   }),
 
   branding: z.object({

@@ -18,7 +18,14 @@ import {
   useUpsertMenuCategoryBranchOverride,
 } from "@/hooks/useMenuCategories";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
-import { Eye, GripVertical, Loader2, MoreVertical, Search, SlidersHorizontal } from "lucide-react";
+import {
+  Eye,
+  GripVertical,
+  Loader2,
+  MoreVertical,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 import CreateCategoryModalParent from "@/components/pages/Menu/legacy/root-menu-components/listing/CreateCategoryModalParent";
 import { useRouter } from "next/navigation";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
@@ -27,7 +34,6 @@ import { extractResponseItems, extractResponseMeta } from "@/lib/response";
 import { useTranslations } from "next-intl";
 
 const PAGE_LIMIT = 10;
-
 
 const mergeUniqueById = (prev: any[], next: any[]) => {
   const map = new Map<string, any>();
@@ -45,8 +51,8 @@ export default function CategoriesTable({ refetchKey }: any) {
   const t = useTranslations("menu.categories");
   const commonT = useTranslations("common");
   const { restaurantId, branchId, isBranchAdmin } = useAuth();
-const [statusFilter, setStatusFilter] = useState("all");
-const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
 
   const router = useRouter();
 
@@ -91,35 +97,32 @@ const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
     return () => clearTimeout(timer);
   }, [search]);
 
-const {
-  data: response,
-  isLoading,
-  isFetching,
-  refetch,
-} = useGetMenuCategories({
-  page,
-  limit,
-  search: debouncedSearch || undefined,
-  restaurantId: restaurantId || undefined,
-  sortOrder,
+  const {
+    data: response,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useGetMenuCategories({
+    page,
+    limit,
+    search: debouncedSearch || undefined,
+    restaurantId: restaurantId || undefined,
+    sortOrder,
 
-  // only include inactive when "all" selected
-  includeInactive: statusFilter === "all",
+    // only include inactive when "all" selected
+    includeInactive: statusFilter === "all",
 
-  inactive:
-    statusFilter === "all"
-      ? undefined
-      : statusFilter === "inactive",
-});
-
+    inactive: statusFilter === "all" ? undefined : statusFilter === "inactive",
+  });
 
   const { mutate: deleteMenuCategory, isPending: isDeleting } =
     useDeleteMenuCategory();
 
   const { mutate: reorderCategories, isPending: isReordering } =
     useReorderMenuCategories();
-const { mutate: updateCategoryStatus } = useUpdateMenuCategory();
-const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertMenuCategoryBranchOverride();
+  const { mutate: updateCategoryStatus } = useUpdateMenuCategory();
+  const { mutate: saveCategoryOverride, isPending: isSavingOverride } =
+    useUpsertMenuCategoryBranchOverride();
   const fetchedItems = useMemo<any[] | null>(() => {
     return extractResponseItems(response);
   }, [response]);
@@ -136,7 +139,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
     const totalPages = Number(
       meta?.totalPages ??
         meta?.pages ??
-        (total > 0 && pageSize > 0 ? Math.ceil(total / pageSize) : 0)
+        (total > 0 && pageSize > 0 ? Math.ceil(total / pageSize) : 0),
     );
 
     return {
@@ -148,10 +151,10 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
         typeof meta?.hasNext === "boolean"
           ? meta.hasNext
           : typeof meta?.hasMore === "boolean"
-          ? meta.hasMore
-          : total > 0
-          ? allItems.length < total
-          : Boolean(fetchedItems && fetchedItems.length >= pageSize),
+            ? meta.hasMore
+            : total > 0
+              ? allItems.length < total
+              : Boolean(fetchedItems && fetchedItems.length >= pageSize),
       hasPrevious:
         typeof meta?.hasPrevious === "boolean"
           ? meta.hasPrevious
@@ -262,7 +265,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
     deleteMenuCategory(deleteId, {
       onSuccess: () => {
         setAllItems((prev) =>
-          prev.filter((item) => String(item.id) !== String(deleteId))
+          prev.filter((item) => String(item.id) !== String(deleteId)),
         );
 
         setDeleteId(null);
@@ -298,11 +301,11 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
 
     setAllItems((prev) => {
       const fromIndex = prev.findIndex(
-        (item) => String(item.id) === String(fromId)
+        (item) => String(item.id) === String(fromId),
       );
 
       const toIndex = prev.findIndex(
-        (item) => String(item.id) === String(toId)
+        (item) => String(item.id) === String(toId),
       );
 
       if (fromIndex === -1 || toIndex === -1) {
@@ -336,16 +339,20 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
     setDraggedId(null);
   };
 
-
   const getBranchCategoryOverride = (item: any) =>
-    item?.branchOverride || item?.branchOverrides?.[0] || item?.overrides?.[0] || null;
+    item?.branchOverride ||
+    item?.branchOverrides?.[0] ||
+    item?.overrides?.[0] ||
+    null;
 
   const handleOverrideOpen = (item: any) => {
     const override = getBranchCategoryOverride(item);
 
     setOverrideCategory(item);
     setOverrideForm({
-      isAvailable: Boolean(override?.isAvailable ?? item?.isAvailable ?? item?.isActive ?? true),
+      isAvailable: Boolean(
+        override?.isAvailable ?? item?.isAvailable ?? item?.isActive ?? true,
+      ),
       reason: override?.reason || "",
     });
   };
@@ -365,7 +372,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
           setOverrideCategory(null);
           resetAndFetchFirstPage();
         },
-      }
+      },
     );
   };
 
@@ -417,35 +424,35 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
 
   return (
     <div className="w-full">
-    <div className="mb-6 rounded-[18px] border bg-white p-4 shadow-sm">
-  <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-    <div className="relative flex-1">
-      <Search
-        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-        size={18}
-      />
+      <div className="mb-6 rounded-[18px] border bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="relative flex-1">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+              size={18}
+            />
 
-      <input
-        placeholder={t("searchPlaceholder")}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-      />
-    </div>
+            <input
+              placeholder={t("searchPlaceholder")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
 
-    <select
-      value={statusFilter}
-      onChange={(e) => {
-        setStatusFilter(e.target.value);
-        setPage(1);
-      }}
-      className="h-[44px] rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm focus:outline-none"
-    >
-      <option value="all">{t("statusOptions.all")}</option>
-      <option value="active">{commonT("inactive")}</option>
-    </select>
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="h-[44px] rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm focus:outline-none"
+          >
+            <option value="all">{t("statusOptions.all")}</option>
+            <option value="active">{commonT("inactive")}</option>
+          </select>
 
-    {/* <select
+          {/* <select
       value={sortOrder}
       onChange={(e) => {
         setSortOrder(e.target.value as "ASC" | "DESC");
@@ -457,17 +464,15 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
       <option value="ASC">Oldest First</option>
     </select> */}
 
-    
-
-    <Button
-      disabled={!canFetchCategories}
-      onClick={handleManualSearch}
-      className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm"
-    >
-      {commonT("search")}
-    </Button>
-  </div>
-</div>
+          <Button
+            disabled={!canFetchCategories}
+            onClick={handleManualSearch}
+            className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm"
+          >
+            {commonT("search")}
+          </Button>
+        </div>
+      </div>
 
       {isReordering && !isBranchAdmin ? (
         <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
@@ -515,7 +520,9 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
                 >
                   <td className="px-2 py-4">
                     {isBranchAdmin ? (
-                      <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">{t("scoped")}</span>
+                      <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
+                        {t("scoped")}
+                      </span>
                     ) : (
                       <div className="flex cursor-grab justify-center text-gray-400 active:cursor-grabbing">
                         <GripVertical size={18} />
@@ -565,94 +572,110 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
                   <td className="px-2 text-center">
                     <span
                       className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                        (item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive)
+                        (item.branchOverride?.isAvailable ??
+                        item.branchOverrides?.[0]?.isAvailable ??
+                        item.isAvailable ??
+                        item.isActive)
                           ? "bg-green-100 text-green-700"
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {(item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive) ? commonT("active") : commonT("inactive")}
+                      {(item.branchOverride?.isAvailable ??
+                      item.branchOverrides?.[0]?.isAvailable ??
+                      item.isAvailable ??
+                      item.isActive)
+                        ? commonT("active")
+                        : commonT("inactive")}
                     </span>
                   </td>
 
-                <td className="px-2 text-center">
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-      <button
-        className="rounded-full p-2 text-gray-500 transition hover:bg-gray-100"
-        type="button"
-      >
-        <MoreVertical size={18} />
-      </button>
-    </DropdownMenuTrigger>
+                  <td className="px-2 text-center">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="rounded-full p-2 text-gray-500 transition hover:bg-gray-100"
+                          type="button"
+                        >
+                          <MoreVertical size={18} />
+                        </button>
+                      </DropdownMenuTrigger>
 
-    <DropdownMenuContent align="end" className="w-[180px]">
-      {isBranchAdmin ? (
-        <>
-          <DropdownMenuItem onClick={() => handleOverrideOpen(item)} className="cursor-pointer">
-            <SlidersHorizontal className="mr-2 h-4 w-4" />
-            {t("branchOverride")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push(`/menu/categories/${item.id}`)} className="cursor-pointer">
-            <Eye className="mr-2 h-4 w-4" />
-            {commonT("viewDetails")}
-          </DropdownMenuItem>
-        </>
-      ) : (
-        <>
-      <DropdownMenuItem
-        onClick={() => {
-          setSelected(item);
-          setOpen(true);
-        }}
-        className="cursor-pointer"
-      >
-        <FaPen className="mr-2" size={12} />
-        {commonT("edit")}
-      </DropdownMenuItem>
+                      <DropdownMenuContent align="end" className="w-[180px]">
+                        {isBranchAdmin ? (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => handleOverrideOpen(item)}
+                              className="cursor-pointer"
+                            >
+                              <SlidersHorizontal className="mr-2 h-4 w-4" />
+                              {t("branchOverride")}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                router.push(`/menu/categories/${item.id}`)
+                              }
+                              className="cursor-pointer"
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              {commonT("viewDetails")}
+                            </DropdownMenuItem>
+                          </>
+                        ) : (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelected(item);
+                                setOpen(true);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <FaPen className="mr-2" size={12} />
+                              {commonT("edit")}
+                            </DropdownMenuItem>
 
-      <DropdownMenuItem
-        onClick={() =>
-          router.push(`/menu/categories/${item.id}`)
-        }
-        className="cursor-pointer"
-      >
-        <Eye className="mr-2 h-4 w-4" />
-        {commonT("viewDetails")}
-      </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                router.push(`/menu/categories/${item.id}`)
+                              }
+                              className="cursor-pointer"
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              {commonT("viewDetails")}
+                            </DropdownMenuItem>
 
-      <DropdownMenuItem
-        onClick={() => {
-          updateCategoryStatus(
-            {
-              id: item.id,
-              data: {
-                isActive: !item.isActive,
-              },
-            },
-            {
-              onSuccess: () => {
-                softRefresh();
-              },
-            }
-          );
-        }}
-        className="cursor-pointer"
-      >
-        {item.isActive ? t("deactivate") : t("activate")}
-      </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                updateCategoryStatus(
+                                  {
+                                    id: item.id,
+                                    data: {
+                                      isActive: !item.isActive,
+                                    },
+                                  },
+                                  {
+                                    onSuccess: () => {
+                                      softRefresh();
+                                    },
+                                  },
+                                );
+                              }}
+                              className="cursor-pointer"
+                            >
+                              {item.isActive ? t("deactivate") : t("activate")}
+                            </DropdownMenuItem>
 
-      <DropdownMenuItem
-        onClick={() => setDeleteId(item.id)}
-        className="cursor-pointer text-red-500 focus:text-red-500"
-      >
-        <FaTrash className="mr-2" size={12} />
-        {commonT("delete")}
-      </DropdownMenuItem>
-        </>
-      )}
-    </DropdownMenuContent>
-  </DropdownMenu>
-</td>
+                            <DropdownMenuItem
+                              onClick={() => setDeleteId(item.id)}
+                              className="cursor-pointer text-red-500 focus:text-red-500"
+                            >
+                              <FaTrash className="mr-2" size={12} />
+                              {commonT("delete")}
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
                 </tr>
               ))
             )}
@@ -662,6 +685,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
         {!shouldShowInitialLoader && !shouldShowEmpty && allItems.length > 0 ? (
           <InfiniteScrollFooter
             loadMoreRef={desktopLoadMoreRef}
+            onLoadMore={handleLoadMore}
             isFetching={isFetching && page > 1}
             hasMore={hasMore}
             total={pagination.total}
@@ -693,7 +717,9 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
             >
               <div className="mb-3 flex justify-end">
                 {isBranchAdmin ? (
-                  <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">{t("scopedBranch")}</span>
+                  <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
+                    {t("scopedBranch")}
+                  </span>
                 ) : (
                   <div className="flex cursor-grab items-center gap-1 text-xs text-gray-400 active:cursor-grabbing">
                     <GripVertical size={16} />
@@ -732,91 +758,107 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
                   <div className="mt-2 flex items-center justify-between">
                     <span
                       className={`rounded-full px-2 py-1 text-xs ${
-                        (item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive)
+                        (item.branchOverride?.isAvailable ??
+                        item.branchOverrides?.[0]?.isAvailable ??
+                        item.isAvailable ??
+                        item.isActive)
                           ? "bg-green-100 text-green-700"
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {(item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive) ? commonT("active") : commonT("inactive")}
+                      {(item.branchOverride?.isAvailable ??
+                      item.branchOverrides?.[0]?.isAvailable ??
+                      item.isAvailable ??
+                      item.isActive)
+                        ? commonT("active")
+                        : commonT("inactive")}
                     </span>
 
-                  <DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <button
-      className="rounded-full p-2 text-gray-500 transition hover:bg-gray-100"
-      type="button"
-    >
-      <MoreVertical size={18} />
-    </button>
-  </DropdownMenuTrigger>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="rounded-full p-2 text-gray-500 transition hover:bg-gray-100"
+                          type="button"
+                        >
+                          <MoreVertical size={18} />
+                        </button>
+                      </DropdownMenuTrigger>
 
-  <DropdownMenuContent align="end" className="w-[180px]">
-    {isBranchAdmin ? (
-      <>
-        <DropdownMenuItem onClick={() => handleOverrideOpen(item)} className="cursor-pointer">
-          <SlidersHorizontal className="mr-2 h-4 w-4" />
-          {t("branchOverride")}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => router.push(`/menu/categories/${item.id}`)} className="cursor-pointer">
-          <Eye className="mr-2 h-4 w-4" />
-          {commonT("viewDetails")}
-        </DropdownMenuItem>
-      </>
-    ) : (
-      <>
-    <DropdownMenuItem
-      onClick={() => {
-        setSelected(item);
-        setOpen(true);
-      }}
-      className="cursor-pointer"
-    >
-      <FaPen className="mr-2" size={12} />
-      {commonT("edit")}
-    </DropdownMenuItem>
+                      <DropdownMenuContent align="end" className="w-[180px]">
+                        {isBranchAdmin ? (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => handleOverrideOpen(item)}
+                              className="cursor-pointer"
+                            >
+                              <SlidersHorizontal className="mr-2 h-4 w-4" />
+                              {t("branchOverride")}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                router.push(`/menu/categories/${item.id}`)
+                              }
+                              className="cursor-pointer"
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              {commonT("viewDetails")}
+                            </DropdownMenuItem>
+                          </>
+                        ) : (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelected(item);
+                                setOpen(true);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <FaPen className="mr-2" size={12} />
+                              {commonT("edit")}
+                            </DropdownMenuItem>
 
-    <DropdownMenuItem
-      onClick={() =>
-        router.push(`/menu/categories/${item.id}`)
-      }
-      className="cursor-pointer"
-    >
-      <Eye className="mr-2 h-4 w-4" />
-      {commonT("viewDetails")}
-    </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                router.push(`/menu/categories/${item.id}`)
+                              }
+                              className="cursor-pointer"
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              {commonT("viewDetails")}
+                            </DropdownMenuItem>
 
-    <DropdownMenuItem
-      onClick={() => {
-        updateCategoryStatus(
-          {
-            id: item.id,
-            data: {
-              isActive: !item.isActive,
-            },
-          },
-          {
-            onSuccess: () => {
-              softRefresh();
-            },
-          }
-        );
-      }}
-      className="cursor-pointer"
-    >
-      {item.isActive ? t("deactivate") : t("activate")}
-    </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                updateCategoryStatus(
+                                  {
+                                    id: item.id,
+                                    data: {
+                                      isActive: !item.isActive,
+                                    },
+                                  },
+                                  {
+                                    onSuccess: () => {
+                                      softRefresh();
+                                    },
+                                  },
+                                );
+                              }}
+                              className="cursor-pointer"
+                            >
+                              {item.isActive ? t("deactivate") : t("activate")}
+                            </DropdownMenuItem>
 
-    <DropdownMenuItem
-      onClick={() => setDeleteId(item.id)}
-      className="cursor-pointer text-red-500 focus:text-red-500"
-    >
-      <FaTrash className="mr-2" size={12} />
-      {commonT("delete")}
-    </DropdownMenuItem>
-      </>
-    )}
-  </DropdownMenuContent>
-</DropdownMenu>
+                            <DropdownMenuItem
+                              onClick={() => setDeleteId(item.id)}
+                              className="cursor-pointer text-red-500 focus:text-red-500"
+                            >
+                              <FaTrash className="mr-2" size={12} />
+                              {commonT("delete")}
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </div>
@@ -827,6 +869,7 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
         {!shouldShowInitialLoader && !shouldShowEmpty && allItems.length > 0 ? (
           <InfiniteScrollFooter
             loadMoreRef={mobileLoadMoreRef}
+            onLoadMore={handleLoadMore}
             isFetching={isFetching && page > 1}
             hasMore={hasMore}
             total={pagination.total}
@@ -840,9 +883,13 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
         <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-[440px] rounded-[20px] bg-white p-6 shadow-xl">
             <div className="mb-5">
-              <h3 className="text-lg font-semibold text-gray-900">{t("overrideTitle")}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {t("overrideTitle")}
+              </h3>
               <p className="mt-1 text-sm text-gray-500">
-                {t("overrideDescription", { name: overrideCategory?.name || t("thisCategory") })}
+                {t("overrideDescription", {
+                  name: overrideCategory?.name || t("thisCategory"),
+                })}
               </p>
             </div>
 
@@ -853,18 +900,26 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
                   type="checkbox"
                   checked={overrideForm.isAvailable}
                   onChange={(event) =>
-                    setOverrideForm((prev) => ({ ...prev, isAvailable: event.target.checked }))
+                    setOverrideForm((prev) => ({
+                      ...prev,
+                      isAvailable: event.target.checked,
+                    }))
                   }
                   className="h-5 w-5 accent-primary"
                 />
               </label>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-600">{t("reasonNote")}</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-600">
+                  {t("reasonNote")}
+                </label>
                 <textarea
                   value={overrideForm.reason}
                   onChange={(event) =>
-                    setOverrideForm((prev) => ({ ...prev, reason: event.target.value }))
+                    setOverrideForm((prev) => ({
+                      ...prev,
+                      reason: event.target.value,
+                    }))
                   }
                   placeholder={t("optionalBranchNote")}
                   className="min-h-[92px] w-full rounded-[14px] border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
@@ -873,10 +928,18 @@ const { mutate: saveCategoryOverride, isPending: isSavingOverride } = useUpsertM
             </div>
 
             <div className="mt-6 flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={() => setOverrideCategory(null)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOverrideCategory(null)}
+              >
                 {commonT("cancel")}
               </Button>
-              <Button type="button" onClick={handleSaveOverride} disabled={isSavingOverride || !branchId}>
+              <Button
+                type="button"
+                onClick={handleSaveOverride}
+                disabled={isSavingOverride || !branchId}
+              >
                 {isSavingOverride ? commonT("saving") : t("saveOverride")}
               </Button>
             </div>

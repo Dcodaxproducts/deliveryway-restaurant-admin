@@ -46,6 +46,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime24 } from "@/lib/date-time-format";
 import { formatMoney as formatCurrencyAmount } from "@/lib/currency";
+import { formatPaymentStatusLabel } from "@/lib/payment-status-label";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -378,7 +379,10 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   const metadata: Array<[string, React.ReactNode]> = [
     [t("orderType"), formatStatus(order.orderType)],
     [t("statusLabel"), statusLabel],
-    [t("paymentStatus"), formatStatus(order.paymentStatus)],
+    [
+      t("paymentStatus"),
+      formatPaymentStatusLabel(order.paymentStatus, order.paymentMethod),
+    ],
     [t("scheduled"), order.isScheduled ? t("yes") : t("no")],
     [t("groupOrder"), order.isGroupOrder ? t("yes") : t("no")],
     [t("itemCount"), order.itemCount ?? items.length],
@@ -871,7 +875,10 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
             />
             <InfoRow
               label={t("paymentStatus")}
-              value={formatStatus(order.paymentStatus)}
+              value={formatPaymentStatusLabel(
+                order.paymentStatus,
+                order.paymentMethod,
+              )}
             />
             {paymentStatusTransaction?.id ? (
               <InfoRow
@@ -1220,7 +1227,10 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                     {t("currentPaymentStatus")}
                   </p>
                   <p className="mt-1 text-sm font-bold text-gray-950">
-                    {formatStatus(order.paymentStatus)}
+                    {formatPaymentStatusLabel(
+                      order.paymentStatus,
+                      order.paymentMethod,
+                    )}
                   </p>
                 </div>
                 <div>

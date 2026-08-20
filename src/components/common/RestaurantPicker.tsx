@@ -24,13 +24,17 @@ import { useGetBranch } from "@/hooks/useBranches";
 
 type RestaurantOption = {
   id: string;
+  displayNumber?: number;
   name?: string;
   tenantId?: string | null;
   logoUrl?: string | null;
 };
 
 const RESTAURANT_PICKER_LIMIT = 20;
-const getRestaurantIdentifier = (id: string) => `#${id.slice(-6)}`;
+const getRestaurantIdentifier = (restaurant: RestaurantOption) =>
+  restaurant.displayNumber !== undefined
+    ? `#${restaurant.displayNumber}`
+    : `#${restaurant.id.slice(-6)}`;
 
 const getResponseRows = (response: unknown) => {
   if (!isRecord(response)) return [];
@@ -94,6 +98,15 @@ const getRestaurantLogoUrl = (restaurant: unknown) => {
     getStringValue(logo, "light") ??
     null
   );
+};
+
+const getRestaurantDisplayNumber = (restaurant: unknown) => {
+  if (!isRecord(restaurant)) return undefined;
+
+  const direct = Number(restaurant.displayNumber);
+  if (Number.isSafeInteger(direct) && direct > 0) return direct;
+
+  return getRestaurantDisplayNumber(restaurant.data);
 };
 
 export default function RestaurantPicker({ className }: RestaurantPickerProps) {
@@ -192,6 +205,7 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
 
       acc.push({
         id,
+        displayNumber: getRestaurantDisplayNumber(row),
         name: getRestaurantName(row, id),
         tenantId,
         logoUrl: getRestaurantLogoUrl(row),
@@ -212,6 +226,7 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
 
         return {
           id,
+          displayNumber: getRestaurantDisplayNumber(restaurant),
           name: getRestaurantName(restaurant, id),
           tenantId: user?.tenantId ?? null,
           logoUrl: getRestaurantLogoUrl(restaurant),
@@ -409,7 +424,7 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
                   <span className="min-w-0 text-left">
                     <span className="block truncate">{restaurant.name}</span>
                     <span className="block truncate text-[10px] font-medium text-gray-400">
-                      {getRestaurantIdentifier(restaurant.id)}
+                      {getRestaurantIdentifier(restaurant)}
                     </span>
                   </span>
                 </span>

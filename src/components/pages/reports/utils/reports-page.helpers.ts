@@ -87,34 +87,28 @@ export const buildFinancialStats = (
   withNeutralTrend(
     [
       {
-        _id: "financial-total-orders",
-        title: t("stats.totalOrders"),
-        value: String(financialData?.totalOrders ?? 0),
+        _id: "financial-cod-amount",
+        title: t("stats.codAmount"),
+        value: formatCurrency(financialData?.codAmount ?? 0, currency),
         icon: "orders",
       },
       {
-        _id: "financial-gross-revenue",
-        title: t("stats.grossRevenue"),
-        value: formatCurrency(financialData?.grossRevenue ?? 0, currency),
+        _id: "financial-online-amount",
+        title: t("stats.onlineAmount"),
+        value: formatCurrency(
+          financialData?.onlineAmount ??
+            getPaymentMethodRevenue(financialData, "STRIPE") +
+              getPaymentMethodRevenue(financialData, "PAYPAL"),
+          currency,
+        ),
         icon: "revenue",
-      },
-      {
-        _id: "financial-paid-revenue",
-        title: t("stats.paidRevenue"),
-        value: formatCurrency(financialData?.paidRevenue ?? 0, currency),
-        icon: "completed",
-      },
-      {
-        _id: "financial-net-revenue",
-        title: t("stats.netRevenue"),
-        value: formatCurrency(financialData?.netRevenue ?? 0, currency),
-        icon: "store",
       },
       {
         _id: "financial-stripe-received",
         title: t("stats.stripeReceived"),
         value: formatCurrency(
-          getPaymentMethodRevenue(financialData, "STRIPE"),
+          financialData?.stripeAmount ??
+            getPaymentMethodRevenue(financialData, "STRIPE"),
           currency,
         ),
         icon: "completed",
@@ -123,22 +117,11 @@ export const buildFinancialStats = (
         _id: "financial-paypal-received",
         title: t("stats.paypalReceived"),
         value: formatCurrency(
-          getPaymentMethodRevenue(financialData, "PAYPAL"),
+          financialData?.paypalAmount ??
+            getPaymentMethodRevenue(financialData, "PAYPAL"),
           currency,
         ),
         icon: "completed",
-      },
-      {
-        _id: "financial-average-order-value",
-        title: t("stats.averageOrderValue"),
-        value: formatCurrency(financialData?.averageOrderValue ?? 0, currency),
-        icon: "users",
-      },
-      {
-        _id: "financial-tax",
-        title: t("stats.totalTax"),
-        value: formatCurrency(financialData?.totalTax ?? 0, currency),
-        icon: "revenue",
       },
       {
         _id: "financial-delivery-fee",

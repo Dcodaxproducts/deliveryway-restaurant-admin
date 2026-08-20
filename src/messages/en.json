@@ -2873,6 +2873,8 @@
       "branchOrderDescription": "View order analytics for your assigned branch"
     },
     "stats": {
+      "codAmount": "Total COD Amount",
+      "onlineAmount": "Total Online Amount",
       "totalOrders": "Total Orders",
       "grossRevenue": "Gross Revenue",
       "paidRevenue": "Paid Revenue",

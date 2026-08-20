@@ -39,7 +39,7 @@ describe("mergeRestaurantBillingInvoices", () => {
     const t = (key: string) => `translated:${key}`;
 
     expect(buildFinancialStats({}, "EUR", t)[0]?.title).toBe(
-      "translated:stats.totalOrders",
+      "translated:stats.codAmount",
     );
     expect(getReportHeaderContent("invoice-history", false, t)).toEqual({
       title: "translated:headers.billingTitle",
@@ -65,5 +65,6 @@ describe("mergeRestaurantBillingInvoices", () => {
     expect(
       stats.find((item) => item._id === "financial-paypal-received")?.value,
     ).toContain("75");
+    expect(stats).toHaveLength(6);
   });
 });

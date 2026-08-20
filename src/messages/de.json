@@ -2873,6 +2873,8 @@
       "branchOrderDescription": "Bestellanalysen Ihrer zugewiesenen Filiale anzeigen"
     },
     "stats": {
+      "codAmount": "Nachnahme gesamt",
+      "onlineAmount": "Online-Zahlungen gesamt",
       "totalOrders": "Bestellungen gesamt",
       "grossRevenue": "Bruttoumsatz",
       "paidRevenue": "Bezahlter Umsatz",
