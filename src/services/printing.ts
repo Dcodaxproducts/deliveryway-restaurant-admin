@@ -68,6 +68,16 @@ export type AdminPrintingStatusResponse = {
   message: string;
 };
 
+type QzCertificateResponse = {
+  data: { certificate: string };
+  message: string;
+};
+
+type QzSignatureResponse = {
+  data: { signature: string };
+  message: string;
+};
+
 export type UpdatePrintingSettingsPayload = {
   restaurantId: string;
   branchId?: string | null;
@@ -96,6 +106,23 @@ const buildPrintingParams = (params?: PrintingQueryParams) => {
     restaurantId: params?.restaurantId,
     ...(params?.branchId ? { branchId: params.branchId } : {}),
   };
+};
+
+export const getQzCertificate = async (): Promise<string> => {
+  const response = await api.get<QzCertificateResponse>(
+    "/admin/printing/qz/certificate",
+  );
+
+  return response.data.data.certificate;
+};
+
+export const signQzChallenge = async (challenge: string): Promise<string> => {
+  const response = await api.post<QzSignatureResponse>(
+    "/admin/printing/qz/signature",
+    { challenge },
+  );
+
+  return response.data.data.signature;
 };
 
 export const getAdminPrintingSettings = async (
