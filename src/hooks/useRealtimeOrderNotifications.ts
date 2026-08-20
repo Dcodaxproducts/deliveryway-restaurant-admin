@@ -74,6 +74,35 @@ type OrderUpdatedPayload = OrderCreatedPayload & {
 };
 
 const MAX_SEEN_ORDER_IDS = 100;
+const ORDER_SOUND_REPEAT_INTERVAL_MS = 3_000;
+
+export const startRepeatingOrderSound = ({
+  orderId,
+  intervals,
+  enabled,
+  playSound,
+  schedule,
+  clear,
+}: {
+  orderId: string;
+  intervals: Map<string, number>;
+  enabled: boolean;
+  playSound: () => void;
+  schedule: (callback: () => void, delayMs: number) => number;
+  clear: (intervalId: number) => void;
+}) => {
+  const existingInterval = intervals.get(orderId);
+  if (existingInterval !== undefined) clear(existingInterval);
+  intervals.delete(orderId);
+
+  if (!enabled) return;
+
+  playSound();
+  intervals.set(
+    orderId,
+    schedule(playSound, ORDER_SOUND_REPEAT_INTERVAL_MS),
+  );
+};
 
 export const getOrderTrackingSocketUrl = () =>
   new URL("/orders-tracking", API_BASE_URL).toString().replace(/\/$/, "");
@@ -203,13 +232,15 @@ export function useRealtimeOrderNotifications() {
       [...ringingOrders.current.keys()].forEach(stopOrderAlert);
     };
     const startOrderAlert = (orderId: string) => {
-      stopOrderAlert(orderId);
-      if (!soundEnabled()) return;
-      void playNewOrderSound();
-      ringingOrders.current.set(
+      startRepeatingOrderSound({
         orderId,
-        window.setInterval(() => void playNewOrderSound(), 3_000),
-      );
+        intervals: ringingOrders.current,
+        enabled: soundEnabled(),
+        playSound: () => void playNewOrderSound(),
+        schedule: (callback, delayMs) =>
+          window.setInterval(callback, delayMs),
+        clear: (intervalId) => window.clearInterval(intervalId),
+      });
     };
     const handleSoundSetting = () => {
       if (!soundEnabled()) {
