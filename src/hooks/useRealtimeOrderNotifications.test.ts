@@ -17,6 +17,7 @@ import {
   isScopedOrderStatusUpdate,
   playNewOrderSound,
   silenceOrderAlert,
+  startRepeatingOrderSound,
   unlockOrderNotificationSound,
 } from "./useRealtimeOrderNotifications";
 
@@ -137,6 +138,30 @@ describe("silenceOrderAlert", () => {
 });
 
 describe("order notification sound", () => {
+  it("replaces only the existing sound timer and keeps ringing every three seconds", () => {
+    const intervals = new Map([["order-1", 11]]);
+    const playSound = vi.fn();
+    const clear = vi.fn();
+    const schedule = vi.fn((callback: () => void, delayMs: number) => {
+      expect(delayMs).toBe(3_000);
+      callback();
+      return 22;
+    });
+
+    startRepeatingOrderSound({
+      orderId: "order-1",
+      intervals,
+      enabled: true,
+      playSound,
+      schedule,
+      clear,
+    });
+
+    expect(clear).toHaveBeenCalledWith(11);
+    expect(playSound).toHaveBeenCalledTimes(2);
+    expect(intervals.get("order-1")).toBe(22);
+  });
+
   it("unlocks and reuses one audio context before playing the alert", async () => {
     const resume = vi.fn().mockResolvedValue(undefined);
     const start = vi.fn();
