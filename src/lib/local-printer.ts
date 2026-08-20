@@ -3,13 +3,25 @@ import {
   buildOrderTicketHtml,
   type OrderTicket,
 } from "@/lib/order-ticket";
-import type { PrintingMode, PrintingPaperSize } from "@/services/printing";
+import {
+  getQzCertificate,
+  signQzChallenge,
+  type PrintingMode,
+  type PrintingPaperSize,
+} from "@/services/printing";
 
 const QZ_UNAVAILABLE_MESSAGE =
   "QZ Tray is not running. Install or start QZ Tray on this computer, then try again.";
 
+const configureQzSecurity = (qz: typeof import("qz-tray")) => {
+  qz.security.setCertificatePromise(getQzCertificate);
+  qz.security.setSignatureAlgorithm("SHA512");
+  qz.security.setSignaturePromise(signQzChallenge);
+};
+
 const connectToQzTray = async () => {
   const qz = await import("qz-tray");
+  configureQzSecurity(qz);
 
   if (!qz.websocket.isActive()) {
     try {

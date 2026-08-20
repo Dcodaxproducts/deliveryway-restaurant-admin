@@ -7,6 +7,9 @@ import {
 } from "@/lib/local-printer";
 
 const qzMocks = vi.hoisted(() => ({
+  setCertificatePromise: vi.fn(),
+  setSignatureAlgorithm: vi.fn(),
+  setSignaturePromise: vi.fn(),
   isActive: vi.fn(),
   connect: vi.fn(),
   find: vi.fn(),
@@ -14,7 +17,22 @@ const qzMocks = vi.hoisted(() => ({
   print: vi.fn(),
 }));
 
+const qzSigningMocks = vi.hoisted(() => ({
+  getCertificate: vi.fn(),
+  signChallenge: vi.fn(),
+}));
+
+vi.mock("@/services/printing", () => ({
+  getQzCertificate: qzSigningMocks.getCertificate,
+  signQzChallenge: qzSigningMocks.signChallenge,
+}));
+
 vi.mock("qz-tray", () => ({
+  security: {
+    setCertificatePromise: qzMocks.setCertificatePromise,
+    setSignatureAlgorithm: qzMocks.setSignatureAlgorithm,
+    setSignaturePromise: qzMocks.setSignaturePromise,
+  },
   websocket: {
     isActive: qzMocks.isActive,
     connect: qzMocks.connect,
@@ -28,6 +46,27 @@ describe("local printer bridge", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     qzMocks.isActive.mockReturnValue(true);
+    qzSigningMocks.getCertificate.mockResolvedValue("certificate");
+    qzSigningMocks.signChallenge.mockResolvedValue("signature");
+  });
+
+  it("configures QZ Premium certificate and SHA512 signing before connecting", async () => {
+    qzMocks.isActive.mockReturnValue(false);
+    qzMocks.connect.mockResolvedValue(undefined);
+    qzMocks.find.mockResolvedValue(["Kitchen USB"]);
+
+    await discoverLocalPrinters();
+
+    expect(qzMocks.setCertificatePromise).toHaveBeenCalledWith(
+      qzSigningMocks.getCertificate,
+    );
+    expect(qzMocks.setSignatureAlgorithm).toHaveBeenCalledWith("SHA512");
+    expect(qzMocks.setSignaturePromise).toHaveBeenCalledWith(
+      qzSigningMocks.signChallenge,
+    );
+    expect(
+      qzMocks.setSignaturePromise.mock.invocationCallOrder[0],
+    ).toBeLessThan(qzMocks.connect.mock.invocationCallOrder[0]);
   });
 
   it("returns unique installed printer queues", async () => {
