@@ -412,7 +412,6 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   ];
   const totals = [
     [t("subtotal"), order.subtotal],
-    [t("tax"), order.taxAmount],
     [t("deliveryFee"), order.deliveryFee],
     [t("serviceCharge"), order.serviceChargeAmount],
     [t("tipAmount"), order.tipAmount],
