@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildOrdersScheduleQuery,
   isFutureOrder,
   matchesOrdersScheduleFilter,
 } from "@/components/pages/Orders/utils/orders-schedule-filters";
@@ -75,5 +76,20 @@ describe("orders schedule filters", () => {
         now
       )
     ).toBe(true);
+  });
+
+  it("builds server-side schedule ranges before pagination", () => {
+    expect(buildOrdersScheduleQuery("PREORDERS", {}, now)).toEqual({
+      isScheduled: true,
+    });
+    expect(buildOrdersScheduleQuery("TODAY_SCHEDULED", {}, now)).toEqual({
+      isScheduled: true,
+      orderTimeFrom: "2026-06-18T00:00:00.000Z",
+      orderTimeTo: "2026-06-18T23:59:59.999Z",
+    });
+    expect(buildOrdersScheduleQuery("PAST_SCHEDULED", {}, now)).toEqual({
+      isScheduled: true,
+      orderTimeTo: now.toISOString(),
+    });
   });
 });

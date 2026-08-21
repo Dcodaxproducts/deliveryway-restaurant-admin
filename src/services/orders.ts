@@ -17,6 +17,12 @@ export interface GetOrdersParams {
   sortBy?: string;
   sortOrder?: string;
   kind?: string;
+  excludeStatus?: string;
+  createdFrom?: string;
+  createdTo?: string;
+  orderTimeFrom?: string;
+  orderTimeTo?: string;
+  isScheduled?: boolean;
 }
 
 export interface OrdersMeta {
@@ -219,6 +225,18 @@ export const getOrders = async (
       ...(params.sortBy ? { sortBy: params.sortBy } : {}),
       ...(params.sortOrder ? { sortOrder: params.sortOrder } : {}),
       ...(params.kind ? { kind: params.kind } : {}),
+      ...(params.excludeStatus
+        ? { excludeStatus: params.excludeStatus }
+        : {}),
+      ...(params.createdFrom ? { createdFrom: params.createdFrom } : {}),
+      ...(params.createdTo ? { createdTo: params.createdTo } : {}),
+      ...(params.orderTimeFrom
+        ? { orderTimeFrom: params.orderTimeFrom }
+        : {}),
+      ...(params.orderTimeTo ? { orderTimeTo: params.orderTimeTo } : {}),
+      ...(params.isScheduled !== undefined
+        ? { isScheduled: params.isScheduled }
+        : {}),
     },
   });
 
