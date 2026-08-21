@@ -91,6 +91,22 @@ export const buildOrderStats = (
         percentage: t("cancelledCount", { count: cancelledOrders }),
       },
     },
+    {
+      _id: "cod-amount",
+      title: t("codPayments"),
+      value: formatMoney(Number(orderStats?.codAmount ?? 0), currency),
+      icon: "revenue",
+      iconStyle: "default",
+      trend: { direction: "up", percentage: t("confirmedRevenue") },
+    },
+    {
+      _id: "digital-amount",
+      title: t("digitalPayments"),
+      value: formatMoney(Number(orderStats?.digitalAmount ?? 0), currency),
+      icon: "revenue",
+      iconStyle: "default",
+      trend: { direction: "up", percentage: t("confirmedRevenue") },
+    },
   ] as StatItem[];
 };
 
