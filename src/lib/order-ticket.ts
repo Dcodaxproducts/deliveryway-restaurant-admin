@@ -263,7 +263,7 @@ export const buildOrderTicketHtml = (
       : '<div style="border:2px solid #000;padding:7px;margin:0 0 12px;text-align:center;font-size:1.2em;font-weight:800">ASAP / SOFORT</div>';
 
   return [
-    `<div style="box-sizing:border-box;width:${getTicketWidth(paperSize)};padding-right:4mm;font-family:Arial,sans-serif;font-size:${fontSize};color:#000">`,
+    `<div style="box-sizing:border-box;width:${getTicketWidth(paperSize)};padding-right:4mm;font-family:Arial,sans-serif;font-size:${fontSize};color:#000;overflow-wrap:anywhere;word-break:break-word">`,
     fulfillmentBanner,
     '<div style="text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px">',
     '<div style="font-size:1.4em;font-weight:700">DeliveryWays</div>',
@@ -337,11 +337,7 @@ const wrapText = (value: string, columns: number) => {
   return lines;
 };
 
-const formatEscPosAmount = (
-  label: string,
-  value: string,
-  columns: number,
-) => {
+const formatEscPosAmount = (label: string, value: string, columns: number) => {
   const spacing = columns - label.length - value.length;
   return spacing > 0
     ? `${label}${" ".repeat(spacing)}${value}`
