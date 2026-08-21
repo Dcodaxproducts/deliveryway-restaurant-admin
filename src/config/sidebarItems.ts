@@ -435,8 +435,8 @@ export const menuItems: MenuItem[] = [
     href: "/integrations/winorder",
     icon: PlugZap,
     section: "account",
-    roles: allAdminRoles,
-    permissionAccesses: ["auto-printing-pos"],
+    roles: accountProfileRoles,
+    permissionAccesses: ["winorder-integration"],
   },
   {
     title: "Reports & Payouts",

@@ -315,12 +315,30 @@ describe("auth helpers", () => {
     });
 
     expect(isStaffRouteAllowed(user, "/payment-settings")).toBe(true);
-    expect(
-      hasStaffPermission(user, ["payment-settings"], ["update"]),
-    ).toBe(true);
-    expect(
-      hasStaffPermission(user, ["payment-settings"], ["create"]),
-    ).toBe(false);
+    expect(hasStaffPermission(user, ["payment-settings"], ["update"])).toBe(
+      true,
+    );
+    expect(hasStaffPermission(user, ["payment-settings"], ["create"])).toBe(
+      false,
+    );
+  });
+
+  it("allows WinOrder routes with the WinOrder permission", () => {
+    const user = normalizeUser({
+      id: "winorder-staff",
+      role: "STAFF",
+      actorType: "STAFF",
+      tenantId: "tenant-1",
+      restaurantAccess: { restaurantIds: ["restaurant-1"] },
+      staffRole: {
+        permissions: [{ access: "winorder-integration", operations: ["read"] }],
+      },
+    });
+
+    expect(getStaffRoutePermissionAccesses("/integrations/winorder")).toEqual([
+      "winorder-integration",
+    ]);
+    expect(isStaffRouteAllowed(user, "/integrations/winorder")).toBe(true);
   });
 
   it("normalizes all-restaurants staff access claims", () => {

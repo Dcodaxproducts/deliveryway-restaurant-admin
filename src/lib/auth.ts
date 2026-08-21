@@ -361,6 +361,7 @@ const STAFF_ROUTE_ACCESS: Array<{ href: string; accesses: string[] }> = [
   { href: "/privacy-policy", accesses: ["content-management"] },
   { href: "/profile", accesses: ["profile"] },
   { href: "/auto-printing", accesses: ["auto-printing-pos"] },
+  { href: "/integrations/winorder", accesses: ["winorder-integration"] },
   { href: "/reports", accesses: ["reports-payouts"] },
   { href: "/payment-settings", accesses: ["payment-settings"] },
   { href: "/notifications", accesses: ["notifications"] },
