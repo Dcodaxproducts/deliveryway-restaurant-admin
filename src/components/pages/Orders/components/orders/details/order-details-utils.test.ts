@@ -9,6 +9,12 @@ import {
 } from "@/components/pages/Orders/components/orders/details/order-details-utils";
 
 describe("order details utils", () => {
+  it("uses localized payment method labels when provided", () => {
+    expect(formatPaymentMethod("COD", { COD: "Barzahlung" })).toBe(
+      "Barzahlung"
+    );
+  });
+
   it("prefers selected payment option over legacy paymentMethod", () => {
     expect(
       getSelectedPaymentMethod({

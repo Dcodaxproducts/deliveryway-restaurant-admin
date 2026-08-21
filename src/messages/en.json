@@ -565,6 +565,16 @@
     "groupOrderDescription": "Organizing {totalItems} items across {participants} participants.",
     "printLabel": "Print Label",
     "payment": "Payment",
+    "paymentMethods": {
+      "COD": "Cash on delivery",
+      "CARD_ON_DELIVERY": "Card on delivery",
+      "STRIPE": "Stripe online payment",
+      "PAYPAL": "PayPal",
+      "EASYPAISA": "Easypaisa",
+      "JAZZCASH": "JazzCash",
+      "BANK_TRANSFER": "Bank transfer",
+      "WALLET": "Customer wallet"
+    },
     "refundPayment": "Refund payment",
     "refundingPayment": "Refunding...",
     "refundConfirm": "Refund this payment? A full refund will be created for the paid charge.",
