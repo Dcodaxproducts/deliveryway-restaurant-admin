@@ -12,6 +12,12 @@ export type OrdersScheduleDateRange = {
   to?: Date;
 };
 
+export type OrdersScheduleQuery = {
+  orderTimeFrom?: string;
+  orderTimeTo?: string;
+  isScheduled?: boolean;
+};
+
 const startOfDay = (date: Date) => {
   const nextDate = new Date(date);
   nextDate.setHours(0, 0, 0, 0);
@@ -95,4 +101,37 @@ export const matchesOrdersScheduleFilter = (
   }
 
   return isWithinRange(orderTime, range);
+};
+
+export const buildOrdersScheduleQuery = (
+  filter: OrdersScheduleFilter,
+  range: OrdersScheduleDateRange = {},
+  now: Date = new Date(),
+): OrdersScheduleQuery => {
+  if (filter === "PREORDERS") {
+    return { isScheduled: true };
+  }
+
+  if (filter === "TODAY_SCHEDULED") {
+    return {
+      isScheduled: true,
+      orderTimeFrom: startOfDay(now).toISOString(),
+      orderTimeTo: endOfDay(now).toISOString(),
+    };
+  }
+
+  if (filter === "PAST_SCHEDULED") {
+    return { isScheduled: true, orderTimeTo: now.toISOString() };
+  }
+
+  if (filter === "CUSTOM_RANGE") {
+    return {
+      ...(range.from
+        ? { orderTimeFrom: startOfDay(range.from).toISOString() }
+        : {}),
+      ...(range.to ? { orderTimeTo: endOfDay(range.to).toISOString() } : {}),
+    };
+  }
+
+  return {};
 };

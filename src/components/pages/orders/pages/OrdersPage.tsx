@@ -27,7 +27,7 @@ import {
   type OrderTab,
 } from "@/components/pages/orders/utils/orders-page.helpers";
 import {
-  matchesOrdersScheduleFilter,
+  buildOrdersScheduleQuery,
   type OrdersScheduleDateRange,
   type OrdersScheduleFilter,
 } from "@/components/pages/Orders/utils/orders-schedule-filters";
@@ -35,6 +35,7 @@ import { useTranslations } from "next-intl";
 import type { Order } from "@/types/orders";
 
 const orderTabs = new Set<OrderTab>([
+  "today",
   "all",
   "payment-pending",
   "delivery",
@@ -57,7 +58,7 @@ export function OrdersPage() {
   const t = useTranslations("orders");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<OrderTab>("all");
+  const [activeTab, setActiveTab] = useState<OrderTab>("today");
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
   const [status, setStatus] = useState("ALL");
@@ -91,27 +92,26 @@ export function OrdersPage() {
       : status !== "ALL"
         ? status
         : undefined;
+  const excludeStatus =
+    activeTab === "today" || activeTab === "all"
+      ? "PAYMENT_PENDING"
+      : undefined;
+  const todayRange = useMemo(() => {
+    if (activeTab !== "today") return {};
+
+    const from = new Date();
+    const to = new Date();
+    from.setHours(0, 0, 0, 0);
+    to.setHours(23, 59, 59, 999);
+    return { fromDate: from.toISOString(), toDate: to.toISOString() };
+  }, [activeTab]);
+  const scheduleQuery = useMemo(
+    () => buildOrdersScheduleQuery(scheduleFilter, scheduleRange),
+    [scheduleFilter, scheduleRange],
+  );
   const reportDateRange = useMemo(() => {
-    const now = new Date();
-    if (scheduleFilter === "TODAY_SCHEDULED") {
-      const from = new Date(now);
-      const to = new Date(now);
-      from.setHours(0, 0, 0, 0);
-      to.setHours(23, 59, 59, 999);
-      return { fromDate: from.toISOString(), toDate: to.toISOString() };
-    }
-    if (scheduleFilter === "CUSTOM_RANGE") {
-      const from = scheduleRange.from ? new Date(scheduleRange.from) : null;
-      const to = scheduleRange.to ? new Date(scheduleRange.to) : null;
-      from?.setHours(0, 0, 0, 0);
-      to?.setHours(23, 59, 59, 999);
-      return {
-        ...(from ? { fromDate: from.toISOString() } : {}),
-        ...(to ? { toDate: to.toISOString() } : {}),
-      };
-    }
-    return {};
-  }, [scheduleFilter, scheduleRange]);
+    return { ...todayRange, ...scheduleQuery };
+  }, [scheduleQuery, todayRange]);
   const orderReportQuery = useGetOrdersReport(
     restaurantId && !isInvoiceHistoryTab
       ? {
@@ -120,6 +120,7 @@ export function OrdersPage() {
           orderType,
           kind: orderKind,
           status: effectiveStatus,
+          excludeStatus,
           ...reportDateRange,
         }
       : undefined,
@@ -137,6 +138,10 @@ export function OrdersPage() {
     limit,
     orderType,
     kind: orderKind,
+    excludeStatus,
+    createdFrom: todayRange.fromDate,
+    createdTo: todayRange.toDate,
+    ...scheduleQuery,
     enabled: !isInvoiceHistoryTab,
   });
 
@@ -165,7 +170,7 @@ export function OrdersPage() {
       return;
     }
 
-    setActiveTab("all");
+    setActiveTab("today");
   }, [searchParams]);
 
   useEffect(() => {
@@ -194,17 +199,9 @@ export function OrdersPage() {
       })),
     [orders],
   );
-  const filteredOrders = useMemo(
-    () =>
-      ordersWithCustomerName.filter((order) =>
-        matchesOrdersScheduleFilter(order, scheduleFilter, scheduleRange),
-      ),
-    [ordersWithCustomerName, scheduleFilter, scheduleRange],
-  );
   const sortedOrders = sortKey
-    ? sortData<OrdersTableRow>(filteredOrders, sortKey, sortDir)
-    : filteredOrders;
-  const isClientScheduleFilterActive = scheduleFilter !== "ALL";
+    ? sortData<OrdersTableRow>(ordersWithCustomerName, sortKey, sortDir)
+    : ordersWithCustomerName;
 
   const { title, description } = getOrdersHeaderContent(
     activeTab,
@@ -228,6 +225,14 @@ export function OrdersPage() {
         />
 
         <div className="flex items-center gap-0 flex-wrap text-sm lg:text-base">
+          <TabButton
+            active={activeTab === "today"}
+            tone="primary"
+            onClick={() => handleTabChange("today")}
+          >
+            {t("todayOrders")}
+          </TabButton>
+
           <TabButton
             active={activeTab === "all"}
             tone="primary"
@@ -296,15 +301,6 @@ export function OrdersPage() {
               onScheduleFilterChange={setScheduleFilter}
               onScheduleRangeChange={setScheduleRange}
             />
-
-            {isClientScheduleFilterActive ? (
-              <div className="rounded-[16px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-                {t("scheduleClientFilterNotice", {
-                  shown: sortedOrders.length,
-                  loaded: ordersWithCustomerName.length,
-                })}
-              </div>
-            ) : null}
 
             <OrdersTable
               orders={sortedOrders}

@@ -2,6 +2,7 @@ import type { StatItem } from "@/types/stats";
 import { formatMoney } from "@/lib/currency";
 
 export type OrderTab =
+  | "today"
   | "all"
   | "payment-pending"
   | "delivery"
@@ -99,6 +100,11 @@ export const getOrdersHeaderContent = (
   t: Translate,
 ) => {
   switch (tab) {
+    case "today":
+      return {
+        title: isBranchAdmin ? t("branchTodayOrders") : t("todayOrders"),
+        description: t("todayOrdersDescription"),
+      };
     case "all":
       return {
         title: isBranchAdmin ? t("branchAllOrders") : t("allOrders"),

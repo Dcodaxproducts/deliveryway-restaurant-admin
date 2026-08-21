@@ -33,6 +33,12 @@ interface UseOrdersParams {
   restaurantId?: string;
   branchId?: string;
   enabled?: boolean;
+  excludeStatus?: string;
+  createdFrom?: string;
+  createdTo?: string;
+  orderTimeFrom?: string;
+  orderTimeTo?: string;
+  isScheduled?: boolean;
 }
 
 interface OrdersMeta {
@@ -65,6 +71,12 @@ export function useOrders(params?: UseOrdersParams) {
       params?.sortBy,
       params?.sortOrder,
       params?.kind,
+      params?.excludeStatus,
+      params?.createdFrom,
+      params?.createdTo,
+      params?.orderTimeFrom,
+      params?.orderTimeTo,
+      params?.isScheduled,
     ],
     queryFn: () =>
       getOrders({
@@ -77,6 +89,12 @@ export function useOrders(params?: UseOrdersParams) {
         sortBy: params?.sortBy,
         sortOrder: params?.sortOrder,
         kind: params?.kind,
+        excludeStatus: params?.excludeStatus,
+        createdFrom: params?.createdFrom,
+        createdTo: params?.createdTo,
+        orderTimeFrom: params?.orderTimeFrom,
+        orderTimeTo: params?.orderTimeTo,
+        isScheduled: params?.isScheduled,
         branchId,
       }),
     enabled: !!restaurantId && (params?.enabled ?? true),
