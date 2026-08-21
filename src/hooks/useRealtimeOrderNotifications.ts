@@ -37,7 +37,13 @@ type HandleOrderCreatedOptions = {
 };
 
 export const ORDER_SOUND_STORAGE_KEY = "deliveryways.orderSound.enabled";
+export const ORDER_SOUND_MODE_STORAGE_KEY = "deliveryways.orderSound.mode";
 export const ORDER_SOUND_SETTING_EVENT = "deliveryways:order-sound-setting";
+export type OrderSoundMode = "ONCE" | "REPEAT";
+export const getOrderSoundMode = (): OrderSoundMode =>
+  window.localStorage.getItem(ORDER_SOUND_MODE_STORAGE_KEY) === "ONCE"
+    ? "ONCE"
+    : "REPEAT";
 export const ORDER_ALERT_DISMISS_EVENT = "deliveryways:order-alert-dismiss";
 export const silenceOrderAlert = (orderId: string) => {
   if (typeof window === "undefined" || !orderId.trim()) return;
@@ -80,6 +86,7 @@ export const startRepeatingOrderSound = ({
   orderId,
   intervals,
   enabled,
+  repeat,
   playSound,
   schedule,
   clear,
@@ -87,6 +94,7 @@ export const startRepeatingOrderSound = ({
   orderId: string;
   intervals: Map<string, number>;
   enabled: boolean;
+  repeat: boolean;
   playSound: () => void;
   schedule: (callback: () => void, delayMs: number) => number;
   clear: (intervalId: number) => void;
@@ -98,6 +106,8 @@ export const startRepeatingOrderSound = ({
   if (!enabled) return;
 
   playSound();
+  if (!repeat) return;
+
   intervals.set(
     orderId,
     schedule(playSound, ORDER_SOUND_REPEAT_INTERVAL_MS),
@@ -121,57 +131,40 @@ export const buildOrderTrackingSocketAuth = ({
   ...(branchId ? { branchId } : {}),
 });
 
-let orderSoundAudioContext: AudioContext | null = null;
+const ORDER_SOUND_URL = "/sounds/mixkit-bell-notification-933.wav";
+let orderSoundAudio: HTMLAudioElement | null = null;
 
-const getOrderSoundAudioContext = () => {
-  if (orderSoundAudioContext && orderSoundAudioContext.state !== "closed") {
-    return orderSoundAudioContext;
+const getOrderSoundAudio = () => {
+  if (!orderSoundAudio) {
+    orderSoundAudio = new Audio(ORDER_SOUND_URL);
+    orderSoundAudio.preload = "auto";
   }
-
-  const AudioContextClass =
-    window.AudioContext ??
-    (
-      window as typeof window & {
-        webkitAudioContext?: typeof AudioContext;
-      }
-    ).webkitAudioContext;
-
-  if (!AudioContextClass) return null;
-
-  orderSoundAudioContext = new AudioContextClass();
-  return orderSoundAudioContext;
+  return orderSoundAudio;
 };
 
 export const unlockOrderNotificationSound = async () => {
-  const context = getOrderSoundAudioContext();
-
-  if (!context) return false;
-
-  if (context.state === "suspended") {
-    try {
-      await context.resume();
-    } catch {
-      return false;
-    }
+  const audio = getOrderSoundAudio();
+  audio.muted = true;
+  try {
+    await audio.play();
+    audio.pause();
+    audio.currentTime = 0;
+    audio.muted = false;
+    return true;
+  } catch {
+    audio.muted = false;
+    return false;
   }
-
-  return context.state === "running";
 };
 
 export const playNewOrderSound = async () => {
-  const context = getOrderSoundAudioContext();
-
-  if (!context || !(await unlockOrderNotificationSound())) return;
-
-  const oscillator = context.createOscillator();
-  const gain = context.createGain();
-  oscillator.frequency.setValueAtTime(880, context.currentTime);
-  gain.gain.setValueAtTime(0.12, context.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.45);
-  oscillator.connect(gain);
-  gain.connect(context.destination);
-  oscillator.start();
-  oscillator.stop(context.currentTime + 0.45);
+  const audio = getOrderSoundAudio();
+  audio.currentTime = 0;
+  try {
+    await audio.play();
+  } catch {
+    // Browsers can block media until the first user gesture.
+  }
 };
 
 export function useRealtimeOrderNotifications() {
@@ -236,6 +229,7 @@ export function useRealtimeOrderNotifications() {
         orderId,
         intervals: ringingOrders.current,
         enabled: soundEnabled(),
+        repeat: getOrderSoundMode() === "REPEAT",
         playSound: () => void playNewOrderSound(),
         schedule: (callback, delayMs) =>
           window.setInterval(callback, delayMs),
@@ -263,10 +257,7 @@ export function useRealtimeOrderNotifications() {
         ?.orderId;
       if (orderId) stopOrderAlert(orderId);
     };
-    window.addEventListener(
-      ORDER_ALERT_DISMISS_EVENT,
-      handleOrderAlertDismiss,
-    );
+    window.addEventListener(ORDER_ALERT_DISMISS_EVENT, handleOrderAlertDismiss);
     window.addEventListener("pointerdown", unlockSoundFromUserGesture);
     window.addEventListener("keydown", unlockSoundFromUserGesture);
 

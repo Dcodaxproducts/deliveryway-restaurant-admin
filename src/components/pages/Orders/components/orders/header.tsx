@@ -9,7 +9,9 @@ import type { Order } from "@/types/orders";
 import { useEffect, useState } from "react";
 import {
   ORDER_SOUND_SETTING_EVENT,
+  ORDER_SOUND_MODE_STORAGE_KEY,
   ORDER_SOUND_STORAGE_KEY,
+  type OrderSoundMode,
   unlockOrderNotificationSound,
 } from "@/hooks/useRealtimeOrderNotifications";
 import Link from "next/link";
@@ -24,9 +26,15 @@ export function OrdersHeader({ title, description, orders }: HeaderProps) {
   const common = useTranslations("common");
   const ordersT = useTranslations("orders");
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundMode, setSoundMode] = useState<OrderSoundMode>("REPEAT");
   useEffect(() => {
     setSoundEnabled(
       window.localStorage.getItem(ORDER_SOUND_STORAGE_KEY) !== "false",
+    );
+    setSoundMode(
+      window.localStorage.getItem(ORDER_SOUND_MODE_STORAGE_KEY) === "ONCE"
+        ? "ONCE"
+        : "REPEAT",
     );
   }, []);
 
@@ -105,6 +113,21 @@ export function OrdersHeader({ title, description, orders }: HeaderProps) {
               ? ordersT("notificationSoundOn")
               : ordersT("notificationSoundOff")}
           </Button>
+          <select
+            value={soundMode}
+            disabled={!soundEnabled}
+            aria-label={ordersT("notificationSoundMode")}
+            onChange={(event) => {
+              const next = event.target.value as OrderSoundMode;
+              setSoundMode(next);
+              window.localStorage.setItem(ORDER_SOUND_MODE_STORAGE_KEY, next);
+              window.dispatchEvent(new Event(ORDER_SOUND_SETTING_EVENT));
+            }}
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="ONCE">{ordersT("notificationSoundOnce")}</option>
+            <option value="REPEAT">{ordersT("notificationSoundRepeat")}</option>
+          </select>
           <Button asChild variant="outline" className="w-fit gap-2">
             <Link href="/auto-printing">
               <Printer size={18} />
