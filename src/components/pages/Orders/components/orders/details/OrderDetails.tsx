@@ -323,7 +323,19 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   const shouldShowInferredDeal =
     /^DEAL-/i.test(couponCode) && !hasBackendDealRows && items.length > 0;
   const selectedPaymentMethod = getSelectedPaymentMethod(order);
-  const paymentLabel = formatPaymentMethod(selectedPaymentMethod);
+  const localizedPaymentMethodLabels = {
+    COD: t("paymentMethods.COD"),
+    CARD_ON_DELIVERY: t("paymentMethods.CARD_ON_DELIVERY"),
+    STRIPE: t("paymentMethods.STRIPE"),
+    PAYPAL: t("paymentMethods.PAYPAL"),
+    EASYPAISA: t("paymentMethods.EASYPAISA"),
+    JAZZCASH: t("paymentMethods.JAZZCASH"),
+    BANK_TRANSFER: t("paymentMethods.BANK_TRANSFER"),
+    WALLET: t("paymentMethods.WALLET"),
+  };
+  const formatLocalizedPaymentMethod = (method?: string | null) =>
+    formatPaymentMethod(method, localizedPaymentMethodLabels);
+  const paymentLabel = formatLocalizedPaymentMethod(selectedPaymentMethod);
   const selectedPaymentMethodKey = selectedPaymentMethod?.toUpperCase();
   const deliveryAddress = formatDeliveryAddress(order.deliveryAddress);
   const mapsUrl = getMapsUrl(order.deliveryAddress);
@@ -930,7 +942,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                       key={method}
                       className="rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-600 ring-1 ring-gray-100"
                     >
-                      {formatPaymentMethod(method)}
+                      {formatLocalizedPaymentMethod(method)}
                     </span>
                   ))
                 ) : (
@@ -986,7 +998,9 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-bold text-gray-950">
-                          {formatPaymentMethod(transaction.paymentMethod)}
+                          {formatLocalizedPaymentMethod(
+                            transaction.paymentMethod,
+                          )}
                         </p>
                         <p className="mt-1 text-xs text-gray-500">
                           {formatStatus(transaction.type)} ·{" "}

@@ -53,10 +53,14 @@ const getUniqueParts = (parts: string[]) => {
   });
 };
 
-export const formatPaymentMethod = (method?: string | null) => {
+export const formatPaymentMethod = (
+  method?: string | null,
+  localizedLabels?: Partial<Record<string, string>>,
+) => {
   if (!method) return null;
 
   return (
+    localizedLabels?.[method] ??
     paymentMethodLabels[method] ??
     method
       .toLowerCase()

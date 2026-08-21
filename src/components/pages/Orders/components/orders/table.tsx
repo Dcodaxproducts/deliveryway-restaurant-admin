@@ -366,8 +366,8 @@ export function OrdersTable({
 
   return (
     <div className="space-y-4">
-      <div className="hidden max-w-full overflow-hidden lg:block">
-        <Table className="table-fixed">
+      <div className="block max-w-full overflow-x-auto rounded-lg border border-gray-100">
+        <Table className="min-w-[920px] table-fixed">
           <TableHeader>
             <TableRow className="border-none">
               <TableHead className="w-10">
