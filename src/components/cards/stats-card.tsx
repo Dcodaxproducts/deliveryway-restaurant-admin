@@ -6,7 +6,7 @@ import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import {
   Store,
   ShoppingBag,
-  DollarSign,
+  Banknote,
   Users,
   CheckCircle,
   XCircle,
@@ -17,7 +17,7 @@ import { usePathname } from "next/navigation";
 const ICON_MAP: Record<StatIcon, React.ElementType> = {
   store: Store,
   orders: ShoppingBag,
-  revenue: DollarSign,
+  revenue: Banknote,
   users: Users,
   completed: CheckCircle,
   cancelled: XCircle,

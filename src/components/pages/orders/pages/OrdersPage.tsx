@@ -221,7 +221,7 @@ export function OrdersPage() {
         <StatsSection
           stats={dynamicStats}
           loading={orderReportQuery.isLoading || orderReportQuery.isFetching}
-          className="xl:grid-cols-4"
+          className="xl:grid-cols-3 2xl:grid-cols-6"
         />
 
         <div className="flex items-center gap-0 flex-wrap text-sm lg:text-base">
