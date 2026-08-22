@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
@@ -8,6 +8,7 @@ import {
   Cable,
   CheckCircle2,
   Clipboard,
+  FileSearch,
   KeyRound,
   RefreshCw,
   RotateCcw,
@@ -39,6 +40,11 @@ import {
 } from "@/lib/winorder-store-id";
 import { getStringValue, isRecord } from "@/lib/auth";
 import {
+  compareWinOrderCatalog,
+  parseWinOrderCatalog,
+  type WinOrderCatalogComparison,
+} from "@/lib/winorder-catalog";
+import {
   createWinOrderConnection,
   getWinOrderConnection,
   getWinOrderHealth,
@@ -59,6 +65,8 @@ type CatalogDraft = Record<
   string,
   {
     mappingType: WinOrderCatalogMapping["mappingType"];
+    localName: string;
+    variationName?: string | null;
     name: string;
     no: string;
   }
@@ -121,6 +129,9 @@ export default function WinOrderSettingsPage() {
   const [oneTimeCredentials, setOneTimeCredentials] =
     useState<WinOrderConnection | null>(null);
   const [catalogDraft, setCatalogDraft] = useState<CatalogDraft>({});
+  const [catalogComparison, setCatalogComparison] =
+    useState<WinOrderCatalogComparison | null>(null);
+  const [catalogFileName, setCatalogFileName] = useState("");
   const [paymentDraft, setPaymentDraft] = useState<Record<string, string>>({});
   const canEdit = !scope.isBranchAdmin;
 
@@ -180,13 +191,12 @@ export default function WinOrderSettingsPage() {
     const next: CatalogDraft = {};
     for (const item of data.catalog.items) {
       const current = existing.get(item.key);
+      const localName = item.menuItemName ?? item.key;
       next[item.key] = {
         mappingType: "ITEM",
-        name:
-          current?.externalArticleName ??
-          item.variationName ??
-          item.menuItemName ??
-          item.key,
+        localName,
+        variationName: item.variationName,
+        name: current?.externalArticleName ?? localName,
         no: current?.externalArticleNo ?? "",
       };
     }
@@ -194,6 +204,7 @@ export default function WinOrderSettingsPage() {
       const current = existing.get(modifier.key);
       next[modifier.key] = {
         mappingType: "MODIFIER",
+        localName: modifier.name ?? modifier.key,
         name: current?.externalArticleName ?? modifier.name ?? modifier.key,
         no: current?.externalArticleNo ?? "",
       };
@@ -201,7 +212,8 @@ export default function WinOrderSettingsPage() {
     const serviceCharge = existing.get("service_charge");
     next.service_charge = {
       mappingType: "SERVICE_CHARGE",
-      name: serviceCharge?.externalArticleName ?? t("serviceCharge"),
+      localName: t("serviceCharge"),
+      name: serviceCharge?.externalArticleName ?? "",
       no: serviceCharge?.externalArticleNo ?? "",
     };
     setCatalogDraft(next);
@@ -214,6 +226,45 @@ export default function WinOrderSettingsPage() {
       ),
     );
   }, [mappingsQuery.data, t]);
+
+  useEffect(() => {
+    setCatalogComparison(null);
+    setCatalogFileName("");
+  }, [selectedBranchId]);
+
+  const localCatalogNames = useMemo(() => {
+    const catalog = mappingsQuery.data?.data.catalog;
+    if (!catalog) return [];
+    return [
+      ...catalog.items
+        .filter((item) => !item.variationId)
+        .flatMap((item) => (item.menuItemName ? [item.menuItemName] : [])),
+      ...catalog.modifiers.flatMap((modifier) =>
+        modifier.name ? [modifier.name] : [],
+      ),
+    ];
+  }, [mappingsQuery.data]);
+
+  const compareCatalogFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(t("catalogFileTooLarge"));
+      event.target.value = "";
+      return;
+    }
+    try {
+      const articles = parseWinOrderCatalog(await file.text(), file.name);
+      setCatalogComparison(compareWinOrderCatalog(localCatalogNames, articles));
+      setCatalogFileName(file.name);
+    } catch {
+      setCatalogComparison(null);
+      setCatalogFileName("");
+      toast.error(t("catalogFileInvalid"));
+    } finally {
+      event.target.value = "";
+    }
+  };
 
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ["winorder"] });
@@ -246,13 +297,21 @@ export default function WinOrderSettingsPage() {
         storeName: storeName || undefined,
       });
       const catalogMappings = Object.entries(catalogDraft)
-        .filter(([, value]) => value.no.trim())
-        .map(([localKey, value]) => ({
-          mappingType: value.mappingType,
-          localKey,
-          externalArticleNo: value.no.trim(),
-          externalArticleName: value.name.trim() || localKey,
-        }));
+        .flatMap(([localKey, value]) => {
+          const externalArticleNo = value.no.trim();
+          const externalArticleName = value.name.trim();
+          const hasNameOverride = Boolean(externalArticleName) &&
+            externalArticleName !== value.localName;
+          if (!externalArticleNo && !hasNameOverride) return [];
+          return [
+            {
+              mappingType: value.mappingType,
+              localKey,
+              ...(externalArticleNo ? { externalArticleNo } : {}),
+              ...(hasNameOverride ? { externalArticleName } : {}),
+            },
+          ];
+        });
       const payments = paymentMethods.flatMap((paymentMethod) => {
         if (paymentMethod === "COD") return [];
         const externalLabel = paymentDraft[paymentMethod]?.trim();
@@ -285,7 +344,8 @@ export default function WinOrderSettingsPage() {
   );
   const endpoint = `${endpointBase}${connection?.endpointPath ?? "/winorder"}`;
   const oneTimeEndpoint = `${endpointBase}${oneTimeCredentials?.endpointPath ?? "/winorder"}`;
-  const missingCount = mappingsQuery.data?.data.missingCatalogKeys.length ?? 0;
+  const missingCount = catalogComparison?.missingNames.length ?? 0;
+  const duplicateCount = catalogComparison?.duplicateNames.length ?? 0;
   const failedCount = healthQuery.data?.data.exportCounts.FAILED ?? 0;
 
   return (
@@ -326,7 +386,12 @@ export default function WinOrderSettingsPage() {
         <ProgressCard
           icon={Cable}
           label={t("mappings")}
-          complete={Boolean(connection && missingCount === 0)}
+          complete={Boolean(
+            connection &&
+              catalogComparison &&
+              missingCount === 0 &&
+              duplicateCount === 0,
+          )}
         />
         <ProgressCard
           icon={Activity}
@@ -471,18 +536,82 @@ export default function WinOrderSettingsPage() {
                     <CardTitle>{t("catalogMappings")}</CardTitle>
                     <CardDescription>{t("catalogHelp")}</CardDescription>
                   </div>
-                  <Badge variant={missingCount ? "destructive" : "secondary"}>
-                    {missingCount} {t("missing")}
-                  </Badge>
+                  <Badge variant="secondary">{t("nameMatching")}</Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
+                <div className="rounded-xl border bg-muted/20 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <Label htmlFor="winorder-catalog-file">
+                        {t("catalogFile")}
+                      </Label>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {t("catalogFileHelp")}
+                      </p>
+                    </div>
+                    <div className="w-full sm:max-w-sm">
+                      <Input
+                        id="winorder-catalog-file"
+                        type="file"
+                        accept=".csv,.xml,text/csv,application/xml,text/xml"
+                        aria-label={t("catalogFile")}
+                        onChange={(event) => void compareCatalogFile(event)}
+                      />
+                    </div>
+                  </div>
+                  {catalogComparison ? (
+                    <div className="mt-4 space-y-3" aria-live="polite">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <FileSearch className="size-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">
+                          {catalogFileName}
+                        </span>
+                        <Badge variant="secondary">
+                          {catalogComparison.matchedNames.length} {t("matched")}
+                        </Badge>
+                        <Badge variant={missingCount ? "destructive" : "secondary"}>
+                          {missingCount} {t("missing")}
+                        </Badge>
+                        <Badge variant={duplicateCount ? "destructive" : "secondary"}>
+                          {duplicateCount} {t("duplicates")}
+                        </Badge>
+                      </div>
+                      {missingCount ? (
+                        <div>
+                          <p className="text-xs font-medium text-destructive">
+                            {t("missingNames")}
+                          </p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {catalogComparison.missingNames.join(", ")}
+                          </p>
+                        </div>
+                      ) : null}
+                      {duplicateCount ? (
+                        <div>
+                          <p className="text-xs font-medium text-destructive">
+                            {t("duplicateNames")}
+                          </p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {catalogComparison.duplicateNames.join(", ")}
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-xs text-muted-foreground">
+                      {t("catalogNotChecked")}
+                    </p>
+                  )}
+                </div>
                 {Object.entries(catalogDraft).map(([key, value]) => (
                   <MappingRow
                     key={key}
                     localKey={key}
                     value={value}
                     disabled={!canEdit}
+                    articleNumberLabel={t("articleNumber")}
+                    articleNameLabel={t("articleName")}
                     onChange={(next) =>
                       setCatalogDraft((current) => ({
                         ...current,
@@ -688,21 +817,30 @@ function MappingRow({
   localKey,
   value,
   disabled,
+  articleNumberLabel,
+  articleNameLabel,
   onChange,
 }: {
   localKey: string;
   value: CatalogDraft[string];
   disabled: boolean;
+  articleNumberLabel: string;
+  articleNameLabel: string;
   onChange: (value: CatalogDraft[string]) => void;
 }) {
   return (
     <div className="grid gap-2 rounded-lg border p-3 md:grid-cols-[minmax(180px,1fr)_180px_minmax(180px,1fr)] md:items-end">
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium">{value.name}</p>
+        <p className="truncate text-sm font-medium">{value.localName}</p>
+        {value.variationName ? (
+          <p className="text-xs text-muted-foreground">
+            ArticleSize: {value.variationName}
+          </p>
+        ) : null}
         <code className="text-xs text-muted-foreground">{localKey}</code>
       </div>
       <div>
-        <Label>WinOrder #</Label>
+        <Label>{articleNumberLabel}</Label>
         <Input
           className="mt-1 h-10"
           value={value.no}
@@ -711,10 +849,11 @@ function MappingRow({
         />
       </div>
       <div>
-        <Label>WinOrder name</Label>
+        <Label>{articleNameLabel}</Label>
         <Input
           className="mt-1 h-10"
           value={value.name}
+          placeholder={value.localName}
           disabled={disabled}
           onChange={(event) => onChange({ ...value, name: event.target.value })}
         />
