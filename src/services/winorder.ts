@@ -34,8 +34,8 @@ export type WinOrderCatalogMapping = {
   mappingType: "ITEM" | "MODIFIER" | "SERVICE_CHARGE";
   localKey: string;
   localName?: string | null;
-  externalArticleNo: string;
-  externalArticleName: string;
+  externalArticleNo?: string | null;
+  externalArticleName?: string | null;
 };
 
 export type WinOrderPaymentMethod =
@@ -62,6 +62,7 @@ export type WinOrderMappingsData = {
   };
   catalogMappings: WinOrderCatalogMapping[];
   paymentMappings: WinOrderPaymentMapping[];
+  matchingMode: "ARTICLE_NAME";
   missingCatalogKeys: string[];
 };
 

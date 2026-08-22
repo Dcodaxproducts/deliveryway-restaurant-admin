@@ -56,8 +56,7 @@ describe("WinOrder service", () => {
       {
         mappingType: "ITEM" as const,
         localKey: "item:item-1:base",
-        externalArticleNo: "P1",
-        externalArticleName: "Pizza",
+        externalArticleName: "Pizza Spezial",
       },
     ];
 
