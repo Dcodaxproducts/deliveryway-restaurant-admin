@@ -42,6 +42,10 @@ export type OrdersReportParams = BaseReportParams & {
   orderType?: ReportOrderType | string;
   paymentStatus?: ReportPaymentStatus | string;
   kind?: ReportKind | string;
+  excludeStatus?: ReportOrderStatus | string;
+  orderTimeFrom?: string;
+  orderTimeTo?: string;
+  isScheduled?: boolean;
 };
 
 export type FinancialReportParams = BaseReportParams & {

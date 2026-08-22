@@ -2,6 +2,7 @@ import type { StatItem } from "@/types/stats";
 import { formatMoney } from "@/lib/currency";
 
 export type OrderTab =
+  | "today"
   | "all"
   | "payment-pending"
   | "delivery"
@@ -90,6 +91,22 @@ export const buildOrderStats = (
         percentage: t("cancelledCount", { count: cancelledOrders }),
       },
     },
+    {
+      _id: "cod-amount",
+      title: t("codPayments"),
+      value: formatMoney(Number(orderStats?.codAmount ?? 0), currency),
+      icon: "revenue",
+      iconStyle: "default",
+      trend: { direction: "up", percentage: t("confirmedRevenue") },
+    },
+    {
+      _id: "digital-amount",
+      title: t("digitalPayments"),
+      value: formatMoney(Number(orderStats?.digitalAmount ?? 0), currency),
+      icon: "revenue",
+      iconStyle: "default",
+      trend: { direction: "up", percentage: t("confirmedRevenue") },
+    },
   ] as StatItem[];
 };
 
@@ -99,6 +116,11 @@ export const getOrdersHeaderContent = (
   t: Translate,
 ) => {
   switch (tab) {
+    case "today":
+      return {
+        title: isBranchAdmin ? t("branchTodayOrders") : t("todayOrders"),
+        description: t("todayOrdersDescription"),
+      };
     case "all":
       return {
         title: isBranchAdmin ? t("branchAllOrders") : t("allOrders"),

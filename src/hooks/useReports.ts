@@ -94,6 +94,10 @@ export const useGetOrdersReport = (params?: OrdersReportParams) => {
       params?.orderType,
       params?.paymentStatus,
       params?.kind,
+      params?.excludeStatus,
+      params?.orderTimeFrom,
+      params?.orderTimeTo,
+      params?.isScheduled,
     ],
     queryFn: () => getOrdersReport(params),
   });

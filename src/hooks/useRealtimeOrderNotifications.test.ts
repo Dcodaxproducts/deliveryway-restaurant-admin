@@ -13,6 +13,7 @@ import { buildAutoOpenOrderPath } from "@/lib/new-order-navigation";
 import {
   buildOrderTrackingSocketAuth,
   getOrderTrackingSocketUrl,
+  getOrderSoundMode,
   isPendingOrderAlertStatus,
   isScopedOrderStatusUpdate,
   playNewOrderSound,
@@ -152,6 +153,7 @@ describe("order notification sound", () => {
       orderId: "order-1",
       intervals,
       enabled: true,
+      repeat: true,
       playSound,
       schedule,
       clear,
@@ -162,48 +164,61 @@ describe("order notification sound", () => {
     expect(intervals.get("order-1")).toBe(22);
   });
 
-  it("unlocks and reuses one audio context before playing the alert", async () => {
-    const resume = vi.fn().mockResolvedValue(undefined);
-    const start = vi.fn();
-    const stop = vi.fn();
-    const connect = vi.fn();
-    const setValueAtTime = vi.fn();
-    const exponentialRampToValueAtTime = vi.fn();
-    const createOscillator = vi.fn(() => ({
-      frequency: { setValueAtTime },
-      connect,
-      start,
-      stop,
-    }));
-    const createGain = vi.fn(() => ({
-      gain: { setValueAtTime, exponentialRampToValueAtTime },
-      connect,
-    }));
-    const audioContext = {
-      state: "suspended",
-      currentTime: 1,
-      destination: {},
-      resume: vi.fn(async () => {
-        audioContext.state = "running";
-        await resume();
-      }),
-      createOscillator,
-      createGain,
-    };
-    const AudioContextMock = vi.fn(function AudioContextMock() {
-      return audioContext;
+  it("rings once without scheduling a repeat when configured", () => {
+    const intervals = new Map([["order-1", 11]]);
+    const playSound = vi.fn();
+    const clear = vi.fn();
+    const schedule = vi.fn();
+
+    startRepeatingOrderSound({
+      orderId: "order-1",
+      intervals,
+      enabled: true,
+      repeat: false,
+      playSound,
+      schedule,
+      clear,
     });
-    vi.stubGlobal("window", { AudioContext: AudioContextMock });
+
+    expect(clear).toHaveBeenCalledWith(11);
+    expect(playSound).toHaveBeenCalledTimes(1);
+    expect(schedule).not.toHaveBeenCalled();
+    expect(intervals.has("order-1")).toBe(false);
+  });
+
+  it("unlocks and reuses the configured notification audio", async () => {
+    const play = vi.fn().mockResolvedValue(undefined);
+    const pause = vi.fn();
+    const audio = { play, pause, currentTime: 10, muted: false, preload: "" };
+    const AudioMock = vi.fn(function AudioMock() {
+      return audio;
+    });
+    vi.stubGlobal("Audio", AudioMock);
 
     await unlockOrderNotificationSound();
     await playNewOrderSound();
     await playNewOrderSound();
 
-    expect(AudioContextMock).toHaveBeenCalledTimes(1);
-    expect(resume).toHaveBeenCalledTimes(1);
-    expect(createOscillator).toHaveBeenCalledTimes(2);
-    expect(start).toHaveBeenCalledTimes(2);
-    expect(stop).toHaveBeenCalledTimes(2);
+    expect(AudioMock).toHaveBeenCalledTimes(1);
+    expect(AudioMock).toHaveBeenCalledWith(
+      "/sounds/mixkit-bell-notification-933.wav",
+    );
+    expect(play).toHaveBeenCalledTimes(3);
+    expect(pause).toHaveBeenCalledTimes(1);
+    expect(audio.currentTime).toBe(0);
+
+    vi.unstubAllGlobals();
+  });
+
+  it("defaults to repeat and supports a one-ring preference", () => {
+    const getItem = vi
+      .fn()
+      .mockReturnValueOnce(null)
+      .mockReturnValueOnce("ONCE");
+    vi.stubGlobal("window", { localStorage: { getItem } });
+
+    expect(getOrderSoundMode()).toBe("REPEAT");
+    expect(getOrderSoundMode()).toBe("ONCE");
 
     vi.unstubAllGlobals();
   });

@@ -14,3 +14,16 @@ describe("sidebar invoice history", () => {
     });
   });
 });
+
+describe("sidebar WinOrder access", () => {
+  it("uses the WinOrder permission and allows staff roles", () => {
+    const winOrderItem = menuItems.find(
+      (item) => item.href === "/integrations/winorder",
+    );
+
+    expect(winOrderItem).toMatchObject({
+      roles: expect.arrayContaining(["STAFF"]),
+      permissionAccesses: ["winorder-integration"],
+    });
+  });
+});

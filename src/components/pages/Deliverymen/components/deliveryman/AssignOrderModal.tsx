@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
-  CircleDollarSign,
+  Banknote,
   ListChecks,
   Loader2,
   Phone,
@@ -32,8 +32,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useGetBranches } from "@/hooks/useBranches";
-import { useAssignOrdersToDeliveryman, useDeliveryman } from "@/hooks/useDeliverymen";
+import {
+  useAssignOrdersToDeliveryman,
+  useDeliveryman,
+} from "@/hooks/useDeliverymen";
 import { useOrders } from "@/hooks/useOrders";
 import { formatDateTime24 } from "@/lib/date-time-format";
 import type { Order } from "@/types/orders";
@@ -60,9 +64,11 @@ const ASSIGNABLE_STATUSES = [
 
 const KIND_OPTIONS = ["all", "order", "group-orders"];
 
-const getOrderDisplayId = (order: Order) => order.orderNumber || order.id.slice(0, 8);
+const getOrderDisplayId = (order: Order) =>
+  order.orderNumber || order.id.slice(0, 8);
 
-const getBranchId = (order: Order) => order.branchId || order.branch?.id || null;
+const getBranchId = (order: Order) =>
+  order.branchId || order.branch?.id || null;
 
 export default function AssignOrderModal({
   open,
@@ -72,12 +78,15 @@ export default function AssignOrderModal({
 }: AssignOrderModalProps) {
   const t = useTranslations("deliverymen");
   const { user, isBranchAdmin } = useAuth();
+  const { formatMoney } = useCurrency(user?.restaurantId);
   const [search, setSearch] = useState("");
   const [branchId, setBranchId] = useState("all");
   const [status, setStatus] = useState("READY_FOR_PICKUP");
   const [kind, setKind] = useState("all");
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
-  const [assignmentResults, setAssignmentResults] = useState<AssignmentResult[]>([]);
+  const [assignmentResults, setAssignmentResults] = useState<
+    AssignmentResult[]
+  >([]);
 
   const deliverymanBranchId =
     deliveryman?.branchId || deliveryman?.branch?.id || null;
@@ -128,14 +137,18 @@ export default function AssignOrderModal({
       return;
     }
 
-    setBranchId(deliverymanBranchId || (isBranchAdmin ? user?.branchId || "all" : "all"));
+    setBranchId(
+      deliverymanBranchId || (isBranchAdmin ? user?.branchId || "all" : "all"),
+    );
   }, [deliverymanBranchId, isBranchAdmin, open, user?.branchId]);
 
   const activeDeliveryOrders = useMemo(() => {
     const activeOrders = deliverymanDetail?.orders;
     if (!Array.isArray(activeOrders)) return [];
 
-    return activeOrders.filter((order: any) => order?.status === "OUT_FOR_DELIVERY");
+    return activeOrders.filter(
+      (order: any) => order?.status === "OUT_FOR_DELIVERY",
+    );
   }, [deliverymanDetail]);
 
   const driverCanReceiveOrders =
@@ -155,7 +168,10 @@ export default function AssignOrderModal({
   }, [orders]);
 
   const selectedOrders = useMemo(
-    () => filteredOrders.filter((order: Order) => selectedOrderIds.includes(order.id)),
+    () =>
+      filteredOrders.filter((order: Order) =>
+        selectedOrderIds.includes(order.id),
+      ),
     [filteredOrders, selectedOrderIds],
   );
 
@@ -169,7 +185,8 @@ export default function AssignOrderModal({
   };
 
   const assignableSelectedOrders = selectedOrders.filter(isBranchMatched);
-  const hasBlockedSelection = selectedOrders.length !== assignableSelectedOrders.length;
+  const hasBlockedSelection =
+    selectedOrders.length !== assignableSelectedOrders.length;
 
   const toggleOrder = (order: Order) => {
     if (!isBranchMatched(order) || isDriverBlocked) return;
@@ -183,7 +200,11 @@ export default function AssignOrderModal({
   };
 
   const handleAssign = async () => {
-    if (!deliveryman?.id || assignableSelectedOrders.length === 0 || isDriverBlocked) {
+    if (
+      !deliveryman?.id ||
+      assignableSelectedOrders.length === 0 ||
+      isDriverBlocked
+    ) {
       return;
     }
 
@@ -198,7 +219,9 @@ export default function AssignOrderModal({
       setSelectedOrderIds((current) =>
         current.filter(
           (orderId) =>
-            !results.some((result) => result.orderId === orderId && result.success),
+            !results.some(
+              (result) => result.orderId === orderId && result.success,
+            ),
         ),
       );
       onSuccess?.();
@@ -225,10 +248,26 @@ export default function AssignOrderModal({
             </DialogHeader>
 
             <div className="mt-4 grid min-w-0 gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur sm:grid-cols-2 xl:grid-cols-4">
-              <SummaryTile label={t("assignOrder.deliveryman")} value={deliveryman ? `${deliveryman.firstName || ""} ${deliveryman.lastName || ""}` : "-"} />
-              <SummaryTile label={t("assignOrder.phone")} value={deliveryman?.phone || "-"} />
-              <SummaryTile label={t("assignOrder.branch")} value={deliveryman?.branch?.name || t("noBranch")} />
-              <SummaryTile label={t("assignOrder.status")} value={deliveryman?.status || "-"} />
+              <SummaryTile
+                label={t("assignOrder.deliveryman")}
+                value={
+                  deliveryman
+                    ? `${deliveryman.firstName || ""} ${deliveryman.lastName || ""}`
+                    : "-"
+                }
+              />
+              <SummaryTile
+                label={t("assignOrder.phone")}
+                value={deliveryman?.phone || "-"}
+              />
+              <SummaryTile
+                label={t("assignOrder.branch")}
+                value={deliveryman?.branch?.name || t("noBranch")}
+              />
+              <SummaryTile
+                label={t("assignOrder.status")}
+                value={deliveryman?.status || "-"}
+              />
             </div>
           </div>
 
@@ -258,7 +297,9 @@ export default function AssignOrderModal({
                 </SelectTrigger>
                 <SelectContent>
                   {!isBranchAdmin && (
-                    <SelectItem value="all">{t("assignOrder.allBranches")}</SelectItem>
+                    <SelectItem value="all">
+                      {t("assignOrder.allBranches")}
+                    </SelectItem>
                   )}
                   {branches.map((branch: any) => (
                     <SelectItem key={branch.id} value={branch.id}>
@@ -314,7 +355,9 @@ export default function AssignOrderModal({
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
                   <div>
-                    <p className="font-semibold">{t("assignOrder.driverBlockedTitle")}</p>
+                    <p className="font-semibold">
+                      {t("assignOrder.driverBlockedTitle")}
+                    </p>
                     <p className="mt-1 text-xs leading-5">
                       {isBlockedByActiveDelivery
                         ? t("assignOrder.driverActiveDeliveryDescription")
@@ -387,11 +430,15 @@ export default function AssignOrderModal({
                                 </p>
                                 <p
                                   className={`mt-1 text-xs ${
-                                    isSelected ? "text-white/75" : "text-slate-500"
+                                    isSelected
+                                      ? "text-white/75"
+                                      : "text-slate-500"
                                   }`}
                                 >
                                   {order.createdAt
-                                    ? formatDateTime24({ value: order.createdAt })
+                                    ? formatDateTime24({
+                                        value: order.createdAt,
+                                      })
                                     : "-"}
                                 </p>
                               </div>
@@ -411,11 +458,40 @@ export default function AssignOrderModal({
                                 isSelected ? "text-white/90" : "text-slate-600"
                               }`}
                             >
-                              <CardLine icon={<Store size={14} />} label={t("assignOrder.branch")} value={order.branch?.name || t("noBranch")} selected={isSelected} />
-                              <CardLine icon={<ShoppingBag size={14} />} label={t("assignOrder.orderType")} value={order.orderType || "-"} selected={isSelected} />
-                              <CardLine icon={<CircleDollarSign size={14} />} label={t("assignOrder.totalAmount")} value={String(order.totalAmount ?? 0)} selected={isSelected} />
-                              <CardLine icon={<User size={14} />} label={t("assignOrder.customer")} value={order.customer?.fullName || order.customer?.name || "-"} selected={isSelected} />
-                              <CardLine icon={<Phone size={14} />} label={t("assignOrder.phone")} value={order.customer?.phone || "-"} selected={isSelected} />
+                              <CardLine
+                                icon={<Store size={14} />}
+                                label={t("assignOrder.branch")}
+                                value={order.branch?.name || t("noBranch")}
+                                selected={isSelected}
+                              />
+                              <CardLine
+                                icon={<ShoppingBag size={14} />}
+                                label={t("assignOrder.orderType")}
+                                value={order.orderType || "-"}
+                                selected={isSelected}
+                              />
+                              <CardLine
+                                icon={<Banknote size={14} />}
+                                label={t("assignOrder.totalAmount")}
+                                value={formatMoney(order.totalAmount)}
+                                selected={isSelected}
+                              />
+                              <CardLine
+                                icon={<User size={14} />}
+                                label={t("assignOrder.customer")}
+                                value={
+                                  order.customer?.fullName ||
+                                  order.customer?.name ||
+                                  "-"
+                                }
+                                selected={isSelected}
+                              />
+                              <CardLine
+                                icon={<Phone size={14} />}
+                                label={t("assignOrder.phone")}
+                                value={order.customer?.phone || "-"}
+                                selected={isSelected}
+                              />
                             </div>
 
                             {!isMatched && (
@@ -455,9 +531,23 @@ export default function AssignOrderModal({
                   </div>
 
                   <div className="mt-5 grid gap-3">
-                    <InfoTile label={t("assignOrder.deliverymanBranch")} value={deliveryman?.branch?.name || t("noBranch")} />
-                    <InfoTile label={t("assignOrder.selectedOrders")} value={String(assignableSelectedOrders.length)} />
-                    <InfoTile label={t("assignOrder.matchStatus")} value={hasBlockedSelection ? t("assignOrder.branchMismatch") : t("assignOrder.branchMatched")} tone={hasBlockedSelection ? "warning" : "success"} />
+                    <InfoTile
+                      label={t("assignOrder.deliverymanBranch")}
+                      value={deliveryman?.branch?.name || t("noBranch")}
+                    />
+                    <InfoTile
+                      label={t("assignOrder.selectedOrders")}
+                      value={String(assignableSelectedOrders.length)}
+                    />
+                    <InfoTile
+                      label={t("assignOrder.matchStatus")}
+                      value={
+                        hasBlockedSelection
+                          ? t("assignOrder.branchMismatch")
+                          : t("assignOrder.branchMatched")
+                      }
+                      tone={hasBlockedSelection ? "warning" : "success"}
+                    />
                   </div>
 
                   {assignableSelectedOrders.length > 0 && !isDriverBlocked && (
@@ -531,7 +621,8 @@ export default function AssignOrderModal({
                             {result.orderId.slice(0, 8)} ·{" "}
                             {result.success
                               ? t("assignOrder.assigned")
-                              : result.message || t("messages.failedAssignOrder")}
+                              : result.message ||
+                                t("messages.failedAssignOrder")}
                           </span>
                         </div>
                       ))}
@@ -568,7 +659,9 @@ function CardLine({
   selected: boolean;
 }) {
   return (
-    <div className={`rounded-xl p-2.5 ${selected ? "bg-white/10" : "bg-slate-50"}`}>
+    <div
+      className={`rounded-xl p-2.5 ${selected ? "bg-white/10" : "bg-slate-50"}`}
+    >
       <div className="flex items-center gap-2 text-xs font-medium">
         {icon}
         <span>{label}</span>

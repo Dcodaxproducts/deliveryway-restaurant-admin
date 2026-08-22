@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, UserPlus, DollarSign, Bell } from "lucide-react";
+import { Banknote, Bell, CheckCircle, UserPlus } from "lucide-react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import {
@@ -91,7 +91,7 @@ export default function Notifications({ notifications, loading }: Props) {
       case "reservation":
         return <UserPlus size={18} />;
       case "payout":
-        return <DollarSign size={18} />;
+        return <Banknote size={18} />;
       case "order":
         return <CheckCircle size={18} />;
       default:
