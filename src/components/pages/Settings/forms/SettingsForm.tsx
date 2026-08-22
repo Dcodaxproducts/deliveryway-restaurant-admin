@@ -58,7 +58,6 @@ const defaultValues: SettingsFormValues = {
 
 const sidebarItems = [
   { label: "Tax Settings", className: "" },
-  { label: "Commission Settings", className: "absolute top-88" },
   { label: "Currency Settings", className: "absolute top-143" },
   { label: "Localization Settings", className: "absolute bottom-143" },
   { label: "Branding (Quick Setup)", className: "absolute bottom-70" },
@@ -219,23 +218,6 @@ export default function SettingsForm({
               ))}
             </RadioGroup>
           </div>
-        </section>
-
-        <section className="space-y-[24px]">
-          <FormGroup
-            id="default-commission-percentage"
-            label="Default Commission (%)"
-            placeholder="Add Percentage"
-            prefix="%"
-            registration={register("defaultCommissionPercentage")}
-          />
-          <FormGroup
-            id="default-hybrid-fee-percentage"
-            label="Default Hybrid Fee (%)"
-            placeholder="Add Percentage"
-            prefix="%"
-            registration={register("defaultHybridFeePercentage")}
-          />
         </section>
 
         <section className="space-y-[24px]">
@@ -480,6 +462,23 @@ function RestaurantWalletPayoutSection({
             currently available for payout. Wallet deductions happen only
             after Super Admin marks a payout as paid.
           </p>
+          {walletQuery.data?.activePlan ? (
+            <p className="rounded-[10px] bg-primary/5 px-3 py-2 text-sm text-dark">
+              Active plan: <strong>{walletQuery.data.activePlan.name}</strong>
+              {walletQuery.data.activePlan.commissionType === "FIXED"
+                ? ` · ${formatCurrency(
+                    walletQuery.data.activePlan.commissionFixedAmount ?? 0,
+                    walletCurrency,
+                  )} commission per online order`
+                : ` · ${walletQuery.data.activePlan.commissionPercentage ?? 0}% commission on online payments`}
+              {walletQuery.data.activePlan.commissionCapAmount !== null
+                ? ` · capped at ${formatCurrency(
+                    walletQuery.data.activePlan.commissionCapAmount,
+                    walletCurrency,
+                  )}`
+                : ""}
+            </p>
+          ) : null}
         </div>
         <Button
           type="button"
