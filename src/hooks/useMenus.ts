@@ -73,6 +73,8 @@ export const useGetMenuItems = (params?: MenuItemsListParams) => {
       params?.page,
       params?.limit,
       params?.search,
+      params?.sortBy,
+      params?.sortOrder,
       params?.restaurantId,
       params?.branchId,
       params?.categoryId,

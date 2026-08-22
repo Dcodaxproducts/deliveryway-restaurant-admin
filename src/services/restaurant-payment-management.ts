@@ -43,6 +43,17 @@ export type RestaurantWallet = {
   availablePayoutBalance: number | null;
   currency: string | null;
   customerWalletExposure: RecordValue;
+  activePlan: {
+    subscriptionId: string | null;
+    id: string | null;
+    name: string | null;
+    billingModel: string | null;
+    commissionType: string | null;
+    commissionPercentage: number | null;
+    commissionFixedAmount: number | null;
+    commissionCapAmount: number | null;
+    payoutCycle: string | null;
+  } | null;
 };
 
 export type RestaurantPayoutRequestStatus =
@@ -176,6 +187,7 @@ const normalizeLedgerEntry = (
 const normalizeWallet = (response: unknown): RestaurantWallet => {
   const data = getRecord(unwrapData(response));
   const wallet = firstRecord(data.wallet, data.account, data);
+  const activePlan = getRecord(wallet.activePlan);
 
   return {
     type: getString(wallet.type, "RESTAURANT_WALLET"),
@@ -193,6 +205,23 @@ const normalizeWallet = (response: unknown): RestaurantWallet => {
       wallet.customerWalletExposure,
       data.customerWalletExposure,
     ),
+    activePlan: Object.keys(activePlan).length
+      ? {
+          subscriptionId: getString(activePlan.subscriptionId),
+          id: getString(activePlan.id),
+          name: getString(activePlan.name),
+          billingModel: getString(activePlan.billingModel),
+          commissionType: getString(activePlan.commissionType),
+          commissionPercentage: getNumber(activePlan.commissionPercentage),
+          commissionFixedAmount: getNumber(activePlan.commissionFixedAmount),
+          commissionCapAmount:
+            activePlan.commissionCapAmount === null ||
+            activePlan.commissionCapAmount === undefined
+              ? null
+              : getNumber(activePlan.commissionCapAmount),
+          payoutCycle: getString(activePlan.payoutCycle),
+        }
+      : null,
   };
 };
 

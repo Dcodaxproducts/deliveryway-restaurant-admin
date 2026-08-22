@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import CreateMenuItemModal from "@/components/pages/Menu/legacy/root-menu-components/CreateMenuItemModal/CreateMenuItemModal";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { useIsMobile } from "@/hooks/use-mobile";
 import InfiniteScrollFooter from "@/components/common/infinite-scroll-footer";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { formatMoney } from "@/lib/currency";
@@ -174,6 +175,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
     price: "",
     reason: "",
   });
+  const isMobile = useIsMobile();
 
   const canFetchItems = Boolean(restaurantId);
 
@@ -381,12 +383,13 @@ export default function MenuItemsTable({ refetchKey }: any) {
   }, [hasMore, isFetching, isLoading, pagination.totalPages]);
 
   const desktopLoadMoreRef = useInfiniteScroll<HTMLDivElement>({
-    enabled: canFetchItems && hasMore && !isFetching && !isLoading,
+    enabled:
+      !isMobile && canFetchItems && hasMore && !isFetching && !isLoading,
     onLoadMore: handleLoadMore,
   });
 
   const mobileLoadMoreRef = useInfiniteScroll<HTMLDivElement>({
-    enabled: canFetchItems && hasMore && !isFetching && !isLoading,
+    enabled: isMobile && canFetchItems && hasMore && !isFetching && !isLoading,
     onLoadMore: handleLoadMore,
   });
 
