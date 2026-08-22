@@ -153,8 +153,14 @@ export const compareWinOrderCatalog = (
     else missingNames.push(name);
   }
   const duplicateNames = [...winOrderCounts.entries()]
-    .filter(([, count]) => count > 1)
-    .map(([normalized]) => localByNormalizedName.get(normalized) ?? normalized);
+    .filter(
+      ([normalized, count]) =>
+        count > 1 && localByNormalizedName.has(normalized),
+    )
+    .flatMap(([normalized]) => {
+      const name = localByNormalizedName.get(normalized);
+      return name ? [name] : [];
+    });
 
   return {
     matchedNames: matchedNames.sort((left, right) => left.localeCompare(right)),

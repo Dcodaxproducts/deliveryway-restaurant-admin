@@ -50,6 +50,8 @@ describe("compareWinOrderCatalog", () => {
         { name: "pizza", articleNo: "P1" },
         { name: "Extra Käse", articleNo: "E1" },
         { name: "Extra Käse", articleNo: "E2" },
+        { name: "Unrelated", articleNo: "U1" },
+        { name: "Unrelated", articleNo: "U2" },
       ],
     );
 
