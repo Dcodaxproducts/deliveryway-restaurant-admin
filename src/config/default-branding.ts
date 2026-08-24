@@ -2,17 +2,17 @@ import type { RestaurantBrandingPayload } from "@/types/branding";
 
 export const DEFAULT_RESTAURANT_BRANDING_PAYLOAD: RestaurantBrandingPayload = {
   restaurant: {
-    name: "Deliveryway Restaurant",
-    slug: "deliveryway-restaurant",
-    subdomain: "deliveryway-restaurant",
+    name: "FeastFlow Restaurant",
+    slug: "feastflow-restaurant",
+    subdomain: "feastflow-restaurant",
     customDomain: "",
     customDomainVerifiedAt: null,
     logoUrl: "",
     coverImage: "",
     tagline: "Fast, reliable restaurant delivery",
-    bio: "Manage your restaurant storefront, menu, orders, and customer experience from Deliveryway.",
+    bio: "Manage your restaurant storefront, menu, orders, and customer experience from FeastFlow.",
     supportContact: {
-      email: "support@deliveryway.com",
+      email: "support@feastflow.co",
       phone: "",
       whatsapp: "",
       address: "",

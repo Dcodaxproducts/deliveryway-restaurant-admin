@@ -112,7 +112,7 @@ describe("order details utils", () => {
       getOrderAddressPreview(
         {
           orderType: "DINE_IN",
-          branch: { name: "American Corner" },
+          branch: { name: "Sample Bistro" },
         },
         {
           addressPending: "Address pending",
@@ -123,8 +123,8 @@ describe("order details utils", () => {
       )
     ).toEqual({
       primary: "Dine in",
-      secondary: "American Corner",
-      full: "American Corner",
+      secondary: "Sample Bistro",
+      full: "Sample Bistro",
     });
   });
 });

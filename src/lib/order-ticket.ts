@@ -266,7 +266,7 @@ export const buildOrderTicketHtml = (
     `<div style="box-sizing:border-box;width:${getTicketWidth(paperSize)};padding-right:4mm;font-family:Arial,sans-serif;font-size:${fontSize};color:#000;overflow-wrap:anywhere;word-break:break-word">`,
     fulfillmentBanner,
     '<div style="text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px">',
-    '<div style="font-size:1.4em;font-weight:700">DeliveryWays</div>',
+    '<div style="font-size:1.4em;font-weight:700">FeastFlow</div>',
     `<div>Order / Bestellung ${escapeHtml(orderLabel)}</div>`,
     "</div>",
     ticket.orderType
@@ -360,7 +360,7 @@ export const buildOrderTicketEscPos = (
     `${ESC}t\x13`,
     `${ESC}a\x01`,
     `${GS}!\x11`,
-    "DeliveryWays\n",
+    "FeastFlow\n",
     `${GS}!\x00`,
     `Order / Bestellung ${orderLabel}\n`,
     `${ESC}a\x00`,

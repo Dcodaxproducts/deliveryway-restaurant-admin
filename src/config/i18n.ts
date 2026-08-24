@@ -4,7 +4,7 @@ export type AppLocale = (typeof SUPPORTED_LOCALES)[number];
 
 export const DEFAULT_LOCALE: AppLocale = "de";
 
-export const LOCALE_STORAGE_KEY = "deliveryway-admin-locale";
+export const LOCALE_STORAGE_KEY = "feastflow-admin-locale";
 
 export const LANGUAGE_LABELS: Record<AppLocale, string> = {
   en: "English",

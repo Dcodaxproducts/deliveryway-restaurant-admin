@@ -13,7 +13,7 @@ const getInitials = (name: string) =>
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("") || "DW";
+    .join("") || "FF";
 
 const getButtonRadius = (buttonStyle: string, borderRadius: string) => {
   if (buttonStyle === "pill") {

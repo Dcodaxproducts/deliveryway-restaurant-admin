@@ -204,7 +204,7 @@ describe("pos checkout payload", () => {
     expect(
       normalizePosCustomer({
         id: "guest-1",
-        email: "pos-guest-123@deliveryways.local",
+        email: "pos-guest-123@feastflow.local",
         isGuest: true,
         profile: { firstName: "Walk-in", lastName: "Customer" },
       })?.email,

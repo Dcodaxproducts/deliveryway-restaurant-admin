@@ -15,7 +15,7 @@ type PosCustomerOption = {
   } | null;
 };
 
-export const POS_CART_UPDATED_EVENT = "deliveryways:pos-cart-updated";
+export const POS_CART_UPDATED_EVENT = "feastflow:pos-cart-updated";
 
 export const buildPosCustomerSearchParams = ({
   restaurantId,

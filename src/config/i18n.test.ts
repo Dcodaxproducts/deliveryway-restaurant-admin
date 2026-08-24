@@ -28,7 +28,7 @@ describe("i18n config", () => {
   });
 
   it("uses the shared locale storage key", () => {
-    expect(LOCALE_STORAGE_KEY).toBe("deliveryway-admin-locale");
+    expect(LOCALE_STORAGE_KEY).toBe("feastflow-admin-locale");
   });
 
   it("uses the persisted admin locale for API requests", () => {

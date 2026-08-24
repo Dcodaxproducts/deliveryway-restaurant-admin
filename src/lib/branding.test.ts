@@ -17,16 +17,16 @@ describe("branding helpers", () => {
   it("builds environment-aware generated storefront URLs", () => {
     expect(
       buildGeneratedStorefrontUrl(
-        "american-corner",
-        "https://api.dev.delivery-way.de/api/v1",
+        "sample-bistro",
+        "https://api.staging.platform.feastflow.co/api/v1",
       ),
-    ).toBe("https://american-corner.dev.delivery-way.de");
+    ).toBe("https://sample-bistro.staging.platform.feastflow.co");
     expect(
       buildGeneratedStorefrontUrl(
-        "american-corner",
-        "https://api.delivery-way.de/api/v1",
+        "sample-bistro",
+        "https://api.platform.feastflow.co/api/v1",
       ),
-    ).toBe("https://american-corner.delivery-way.de");
+    ).toBe("https://sample-bistro.platform.feastflow.co");
   });
 
   it("normalizes partial payload over defaults", () => {

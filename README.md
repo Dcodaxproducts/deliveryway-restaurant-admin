@@ -1,4 +1,4 @@
-# DeliveryWay Restaurant Admin
+# FeastFlow Restaurant Admin
 
 Production-ready Next.js admin dashboard for restaurant, branch, menu, order, POS, promotion, report, loyalty, and settings management.
 

@@ -23,7 +23,7 @@ const getInitials = (name: string) =>
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("") || "DW";
+    .join("") || "FF";
 
 const normalizeLogoUrl = (value?: string | null) => value?.trim() || "";
 
@@ -48,7 +48,7 @@ export default function BrandLogo({
     }
 
     const themedLogo = currentTheme === "dark" ? restaurant.branding.logo.dark : restaurant.branding.logo.light;
-    return normalizeLogoUrl(themedLogo) || normalizeLogoUrl(restaurant.logoUrl) || normalizeLogoUrl(restaurant.branding.assets.logoUrl) || "/deliveryway-logo.jpg";
+    return normalizeLogoUrl(themedLogo) || normalizeLogoUrl(restaurant.logoUrl) || normalizeLogoUrl(restaurant.branding.assets.logoUrl) || "/feastflow-logo.png";
   }, [currentTheme, logoUrl, restaurant.branding.assets.logoUrl, restaurant.branding.logo.dark, restaurant.branding.logo.light, restaurant.logoUrl]);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export default function BrandLogo({
   }, [logoSrc]);
 
   const showFallback = !logoSrc || failedSrc === logoSrc;
-  const restaurantName = name?.trim() || restaurant.name || "Deliveryway";
+  const restaurantName = name?.trim() || restaurant.name || "FeastFlow";
 
   return (
     <div className={cn("flex min-w-0 items-center gap-3", className)}>

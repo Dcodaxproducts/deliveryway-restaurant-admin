@@ -94,7 +94,7 @@ const getString = (value: unknown) => {
 const getPublicCustomerEmail = (value: unknown) => {
   const email = getString(value);
 
-  return email.toLowerCase().endsWith("@deliveryways.local") ? "" : email;
+  return email.toLowerCase().endsWith("@feastflow.local") ? "" : email;
 };
 
 export const getPosAvailablePaymentMethods = (

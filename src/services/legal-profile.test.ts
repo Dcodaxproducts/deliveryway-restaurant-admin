@@ -28,7 +28,7 @@ describe("legal profile service", () => {
         data: {
           restaurantId: "restaurant-1",
           legalProfile: {
-            legalBusinessName: "DeliveryWays Kitchen LLC",
+            legalBusinessName: "FeastFlow Kitchen LLC",
             taxNumber: "VAT-123",
             businessAddress: {
               street: "Street 12",
@@ -43,7 +43,7 @@ describe("legal profile service", () => {
       })
     ).toEqual({
       restaurantId: "restaurant-1",
-      legalBusinessName: "DeliveryWays Kitchen LLC",
+      legalBusinessName: "FeastFlow Kitchen LLC",
       taxNumber: "VAT-123",
       businessAddress: {
         street: "Street 12",
@@ -68,7 +68,7 @@ describe("legal profile service", () => {
 
   it("patches legal profile payload", async () => {
     const payload = {
-      legalBusinessName: "DeliveryWays Kitchen LLC",
+      legalBusinessName: "FeastFlow Kitchen LLC",
       taxNumber: "VAT-123",
       businessAddress: {
         street: "Street 12",

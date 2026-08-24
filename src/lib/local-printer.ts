@@ -95,7 +95,7 @@ export const printLocalTestTicket = async (
   const qz = await connectToQzTray();
   const config = qz.configs.create(
     selectedPrinter,
-    createPrintOptions(paperSize, "DeliveryWays printer test", printMode),
+    createPrintOptions(paperSize, "FeastFlow printer test", printMode),
   );
 
   if (printMode === "ESC_POS") {
@@ -110,7 +110,7 @@ export const printLocalTestTicket = async (
           "\x1bt\x13",
           "\x1ba\x01",
           "\x1d!\x11",
-          "DeliveryWays\n",
+          "FeastFlow\n",
           "\x1d!\x00",
           "ESC/POS printer test successful.\n",
           `${new Date().toLocaleString()}\n\n\n\n`,
@@ -127,7 +127,7 @@ export const printLocalTestTicket = async (
       flavor: "plain",
       data: [
         "<div style='font-family: sans-serif; padding: 16px'>",
-        "<h2>DeliveryWays</h2>",
+        "<h2>FeastFlow</h2>",
         "<p>Printer connection test successful.</p>",
         `<p>${new Date().toLocaleString()}</p>`,
         "</div>",
@@ -157,7 +157,7 @@ export const printLocalOrderTicket = async ({
     selectedPrinter,
     createPrintOptions(
       paperSize,
-      `DeliveryWays order ${ticket.orderNumber ?? ticket.id}`,
+      `FeastFlow order ${ticket.orderNumber ?? ticket.id}`,
       printMode,
     ),
   );

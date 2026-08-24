@@ -16,7 +16,7 @@ describe("auth route helpers", () => {
   });
 
   it("resolves same-origin absolute URLs to internal paths", () => {
-    expect(getSafeRedirectPath("https://deliveryways.local/reports?tab=sales#daily")).toBe(
+    expect(getSafeRedirectPath("https://feastflow.local/reports?tab=sales#daily")).toBe(
       "/reports?tab=sales#daily"
     );
   });

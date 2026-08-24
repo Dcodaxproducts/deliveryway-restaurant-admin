@@ -88,7 +88,7 @@ describe("local printer bridge", () => {
 
     expect(qzMocks.connect).toHaveBeenCalledTimes(1);
     expect(qzMocks.create).toHaveBeenCalledWith("Kitchen USB", {
-      jobName: "DeliveryWays printer test",
+      jobName: "FeastFlow printer test",
       units: "mm",
       size: { width: 58 },
       margins: 4,
@@ -115,7 +115,7 @@ describe("local printer bridge", () => {
     expect(qzMocks.create).toHaveBeenCalledWith(
       "Kitchen USB",
       expect.objectContaining({
-        jobName: "DeliveryWays order 42",
+        jobName: "FeastFlow order 42",
         units: "mm",
         size,
         margins,
@@ -142,7 +142,7 @@ describe("local printer bridge", () => {
     });
 
     expect(qzMocks.create).toHaveBeenCalledWith("Generic / Text Only", {
-      jobName: "DeliveryWays order 42",
+      jobName: "FeastFlow order 42",
       encoding: "CP858",
     });
     expect(qzMocks.print).toHaveBeenCalledWith(

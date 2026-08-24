@@ -17,9 +17,9 @@ export const metadata: Metadata = {
   },
   applicationName: "Restaurant Admin",
   icons: {
-    icon: "/deliveryway-logo.jpg",
-    shortcut: "/deliveryway-logo.jpg",
-    apple: "/deliveryway-logo.jpg",
+    icon: "/feastflow-logo.png",
+    shortcut: "/feastflow-logo.png",
+    apple: "/feastflow-logo.png",
   },
   other: {
     google: "notranslate",

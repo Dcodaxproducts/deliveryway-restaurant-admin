@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/constants", () => ({
-  API_BASE_URL: "https://api.delivery-way.de/api/v1",
+  API_BASE_URL: "https://api.platform.feastflow.co/api/v1",
 }));
 
 import {
@@ -25,7 +25,7 @@ import {
 describe("getOrderTrackingSocketUrl", () => {
   it("builds the Socket.IO namespace URL from the API origin", () => {
     expect(getOrderTrackingSocketUrl()).toBe(
-      "https://api.delivery-way.de/orders-tracking",
+      "https://api.platform.feastflow.co/orders-tracking",
     );
   });
 });
@@ -130,7 +130,7 @@ describe("silenceOrderAlert", () => {
 
     expect(dispatchEvent).toHaveBeenCalledWith(
       expect.objectContaining({
-        type: "deliveryways:order-alert-dismiss",
+        type: "feastflow:order-alert-dismiss",
         detail: { orderId: "order-1" },
       }),
     );

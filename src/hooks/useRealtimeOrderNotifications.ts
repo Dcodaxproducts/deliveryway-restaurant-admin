@@ -36,15 +36,15 @@ type HandleOrderCreatedOptions = {
   autoOpen?: boolean;
 };
 
-export const ORDER_SOUND_STORAGE_KEY = "deliveryways.orderSound.enabled";
-export const ORDER_SOUND_MODE_STORAGE_KEY = "deliveryways.orderSound.mode";
-export const ORDER_SOUND_SETTING_EVENT = "deliveryways:order-sound-setting";
+export const ORDER_SOUND_STORAGE_KEY = "feastflow.orderSound.enabled";
+export const ORDER_SOUND_MODE_STORAGE_KEY = "feastflow.orderSound.mode";
+export const ORDER_SOUND_SETTING_EVENT = "feastflow:order-sound-setting";
 export type OrderSoundMode = "ONCE" | "REPEAT";
 export const getOrderSoundMode = (): OrderSoundMode =>
   window.localStorage.getItem(ORDER_SOUND_MODE_STORAGE_KEY) === "ONCE"
     ? "ONCE"
     : "REPEAT";
-export const ORDER_ALERT_DISMISS_EVENT = "deliveryways:order-alert-dismiss";
+export const ORDER_ALERT_DISMISS_EVENT = "feastflow:order-alert-dismiss";
 export const silenceOrderAlert = (orderId: string) => {
   if (typeof window === "undefined" || !orderId.trim()) return;
 

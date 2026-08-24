@@ -214,7 +214,7 @@ type AboutPageDraft = {
   whyChooseUs: AboutCardField[];
 };
 
-const aboutPageMarkerPrefix = "deliveryway-about-page:";
+const aboutPageMarkerPrefix = "feastflow-about-page:";
 
 const defaultAboutPageDraft: AboutPageDraft = {
   hero: {
@@ -266,7 +266,7 @@ const encodeAboutDraft = (draft: AboutPageDraft) =>
   encodeURIComponent(JSON.stringify(draft));
 
 const decodeAboutDraft = (value: string): AboutPageDraft | undefined => {
-  const match = value.match(/<!--\s*deliveryway-about-page:([^]+?)\s*-->/);
+  const match = value.match(/<!--\s*feastflow-about-page:([^]+?)\s*-->/);
   if (!match?.[1]) return undefined;
 
   try {

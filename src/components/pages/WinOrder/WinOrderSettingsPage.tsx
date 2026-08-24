@@ -87,9 +87,9 @@ const defaultPaymentLabels: Partial<
   Record<WinOrderPaymentMethod, string>
 > = {
   COD: "Barzahlung",
-  STRIPE: "Über DeliveryWay online bezahlt",
-  PAYPAL: "Über DeliveryWay online bezahlt",
-  WALLET: "Über DeliveryWay online bezahlt",
+  STRIPE: "Über FeastFlow online bezahlt",
+  PAYPAL: "Über FeastFlow online bezahlt",
+  WALLET: "Über FeastFlow online bezahlt",
 };
 
 const readBranches = (response: unknown): BranchOption[] => {

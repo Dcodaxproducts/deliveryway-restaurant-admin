@@ -73,7 +73,7 @@ import {
 } from "@/lib/accepted-order-printing";
 
 const POS_LAST_SELECTION_STORAGE_KEY = "posAddToCartLastSelection";
-const POS_LAST_ORDER_STORAGE_KEY = "deliveryways:pos-last-order";
+const POS_LAST_ORDER_STORAGE_KEY = "feastflow:pos-last-order";
 type UnknownRecord = Record<string, unknown>;
 
 type PosCustomerAddress = {

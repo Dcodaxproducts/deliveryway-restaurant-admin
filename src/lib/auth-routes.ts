@@ -1,4 +1,4 @@
-const FALLBACK_APP_ORIGIN = "https://deliveryways.local";
+const FALLBACK_APP_ORIGIN = "https://feastflow.local";
 const LOGIN_PATH = "/login";
 const DEFAULT_REDIRECT_PATH = "/";
 const MAX_REDIRECT_UNWRAP_DEPTH = 5;
