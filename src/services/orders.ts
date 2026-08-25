@@ -18,6 +18,7 @@ export interface GetOrdersParams {
   sortOrder?: string;
   kind?: string;
   excludeStatus?: string;
+  successfulOnly?: boolean;
   createdFrom?: string;
   createdTo?: string;
   orderTimeFrom?: string;
@@ -228,6 +229,7 @@ export const getOrders = async (
       ...(params.excludeStatus
         ? { excludeStatus: params.excludeStatus }
         : {}),
+      ...(params.successfulOnly ? { successfulOnly: true } : {}),
       ...(params.createdFrom ? { createdFrom: params.createdFrom } : {}),
       ...(params.createdTo ? { createdTo: params.createdTo } : {}),
       ...(params.orderTimeFrom

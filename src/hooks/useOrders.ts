@@ -34,6 +34,7 @@ interface UseOrdersParams {
   branchId?: string;
   enabled?: boolean;
   excludeStatus?: string;
+  successfulOnly?: boolean;
   createdFrom?: string;
   createdTo?: string;
   orderTimeFrom?: string;
@@ -72,6 +73,7 @@ export function useOrders(params?: UseOrdersParams) {
       params?.sortOrder,
       params?.kind,
       params?.excludeStatus,
+      params?.successfulOnly,
       params?.createdFrom,
       params?.createdTo,
       params?.orderTimeFrom,
@@ -90,6 +92,7 @@ export function useOrders(params?: UseOrdersParams) {
         sortOrder: params?.sortOrder,
         kind: params?.kind,
         excludeStatus: params?.excludeStatus,
+        successfulOnly: params?.successfulOnly,
         createdFrom: params?.createdFrom,
         createdTo: params?.createdTo,
         orderTimeFrom: params?.orderTimeFrom,
