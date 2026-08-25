@@ -32,6 +32,7 @@ import { useTranslations } from "next-intl";
 interface Customer {
   id: string;
   email?: string;
+  isGuest?: boolean;
   isActive?: boolean;
   createdAt?: string;
   profile?: {
@@ -149,6 +150,9 @@ const CustomerTable = ({
 
               <SortableHeader label={t("table.serial")} />
               <SortableHeader label={t("table.customerName")} />
+              <TableHead className="px-4 font-semibold">
+                {t("table.customerType")}
+              </TableHead>
               <SortableHeader label={t("table.customerInfo")} />
 
               <TableHead className="text-center px-4 font-semibold">
@@ -182,6 +186,18 @@ const CustomerTable = ({
                   </TableCell>
 
                   <TableCell className="px-4">{fullName || "-"}</TableCell>
+
+                  <TableCell className="px-4">
+                    <span
+                      className={
+                        c.isGuest
+                          ? "inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700"
+                          : "inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
+                      }
+                    >
+                      {t(c.isGuest ? "table.guest" : "table.registered")}
+                    </span>
+                  </TableCell>
 
                   <TableCell className="px-4">
                     <div>
@@ -276,6 +292,15 @@ const CustomerTable = ({
                 <div className="flex items-center gap-2">
                   <Checkbox />
                   <p className="font-medium">{fullName}</p>
+                  <span
+                    className={
+                      c.isGuest
+                        ? "rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700"
+                        : "rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700"
+                    }
+                  >
+                    {t(c.isGuest ? "table.guest" : "table.registered")}
+                  </span>
                 </div>
 
                 <Switch

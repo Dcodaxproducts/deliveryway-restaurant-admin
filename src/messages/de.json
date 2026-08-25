@@ -569,14 +569,14 @@
     "printLabel": "Label drucken",
     "payment": "Zahlung",
     "paymentMethods": {
-      "COD": "Barzahlung",
+      "COD": "BAR",
       "CARD_ON_DELIVERY": "Kartenzahlung bei Lieferung",
-      "STRIPE": "Stripe-Onlinezahlung",
-      "PAYPAL": "PayPal",
+      "STRIPE": "Online bezahlt",
+      "PAYPAL": "Online bezahlt",
       "EASYPAISA": "Easypaisa",
       "JAZZCASH": "JazzCash",
       "BANK_TRANSFER": "Banküberweisung",
-      "WALLET": "Kunden-Wallet"
+      "WALLET": "Online bezahlt"
     },
     "refundPayment": "Zahlung erstatten",
     "refundingPayment": "Erstattung läuft...",
@@ -1729,6 +1729,9 @@
     "table": {
       "serial": "Nr.",
       "customerName": "Kundenname",
+      "customerType": "Kundentyp",
+      "guest": "Gast",
+      "registered": "Registriert",
       "customerInfo": "Kundeninfo",
       "totalOrder": "Bestellungen insgesamt",
       "joiningDate": "Beitrittsdatum",
@@ -2968,17 +2971,17 @@
     "locationUnavailable": "Standort ist in diesem Browser nicht verfuegbar",
     "locationPermissionDenied": "Standortberechtigung wurde abgelehnt",
     "paymentMethod": "Zahlungsmethode",
-    "paymentCash": "Bar",
-    "paymentCardOnDelivery": "Karte bei Lieferung",
+    "paymentCash": "BAR",
+    "paymentCardOnDelivery": "Kartenzahlung bei Lieferung",
     "paymentMethods": {
-      "COD": "Bar",
-      "CARD_ON_DELIVERY": "Karte bei Lieferung",
-      "STRIPE": "Stripe",
-      "PAYPAL": "PayPal",
+      "COD": "BAR",
+      "CARD_ON_DELIVERY": "Kartenzahlung bei Lieferung",
+      "STRIPE": "Online bezahlt",
+      "PAYPAL": "Online bezahlt",
       "EASYPAISA": "EasyPaisa",
       "JAZZCASH": "JazzCash",
       "BANK_TRANSFER": "Bankueberweisung",
-      "WALLET": "Wallet"
+      "WALLET": "Online bezahlt"
     },
     "walletAmount": "Wallet-Betrag",
     "scheduledOrderTime": "Geplante Zeit",

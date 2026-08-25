@@ -206,6 +206,28 @@ describe("auth helpers", () => {
     expect(getStaffDefaultRedirectPath(user)).toBe("/branches");
   });
 
+  it("uses restaurant and branch scope assigned directly on the staff role", () => {
+    const user = normalizeUser({
+      id: "restaurant-staff",
+      email: "restaurant-staff@example.com",
+      role: "STAFF",
+      actorType: "STAFF",
+      restaurantId: null,
+      branchId: null,
+      restaurantAccess: { restaurantIds: [], branchIds: [] },
+      staffRole: {
+        restaurantId: "restaurant-1",
+        branchId: "branch-1",
+        permissions: [
+          { access: "order-management", operations: ["read"] },
+        ],
+      },
+    });
+
+    expect(user?.restaurantId).toBe("restaurant-1");
+    expect(user?.branchId).toBe("branch-1");
+  });
+
   it("allows business-admin staff panel access with tenant scoped role", () => {
     const user = normalizeUser({
       id: "business-staff",

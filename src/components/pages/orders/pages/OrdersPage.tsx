@@ -73,8 +73,7 @@ export function OrdersPage() {
 
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  const { user, branchId, isBranchAdmin } = useAuth();
-  const restaurantId = user?.restaurantId;
+  const { restaurantId, branchId, isBranchAdmin } = useAuth();
   const scopedBranchId = isBranchAdmin ? branchId || undefined : undefined;
   const { currency } = useCurrency(restaurantId);
 

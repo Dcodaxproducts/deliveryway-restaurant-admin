@@ -504,7 +504,7 @@ export const normalizeUser = (
     fallback?.restaurantId ??
     null;
 
-  const branchId =
+  let branchId =
     getStringValue(source, "branchId") ??
     getStringValue(source, "branch_id") ??
     getStringValue(source, "bid") ??
@@ -537,6 +537,26 @@ export const normalizeUser = (
     staffRestaurantIds.length === 1
   ) {
     restaurantId = staffRestaurantIds[0];
+  }
+
+  if (
+    !restaurantId &&
+    isStaffRole(
+      getRoleValue(source, fallback),
+      getStringValue(source, "actorType"),
+    )
+  ) {
+    restaurantId = staffRole?.restaurantId ?? null;
+  }
+
+  if (
+    !branchId &&
+    isStaffRole(
+      getRoleValue(source, fallback),
+      getStringValue(source, "actorType"),
+    )
+  ) {
+    branchId = staffRole?.branchId ?? null;
   }
 
   return {
