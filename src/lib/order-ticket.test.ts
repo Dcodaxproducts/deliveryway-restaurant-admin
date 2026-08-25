@@ -53,7 +53,7 @@ describe("order ticket", () => {
         country: "DE",
       },
       customerNote: "Ring the bell",
-      paymentMethod: "CASH_ON_DELIVERY",
+      paymentMethod: "COD",
       subtotal: 20,
       taxAmount: 1.4,
       deliveryFee: 2.5,
@@ -86,11 +86,12 @@ describe("order ticket", () => {
     expect(html).toContain("Special instructions: No onions");
     expect(html).toContain("Delivery fee:");
     expect(html).toContain("Service charge:");
-    expect(html).toContain("Payment method:</strong> CASH_ON_DELIVERY");
+    expect(html).toContain("Payment method:</strong> BAR");
     expect(html).toContain("Ring the bell");
     expect(html).toContain("PRE-ORDER / VORBESTELLUNG");
     expect(html).toContain("25,40 EUR");
     expect(html).not.toContain("Wallet applied:");
+    expect(html).not.toContain("Tax:");
     expect(html).not.toContain("Not scheduled");
   });
 
@@ -135,8 +136,9 @@ describe("buildOrderTicketEscPos", () => {
         id: "order-12345678",
         orderNumber: "42",
         customerName: "Jörg Weiß",
-        paymentMethod: "CASH",
+        paymentMethod: "PAYPAL",
         subtotal: 10,
+        taxAmount: 2,
         totalAmount: 12.5,
         currency: "EUR",
         items: [
@@ -156,6 +158,8 @@ describe("buildOrderTicketEscPos", () => {
     expect(output).toContain("1 x Döner");
     expect(output).toContain("+ Käse x 1");
     expect(output).toContain("TOTAL:");
-    expect(output).toContain("Payment method: CASH");
+    expect(output).toContain("Payment method: Online bezahlt");
+    expect(output).not.toContain("Tax:");
+    expect(output).toContain("\x1dV\x00");
   });
 });

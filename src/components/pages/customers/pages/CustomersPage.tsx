@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 interface Customer {
   id: string;
   email?: string;
+  isGuest?: boolean;
   isActive?: boolean;
   createdAt?: string;
   deletedAt?: string | null;

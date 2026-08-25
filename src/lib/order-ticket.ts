@@ -73,6 +73,17 @@ const escapeHtml = (value: string) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
+const formatPaymentMethod = (paymentMethod: string) => {
+  if (paymentMethod === "COD") return "BAR";
+  if (paymentMethod === "CARD_ON_DELIVERY") {
+    return "Kartenzahlung bei Lieferung";
+  }
+  if (["STRIPE", "PAYPAL", "WALLET"].includes(paymentMethod)) {
+    return "Online bezahlt";
+  }
+  return paymentMethod;
+};
+
 const normalizeModifiers = (value: unknown): TicketModifier[] => {
   const values = Array.isArray(value)
     ? value
@@ -243,7 +254,6 @@ export const buildOrderTicketHtml = (
       : undefined;
   const amountRows = [
     ["Subtotal", ticket.subtotal],
-    ["Tax", ticket.taxAmount],
     ["Delivery fee", ticket.deliveryFee],
     ["Service charge", ticket.serviceChargeAmount],
     ["Tip", ticket.tipAmount],
@@ -298,7 +308,7 @@ export const buildOrderTicketHtml = (
       ? `<div style="border-top:2px solid #000;margin-top:10px;padding-top:8px;font-size:1.2em;font-weight:700">Total: ${total}</div>`
       : "",
     ticket.paymentMethod
-      ? `<div><strong>Payment method:</strong> ${escapeHtml(ticket.paymentMethod)}</div>`
+      ? `<div><strong>Payment method:</strong> ${escapeHtml(formatPaymentMethod(ticket.paymentMethod))}</div>`
       : "",
     "</div>",
   ].join("");
@@ -429,7 +439,6 @@ export const buildOrderTicketEscPos = (
   lines.push(`${"-".repeat(columns)}\n`);
   const amounts: Array<[string, number | undefined, boolean?]> = [
     ["Subtotal", ticket.subtotal],
-    ["Tax", ticket.taxAmount],
     ["Delivery fee", ticket.deliveryFee],
     ["Service charge", ticket.serviceChargeAmount],
     ["Tip", ticket.tipAmount],
@@ -454,13 +463,13 @@ export const buildOrderTicketEscPos = (
   }
   if (ticket.paymentMethod) {
     for (const line of wrapText(
-      `Payment method: ${ticket.paymentMethod}`,
+      `Payment method: ${formatPaymentMethod(ticket.paymentMethod)}`,
       columns,
     )) {
       lines.push(`${line}\n`);
     }
   }
 
-  lines.push("\n\n\n\n");
+  lines.push("\n\n\n\n", `${GS}V\x00`);
   return lines.join("");
 };

@@ -1729,6 +1729,9 @@
     "table": {
       "serial": "SL",
       "customerName": "Customer Name",
+      "customerType": "Customer Type",
+      "guest": "Guest",
+      "registered": "Registered",
       "customerInfo": "Customer Info",
       "totalOrder": "Total Order",
       "joiningDate": "Joining Date",

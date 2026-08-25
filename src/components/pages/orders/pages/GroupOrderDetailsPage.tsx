@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { useGetOrderById } from "@/hooks/useOrders";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useTranslations } from "next-intl";
+import { formatPaymentMethod } from "@/components/pages/Orders/components/orders/details/order-details-utils";
 
 export default function GroupOrderDetails() {
   const t = useTranslations("orders");
@@ -26,6 +27,13 @@ export default function GroupOrderDetails() {
 
   const participants = order?.participants || [];
   const totalItems = order?.itemCount || 0;
+  const paymentMethod = formatPaymentMethod(order.paymentMethod, {
+    COD: t("paymentMethods.COD"),
+    CARD_ON_DELIVERY: t("paymentMethods.CARD_ON_DELIVERY"),
+    STRIPE: t("paymentMethods.STRIPE"),
+    PAYPAL: t("paymentMethods.PAYPAL"),
+    WALLET: t("paymentMethods.WALLET"),
+  });
 
   const getUserName = (user: any) => {
     return (
@@ -59,7 +67,7 @@ export default function GroupOrderDetails() {
             </h3>
 
             <p className="text-xs text-gray-500">
-              {order.branch?.name} • {order.paymentMethod} • #
+              {order.branch?.name} • {paymentMethod} • #
               {order.groupOrderInviteCode}
             </p>
           </div>

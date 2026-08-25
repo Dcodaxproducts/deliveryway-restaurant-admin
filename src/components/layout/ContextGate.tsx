@@ -62,8 +62,11 @@ const getStaffRestaurantIds = (
 
   const directIds = user?.restaurantAccess?.restaurantIds ?? [];
   const roleIds = user?.staffRole?.restaurantAccess?.restaurantIds ?? [];
+  const assignedIds = [user?.restaurantId, user?.staffRole?.restaurantId];
 
-  return Array.from(new Set([...directIds, ...roleIds].filter(Boolean)));
+  return Array.from(
+    new Set([...assignedIds, ...directIds, ...roleIds].filter(Boolean)),
+  ) as string[];
 };
 
 const getRestaurantName = (restaurant: unknown, fallback: string) => {
