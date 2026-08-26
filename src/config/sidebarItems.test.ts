@@ -3,16 +3,23 @@ import { describe, expect, it } from "vitest";
 import { menuItems } from "@/config/sidebarItems";
 
 describe("order management navigation", () => {
-  it("defaults to today's orders and removes duplicate invoice history", () => {
+  it("opens All Orders with the Today's Orders page tab selected", () => {
     const orderManagement = menuItems.find(
       (item) => item.labelKey === "orderManagement",
+    );
+    const todayOrdersNavigationItem = orderManagement?.children?.find(
+      (item) => item.labelKey === "todayOrders",
+    );
+    const allOrdersNavigationItem = orderManagement?.children?.find(
+      (item) => item.labelKey === "allOrders",
     );
     const invoiceItem = menuItems
       .flatMap((item) => item.children ?? [])
       .find((item) => item.labelKey === "invoiceHistory");
 
     expect(orderManagement?.href).toBe("/orders?tab=today");
-    expect(orderManagement?.children?.[0]?.href).toBe("/orders?tab=today");
+    expect(todayOrdersNavigationItem).toBeUndefined();
+    expect(allOrdersNavigationItem?.href).toBe("/orders?tab=today");
     expect(invoiceItem).toBeUndefined();
   });
 });
