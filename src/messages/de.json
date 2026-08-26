@@ -117,6 +117,9 @@
     "exportReports": "Berichte exportieren",
     "filterDescription": "Nach Status und Sortierung filtern",
     "all": "Alle",
+    "customerType": "Kundentyp",
+    "registered": "Registriert",
+    "guest": "Gast",
     "creationDate": "Erstellungsdatum",
     "modifiedDate": "Änderungsdatum",
     "options": "Optionen",
@@ -2898,6 +2901,7 @@
     "stats": {
       "codAmount": "Nachnahme gesamt",
       "onlineAmount": "Online-Zahlungen gesamt",
+      "availablePayout": "Verfügbare Auszahlung",
       "totalOrders": "Bestellungen gesamt",
       "grossRevenue": "Bruttoumsatz",
       "paidRevenue": "Bezahlter Umsatz",

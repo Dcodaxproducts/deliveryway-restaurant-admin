@@ -458,9 +458,10 @@ function RestaurantWalletPayoutSection({
             </h2>
           </div>
           <p className="text-sm text-gray">
-            Review gross collections, platform commission, and the amount
-            currently available for payout. Wallet deductions happen only
-            after Super Admin marks a payout as paid.
+            Available payout is the platform-held amount minus commission on all
+            successful orders, restaurant-paid transaction fees, VAT, and
+            previous payouts. The wallet is debited after Super Admin marks a
+            payout as paid.
           </p>
           {walletQuery.data?.activePlan ? (
             <p className="rounded-[10px] bg-primary/5 px-3 py-2 text-sm text-dark">
@@ -469,8 +470,8 @@ function RestaurantWalletPayoutSection({
                 ? ` · ${formatCurrency(
                     walletQuery.data.activePlan.commissionFixedAmount ?? 0,
                     walletCurrency,
-                  )} commission per online order`
-                : ` · ${walletQuery.data.activePlan.commissionPercentage ?? 0}% commission on online payments`}
+                  )} commission per successful order`
+                : ` · ${walletQuery.data.activePlan.commissionPercentage ?? 0}% commission on all successful orders`}
               {walletQuery.data.activePlan.commissionCapAmount !== null
                 ? ` · capped at ${formatCurrency(
                     walletQuery.data.activePlan.commissionCapAmount,
@@ -512,7 +513,7 @@ function RestaurantWalletPayoutSection({
         </p>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <PaymentSummaryCard
           icon={<Wallet size={18} />}
           label="Available payout"
@@ -527,10 +528,39 @@ function RestaurantWalletPayoutSection({
           }
         />
         <PaymentSummaryCard
-          icon={<CreditCard size={18} />}
-          label="Gross collected"
+          icon={<Banknote size={18} />}
+          label="Total successful order amount"
           value={formatOptionalMoney(
-            walletQuery.data?.grossCollectedAmount ?? null,
+            walletQuery.data?.totalOrderAmount ?? null,
+            walletCurrency,
+            formatCurrency,
+          )}
+        />
+        <PaymentSummaryCard
+          icon={<CreditCard size={18} />}
+          label="Platform-held amount"
+          value={formatOptionalMoney(
+            walletQuery.data?.platformCollectedAmount ??
+              walletQuery.data?.grossCollectedAmount ??
+              null,
+            walletCurrency,
+            formatCurrency,
+          )}
+        />
+        <PaymentSummaryCard
+          icon={<Info size={18} />}
+          label="Restaurant-paid transaction fees"
+          value={formatOptionalMoney(
+            walletQuery.data?.restaurantTransactionFeeAmount ?? null,
+            walletCurrency,
+            formatCurrency,
+          )}
+        />
+        <PaymentSummaryCard
+          icon={<Info size={18} />}
+          label={`VAT (${walletQuery.data?.vatPercentage ?? walletQuery.data?.activePlan?.vatPercentage ?? 0}%)`}
+          value={formatOptionalMoney(
+            walletQuery.data?.vatAmount ?? null,
             walletCurrency,
             formatCurrency,
           )}

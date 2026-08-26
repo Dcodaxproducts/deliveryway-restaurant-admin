@@ -54,6 +54,7 @@ export const useGetCustomersList = (params?: {
   sortOrder?: "ASC" | "DESC";
   withDeleted?: boolean;
   includeInactive?: boolean;
+  isGuest?: boolean;
   restaurantId?: string;
   branchId?: string;
 }) => {
@@ -65,6 +66,7 @@ export const useGetCustomersList = (params?: {
       params?.sortOrder,
       params?.withDeleted,
       params?.includeInactive,
+      params?.isGuest,
       params?.restaurantId,
       params?.branchId,
     ],

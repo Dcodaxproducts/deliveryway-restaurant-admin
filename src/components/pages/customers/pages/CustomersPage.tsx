@@ -39,6 +39,7 @@ export default function CustomerSettingsPage() {
     sortOrder: "DESC" as "ASC" | "DESC",
     withDeleted: false,
     includeInactive: true,
+    isGuest: undefined as boolean | undefined,
   });
 
   const { data, isLoading, isFetching, refetch } = useGetCustomersList(
@@ -49,6 +50,7 @@ export default function CustomerSettingsPage() {
           sortOrder: filters.sortOrder,
           withDeleted: filters.withDeleted,
           includeInactive: filters.includeInactive,
+          isGuest: filters.isGuest,
           restaurantId,
           ...(scopedBranchId ? { branchId: scopedBranchId } : {}),
         }
@@ -134,6 +136,7 @@ export default function CustomerSettingsPage() {
             branches={customerFilterData}
             filters={filters}
             onFilterChange={handleFilterChange}
+            showCustomerType
           />
         ) : null}
 

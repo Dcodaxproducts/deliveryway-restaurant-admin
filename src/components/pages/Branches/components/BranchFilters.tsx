@@ -11,12 +11,14 @@ interface Props {
   branches?: any[];
   filters: any;
   onFilterChange: (filters: any) => void;
+  showCustomerType?: boolean;
 }
 
 export default function BranchFilters({
   branches,
   filters,
   onFilterChange,
+  showCustomerType = false,
 }: Props) {
   const t = useTranslations("branches");
   const commonT = useTranslations("common");
@@ -26,7 +28,6 @@ export default function BranchFilters({
   const handleSearch = () => {
     onFilterChange({ search, page: 1 });
   };
-
 
   const exportCSV = () => {
     if (!branches || branches.length === 0) return;
@@ -38,18 +39,20 @@ export default function BranchFilters({
       commonT("phone"),
       commonT("status"),
       commonT("createdAt"),
-      t("items")
+      t("items"),
     ];
 
-    const rows = branches.map(({ name, city, address, phone, isActive, createdAt, _count }) => [
-      name ?? "",
-      city ?? "",
-      address ?? "",
-      phone ?? "",
-      isActive ? commonT("active") : commonT("inactive"),
-      createdAt ?? "",
-      _count?.items ?? "",
-    ]);
+    const rows = branches.map(
+      ({ name, city, address, phone, isActive, createdAt, _count }) => [
+        name ?? "",
+        city ?? "",
+        address ?? "",
+        phone ?? "",
+        isActive ? commonT("active") : commonT("inactive"),
+        createdAt ?? "",
+        _count?.items ?? "",
+      ],
+    );
 
     const csvContent =
       "data:text/csv;charset=utf-8," +
@@ -61,7 +64,7 @@ export default function BranchFilters({
 
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-link.setAttribute("download", "data.csv");
+    link.setAttribute("download", "data.csv");
 
     document.body.appendChild(link);
     link.click();
@@ -70,13 +73,12 @@ link.setAttribute("download", "data.csv");
 
   const filteredBranches =
     branches?.filter(({ name }) =>
-      name?.toLowerCase().includes(search.toLowerCase())
+      name?.toLowerCase().includes(search.toLowerCase()),
     ) ?? [];
 
   return (
     <div className="w-full bg-white rounded-lg">
       <div className="w-full flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-3">
-
         <div className="relative flex-1 min-w-[300px]">
           <Search
             size={22}
@@ -148,11 +150,15 @@ link.setAttribute("download", "data.csv");
         onOpenChange={setOpen}
         filters={filters}
         onApply={(f: any) => onFilterChange({ ...f, page: 1 })}
+        showCustomerType={showCustomerType}
       />
 
       {branches && (
         <p className="text-sm text-gray-400 mt-3">
-          {t("filtersShowing", { visible: filteredBranches.length, total: branches.length })}
+          {t("filtersShowing", {
+            visible: filteredBranches.length,
+            total: branches.length,
+          })}
         </p>
       )}
     </div>

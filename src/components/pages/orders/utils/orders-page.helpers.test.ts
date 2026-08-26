@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  buildOrderStats,
-  canRequestOrdersReport,
-} from "./orders-page.helpers";
+import { buildOrderStats, canRequestOrdersReport } from "./orders-page.helpers";
 
 describe("buildOrderStats", () => {
   it("renders confirmed full-order COD and digital totals in configured currency", () => {
@@ -23,12 +20,10 @@ describe("buildOrderStats", () => {
     );
 
     expect(stats).toHaveLength(6);
-    expect(stats.find(({ _id }) => _id === "cod-amount")?.value).toContain(
-      "€",
+    expect(stats.find(({ _id }) => _id === "cod-amount")?.value).toContain("€");
+    expect(stats.find(({ _id }) => _id === "digital-amount")?.value).toContain(
+      "75",
     );
-    expect(
-      stats.find(({ _id }) => _id === "digital-amount")?.value,
-    ).toContain("75");
   });
 });
 
@@ -36,18 +31,16 @@ describe("canRequestOrdersReport", () => {
   it("allows the API to resolve an employee's assigned scope", () => {
     expect(
       canRequestOrdersReport({
-        isInvoiceHistoryTab: false,
         isStaff: true,
         restaurantId: undefined,
       }),
     ).toBe(true);
   });
 
-  it("does not request order totals on invoice history", () => {
+  it("waits for a restaurant scope for non-staff users", () => {
     expect(
       canRequestOrdersReport({
-        isInvoiceHistoryTab: true,
-        isStaff: true,
+        isStaff: false,
         restaurantId: undefined,
       }),
     ).toBe(false);

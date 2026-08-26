@@ -18,12 +18,12 @@ export default function InvoicingPage() {
             Use Orders for invoice actions
           </h2>
           <p className="text-sm leading-6 text-gray">
-            Open the Orders invoice history to review generated invoices, or
-            choose an order row menu to download the invoice PDF or send it to
-            the customer email on file.
+            Choose an order row menu to download the invoice PDF or send it to
+            the customer email on file. Subscription and payout billing
+            documents remain available under Reports.
           </p>
           <Button asChild className="h-[44px] rounded-[12px] px-5">
-            <Link href="/orders?tab=invoice-history">Go to Invoice History</Link>
+            <Link href="/orders?tab=today">Go to Today's Orders</Link>
           </Button>
         </div>
       </div>

@@ -8,8 +8,7 @@ export type OrderTab =
   | "delivery"
   | "pickup"
   | "reservations"
-  | "group"
-  | "invoice-history";
+  | "group";
 
 export interface Order {
   id: string;
@@ -26,14 +25,12 @@ export interface Order {
 }
 
 export const canRequestOrdersReport = ({
-  isInvoiceHistoryTab,
   isStaff,
   restaurantId,
 }: {
-  isInvoiceHistoryTab: boolean;
   isStaff: boolean;
   restaurantId?: string;
-}) => !isInvoiceHistoryTab && Boolean(restaurantId || isStaff);
+}) => Boolean(restaurantId || isStaff);
 
 const countByStatus = (list: any[] | undefined, status: string) =>
   list?.find((item: any) => item.status?.toUpperCase() === status)?.count ?? 0;
@@ -166,11 +163,6 @@ export const getOrdersHeaderContent = (
       return {
         title: t("groupOrderSummaryTitle"),
         description: t("groupOrderSummaryDescription"),
-      };
-    case "invoice-history":
-      return {
-        title: t("invoiceHistory"),
-        description: t("invoiceHistoryDescription"),
       };
     default:
       return { title: t("orderList"), description: t("orderListDescription") };

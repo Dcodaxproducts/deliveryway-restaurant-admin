@@ -136,6 +136,20 @@ export const buildFinancialStats = (
         icon: "cancelled",
         iconStyle: "danger",
       },
+      ...(financialData?.availablePayoutAmount !== null &&
+      financialData?.availablePayoutAmount !== undefined
+        ? [
+            {
+              _id: "financial-available-payout",
+              title: t("stats.availablePayout"),
+              value: formatCurrency(
+                financialData.availablePayoutAmount,
+                currency,
+              ),
+              icon: "revenue" as const,
+            },
+          ]
+        : []),
     ],
     t,
   );
