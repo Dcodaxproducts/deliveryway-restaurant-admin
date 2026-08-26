@@ -25,6 +25,16 @@ export interface Order {
   customerName?: string;
 }
 
+export const canRequestOrdersReport = ({
+  isInvoiceHistoryTab,
+  isStaff,
+  restaurantId,
+}: {
+  isInvoiceHistoryTab: boolean;
+  isStaff: boolean;
+  restaurantId?: string;
+}) => !isInvoiceHistoryTab && Boolean(restaurantId || isStaff);
+
 const countByStatus = (list: any[] | undefined, status: string) =>
   list?.find((item: any) => item.status?.toUpperCase() === status)?.count ?? 0;
 

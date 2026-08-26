@@ -23,6 +23,7 @@ import {
 import { useCurrency } from "@/hooks/useCurrency";
 import {
   buildOrderStats,
+  canRequestOrdersReport,
   getOrdersHeaderContent,
   type OrderTab,
 } from "@/components/pages/orders/utils/orders-page.helpers";
@@ -33,6 +34,7 @@ import {
 } from "@/components/pages/Orders/utils/orders-schedule-filters";
 import { useTranslations } from "next-intl";
 import type { Order } from "@/types/orders";
+import { isStaffRole } from "@/lib/auth";
 
 const orderTabs = new Set<OrderTab>([
   "today",
@@ -73,9 +75,12 @@ export function OrdersPage() {
 
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  const { restaurantId, branchId, isBranchAdmin } = useAuth();
-  const scopedBranchId = isBranchAdmin ? branchId || undefined : undefined;
-  const { currency } = useCurrency(restaurantId);
+  const { user, restaurantId, branchId, isBranchAdmin, scopedParams } =
+    useAuth();
+  const scopedRestaurantId = scopedParams.restaurantId || restaurantId;
+  const scopedBranchId =
+    scopedParams.branchId || (isBranchAdmin ? branchId || undefined : undefined);
+  const { currency } = useCurrency(scopedRestaurantId);
 
   const orderType =
     activeTab === "delivery"
@@ -112,24 +117,28 @@ export function OrdersPage() {
   const reportDateRange = useMemo(() => {
     return { ...todayRange, ...scheduleQuery };
   }, [scheduleQuery, todayRange]);
+  const canRequestOrderReport = canRequestOrdersReport({
+    isInvoiceHistoryTab,
+    isStaff: isStaffRole(user?.role, user?.actorType),
+    restaurantId: scopedRestaurantId,
+  });
   const orderReportQuery = useGetOrdersReport(
-    restaurantId && !isInvoiceHistoryTab
-      ? {
-          restaurantId,
-          branchId: scopedBranchId,
-          orderType,
-          kind: orderKind,
-          status: effectiveStatus,
-          excludeStatus,
-          ...reportDateRange,
-        }
-      : undefined,
+    {
+      restaurantId: scopedRestaurantId,
+      branchId: scopedBranchId,
+      orderType,
+      kind: orderKind,
+      status: effectiveStatus,
+      excludeStatus,
+      ...reportDateRange,
+    },
+    { enabled: canRequestOrderReport },
   );
   const orderStats = orderReportQuery.data?.data;
   const dynamicStats = buildOrderStats(orderStats, t, currency);
 
   const ordersQuery = useOrders({
-    restaurantId: restaurantId || undefined,
+    restaurantId: scopedRestaurantId || undefined,
     branchId: scopedBranchId,
     search: search || undefined,
     status: effectiveStatus,

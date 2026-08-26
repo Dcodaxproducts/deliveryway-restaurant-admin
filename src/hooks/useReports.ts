@@ -81,7 +81,10 @@ const getErrorMessage = (err: any, fallback: string) => {
  * ==============================
  */
 
-export const useGetOrdersReport = (params?: OrdersReportParams) => {
+export const useGetOrdersReport = (
+  params?: OrdersReportParams,
+  options?: { enabled?: boolean },
+) => {
   return useQuery({
     queryKey: [
       "reports",
@@ -100,6 +103,7 @@ export const useGetOrdersReport = (params?: OrdersReportParams) => {
       params?.isScheduled,
     ],
     queryFn: () => getOrdersReport(params),
+    enabled: options?.enabled ?? Boolean(params),
   });
 };
 
