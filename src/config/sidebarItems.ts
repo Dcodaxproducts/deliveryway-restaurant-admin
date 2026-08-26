@@ -217,18 +217,9 @@ export const menuItems: MenuItem[] = [
     permissionAccesses: ["order-management"],
     children: [
       {
-        title: "Today's Orders",
-        labelKey: "todayOrders",
-        href: "/orders?tab=today",
-        icon: ShoppingBag,
-        section: "main",
-        roles: allAdminRoles,
-        permissionAccesses: ["order-management"],
-      },
-      {
         title: "All Orders",
         labelKey: "allOrders",
-        href: "/orders?tab=all",
+        href: "/orders?tab=today",
         icon: ShoppingBag,
         section: "main",
         roles: allAdminRoles,
