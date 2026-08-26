@@ -38,8 +38,15 @@ export type RestaurantWallet = {
   type: string | null;
   balance: number | null;
   ledgerBalance: number | null;
+  totalOrderAmount: number | null;
+  platformCollectedAmount: number | null;
   grossCollectedAmount: number | null;
   commissionLiabilityAmount: number | null;
+  restaurantTransactionFeeAmount: number | null;
+  vatPercentage: number | null;
+  vatAmount: number | null;
+  previousPayoutAmount: number | null;
+  totalDeductionsAmount: number | null;
   availablePayoutBalance: number | null;
   currency: string | null;
   customerWalletExposure: RecordValue;
@@ -52,6 +59,7 @@ export type RestaurantWallet = {
     commissionPercentage: number | null;
     commissionFixedAmount: number | null;
     commissionCapAmount: number | null;
+    vatPercentage: number | null;
     payoutCycle: string | null;
   } | null;
 };
@@ -195,10 +203,23 @@ const normalizeWallet = (response: unknown): RestaurantWallet => {
       wallet.balance ?? wallet.availableBalance ?? wallet.amount,
     ),
     ledgerBalance: getNumber(wallet.ledgerBalance ?? wallet.balance),
+    totalOrderAmount: getNumber(wallet.totalOrderAmount),
+    platformCollectedAmount: getNumber(
+      wallet.platformCollectedAmount ?? wallet.grossCollectedAmount,
+    ),
     grossCollectedAmount: getNumber(wallet.grossCollectedAmount),
     commissionLiabilityAmount: getNumber(wallet.commissionLiabilityAmount),
+    restaurantTransactionFeeAmount: getNumber(
+      wallet.restaurantTransactionFeeAmount,
+    ),
+    vatPercentage: getNumber(wallet.vatPercentage),
+    vatAmount: getNumber(wallet.vatAmount),
+    previousPayoutAmount: getNumber(wallet.previousPayoutAmount),
+    totalDeductionsAmount: getNumber(wallet.totalDeductionsAmount),
     availablePayoutBalance: getNumber(
-      wallet.availablePayoutBalance ?? wallet.availableBalance ?? wallet.balance,
+      wallet.availablePayoutBalance ??
+        wallet.availableBalance ??
+        wallet.balance,
     ),
     currency: getString(wallet.currency ?? data.currency),
     customerWalletExposure: firstRecord(
@@ -219,6 +240,7 @@ const normalizeWallet = (response: unknown): RestaurantWallet => {
             activePlan.commissionCapAmount === undefined
               ? null
               : getNumber(activePlan.commissionCapAmount),
+          vatPercentage: getNumber(activePlan.vatPercentage),
           payoutCycle: getString(activePlan.payoutCycle),
         }
       : null,

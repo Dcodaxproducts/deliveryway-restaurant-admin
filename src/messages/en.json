@@ -117,6 +117,9 @@
     "exportReports": "Export Reports",
     "filterDescription": "Filter by status and sorting",
     "all": "All",
+    "customerType": "Customer type",
+    "registered": "Registered",
+    "guest": "Guest",
     "creationDate": "Creation Date",
     "modifiedDate": "Modified Date",
     "options": "Options",
@@ -2898,6 +2901,7 @@
     "stats": {
       "codAmount": "Total COD Amount",
       "onlineAmount": "Total Online Amount",
+      "availablePayout": "Available Payout",
       "totalOrders": "Total Orders",
       "grossRevenue": "Gross Revenue",
       "paidRevenue": "Paid Revenue",

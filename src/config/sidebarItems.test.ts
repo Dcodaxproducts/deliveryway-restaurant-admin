@@ -2,16 +2,18 @@ import { describe, expect, it } from "vitest";
 
 import { menuItems } from "@/config/sidebarItems";
 
-describe("sidebar invoice history", () => {
-  it("opens order invoice history for Order Management users", () => {
+describe("order management navigation", () => {
+  it("defaults to today's orders and removes duplicate invoice history", () => {
+    const orderManagement = menuItems.find(
+      (item) => item.labelKey === "orderManagement",
+    );
     const invoiceItem = menuItems
       .flatMap((item) => item.children ?? [])
       .find((item) => item.labelKey === "invoiceHistory");
 
-    expect(invoiceItem).toMatchObject({
-      href: "/orders?tab=invoice-history",
-      permissionAccesses: ["order-management"],
-    });
+    expect(orderManagement?.href).toBe("/orders?tab=today");
+    expect(orderManagement?.children?.[0]?.href).toBe("/orders?tab=today");
+    expect(invoiceItem).toBeUndefined();
   });
 });
 

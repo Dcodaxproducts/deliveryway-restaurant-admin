@@ -210,12 +210,21 @@ export const menuItems: MenuItem[] = [
   {
     title: "Order Management",
     labelKey: "orderManagement",
-    href: "/orders",
+    href: "/orders?tab=today",
     icon: ShoppingBag,
     section: "main",
     roles: allAdminRoles,
     permissionAccesses: ["order-management"],
     children: [
+      {
+        title: "Today's Orders",
+        labelKey: "todayOrders",
+        href: "/orders?tab=today",
+        icon: ShoppingBag,
+        section: "main",
+        roles: allAdminRoles,
+        permissionAccesses: ["order-management"],
+      },
       {
         title: "All Orders",
         labelKey: "allOrders",
@@ -248,15 +257,6 @@ export const menuItems: MenuItem[] = [
         labelKey: "groupOrders",
         href: "/orders?tab=group",
         icon: ClipboardList,
-        section: "main",
-        roles: allAdminRoles,
-        permissionAccesses: ["order-management"],
-      },
-      {
-        title: "Invoice History",
-        labelKey: "invoiceHistory",
-        href: "/orders?tab=invoice-history",
-        icon: ReceiptText,
         section: "main",
         roles: allAdminRoles,
         permissionAccesses: ["order-management"],

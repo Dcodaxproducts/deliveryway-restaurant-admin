@@ -37,10 +37,14 @@ export const customerStatusSchema = z.object({
 export type CustomerStatusValues = z.infer<typeof customerStatusSchema>;
 
 export const forceDeleteCustomerSchema = z.object({
-  emails: z.array(z.string().trim().email("Invalid email")).min(1, "At least one email is required"),
+  emails: z
+    .array(z.string().trim().email("Invalid email"))
+    .min(1, "At least one email is required"),
 });
 
-export type ForceDeleteCustomerValues = z.infer<typeof forceDeleteCustomerSchema>;
+export type ForceDeleteCustomerValues = z.infer<
+  typeof forceDeleteCustomerSchema
+>;
 
 export const customerListParamsSchema = z.object({
   page: z.number().int().positive().optional(),
@@ -49,6 +53,7 @@ export const customerListParamsSchema = z.object({
   sortOrder: z.enum(["ASC", "DESC"]).optional(),
   withDeleted: z.boolean().optional(),
   includeInactive: z.boolean().optional(),
+  isGuest: z.boolean().optional(),
   restaurantId: z.string().optional(),
   branchId: z.string().optional(),
 });
@@ -56,7 +61,12 @@ export const customerListParamsSchema = z.object({
 export type CustomerListParams = z.infer<typeof customerListParamsSchema>;
 
 export const verifyCustomerOtpSchema = z.object({
-  otp: z.string().trim().min(1, "OTP is required").min(4, "OTP is too short").max(10, "OTP is too long"),
+  otp: z
+    .string()
+    .trim()
+    .min(1, "OTP is required")
+    .min(4, "OTP is too short")
+    .max(10, "OTP is too long"),
 });
 
 export type VerifyCustomerOtpValues = z.infer<typeof verifyCustomerOtpSchema>;

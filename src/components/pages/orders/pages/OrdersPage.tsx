@@ -11,15 +11,11 @@ import {
 } from "@/components/pages/Orders/components/orders/table";
 import { Button } from "@/components/ui/button";
 import { OrdersFilters } from "@/components/pages/Orders/components/orders/OrdersFilters";
-import { GeneratedInvoiceHistoryTable } from "@/components/pages/Orders/components/orders/GeneratedInvoiceHistoryTable";
 import { useAuth } from "@/hooks/useAuth";
 import PaginationSection from "@/components/common/pagination";
 import { sortData } from "@/lib/sort-data";
 import { useOrders } from "@/hooks/useOrders";
-import {
-  useGetGeneratedInvoices,
-  useGetOrdersReport,
-} from "@/hooks/useReports";
+import { useGetOrdersReport } from "@/hooks/useReports";
 import { useCurrency } from "@/hooks/useCurrency";
 import {
   buildOrderStats,
@@ -44,7 +40,6 @@ const orderTabs = new Set<OrderTab>([
   "pickup",
   "reservations",
   "group",
-  "invoice-history",
 ]);
 
 const getOrderCustomerName = (order: Order) => {
@@ -79,7 +74,8 @@ export function OrdersPage() {
     useAuth();
   const scopedRestaurantId = scopedParams.restaurantId || restaurantId;
   const scopedBranchId =
-    scopedParams.branchId || (isBranchAdmin ? branchId || undefined : undefined);
+    scopedParams.branchId ||
+    (isBranchAdmin ? branchId || undefined : undefined);
   const { currency } = useCurrency(scopedRestaurantId);
 
   const orderType =
@@ -89,7 +85,6 @@ export function OrdersPage() {
         ? "TAKEAWAY"
         : undefined;
   const orderKind = activeTab === "group" ? "group-orders" : "order";
-  const isInvoiceHistoryTab = activeTab === "invoice-history";
   const effectiveStatus =
     activeTab === "payment-pending"
       ? "PAYMENT_PENDING"
@@ -118,7 +113,6 @@ export function OrdersPage() {
     return { ...todayRange, ...scheduleQuery };
   }, [scheduleQuery, todayRange]);
   const canRequestOrderReport = canRequestOrdersReport({
-    isInvoiceHistoryTab,
     isStaff: isStaffRole(user?.role, user?.actorType),
     restaurantId: scopedRestaurantId,
   });
@@ -152,17 +146,8 @@ export function OrdersPage() {
     createdFrom: todayRange.fromDate,
     createdTo: todayRange.toDate,
     ...scheduleQuery,
-    enabled: !isInvoiceHistoryTab,
+    enabled: true,
   });
-
-  const generatedInvoicesQuery = useGetGeneratedInvoices(
-    {
-      kind: "ORDER",
-      restaurantId: restaurantId || undefined,
-      branchId: scopedBranchId,
-    },
-    { enabled: isInvoiceHistoryTab && Boolean(restaurantId) },
-  );
 
   const orders: Order[] = ordersQuery.orders;
   const paginationMeta = ordersQuery.meta;
@@ -181,7 +166,8 @@ export function OrdersPage() {
     }
 
     setActiveTab("today");
-  }, [searchParams]);
+    router.replace("/orders?tab=today", { scroll: false });
+  }, [router, searchParams]);
 
   useEffect(() => {
     setPage(1);
@@ -282,56 +268,38 @@ export function OrdersPage() {
           >
             {t("groupOrders")}
           </TabButton>
-
-          <TabButton
-            active={activeTab === "invoice-history"}
-            tone="primary"
-            onClick={() => handleTabChange("invoice-history")}
-          >
-            {t("invoiceHistory")}
-          </TabButton>
         </div>
 
-        {isInvoiceHistoryTab ? (
-          <GeneratedInvoiceHistoryTable
-            invoices={generatedInvoicesQuery.data?.data || []}
-            loading={
-              generatedInvoicesQuery.isLoading ||
-              generatedInvoicesQuery.isFetching
-            }
+        <>
+          <OrdersFilters
+            onSearch={setSearch}
+            onSortChange={setSortOrder}
+            onStatusChange={setStatus}
+            scheduleFilter={scheduleFilter}
+            scheduleRange={scheduleRange}
+            onScheduleFilterChange={setScheduleFilter}
+            onScheduleRangeChange={setScheduleRange}
           />
-        ) : (
-          <>
-            <OrdersFilters
-              onSearch={setSearch}
-              onSortChange={setSortOrder}
-              onStatusChange={setStatus}
-              scheduleFilter={scheduleFilter}
-              scheduleRange={scheduleRange}
-              onScheduleFilterChange={setScheduleFilter}
-              onScheduleRangeChange={setScheduleRange}
-            />
 
-            <OrdersTable
-              orders={sortedOrders}
-              loading={loading}
-              sortKey={sortKey}
-              sortDir={sortDir}
-              onSort={handleSort}
-              activeTab={activeTab}
-            />
+          <OrdersTable
+            orders={sortedOrders}
+            loading={loading}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={handleSort}
+            activeTab={activeTab}
+          />
 
-            <PaginationSection
-              page={page}
-              totalPages={totalPages}
-              total={total}
-              limit={limit}
-              hasNext={hasNext}
-              hasPrevious={hasPrevious}
-              onPageChange={(newPage: number) => setPage(newPage)}
-            />
-          </>
-        )}
+          <PaginationSection
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            limit={limit}
+            hasNext={hasNext}
+            hasPrevious={hasPrevious}
+            onPageChange={(newPage: number) => setPage(newPage)}
+          />
+        </>
       </div>
     </Container>
   );

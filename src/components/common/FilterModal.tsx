@@ -19,18 +19,28 @@ type FilterModalProps = {
   onOpenChange: (open: boolean) => void;
   filters?: any;
   onApply?: (filters: any) => void;
+  showCustomerType?: boolean;
 };
+
+export const customerTypeToIsGuest = (customerType: string) =>
+  customerType === "guest"
+    ? true
+    : customerType === "registered"
+      ? false
+      : undefined;
 
 export default function FilterModal({
   open,
   onOpenChange,
   filters,
   onApply,
+  showCustomerType = false,
 }: FilterModalProps) {
   const t = useTranslations("common");
   const [status, setStatus] = useState("all");
   const [sortBy, setSortBy] = useState("default");
   const [withDeleted, setWithDeleted] = useState(false);
+  const [customerType, setCustomerType] = useState("all");
 
   const [creationDate, setCreationDate] = useState("");
   const [modifiedDate, setModifiedDate] = useState("");
@@ -48,12 +58,20 @@ export default function FilterModal({
     if (filters.withDeleted !== undefined) {
       setWithDeleted(filters.withDeleted);
     }
+    setCustomerType(
+      filters.isGuest === true
+        ? "guest"
+        : filters.isGuest === false
+          ? "registered"
+          : "all",
+    );
   }, [filters]);
 
   const handleReset = () => {
     setStatus("all");
     setSortBy("default");
     setWithDeleted(false);
+    setCustomerType("all");
     setCreationDate("");
     setModifiedDate("");
 
@@ -62,6 +80,7 @@ export default function FilterModal({
         includeInactive: false,
         withDeleted: false,
         sortOrder: "ASC",
+        isGuest: undefined,
       });
     }
 
@@ -86,6 +105,7 @@ export default function FilterModal({
       sortOrder,
       creationDate,
       modifiedDate,
+      isGuest: customerTypeToIsGuest(customerType),
     };
 
     if (onApply) {
@@ -128,6 +148,26 @@ export default function FilterModal({
               </div>
             </div>
           </div>
+
+          {showCustomerType ? (
+            <div className="space-y-3">
+              <p className="text-sm font-medium">{t("customerType")}</p>
+              <div className="flex flex-wrap gap-6">
+                <div onClick={() => setCustomerType("all")}>
+                  <Radio label={t("all")} active={customerType === "all"} />
+                </div>
+                <div onClick={() => setCustomerType("registered")}>
+                  <Radio
+                    label={t("registered")}
+                    active={customerType === "registered"}
+                  />
+                </div>
+                <div onClick={() => setCustomerType("guest")}>
+                  <Radio label={t("guest")} active={customerType === "guest"} />
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           {/* CREATION DATE */}
 
