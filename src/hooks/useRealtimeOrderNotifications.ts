@@ -167,6 +167,41 @@ export const playNewOrderSound = async () => {
   }
 };
 
+export const registerOrderSoundUnlockListeners = ({
+  eventTarget,
+  soundEnabled,
+  unlockSound,
+}: {
+  eventTarget: EventTarget;
+  soundEnabled: () => boolean;
+  unlockSound: () => void;
+}) => {
+  const unlockFromUserGesture = () => {
+    eventTarget.removeEventListener("pointerdown", unlockFromUserGesture);
+    eventTarget.removeEventListener("keydown", unlockFromUserGesture);
+    if (soundEnabled()) unlockSound();
+  };
+  const unlockFromSettingChange = () => {
+    if (soundEnabled()) unlockSound();
+  };
+
+  eventTarget.addEventListener("pointerdown", unlockFromUserGesture);
+  eventTarget.addEventListener("keydown", unlockFromUserGesture);
+  eventTarget.addEventListener(
+    ORDER_SOUND_SETTING_EVENT,
+    unlockFromSettingChange,
+  );
+
+  return () => {
+    eventTarget.removeEventListener("pointerdown", unlockFromUserGesture);
+    eventTarget.removeEventListener("keydown", unlockFromUserGesture);
+    eventTarget.removeEventListener(
+      ORDER_SOUND_SETTING_EVENT,
+      unlockFromSettingChange,
+    );
+  };
+};
+
 export function useRealtimeOrderNotifications() {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -175,6 +210,17 @@ export function useRealtimeOrderNotifications() {
   const ringingOrders = useRef(new Map<string, number>());
   const { token, restaurantId, branchId, isBranchAdmin, isRestaurantAdmin } =
     useAuth();
+
+  useEffect(
+    () =>
+      registerOrderSoundUnlockListeners({
+        eventTarget: window,
+        soundEnabled: () =>
+          window.localStorage.getItem(ORDER_SOUND_STORAGE_KEY) !== "false",
+        unlockSound: () => void unlockOrderNotificationSound(),
+      }),
+    [],
+  );
 
   useEffect(() => {
     if (
@@ -239,16 +285,6 @@ export function useRealtimeOrderNotifications() {
     const handleSoundSetting = () => {
       if (!soundEnabled()) {
         stopAllOrderAlerts();
-        return;
-      }
-
-      void unlockOrderNotificationSound();
-    };
-    const unlockSoundFromUserGesture = () => {
-      window.removeEventListener("pointerdown", unlockSoundFromUserGesture);
-      window.removeEventListener("keydown", unlockSoundFromUserGesture);
-      if (soundEnabled()) {
-        void unlockOrderNotificationSound();
       }
     };
     window.addEventListener(ORDER_SOUND_SETTING_EVENT, handleSoundSetting);
@@ -258,8 +294,6 @@ export function useRealtimeOrderNotifications() {
       if (orderId) stopOrderAlert(orderId);
     };
     window.addEventListener(ORDER_ALERT_DISMISS_EVENT, handleOrderAlertDismiss);
-    window.addEventListener("pointerdown", unlockSoundFromUserGesture);
-    window.addEventListener("keydown", unlockSoundFromUserGesture);
 
     const handleOrderCreated = (
       payload: OrderCreatedPayload,
@@ -435,8 +469,6 @@ export function useRealtimeOrderNotifications() {
         ORDER_ALERT_DISMISS_EVENT,
         handleOrderAlertDismiss,
       );
-      window.removeEventListener("pointerdown", unlockSoundFromUserGesture);
-      window.removeEventListener("keydown", unlockSoundFromUserGesture);
       stopAllOrderAlerts();
       socket.disconnect();
     };
