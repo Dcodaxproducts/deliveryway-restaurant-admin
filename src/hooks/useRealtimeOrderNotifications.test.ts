@@ -17,6 +17,7 @@ import {
   isPendingOrderAlertStatus,
   isScopedOrderStatusUpdate,
   playNewOrderSound,
+  registerOrderSoundUnlockListeners,
   silenceOrderAlert,
   startRepeatingOrderSound,
   unlockOrderNotificationSound,
@@ -221,5 +222,21 @@ describe("order notification sound", () => {
     expect(getOrderSoundMode()).toBe("ONCE");
 
     vi.unstubAllGlobals();
+  });
+
+  it("unlocks on the first gesture even before restaurant scope is available", () => {
+    const eventTarget = new EventTarget();
+    const unlockSound = vi.fn();
+    const cleanup = registerOrderSoundUnlockListeners({
+      eventTarget,
+      soundEnabled: () => true,
+      unlockSound,
+    });
+
+    eventTarget.dispatchEvent(new Event("pointerdown"));
+    eventTarget.dispatchEvent(new Event("keydown"));
+
+    expect(unlockSound).toHaveBeenCalledTimes(1);
+    cleanup();
   });
 });
