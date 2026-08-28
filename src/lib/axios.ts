@@ -31,7 +31,7 @@ export const isAuthenticationRequest = (requestUrl: string): boolean => {
   );
 };
 
-const refreshAccessToken = async () => {
+export const refreshStoredAccessToken = async () => {
   if (refreshPromise) return refreshPromise;
 
   refreshPromise = (async () => {
@@ -97,7 +97,7 @@ api.interceptors.response.use(
       !isLoginRequest
     ) {
       originalRequest._retry = true;
-      const accessToken = await refreshAccessToken();
+      const accessToken = await refreshStoredAccessToken();
 
       if (accessToken) {
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
