@@ -9,7 +9,10 @@ import {
   shouldDismissNewOrderToast,
 } from "@/hooks/realtime-order-state";
 
-import { buildAutoOpenOrderPath } from "@/lib/new-order-navigation";
+import {
+  buildAutoOpenOrderPath,
+  shouldSilenceOrderAlertOnDetailsOpen,
+} from "@/lib/new-order-navigation";
 import {
   buildOrderTrackingSocketAuth,
   getOrderTrackingSocketUrl,
@@ -53,6 +56,11 @@ describe("new order navigation", () => {
     expect(buildAutoOpenOrderPath("order-123")).toBe(
       "/orders/details/order-123?acceptOrder=1",
     );
+  });
+
+  it("keeps the alert ringing when realtime delivery auto-opens order details", () => {
+    expect(shouldSilenceOrderAlertOnDetailsOpen("1")).toBe(false);
+    expect(shouldSilenceOrderAlertOnDetailsOpen(null)).toBe(true);
   });
 });
 

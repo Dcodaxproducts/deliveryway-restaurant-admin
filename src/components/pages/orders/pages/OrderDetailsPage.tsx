@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import OrderDetailsMain from "@/components/pages/Orders/components/orders/details/OrderDetails";
@@ -10,16 +10,23 @@ import OrderTrackingSection from "@/components/pages/Orders/components/orders/de
 import UserProfile from "@/components/pages/Orders/components/orders/details/UserProfile";
 import { useGetOrderById } from "@/hooks/useOrders";
 import { silenceOrderAlert } from "@/hooks/useRealtimeOrderNotifications";
+import { shouldSilenceOrderAlertOnDetailsOpen } from "@/lib/new-order-navigation";
 
 export default function OrderDetails() {
   const t = useTranslations("orders");
   const { orderId } = useParams();
+  const searchParams = useSearchParams();
+  const shouldSilenceAlert = useRef(
+    shouldSilenceOrderAlertOnDetailsOpen(searchParams.get("acceptOrder")),
+  ).current;
 
   const { data: order, isLoading: loading } = useGetOrderById(orderId as string);
 
   useEffect(() => {
-    if (typeof orderId === "string") silenceOrderAlert(orderId);
-  }, [orderId]);
+    if (shouldSilenceAlert && typeof orderId === "string") {
+      silenceOrderAlert(orderId);
+    }
+  }, [orderId, shouldSilenceAlert]);
 
   if (loading || !order) {
     return <div className="p-6">{t("loadingOrder")}</div>;
