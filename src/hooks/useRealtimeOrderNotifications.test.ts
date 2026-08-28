@@ -22,8 +22,10 @@ import {
   isPendingOrderAlertStatus,
   isScopedOrderStatusUpdate,
   playNewOrderSound,
+  rememberOrderNotification,
   registerOrderSoundUnlockListeners,
   silenceOrderAlert,
+  isOrderNotificationScopeReady,
   shouldPollPendingOrderNotifications,
   shouldRecoverOrderTrackingSocket,
   startRepeatingOrderSound,
@@ -109,7 +111,7 @@ describe("order tracking connection recovery", () => {
     expect(onAuthenticationFailure).not.toHaveBeenCalled();
   });
 
-  it("polls pending orders only while the visible page is disconnected", () => {
+  it("polls pending orders whenever the page is visible", () => {
     expect(
       shouldPollPendingOrderNotifications({
         socketConnected: false,
@@ -121,11 +123,37 @@ describe("order tracking connection recovery", () => {
         socketConnected: true,
         visibilityState: "visible",
       }),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       shouldPollPendingOrderNotifications({
         socketConnected: false,
         visibilityState: "hidden",
+      }),
+    ).toBe(false);
+  });
+
+  it("starts tenant-scoped notifications for a business admin without a restaurant id", () => {
+    expect(
+      isOrderNotificationScopeReady({
+        token: "access-token",
+        tenantId: "tenant-1",
+        restaurantId: undefined,
+        branchId: undefined,
+        isRestaurantAdmin: true,
+        isBranchAdmin: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("requires the JWT restaurant and branch scope for a branch admin", () => {
+    expect(
+      isOrderNotificationScopeReady({
+        token: "access-token",
+        tenantId: "tenant-1",
+        restaurantId: "restaurant-1",
+        branchId: undefined,
+        isRestaurantAdmin: false,
+        isBranchAdmin: true,
       }),
     ).toBe(false);
   });
@@ -153,6 +181,30 @@ describe("realtime order notification state", () => {
     expect(shouldDismissNewOrderToast("PLACED")).toBe(false);
     expect(shouldDismissNewOrderToast("CONFIRMED")).toBe(true);
     expect(shouldDismissNewOrderToast("CANCELLED")).toBe(true);
+  });
+
+  it("handles the same socket and recovery order only once", () => {
+    const seenOrderIds = new Set<string>();
+
+    expect(
+      rememberOrderNotification({ seenOrderIds, orderId: "order-1" }),
+    ).toBe(true);
+    expect(
+      rememberOrderNotification({ seenOrderIds, orderId: "order-1" }),
+    ).toBe(false);
+  });
+
+  it("bounds the order deduplication memory without retaining the oldest id", () => {
+    const seenOrderIds = new Set(["order-1", "order-2"]);
+
+    expect(
+      rememberOrderNotification({
+        seenOrderIds,
+        orderId: "order-3",
+        maxSeenOrderIds: 2,
+      }),
+    ).toBe(true);
+    expect([...seenOrderIds]).toEqual(["order-2", "order-3"]);
   });
 });
 
@@ -209,6 +261,7 @@ describe("isScopedOrderStatusUpdate", () => {
   const payload = {
     id: "order-1",
     status: "CONFIRMED",
+    tenantId: "tenant-1",
     restaurantId: "restaurant-1",
     branchId: "branch-1",
   };
@@ -217,6 +270,7 @@ describe("isScopedOrderStatusUpdate", () => {
     expect(
       isScopedOrderStatusUpdate({
         payload,
+        tenantId: "tenant-1",
         restaurantId: "restaurant-1",
         isBranchAdmin: false,
       }),
@@ -227,9 +281,32 @@ describe("isScopedOrderStatusUpdate", () => {
     expect(
       isScopedOrderStatusUpdate({
         payload,
+        tenantId: "tenant-1",
         restaurantId: "restaurant-1",
         branchId: "branch-2",
         isBranchAdmin: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("accepts tenant events for a business admin without a restaurant id", () => {
+    expect(
+      isScopedOrderStatusUpdate({
+        payload,
+        tenantId: "tenant-1",
+        restaurantId: undefined,
+        isBranchAdmin: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects another tenant's event for a business admin", () => {
+    expect(
+      isScopedOrderStatusUpdate({
+        payload,
+        tenantId: "tenant-2",
+        restaurantId: undefined,
+        isBranchAdmin: false,
       }),
     ).toBe(false);
   });

@@ -25,6 +25,7 @@ import { buildAutoOpenOrderPath } from "@/lib/new-order-navigation";
 
 type OrderCreatedPayload = {
   id: string;
+  tenantId: string;
   restaurantId: string;
   branchId: string;
   source?: "STOREFRONT" | "POS";
@@ -63,18 +64,24 @@ export const isPendingOrderAlertStatus = (status?: string | null) =>
 
 export const isScopedOrderStatusUpdate = ({
   payload,
+  tenantId,
   restaurantId,
   branchId,
   isBranchAdmin,
 }: {
   payload: OrderStatusUpdatedPayload;
-  restaurantId: string;
+  tenantId?: string | null;
+  restaurantId?: string | null;
   branchId?: string | null;
   isBranchAdmin: boolean;
 }) =>
   Boolean(payload?.id) &&
-  payload.restaurantId === restaurantId &&
-  (!isBranchAdmin || payload.branchId === branchId);
+  Boolean(tenantId) &&
+  payload.tenantId === tenantId &&
+  (!isBranchAdmin ||
+    (Boolean(restaurantId) &&
+      payload.restaurantId === restaurantId &&
+      payload.branchId === branchId));
 
 type OrderUpdatedPayload = OrderCreatedPayload & {
   status: string;
@@ -84,6 +91,26 @@ type OrderUpdatedPayload = OrderCreatedPayload & {
 const MAX_SEEN_ORDER_IDS = 100;
 const ORDER_SOUND_REPEAT_INTERVAL_MS = 3_000;
 export const PENDING_ORDER_RECOVERY_INTERVAL_MS = 15_000;
+
+export const rememberOrderNotification = ({
+  seenOrderIds,
+  orderId,
+  maxSeenOrderIds = MAX_SEEN_ORDER_IDS,
+}: {
+  seenOrderIds: Set<string>;
+  orderId: string;
+  maxSeenOrderIds?: number;
+}) => {
+  if (seenOrderIds.has(orderId)) return false;
+
+  seenOrderIds.add(orderId);
+  if (seenOrderIds.size > maxSeenOrderIds) {
+    const oldestOrderId = seenOrderIds.values().next().value;
+    if (oldestOrderId) seenOrderIds.delete(oldestOrderId);
+  }
+
+  return true;
+};
 
 type OrderTrackingError = {
   code?: string;
@@ -109,12 +136,31 @@ export const isOrderTrackingAuthenticationError = (
 };
 
 export const shouldPollPendingOrderNotifications = ({
-  socketConnected,
   visibilityState,
 }: {
-  socketConnected: boolean;
+  socketConnected?: boolean;
   visibilityState: DocumentVisibilityState;
-}) => !socketConnected && visibilityState === "visible";
+}) => visibilityState === "visible";
+
+export const isOrderNotificationScopeReady = ({
+  token,
+  tenantId,
+  restaurantId,
+  branchId,
+  isRestaurantAdmin,
+  isBranchAdmin,
+}: {
+  token?: string | null;
+  tenantId?: string | null;
+  restaurantId?: string | null;
+  branchId?: string | null;
+  isRestaurantAdmin: boolean;
+  isBranchAdmin: boolean;
+}) =>
+  Boolean(token) &&
+  Boolean(tenantId) &&
+  ((isRestaurantAdmin && !isBranchAdmin) ||
+    (isBranchAdmin && Boolean(restaurantId) && Boolean(branchId)));
 
 export const createOrderTrackingSocketRecovery = ({
   refreshAccessToken,
@@ -189,11 +235,11 @@ export const buildOrderTrackingSocketAuth = ({
   branchId,
 }: {
   token: string;
-  restaurantId: string;
+  restaurantId?: string;
   branchId?: string;
 }) => ({
   token,
-  restaurantId,
+  ...(restaurantId ? { restaurantId } : {}),
   ...(branchId ? { branchId } : {}),
 });
 
@@ -274,8 +320,14 @@ export function useRealtimeOrderNotifications() {
   const orders = useTranslations("orders");
   const seenOrderIds = useRef(new Set<string>());
   const ringingOrders = useRef(new Map<string, number>());
-  const { token, restaurantId, branchId, isBranchAdmin, isRestaurantAdmin } =
-    useAuth();
+  const {
+    token,
+    tenantId,
+    restaurantId,
+    branchId,
+    isBranchAdmin,
+    isRestaurantAdmin,
+  } = useAuth();
 
   useEffect(
     () =>
@@ -291,9 +343,15 @@ export function useRealtimeOrderNotifications() {
   useEffect(() => {
     if (
       !token ||
-      !restaurantId ||
-      (!isRestaurantAdmin && !isBranchAdmin) ||
-      (isBranchAdmin && !branchId)
+      !tenantId ||
+      !isOrderNotificationScopeReady({
+        token,
+        tenantId,
+        restaurantId,
+        branchId,
+        isRestaurantAdmin,
+        isBranchAdmin,
+      })
     ) {
       return;
     }
@@ -367,19 +425,19 @@ export function useRealtimeOrderNotifications() {
     ) => {
       if (
         !payload?.id ||
-        payload.restaurantId !== restaurantId ||
-        (isBranchAdmin && payload.branchId !== branchId) ||
-        seenOrderIds.current.has(payload.id)
+        !isScopedOrderStatusUpdate({
+          payload: { ...payload, status: "PLACED" },
+          tenantId,
+          restaurantId,
+          branchId,
+          isBranchAdmin,
+        }) ||
+        !rememberOrderNotification({
+          seenOrderIds: seenOrderIds.current,
+          orderId: payload.id,
+        })
       ) {
         return;
-      }
-
-      seenOrderIds.current.add(payload.id);
-      if (seenOrderIds.current.size > MAX_SEEN_ORDER_IDS) {
-        const oldestOrderId = seenOrderIds.current.values().next().value;
-        if (oldestOrderId) {
-          seenOrderIds.current.delete(oldestOrderId);
-        }
       }
 
       refreshOrderData();
@@ -390,7 +448,7 @@ export function useRealtimeOrderNotifications() {
 
       void printNewOrderIfConfigured({
         orderId: payload.id,
-        restaurantId,
+        restaurantId: payload.restaurantId,
         branchId: payload.branchId,
       }).catch(() => {
         toast.error(orders("newOrderAutoPrintFailed"));
@@ -453,8 +511,8 @@ export function useRealtimeOrderNotifications() {
       if (pendingOrderRecoveryPromise) return pendingOrderRecoveryPromise;
 
       pendingOrderRecoveryPromise = claimPendingOrderNotifications({
-        restaurantId,
         channel: "IN_APP",
+        ...(restaurantId ? { restaurantId } : {}),
         ...(isBranchAdmin && branchId ? { branchId } : {}),
       })
         .then((response) => {
@@ -467,7 +525,8 @@ export function useRealtimeOrderNotifications() {
             handleOrderCreated(
               {
                 id: order.id,
-                restaurantId: order.restaurantId ?? restaurantId,
+                tenantId: order.tenantId ?? tenantId ?? "",
+                restaurantId: order.restaurantId ?? restaurantId ?? "",
                 branchId: order.branchId ?? branchId ?? "",
                 source: "STOREFRONT",
               },
@@ -524,10 +583,9 @@ export function useRealtimeOrderNotifications() {
       }
     });
 
-    const recoverWhileDisconnected = () => {
+    const recoverWhileVisible = () => {
       if (
         shouldPollPendingOrderNotifications({
-          socketConnected: socket.connected,
           visibilityState: document.visibilityState,
         })
       ) {
@@ -535,10 +593,10 @@ export function useRealtimeOrderNotifications() {
       }
     };
     const pendingOrderRecoveryInterval = window.setInterval(
-      recoverWhileDisconnected,
+      recoverWhileVisible,
       PENDING_ORDER_RECOVERY_INTERVAL_MS,
     );
-    document.addEventListener("visibilitychange", recoverWhileDisconnected);
+    document.addEventListener("visibilitychange", recoverWhileVisible);
 
     socket.on("order.created", handleOrderCreated);
 
@@ -546,6 +604,7 @@ export function useRealtimeOrderNotifications() {
       if (
         !isScopedOrderStatusUpdate({
           payload,
+          tenantId,
           restaurantId,
           branchId,
           isBranchAdmin,
@@ -566,7 +625,7 @@ export function useRealtimeOrderNotifications() {
       if (payload.status === "CONFIRMED") {
         void printAcceptedOrderIfConfigured({
           orderId: payload.id,
-          restaurantId,
+          restaurantId: payload.restaurantId,
           branchId: payload.branchId,
         }).catch(() => {
           toast.error(orders("acceptedOrderAutoPrintFailed"));
@@ -576,9 +635,13 @@ export function useRealtimeOrderNotifications() {
 
     socket.on("order.updated", (payload: OrderUpdatedPayload) => {
       if (
-        !payload?.id ||
-        payload.restaurantId !== restaurantId ||
-        (isBranchAdmin && payload.branchId !== branchId)
+        !isScopedOrderStatusUpdate({
+          payload,
+          tenantId,
+          restaurantId,
+          branchId,
+          isBranchAdmin,
+        })
       ) {
         return;
       }
@@ -603,7 +666,7 @@ export function useRealtimeOrderNotifications() {
       );
       document.removeEventListener(
         "visibilitychange",
-        recoverWhileDisconnected,
+        recoverWhileVisible,
       );
       window.clearInterval(pendingOrderRecoveryInterval);
       stopAllOrderAlerts();
@@ -618,5 +681,6 @@ export function useRealtimeOrderNotifications() {
     restaurantId,
     router,
     token,
+    tenantId,
   ]);
 }

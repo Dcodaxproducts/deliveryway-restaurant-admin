@@ -19,6 +19,7 @@ export type AdminNotification = {
   metadata?: AdminNotificationMetadata | null;
   order?: {
     id: string;
+    tenantId?: string;
     restaurantId?: string;
     branchId?: string;
     status?: string;

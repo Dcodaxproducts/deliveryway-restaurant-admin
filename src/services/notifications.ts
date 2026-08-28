@@ -7,7 +7,7 @@ import type {
 } from "@/types/notifications";
 
 export type GetNotificationsParams = {
-  restaurantId: string;
+  restaurantId?: string;
   branchId?: string;
   status?: "pending" | "seen";
   channel?: "IN_APP" | "EMAIL" | "PUSH";
@@ -56,6 +56,7 @@ const normalizeNotification = (value: unknown): AdminNotification | null => {
   const order = isRecord(value.order)
     ? {
         id: getString(value.order, "id"),
+        tenantId: getString(value.order, "tenantId") || undefined,
         restaurantId: getString(value.order, "restaurantId") || undefined,
         branchId: getString(value.order, "branchId") || undefined,
         status: getString(value.order, "status") || undefined,

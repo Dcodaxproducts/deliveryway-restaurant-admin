@@ -38,6 +38,32 @@ describe("normalizeNotificationsResponse", () => {
 
     expect(result.data[0]?.seen).toBe(true);
   });
+
+  it("preserves the tenant, restaurant, and branch scope of recovered orders", () => {
+    const result = normalizeNotificationsResponse({
+      data: [
+        {
+          id: "notification-1",
+          type: "ORDER_PLACED",
+          order: {
+            id: "order-1",
+            tenantId: "tenant-1",
+            restaurantId: "restaurant-1",
+            branchId: "branch-1",
+          },
+        },
+      ],
+    });
+
+    expect(result.data[0]?.order).toEqual(
+      expect.objectContaining({
+        id: "order-1",
+        tenantId: "tenant-1",
+        restaurantId: "restaurant-1",
+        branchId: "branch-1",
+      }),
+    );
+  });
 });
 
 describe("restaurant admin notification feed", () => {
@@ -94,6 +120,19 @@ describe("restaurant admin notification feed", () => {
       { params: inAppScope },
     );
     expect(result.data[0]?.order?.id).toBe("order-1");
+  });
+
+  it("claims tenant pending orders without inventing a restaurant scope", async () => {
+    apiPostMock.mockResolvedValue({ data: { data: [] } });
+    const tenantScope = { channel: "IN_APP" as const };
+
+    await claimPendingOrderNotifications(tenantScope);
+
+    expect(apiPostMock).toHaveBeenCalledWith(
+      "/notifications/claim-pending-orders",
+      undefined,
+      { params: tenantScope },
+    );
   });
 
   it("marks one opened notification as seen", async () => {
