@@ -95,7 +95,6 @@ export function OrdersPage() {
     activeTab === "today" || activeTab === "all"
       ? "PAYMENT_PENDING"
       : undefined;
-  const successfulOnly = activeTab === "today" || activeTab === "all";
   const todayRange = useMemo(() => {
     if (activeTab !== "today") return {};
 
@@ -142,7 +141,6 @@ export function OrdersPage() {
     orderType,
     kind: orderKind,
     excludeStatus,
-    successfulOnly,
     createdFrom: todayRange.fromDate,
     createdTo: todayRange.toDate,
     ...scheduleQuery,
