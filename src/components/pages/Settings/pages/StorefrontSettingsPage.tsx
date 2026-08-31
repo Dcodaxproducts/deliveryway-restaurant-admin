@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 import type { FieldPath } from "react-hook-form";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { BadgeCheck, Clock3, Globe2, LockKeyhole } from "lucide-react";
@@ -25,6 +25,7 @@ import ColorSchemeSection from "@/components/pages/Settings/theme/components/the
 import PreviewSection from "@/components/pages/Settings/theme/components/theme-settings/preview-section";
 import TypographySection from "@/components/pages/Settings/theme/components/theme-settings/typography-section";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useBranding } from "@/hooks/useBranding";
 import { buildGeneratedStorefrontUrl } from "@/lib/branding";
@@ -199,9 +200,7 @@ export function StorefrontSettingsPage() {
       await saveBranding(values);
       toast.success(t("brandingSaved"));
     } catch (error) {
-      toast.error(
-        getApiErrorMessage(error, t("brandingSaveFailed")),
-      );
+      toast.error(getApiErrorMessage(error, t("brandingSaveFailed")));
     }
   };
 
@@ -221,9 +220,7 @@ export function StorefrontSettingsPage() {
       await resetBranding();
       toast.success(t("brandingReset"));
     } catch (error) {
-      toast.error(
-        getApiErrorMessage(error, t("brandingResetFailed")),
-      );
+      toast.error(getApiErrorMessage(error, t("brandingResetFailed")));
     }
   };
 
@@ -377,6 +374,38 @@ export function StorefrontSettingsPage() {
               value={activeStorefrontUrl}
               href={activeStorefrontUrl}
               activeLabel={t("active")}
+            />
+          </div>
+        </div>
+
+        <div className={BRANDING_PANEL_CLASS}>
+          <h3 className={BRANDING_SECTION_TITLE_CLASS}>
+            {t("homepageSections")}
+          </h3>
+          <div className="mt-6 flex items-center justify-between gap-6 rounded-[14px] border border-gray-200 bg-gray-50/70 p-4">
+            <div>
+              <label
+                htmlFor="show-app-promotion"
+                className="text-sm font-semibold text-gray-900"
+              >
+                {t("mobileAppPromotion")}
+              </label>
+              <p className="mt-1 text-sm text-gray-500">
+                {t("mobileAppPromotionDescription")}
+              </p>
+            </div>
+            <Controller
+              control={control}
+              name="restaurant.branding.app.showAppPromotion"
+              render={({ field }) => (
+                <Switch
+                  id="show-app-promotion"
+                  checked={field.value}
+                  disabled={isBrandingBusy}
+                  onCheckedChange={field.onChange}
+                  className="data-[state=checked]:bg-primary"
+                />
+              )}
             />
           </div>
         </div>

@@ -2771,6 +2771,9 @@
   "settings": {
     "storefrontTitle": "Storefront-Einstellungen",
     "storefrontDescription": "Restaurantprofil, Branding, Assets, Supportkontakt und kundenorientiertes Erscheinungsbild verwalten.",
+    "homepageSections": "Startseitenbereiche",
+    "mobileAppPromotion": "Mobile-App-Werbung",
+    "mobileAppPromotionDescription": "Den Download-Banner der DeliveryWay-App auf der Kunden-Startseite anzeigen.",
     "restaurantProfile": "Restaurantprofil",
     "restaurantName": "Restaurantname",
     "restaurantNamePlaceholder": "DeliveryWay Restaurant",

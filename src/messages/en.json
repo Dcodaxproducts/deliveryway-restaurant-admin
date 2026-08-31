@@ -2771,6 +2771,9 @@
   "settings": {
     "storefrontTitle": "Storefront Settings",
     "storefrontDescription": "Manage restaurant profile, branding, assets, support contact, and customer-facing appearance.",
+    "homepageSections": "Homepage Sections",
+    "mobileAppPromotion": "Mobile App Promotion",
+    "mobileAppPromotionDescription": "Show the DeliveryWay app download banner on the customer homepage.",
     "restaurantProfile": "Restaurant Profile",
     "restaurantName": "Restaurant Name",
     "restaurantNamePlaceholder": "DeliveryWay Restaurant",

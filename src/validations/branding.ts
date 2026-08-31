@@ -7,26 +7,27 @@ const menuCardStyles = ["image-top", "compact", "image-left"] as const;
 
 export const hexColorSchema = z
   .string()
-  .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, "Use a valid #RGB or #RRGGBB color");
+  .regex(
+    /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
+    "Use a valid #RGB or #RRGGBB color",
+  );
 
-export const optionalUrlSchema = z
-  .string()
-  .refine((value) => {
-    if (value === "") {
-      return true;
-    }
+export const optionalUrlSchema = z.string().refine((value) => {
+  if (value === "") {
+    return true;
+  }
 
-    if (value.startsWith("/")) {
-      return true;
-    }
+  if (value.startsWith("/")) {
+    return true;
+  }
 
-    try {
-      const url = new URL(value);
-      return url.protocol === "http:" || url.protocol === "https:";
-    } catch {
-      return false;
-    }
-  }, "Use an empty value, a relative path, or a valid http/https URL");
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}, "Use an empty value, a relative path, or a valid http/https URL");
 
 const borderRadiusSchema = z
   .string()
@@ -76,6 +77,7 @@ const appOptionsSchema = z.object({
   menuCardStyle: z.enum(menuCardStyles),
   showTagline: z.boolean(),
   showHeroBanner: z.boolean(),
+  showAppPromotion: z.boolean(),
   splashColor: hexColorSchema,
   statusBarColor: hexColorSchema,
   bottomNavColor: hexColorSchema,
@@ -157,4 +159,6 @@ export const restaurantBrandingPayloadSchema = z.object({
   restaurant: restaurantBrandingProfileSchema,
 });
 
-export type BrandingFormValues = z.infer<typeof restaurantBrandingPayloadSchema>;
+export type BrandingFormValues = z.infer<
+  typeof restaurantBrandingPayloadSchema
+>;

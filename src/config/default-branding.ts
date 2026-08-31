@@ -32,8 +32,10 @@ export const DEFAULT_RESTAURANT_BRANDING_PAYLOAD: RestaurantBrandingPayload = {
           backgroundColor: "#030401",
           textColor: "#F5F5F5",
         },
-        fontFamily: "var(--font-onest), 'Onest', 'Onest Fallback', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        headingFontFamily: "var(--font-onest), 'Onest', 'Onest Fallback', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        fontFamily:
+          "var(--font-onest), 'Onest', 'Onest Fallback', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        headingFontFamily:
+          "var(--font-onest), 'Onest', 'Onest Fallback', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         borderRadius: "12px",
         buttonStyle: "rounded",
         homeLayout: "hero",
@@ -46,6 +48,7 @@ export const DEFAULT_RESTAURANT_BRANDING_PAYLOAD: RestaurantBrandingPayload = {
         menuCardStyle: "image-top",
         showTagline: true,
         showHeroBanner: true,
+        showAppPromotion: true,
         splashColor: "#c1000a",
         statusBarColor: "#030401",
         bottomNavColor: "#F5F5F5",

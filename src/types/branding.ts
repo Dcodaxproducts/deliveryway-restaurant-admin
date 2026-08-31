@@ -47,6 +47,7 @@ export type BrandingAppOptions = {
   menuCardStyle: BrandingMenuCardStyle;
   showTagline: boolean;
   showHeroBanner: boolean;
+  showAppPromotion: boolean;
   splashColor: string;
   statusBarColor: string;
   bottomNavColor: string;

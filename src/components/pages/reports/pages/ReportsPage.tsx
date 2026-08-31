@@ -102,23 +102,12 @@ export default function Orders() {
       enabled: activeTab === "invoice-history" && Boolean(restaurantId),
     },
   );
-  const payoutInvoicesQuery = useGetGeneratedInvoices(
-    {
-      restaurantId: restaurantId || undefined,
-      branchId: isBranchAdmin ? branchId || undefined : undefined,
-      kind: "WEEKLY_PAYOUT",
-    },
-    {
-      enabled: activeTab === "invoice-history" && Boolean(restaurantId),
-    },
-  );
   const billingInvoices = useMemo(
     () =>
       mergeRestaurantBillingInvoices(
         subscriptionInvoicesQuery.data?.data || [],
-        payoutInvoicesQuery.data?.data || [],
       ),
-    [payoutInvoicesQuery.data?.data, subscriptionInvoicesQuery.data?.data],
+    [subscriptionInvoicesQuery.data?.data],
   );
 
   const financialData = financialReportResponse?.data;
@@ -154,9 +143,7 @@ export default function Orders() {
     authLoading ||
     (activeTab === "invoice-history"
       ? subscriptionInvoicesQuery.isLoading ||
-        subscriptionInvoicesQuery.isFetching ||
-        payoutInvoicesQuery.isLoading ||
-        payoutInvoicesQuery.isFetching
+        subscriptionInvoicesQuery.isFetching
       : activeTab === "financial"
         ? financialLoading || financialFetching
         : ordersLoading || ordersFetching);
