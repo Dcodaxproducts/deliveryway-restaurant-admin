@@ -25,6 +25,20 @@ describe("buildOrderStats", () => {
       "75",
     );
   });
+
+  it("reads cancelled orders from the report key/count contract", () => {
+    const stats = buildOrderStats(
+      {
+        totalOrders: 5,
+        statusBreakdown: [{ key: "CANCELLED", count: 2 }],
+        paymentStatusBreakdown: [],
+      },
+      (key: string) => key,
+      "EUR",
+    );
+
+    expect(stats.find(({ _id }) => _id === "cancelled-orders")?.value).toBe(2);
+  });
 });
 
 describe("canRequestOrdersReport", () => {

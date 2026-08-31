@@ -32,8 +32,16 @@ export const canRequestOrdersReport = ({
   restaurantId?: string;
 }) => Boolean(restaurantId || isStaff);
 
-const countByStatus = (list: any[] | undefined, status: string) =>
-  list?.find((item: any) => item.status?.toUpperCase() === status)?.count ?? 0;
+type StatusCount = {
+  key?: string;
+  status?: string;
+  count?: number;
+};
+
+const countByStatus = (list: StatusCount[] | undefined, status: string) =>
+  list?.find(
+    (item) => (item.status ?? item.key)?.toUpperCase() === status,
+  )?.count ?? 0;
 
 type Translate = (
   key: string,
