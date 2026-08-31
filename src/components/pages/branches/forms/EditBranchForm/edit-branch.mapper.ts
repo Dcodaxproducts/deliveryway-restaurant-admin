@@ -474,7 +474,6 @@ export const buildBranchPatchPayload = (
   return {
     restaurantId: branchData.restaurantId,
     name: branchData.name,
-    isMain: branchData.isMain,
     ...(branchAdmin ? { branchAdmin } : {}),
     street: branchData.street,
     shopNumber: branchData.shopNumber,

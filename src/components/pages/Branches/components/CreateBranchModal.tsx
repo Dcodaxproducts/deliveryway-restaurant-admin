@@ -91,7 +91,6 @@ const defaultValues: CreateBranchFormValues = {
   area: "",
   lat: "",
   lng: "",
-  isMain: false,
   settings: defaultCreateBranchSettings,
   branchAdmin: {
     email: "",
@@ -207,7 +206,6 @@ const getErrorMessage = (
 };
 
 export function CreateBranchModal({
-  hasExistingBranches = false,
   open,
   onOpenChange,
   onSuccess,
@@ -263,7 +261,6 @@ export function CreateBranchModal({
         area: values.area ?? "",
         lat: values.lat ?? "",
         lng: values.lng ?? "",
-        isMain: values.isMain,
         settings: buildCreateBranchSettings(values.settings),
         branchAdmin: {
           email: values.branchAdmin.email ?? "",
@@ -352,28 +349,6 @@ export function CreateBranchModal({
                   ? renderBranchField(branchNameFieldConfig)
                   : null}
 
-                {!hasExistingBranches ? (
-                  <div className="flex h-[44px] min-w-[180px] items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4">
-                    <Label
-                      htmlFor="create-branch-is-main"
-                      className="text-sm font-medium text-slate-700"
-                    >
-                      {t("mainBranch")}
-                    </Label>
-                    <Controller
-                      control={control}
-                      name="isMain"
-                      render={({ field }) => (
-                        <Switch
-                          id="create-branch-is-main"
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          className="data-[state=checked]:bg-primary"
-                        />
-                      )}
-                    />
-                  </div>
-                ) : null}
               </div>
 
               <div className="space-y-2">

@@ -200,7 +200,6 @@ export const createBranchSchema = z.object({
   area: z.string().optional(),
   lat: z.string().optional(),
   lng: z.string().optional(),
-  isMain: z.boolean(),
   branchAdmin: z.object({
     email: z.string().optional(),
     password: z.string().optional(),
