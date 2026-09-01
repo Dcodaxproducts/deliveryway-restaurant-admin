@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
-      lang="de"
+      lang="en"
       className="notranslate"
       translate="no"
       suppressHydrationWarning
