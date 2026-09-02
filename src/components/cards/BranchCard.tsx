@@ -471,7 +471,7 @@ function ActionButton({
   return (
     <Button
       variant="ghost"
-      className="h-[40px] w-[44px] flex items-center justify-center text-gray-500 hover:bg-gray-50"
+      className="h-[40px] w-[44px] flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-700"
       onClick={onClick}
     >
       {children}
