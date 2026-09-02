@@ -2924,6 +2924,13 @@
       "pendingPayments": "Ausstehende Zahlungen"
     },
     "downloadPdf": "PDF herunterladen",
+    "customPeriod": "Individueller Zeitraum",
+    "fromDate": "Von",
+    "toDate": "Bis",
+    "applyPeriod": "Zeitraum anwenden",
+    "resetPeriod": "Zurücksetzen",
+    "invalidCustomPeriod": "Bitte wählen Sie ein gültiges Start- und Enddatum",
+    "selectedPeriod": "Ausgewählt: {from} bis {to}",
     "restaurantUnavailable": "Restaurant ist nicht verfügbar",
     "pdfDownloaded": "{title} wurde als PDF heruntergeladen",
     "live": "Live",

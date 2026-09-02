@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Download } from "lucide-react";
+import { CalendarDays, Download } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -15,7 +15,9 @@ import OrdersGraph from "@/components/pages/Reports/components/graphs/orders-gra
 import type { TrendRange } from "@/components/pages/Reports/components/graphs/orders-graph";
 import { GeneratedInvoiceHistoryTable } from "@/components/pages/Orders/components/orders/GeneratedInvoiceHistoryTable";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
+import { useBranding } from "@/hooks/useBranding";
 import { useCurrency } from "@/hooks/useCurrency";
 import {
   useGetFinancialReport,
@@ -31,6 +33,11 @@ import {
   mergeRestaurantBillingInvoices,
   type ReportTab,
 } from "@/components/pages/reports/utils/reports-page.helpers";
+import {
+  isValidCustomReportPeriod,
+  resolveReportDateRange,
+  type CustomReportPeriod,
+} from "@/components/pages/reports/utils/report-date-range";
 
 export default function Orders() {
   const t = useTranslations("reports");
@@ -43,6 +50,7 @@ export default function Orders() {
     loading: authLoading,
   } = useAuth();
   const { currency: fallbackCurrency } = useCurrency(restaurantId);
+  const { restaurant } = useBranding();
   const scopedReportParams = restaurantId
     ? {
         restaurantId,
@@ -52,17 +60,15 @@ export default function Orders() {
 
   const [activeTab, setActiveTab] = useState<ReportTab>("financial");
   const [range, setRange] = useState<TrendRange>("daily");
-  const reportDateRange = useMemo(() => {
-    const now = new Date();
-    const from = new Date(now);
-    from.setHours(0, 0, 0, 0);
-    if (range === "weekly") from.setDate(from.getDate() - 6);
-    if (range === "monthly") from.setDate(1);
-    return {
-      fromDate: from.toISOString(),
-      toDate: now.toISOString(),
-    };
-  }, [range]);
+  const [draftCustomPeriod, setDraftCustomPeriod] =
+    useState<CustomReportPeriod>({ from: "", to: "" });
+  const [customPeriod, setCustomPeriod] = useState<CustomReportPeriod | null>(
+    null,
+  );
+  const reportDateRange = useMemo(
+    () => resolveReportDateRange(range, customPeriod),
+    [customPeriod, range],
+  );
   useEffect(() => {
     const requestedTab = searchParams.get("tab");
     if (
@@ -163,7 +169,9 @@ export default function Orders() {
       title,
       description,
       restaurantId,
+      restaurantName: restaurant.name,
       currency: reportCurrency,
+      period: reportDateRange,
       stats: activeStats.map((stat) => ({
         title: stat.title,
         value: String(stat.value ?? "-"),
@@ -173,6 +181,25 @@ export default function Orders() {
     });
 
     toast.success(t("pdfDownloaded", { title }));
+  };
+
+  const handleApplyCustomPeriod = () => {
+    if (!isValidCustomReportPeriod(draftCustomPeriod)) {
+      toast.error(t("invalidCustomPeriod"));
+      return;
+    }
+
+    setCustomPeriod(draftCustomPeriod);
+  };
+
+  const handleResetCustomPeriod = () => {
+    setDraftCustomPeriod({ from: "", to: "" });
+    setCustomPeriod(null);
+  };
+
+  const handleRangeChange = (nextRange: TrendRange) => {
+    setRange(nextRange);
+    setCustomPeriod(null);
   };
 
   const handleTabChange = (tab: ReportTab) => {
@@ -225,6 +252,70 @@ export default function Orders() {
           </TabButton>
         </div>
 
+        {activeTab !== "invoice-history" ? (
+          <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 lg:flex-row lg:items-end">
+            <div className="flex items-center gap-2 pb-1 text-sm font-medium text-gray-700 lg:mr-2">
+              <CalendarDays size={18} />
+              {t("customPeriod")}
+            </div>
+            <label className="grid gap-1 text-xs font-medium text-gray-600">
+              {t("fromDate")}
+              <Input
+                type="date"
+                value={draftCustomPeriod.from}
+                max={draftCustomPeriod.to || undefined}
+                onChange={(event) =>
+                  setDraftCustomPeriod((current) => ({
+                    ...current,
+                    from: event.target.value,
+                  }))
+                }
+                className="h-10 bg-white"
+              />
+            </label>
+            <label className="grid gap-1 text-xs font-medium text-gray-600">
+              {t("toDate")}
+              <Input
+                type="date"
+                value={draftCustomPeriod.to}
+                min={draftCustomPeriod.from || undefined}
+                onChange={(event) =>
+                  setDraftCustomPeriod((current) => ({
+                    ...current,
+                    to: event.target.value,
+                  }))
+                }
+                className="h-10 bg-white"
+              />
+            </label>
+            <Button
+              type="button"
+              onClick={handleApplyCustomPeriod}
+              className="h-10"
+            >
+              {t("applyPeriod")}
+            </Button>
+            {customPeriod ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleResetCustomPeriod}
+                className="h-10"
+              >
+                {t("resetPeriod")}
+              </Button>
+            ) : null}
+            {customPeriod ? (
+              <p className="text-sm text-gray-600 lg:ml-auto lg:pb-2">
+                {t("selectedPeriod", {
+                  from: customPeriod.from,
+                  to: customPeriod.to,
+                })}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
         {activeTab === "invoice-history" ? (
           <GeneratedInvoiceHistoryTable
             invoices={billingInvoices}
@@ -239,7 +330,7 @@ export default function Orders() {
               className="xl:grid-cols-4"
             />
 
-            <RevenueAnalytics range={range} onRangeChange={setRange} />
+            <RevenueAnalytics range={range} onRangeChange={handleRangeChange} />
           </>
         ) : (
           <>
@@ -249,7 +340,7 @@ export default function Orders() {
               className="xl:grid-cols-4"
             />
 
-            <OrdersGraph range={range} onRangeChange={setRange} />
+            <OrdersGraph range={range} onRangeChange={handleRangeChange} />
           </>
         )}
       </div>
