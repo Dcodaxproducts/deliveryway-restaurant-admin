@@ -2924,6 +2924,13 @@
       "pendingPayments": "Pending Payments"
     },
     "downloadPdf": "Download PDF",
+    "customPeriod": "Custom period",
+    "fromDate": "From",
+    "toDate": "To",
+    "applyPeriod": "Apply period",
+    "resetPeriod": "Reset",
+    "invalidCustomPeriod": "Select a valid start and end date",
+    "selectedPeriod": "Selected: {from} to {to}",
     "restaurantUnavailable": "Restaurant is not available",
     "pdfDownloaded": "{title} PDF downloaded successfully",
     "live": "Live",
