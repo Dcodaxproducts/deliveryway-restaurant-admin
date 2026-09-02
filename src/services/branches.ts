@@ -15,7 +15,7 @@ import type { HolidayOpeningHoursPayload } from "@/types/opening-hours";
  * ==============================
  */
 
-export const createBranch = async (payload: BranchValues) => {
+export const createBranch = async (payload: Omit<BranchValues, "isMain">) => {
   const { data } = await api.post("/branches", payload);
   return data;
 };

@@ -575,6 +575,24 @@ function RestaurantWalletPayoutSection({
           )}
         />
         <PaymentSummaryCard
+          icon={<Banknote size={18} />}
+          label="Monthly fee deducted in this payout"
+          value={formatOptionalMoney(
+            walletQuery.data?.monthlyFeeDeductedAmount ?? null,
+            walletCurrency,
+            formatCurrency,
+          )}
+        />
+        <PaymentSummaryCard
+          icon={<Banknote size={18} />}
+          label="Monthly fee outstanding"
+          value={formatOptionalMoney(
+            walletQuery.data?.monthlyFeeOutstandingAmount ?? null,
+            walletCurrency,
+            formatCurrency,
+          )}
+        />
+        <PaymentSummaryCard
           icon={<Info size={18} />}
           label="Customer wallet exposure"
           value={formatRecordAmount(
