@@ -107,19 +107,23 @@ export const normalizeBranchAdminForPatch = (
   branchAdmin: unknown,
 ): BranchAdmin | undefined => {
   const adminRecord = toRecord(branchAdmin);
-  const admin: BranchAdmin = {
-    email: toStringValue(adminRecord.email).trim(),
-    firstName: toStringValue(adminRecord.firstName).trim(),
-    lastName: toStringValue(adminRecord.lastName).trim(),
-    phone: toStringValue(adminRecord.phone).trim(),
-  };
-  const password = toStringValue(adminRecord.password).trim();
+  const admin: BranchAdmin = {};
 
-  if (password) {
-    admin.password = password;
+  for (const field of [
+    "email",
+    "firstName",
+    "lastName",
+    "phone",
+    "password",
+  ] as const) {
+    const value = toStringValue(adminRecord[field]).trim();
+
+    if (value) {
+      admin[field] = value;
+    }
   }
 
-  return Object.values(admin).some(Boolean) ? admin : undefined;
+  return Object.keys(admin).length ? admin : undefined;
 };
 
 export const toNumber = (value: unknown, fallback = 0) => {
