@@ -554,6 +554,26 @@ describe("edit branch delivery and settings mapper", () => {
     expect(payload).not.toHaveProperty("branchAdmin");
   });
 
+  it("omits blank branch admin fields from a partial branch update", () => {
+    const payload = buildBranchPatchPayload(
+      {
+        restaurantId: "restaurant-1",
+        name: "Blue Area",
+        branchAdmin: {
+          email: "",
+          firstName: "",
+          lastName: "",
+          phone: " +49 30 1234567 ",
+        },
+      },
+      {},
+    );
+
+    expect(payload.branchAdmin).toEqual({
+      phone: "+49 30 1234567",
+    });
+  });
+
   it("preserves settings while adding branch admin to the patch payload", () => {
     const settings = {
       contact: {
