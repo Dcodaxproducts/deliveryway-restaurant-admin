@@ -9,6 +9,8 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/useAuth";
 import { getStoredAuth } from "@/lib/auth";
+import { buildLoginRoute } from "@/lib/auth-routes";
+import { refreshStoredAccessToken } from "@/lib/axios";
 import { API_BASE_URL } from "@/lib/constants";
 import {
   getNewOrderToastId,
@@ -81,6 +83,91 @@ type OrderUpdatedPayload = OrderCreatedPayload & {
 
 const MAX_SEEN_ORDER_IDS = 100;
 const ORDER_SOUND_REPEAT_INTERVAL_MS = 3_000;
+export const PENDING_ORDER_RECOVERY_INTERVAL_MS = 15_000;
+
+export const rememberOrderNotification = ({
+  seenOrderIds,
+  orderId,
+  maxSeenOrderIds = MAX_SEEN_ORDER_IDS,
+}: {
+  seenOrderIds: Set<string>;
+  orderId: string;
+  maxSeenOrderIds?: number;
+}) => {
+  if (seenOrderIds.has(orderId)) return false;
+
+  seenOrderIds.add(orderId);
+  if (seenOrderIds.size > maxSeenOrderIds) {
+    const oldestOrderId = seenOrderIds.values().next().value;
+    if (oldestOrderId) seenOrderIds.delete(oldestOrderId);
+  }
+
+  return true;
+};
+
+type OrderTrackingError = {
+  code?: string;
+  message?: string;
+};
+
+export const shouldRecoverOrderTrackingSocket = (reason: string) =>
+  reason === "io server disconnect";
+
+export const isOrderTrackingAuthenticationError = (
+  error?: OrderTrackingError | Error,
+) => {
+  const code = error && "code" in error ? String(error.code ?? "") : "";
+  const message = String(error?.message ?? "").toLowerCase();
+
+  return (
+    code.toUpperCase() === "UNAUTHORIZED" ||
+    message.includes("unauthorized") ||
+    message.includes("authentication") ||
+    message.includes("invalid token") ||
+    message.includes("expired token")
+  );
+};
+
+export const shouldPollPendingOrderNotifications = ({
+  visibilityState,
+}: {
+  visibilityState: DocumentVisibilityState;
+}) => visibilityState === "visible";
+
+export const createOrderTrackingSocketRecovery = ({
+  refreshAccessToken,
+  reconnect,
+  isActive,
+  onAuthenticationFailure,
+}: {
+  refreshAccessToken: () => Promise<string | null>;
+  reconnect: () => void;
+  isActive: () => boolean;
+  onAuthenticationFailure: () => void;
+}) => {
+  let recoveryPromise: Promise<boolean> | null = null;
+
+  return () => {
+    if (recoveryPromise) return recoveryPromise;
+
+    recoveryPromise = (async () => {
+      const accessToken = await refreshAccessToken();
+      if (!isActive()) return false;
+
+      if (!accessToken) {
+        onAuthenticationFailure();
+        return false;
+      }
+
+      reconnect();
+      return true;
+    })().finally(() => {
+      recoveryPromise = null;
+    });
+
+    return recoveryPromise;
+  };
+};
 
 export const startRepeatingOrderSound = ({
   orderId,
@@ -232,6 +319,7 @@ export function useRealtimeOrderNotifications() {
       return;
     }
 
+    let active = true;
     const socket = io(getOrderTrackingSocketUrl(), {
       auth: (callback) => {
         callback(
@@ -303,17 +391,12 @@ export function useRealtimeOrderNotifications() {
         !payload?.id ||
         payload.restaurantId !== restaurantId ||
         (isBranchAdmin && payload.branchId !== branchId) ||
-        seenOrderIds.current.has(payload.id)
+        !rememberOrderNotification({
+          seenOrderIds: seenOrderIds.current,
+          orderId: payload.id,
+        })
       ) {
         return;
-      }
-
-      seenOrderIds.current.add(payload.id);
-      if (seenOrderIds.current.size > MAX_SEEN_ORDER_IDS) {
-        const oldestOrderId = seenOrderIds.current.values().next().value;
-        if (oldestOrderId) {
-          seenOrderIds.current.delete(oldestOrderId);
-        }
       }
 
       refreshOrderData();
@@ -381,14 +464,19 @@ export function useRealtimeOrderNotifications() {
       }
     };
 
-    socket.on("connect", () => {
-      refreshOrderData();
-      void claimPendingOrderNotifications({
+    let pendingOrderRecoveryPromise: Promise<void> | null = null;
+    const recoverPendingOrders = () => {
+      if (!active) return Promise.resolve();
+      if (pendingOrderRecoveryPromise) return pendingOrderRecoveryPromise;
+
+      pendingOrderRecoveryPromise = claimPendingOrderNotifications({
         restaurantId,
         channel: "IN_APP",
         ...(isBranchAdmin && branchId ? { branchId } : {}),
       })
         .then((response) => {
+          if (!active) return;
+
           response.data.forEach((notification) => {
             const order = notification.order;
             if (!order?.id) return;
@@ -405,9 +493,72 @@ export function useRealtimeOrderNotifications() {
           });
         })
         .catch(() => {
-          // Realtime delivery remains active if backlog claiming is unavailable.
+          // The next bounded recovery attempt can retry transient HTTP failures.
+        })
+        .finally(() => {
+          pendingOrderRecoveryPromise = null;
         });
+
+      return pendingOrderRecoveryPromise;
+    };
+
+    const recoverSocketAuthentication = createOrderTrackingSocketRecovery({
+      refreshAccessToken: refreshStoredAccessToken,
+      reconnect: () => {
+        socket.disconnect();
+        socket.connect();
+      },
+      isActive: () => active,
+      onAuthenticationFailure: () => {
+        const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        window.location.href = buildLoginRoute(currentPath);
+      },
     });
+
+    socket.on("connect", () => {
+      refreshOrderData();
+      void recoverPendingOrders();
+    });
+
+    socket.on("order.tracking.error", (error: OrderTrackingError) => {
+      if (isOrderTrackingAuthenticationError(error)) {
+        void recoverSocketAuthentication();
+      }
+    });
+
+    socket.on("connect_error", (error: Error) => {
+      if (isOrderTrackingAuthenticationError(error)) {
+        void recoverSocketAuthentication();
+      }
+    });
+
+    socket.on("disconnect", (reason) => {
+      if (!active) return;
+
+      void recoverPendingOrders();
+      if (shouldRecoverOrderTrackingSocket(reason)) {
+        void recoverSocketAuthentication();
+      }
+    });
+
+    const recoverWhileVisible = () => {
+      if (
+        shouldPollPendingOrderNotifications({
+          visibilityState: document.visibilityState,
+        })
+      ) {
+        void recoverPendingOrders();
+      }
+    };
+    const pendingOrderRecoveryInterval = window.setInterval(
+      recoverWhileVisible,
+      PENDING_ORDER_RECOVERY_INTERVAL_MS,
+    );
+    document.addEventListener("visibilitychange", recoverWhileVisible);
+    window.addEventListener("focus", recoverWhileVisible);
+    window.addEventListener("pageshow", recoverWhileVisible);
+    window.addEventListener("online", recoverWhileVisible);
+    void recoverPendingOrders();
 
     socket.on("order.created", handleOrderCreated);
 
@@ -464,11 +615,17 @@ export function useRealtimeOrderNotifications() {
     });
 
     return () => {
+      active = false;
       window.removeEventListener(ORDER_SOUND_SETTING_EVENT, handleSoundSetting);
       window.removeEventListener(
         ORDER_ALERT_DISMISS_EVENT,
         handleOrderAlertDismiss,
       );
+      document.removeEventListener("visibilitychange", recoverWhileVisible);
+      window.removeEventListener("focus", recoverWhileVisible);
+      window.removeEventListener("pageshow", recoverWhileVisible);
+      window.removeEventListener("online", recoverWhileVisible);
+      window.clearInterval(pendingOrderRecoveryInterval);
       stopAllOrderAlerts();
       socket.disconnect();
     };
