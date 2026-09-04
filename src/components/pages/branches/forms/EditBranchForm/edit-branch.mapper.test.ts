@@ -424,6 +424,33 @@ describe("edit branch delivery and settings mapper", () => {
     });
   });
 
+  it("prefills an unassigned main branch with the registering business admin", () => {
+    const hydrated = hydrateBranchForEdit(
+      {
+        id: "branch-1",
+        name: "Main branch",
+        branchAdmin: null,
+        manager: null,
+      } as unknown as BranchFormData,
+      {
+        email: "owner@restaurant.de",
+        profile: {
+          firstName: "Anna",
+          lastName: "Becker",
+          phone: "+49 30 123456",
+        },
+      },
+    );
+
+    expect(hydrated.branchAdmin).toEqual({
+      email: "owner@restaurant.de",
+      password: "",
+      firstName: "Anna",
+      lastName: "Becker",
+      phone: "+49 30 123456",
+    });
+  });
+
   it("includes edited branch admin info without sending a blank password", () => {
     const payload = buildBranchPatchPayload(
       {

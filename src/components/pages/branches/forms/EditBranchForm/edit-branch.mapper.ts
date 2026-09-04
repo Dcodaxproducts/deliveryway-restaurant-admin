@@ -70,34 +70,52 @@ const toCoordinateValue = (value: unknown): string | number | undefined =>
 const normalizeBranchAdminForEdit = (
   branchAdmin: unknown,
   manager: unknown,
+  registrationAdmin?: unknown,
 ): BranchAdmin => {
   const adminRecord = toRecord(branchAdmin);
   const adminProfileRecord = toRecord(adminRecord.profile);
   const managerRecord = toRecord(manager);
   const profileRecord = toRecord(managerRecord.profile);
+  const registrationAdminRecord = toRecord(registrationAdmin);
+  const registrationProfileRecord = toRecord(registrationAdminRecord.profile);
 
   return {
-    email: toStringValue(adminRecord.email, toStringValue(managerRecord.email)),
+    email: toStringValue(
+      adminRecord.email,
+      toStringValue(
+        managerRecord.email,
+        toStringValue(registrationAdminRecord.email),
+      ),
+    ),
     password: toStringValue(adminRecord.password),
     firstName: toStringValue(
       adminRecord.firstName,
       toStringValue(
         adminProfileRecord.firstName,
-        toStringValue(profileRecord.firstName),
+        toStringValue(
+          profileRecord.firstName,
+          toStringValue(registrationProfileRecord.firstName),
+        ),
       ),
     ),
     lastName: toStringValue(
       adminRecord.lastName,
       toStringValue(
         adminProfileRecord.lastName,
-        toStringValue(profileRecord.lastName),
+        toStringValue(
+          profileRecord.lastName,
+          toStringValue(registrationProfileRecord.lastName),
+        ),
       ),
     ),
     phone: toStringValue(
       adminRecord.phone,
       toStringValue(
         adminProfileRecord.phone,
-        toStringValue(profileRecord.phone),
+        toStringValue(
+          profileRecord.phone,
+          toStringValue(registrationProfileRecord.phone),
+        ),
       ),
     ),
   };
@@ -549,6 +567,7 @@ export const buildSafeBranchSettings = (
 
 export const hydrateBranchForEdit = (
   branchData: BranchFormData,
+  registrationAdmin?: unknown,
 ): BranchFormData => {
   const settings = branchData.settings || {};
   const deliveryConfig = normalizeDeliveryConfigForApi(settings.deliveryConfig);
@@ -593,7 +612,11 @@ export const hydrateBranchForEdit = (
       lat: toCoordinateValue(address.lat),
       lng: toCoordinateValue(address.lng),
     },
-    branchAdmin: normalizeBranchAdminForEdit(branchData.branchAdmin, manager),
+    branchAdmin: normalizeBranchAdminForEdit(
+      branchData.branchAdmin,
+      manager,
+      registrationAdmin,
+    ),
     settings: {
       ...settings,
       tableReservationsEnabled: Boolean(

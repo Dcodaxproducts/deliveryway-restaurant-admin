@@ -597,6 +597,10 @@ export function useRealtimeOrderNotifications() {
       PENDING_ORDER_RECOVERY_INTERVAL_MS,
     );
     document.addEventListener("visibilitychange", recoverWhileVisible);
+    window.addEventListener("focus", recoverWhileVisible);
+    window.addEventListener("pageshow", recoverWhileVisible);
+    window.addEventListener("online", recoverWhileVisible);
+    void recoverPendingOrders();
 
     socket.on("order.created", handleOrderCreated);
 
@@ -668,6 +672,9 @@ export function useRealtimeOrderNotifications() {
         "visibilitychange",
         recoverWhileVisible,
       );
+      window.removeEventListener("focus", recoverWhileVisible);
+      window.removeEventListener("pageshow", recoverWhileVisible);
+      window.removeEventListener("online", recoverWhileVisible);
       window.clearInterval(pendingOrderRecoveryInterval);
       stopAllOrderAlerts();
       socket.disconnect();
