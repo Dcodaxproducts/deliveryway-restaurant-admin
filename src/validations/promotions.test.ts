@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { happyHourSchema, promotionSchema } from "@/validations/promotions";
+import {
+  couponSchema,
+  happyHourSchema,
+  promotionSchema,
+} from "@/validations/promotions";
 
 const validPromotion = {
   code: "",
@@ -47,13 +51,24 @@ const validHappyHour = {
 
 describe("promotion thumbnailUrl validation", () => {
   it("allows empty, relative, and http thumbnail URLs", () => {
-    for (const thumbnailUrl of ["", "/uploads/promo.png", "https://cdn.example.com/promo.png"]) {
-      expect(promotionSchema.safeParse({ ...validPromotion, thumbnailUrl }).success).toBe(true);
+    for (const thumbnailUrl of [
+      "",
+      "/uploads/promo.png",
+      "https://cdn.example.com/promo.png",
+    ]) {
+      expect(
+        promotionSchema.safeParse({ ...validPromotion, thumbnailUrl }).success,
+      ).toBe(true);
     }
   });
 
   it("rejects invalid thumbnail URLs", () => {
-    expect(promotionSchema.safeParse({ ...validPromotion, thumbnailUrl: "invalid-url" }).success).toBe(false);
+    expect(
+      promotionSchema.safeParse({
+        ...validPromotion,
+        thumbnailUrl: "invalid-url",
+      }).success,
+    ).toBe(false);
   });
 });
 
@@ -78,5 +93,37 @@ describe("happy hour validation", () => {
     });
 
     expect(result.success).toBe(true);
+  });
+});
+
+describe("coupon validation", () => {
+  const coupon = {
+    code: "PICKUP10",
+    title: "Pickup discount",
+    discountType: "PERCENTAGE",
+    discountValue: "10",
+    startsAt: "",
+    expiresAt: "",
+    applicableOrderType: "TAKEAWAY",
+    description: "",
+    audience: "BOTH",
+    applyMode: "ORDER_TOTAL",
+    branchId: "",
+    maxDiscountAmount: "",
+    minOrderAmount: "",
+    maxUses: "",
+    maxUsesPerCustomer: "",
+    selectedMenuItems: [],
+    selectedCategories: [],
+  };
+
+  it("allows a pickup-only percentage coupon without validity dates", () => {
+    expect(couponSchema.safeParse(coupon).success).toBe(true);
+  });
+
+  it("rejects percentage coupons above 100 percent", () => {
+    expect(
+      couponSchema.safeParse({ ...coupon, discountValue: "101" }).success,
+    ).toBe(false);
   });
 });

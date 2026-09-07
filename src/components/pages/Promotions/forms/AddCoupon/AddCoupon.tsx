@@ -52,6 +52,7 @@ const defaultValues: CouponFormValues = {
   discountValue: "",
   startsAt: "",
   expiresAt: "",
+  applicableOrderType: "ALL",
   description: "",
   audience: "BOTH",
   applyMode: "ORDER_TOTAL",
@@ -151,6 +152,12 @@ export default function AddNewCoupon() {
       discountValue: String(coupon.discountValue ?? ""),
       startsAt: formatDate(getString(coupon, "startsAt") ?? ""),
       expiresAt: formatDate(getString(coupon, "expiresAt") ?? ""),
+      applicableOrderType:
+        coupon.applicableOrderType === "DELIVERY" ||
+        coupon.applicableOrderType === "TAKEAWAY" ||
+        coupon.applicableOrderType === "DINE_IN"
+          ? coupon.applicableOrderType
+          : "ALL",
       description: getString(coupon, "description") ?? "",
       audience: coupon.audience === "REGISTERED" ? "REGISTERED" : "BOTH",
       applyMode:
@@ -236,22 +243,30 @@ export default function AddNewCoupon() {
       values.applyMode === "SCOPED_ITEMS"
         ? getIds(values.selectedCategories)
         : [];
-    const payload = cleanPayload({
-      ...values,
-      ...(isEdit ? {} : { restaurantId }),
-      code: values.code.trim(),
-      title: values.title.trim(),
-      description: values.description?.trim() || undefined,
-      discountValue: toOptionalNumber(values.discountValue) ?? 0,
-      maxDiscountAmount: toOptionalNumber(values.maxDiscountAmount),
-      minOrderAmount: toOptionalNumber(values.minOrderAmount),
-      maxUses: toOptionalNumber(values.maxUses),
-      maxUsesPerCustomer: toOptionalNumber(values.maxUsesPerCustomer),
-      scopeMenuItemIds,
-      scopeCategoryIds,
-      scopeMenuItemId: scopeMenuItemIds[0],
-      scopeCategoryId: scopeCategoryIds[0],
-    });
+    const payload = {
+      ...cleanPayload({
+        ...values,
+        ...(isEdit ? {} : { restaurantId }),
+        code: values.code.trim(),
+        title: values.title.trim(),
+        description: values.description?.trim() || undefined,
+        discountValue: toOptionalNumber(values.discountValue) ?? 0,
+        maxDiscountAmount: toOptionalNumber(values.maxDiscountAmount),
+        minOrderAmount: toOptionalNumber(values.minOrderAmount),
+        maxUses: toOptionalNumber(values.maxUses),
+        maxUsesPerCustomer: toOptionalNumber(values.maxUsesPerCustomer),
+        scopeMenuItemIds,
+        scopeCategoryIds,
+        scopeMenuItemId: scopeMenuItemIds[0],
+        scopeCategoryId: scopeCategoryIds[0],
+      }),
+      applicableOrderType:
+        values.applicableOrderType === "ALL"
+          ? null
+          : values.applicableOrderType,
+      startsAt: values.startsAt || null,
+      expiresAt: values.expiresAt || null,
+    };
 
     try {
       if (isEdit) {
@@ -383,7 +398,7 @@ export default function AddNewCoupon() {
             name="startsAt"
             render={({ field }) => (
               <FormInput
-                label={t("forms.startsAt")}
+                label={t("forms.startsAtOptional")}
                 type="datetime-local"
                 min={minimumDateTime}
                 value={field.value}
@@ -398,7 +413,7 @@ export default function AddNewCoupon() {
             name="expiresAt"
             render={({ field }) => (
               <FormInput
-                label={t("forms.expiresAt")}
+                label={t("forms.expiresAtOptional")}
                 type="datetime-local"
                 min={minimumDateTime}
                 value={field.value}
@@ -426,6 +441,40 @@ export default function AddNewCoupon() {
                   ))}
                 </SelectContent>
               </Select>
+            )}
+          />
+        </Section>
+
+        <Section label={t("forms.orderTypeScope")}>
+          <Controller
+            control={control}
+            name="applicableOrderType"
+            render={({ field }) => (
+              <div className="space-y-2">
+                <Label>{t("forms.validForOrderType")}</Label>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">
+                      {t("forms.allOrderTypes")}
+                    </SelectItem>
+                    <SelectItem value="DELIVERY">
+                      {t("forms.deliveryOnly")}
+                    </SelectItem>
+                    <SelectItem value="TAKEAWAY">
+                      {t("forms.pickupOnly")}
+                    </SelectItem>
+                    <SelectItem value="DINE_IN">
+                      {t("forms.dineInOnly")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  {t("forms.orderTypeScopeHelp")}
+                </p>
+              </div>
             )}
           />
         </Section>

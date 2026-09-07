@@ -37,7 +37,11 @@ import {
 import { ClickTooltip } from "@/components/common/ClickTooltip";
 import TableSkeleton from "@/components/common/TableSkeleton";
 import SortHeader from "@/components/common/sort-header";
-import { getOrderAddressPreview } from "@/components/pages/Orders/components/orders/details/order-details-utils";
+import {
+  formatPaymentMethod,
+  getOrderAddressPreview,
+  getSelectedPaymentMethod,
+} from "@/components/pages/Orders/components/orders/details/order-details-utils";
 import { OrderStatusUpdateDialog } from "@/components/pages/Orders/components/orders/OrderStatusUpdateDialog";
 import { OrderStatusProgressDialog } from "@/components/pages/Orders/components/orders/OrderStatusProgressDialog";
 import { PaymentStatusUpdateDialog } from "@/components/pages/Orders/components/orders/PaymentStatusUpdateDialog";
@@ -138,6 +142,16 @@ export function OrdersTable({
   const { formatMoney } = useCurrency();
   const common = useTranslations("common");
   const t = useTranslations("orders");
+  const paymentMethodLabels = {
+    COD: t("paymentMethods.COD"),
+    CARD_ON_DELIVERY: t("paymentMethods.CARD_ON_DELIVERY"),
+    STRIPE: t("paymentMethods.STRIPE"),
+    PAYPAL: t("paymentMethods.PAYPAL"),
+    EASYPAISA: t("paymentMethods.EASYPAISA"),
+    JAZZCASH: t("paymentMethods.JAZZCASH"),
+    BANK_TRANSFER: t("paymentMethods.BANK_TRANSFER"),
+    WALLET: t("paymentMethods.WALLET"),
+  };
   const locale = useLocale();
   const [statusOrder, setStatusOrder] = useState<OrdersTableRow | null>(null);
   const [progressOrder, setProgressOrder] =
@@ -447,6 +461,9 @@ export function OrdersTable({
                     onSort={onSort}
                     className="w-[16%]"
                   />
+                  <TableHead className="w-[16%]">
+                    {t("paymentMethod")}
+                  </TableHead>
                 </>
               )}
 
@@ -618,6 +635,14 @@ export function OrdersTable({
                         </span>
                       </TableCell>
 
+                      <TableCell className="px-4">
+                        <span className="block truncate text-sm text-gray-600">
+                          {formatPaymentMethod(
+                            getSelectedPaymentMethod(order),
+                            paymentMethodLabels,
+                          ) ?? "-"}
+                        </span>
+                      </TableCell>
                     </>
                   )}
 
