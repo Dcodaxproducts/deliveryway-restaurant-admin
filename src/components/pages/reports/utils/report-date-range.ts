@@ -23,6 +23,25 @@ const parseLocalDate = (value: string, endOfDay: boolean) => {
 export const isValidCustomReportPeriod = (period: CustomReportPeriod) =>
   Boolean(period.from && period.to && period.from <= period.to);
 
+const formatDateInputValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+export const getPreviousCalendarMonthPeriod = (
+  now = new Date(),
+): CustomReportPeriod => {
+  const from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const to = new Date(now.getFullYear(), now.getMonth(), 0);
+
+  return {
+    from: formatDateInputValue(from),
+    to: formatDateInputValue(to),
+  };
+};
+
 export const resolveReportDateRange = (
   range: TrendRange,
   customPeriod?: CustomReportPeriod | null,

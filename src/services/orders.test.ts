@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api, httpClient } from "@/lib/axios";
 import {
+  downloadOrderInvoicePdf,
   failPaymentTransaction,
   getOrders,
   markPaymentTransactionPaid,
@@ -67,6 +68,29 @@ describe("orders service", () => {
         kind: "order",
       },
     });
+  });
+
+  it("passes the selected UI language when downloading an invoice", async () => {
+    const pdf = new Blob(["invoice"], { type: "application/pdf" });
+    mockedGet.mockResolvedValue({ data: pdf });
+
+    await downloadOrderInvoicePdf("order-1", {
+      restaurantId: "restaurant-1",
+      branchId: "branch-1",
+      locale: "de",
+    });
+
+    expect(mockedGet).toHaveBeenCalledWith(
+      "/admin/reports/invoices/order-1/pdf",
+      {
+        params: {
+          restaurantId: "restaurant-1",
+          branchId: "branch-1",
+          locale: "de",
+        },
+        responseType: "blob",
+      },
+    );
   });
 
   it("updateOrderStatus calls /orders/:id/status without duplicating /api/v1", async () => {

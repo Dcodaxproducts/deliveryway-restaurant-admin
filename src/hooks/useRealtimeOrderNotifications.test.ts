@@ -15,6 +15,7 @@ import {
 } from "@/lib/new-order-navigation";
 import {
   buildOrderTrackingSocketAuth,
+  buildStaffOrderSubscription,
   createOrderTrackingSocketRecovery,
   getOrderTrackingSocketUrl,
   getOrderSoundMode,
@@ -157,6 +158,20 @@ describe("order tracking connection recovery", () => {
       }),
     ).toBe(false);
   });
+
+  it("starts notifications for restaurant staff with a selected restaurant", () => {
+    expect(
+      isOrderNotificationScopeReady({
+        token: "access-token",
+        tenantId: "tenant-1",
+        restaurantId: "restaurant-1",
+        branchId: undefined,
+        isRestaurantAdmin: false,
+        isBranchAdmin: false,
+        isStaff: true,
+      }),
+    ).toBe(true);
+  });
 });
 
 describe("getOrderTrackingSocketUrl", () => {
@@ -257,6 +272,27 @@ describe("buildOrderTrackingSocketAuth", () => {
   });
 });
 
+describe("buildStaffOrderSubscription", () => {
+  it("subscribes staff to the selected restaurant and assigned branch", () => {
+    expect(
+      buildStaffOrderSubscription({
+        isStaff: true,
+        restaurantId: "restaurant-1",
+        branchId: "branch-1",
+      }),
+    ).toEqual({ restaurantId: "restaurant-1", branchId: "branch-1" });
+  });
+
+  it("does not create an unscoped staff subscription", () => {
+    expect(
+      buildStaffOrderSubscription({
+        isStaff: true,
+        restaurantId: undefined,
+      }),
+    ).toBeNull();
+  });
+});
+
 describe("isScopedOrderStatusUpdate", () => {
   const payload = {
     id: "order-1",
@@ -307,6 +343,18 @@ describe("isScopedOrderStatusUpdate", () => {
         tenantId: "tenant-2",
         restaurantId: undefined,
         isBranchAdmin: false,
+      }),
+    ).toBe(false);
+  });
+
+  it("rejects another restaurant's event for restaurant staff", () => {
+    expect(
+      isScopedOrderStatusUpdate({
+        payload,
+        tenantId: "tenant-1",
+        restaurantId: "restaurant-2",
+        isBranchAdmin: false,
+        isStaff: true,
       }),
     ).toBe(false);
   });
