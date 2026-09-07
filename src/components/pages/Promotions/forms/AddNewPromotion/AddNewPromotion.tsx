@@ -70,6 +70,7 @@ const defaultValues: PromotionFormValues = {
   isActive: true,
   assignPermanently: false,
   branchId: "",
+  applicableOrderType: "ALL",
   selectedBranch: null,
   selectedMenuItems: [],
   selectedCategories: [],
@@ -200,6 +201,12 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
       isActive: Boolean(detail.isActive),
       assignPermanently: false,
       branchId,
+      applicableOrderType:
+        detail.applicableOrderType === "DELIVERY" ||
+        detail.applicableOrderType === "TAKEAWAY" ||
+        detail.applicableOrderType === "DINE_IN"
+          ? detail.applicableOrderType
+          : "ALL",
       selectedBranch:
         normalizeSelectedOptions({
           singleRecord: detail.branch,
@@ -286,6 +293,10 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
       ...(thumbnailUrl ? { thumbnailUrl } : {}),
       restaurantId,
       branchId: selectedBranchId || undefined,
+      applicableOrderType:
+        values.applicableOrderType === "ALL"
+          ? null
+          : values.applicableOrderType,
       discountType: values.discountType,
       discountValue: toOptionalNumber(values.discountValue) ?? 0,
       ...(maxDiscountAmount !== undefined ? { maxDiscountAmount } : {}),
@@ -664,6 +675,30 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                 />
                 {t("forms.activePromotion")}
               </label>
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="applicableOrderType"
+            render={({ field }) => (
+              <div className="space-y-2">
+                <Label>{t("forms.validForOrderType")}</Label>
+                <select
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  className="h-[52px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-base outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                >
+                  <option value="ALL">{t("forms.allOrderTypes")}</option>
+                  <option value="DELIVERY">{t("forms.deliveryOnly")}</option>
+                  <option value="TAKEAWAY">{t("forms.pickupOnly")}</option>
+                  <option value="DINE_IN">{t("forms.dineInOnly")}</option>
+                </select>
+                <p className={MUTED_TEXT_SM_CLASS}>
+                  {t("forms.orderTypeScopeHelp")}
+                </p>
+              </div>
             )}
           />
         </Section>

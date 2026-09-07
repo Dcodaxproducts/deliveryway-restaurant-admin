@@ -22,6 +22,7 @@ export type PromotionCampaignPayload = {
   thumbnailUrl?: string;
   restaurantId?: string | null;
   branchId?: string | null;
+  applicableOrderType?: "DELIVERY" | "TAKEAWAY" | "DINE_IN" | null;
 
   discountType: "FLAT" | "PERCENTAGE" | string;
   discountValue: number;
@@ -218,8 +219,9 @@ export type CouponPayload = {
   title: string;
   discountType: "FLAT" | "PERCENTAGE" | string;
   discountValue?: number;
-  startsAt?: string;
-  expiresAt?: string;
+  startsAt?: string | null;
+  expiresAt?: string | null;
+  applicableOrderType?: "DELIVERY" | "TAKEAWAY" | "DINE_IN" | null;
   description?: string;
   audience?: "REGISTERED" | "BOTH";
   applyMode?: "ORDER_TOTAL" | "SCOPED_ITEMS";

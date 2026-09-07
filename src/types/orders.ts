@@ -19,6 +19,7 @@ export type Order = {
   orderType: string;
   status: string;
   paymentMethod?: string;
+  paymentOptions?: { selected?: string | null } | null;
   paymentStatus?: string;
   totalAmount?: number;
   currency?: string | null;
@@ -48,7 +49,8 @@ export type PaymentTransaction = {
   id?: string | null;
   paymentMethod?: string | null;
   type?: "CHARGE" | "REFUND" | string | null;
-  status?: "PENDING" | "PAID" | "FAILED" | "CANCELLED" | "REFUNDED" | string | null;
+  status?:
+    "PENDING" | "PAID" | "FAILED" | "CANCELLED" | "REFUNDED" | string | null;
   amount?: number | null;
   currency?: string | null;
   providerRef?: string | null;
