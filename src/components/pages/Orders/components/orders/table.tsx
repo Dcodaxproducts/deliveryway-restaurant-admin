@@ -55,7 +55,6 @@ import {
   useUpdateOrderStatus,
 } from "@/hooks/useOrders";
 import { formatDateTime24 } from "@/lib/date-time-format";
-import { formatPaymentStatusLabel } from "@/lib/payment-status-label";
 import { reprintOrder } from "@/lib/accepted-order-printing";
 import { getOrderById } from "@/services/orders/orders.api";
 import {
@@ -69,7 +68,7 @@ import {
 } from "@/lib/order-status-transitions";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
 import type { Order, PaymentTransaction } from "@/types/orders";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export type OrdersTableRow = Order & {
   customerName?: string;
@@ -139,6 +138,7 @@ export function OrdersTable({
   const { formatMoney } = useCurrency();
   const common = useTranslations("common");
   const t = useTranslations("orders");
+  const locale = useLocale();
   const [statusOrder, setStatusOrder] = useState<OrdersTableRow | null>(null);
   const [progressOrder, setProgressOrder] =
     useState<OrderStatusProgressState | null>(null);
@@ -261,6 +261,7 @@ export function OrdersTable({
       params: {
         restaurantId: user?.restaurantId ?? undefined,
         branchId: order.branchId ?? undefined,
+        locale: locale === "de" ? "de" : "en",
       },
     });
   };
@@ -345,7 +346,6 @@ export function OrdersTable({
             t("address"),
             t("amount"),
             t("statusLabel"),
-            t("paymentStatus"),
           ]}
           rows={6}
           showCheckbox
@@ -367,7 +367,7 @@ export function OrdersTable({
   return (
     <div className="space-y-4">
       <div className="block max-w-full overflow-x-auto rounded-lg border border-gray-100">
-        <Table className="min-w-[920px] table-fixed">
+        <Table className="min-w-[780px] table-fixed">
           <TableHeader>
             <TableRow className="border-none">
               <TableHead className="w-10">
@@ -420,7 +420,7 @@ export function OrdersTable({
                     activeKey={sortKey}
                     direction={sortDir}
                     onSort={onSort}
-                    className="w-[19%]"
+                    className="w-[22%]"
                   />
                   <SortHeader
                     label={t("orderType")}
@@ -428,16 +428,16 @@ export function OrdersTable({
                     activeKey={sortKey}
                     direction={sortDir}
                     onSort={onSort}
-                    className="w-[12%]"
+                    className="w-[14%]"
                   />
-                  <TableHead className="w-[22%]">{t("address")}</TableHead>
+                  <TableHead className="w-[26%]">{t("address")}</TableHead>
                   <SortHeader
                     label={t("amount")}
                     sortKey="totalAmount"
                     activeKey={sortKey}
                     direction={sortDir}
                     onSort={onSort}
-                    className="w-[12%]"
+                    className="w-[14%]"
                   />
                   <SortHeader
                     label={t("statusLabel")}
@@ -445,15 +445,7 @@ export function OrdersTable({
                     activeKey={sortKey}
                     direction={sortDir}
                     onSort={onSort}
-                    className="w-[13%]"
-                  />
-                  <SortHeader
-                    label={t("paymentStatus")}
-                    sortKey="paymentStatus"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={onSort}
-                    className="w-[14%]"
+                    className="w-[16%]"
                   />
                 </>
               )}
@@ -626,16 +618,6 @@ export function OrdersTable({
                         </span>
                       </TableCell>
 
-                      <TableCell className="px-4">
-                        <Badge className="max-w-full border-gray-200 bg-gray-100 text-gray-700">
-                          <span className="truncate">
-                            {formatPaymentStatusLabel(
-                              paymentStatus,
-                              order.paymentMethod,
-                            )}
-                          </span>
-                        </Badge>
-                      </TableCell>
                     </>
                   )}
 

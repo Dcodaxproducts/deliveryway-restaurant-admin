@@ -55,6 +55,7 @@ export type PaymentStatusUpdatePayload = {
 export type DownloadOrderInvoicePdfParams = {
   restaurantId?: string;
   branchId?: string;
+  locale?: "en" | "de";
 };
 
 export type SendOrderInvoiceEmailParams = DownloadOrderInvoicePdfParams;

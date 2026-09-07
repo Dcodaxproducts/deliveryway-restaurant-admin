@@ -8,7 +8,7 @@ import { io } from "socket.io-client";
 import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/useAuth";
-import { getStoredAuth } from "@/lib/auth";
+import { getStoredAuth, isStaffRole } from "@/lib/auth";
 import { buildLoginRoute } from "@/lib/auth-routes";
 import { refreshStoredAccessToken } from "@/lib/axios";
 import { API_BASE_URL } from "@/lib/constants";
@@ -66,15 +66,18 @@ export const isScopedOrderStatusUpdate = ({
   restaurantId,
   branchId,
   isBranchAdmin,
+  isStaff = false,
 }: {
   payload: OrderStatusUpdatedPayload;
   restaurantId: string;
   branchId?: string | null;
   isBranchAdmin: boolean;
+  isStaff?: boolean;
 }) =>
   Boolean(payload?.id) &&
   payload.restaurantId === restaurantId &&
-  (!isBranchAdmin || payload.branchId === branchId);
+  ((!isBranchAdmin && !isStaff) ||
+    (!branchId || payload.branchId === branchId));
 
 type OrderUpdatedPayload = OrderCreatedPayload & {
   status: string;
@@ -134,6 +137,43 @@ export const shouldPollPendingOrderNotifications = ({
   visibilityState: DocumentVisibilityState;
 }) => visibilityState === "visible";
 
+export const isOrderNotificationScopeReady = ({
+  token,
+  restaurantId,
+  branchId,
+  isRestaurantAdmin,
+  isBranchAdmin,
+  isStaff = false,
+}: {
+  token?: string | null;
+  restaurantId?: string | null;
+  branchId?: string | null;
+  isRestaurantAdmin: boolean;
+  isBranchAdmin: boolean;
+  isStaff?: boolean;
+}) =>
+  Boolean(token) &&
+  Boolean(restaurantId) &&
+  ((isRestaurantAdmin && !isBranchAdmin) ||
+    (isBranchAdmin && Boolean(branchId)) ||
+    isStaff);
+
+export const buildStaffOrderSubscription = ({
+  isStaff,
+  restaurantId,
+  branchId,
+}: {
+  isStaff: boolean;
+  restaurantId?: string | null;
+  branchId?: string | null;
+}) => {
+  if (!isStaff || !restaurantId) return null;
+
+  return {
+    restaurantId,
+    ...(branchId ? { branchId } : {}),
+  };
+};
 export const createOrderTrackingSocketRecovery = ({
   refreshAccessToken,
   reconnect,
@@ -295,8 +335,15 @@ export function useRealtimeOrderNotifications() {
   const orders = useTranslations("orders");
   const seenOrderIds = useRef(new Set<string>());
   const ringingOrders = useRef(new Map<string, number>());
-  const { token, restaurantId, branchId, isBranchAdmin, isRestaurantAdmin } =
-    useAuth();
+  const {
+    user,
+    token,
+    restaurantId,
+    branchId,
+    isBranchAdmin,
+    isRestaurantAdmin,
+  } = useAuth();
+  const isStaff = isStaffRole(user?.role, user?.actorType);
 
   useEffect(
     () =>
@@ -312,9 +359,14 @@ export function useRealtimeOrderNotifications() {
   useEffect(() => {
     if (
       !token ||
-      !restaurantId ||
-      (!isRestaurantAdmin && !isBranchAdmin) ||
-      (isBranchAdmin && !branchId)
+      !isOrderNotificationScopeReady({
+        token,
+        restaurantId,
+        branchId,
+        isRestaurantAdmin,
+        isBranchAdmin,
+        isStaff,
+      })
     ) {
       return;
     }
@@ -389,8 +441,13 @@ export function useRealtimeOrderNotifications() {
     ) => {
       if (
         !payload?.id ||
-        payload.restaurantId !== restaurantId ||
-        (isBranchAdmin && payload.branchId !== branchId) ||
+        !isScopedOrderStatusUpdate({
+          payload: { ...payload, status: "PLACED" },
+          restaurantId,
+          branchId,
+          isBranchAdmin,
+          isStaff,
+        }) ||
         !rememberOrderNotification({
           seenOrderIds: seenOrderIds.current,
           orderId: payload.id,
@@ -472,7 +529,7 @@ export function useRealtimeOrderNotifications() {
       pendingOrderRecoveryPromise = claimPendingOrderNotifications({
         restaurantId,
         channel: "IN_APP",
-        ...(isBranchAdmin && branchId ? { branchId } : {}),
+        ...((isBranchAdmin || isStaff) && branchId ? { branchId } : {}),
       })
         .then((response) => {
           if (!active) return;
@@ -516,6 +573,14 @@ export function useRealtimeOrderNotifications() {
     });
 
     socket.on("connect", () => {
+      const staffSubscription = buildStaffOrderSubscription({
+        isStaff,
+        restaurantId,
+        branchId,
+      });
+      if (staffSubscription) {
+        socket.emit("order.admin.subscribe", staffSubscription);
+      }
       refreshOrderData();
       void recoverPendingOrders();
     });
@@ -569,6 +634,7 @@ export function useRealtimeOrderNotifications() {
           restaurantId,
           branchId,
           isBranchAdmin,
+          isStaff,
         })
       ) {
         return;
@@ -596,9 +662,13 @@ export function useRealtimeOrderNotifications() {
 
     socket.on("order.updated", (payload: OrderUpdatedPayload) => {
       if (
-        !payload?.id ||
-        payload.restaurantId !== restaurantId ||
-        (isBranchAdmin && payload.branchId !== branchId)
+        !isScopedOrderStatusUpdate({
+          payload,
+          restaurantId,
+          branchId,
+          isBranchAdmin,
+          isStaff,
+        })
       ) {
         return;
       }
@@ -633,6 +703,7 @@ export function useRealtimeOrderNotifications() {
     branchId,
     isBranchAdmin,
     isRestaurantAdmin,
+    isStaff,
     orders,
     queryClient,
     restaurantId,

@@ -527,6 +527,9 @@ export const normalizeUser = (
   const staffRestaurantIds = restaurantAccess?.restaurantIds?.length
     ? restaurantAccess.restaurantIds
     : (staffRole?.restaurantAccess?.restaurantIds ?? []);
+  const staffBranchIds = restaurantAccess?.branchIds?.length
+    ? restaurantAccess.branchIds
+    : (staffRole?.restaurantAccess?.branchIds ?? []);
 
   if (
     !restaurantId &&
@@ -556,7 +559,10 @@ export const normalizeUser = (
       getStringValue(source, "actorType"),
     )
   ) {
-    branchId = staffRole?.branchId ?? null;
+    branchId =
+      (staffBranchIds.length === 1 ? staffBranchIds[0] : undefined) ??
+      staffRole?.branchId ??
+      null;
   }
 
   return {

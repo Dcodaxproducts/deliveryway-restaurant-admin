@@ -245,6 +245,27 @@ describe("auth helpers", () => {
     expect(user?.branchId).toBe("branch-1");
   });
 
+  it("uses the only assigned branch as restaurant staff scope", () => {
+    const user = normalizeUser({
+      id: "branch-staff",
+      email: "branch-staff@example.com",
+      role: "STAFF",
+      actorType: "STAFF",
+      restaurantAccess: {
+        restaurantIds: ["restaurant-1"],
+        branchIds: ["branch-1"],
+      },
+      staffRole: {
+        permissions: [
+          { access: "order-management", operations: ["read"] },
+        ],
+      },
+    });
+
+    expect(user?.restaurantId).toBe("restaurant-1");
+    expect(user?.branchId).toBe("branch-1");
+  });
+
   it("allows business-admin staff panel access with tenant scoped role", () => {
     const user = normalizeUser({
       id: "business-staff",

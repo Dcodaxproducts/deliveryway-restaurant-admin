@@ -34,6 +34,7 @@ import {
   type ReportTab,
 } from "@/components/pages/reports/utils/reports-page.helpers";
 import {
+  getPreviousCalendarMonthPeriod,
   isValidCustomReportPeriod,
   resolveReportDateRange,
   type CustomReportPeriod,
@@ -197,6 +198,12 @@ export default function Orders() {
     setCustomPeriod(null);
   };
 
+  const handleLastMonth = () => {
+    const previousMonth = getPreviousCalendarMonthPeriod();
+    setDraftCustomPeriod(previousMonth);
+    setCustomPeriod(previousMonth);
+  };
+
   const handleRangeChange = (nextRange: TrendRange) => {
     setRange(nextRange);
     setCustomPeriod(null);
@@ -258,6 +265,14 @@ export default function Orders() {
               <CalendarDays size={18} />
               {t("customPeriod")}
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleLastMonth}
+              className="h-10 bg-white"
+            >
+              {t("lastMonth")}
+            </Button>
             <label className="grid gap-1 text-xs font-medium text-gray-600">
               {t("fromDate")}
               <Input

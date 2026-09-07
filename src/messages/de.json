@@ -2925,6 +2925,7 @@
     },
     "downloadPdf": "PDF herunterladen",
     "customPeriod": "Individueller Zeitraum",
+    "lastMonth": "Letzter Monat",
     "fromDate": "Von",
     "toDate": "Bis",
     "applyPeriod": "Zeitraum anwenden",

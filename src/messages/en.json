@@ -2925,6 +2925,7 @@
     },
     "downloadPdf": "Download PDF",
     "customPeriod": "Custom period",
+    "lastMonth": "Last month",
     "fromDate": "From",
     "toDate": "To",
     "applyPeriod": "Apply period",

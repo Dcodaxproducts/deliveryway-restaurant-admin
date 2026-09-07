@@ -15,16 +15,80 @@ import {
 } from "@/lib/new-order-navigation";
 import {
   buildOrderTrackingSocketAuth,
+  buildStaffOrderSubscription,
+  createOrderTrackingSocketRecovery,
   getOrderTrackingSocketUrl,
   getOrderSoundMode,
+  isOrderNotificationScopeReady,
+  isOrderTrackingAuthenticationError,
   isPendingOrderAlertStatus,
   isScopedOrderStatusUpdate,
   playNewOrderSound,
   registerOrderSoundUnlockListeners,
   silenceOrderAlert,
   startRepeatingOrderSound,
+  shouldPollPendingOrderNotifications,
+  shouldRecoverOrderTrackingSocket,
   unlockOrderNotificationSound,
 } from "./useRealtimeOrderNotifications";
+
+describe("order tracking connection recovery", () => {
+  it("recovers authentication once for concurrent socket failures", async () => {
+    let resolveRefresh: ((token: string | null) => void) | undefined;
+    const refreshAccessToken = vi.fn(
+      () =>
+        new Promise<string | null>((resolve) => {
+          resolveRefresh = resolve;
+        }),
+    );
+    const reconnect = vi.fn();
+    const onAuthenticationFailure = vi.fn();
+    const recover = createOrderTrackingSocketRecovery({
+      refreshAccessToken,
+      reconnect,
+      isActive: () => true,
+      onAuthenticationFailure,
+    });
+
+    const first = recover();
+    const second = recover();
+    resolveRefresh?.("fresh-access-token");
+
+    await expect(first).resolves.toBe(true);
+    await expect(second).resolves.toBe(true);
+    expect(refreshAccessToken).toHaveBeenCalledTimes(1);
+    expect(reconnect).toHaveBeenCalledTimes(1);
+    expect(onAuthenticationFailure).not.toHaveBeenCalled();
+  });
+
+  it("recognizes auth failures and polls only while visible", () => {
+    expect(shouldRecoverOrderTrackingSocket("io server disconnect")).toBe(true);
+    expect(isOrderTrackingAuthenticationError({ code: "UNAUTHORIZED" })).toBe(
+      true,
+    );
+    expect(isOrderTrackingAuthenticationError(new Error("timeout"))).toBe(
+      false,
+    );
+    expect(
+      shouldPollPendingOrderNotifications({ visibilityState: "visible" }),
+    ).toBe(true);
+    expect(
+      shouldPollPendingOrderNotifications({ visibilityState: "hidden" }),
+    ).toBe(false);
+  });
+
+  it("starts restaurant-scoped notifications for staff", () => {
+    expect(
+      isOrderNotificationScopeReady({
+        token: "access-token",
+        restaurantId: "restaurant-1",
+        isRestaurantAdmin: false,
+        isBranchAdmin: false,
+        isStaff: true,
+      }),
+    ).toBe(true);
+  });
+});
 
 describe("getOrderTrackingSocketUrl", () => {
   it("builds the Socket.IO namespace URL from the API origin", () => {
@@ -100,6 +164,27 @@ describe("buildOrderTrackingSocketAuth", () => {
   });
 });
 
+describe("buildStaffOrderSubscription", () => {
+  it("subscribes staff to the selected restaurant and assigned branch", () => {
+    expect(
+      buildStaffOrderSubscription({
+        isStaff: true,
+        restaurantId: "restaurant-1",
+        branchId: "branch-1",
+      }),
+    ).toEqual({ restaurantId: "restaurant-1", branchId: "branch-1" });
+  });
+
+  it("does not create an unscoped staff subscription", () => {
+    expect(
+      buildStaffOrderSubscription({
+        isStaff: true,
+        restaurantId: undefined,
+      }),
+    ).toBeNull();
+  });
+});
+
 describe("isScopedOrderStatusUpdate", () => {
   const payload = {
     id: "order-1",
@@ -125,6 +210,17 @@ describe("isScopedOrderStatusUpdate", () => {
         restaurantId: "restaurant-1",
         branchId: "branch-2",
         isBranchAdmin: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("rejects another restaurant's event for restaurant staff", () => {
+    expect(
+      isScopedOrderStatusUpdate({
+        payload,
+        restaurantId: "restaurant-2",
+        isBranchAdmin: false,
+        isStaff: true,
       }),
     ).toBe(false);
   });
