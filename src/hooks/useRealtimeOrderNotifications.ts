@@ -359,6 +359,7 @@ export function useRealtimeOrderNotifications() {
   useEffect(() => {
     if (
       !token ||
+      !restaurantId ||
       !isOrderNotificationScopeReady({
         token,
         restaurantId,
