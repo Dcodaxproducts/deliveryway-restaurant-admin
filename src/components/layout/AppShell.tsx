@@ -17,9 +17,9 @@ type AppShellProps = {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const hideLayout = isPublicRoute(pathname);
-  const { loading } = useAuth();
+  const { loading, user, token } = useAuth();
 
-  if (loading && !hideLayout) {
+  if (!hideLayout && (loading || !user || !token)) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-primary" />
