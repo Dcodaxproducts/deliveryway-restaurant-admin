@@ -232,22 +232,34 @@ function LoginFormContent() {
 
   return (
     <AuthPageShell>
-      <div className="w-full max-w-[420px] py-8 sm:py-10">
-        <h1 className="text-center text-[26px] font-semibold">
+      <div className="relative w-full max-w-[440px] rounded-[28px] border border-black/[0.06] bg-white px-5 py-6 shadow-[0_24px_70px_rgba(42,27,20,0.08)] sm:px-9 sm:py-10 lg:border-0 lg:px-0 lg:shadow-none">
+        <Image
+          src="/feastflow-logo.png"
+          alt="FeastFlow"
+          width={360}
+          height={87}
+          className="mx-auto h-auto w-[140px] sm:w-[164px]"
+          priority
+        />
+
+        <h1 id="partner-login-title" className="mt-5 text-center text-[26px] font-semibold tracking-[-0.03em] text-gray-950 sm:mt-8 sm:text-[30px]">
           {t("welcomeTitle")}
         </h1>
 
-        <p className="mt-3 text-center text-sm text-gray-400">
+        <p className="mx-auto mt-1.5 max-w-[38ch] text-center text-sm leading-5 text-gray-600 sm:mt-2 sm:leading-6">
           {t("loginSubtitle")}
         </p>
 
-        <form className="mt-8 space-y-5" noValidate onSubmit={submitLogin}>
+        <form className="mt-5 space-y-4 sm:mt-7 sm:space-y-5" noValidate onSubmit={submitLogin}>
           <Controller
             control={control}
             name="email"
             render={({ field }) => (
               <FormInput
                 label={t("email")}
+                type="email"
+                inputMode="email"
+                autoComplete="email"
                 placeholder={t("emailPlaceholder")}
                 value={field.value}
                 onChange={field.onChange}
@@ -265,6 +277,7 @@ function LoginFormContent() {
               <FormInput
                 label={t("password")}
                 type="password"
+                autoComplete="current-password"
                 placeholder={t("passwordPlaceholder")}
                 showPasswordToggle
                 value={field.value}
@@ -280,16 +293,17 @@ function LoginFormContent() {
             control={control}
             name="role"
             render={({ field }) => (
-              <div className="space-y-3">
+              <fieldset className="space-y-2.5 sm:space-y-3">
+                <legend className="sr-only">{t("loginAs")}</legend>
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-gray-900">
                     {t("loginAs")}
                   </p>
-                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                  <span className="rounded-md bg-primary/[0.08] px-2.5 py-1 text-[11px] font-semibold tracking-[0.01em] text-primary">
                     {t("roleRequired")}
                   </span>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
                   {loginRoles.map(({ value, icon: Icon, labelKey }) => {
                     const selected = field.value === value;
 
@@ -297,12 +311,14 @@ function LoginFormContent() {
                       <button
                         key={value}
                         type="button"
+                        aria-pressed={selected}
                         onClick={() => field.onChange(value)}
                         className={cn(
-                          "group flex min-h-[58px] items-center gap-3 rounded-2xl border px-4 py-3 text-left transition",
+                          "group flex min-h-[54px] items-center gap-3 rounded-2xl border px-4 py-2.5 text-left transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 active:scale-[0.99] sm:min-h-[58px] sm:py-3",
+                          value === "STAFF" && "sm:col-span-2",
                           selected
-                            ? "border-primary bg-primary/5 shadow-[0_10px_28px_rgba(193,18,31,0.12)]"
-                            : "border-gray-200 bg-white hover:border-primary/40 hover:bg-gray-50"
+                            ? "border-primary bg-primary/[0.045] shadow-[0_10px_28px_rgba(193,18,31,0.10)]"
+                            : "border-gray-200 bg-white hover:border-primary/40 hover:bg-[#faf8f6]"
                         )}
                       >
                         <span
@@ -322,7 +338,7 @@ function LoginFormContent() {
                     );
                   })}
                 </div>
-              </div>
+              </fieldset>
             )}
           />
 
@@ -332,7 +348,7 @@ function LoginFormContent() {
               {t("rememberMe")}
             </label>
 
-            <Link href="/forgot-password" className="text-primary hover:underline">
+            <Link href="/forgot-password" className="rounded-sm text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
               {t("forgotPasswordLink")}
             </Link>
           </div>
@@ -341,7 +357,7 @@ function LoginFormContent() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="h-[48px] w-full rounded-[12px] text-base"
+              className="h-[48px] w-full rounded-[12px] text-base shadow-[0_10px_24px_rgba(193,0,10,0.18)] active:scale-[0.99] sm:h-[50px]"
             >
               {isSubmitting ? t("signingIn") : t("signIn")}
             </Button>
@@ -356,7 +372,7 @@ function LoginFormContent() {
               type="button"
               disabled={isSubmitting || isGoogleSubmitting}
               onClick={handleGoogleLogin}
-              className="flex h-[48px] w-full items-center justify-center gap-3 rounded-[12px] border border-[#BBBBBB] text-sm font-medium transition hover:bg-gray-50"
+              className="flex h-[48px] w-full items-center justify-center gap-3 rounded-[12px] border border-gray-300 bg-white text-sm font-medium transition duration-200 hover:border-gray-400 hover:bg-[#faf8f6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50 sm:h-[50px]"
             >
               <Image src="/google_icon.png" alt={t("googleAlt")} width={18} height={18} />
               {isGoogleSubmitting ? t("signingIn") : t("signInWithGoogle")}

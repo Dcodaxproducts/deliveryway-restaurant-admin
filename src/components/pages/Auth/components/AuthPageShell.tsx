@@ -13,20 +13,26 @@ type AuthPageShellProps = {
 
 export default function AuthPageShell({ children }: AuthPageShellProps) {
   return (
-    <div className="grid min-h-screen grid-cols-1 bg-white lg:grid-cols-2">
-      <div className="relative hidden lg:block">
+    <main className="grid min-h-[100dvh] grid-cols-1 overflow-hidden bg-[#f7f5f2] lg:grid-cols-[minmax(0,1.04fr)_minmax(520px,0.96fr)]">
+      <div className="relative hidden overflow-hidden lg:block" aria-hidden="true">
         <Image
-          src="/login_banner.jpg"
-          alt="Login Banner"
+          src="/login_banner.webp"
+          alt=""
           fill
-          className="object-cover"
+          sizes="52vw"
+          className="scale-[1.01] object-cover"
           priority
         />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,4,1,0.06),rgba(3,4,1,0.32))]" />
       </div>
 
-      <div className="flex items-center justify-center px-6">
+      <section
+        aria-labelledby="partner-login-title"
+        className="relative flex items-center justify-center px-5 py-8 sm:px-10 lg:bg-white lg:px-14"
+      >
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top_right,rgba(193,0,10,0.08),transparent_64%)] lg:hidden" />
         {children}
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     template: "%s | Restaurant Admin",
   },
   applicationName: "Restaurant Admin",
+  description: "Manage your FeastFlow restaurant, branches, menus, orders, and team.",
   icons: {
     icon: "/feastflow-logo.png",
     shortcut: "/feastflow-logo.png",

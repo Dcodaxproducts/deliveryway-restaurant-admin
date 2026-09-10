@@ -55,6 +55,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           ? "text"
           : "password"
         : type;
+    const errorId = `${inputId}-error`;
 
     return (
       <div>
@@ -73,6 +74,8 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
             onBlur={onBlur}
             placeholder={placeholder}
             required={required}
+            aria-invalid={error || undefined}
+            aria-describedby={error && errorText ? errorId : undefined}
             className={`
               border-[#BBBBBB]
               placeholder-[#BBBBBB]
@@ -92,14 +95,18 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
               aria-label={showPassword ? t("hidePassword") : t("showPassword")}
               aria-pressed={showPassword}
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-1 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           )}
         </div>
 
-        {error && errorText && <p className="mt-1 text-xs text-primary">{errorText}</p>}
+        {error && errorText && (
+          <p id={errorId} className="mt-1 text-xs text-primary">
+            {errorText}
+          </p>
+        )}
       </div>
     );
   }
