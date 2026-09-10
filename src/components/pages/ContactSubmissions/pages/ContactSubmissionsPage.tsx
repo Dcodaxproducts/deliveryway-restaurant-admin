@@ -15,7 +15,7 @@ import {
 import Container from "@/components/common/Container";
 import EmptyState from "@/components/common/EmptyState";
 import PageHeader from "@/components/common/PageHeader";
-import PaginationSection from "@/components/common/pagination";
+import PaginationSection from "@/components/common/PaginationSection";
 import { StatusBadge } from "@/components/common/status-badge";
 import { Button } from "@/components/ui/button";
 import {

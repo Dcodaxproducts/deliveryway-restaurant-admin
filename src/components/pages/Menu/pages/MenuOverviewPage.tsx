@@ -5,7 +5,7 @@ import Container from "@/components/common/Container";
 import Header from "@/components/pages/Menu/legacy/root-menu-components/header";
 import Table from "@/components/pages/Menu/legacy/root-menu-components/list";
 import BranchFilters from "@/components/pages/Branches/components/BranchFilters";
-import PaginationSection from "@/components/common/pagination";
+import PaginationSection from "@/components/common/PaginationSection";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetRestaurantMenus } from "@/hooks/useMenus";

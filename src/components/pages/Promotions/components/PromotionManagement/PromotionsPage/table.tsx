@@ -19,7 +19,7 @@ import SortableHeader from "@/components/common/sortable-head";
 import EmptyState from "@/components/common/EmptyState";
 import PromotionCreateLink from "../PromotionOverview/PromotionCreateLink";
 import { Edit, MoreHorizontal, Trash2 } from "lucide-react";
-import PaginationSection from "@/components/common/pagination";
+import PaginationSection from "@/components/common/PaginationSection";
 import { toast } from "sonner";
 import { useDeleteAdminPromotionCampaign } from "@/hooks/usePromotions";
 import { useAuth } from "@/hooks/useAuth";

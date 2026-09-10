@@ -272,7 +272,7 @@ const fetchMessages = async () => {
       </aside>
 
       {/* MAIN */}
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col rounded-sm border border-[#F0EDED]">
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col rounded-sm border border-[#F0EDED]">
         <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
          <h2 className="font-medium text-[14px]">
   {activeThread?.orderId
@@ -362,7 +362,7 @@ const fetchMessages = async () => {
             </button>
           </div>
         </div>
-      </main>
+      </section>
     </div>
   );
 }

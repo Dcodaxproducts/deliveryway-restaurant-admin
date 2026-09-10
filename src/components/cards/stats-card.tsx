@@ -1,5 +1,3 @@
-"use client";
-
 import { Card } from "@/components/ui/card";
 import { StatItem, StatIcon } from "@/types/stats";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
@@ -12,7 +10,7 @@ import {
   XCircle,
   Loader,
 } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const ICON_MAP: Record<StatIcon, React.ElementType> = {
   store: Store,
@@ -24,15 +22,19 @@ const ICON_MAP: Record<StatIcon, React.ElementType> = {
   ongoing: Loader,
 };
 
-const StatsCard = ({
-  data,
-  loading = false,
-}: {
+export type StatCardProps = {
   data: StatItem;
   loading?: boolean;
-}) => {
-  const pathname = usePathname();
-  const isOrdersPage = pathname === "/orders" || pathname === "/reports";
+  variant?: "plain" | "outlined";
+  className?: string;
+};
+
+export const StatCard = ({
+  data,
+  loading = false,
+  variant = "outlined",
+  className,
+}: StatCardProps) => {
 
   const hasTrend = Boolean(data.trend?.percentage);
   const isUp = data.trend?.direction === "up";
@@ -41,22 +43,26 @@ const StatsCard = ({
 
   return (
     <Card
-      className={`
-        rounded-[18px] bg-white p-[16px] shadow-none
-        ${isOrdersPage ? "border border-border" : "border-none"}
-        sm:p-[20px] md:p-[24px]
-      `}
+      data-slot="stat-card"
+      className={cn(
+        "gap-0 rounded-[var(--ui-radius-card)] bg-[var(--ui-surface)] p-4 shadow-none sm:p-5 md:p-6",
+        variant === "outlined" ? "border border-[var(--ui-border)]" : "border-none",
+        className,
+      )}
     >
       <div className="flex items-start gap-4 sm:flex-row sm:items-center">
         <div
-          className={`flex size-[44px] items-center justify-center rounded-full p-2 ${
-            isDanger ? "bg-primary/10" : "bg-gray-100 text-gray-500"
-          }`}
+          className={cn(
+            "flex size-11 shrink-0 items-center justify-center rounded-[var(--ui-radius-compact)] p-2",
+            isDanger
+              ? "bg-[var(--ui-danger-soft)] text-[var(--ui-danger)]"
+              : "bg-[var(--ui-brand-soft)] text-primary",
+          )}
         >
           {loading ? (
             <div className="h-5 w-5 animate-pulse rounded-full bg-gray-200" />
           ) : (
-            <Icon size={20} className="text-primary" />
+            <Icon size={20} aria-hidden="true" />
           )}
         </div>
 
@@ -69,24 +75,25 @@ const StatsCard = ({
             </>
           ) : (
             <>
-              <div className="text-[16px] font-semibold leading-none text-foreground sm:text-[22px]">
+              <div className="text-lg font-semibold leading-none tabular-nums text-[var(--ui-text)] sm:text-[22px]">
                 {data.value}
               </div>
 
-              <p className="mt-1 text-[11px] text-gray-400 sm:text-[15px]">
+              <p className="mt-1 text-xs text-[var(--ui-text-muted)] sm:text-sm">
                 {data.title}
               </p>
 
               {hasTrend ? (
                 <div
-                  className={`mt-2 flex items-center gap-1 text-xs font-medium sm:text-sm ${
-                    isUp ? "text-green-600" : "text-red-600"
-                  }`}
+                  className={cn(
+                    "mt-2 flex items-center gap-1 text-xs font-medium tabular-nums sm:text-sm",
+                    isUp ? "text-[var(--ui-success)]" : "text-[var(--ui-danger)]",
+                  )}
                 >
                   {isUp ? (
-                    <ArrowUpRight size={16} strokeWidth={2.5} />
+                    <ArrowUpRight aria-hidden="true" size={16} strokeWidth={2.5} />
                   ) : (
-                    <ArrowDownRight size={16} strokeWidth={2.5} />
+                    <ArrowDownRight aria-hidden="true" size={16} strokeWidth={2.5} />
                   )}
                   {data.trend?.percentage}
                 </div>
@@ -99,4 +106,4 @@ const StatsCard = ({
   );
 };
 
-export default StatsCard;
+export default StatCard;

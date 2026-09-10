@@ -61,6 +61,47 @@
   --sidebar-accent-foreground: var(--brand-text);
   --sidebar-border: var(--brand-border);
   --sidebar-ring: var(--brand-primary);
+
+  /* Shared UI foundation: semantic surfaces and layout scales. */
+  --ui-brand-soft: color-mix(in srgb, var(--brand-primary) 9%, white);
+  --ui-canvas: var(--brand-background);
+  --ui-surface: var(--brand-surface);
+  --ui-surface-subtle: #FAFAFA;
+  --ui-surface-raised: #FFFFFF;
+  --ui-text: var(--brand-text);
+  --ui-text-muted: #686868;
+  --ui-text-subtle: #909090;
+  --ui-border: #E5E5E5;
+  --ui-border-strong: #BBBBBB;
+  --ui-focus-ring: var(--brand-primary);
+  --ui-success: #16803B;
+  --ui-success-soft: #ECFDF3;
+  --ui-warning: #A15C07;
+  --ui-warning-soft: #FFF7E6;
+  --ui-danger: #B42318;
+  --ui-danger-soft: #FEF3F2;
+  --ui-info: #175CD3;
+  --ui-info-soft: #EFF8FF;
+  --ui-radius-control: 10px;
+  --ui-radius-compact: 12px;
+  --ui-radius-card: 16px;
+  --ui-radius-panel: 20px;
+  --ui-shadow-xs: 0 1px 2px rgb(3 4 1 / 0.04);
+  --ui-shadow-sm: 0 8px 24px rgb(3 4 1 / 0.06);
+  --ui-shadow-md: 0 16px 40px rgb(3 4 1 / 0.10);
+  --ui-shadow-overlay: 0 24px 64px rgb(3 4 1 / 0.18);
+  --ui-content-admin: 1600px;
+  --ui-content-storefront: 1400px;
+  --ui-page-gutter: 16px;
+  --ui-data-row: 64px;
+  --ui-data-row-compact: 52px;
+  --ui-motion-fast: 150ms;
+  --ui-motion-normal: 220ms;
+  --ui-motion-slow: 320ms;
+  --ui-layer-sticky: 30;
+  --ui-layer-dropdown: 40;
+  --ui-layer-overlay: 50;
+  --ui-layer-toast: 60;
 }
 
 @theme inline {
@@ -103,6 +144,10 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-control: var(--ui-radius-control);
+  --radius-compact: var(--ui-radius-compact);
+  --radius-card: var(--ui-radius-card);
+  --radius-panel: var(--ui-radius-panel);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -128,6 +173,11 @@
     font-family: var(--brand-font-family);
   }
 
+  :where(button, a, input, select, textarea, [role="button"]):focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
+  }
+
   h1,
   h2,
   h3,
@@ -135,6 +185,12 @@
   h5,
   h6 {
     font-family: var(--brand-heading-font-family);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --ui-page-gutter: 24px;
   }
 }
 
@@ -208,6 +264,10 @@ div[role="option"][data-disabled] {
 
   .brand-button-radius {
     border-radius: var(--brand-button-radius);
+  }
+
+  .tabular-data {
+    font-variant-numeric: tabular-nums;
   }
 
   .font-onest {

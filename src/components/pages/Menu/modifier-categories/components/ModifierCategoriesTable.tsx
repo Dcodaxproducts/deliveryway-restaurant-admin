@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { FaPen, FaTrash } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
-import PaginationSection from "@/components/common/pagination";
+import PaginationSection from "@/components/common/PaginationSection";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useDeleteModifierCategory,

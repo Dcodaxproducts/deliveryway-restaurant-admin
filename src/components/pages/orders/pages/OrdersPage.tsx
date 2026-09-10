@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { OrdersFilters } from "@/components/pages/Orders/components/orders/OrdersFilters";
 import { useAuth } from "@/hooks/useAuth";
-import PaginationSection from "@/components/common/pagination";
+import PaginationSection from "@/components/common/PaginationSection";
 import { sortData } from "@/lib/sort-data";
 import { useOrders } from "@/hooks/useOrders";
 import { useGetOrdersReport } from "@/hooks/useReports";

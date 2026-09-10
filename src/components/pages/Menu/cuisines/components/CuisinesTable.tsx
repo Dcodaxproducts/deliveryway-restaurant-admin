@@ -4,7 +4,13 @@ import Image from "next/image";
 import { Layers3 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import PaginationSection from "@/components/common/pagination";
+import PaginationSection from "@/components/common/PaginationSection";
+import {
+  ResponsiveDataView,
+} from "@/components/common/ResponsiveDataView";
+import type { DataTableColumn } from "@/components/common/DataTable";
+import { SectionCard } from "@/components/common/SectionCard";
+import { StatusBadge } from "@/components/common/status-badge";
 import { useCuisines } from "@/hooks/useCuisines";
 import CuisineFilters, {
   type CuisineStatusFilter,
@@ -85,24 +91,35 @@ export default function CuisinesTable() {
       hasPrevious: source?.hasPrevious ?? currentPage > 1,
     };
   }, [cuisines.length, limit, page, response?.meta]);
+  const columns = useMemo<readonly DataTableColumn<Cuisine>[]>(
+    () => [
+      {
+        id: "name",
+        header: t("name"),
+        cell: (cuisine) => <CuisineIdentity cuisine={cuisine} />,
+      },
+      {
+        id: "description",
+        header: t("description"),
+        cell: (cuisine) => <DescriptionWithTooltip value={cuisine.description} />,
+        className: "max-w-[420px]",
+      },
+      {
+        id: "status",
+        header: t("status"),
+        cell: (cuisine) => <CuisineStatusBadge isActive={cuisine.isActive} />,
+        align: "center",
+      },
+    ],
+    [t],
+  );
 
   return (
-    <div className="w-full">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-[18px] font-semibold text-gray-900">
-            {t("cuisines")}
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            {t("cuisinesDescription")}
-          </p>
-        </div>
-
-        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-          {t("readOnly")}
-        </span>
-      </div>
-
+    <SectionCard
+      title={t("cuisines")}
+      description={t("cuisinesDescription")}
+      action={<StatusBadge tone="neutral">{t("readOnly")}</StatusBadge>}
+    >
       <CuisineFilters
         search={search}
         onSearchChange={setSearch}
@@ -113,81 +130,26 @@ export default function CuisinesTable() {
         }}
         onSearch={() => void refetch()}
       />
-
-      <div className="hidden overflow-x-auto rounded-[16px] bg-white md:block">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-left text-gray-500">
-              <th className="px-2 py-3">{t("name")}</th>
-              <th className="px-2">{t("description")}</th>
-              <th className="px-2 text-center">{t("status")}</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {isTableLoading ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                <SkeletonRow key={index} />
-              ))
-            ) : cuisines.length === 0 ? (
-              <tr>
-                <td colSpan={3} className="py-10 text-center text-gray-400">
-                  {t("noCuisinesFound")}
-                </td>
-              </tr>
-            ) : (
-              cuisines.map((cuisine) => (
-                <tr key={cuisine.id} className="border-b hover:bg-gray-50">
-                  <td className="px-2 py-4">
-                    <CuisineIdentity cuisine={cuisine} />
-                  </td>
-                  <td className="max-w-[420px] px-2 text-gray-600">
-                    <DescriptionWithTooltip value={cuisine.description} />
-                  </td>
-                  <td className="px-2 text-center">
-                    <StatusBadge isActive={cuisine.isActive} />
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
-        <div className="mt-4 px-2 pb-2">
-          <PaginationSection {...pagination} onPageChange={setPage} />
-        </div>
-      </div>
-
-      <div className="space-y-4 md:hidden">
-        {isTableLoading ? (
-          Array.from({ length: 4 }).map((_, index) => (
-            <SkeletonCard key={index} />
-          ))
-        ) : cuisines.length === 0 ? (
-          <div className="py-10 text-center text-gray-400">
-            {t("noCuisinesFound")}
-          </div>
-        ) : (
-          cuisines.map((cuisine) => (
-            <div
-              key={cuisine.id}
-              className="rounded-[18px] border bg-white p-4 shadow-sm"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <CuisineIdentity cuisine={cuisine} />
-                <StatusBadge isActive={cuisine.isActive} />
-              </div>
-
-              <div className="mt-3 text-sm text-gray-600">
-                <DescriptionWithTooltip value={cuisine.description} />
-              </div>
+      <ResponsiveDataView
+        data={cuisines}
+        columns={columns}
+        rowKey={(cuisine) => cuisine.id}
+        loading={isTableLoading}
+        emptyTitle={t("noCuisinesFound")}
+        renderMobileItem={(cuisine) => (
+          <article className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4 shadow-[var(--ui-shadow-xs)]">
+            <div className="flex items-start justify-between gap-3">
+              <CuisineIdentity cuisine={cuisine} />
+              <CuisineStatusBadge isActive={cuisine.isActive} />
             </div>
-          ))
+            <div className="mt-3 text-sm text-[var(--ui-text-muted)]">
+              <DescriptionWithTooltip value={cuisine.description} />
+            </div>
+          </article>
         )}
-
-        <PaginationSection {...pagination} onPageChange={setPage} />
-      </div>
-    </div>
+        footer={<PaginationSection {...pagination} onPageChange={setPage} />}
+      />
+    </SectionCard>
   );
 }
 
@@ -249,41 +211,13 @@ function DescriptionWithTooltip({ value }: { value?: string | null }) {
   );
 }
 
-function StatusBadge({ isActive }: { isActive?: boolean }) {
+function CuisineStatusBadge({ isActive }: { isActive?: boolean }) {
   const t = useTranslations("common");
   const active = isActive !== false;
 
   return (
-    <span
-      className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-        active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
-      }`}
-    >
+    <StatusBadge tone={active ? "success" : "neutral"}>
       {active ? t("active") : t("inactive")}
-    </span>
-  );
-}
-
-function SkeletonRow() {
-  return (
-    <tr className="border-b">
-      {Array.from({ length: 3 }).map((_, index) => (
-        <td key={index} className="px-2 py-4">
-          <div className="h-4 animate-pulse rounded bg-gray-100" />
-        </td>
-      ))}
-    </tr>
-  );
-}
-
-function SkeletonCard() {
-  return (
-    <div className="rounded-[18px] border bg-white p-4 shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="h-12 w-12 animate-pulse rounded-2xl bg-gray-100" />
-        <div className="h-5 w-1/2 animate-pulse rounded bg-gray-100" />
-      </div>
-      <div className="mt-5 h-4 w-full animate-pulse rounded bg-gray-100" />
-    </div>
+    </StatusBadge>
   );
 }

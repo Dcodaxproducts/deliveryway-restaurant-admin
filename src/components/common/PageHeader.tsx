@@ -1,8 +1,14 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-type PageHeaderProps = {
+export type PageHeaderProps = {
   title: string;
   description?: string;
+  eyebrow?: string;
+  breadcrumbs?: ReactNode;
+  backAction?: ReactNode;
+  actions?: ReactNode;
+  tabs?: ReactNode;
   className?: string;
   titleClassName?: string;
   descriptionClassName?: string;
@@ -11,26 +17,54 @@ type PageHeaderProps = {
 export default function PageHeader({
   title,
   description,
+  eyebrow,
+  breadcrumbs,
+  backAction,
+  actions,
+  tabs,
   className,
   titleClassName,
   descriptionClassName,
 }: PageHeaderProps) {
   return (
-    <div className={cn("lg:space-y-[6px]", className)}>
-      <h1
-        className={cn(
-          "text-xl font-semibold text-foreground lg:text-[32px] lg:leading-[42px]",
-          titleClassName
-        )}
-      >
-        {title}
-      </h1>
-
-      {description ? (
-        <p className={cn("text-sm text-gray lg:text-base", descriptionClassName)}>
-          {description}
-        </p>
-      ) : null}
-    </div>
+    <header data-slot="page-header" className={cn("space-y-4", className)}>
+      {breadcrumbs ? <div data-slot="page-header-breadcrumbs">{breadcrumbs}</div> : null}
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          {backAction ? <div className="shrink-0 pt-0.5">{backAction}</div> : null}
+          <div className="min-w-0 space-y-1.5">
+            {eyebrow ? (
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+                {eyebrow}
+              </p>
+            ) : null}
+            <h1
+              className={cn(
+                "text-balance text-2xl font-semibold leading-tight tracking-[-0.02em] text-[var(--ui-text)] lg:text-[32px] lg:leading-[1.2]",
+                titleClassName,
+              )}
+            >
+              {title}
+            </h1>
+            {description ? (
+              <p
+                className={cn(
+                  "max-w-[65ch] text-pretty text-sm leading-6 text-[var(--ui-text-muted)] lg:text-base",
+                  descriptionClassName,
+                )}
+              >
+                {description}
+              </p>
+            ) : null}
+          </div>
+        </div>
+        {actions ? (
+          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+            {actions}
+          </div>
+        ) : null}
+      </div>
+      {tabs ? <div data-slot="page-header-tabs">{tabs}</div> : null}
+    </header>
   );
 }

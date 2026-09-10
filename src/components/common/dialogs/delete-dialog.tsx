@@ -12,33 +12,39 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-type Props = {
+export type ConfirmDialogProps = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onConfirm: () => void;
     isLoading?: boolean;
     title?: string;
     description?: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    tone?: "danger" | "default";
 };
 
-export default function DeleteDialog({
+export function ConfirmDialog({
     open,
     onOpenChange,
     onConfirm,
     isLoading,
     title,
-    description
-}: Props) {
+    description,
+    confirmLabel,
+    cancelLabel,
+    tone = "danger",
+}: ConfirmDialogProps) {
     const t = useTranslations("common");
     const dialogTitle = title ?? t("confirmDeletion");
     const dialogDescription = description ?? t("deleteConfirmation");
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[400px] p-[30px]">
+            <DialogContent className="max-w-[400px] rounded-[var(--ui-radius-panel)] p-6 sm:p-[30px]">
                 <DialogHeader className="flex flex-col items-center text-center gap-[12px]">
-                    <div className="w-[56px] h-[56px] rounded-full bg-red-50 flex items-center justify-center">
-                        <Trash2 size={24} className="text-red-500" />
+                    <div className="flex size-14 items-center justify-center rounded-[var(--ui-radius-card)] bg-[var(--ui-danger-soft)]">
+                        <Trash2 size={24} className="text-[var(--ui-danger)]" />
                     </div>
                     <DialogTitle className="text-[18px] font-semibold text-gray-800">
                         {dialogTitle}
@@ -56,18 +62,21 @@ export default function DeleteDialog({
                         onClick={() => onOpenChange(false)}
                         disabled={isLoading}
                     >
-                        {t("cancel")}
+                        {cancelLabel ?? t("cancel")}
                     </Button>
                     <Button
                         type="button"
-                        className="flex-1 bg-primary"
+                        variant={tone === "danger" ? "destructive" : "default"}
+                        className="flex-1"
                         onClick={onConfirm}
                         disabled={isLoading}
                     >
-                        {isLoading ? t("deleting") : t("delete")}
+                        {isLoading ? t("deleting") : (confirmLabel ?? t("delete"))}
                     </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
+
+export default ConfirmDialog;

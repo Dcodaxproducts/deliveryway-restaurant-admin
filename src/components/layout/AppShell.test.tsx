@@ -69,7 +69,8 @@ describe("AppShell authentication boundary", () => {
     const markup = renderShell();
 
     expect(markup).not.toContain("protected-dashboard");
-    expect(markup).toContain("animate-spin");
+    expect(markup).toContain('aria-label="Loading workspace"');
+    expect(markup).toContain("animate-pulse");
   });
 
   it("hides protected content after a missing session is resolved", () => {
@@ -82,7 +83,8 @@ describe("AppShell authentication boundary", () => {
     const markup = renderShell();
 
     expect(markup).not.toContain("protected-dashboard");
-    expect(markup).toContain("animate-spin");
+    expect(markup).toContain('aria-label="Loading workspace"');
+    expect(markup).toContain("animate-pulse");
   });
 
   it("hides protected content when an expired token has been cleared", () => {
@@ -94,7 +96,8 @@ describe("AppShell authentication boundary", () => {
     const markup = renderShell();
 
     expect(markup).not.toContain("protected-dashboard");
-    expect(markup).toContain("animate-spin");
+    expect(markup).toContain('aria-label="Loading workspace"');
+    expect(markup).toContain("animate-pulse");
   });
 
   it("renders protected content for a resolved valid session", () => {

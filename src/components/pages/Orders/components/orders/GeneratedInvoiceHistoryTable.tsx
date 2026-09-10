@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import EmptyState from "@/components/common/EmptyState";
-import TableSkeleton from "@/components/common/TableSkeleton";
+import { DataTableSkeleton } from "@/components/common/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -171,7 +171,7 @@ export function GeneratedInvoiceHistoryTable({
   };
 
   if (loading) {
-    return <TableSkeleton headers={headers} rows={6} showActions />;
+    return <DataTableSkeleton columns={headers.length + 1} rows={6} />;
   }
 
   if (!invoices.length) {

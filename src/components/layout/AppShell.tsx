@@ -19,41 +19,73 @@ export function AppShell({ children }: AppShellProps) {
   const hideLayout = isPublicRoute(pathname);
   const { loading, user, token } = useAuth();
 
-  if (!hideLayout && (loading || !user || !token)) {
+  if (hideLayout) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-primary" />
+      <>
+        {children}
+        <ContextGate />
+      </>
+    );
+  }
+
+  if (loading || !user || !token) {
+    return (
+      <div
+        role="status"
+        aria-label="Loading workspace"
+        className="min-h-[100dvh] bg-[var(--ui-canvas)]"
+      >
+        <div className="h-[76px] animate-pulse border-b border-[var(--ui-border)] bg-[var(--ui-surface)]" />
+        <div className="flex min-h-[calc(100dvh-76px)]">
+          <div className="hidden w-72 animate-pulse border-r border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] xl:block" />
+          <div className="mx-auto w-full max-w-[var(--ui-content-admin)] space-y-6 p-[var(--ui-page-gutter)] lg:py-6">
+            <div className="h-20 max-w-xl animate-pulse rounded-[var(--ui-radius-card)] bg-neutral-200" />
+            <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-32 animate-pulse rounded-[var(--ui-radius-card)] bg-neutral-200"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <span className="sr-only">Loading workspace</span>
       </div>
     );
   }
 
   return (
     <>
-      {!hideLayout && (
-        <div className="fixed inset-x-0 top-0 z-40">
-          <Navbar />
-        </div>
-      )}
+      <a
+        href="#main-content"
+        className="fixed left-4 top-4 z-[var(--ui-layer-toast)] -translate-y-24 rounded-[var(--ui-radius-control)] bg-primary px-4 py-2 text-sm font-medium text-white transition-transform focus:translate-y-0"
+      >
+        Skip to content
+      </a>
+      <div className="fixed inset-x-0 top-0 z-[var(--ui-layer-dropdown)]">
+        <Navbar />
+      </div>
       <div
         className={cn(
           "flex min-h-screen items-start",
-          !hideLayout && "pt-[116px] md:pt-[76px]",
+          "pt-[116px] md:pt-[76px]",
         )}
       >
-        {!hideLayout && (
-          <div className="hidden h-[calc(100vh-76px)] shrink-0 overflow-hidden xl:fixed xl:left-0 xl:top-[76px] xl:z-30 xl:flex">
-            <Sidebar />
-          </div>
-        )}
+        <div className="hidden h-[calc(100dvh-76px)] shrink-0 overflow-hidden xl:fixed xl:left-0 xl:top-[76px] xl:z-[var(--ui-layer-sticky)] xl:flex">
+          <Sidebar />
+        </div>
 
-        <div
+        <main
+          id="main-content"
+          tabIndex={-1}
           className={cn(
             "flex min-w-0 flex-1 flex-col",
-            !hideLayout && "xl:pl-72",
+            "xl:pl-72",
           )}
         >
           {children}
-        </div>
+        </main>
       </div>
       <ContextGate />
     </>

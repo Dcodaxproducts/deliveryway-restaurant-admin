@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FaPen, FaTrash } from "react-icons/fa";
 import ModifierModal from "@/components/pages/Menu/legacy/ModifierModal";
 import ModifierCategoryInfiniteSelect from "@/components/pages/Menu/modifiers/components/ModifierCategoryInfiniteSelect";
-import PaginationSection from "@/components/common/pagination";
+import PaginationSection from "@/components/common/PaginationSection";
 import { Copy, MoreVertical, Search } from "lucide-react";
 import { useDuplicateModifier } from "@/hooks/useMenus";
 import { useDeleteModifier, useModifiers } from "@/hooks/useModifiers";

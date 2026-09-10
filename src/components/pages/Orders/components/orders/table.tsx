@@ -35,7 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ClickTooltip } from "@/components/common/ClickTooltip";
-import TableSkeleton from "@/components/common/TableSkeleton";
+import { DataTableSkeleton } from "@/components/common/DataTable";
 import SortHeader from "@/components/common/sort-header";
 import {
   formatPaymentMethod,
@@ -353,18 +353,7 @@ export function OrdersTable({
           {t("loading")}
         </div>
 
-        <TableSkeleton
-          headers={[
-            t("date"),
-            t("orderType"),
-            t("address"),
-            t("amount"),
-            t("statusLabel"),
-          ]}
-          rows={6}
-          showCheckbox
-          showActions
-        />
+        <DataTableSkeleton columns={7} rows={6} />
       </>
     );
   }

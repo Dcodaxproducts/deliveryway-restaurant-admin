@@ -5,7 +5,10 @@ import { forwardRef, useId, useState, type InputHTMLAttributes } from "react";
 import { useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  FormField,
+  getFormFieldDescriptionId,
+} from "@/components/common/FormField";
 
 interface FormInputProps
   extends Omit<
@@ -55,15 +58,17 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           ? "text"
           : "password"
         : type;
-    const errorId = `${inputId}-error`;
+    const describedBy = getFormFieldDescriptionId(inputId, {
+      hasError: Boolean(error && errorText),
+    });
 
     return (
-      <div>
-        <Label htmlFor={inputId} className="mb-2 text-[16px]">
-          {label}
-          {required && <span className="text-primary"> *</span>}
-        </Label>
-
+      <FormField
+        id={inputId}
+        label={label}
+        required={required}
+        error={error ? errorText : undefined}
+      >
         <div className="relative">
           <Input
             ref={ref}
@@ -75,7 +80,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
             placeholder={placeholder}
             required={required}
             aria-invalid={error || undefined}
-            aria-describedby={error && errorText ? errorId : undefined}
+            aria-describedby={describedBy}
             className={`
               border-[#BBBBBB]
               placeholder-[#BBBBBB]
@@ -101,13 +106,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
             </button>
           )}
         </div>
-
-        {error && errorText && (
-          <p id={errorId} className="mt-1 text-xs text-primary">
-            {errorText}
-          </p>
-        )}
-      </div>
+      </FormField>
     );
   }
 );

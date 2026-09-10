@@ -182,7 +182,7 @@ export default function BranchDetailsPage() {
         </Button>
       </div>
 
-      <main className="overflow-hidden rounded-[24px] border border-slate-200 bg-[#F8FAFC] shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
+      <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-[#F8FAFC] shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
         <section className="relative min-h-72 overflow-hidden bg-slate-900">
           {text(branch.coverImage) ? (
             <Image
@@ -423,7 +423,7 @@ export default function BranchDetailsPage() {
             </aside>
           </div>
         </div>
-      </main>
+      </section>
     </Container>
   );
 }

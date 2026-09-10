@@ -6,7 +6,7 @@ import { FaPen, FaTrash } from "react-icons/fa";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { ModifierGroupModal } from "@/components/pages/Menu/legacy/ModifierGroupModal";
 import { ManageGroupModifiersDialog } from "@/components/pages/Menu/modifier-groups/components/ManageGroupModifiersDialog";
-import PaginationSection from "@/components/common/pagination";
+import PaginationSection from "@/components/common/PaginationSection";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import {
   useDeleteModifierGroup,
