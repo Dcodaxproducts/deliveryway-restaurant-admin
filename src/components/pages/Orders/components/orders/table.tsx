@@ -37,7 +37,10 @@ import {
 import { ClickTooltip } from "@/components/common/ClickTooltip";
 import TableSkeleton from "@/components/common/TableSkeleton";
 import SortHeader from "@/components/common/sort-header";
-import { getOrderAddressPreview } from "@/components/pages/Orders/components/orders/details/order-details-utils";
+import {
+  formatPaymentMethod,
+  getOrderAddressPreview,
+} from "@/components/pages/Orders/components/orders/details/order-details-utils";
 import { OrderStatusUpdateDialog } from "@/components/pages/Orders/components/orders/OrderStatusUpdateDialog";
 import { OrderStatusProgressDialog } from "@/components/pages/Orders/components/orders/OrderStatusProgressDialog";
 import { PaymentStatusUpdateDialog } from "@/components/pages/Orders/components/orders/PaymentStatusUpdateDialog";
@@ -139,6 +142,16 @@ export function OrdersTable({
   const common = useTranslations("common");
   const t = useTranslations("orders");
   const locale = useLocale();
+  const paymentMethodLabels: Partial<Record<string, string>> = {
+    COD: t("paymentMethods.COD"),
+    CARD_ON_DELIVERY: t("paymentMethods.CARD_ON_DELIVERY"),
+    STRIPE: t("paymentMethods.STRIPE"),
+    PAYPAL: t("paymentMethods.PAYPAL"),
+    EASYPAISA: t("paymentMethods.EASYPAISA"),
+    JAZZCASH: t("paymentMethods.JAZZCASH"),
+    BANK_TRANSFER: t("paymentMethods.BANK_TRANSFER"),
+    WALLET: t("paymentMethods.WALLET"),
+  };
   const [statusOrder, setStatusOrder] = useState<OrdersTableRow | null>(null);
   const [progressOrder, setProgressOrder] =
     useState<OrderStatusProgressState | null>(null);
@@ -346,6 +359,7 @@ export function OrdersTable({
             t("address"),
             t("amount"),
             t("statusLabel"),
+            t("paymentMethod"),
           ]}
           rows={6}
           showCheckbox
@@ -367,7 +381,7 @@ export function OrdersTable({
   return (
     <div className="space-y-4">
       <div className="block max-w-full overflow-x-auto rounded-lg border border-gray-100">
-        <Table className="min-w-[780px] table-fixed">
+        <Table className="min-w-[920px] table-fixed">
           <TableHeader>
             <TableRow className="border-none">
               <TableHead className="w-10">
@@ -420,7 +434,7 @@ export function OrdersTable({
                     activeKey={sortKey}
                     direction={sortDir}
                     onSort={onSort}
-                    className="w-[22%]"
+                    className="w-[18%]"
                   />
                   <SortHeader
                     label={t("orderType")}
@@ -428,16 +442,16 @@ export function OrdersTable({
                     activeKey={sortKey}
                     direction={sortDir}
                     onSort={onSort}
-                    className="w-[14%]"
+                    className="w-[12%]"
                   />
-                  <TableHead className="w-[26%]">{t("address")}</TableHead>
+                  <TableHead className="w-[22%]">{t("address")}</TableHead>
                   <SortHeader
                     label={t("amount")}
                     sortKey="totalAmount"
                     activeKey={sortKey}
                     direction={sortDir}
                     onSort={onSort}
-                    className="w-[14%]"
+                    className="w-[11%]"
                   />
                   <SortHeader
                     label={t("statusLabel")}
@@ -445,7 +459,15 @@ export function OrdersTable({
                     activeKey={sortKey}
                     direction={sortDir}
                     onSort={onSort}
-                    className="w-[16%]"
+                    className="w-[13%]"
+                  />
+                  <SortHeader
+                    label={t("paymentMethod")}
+                    sortKey="paymentMethod"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={onSort}
+                    className="w-[14%]"
                   />
                 </>
               )}
@@ -616,6 +638,17 @@ export function OrdersTable({
                         <span className="block truncate text-sm font-medium text-yellow-600">
                           {getStatusLabel(status)}
                         </span>
+                      </TableCell>
+
+                      <TableCell className="px-4">
+                        <Badge className="max-w-full border-gray-200 bg-gray-100 text-gray-700">
+                          <span className="truncate">
+                            {formatPaymentMethod(
+                              order.paymentMethod,
+                              paymentMethodLabels,
+                            ) || "-"}
+                          </span>
+                        </Badge>
                       </TableCell>
 
                     </>
