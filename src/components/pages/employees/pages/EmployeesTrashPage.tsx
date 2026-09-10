@@ -5,6 +5,7 @@ import Table from "@/components/pages/Employees/components/employee-settings/tab
 import Header from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
+import { SectionCard } from "@/components/common/SectionCard";
 
 const EmployeeTrashPage = () => {
   const t = useTranslations("employees");
@@ -12,7 +13,7 @@ const EmployeeTrashPage = () => {
   return (
     <Container>
       <Header title={t("trashTitle")} description={t("trashDescription")} />
-      <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6">
+      <SectionCard padding="md" className="space-y-6">
         <Table />
         <div className="flex items-center gap-6 pt-4 border-t border-[#EDEFF2]">
           {/* Cancel */}
@@ -31,7 +32,7 @@ const EmployeeTrashPage = () => {
             {t("actions.confirm")}
           </Button>
         </div>
-      </div>
+      </SectionCard>
     </Container>
   );
 };

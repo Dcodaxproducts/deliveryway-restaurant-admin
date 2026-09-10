@@ -11,6 +11,7 @@ import { formatTime24 } from "@/lib/date-time-format";
 import type { AdminNotification } from "@/types/notifications";
 import { useMarkNotificationSeen } from "@/hooks/useNotifications";
 import { useTranslations } from "next-intl";
+import { StatePanel } from "@/components/common/EmptyState";
 
 interface Props {
   notifications: AdminNotification[];
@@ -114,13 +115,18 @@ export default function Notifications({ notifications, loading }: Props) {
 
   return (
     <div className="space-y-4">
-      {loading && <p className="text-sm text-gray-400">{t("loading")}</p>}
+      {loading ? (
+        <StatePanel state="loading" title={t("loading")} compact />
+      ) : null}
 
       {!loading && notifications.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-10 text-center">
-          <Bell className="mb-3 text-gray-300" size={40} />
-          <p className="text-sm text-gray-500">{t("empty")}</p>
-        </div>
+        <StatePanel
+          state="empty"
+          title={t("empty")}
+          description="Restaurant alerts and customer activity will appear here."
+          icon={<Bell aria-hidden="true" />}
+          compact
+        />
       )}
 
       {!loading &&

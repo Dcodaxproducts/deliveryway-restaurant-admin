@@ -6,6 +6,7 @@ import Table from "@/components/pages/Menu/legacy/root-menu-components/list";
 import Header from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
+import { SectionCard } from "@/components/common/SectionCard";
 
 const CustomerTrashPage = () => {
     const t = useTranslations("menu.trash");
@@ -17,7 +18,7 @@ const CustomerTrashPage = () => {
                 title={t("title")}
                 description={t("description")}
             />
-            <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6">
+            <SectionCard padding="md" className="space-y-6">
                 <Table />
                <div className="flex items-center gap-6 pt-4 border-t border-[#EDEFF2]">
   {/* Cancel */}
@@ -38,7 +39,7 @@ const CustomerTrashPage = () => {
 </div>
 
 
-            </div>
+            </SectionCard>
 
            
         </Container>

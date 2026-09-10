@@ -1,18 +1,38 @@
 "use client";
 
-import { Search, Download, SlidersHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import FilterModal from "@/components/common/FilterModal";
-import { Input } from "@/components/ui/input";
+import { Download, Search, SlidersHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { FilterBar } from "@/components/common/FilterBar";
+import FilterModal, { type CommonFilterValues } from "@/components/common/FilterModal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+type ExportRow = {
+  name?: string;
+  city?: string;
+  address?: string;
+  phone?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  _count?: { items?: number };
+};
+
+export type BranchFilterState = Partial<CommonFilterValues> & {
+  search?: string;
+  page?: number;
+};
+
 interface Props {
-  branches?: any[];
-  filters: any;
-  onFilterChange: (filters: any) => void;
+  branches?: readonly ExportRow[];
+  filters: BranchFilterState;
+  onFilterChange: (filters: BranchFilterState) => void;
   showCustomerType?: boolean;
 }
+
+const escapeCsvCell = (value: string | number | boolean | undefined) =>
+  `"${String(value ?? "").replaceAll('"', '""')}"`;
 
 export default function BranchFilters({
   branches,
@@ -23,14 +43,12 @@ export default function BranchFilters({
   const t = useTranslations("branches");
   const commonT = useTranslations("common");
   const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState(filters?.search ?? "");
+  const [search, setSearch] = useState(filters.search ?? "");
 
-  const handleSearch = () => {
-    onFilterChange({ search, page: 1 });
-  };
+  const handleSearch = () => onFilterChange({ search, page: 1 });
 
   const exportCSV = () => {
-    if (!branches || branches.length === 0) return;
+    if (!branches?.length) return;
 
     const headers = [
       commonT("name"),
@@ -41,126 +59,90 @@ export default function BranchFilters({
       commonT("createdAt"),
       t("items"),
     ];
-
-    const rows = branches.map(
-      ({ name, city, address, phone, isActive, createdAt, _count }) => [
-        name ?? "",
-        city ?? "",
-        address ?? "",
-        phone ?? "",
-        isActive ? commonT("active") : commonT("inactive"),
-        createdAt ?? "",
-        _count?.items ?? "",
-      ],
-    );
-
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers, ...rows]
-        .map((cells) => cells.map((cell) => `"${cell}"`).join(","))
-        .join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-
+    const rows = branches.map(({ name, city, address, phone, isActive, createdAt, _count }) => [
+      name,
+      city,
+      address,
+      phone,
+      isActive ? commonT("active") : commonT("inactive"),
+      createdAt,
+      _count?.items,
+    ]);
+    const csvContent = [headers, ...rows]
+      .map((cells) => cells.map(escapeCsvCell).join(","))
+      .join("\n");
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "data.csv");
-
+    link.href = `data:text/csv;charset=utf-8,${encodeURIComponent(csvContent)}`;
+    link.download = "data.csv";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const filteredBranches =
-    branches?.filter(({ name }) =>
-      name?.toLowerCase().includes(search.toLowerCase()),
-    ) ?? [];
+  const visibleCount =
+    branches?.filter(({ name }) => name?.toLowerCase().includes(search.toLowerCase())).length ?? 0;
 
   return (
-    <div className="w-full bg-white rounded-lg">
-      <div className="w-full flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-3">
-        <div className="relative flex-1 min-w-[300px]">
-          <Search
-            size={22}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
-          />
-
-          <Input
-            type="text"
-            placeholder={commonT("searchByName")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="
-              w-full h-[44px]
-              pl-10 pr-[160px]
-              bg-transparent
-              border-0 border-b border-gray-200
-              text-lg text-dark
-              placeholder:text-gray-400
-              focus:outline-none
-              focus:border-primary
-              focus:ring-0
-              rounded-br-[14px]
-            "
-          />
-
-          <Button
-            onClick={handleSearch}
-            className="
-              absolute right-0 top-1/1 -translate-y-1/1
-              h-[44px]
-              px-10
-              rounded-[14px]
-              bg-primary
-              text-white
-              text-[16px]
-              font-[600]
-              transition-colors
-              hover:bg-primary/90
-              focus-visible:ring-primary/25
-            "
+    <>
+      <FilterBar
+        search={
+          <form
+            className="flex min-w-0 gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleSearch();
+            }}
           >
-            {commonT("search")}
-          </Button>
-        </div>
-
-        {/* EXPORT */}
-        <Button
-          onClick={exportCSV}
-          variant="outline"
-          className="h-[44px] px-5 rounded-[14px] border-[var(--brand-accent)]/40 bg-white flex items-center gap-2 shrink-0 text-[var(--brand-accent)] text-[15px] font-[600] transition-colors hover:border-[var(--brand-accent)] hover:bg-[var(--brand-accent)]/10 hover:text-[var(--brand-accent)] focus-visible:ring-[var(--brand-accent)]/25"
-        >
-          <Download size={18} className="text-[var(--brand-accent)]" />
-          {commonT("export")}
-        </Button>
-
-        {/* FILTER MODAL */}
-        <Button
-          onClick={() => setOpen(true)}
-          variant="outline"
-          className="h-[44px] px-5 rounded-[14px] border-[#E5E7EB] text-[#767676] flex items-center gap-2 text-[15px] font-[600] transition-colors hover:border-[#D6D9E0] hover:bg-gray-50 hover:text-[#4B5563] focus-visible:ring-primary/20"
-        >
-          <SlidersHorizontal size={18} color="#767676" />
-          {commonT("filter")}
-        </Button>
-      </div>
+            <div className="relative min-w-0 flex-1">
+              <Search
+                aria-hidden="true"
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ui-text-subtle)]"
+              />
+              <Input
+                type="search"
+                placeholder={commonT("searchByName")}
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                className="h-11 pl-10"
+              />
+            </div>
+            <Button type="submit" className="h-11 px-5">
+              {commonT("search")}
+            </Button>
+          </form>
+        }
+        resultCount={
+          branches
+            ? t("filtersShowing", { visible: visibleCount, total: branches.length })
+            : undefined
+        }
+        actions={
+          <>
+            <Button type="button" onClick={exportCSV} variant="outline" className="h-11 gap-2">
+              <Download aria-hidden="true" size={17} />
+              {commonT("export")}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setOpen(true)}
+              variant="outline"
+              className="h-11 gap-2"
+            >
+              <SlidersHorizontal aria-hidden="true" size={17} />
+              {commonT("filter")}
+            </Button>
+          </>
+        }
+      />
 
       <FilterModal
         open={open}
         onOpenChange={setOpen}
         filters={filters}
-        onApply={(f: any) => onFilterChange({ ...f, page: 1 })}
+        onApply={(values) => onFilterChange({ ...values, page: 1 })}
         showCustomerType={showCustomerType}
       />
-
-      {branches && (
-        <p className="text-sm text-gray-400 mt-3">
-          {t("filtersShowing", {
-            visible: filteredBranches.length,
-            total: branches.length,
-          })}
-        </p>
-      )}
-    </div>
+    </>
   );
 }

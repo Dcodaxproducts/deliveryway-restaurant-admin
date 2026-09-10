@@ -20,6 +20,7 @@ import {
 } from "@/hooks/useRestaurants";
 import { ADMIN_ROLES } from "@/lib/auth";
 import type { GiftCard, GiftCardsListParams } from "@/types/gift-cards";
+import { SectionCard } from "@/components/common/SectionCard";
 
 const defaultFilters: GiftCardsFilterState = {
   search: "",
@@ -150,7 +151,7 @@ export default function GiftCardsPage() {
         onVisibilityChange={handleVisibilityChange}
       />
 
-      <div className="mt-6 space-y-6 rounded-lg bg-white p-4 shadow-sm lg:p-6">
+      <SectionCard padding="md" className="space-y-6">
         <GiftCardsFilters
           filters={filters}
           branchOptions={branchOptions}
@@ -178,7 +179,7 @@ export default function GiftCardsPage() {
           }}
           onPageChange={setPage}
         />
-      </div>
+      </SectionCard>
 
       <GiftCardDeleteDialog
         giftCard={giftCardToDelete}

@@ -7,25 +7,24 @@ interface ManagementCardProps {
 
 const ManagementCard = ({ data }: ManagementCardProps) => {
   return (
-    <div className="flex flex-col items-center justify-between rounded-[16px] bg-white px-6 py-8 text-center">
-      
+    <article className="group flex min-h-52 flex-col justify-between rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-5 shadow-[var(--ui-shadow-xs)] transition duration-[var(--ui-motion-normal)] hover:-translate-y-0.5 hover:border-[var(--ui-border-strong)] hover:shadow-[var(--ui-shadow-sm)] sm:p-6">
       <div>
-        <h3 className="text-base font-semibold text-dark">
+        <h3 className="text-lg font-semibold tracking-[-0.01em] text-[var(--ui-text)]">
           {data.title}
         </h3>
 
-        <p className="mt-2 text-sm text-gray-400 leading-relaxed">
+        <p className="mt-2 max-w-[34ch] text-sm leading-6 text-[var(--ui-text-muted)]">
           {data.description}
         </p>
       </div>
 
       <Link
         href={data.actionHref}
-        className="mt-6 inline-flex w-[195px] items-center justify-center rounded-[var(--brand-button-radius)] bg-primary px-6 py-2.5 text-sm font-medium text-white transition hover:bg-primary/90"
+        className="mt-6 inline-flex min-h-11 w-fit items-center justify-center rounded-[var(--ui-radius-control)] bg-[var(--ui-brand-soft)] px-4 text-sm font-semibold text-primary transition duration-[var(--ui-motion-fast)] hover:bg-primary hover:text-white active:translate-y-px"
       >
         {data.actionLabel}
       </Link>
-    </div>
+    </article>
   );
 };
 

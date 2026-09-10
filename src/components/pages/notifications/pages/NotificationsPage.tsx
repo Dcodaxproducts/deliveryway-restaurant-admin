@@ -6,6 +6,7 @@ import Notifications from "@/components/pages/Notifications/components/notificat
 import { useAuth } from "@/hooks/useAuth";
 import { useGetNotifications } from "@/hooks/useNotifications";
 import type { AdminNotification } from "@/types/notifications";
+import { SectionCard } from "@/components/common/SectionCard";
 
 const NotificationsPage = () => {
   const { restaurantId, branchId, isBranchAdmin } = useAuth();
@@ -42,7 +43,9 @@ const NotificationsPage = () => {
         refetch={() => refetch()}
       />
 
-      <Notifications notifications={notifications} loading={loading} />
+      <SectionCard padding="md">
+        <Notifications notifications={notifications} loading={loading} />
+      </SectionCard>
     </Container>
   );
 };

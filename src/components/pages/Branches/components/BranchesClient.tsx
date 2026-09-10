@@ -1,14 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import BranchFilters from "./BranchFilters";
+import BranchFilters, { type BranchFilterState } from "./BranchFilters";
 import Table from "./list";
 
+type BranchListItem = {
+  id: string;
+  name?: string;
+  city?: string;
+  address?: string;
+  phone?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  _count?: { items?: number };
+};
+
 interface Props {
-  branches: any[];
-  meta: any;
+  branches: BranchListItem[];
+  meta: unknown;
   loading: boolean;
-  fetchBranches: (params?: any) => void;
+  fetchBranches: (params?: BranchFilterState) => void;
 }
 
 export default function BranchesClient({
@@ -17,7 +28,7 @@ export default function BranchesClient({
   loading,
   fetchBranches,
 }: Props) {
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<BranchFilterState>({
     search: "",
     sortOrder: "ASC",
     includeInactive: false,
@@ -25,7 +36,7 @@ export default function BranchesClient({
     page: 1,
   });
 
-  const handleFilterChange = (newFilters: any) => {
+  const handleFilterChange = (newFilters: BranchFilterState) => {
     const updated = { ...filters, ...newFilters };
 
     setFilters(updated);

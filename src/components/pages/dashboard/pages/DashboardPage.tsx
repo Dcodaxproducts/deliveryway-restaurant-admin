@@ -10,6 +10,7 @@ import ManagementSection from "@/components/pages/Dashboard/components/dashboard
 import { useAuth } from "@/hooks/useAuth";
 import { useGetRestaurantDashboardOverview } from "@/hooks/useDashboard";
 import { useTranslations } from "next-intl";
+import type { StatItem } from "@/types/stats";
 
 export default function Home() {
   const t = useTranslations("dashboard");
@@ -69,7 +70,7 @@ export default function Home() {
 
   const overview = dashboardOverviewResponse?.data;
 
-  const statsData = [
+  const statsData: StatItem[] = [
     {
       _id: "total-orders",
       title: t("totalOrders"),
@@ -127,7 +128,7 @@ export default function Home() {
         percentage: t("totalSuffix", { count: overview?.totalEmployees ?? 0 }),
       },
     },
-  ] as any;
+  ];
 
   const statsLoading = authLoading || isLoading || isFetching;
 

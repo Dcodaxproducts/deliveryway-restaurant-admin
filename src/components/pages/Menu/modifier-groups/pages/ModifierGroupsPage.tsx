@@ -4,6 +4,7 @@ import Container from "@/components/common/Container";
 import Header from "@/components/common/PageHeader";
 import { ModifierGroupsTable } from "@/components/pages/Menu/modifier-groups/components/ModifierGroupsTable/ModifierGroupsTable";
 import { useTranslations } from "next-intl";
+import { SectionCard } from "@/components/common/SectionCard";
 
 export function ModifierGroupsPage() {
   const t = useTranslations("menu");
@@ -15,9 +16,9 @@ export function ModifierGroupsPage() {
         description={t("modifierGroupsDescription")}
       />
 
-      <div className="bg-white p-6 rounded-[20px] shadow-sm mt-6">
+      <SectionCard padding="md">
         <ModifierGroupsTable />
-      </div>
+      </SectionCard>
     </Container>
   );
 }

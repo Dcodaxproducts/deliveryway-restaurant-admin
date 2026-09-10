@@ -7,7 +7,6 @@ import {
   Loader2,
   Mail,
   MessageSquareReply,
-  MoreHorizontal,
   RefreshCw,
   Search,
 } from "lucide-react";
@@ -16,6 +15,9 @@ import Container from "@/components/common/Container";
 import EmptyState from "@/components/common/EmptyState";
 import PageHeader from "@/components/common/PageHeader";
 import PaginationSection from "@/components/common/PaginationSection";
+import { FilterBar } from "@/components/common/FilterBar";
+import { RowActions } from "@/components/common/RowActions";
+import { SectionCard } from "@/components/common/SectionCard";
 import { StatusBadge } from "@/components/common/status-badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,12 +28,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
@@ -393,8 +389,11 @@ export default function ContactSubmissionsPage() {
         </Button>
       </div>
 
-      <div className="mt-6 space-y-6 rounded-lg bg-white p-4 shadow-sm lg:p-6">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
+      <SectionCard padding="md" className="space-y-6">
+        <FilterBar
+          resultCount={`${meta.total} submission${meta.total === 1 ? "" : "s"}`}
+          filters={
+          <div className="grid w-full gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
           <div className="xl:col-span-4">
             <Label className="mb-1.5 block text-xs font-medium text-gray-600">
               Search
@@ -476,7 +475,9 @@ export default function ContactSubmissionsPage() {
               Clear filters
             </Button>
           </div>
-        </div>
+          </div>
+          }
+        />
 
         {submissionsQuery.isLoading ? (
           <div className="py-10 text-center text-sm text-gray-400">
@@ -540,42 +541,15 @@ export default function ContactSubmissionsPage() {
                         <ContactSubmissionStatusBadge status={submission.status} />
                       </td>
                       <td className="px-5 py-4 text-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              type="button"
-                              className="inline-flex size-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-50 hover:text-primary"
-                            >
-                              <MoreHorizontal size={18} />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem
-                              onClick={() => setDetailSubmissionId(submission.id)}
-                            >
-                              <Eye size={16} />
-                              View details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => updateStatus(submission, "READ")}
-                            >
-                              <Mail size={16} />
-                              Mark as read
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setReplySubmission(submission)}
-                            >
-                              <MessageSquareReply size={16} />
-                              Reply
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => updateStatus(submission, "ARCHIVED")}
-                            >
-                              <Archive size={16} />
-                              Archive
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <RowActions
+                          label={`Actions for ${getCustomerLabel(submission)}`}
+                          actions={[
+                            { id: "view", label: "View details", icon: <Eye size={16} />, onSelect: () => setDetailSubmissionId(submission.id) },
+                            { id: "read", label: "Mark as read", icon: <Mail size={16} />, onSelect: () => updateStatus(submission, "READ") },
+                            { id: "reply", label: "Reply", icon: <MessageSquareReply size={16} />, onSelect: () => setReplySubmission(submission) },
+                            { id: "archive", label: "Archive", icon: <Archive size={16} />, onSelect: () => updateStatus(submission, "ARCHIVED") },
+                          ]}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -648,7 +622,7 @@ export default function ContactSubmissionsPage() {
             ))}
           </select>
         </div>
-      </div>
+      </SectionCard>
 
       <ContactSubmissionReplyDialog
         submission={replySubmission}

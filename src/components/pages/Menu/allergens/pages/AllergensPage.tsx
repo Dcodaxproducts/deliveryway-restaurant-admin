@@ -4,6 +4,7 @@ import Container from "@/components/common/Container";
 import Header from "@/components/common/PageHeader";
 import AllergenTable from "@/components/pages/Menu/allergens/components/AllergenTable/AllergenTable";
 import { useTranslations } from "next-intl";
+import { SectionCard } from "@/components/common/SectionCard";
 
 const AllergenPage = () => {
   const t = useTranslations("menu");
@@ -15,9 +16,9 @@ const AllergenPage = () => {
         description={t("allergensDescription")}
       />
 
-      <div className="mt-6 rounded-[20px] bg-white p-6 shadow-sm">
+      <SectionCard padding="md">
         <AllergenTable />
-      </div>
+      </SectionCard>
     </Container>
   );
 };

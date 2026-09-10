@@ -4,6 +4,7 @@ import Container from "@/components/common/Container";
 import Header from "@/components/common/PageHeader";
 import LabelsTable from "@/components/pages/Menu/labels/components/LabelsTable/LabelsTable";
 import { useTranslations } from "next-intl";
+import { SectionCard } from "@/components/common/SectionCard";
 
 const LabelsPage = () => {
   const t = useTranslations("menu");
@@ -15,9 +16,9 @@ const LabelsPage = () => {
         description={t("labelsDescriptionLong")}
       />
 
-      <div className="mt-6 rounded-[20px] bg-white p-6 shadow-sm">
+      <SectionCard padding="md">
         <LabelsTable />
-      </div>
+      </SectionCard>
     </Container>
   );
 };

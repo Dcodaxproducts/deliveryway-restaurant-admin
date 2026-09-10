@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGetCustomersList } from "@/hooks/useCustomers";
 import { useGetCustomersStats } from "@/hooks/useDashboard";
 import { useTranslations } from "next-intl";
+import { SectionCard } from "@/components/common/SectionCard";
 
 interface Customer {
   id: string;
@@ -125,7 +126,7 @@ export default function CustomerSettingsPage() {
         onRefresh={handleRefresh}
       />
 
-      <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6">
+      <SectionCard padding="md" className="space-y-6">
         <StatsSection
           stats={customerStats}
           loading={isStatsLoading || isStatsFetching}
@@ -147,7 +148,7 @@ export default function CustomerSettingsPage() {
           onPageChange={handlePageChange}
           onRefresh={handleRefresh}
         />
-      </div>
+      </SectionCard>
     </Container>
   );
 }

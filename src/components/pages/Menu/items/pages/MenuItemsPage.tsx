@@ -9,6 +9,7 @@ import { PlusCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import CreateMenuItemModal from "@/components/pages/Menu/items/components/CreateMenuItemModal/CreateMenuItemModal";
 import { useTranslations } from "next-intl";
+import { SectionCard } from "@/components/common/SectionCard";
 
 const MenuItemsPage = () => {
   const { isBranchAdmin } = useAuth();
@@ -43,9 +44,9 @@ const MenuItemsPage = () => {
         ) : null}
       </div>
 
-      <div className="bg-white p-6 rounded-[20px] shadow-sm mt-6">
+      <SectionCard padding="md">
         <MenuItemsTable refetchKey={refetchKey} />
-      </div>
+      </SectionCard>
 
       {/*  GLOBAL MODAL */}
       <CreateMenuItemModal

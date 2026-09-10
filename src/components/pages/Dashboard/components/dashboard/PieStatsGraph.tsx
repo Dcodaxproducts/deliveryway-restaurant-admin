@@ -1,6 +1,6 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
+import { ChartPanel } from "@/components/common/ChartPanel";
 import {
   PieChart,
   Pie,
@@ -43,7 +43,7 @@ const PieStatsGraph = () => {
   }));
 
   return (
-   <Card className="h-full min-w-0 overflow-hidden rounded-[16px] border-none bg-white p-[24px] shadow-none">
+   <ChartPanel title={null} className="h-full">
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-base font-medium text-dark">{t("pieChart")}</h3>
@@ -92,7 +92,7 @@ const PieStatsGraph = () => {
           </div>
         ))}
       </div>
-    </Card>
+    </ChartPanel>
   );
 };
 

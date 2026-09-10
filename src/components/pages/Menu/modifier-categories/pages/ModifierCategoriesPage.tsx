@@ -2,6 +2,7 @@
 
 import Container from "@/components/common/Container";
 import Header from "@/components/common/PageHeader";
+import { SectionCard } from "@/components/common/SectionCard";
 import ModifierCategoriesTable from "@/components/pages/Menu/modifier-categories/components/ModifierCategoriesTable";
 
 export default function ModifierCategoriesPage() {
@@ -12,9 +13,9 @@ export default function ModifierCategoriesPage() {
         description="Create categories such as Bread, Sauces, Cheese, and Toppings."
       />
 
-      <div className="mt-6 rounded-[20px] bg-white p-6 shadow-sm">
+      <SectionCard padding="md">
         <ModifierCategoriesTable />
-      </div>
+      </SectionCard>
     </Container>
   );
 }

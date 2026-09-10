@@ -8,6 +8,7 @@ import { useGetBranches } from "@/hooks/useBranches";
 import { useAuth } from "@/hooks/useAuth";
 import BranchWorkspace from "@/components/pages/BranchWorkspace/components/branch-admin/BranchWorkspace";
 import { useTranslations } from "next-intl";
+import { SectionCard } from "@/components/common/SectionCard";
 
 export function BranchesPage() {
   const { isBranchAdmin } = useAuth();
@@ -59,14 +60,14 @@ function RestaurantBranchesPage() {
         onBranchCreated={refetch}
       />
 
-      <div className="space-y-[32px] bg-white lg:p-[30px] rounded-[14px] shadow-sm">
+      <SectionCard padding="md">
         <BranchesClient
           branches={branches}
           meta={meta}
           loading={isLoading}
           fetchBranches={handleFetchBranches}
         />
-      </div>
+      </SectionCard>
     </Container>
   );
 }

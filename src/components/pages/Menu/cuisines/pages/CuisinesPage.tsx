@@ -3,6 +3,7 @@
 import Container from "@/components/common/Container";
 import Header from "@/components/common/PageHeader";
 import CuisinesTable from "@/components/pages/Menu/cuisines/components/CuisinesTable";
+import { SectionCard } from "@/components/common/SectionCard";
 
 export default function CuisinesPage() {
   return (
@@ -12,9 +13,9 @@ export default function CuisinesPage() {
         description="View global cuisine tags available for menu items."
       />
 
-      <div className="mt-6 rounded-[20px] bg-white p-6 shadow-sm">
+      <SectionCard padding="md">
         <CuisinesTable />
-      </div>
+      </SectionCard>
     </Container>
   );
 }

@@ -1,8 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
+
 import Container from "@/components/common/Container";
+import type { DataTableColumn } from "@/components/common/DataTable";
+import { StatePanel } from "@/components/common/EmptyState";
+import { FilterBar } from "@/components/common/FilterBar";
 import Header from "@/components/common/PageHeader";
+import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
+import { SectionCard } from "@/components/common/SectionCard";
+import { StatusBadge } from "@/components/common/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +22,15 @@ import {
 } from "@/hooks/useInventory";
 
 type InventoryTab = "items" | "movements" | "recipes" | "categories";
+type MovementType = "IN" | "OUT" | "ADJUSTMENT";
+
+type InventoryRow = {
+  key: string;
+  name: string;
+  category: string;
+  quantity: string | number;
+  status: string;
+};
 
 const inventoryTabs: { key: InventoryTab; label: string }[] = [
   { key: "items", label: "Items" },
@@ -23,19 +39,67 @@ const inventoryTabs: { key: InventoryTab; label: string }[] = [
   { key: "categories", label: "Categories" },
 ];
 
-const loadingRows = Array.from({ length: 5 }, (_, index) => `loading-row-${index}`);
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
 
-const normalizeRows = (response: any) => {
-  const candidates = [
-    response?.data,
-    response?.data?.items,
-    response?.data?.data,
-    response?.items,
-    response,
-  ];
+const getText = (value: unknown) =>
+  typeof value === "string" && value.trim() ? value.trim() : undefined;
 
-  return candidates.find(Array.isArray) || [];
+const getRowsSource = (response: unknown): unknown[] => {
+  if (Array.isArray(response)) return response;
+  if (!isRecord(response)) return [];
+
+  if (Array.isArray(response.data)) return response.data;
+  if (Array.isArray(response.items)) return response.items;
+  if (isRecord(response.data)) {
+    if (Array.isArray(response.data.items)) return response.data.items;
+    if (Array.isArray(response.data.data)) return response.data.data;
+  }
+
+  return [];
 };
+
+const normalizeRows = (response: unknown): InventoryRow[] =>
+  getRowsSource(response).flatMap((value, index) => {
+    if (!isRecord(value)) return [];
+
+    const item = isRecord(value.item) ? value.item : undefined;
+    const category = isRecord(value.category) ? value.category : undefined;
+    const identity =
+      getText(value.id) ?? getText(value._id) ?? getText(value.name) ?? `inventory-${index}`;
+    const quantity = value.quantity ?? value.currentStock ?? value.stock ?? "—";
+
+    return [{
+      key: identity,
+      name:
+        getText(value.name) ?? getText(item?.name) ?? getText(value.reference) ?? identity,
+      category:
+        getText(category?.name) ?? getText(value.type) ?? getText(value.movementType) ?? "—",
+      quantity: typeof quantity === "string" || typeof quantity === "number" ? quantity : "—",
+      status:
+        getText(value.status) ?? getText(value.updatedAt) ?? getText(value.createdAt) ?? "—",
+    }];
+  });
+
+const columns: DataTableColumn<InventoryRow>[] = [
+  {
+    id: "name",
+    header: "Name / reference",
+    cell: (row) => <span className="font-semibold text-[var(--ui-text)]">{row.name}</span>,
+  },
+  { id: "category", header: "Category / type", cell: (row) => row.category },
+  {
+    id: "quantity",
+    header: "Quantity",
+    align: "right",
+    cell: (row) => <span className="font-medium tabular-nums">{row.quantity}</span>,
+  },
+  {
+    id: "status",
+    header: "Status / updated",
+    cell: (row) => <StatusBadge>{row.status}</StatusBadge>,
+  },
+];
 
 export default function InventoryPage() {
   const { restaurantId, branchId, isBranchAdmin, loading } = useAuth();
@@ -43,7 +107,7 @@ export default function InventoryPage() {
   const [search, setSearch] = useState("");
   const [movement, setMovement] = useState({
     itemId: "",
-    type: "ADJUSTMENT" as "IN" | "OUT" | "ADJUSTMENT",
+    type: "ADJUSTMENT" as MovementType,
     quantity: "",
     reason: "",
   });
@@ -56,7 +120,7 @@ export default function InventoryPage() {
       page: 1,
       limit: 50,
     }),
-    [restaurantId, branchId, search]
+    [restaurantId, branchId, search],
   );
 
   const itemsQuery = useInventoryItems(params);
@@ -64,26 +128,17 @@ export default function InventoryPage() {
   const recipesQuery = useInventoryRecipes(params);
   const categoriesQuery = useInventoryCategories(params);
   const createMovement = useCreateInventoryMovement();
-
-  const rows = normalizeRows(
+  const activeQuery =
     activeTab === "items"
-      ? itemsQuery.data
+      ? itemsQuery
       : activeTab === "movements"
-      ? movementsQuery.data
-      : activeTab === "recipes"
-      ? recipesQuery.data
-      : categoriesQuery.data
-  );
-
-  const isLoading =
-    loading ||
-    (activeTab === "items"
-      ? itemsQuery.isLoading || itemsQuery.isFetching
-      : activeTab === "movements"
-      ? movementsQuery.isLoading || movementsQuery.isFetching
-      : activeTab === "recipes"
-      ? recipesQuery.isLoading || recipesQuery.isFetching
-      : categoriesQuery.isLoading || categoriesQuery.isFetching);
+        ? movementsQuery
+        : activeTab === "recipes"
+          ? recipesQuery
+          : categoriesQuery;
+  const rows = normalizeRows(activeQuery.data);
+  const isLoading = loading || activeQuery.isLoading || activeQuery.isFetching;
+  const error = activeQuery.error instanceof Error ? activeQuery.error.message : null;
 
   const handleCreateMovement = () => {
     if (!restaurantId || !branchId || !movement.itemId || !movement.quantity) return;
@@ -102,170 +157,136 @@ export default function InventoryPage() {
           setMovement({ itemId: "", type: "ADJUSTMENT", quantity: "", reason: "" });
           setActiveTab("movements");
         },
-      }
+      },
     );
   };
 
   return (
     <Container>
       <Header
-        title={isBranchAdmin ? "Branch Inventory" : "Inventory"}
+        eyebrow="Operations"
+        title={isBranchAdmin ? "Branch inventory" : "Inventory"}
         description={
           isBranchAdmin
             ? "View branch stock, recipes, categories, and record stock movements for your assigned branch."
-            : "View inventory and stock movements."
+            : "Track stock, movements, recipes, and inventory categories."
         }
       />
 
       {!branchId ? (
-        <div className="rounded-[16px] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-700">
-          No assigned branch was found in your session. Please login again with a branch-admin account.
-        </div>
+        <StatePanel
+          state="unavailable"
+          title="No branch assigned"
+          description="Sign in with a branch-admin account or select a branch before recording inventory movements."
+          compact
+        />
       ) : null}
 
-      <div className="mt-6 rounded-[20px] bg-white p-5 shadow-sm">
-        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {inventoryTabs.map(({ key, label }) => (
-              <Button
-                key={key}
-                type="button"
-                variant={activeTab === key ? "default" : "outline"}
-                onClick={() => setActiveTab(key)}
-                className="rounded-[12px]"
-              >
-                {label}
-              </Button>
-            ))}
-          </div>
+      <SectionCard padding="md" className="space-y-5">
+        <FilterBar
+          search={
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search inventory"
+              aria-label="Search inventory"
+              className="h-11"
+            />
+          }
+          filters={
+            <div className="flex flex-wrap gap-2" role="tablist" aria-label="Inventory view">
+              {inventoryTabs.map(({ key, label }) => (
+                <Button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === key}
+                  variant={activeTab === key ? "default" : "ghost"}
+                  onClick={() => setActiveTab(key)}
+                  className="min-h-10"
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          }
+          resultCount={`${rows.length} record${rows.length === 1 ? "" : "s"}`}
+        />
 
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search inventory..."
-            className="h-[44px] max-w-[360px] rounded-[14px]"
-          />
-        </div>
-
-        <div className="mb-6 rounded-[16px] border border-gray-100 bg-gray-50 p-4">
-          <h3 className="mb-3 text-sm font-semibold text-gray-800">Record stock movement</h3>
-          <div className="grid gap-3 md:grid-cols-4">
+        <SectionCard
+          variant="outlined"
+          padding="sm"
+          title="Record stock movement"
+          description="Add an inventory adjustment for the active branch."
+        >
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <Input
               value={movement.itemId}
-              onChange={(event) =>
-                setMovement((prev) => ({ ...prev, itemId: event.target.value }))
-              }
+              onChange={(event) => setMovement((prev) => ({ ...prev, itemId: event.target.value }))}
               placeholder="Inventory item ID"
-              className="h-[42px] rounded-[12px]"
+              aria-label="Inventory item ID"
             />
             <select
               value={movement.type}
               onChange={(event) =>
-                setMovement((prev) => ({ ...prev, type: event.target.value as any }))
+                setMovement((prev) => ({ ...prev, type: event.target.value as MovementType }))
               }
-              className="h-[42px] rounded-[12px] border border-gray-200 bg-white px-3 text-sm"
+              aria-label="Movement type"
+              className="h-11 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] px-3 text-sm"
             >
-              <option value="IN">IN</option>
-              <option value="OUT">OUT</option>
-              <option value="ADJUSTMENT">ADJUSTMENT</option>
+              <option value="IN">In</option>
+              <option value="OUT">Out</option>
+              <option value="ADJUSTMENT">Adjustment</option>
             </select>
             <Input
               type="number"
               value={movement.quantity}
-              onChange={(event) =>
-                setMovement((prev) => ({ ...prev, quantity: event.target.value }))
-              }
+              onChange={(event) => setMovement((prev) => ({ ...prev, quantity: event.target.value }))}
               placeholder="Quantity"
-              className="h-[42px] rounded-[12px]"
+              aria-label="Quantity"
             />
             <Input
               value={movement.reason}
-              onChange={(event) =>
-                setMovement((prev) => ({ ...prev, reason: event.target.value }))
-              }
-              placeholder="Reason / note"
-              className="h-[42px] rounded-[12px]"
+              onChange={(event) => setMovement((prev) => ({ ...prev, reason: event.target.value }))}
+              placeholder="Reason or note"
+              aria-label="Reason or note"
             />
           </div>
           <Button
             type="button"
             onClick={handleCreateMovement}
             disabled={createMovement.isPending || !branchId}
-            className="mt-3 rounded-[12px]"
+            className="mt-4"
           >
-            {createMovement.isPending ? "Saving..." : "Save movement"}
+            {createMovement.isPending ? "Saving…" : "Save movement"}
           </Button>
-        </div>
+        </SectionCard>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-gray-500">
-                <th className="py-3 pr-3">Name / Reference</th>
-                <th className="py-3 pr-3">Category / Type</th>
-                <th className="py-3 pr-3">Quantity</th>
-                <th className="py-3 pr-3">Status / Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                loadingRows.map((key) => (
-                  <tr key={key}>
-                    <td colSpan={4} className="py-4">
-                      <div className="h-8 animate-pulse rounded bg-gray-100" />
-                    </td>
-                  </tr>
-                ))
-              ) : rows.length ? (
-                rows.map((row: any) => {
-                  const {
-                    id,
-                    _id,
-                    name,
-                    item,
-                    reference,
-                    category,
-                    type,
-                    movementType,
-                    quantity,
-                    currentStock,
-                    stock,
-                    status,
-                    updatedAt,
-                    createdAt,
-                  } = row;
-                  const displayName = name?.trim() || item?.name?.trim() || reference?.trim() || id || "-";
-                  const displayCategory = category?.name?.trim() || type || movementType || "-";
-                  const displayStatus = status || updatedAt || createdAt || "-";
-
-                  return (
-                  <tr key={id ?? _id ?? name} className="border-b last:border-0">
-                    <td className="py-3 pr-3 font-medium text-gray-900">
-                      {displayName}
-                    </td>
-                    <td className="py-3 pr-3 text-gray-600">
-                      {displayCategory}
-                    </td>
-                    <td className="py-3 pr-3 text-gray-600">
-                      {quantity ?? currentStock ?? stock ?? "-"}
-                    </td>
-                    <td className="py-3 pr-3 text-gray-600">
-                      {displayStatus}
-                    </td>
-                  </tr>
-                );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={4} className="py-10 text-center text-gray-400">
-                    No inventory records found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+        <ResponsiveDataView
+          data={rows}
+          columns={columns}
+          rowKey={(row) => row.key}
+          loading={isLoading}
+          error={error}
+          emptyTitle="No inventory records found"
+          emptyDescription="Try another tab or search term."
+          caption={`${activeTab} inventory records`}
+          renderMobileItem={(row) => (
+            <article className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4 shadow-[var(--ui-shadow-xs)]">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="truncate font-semibold text-[var(--ui-text)]">{row.name}</h3>
+                  <p className="mt-1 text-sm text-[var(--ui-text-muted)]">{row.category}</p>
+                </div>
+                <StatusBadge>{row.status}</StatusBadge>
+              </div>
+              <p className="mt-4 text-sm text-[var(--ui-text-muted)]">
+                Quantity <span className="ml-1 font-semibold tabular-nums text-[var(--ui-text)]">{row.quantity}</span>
+              </p>
+            </article>
+          )}
+        />
+      </SectionCard>
     </Container>
   );
 }

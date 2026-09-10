@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGetBranches } from "@/hooks/useBranches";
 import { useTableReservations } from "@/hooks/useTableReservations";
 import type { TableReservationsParams } from "@/types/table-reservations";
+import { SectionCard } from "@/components/common/SectionCard";
 
 const defaultFilters: TableReservationsFilterState = {
   search: "",
@@ -125,7 +126,7 @@ export function TableReservationsPage() {
         onRefresh={() => reservationsQuery.refetch()}
       />
 
-      <div className="space-y-6 rounded-lg bg-white p-4 shadow-sm lg:p-6">
+      <SectionCard padding="md" className="space-y-6">
         <TableReservationsStats
           reservations={reservations}
           total={meta.total}
@@ -157,7 +158,7 @@ export function TableReservationsPage() {
           onLimitChange={handleLimitChange}
           onPageChange={setPage}
         />
-      </div>
+      </SectionCard>
     </Container>
   );
 }

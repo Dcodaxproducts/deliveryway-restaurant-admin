@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useGetBranches } from "@/hooks/useBranches";
 import type { AdminDeal, AdminDealsListParams } from "@/types/admin-deals";
+import { SectionCard } from "@/components/common/SectionCard";
 
 const defaultFilters: AdminDealsFilterState = {
   search: "",
@@ -176,7 +177,7 @@ export default function AdminDealsPage() {
         onRefresh={() => dealsQuery.refetch()}
       />
 
-      <div className="mt-6 space-y-6 rounded-lg bg-white p-4 shadow-sm lg:p-6">
+      <SectionCard padding="md" className="space-y-6">
         <AdminDealsFilters
           filters={filters}
           branchOptions={branchOptions}
@@ -207,7 +208,7 @@ export default function AdminDealsPage() {
           }}
           onPageChange={setPage}
         />
-      </div>
+      </SectionCard>
 
       <AdminDealDeleteDialog
         deal={dealToDelete}

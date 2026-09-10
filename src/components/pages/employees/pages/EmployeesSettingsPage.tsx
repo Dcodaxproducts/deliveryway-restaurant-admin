@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGetBranches } from "@/hooks/useBranches";
 import { useGetEmployeesStats } from "@/hooks/useDashboard";
 import { useTranslations } from "next-intl";
+import { SectionCard } from "@/components/common/SectionCard";
 
 type BranchOption = {
   id: string;
@@ -84,7 +85,7 @@ const EmployeesSettingsPage = () => {
         onRoleSuccess={triggerRolesRefresh}
       />
 
-      <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6">
+      <SectionCard padding="md" className="space-y-6">
         <StatsSection
           stats={employeeStats}
           loading={isEmployeeStatsLoading || isEmployeeStatsFetching}
@@ -155,7 +156,7 @@ const EmployeesSettingsPage = () => {
             onSuccess={triggerRolesRefresh}
           />
         )}
-      </div>
+      </SectionCard>
     </Container>
   );
 };

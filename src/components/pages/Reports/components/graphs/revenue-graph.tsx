@@ -12,7 +12,7 @@ import {
   Area,
 } from "recharts";
 import { RefreshCw } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { ChartPanel } from "@/components/common/ChartPanel";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -100,7 +100,7 @@ const RevenueGraph = ({
   const loading = authLoading || isLoading || isFetching;
 
   return (
-    <Card className="h-full min-w-0 overflow-hidden rounded-[16px] border-none bg-white p-[24px] shadow-none">
+    <ChartPanel title={null} className="h-full">
       <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
@@ -293,7 +293,7 @@ const RevenueGraph = ({
           </ResponsiveContainer>
         )}
       </div>
-    </Card>
+    </ChartPanel>
   );
 };
 

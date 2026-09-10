@@ -1,24 +1,27 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { FilterSheet } from "@/components/common/FilterBar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Radio } from "@/components/ui/radioBtn";
 import FormInput from "@/components/forms/common/FormInput";
 import { getLocalTodayInputValue } from "@/lib/date-input";
 import { useTranslations } from "next-intl";
 
+export type CommonFilterValues = {
+  includeInactive: boolean;
+  withDeleted: boolean;
+  sortOrder: "ASC" | "DESC";
+  creationDate?: string;
+  modifiedDate?: string;
+  isGuest?: boolean;
+};
+
 type FilterModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  filters?: any;
-  onApply?: (filters: any) => void;
+  filters?: Partial<CommonFilterValues>;
+  onApply?: (filters: CommonFilterValues) => void;
   showCustomerType?: boolean;
 };
 
@@ -94,7 +97,7 @@ export default function FilterModal({
       includeInactive = true;
     }
 
-    let sortOrder = "ASC";
+    let sortOrder: CommonFilterValues["sortOrder"] = "ASC";
 
     if (sortBy === "default") sortOrder = "DESC";
     if (sortBy === "oldest") sortOrder = "ASC";
@@ -116,19 +119,17 @@ export default function FilterModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[420px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
-            {t("filter")}
-          </DialogTitle>
-
-          <p className="text-sm text-gray-500">{t("filterDescription")}</p>
-        </DialogHeader>
-
-        {/* BODY */}
-
-        <div className="mt-4 rounded-[14px] bg-white p-4 space-y-6">
+    <FilterSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t("filter")}
+      description={t("filterDescription")}
+      applyLabel={t("apply")}
+      resetLabel={t("reset")}
+      onApply={handleApply}
+      onReset={handleReset}
+    >
+        <div className="space-y-6 rounded-[var(--ui-radius-card)] bg-[var(--ui-surface-subtle)] p-4">
           {/* STATUS */}
 
           <div className="space-y-3">
@@ -226,22 +227,6 @@ export default function FilterModal({
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-center gap-6">
-          <button
-            onClick={handleReset}
-            className="text-sm font-medium text-gray-600 hover:text-black"
-          >
-            {t("reset")}
-          </button>
-
-          <Button
-            onClick={handleApply}
-            className="px-8 py-2 rounded-[10px] bg-primary hover:bg-primary/90"
-          >
-            {t("apply")}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    </FilterSheet>
   );
 }

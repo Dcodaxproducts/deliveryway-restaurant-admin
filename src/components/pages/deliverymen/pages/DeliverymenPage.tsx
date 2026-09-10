@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDeliverymen } from "@/hooks/useDeliverymen";
 import { useGetDeliverymenStats } from "@/hooks/useDashboard";
 import { useTranslations } from "next-intl";
+import { SectionCard } from "@/components/common/SectionCard";
 
 const Deliveryman = () => {
   const { restaurantId, branchId, isBranchAdmin, loading } = useAuth();
@@ -73,7 +74,7 @@ const Deliveryman = () => {
         description={isBranchAdmin ? t("branchDescription") : t("description")}
       />
 
-      <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6">
+      <SectionCard padding="md" className="space-y-6">
         <StatsSection stats={deliverymanStats} loading={isCardLoading} />
 
         {!isBranchAdmin ? (
@@ -93,7 +94,7 @@ const Deliveryman = () => {
           }
           refresh={handleRefresh}
         />
-      </div>
+      </SectionCard>
     </Container>
   );
 };

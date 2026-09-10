@@ -1,6 +1,7 @@
 import { ManagementItem } from "@/types/dashboard";
 import ManagementCard from "@/components/cards/ManagementCard";
 import { cn } from "@/lib/utils";
+import { SectionCard } from "@/components/common/SectionCard";
 
 interface ManagementSectionProps {
   items: ManagementItem[];
@@ -9,16 +10,18 @@ interface ManagementSectionProps {
 
 const ManagementSection = ({ items, className }: ManagementSectionProps) => {
   return (
-    <div
-      className={cn(
-        "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6",
-        className
-      )}
+    <SectionCard
+      title="Manage your restaurant"
+      description="Jump into the areas you use most often."
+      padding="none"
+      className={cn("bg-transparent shadow-none", className)}
     >
-      {items.map((item) => (
-        <ManagementCard key={item.id} data={item} />
-      ))}
-    </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {items.map((item) => (
+          <ManagementCard key={item.id} data={item} />
+        ))}
+      </div>
+    </SectionCard>
   );
 };
 

@@ -24,7 +24,7 @@ export const sectionCardVariants = cva("overflow-hidden text-[var(--ui-text)]", 
   },
 });
 
-export type SectionCardProps = React.HTMLAttributes<HTMLElement> &
+export type SectionCardProps = Omit<React.HTMLAttributes<HTMLElement>, "title"> &
   VariantProps<typeof sectionCardVariants> & {
     title?: React.ReactNode;
     description?: React.ReactNode;

@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import CategoriesTable from "@/components/pages/Menu/categories/components/CategoriesTable/CategoriesTable";
 import CreateCategoryModalParent from "@/components/pages/Menu/legacy/root-menu-components/listing/CreateCategoryModalParent";
 import { useTranslations } from "next-intl";
+import { SectionCard } from "@/components/common/SectionCard";
 
 const MenuCategoriesPage = () => {
   const { isBranchAdmin } = useAuth();
@@ -43,9 +44,9 @@ const MenuCategoriesPage = () => {
         ) : null}
       </div>
 
-      <div className="bg-white p-6 rounded-[20px] shadow-sm mt-6">
+      <SectionCard padding="md">
         <CategoriesTable refetchKey={refetchKey} />
-      </div>
+      </SectionCard>
 
       {/*  GLOBAL MODAL */}
       <CreateCategoryModalParent
