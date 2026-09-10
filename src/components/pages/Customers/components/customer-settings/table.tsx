@@ -1,392 +1,139 @@
 "use client";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
-import SortableHeader from "@/components/common/sortable-head";
-import { Eye, MoreHorizontal } from "lucide-react";
-import EmptyState from "@/components/common/EmptyState";
-import { useState, useEffect } from "react"; //  added useEffect
-import CustomerDetailModal from "./CustomerDetailModal";
-import PaginationSection from "@/components/common/PaginationSection";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import AddCustomerModal from "./AddCustomerModal";
-import {
-  useDeleteCustomer,
-  useUpdateCustomerStatus,
-} from "@/hooks/useCustomers";
+import { Eye, Pencil, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
-interface Customer {
+import type { DataTableColumn } from "@/components/common/DataTable";
+import PaginationSection, { type PaginationMeta } from "@/components/common/PaginationSection";
+import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
+import { RowActions } from "@/components/common/RowActions";
+import { StatusBadge } from "@/components/common/status-badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { useDeleteCustomer, useUpdateCustomerStatus } from "@/hooks/useCustomers";
+import AddCustomerModal from "./AddCustomerModal";
+import CustomerDetailModal from "./CustomerDetailModal";
+
+export interface CustomerListItem {
   id: string;
   email?: string;
   isGuest?: boolean;
   isActive?: boolean;
   createdAt?: string;
-  profile?: {
-    firstName?: string;
-    lastName?: string;
-    phone?: string;
-  };
-  _count?: {
-    customerOrders?: number;
-  };
+  profile?: { firstName?: string; lastName?: string; phone?: string };
+  _count?: { customerOrders?: number };
 }
 
 interface Props {
-  customers?: Customer[];
+  customers?: CustomerListItem[];
   loading?: boolean;
-  meta?: any;
+  meta?: PaginationMeta | null;
   onPageChange?: (page: number) => void;
   onRefresh?: () => void;
 }
-const CustomerTable = ({
+
+const getFullName = (customer: CustomerListItem) =>
+  `${customer.profile?.firstName || ""} ${customer.profile?.lastName || ""}`.trim() || "-";
+
+export default function CustomerTable({
   customers = [],
   loading = false,
   meta,
   onPageChange = () => undefined,
   onRefresh = () => undefined,
-}: Props) => {
+}: Props) {
   const t = useTranslations("customers");
   const commonT = useTranslations("common");
   const [openDetails, setOpenDetails] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null,
-  );
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerListItem | null>(null);
+  const [localCustomers, setLocalCustomers] = useState<CustomerListItem[]>(customers);
 
-  const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
-
-  useEffect(() => {
-    setLocalCustomers(customers);
-  }, [customers]);
+  useEffect(() => setLocalCustomers(customers), [customers]);
 
   const deleteCustomerMutation = useDeleteCustomer({
-    messages: {
-      success: t("messages.deleted"),
-      error: t("messages.failedDelete"),
-    },
+    messages: { success: t("messages.deleted"), error: t("messages.failedDelete") },
   });
   const updateCustomerStatusMutation = useUpdateCustomerStatus({
-    messages: {
-      success: t("messages.statusUpdated"),
-      error: t("messages.failedStatusUpdate"),
-    },
+    messages: { success: t("messages.statusUpdated"), error: t("messages.failedStatusUpdate") },
   });
 
-  const handleDelete = async (id?: string) => {
-    if (!id) return;
-
+  const handleDelete = async (id: string) => {
     try {
       await deleteCustomerMutation.mutateAsync(id);
-
-      // instant UI update
-      setLocalCustomers((prev) => prev.filter((c) => c.id !== id));
-
-      // sync from server
+      setLocalCustomers((current) => current.filter((customer) => customer.id !== id));
       onRefresh();
     } catch {
-      // toast already handled in hook
+      // The mutation hook owns error feedback.
     }
   };
 
-  const handleToggleStatus = async (id: string, current: boolean) => {
-    // optimistic UI update
-    setLocalCustomers((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, isActive: !current } : c)),
+  const handleToggleStatus = async (customer: CustomerListItem) => {
+    const currentStatus = Boolean(customer.isActive);
+    setLocalCustomers((current) =>
+      current.map((item) => item.id === customer.id ? { ...item, isActive: !currentStatus } : item),
     );
-
     try {
-      await updateCustomerStatusMutation.mutateAsync({
-        id,
-        isActive: !current,
-      });
-
+      await updateCustomerStatusMutation.mutateAsync({ id: customer.id, isActive: !currentStatus });
       onRefresh();
     } catch {
-      // rollback
-      setLocalCustomers((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, isActive: current } : c)),
+      setLocalCustomers((current) =>
+        current.map((item) => item.id === customer.id ? { ...item, isActive: currentStatus } : item),
       );
     }
   };
 
-  if (loading) {
-    return (
-      <div className="text-sm text-gray-400 py-10 text-center">
-        {t("loading")}
-      </div>
-    );
-  }
+  const openCustomer = (customer: CustomerListItem) => {
+    setSelectedCustomer(customer);
+    setOpenDetails(true);
+  };
+  const editCustomer = (customer: CustomerListItem) => {
+    setSelectedCustomer(customer);
+    setOpenEdit(true);
+  };
 
-  if (!localCustomers || localCustomers.length === 0) {
-    return (
-      <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
-    );
-  }
+  const columns: readonly DataTableColumn<CustomerListItem>[] = [
+    { id: "select", header: <Checkbox aria-label={t("table.selectAll")} />, cell: (customer) => <Checkbox aria-label={t("table.selectCustomer", { name: getFullName(customer) })} /> },
+    { id: "name", header: t("table.customerName"), cell: (customer) => <span className="font-semibold text-[var(--ui-text)]">{getFullName(customer)}</span> },
+    { id: "type", header: t("table.customerType"), cell: (customer) => <StatusBadge tone={customer.isGuest ? "warning" : "success"}>{t(customer.isGuest ? "table.guest" : "table.registered")}</StatusBadge> },
+    { id: "info", header: t("table.customerInfo"), cell: (customer) => <div><p>{customer.profile?.phone || "-"}</p><p className="max-w-48 truncate text-xs">{customer.email || "-"}</p></div> },
+    { id: "orders", header: t("table.totalOrder"), align: "center", cell: (customer) => <span className="tabular-nums">{customer._count?.customerOrders || 0}</span> },
+    { id: "joined", header: t("table.joiningDate"), cell: (customer) => customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : "-" },
+    { id: "status", header: t("table.blockToggle"), align: "center", cell: (customer) => <Switch checked={Boolean(customer.isActive)} onCheckedChange={() => void handleToggleStatus(customer)} /> },
+    { id: "actions", header: commonT("actions"), align: "right", cell: (customer) => <RowActions actions={[
+      { id: "view", label: commonT("view"), icon: <Eye className="size-4" />, onSelect: () => openCustomer(customer) },
+      { id: "edit", label: commonT("edit"), icon: <Pencil className="size-4" />, onSelect: () => editCustomer(customer) },
+      { id: "delete", label: commonT("delete"), icon: <Trash2 className="size-4" />, destructive: true, onSelect: () => void handleDelete(customer.id) },
+    ]} /> },
+  ];
 
   return (
     <>
-      {/* -------- Desktop -------- */}
-      <div className="hidden md:block">
-        <Table className="my-10">
-          <TableHeader>
-            <TableRow className="border-none">
-              <TableHead className="w-[50px]">
-                <Checkbox />
-              </TableHead>
-
-              <SortableHeader label={t("table.serial")} />
-              <SortableHeader label={t("table.customerName")} />
-              <TableHead className="px-4 font-semibold">
-                {t("table.customerType")}
-              </TableHead>
-              <SortableHeader label={t("table.customerInfo")} />
-
-              <TableHead className="text-center px-4 font-semibold">
-                {t("table.totalOrder")}
-              </TableHead>
-
-              <SortableHeader label={t("table.joiningDate")} />
-              <SortableHeader label={t("table.blockToggle")} />
-
-              <TableHead className="text-center font-semibold">
-                {commonT("actions")}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            {localCustomers.map((c, i) => {
-              //  CHANGED
-              const fullName = `${c.profile?.firstName || ""} ${
-                c.profile?.lastName || ""
-              }`;
-
-              return (
-                <TableRow key={c.id} className="border-none h-[70px]">
-                  <TableCell>
-                    <Checkbox />
-                  </TableCell>
-
-                  <TableCell className="px-4">
-                    {(meta?.page - 1) * (meta?.limit || 10) + i + 1}
-                  </TableCell>
-
-                  <TableCell className="px-4">{fullName || "-"}</TableCell>
-
-                  <TableCell className="px-4">
-                    <span
-                      className={
-                        c.isGuest
-                          ? "inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700"
-                          : "inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
-                      }
-                    >
-                      {t(c.isGuest ? "table.guest" : "table.registered")}
-                    </span>
-                  </TableCell>
-
-                  <TableCell className="px-4">
-                    <div>
-                      <p>{c.profile?.phone || "-"}</p>
-                      <p className="text-gray max-w-[180px] truncate">
-                        {c.email}
-                      </p>
-                    </div>
-                  </TableCell>
-
-                  <TableCell className="px-4 text-center">
-                    {c._count?.customerOrders || 0}
-                  </TableCell>
-
-                  <TableCell className="px-4">
-                    {c.createdAt
-                      ? new Date(c.createdAt).toLocaleDateString()
-                      : "-"}
-                  </TableCell>
-
-                  <TableCell className="text-center pr-14">
-                    <Switch
-                      checked={!!c.isActive} //  ensure boolean
-                      onCheckedChange={() =>
-                        handleToggleStatus(c.id, !!c.isActive)
-                      }
-                    />
-                  </TableCell>
-
-                  <TableCell className="px-4">
-                    <div className="flex items-center justify-center gap-2 text-gray">
-                      <button
-                        className="p-2"
-                        onClick={() => {
-                          setSelectedCustomer(c);
-                          setOpenDetails(true);
-                        }}
-                      >
-                        <Eye size={18} />
-                      </button>
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-2">
-                            <MoreHorizontal size={18} />
-                          </button>
-                        </DropdownMenuTrigger>
-
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedCustomer(c);
-                              setOpenEdit(true);
-                            }}
-                          >
-                            {commonT("edit")}
-                          </DropdownMenuItem>
-
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => handleDelete(c.id)}
-                          >
-                            {commonT("delete")}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-
-        <PaginationSection meta={meta} onPageChange={onPageChange} />
-      </div>
-
-      {/* -------- Mobile -------- */}
-      <div className="flex flex-col gap-4 md:hidden">
-        {localCustomers.map((c) => {
-          //  CHANGED
-          const fullName = `${c.profile?.firstName || ""} ${
-            c.profile?.lastName || ""
-          }`;
-
-          return (
-            <div
-              key={c.id}
-              className="bg-white rounded-[18px] p-4 shadow-sm border"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Checkbox />
-                  <p className="font-medium">{fullName}</p>
-                  <span
-                    className={
-                      c.isGuest
-                        ? "rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700"
-                        : "rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700"
-                    }
-                  >
-                    {t(c.isGuest ? "table.guest" : "table.registered")}
-                  </span>
-                </div>
-
-                <Switch
-                  checked={!!c.isActive}
-                  onCheckedChange={() => handleToggleStatus(c.id, !!c.isActive)}
-                />
-              </div>
-
-              <div className="text-sm text-gray mb-2">
-                <p>
-                  {t("table.phone")}: {c.profile?.phone || "-"}
-                </p>
-                <p className="max-w-[210px] truncate">
-                  {t("table.email")}: {c.email}
-                </p>
-              </div>
-
-              <div className="text-sm text-gray mb-2">
-                <p>
-                  {t("table.totalOrders")}: {c._count?.customerOrders || 0}
-                </p>
-                <p>
-                  {t("table.joined")}:{" "}
-                  {c.createdAt
-                    ? new Date(c.createdAt).toLocaleDateString()
-                    : "-"}
-                </p>
-              </div>
-
-              <div className="flex justify-end gap-2 text-gray">
-                <button
-                  className="p-2"
-                  onClick={() => {
-                    setSelectedCustomer(c);
-                    setOpenDetails(true);
-                  }}
-                >
-                  <Eye size={18} />
-                </button>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="p-2">
-                      <MoreHorizontal size={18} />
-                    </button>
-                  </DropdownMenuTrigger>
-
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setSelectedCustomer(c);
-                        setOpenEdit(true);
-                      }}
-                    >
-                      {commonT("edit")}
-                    </DropdownMenuItem>
-
-                    <DropdownMenuItem
-                      className="text-red-600"
-                      onClick={() => handleDelete(c.id)}
-                    >
-                      {commonT("delete")}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+      <ResponsiveDataView
+        data={localCustomers}
+        columns={columns}
+        rowKey={(customer) => customer.id}
+        loading={loading}
+        emptyTitle={t("emptyTitle")}
+        emptyDescription={t("emptyDescription")}
+        renderMobileItem={(customer) => (
+          <article className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4 shadow-[var(--ui-shadow-xs)]">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0"><p className="truncate font-semibold text-[var(--ui-text)]">{getFullName(customer)}</p><p className="mt-1 truncate text-sm text-[var(--ui-text-muted)]">{customer.email || "-"}</p></div>
+              <Switch checked={Boolean(customer.isActive)} onCheckedChange={() => void handleToggleStatus(customer)} />
             </div>
-          );
-        })}
-
-        <PaginationSection meta={meta} onPageChange={onPageChange} />
-
-        <CustomerDetailModal
-          open={openDetails}
-          onOpenChange={setOpenDetails}
-          customer={selectedCustomer}
-        />
-        <AddCustomerModal
-          open={openEdit}
-          onOpenChange={setOpenEdit}
-          initialData={selectedCustomer} // <-- IMPORTANT (you can handle inside modal)
-          onSuccess={onRefresh}
-        />
-      </div>
+            <div className="mt-4 flex items-center justify-between gap-3"><StatusBadge tone={customer.isGuest ? "warning" : "success"}>{t(customer.isGuest ? "table.guest" : "table.registered")}</StatusBadge><RowActions actions={[
+              { id: "view", label: commonT("view"), icon: <Eye className="size-4" />, onSelect: () => openCustomer(customer) },
+              { id: "edit", label: commonT("edit"), icon: <Pencil className="size-4" />, onSelect: () => editCustomer(customer) },
+              { id: "delete", label: commonT("delete"), icon: <Trash2 className="size-4" />, destructive: true, onSelect: () => void handleDelete(customer.id) },
+            ]} /></div>
+          </article>
+        )}
+        footer={<PaginationSection meta={meta} onPageChange={onPageChange} />}
+      />
+      <CustomerDetailModal open={openDetails} onOpenChange={setOpenDetails} customer={selectedCustomer} />
+      <AddCustomerModal open={openEdit} onOpenChange={setOpenEdit} initialData={selectedCustomer} onSuccess={onRefresh} />
     </>
   );
-};
-
-export default CustomerTable;
+}

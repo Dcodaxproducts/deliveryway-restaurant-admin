@@ -1,23 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import PaginationSection, { type PaginationMeta } from "@/components/common/PaginationSection";
 import BranchFilters, { type BranchFilterState } from "./BranchFilters";
-import Table from "./list";
-
-type BranchListItem = {
-  id: string;
-  name?: string;
-  city?: string;
-  address?: string;
-  phone?: string;
-  isActive?: boolean;
-  createdAt?: string;
-  _count?: { items?: number };
-};
+import Table, { type BranchListItem } from "./list";
 
 interface Props {
   branches: BranchListItem[];
-  meta: unknown;
+  meta: PaginationMeta | null;
   loading: boolean;
   fetchBranches: (params?: BranchFilterState) => void;
 }
@@ -54,8 +44,7 @@ export default function BranchesClient({
 
       <div className="px-2 lg:px-0">
         <Table branches={branches} loading={loading} />
-
-      
+        <PaginationSection meta={meta} onPageChange={(page) => handleFilterChange({ ...filters, page })} />
       </div>
     </>
   );
