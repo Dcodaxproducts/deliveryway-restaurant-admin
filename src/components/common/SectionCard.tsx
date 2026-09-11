@@ -13,9 +13,9 @@ export const sectionCardVariants = cva("overflow-hidden text-[var(--ui-text)]", 
     },
     padding: {
       none: "p-0",
-      sm: "p-4",
-      md: "p-6",
-      lg: "p-8",
+      sm: "p-3.5 sm:p-4",
+      md: "p-4 sm:p-5",
+      lg: "p-5 sm:p-6",
     },
   },
   defaultVariants: {
@@ -50,9 +50,9 @@ export function SectionCard({
       {...props}
     >
       {title || description || action ? (
-        <div className="mb-5 flex items-start justify-between gap-4">
+        <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
           <div className="min-w-0">
-            {title ? <h2 className="text-lg font-semibold leading-6">{title}</h2> : null}
+            {title ? <h2 className="text-base font-semibold leading-5">{title}</h2> : null}
             {description ? (
               <div className="mt-1 text-sm leading-5 text-[var(--ui-text-muted)]">
                 {description}
@@ -64,7 +64,7 @@ export function SectionCard({
       ) : null}
       {children}
       {footer ? (
-        <div className="mt-5 border-t border-[var(--ui-border)] pt-4">{footer}</div>
+        <div className="mt-4 border-t border-[var(--ui-border)] pt-4">{footer}</div>
       ) : null}
     </section>
   );

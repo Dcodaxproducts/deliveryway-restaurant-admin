@@ -235,8 +235,8 @@ export default function Orders() {
         </div>
       </div>
 
-      <div className="space-y-6 rounded-lg bg-white p-4 shadow-sm lg:p-6">
-        <div className="flex items-center gap-6">
+      <div className="space-y-5 rounded-lg bg-white p-4 shadow-sm lg:p-5">
+        <div className="flex max-w-full flex-wrap items-center gap-2">
           <TabButton
             active={activeTab === "financial"}
             onClick={() => handleTabChange("financial")}

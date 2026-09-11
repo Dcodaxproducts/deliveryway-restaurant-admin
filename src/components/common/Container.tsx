@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 export const pageLayoutVariants = cva(
-  "mx-auto mb-6 w-full min-w-0 space-y-6 px-[var(--ui-page-gutter)] py-5 lg:mb-12 lg:py-6",
+  "mx-auto mb-5 w-full min-w-0 space-y-5 px-[var(--ui-page-gutter)] py-4 lg:mb-8 lg:py-5",
   {
     variants: {
       width: {

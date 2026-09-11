@@ -27,12 +27,12 @@ export default function PageHeader({
   descriptionClassName,
 }: PageHeaderProps) {
   return (
-    <header data-slot="page-header" className={cn("space-y-4", className)}>
+    <header data-slot="page-header" className={cn("space-y-3", className)}>
       {breadcrumbs ? <div data-slot="page-header-breadcrumbs">{breadcrumbs}</div> : null}
-      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           {backAction ? <div className="shrink-0 pt-0.5">{backAction}</div> : null}
-          <div className="min-w-0 space-y-1.5">
+          <div className="min-w-0 space-y-1">
             {eyebrow ? (
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
                 {eyebrow}
@@ -40,7 +40,7 @@ export default function PageHeader({
             ) : null}
             <h1
               className={cn(
-                "text-balance text-2xl font-semibold leading-tight tracking-[-0.02em] text-[var(--ui-text)] lg:text-[32px] lg:leading-[1.2]",
+                "text-balance text-xl font-semibold leading-tight tracking-[-0.02em] text-[var(--ui-text)] lg:text-2xl",
                 titleClassName,
               )}
             >
@@ -49,7 +49,7 @@ export default function PageHeader({
             {description ? (
               <p
                 className={cn(
-                  "max-w-[65ch] text-pretty text-sm leading-6 text-[var(--ui-text-muted)] lg:text-base",
+                  "max-w-[65ch] text-pretty text-sm leading-5 text-[var(--ui-text-muted)]",
                   descriptionClassName,
                 )}
               >

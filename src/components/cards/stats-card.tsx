@@ -45,15 +45,15 @@ export const StatCard = ({
     <Card
       data-slot="stat-card"
       className={cn(
-        "gap-0 rounded-[var(--ui-radius-card)] bg-[var(--ui-surface)] p-4 shadow-none sm:p-5 md:p-6",
+        "gap-0 rounded-[var(--ui-radius-card)] bg-[var(--ui-surface)] p-3.5 shadow-none",
         variant === "outlined" ? "border border-[var(--ui-border)]" : "border-none",
         className,
       )}
     >
-      <div className="flex items-start gap-4 sm:flex-row sm:items-center">
+      <div className="flex min-w-0 items-center gap-2.5">
         <div
           className={cn(
-            "flex size-11 shrink-0 items-center justify-center rounded-[var(--ui-radius-compact)] p-2",
+            "flex size-9 shrink-0 items-center justify-center rounded-[var(--ui-radius-control)] p-1.5",
             isDanger
               ? "bg-[var(--ui-danger-soft)] text-[var(--ui-danger)]"
               : "bg-[var(--ui-brand-soft)] text-primary",
@@ -62,11 +62,11 @@ export const StatCard = ({
           {loading ? (
             <div className="h-5 w-5 animate-pulse rounded-full bg-gray-200" />
           ) : (
-            <Icon size={20} aria-hidden="true" />
+            <Icon size={16} aria-hidden="true" />
           )}
         </div>
 
-        <div className="flex flex-col">
+        <div className="flex min-w-0 flex-col">
           {loading ? (
             <>
               <div className="h-8 w-20 animate-pulse rounded-md bg-gray-200 sm:h-10" />
@@ -75,18 +75,18 @@ export const StatCard = ({
             </>
           ) : (
             <>
-              <div className="text-lg font-semibold leading-none tabular-nums text-[var(--ui-text)] sm:text-[22px]">
+              <div className="text-base font-semibold leading-none tabular-nums text-[var(--ui-text)]">
                 {data.value}
               </div>
 
-              <p className="mt-1 text-xs text-[var(--ui-text-muted)] sm:text-sm">
+              <p className="mt-1 text-pretty text-[11px] leading-4 text-[var(--ui-text-muted)]">
                 {data.title}
               </p>
 
               {hasTrend ? (
                 <div
                   className={cn(
-                    "mt-2 flex items-center gap-1 text-xs font-medium tabular-nums sm:text-sm",
+                    "mt-1.5 flex items-center gap-1 text-[11px] font-medium tabular-nums",
                     isUp ? "text-[var(--ui-success)]" : "text-[var(--ui-danger)]",
                   )}
                 >

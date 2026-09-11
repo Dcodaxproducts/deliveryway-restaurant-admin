@@ -24,7 +24,7 @@ export function StatGrid({
   return (
     <div
       className={cn(
-        "grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-5",
+        "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:gap-4",
         columnClassNames[columns],
         className,
       )}

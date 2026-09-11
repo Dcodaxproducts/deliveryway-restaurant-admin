@@ -204,8 +204,12 @@ describe.each(["en", "de"] as const)("%s dashboard browser findings", (locale) =
   });
 
   it("retains the dashboard default range and restaurant-only scope", () => {
-    renderToStaticMarkup(<OrdersGraph />);
+    const markup = renderToStaticMarkup(<OrdersGraph />);
     expect(harness.query).toHaveBeenCalledExactlyOnceWith({ restaurantId: "restaurant-1", range: "daily" });
+    expect(markup).toContain("grid-cols-3");
+    expect(markup).toContain("h-[220px]");
+    expect(markup).toContain("2xl:flex-row");
+    expect(markup).not.toContain("h-[260px]");
   });
 
   it("resolves branch headings and detail actions using existing messages", () => {

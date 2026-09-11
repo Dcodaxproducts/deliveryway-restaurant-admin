@@ -97,14 +97,14 @@ export function StatePanel({
       role={state === "error" ? "alert" : "status"}
       aria-live={state === "error" ? "assertive" : "polite"}
       className={cn(
-        "flex w-full flex-col items-center justify-center rounded-[var(--ui-radius-card)] bg-[var(--ui-surface-subtle)] px-6 text-center",
-        compact ? "min-h-40 py-8" : "min-h-64 py-12",
+        "flex w-full flex-col items-center justify-center rounded-[var(--ui-radius-card)] bg-[var(--ui-surface-subtle)] px-5 text-center",
+        compact ? "min-h-32 py-6" : "min-h-52 py-9",
         className,
       )}
     >
       <div
         className={cn(
-          "mb-4 flex size-11 items-center justify-center rounded-[var(--ui-radius-compact)] [&_svg]:size-5",
+          "mb-3 flex size-10 items-center justify-center rounded-[var(--ui-radius-control)] [&_svg]:size-5",
           toneClassName,
         )}
       >
@@ -114,13 +114,13 @@ export function StatePanel({
           icon ?? stateIcons[state]
         )}
       </div>
-      <h2 className="text-balance text-xl font-semibold leading-7 text-[var(--ui-text)]">
+      <h2 className="text-balance text-lg font-semibold leading-6 text-[var(--ui-text)]">
         {finalTitle}
       </h2>
-      <p className="mt-1 max-w-[52ch] text-pretty text-sm leading-6 text-[var(--ui-text-muted)]">
+      <p className="mt-1 max-w-[52ch] text-pretty text-sm leading-5 text-[var(--ui-text-muted)]">
         {finalDescription}
       </p>
-      {action ? <div className="mt-5">{action}</div> : null}
+      {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );
 }

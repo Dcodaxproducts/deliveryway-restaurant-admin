@@ -105,10 +105,10 @@ const RevenueGraph = ({
 
   return (
     <ChartPanel title={null} className="h-full">
-      <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+      <div className="mb-5 flex min-w-0 flex-col gap-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            <h3 className="text-[18px] font-semibold text-dark">
+            <h3 className="text-base font-semibold text-dark">
               Revenue Trend
             </h3>
 
@@ -127,14 +127,14 @@ const RevenueGraph = ({
             ) : null}
           </div>
 
-          <p className="mt-1 text-sm text-gray-400">
+          <p className="mt-1 text-xs leading-4 text-gray-400">
             Track revenue across the selected{" "}
             <span className="capitalize">{currentRange}</span> range
           </p>
         </div>
 
-        <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 sm:justify-end">
-          <div className="flex min-w-0 flex-wrap items-center rounded-[12px] bg-[#F5F6F8] p-1">
+        <div className="flex min-w-0 items-center justify-between gap-2 2xl:justify-end">
+          <div className="grid min-w-0 grid-cols-3 items-center rounded-[10px] bg-[#F5F6F8] p-1">
             {(["daily", "weekly", "monthly"] as TrendRange[]).map((item) => {
               const active = range === item;
 
@@ -144,7 +144,7 @@ const RevenueGraph = ({
                   type="button"
                   variant="ghost"
                   onClick={() => setRange(item)}
-                  className={`h-9 rounded-[10px] px-4 text-sm font-medium capitalize transition-all ${
+                  className={`h-8 min-w-0 rounded-[8px] px-2.5 text-xs font-medium capitalize transition-all ${
                     active
                       ? "bg-white text-primary shadow-sm hover:bg-white"
                       : "text-gray-500 hover:text-dark"
@@ -160,7 +160,7 @@ const RevenueGraph = ({
             type="button"
             onClick={() => refetch()}
             disabled={authLoading || isFetching}
-            className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[#E7EAF0] text-gray-500 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
+            className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-[#E7EAF0] text-gray-500 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
             aria-label={t("refreshRevenueTrend")}
             title={common("refresh")}
           >
@@ -185,7 +185,7 @@ const RevenueGraph = ({
       )}
 
       {(!isError || hasData) && (
-      <div className="h-[260px] w-full min-w-0">
+      <div className="h-[220px] w-full min-w-0">
         {loading ? (
           <div role="status" aria-label={common("loading")} className="h-full w-full animate-pulse rounded-[16px] bg-gray-100" />
         ) : !hasData ? (

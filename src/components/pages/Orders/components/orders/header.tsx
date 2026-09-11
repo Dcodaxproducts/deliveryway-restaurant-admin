@@ -86,10 +86,10 @@ export function OrdersHeader({ title, description, orders }: HeaderProps) {
 
   return (
     <>
-      <div className="flex gap-4 md:gap-6 lg:flex-row lg:items-center justify-between w-full">
+      <div className="flex w-full min-w-0 flex-col justify-between gap-3 lg:flex-row lg:items-center lg:gap-5">
         <Header title={title} description={description} />
 
-        <div className="flex sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4">
+        <div className="flex min-w-0 flex-wrap items-stretch gap-2 sm:items-center lg:justify-end">
           <Button
             type="button"
             variant="outline"

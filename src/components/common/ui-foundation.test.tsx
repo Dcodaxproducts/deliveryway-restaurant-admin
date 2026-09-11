@@ -16,6 +16,7 @@ import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
 import { SectionCard } from "@/components/common/SectionCard";
 import { StatusBadge } from "@/components/common/status-badge";
 import { StatCard } from "@/components/cards/stats-card";
+import ManagementCard from "@/components/cards/ManagementCard";
 import { ConfirmDialog } from "@/components/common/dialogs/delete-dialog";
 
 vi.mock("next/navigation", () => ({
@@ -74,6 +75,9 @@ describe("shared layout patterns", () => {
     expect(markup).toContain('data-slot="page-layout"');
     expect(markup).toContain('data-slot="page-header"');
     expect(markup).toContain('data-slot="section-card"');
+    expect(markup).toContain("space-y-5");
+    expect(markup).toContain("lg:text-2xl");
+    expect(markup).toContain("sm:p-5");
     expect(markup).toContain("Add branch");
     expect(markup).toContain("Save");
   });
@@ -92,8 +96,29 @@ describe("shared layout patterns", () => {
     );
 
     expect(markup).toContain('data-slot="stat-card"');
+    expect(markup).toContain("size-9");
+    expect(markup).not.toContain("md:p-6");
     expect(markup).toContain("1,248");
     expect(markup).toContain("8.4%");
+  });
+
+  it("keeps dashboard management cards compact without reducing their content", () => {
+    const markup = renderToStaticMarkup(
+      <ManagementCard
+        data={{
+          id: "orders",
+          title: "Manage Orders",
+          description: "Track current orders and delivery progress.",
+          actionLabel: "Manage Orders",
+          actionHref: "/orders",
+        }}
+      />,
+    );
+
+    expect(markup).toContain("min-h-44");
+    expect(markup).toContain("sm:p-5");
+    expect(markup).not.toContain("min-h-52");
+    expect(markup).toContain("Track current orders and delivery progress.");
   });
 });
 

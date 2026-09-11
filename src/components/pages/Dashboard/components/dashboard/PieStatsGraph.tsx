@@ -14,6 +14,7 @@ const PieStatsGraph = () => {
         state="unavailable"
         title={t("percentagesUnavailable")}
         description={t("percentagesUnavailableDescription")}
+        compact
       />
     </ChartPanel>
   );

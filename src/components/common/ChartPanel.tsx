@@ -51,12 +51,12 @@ export function ChartPanel({
       description={description}
       action={actions}
     >
-      <div className="min-h-64">
+      <div className="min-h-56">
         {loading ? (
           <div
             role="status"
             aria-label="Loading chart"
-            className="h-64 animate-pulse rounded-[var(--ui-radius-card)] bg-[var(--ui-surface-subtle)]"
+            className="h-56 animate-pulse rounded-[var(--ui-radius-card)] bg-[var(--ui-surface-subtle)]"
           />
         ) : error ? (
           <StatePanel

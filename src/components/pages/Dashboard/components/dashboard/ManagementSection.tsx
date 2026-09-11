@@ -1,6 +1,5 @@
 import { ManagementItem } from "@/types/dashboard";
 import ManagementCard from "@/components/cards/ManagementCard";
-import { cn } from "@/lib/utils";
 import { SectionCard } from "@/components/common/SectionCard";
 
 interface ManagementSectionProps {
@@ -13,10 +12,11 @@ const ManagementSection = ({ items, className }: ManagementSectionProps) => {
     <SectionCard
       title="Manage your restaurant"
       description="Jump into the areas you use most often."
+      variant="plain"
       padding="none"
-      className={cn("bg-transparent shadow-none", className)}
+      className={className}
     >
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {items.map((item) => (
           <ManagementCard key={item.id} data={item} />
         ))}
