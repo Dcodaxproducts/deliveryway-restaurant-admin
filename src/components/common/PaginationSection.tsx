@@ -1,15 +1,14 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { ChevronsLeft, ChevronsRight } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import {
   Pagination,
   PaginationContent,
   PaginationEllipsis,
   PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
 } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
 
@@ -97,25 +96,37 @@ export function PaginationBar(props: PaginationBarProps) {
       <Pagination className="w-auto">
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious
+            <Button
+              type="button"
+              aria-label={t("goToPreviousPage")}
+              disabled={!hasPrevious}
               aria-disabled={!hasPrevious}
-              tabIndex={hasPrevious ? 0 : -1}
               onClick={() => hasPrevious && onPageChange(page - 1)}
-              className={cn(!hasPrevious && "pointer-events-none opacity-45")}
-            />
+              className="gap-1 rounded-[8px] border border-gray-200 px-3 disabled:opacity-45"
+            >
+              <ChevronsLeft className="size-4" />
+              <span className="hidden text-sm sm:block">{t("previous")}</span>
+            </Button>
           </PaginationItem>
 
           <div className="flex rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-1">
             {getPaginationItems(page, totalPages).map((item) =>
               typeof item === "number" ? (
                 <PaginationItem key={item}>
-                  <PaginationLink
-                    isActive={item === page}
+                  <Button
+                    type="button"
+                    variant={item === page ? "default" : "ghost"}
+                    size="icon"
+                    aria-current={item === page ? "page" : undefined}
                     aria-label={`Page ${item}`}
                     onClick={() => onPageChange(item)}
+                    className={cn(
+                      "rounded-[8px] text-base font-normal",
+                      item === page ? "text-white" : "text-primary",
+                    )}
                   >
                     {item}
-                  </PaginationLink>
+                  </Button>
                 </PaginationItem>
               ) : (
                 <PaginationItem key={item}>
@@ -126,12 +137,17 @@ export function PaginationBar(props: PaginationBarProps) {
           </div>
 
           <PaginationItem>
-            <PaginationNext
+            <Button
+              type="button"
+              aria-label={t("goToNextPage")}
+              disabled={!hasNext}
               aria-disabled={!hasNext}
-              tabIndex={hasNext ? 0 : -1}
               onClick={() => hasNext && onPageChange(page + 1)}
-              className={cn(!hasNext && "pointer-events-none opacity-45")}
-            />
+              className="gap-1 rounded-[8px] border border-gray-200 px-3 disabled:opacity-45"
+            >
+              <span className="hidden text-sm sm:block">{t("next")}</span>
+              <ChevronsRight className="size-4" />
+            </Button>
           </PaginationItem>
         </PaginationContent>
       </Pagination>
