@@ -8,11 +8,14 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import CreateMenuItemModal from "../CreateMenuItemModal/CreateMenuItemModal";
 import { useTranslations } from "next-intl";
+import { SectionCard } from "@/components/common/SectionCard";
+import { StatePanel } from "@/components/common/EmptyState";
 
 interface ItemListProps {
   editing?: boolean;
   items: any[];
   loading?: boolean;
+  error?: string | null;
   showAddNew?: boolean;
   headerText?: string;
   addNewText?: string;
@@ -27,6 +30,7 @@ interface ItemListProps {
 export default function ItemList({
   items,
   loading,
+  error,
   showAddNew = true,
   headerText,
   addNewText,
@@ -38,6 +42,7 @@ export default function ItemList({
   onLoadMore,
 }: ItemListProps) {
   const t = useTranslations("menu.listingItems");
+  const commonT = useTranslations("common");
   const [createMenuItem, setCreateMenuItem] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
@@ -72,13 +77,13 @@ export default function ItemList({
   }, [hasMore, isLoadingMore, isPOS, onLoadMore]);
 
   return (
-    <div className="w-full py-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[24px] font-semibold text-gray-900">
-          {headerText || t("title")}
-        </h2>
-
-        <div className="flex items-center gap-3">
+    <SectionCard
+      variant="plain"
+      padding="none"
+      className="w-full overflow-visible py-4"
+      title={headerText || t("title")}
+      action={(
+        <div className="flex flex-wrap items-center justify-end gap-3">
         {isPOS && typeof shownCount === "number" ? (
           <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-600">
             Showing {shownCount} of {totalCount ?? shownCount} items
@@ -97,42 +102,22 @@ export default function ItemList({
           </Button>
         )}
         </div>
-      </div>
+      )}
+    >
+      {!loading && error ? (
+        <StatePanel state="error" title={commonT("unableToLoad")} description={error} compact />
+      ) : null}
 
       {/* ITEMS */}
       {loading ? (
-        <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="w-full sm:w-[260px] h-[260px] bg-white rounded-[22px] border border-gray-200 p-4 animate-pulse"
-            >
-              <div className="w-full h-[120px] bg-gray-200 rounded-lg mb-4" />
-              <div className="h-4 w-3/4 bg-gray-200 rounded mb-2" />
-              <div className="h-3 w-1/2 bg-gray-200 rounded mb-3" />
-              <div className="h-3 w-1/4 bg-gray-200 rounded mb-4" />
-              <div className="flex items-center justify-between">
-                <div className="h-5 w-1/4 bg-gray-200 rounded" />
-                <div className="h-10 w-10 bg-gray-200 rounded-[10px]" />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center w-full py-16 border border-dashed border-gray-200 rounded-[16px] bg-gray-50">
-          <div className="w-16 h-16 flex items-center justify-center rounded-full bg-white shadow mb-4">
-            <PlusCircle className="w-8 h-8 text-primary" />
-          </div>
-
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">
-            {t("emptyTitle")}
-          </h3>
-
-          <p className="text-sm text-gray-500 mb-4 text-center max-w-[300px]">
-            {t("emptyDescription")}
-          </p>
-
-          {showAddNew && (
+        <StatePanel state="loading" title={commonT("loading")} description="" />
+      ) : items.length === 0 ? (error ? null : (
+        <StatePanel
+          state="empty"
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
+          icon={<PlusCircle />}
+          action={showAddNew ? (
             <Button
               className="bg-primary hover:bg-red-600 text-white rounded-[10px] px-5"
               onClick={() => setCreateMenuItem(true)}
@@ -140,9 +125,9 @@ export default function ItemList({
               <PlusCircle className="w-4 h-4 mr-2" />
               {addNewText || t("addNewItem")}
             </Button>
-          )}
-        </div>
-      ) : (
+          ) : null}
+        />
+      )) : (
         <>
           <div className={`grid ${gridCols} gap-4`}>
             {items.map((item) => (
@@ -193,6 +178,6 @@ export default function ItemList({
         initialData={selectedItem}
         onSuccess={refetch}
       />
-    </div>
+    </SectionCard>
   );
 }

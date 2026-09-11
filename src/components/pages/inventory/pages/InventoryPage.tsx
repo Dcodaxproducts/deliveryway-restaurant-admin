@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import Container from "@/components/common/Container";
 import type { DataTableColumn } from "@/components/common/DataTable";
@@ -102,6 +103,7 @@ const columns: DataTableColumn<InventoryRow>[] = [
 ];
 
 export default function InventoryPage() {
+  const feedbackT = useTranslations("common.feedback");
   const { restaurantId, branchId, isBranchAdmin, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<InventoryTab>("items");
   const [search, setSearch] = useState("");
@@ -137,8 +139,8 @@ export default function InventoryPage() {
           ? recipesQuery
           : categoriesQuery;
   const rows = normalizeRows(activeQuery.data);
-  const isLoading = loading || activeQuery.isLoading || activeQuery.isFetching;
-  const error = activeQuery.error instanceof Error ? activeQuery.error.message : null;
+  const isLoading = !activeQuery.data && (loading || activeQuery.isLoading || activeQuery.isFetching);
+  const error = activeQuery.isError ? feedbackT("loadFailedDescription") : null;
 
   const handleCreateMovement = () => {
     if (!restaurantId || !branchId || !movement.itemId || !movement.quantity) return;
@@ -173,11 +175,11 @@ export default function InventoryPage() {
         }
       />
 
-      {!branchId ? (
+      {!loading && (!restaurantId || !branchId) ? (
         <StatePanel
           state="unavailable"
-          title="No branch assigned"
-          description="Sign in with a branch-admin account or select a branch before recording inventory movements."
+          title={feedbackT("unavailable", { subject: feedbackT("subjects.inventoryContext") })}
+          description={feedbackT("inventoryContextRequired")}
           compact
         />
       ) : null}
@@ -210,7 +212,7 @@ export default function InventoryPage() {
               ))}
             </div>
           }
-          resultCount={`${rows.length} record${rows.length === 1 ? "" : "s"}`}
+          resultCount={activeQuery.data ? `${rows.length} record${rows.length === 1 ? "" : "s"}` : undefined}
         />
 
         <SectionCard
@@ -262,12 +264,18 @@ export default function InventoryPage() {
           </Button>
         </SectionCard>
 
-        <ResponsiveDataView
+        {error && activeQuery.data ? (
+          <StatePanel state="error" title={feedbackT("refreshFailed", { subject: feedbackT("subjects.inventory") })} description={feedbackT("cachedDescription")} compact />
+        ) : null}
+        {loading ? (
+          <StatePanel state="loading" title={feedbackT("loading", { subject: feedbackT("subjects.inventory") })} description={feedbackT("inventoryContextLoading")} compact />
+        ) : restaurantId && branchId ? <ResponsiveDataView
           data={rows}
           columns={columns}
           rowKey={(row) => row.key}
           loading={isLoading}
-          error={error}
+          error={!activeQuery.data ? error : null}
+          errorTitle={feedbackT("loadFailed", { subject: feedbackT("subjects.inventory") })}
           emptyTitle="No inventory records found"
           emptyDescription="Try another tab or search term."
           caption={`${activeTab} inventory records`}
@@ -285,7 +293,8 @@ export default function InventoryPage() {
               </p>
             </article>
           )}
-        />
+        /> : null}
+        {error && restaurantId && branchId ? <Button type="button" variant="outline" disabled={activeQuery.isFetching || loading} onClick={() => void activeQuery.refetch()}>{feedbackT("retry", { subject: feedbackT("subjects.inventory") })}</Button> : null}
       </SectionCard>
     </Container>
   );

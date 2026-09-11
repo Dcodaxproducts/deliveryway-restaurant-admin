@@ -26,11 +26,11 @@ export function TableReservationsTable({ reservations, loading, error, restauran
   const t = useTranslations("tableReservations");
   const [statusReservation, setStatusReservation] = useState<TableReservation | null>(null);
   const columns: readonly DataTableColumn<TableReservation>[] = [
-    { id: "reservation", header: t("reservation"), cell: (reservation) => <div><p className="font-semibold text-[var(--ui-text)]">{formatShortId(reservation.id)}</p><p className="mt-1 text-xs text-[var(--ui-text-muted)]">{t("created")}: {formatDateTime(reservation.createdAt)}</p></div> },
+    { id: "reservation", header: t("reservation"), cell: (reservation) => <div><p className="font-semibold text-[var(--ui-text)]">{formatShortId(reservation.id)}</p><p className="mt-1 text-xs text-[var(--ui-text-muted)]">{t("created")}: {formatDateTime(reservation.createdAt)}</p>{reservation.cancelledAt ? <p className="mt-1 text-xs text-[var(--ui-danger)]">{t("cancelledLabel")}: {formatDateTime(reservation.cancelledAt)}</p> : null}</div> },
     { id: "customer", header: t("customer"), cell: (reservation) => <TableReservationCustomerCell customer={reservation.customer} /> },
     { id: "date", header: t("dateTime"), cell: (reservation) => formatReservationDate(reservation.reservationDate) },
     { id: "guests", header: t("guests"), align: "center", cell: (reservation) => <span className="tabular-nums">{reservation.guestCount}</span> },
-    { id: "branch", header: t("branchNote"), cell: (reservation) => <div className="max-w-52"><p className="truncate font-medium">{getBranchName(reservation)}</p><p className="mt-1 line-clamp-1 text-xs text-[var(--ui-text-muted)]">{reservation.note || t("noNote")}</p></div> },
+    { id: "branch", header: t("branchNote"), cell: (reservation) => <div className="max-w-52"><p className="truncate font-medium">{getBranchName(reservation)}</p><p className="mt-1 truncate text-xs text-[var(--ui-text-muted)]">{reservation.branch?.address || (reservation.branchId ? t("branchId", { id: reservation.branchId }) : t("noBranch"))}</p><p className="mt-1 line-clamp-1 text-xs text-[var(--ui-text-muted)]">{reservation.note || t("noNote")}</p></div> },
     { id: "status", header: common("status"), align: "center", cell: (reservation) => <TableReservationStatusBadge status={reservation.status} /> },
     { id: "actions", header: common("actions"), align: "right", cell: (reservation) => <RowActions actions={[{ id: "status", label: common("updateStatus"), icon: <RefreshCw className="size-4" />, onSelect: () => setStatusReservation(reservation) }]} /> },
   ];
@@ -55,6 +55,7 @@ export function TableReservationsTable({ reservations, loading, error, restauran
               <Info label={t("created")} value={formatDateTime(reservation.createdAt)} />
               <Info label={t("cancelledLabel")} value={reservation.cancelledAt ? formatDateTime(reservation.cancelledAt) : "—"} />
             </dl>
+            <p className="mt-3 text-xs text-[var(--ui-text-muted)]">{reservation.branch?.address || (reservation.branchId ? t("branchId", { id: reservation.branchId }) : t("noBranch"))}</p>
             <div className="mt-4 flex items-end justify-between gap-3"><p className="line-clamp-2 min-w-0 text-sm text-[var(--ui-text-muted)]">{reservation.note || t("noNote")}</p><RowActions actions={[{ id: "status", label: common("updateStatus"), icon: <RefreshCw className="size-4" />, onSelect: () => setStatusReservation(reservation) }]} /></div>
           </article>
         )}

@@ -10,6 +10,8 @@ import {
 } from "@/components/common/ResponsiveDataView";
 import type { DataTableColumn } from "@/components/common/DataTable";
 import { SectionCard } from "@/components/common/SectionCard";
+import { StatePanel } from "@/components/common/EmptyState";
+import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/common/status-badge";
 import { useCuisines } from "@/hooks/useCuisines";
 import CuisineFilters, {
@@ -32,6 +34,7 @@ const isLongDescription = (value: string) =>
   value.length > DESCRIPTION_PREVIEW_LIMIT || value.split(/\r?\n/).length > 2;
 
 export default function CuisinesTable() {
+  const feedbackT = useTranslations("common.feedback");
   const t = useTranslations("common");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
@@ -53,6 +56,7 @@ export default function CuisinesTable() {
     data: response,
     isLoading,
     isFetching,
+    isError,
     refetch,
   } = useCuisines({
     page,
@@ -73,7 +77,7 @@ export default function CuisinesTable() {
       return secondCreatedAt - firstCreatedAt;
     });
   }, [response?.data]);
-  const isTableLoading = isLoading || isFetching;
+  const isTableLoading = !response && (isLoading || isFetching);
 
   const pagination = useMemo(() => {
     const source = response?.meta;
@@ -130,11 +134,16 @@ export default function CuisinesTable() {
         }}
         onSearch={() => void refetch()}
       />
+      {isError && response ? (
+        <StatePanel state="error" title={feedbackT("refreshFailed", { subject: feedbackT("subjects.cuisines") })} description={feedbackT("cachedDescription")} compact />
+      ) : null}
       <ResponsiveDataView
         data={cuisines}
         columns={columns}
         rowKey={(cuisine) => cuisine.id}
         loading={isTableLoading}
+        error={isError && !response ? feedbackT("loadFailedDescription") : null}
+        errorTitle={feedbackT("loadFailed", { subject: feedbackT("subjects.cuisines") })}
         emptyTitle={t("noCuisinesFound")}
         renderMobileItem={(cuisine) => (
           <article className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4 shadow-[var(--ui-shadow-xs)]">
@@ -149,6 +158,7 @@ export default function CuisinesTable() {
         )}
         footer={<PaginationSection {...pagination} onPageChange={setPage} />}
       />
+      {isError ? <Button type="button" variant="outline" disabled={isFetching} onClick={() => void refetch()}>{feedbackT("retry", { subject: feedbackT("subjects.cuisines") })}</Button> : null}
     </SectionCard>
   );
 }

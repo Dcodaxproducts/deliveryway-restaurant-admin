@@ -11,9 +11,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGetRestaurantDashboardOverview } from "@/hooks/useDashboard";
 import { useTranslations } from "next-intl";
 import type { StatItem } from "@/types/stats";
+import { StatePanel } from "@/components/common/EmptyState";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const t = useTranslations("dashboard");
+  const feedbackT = useTranslations("common.feedback");
   const { restaurantId, branchId, isBranchAdmin, loading: authLoading } = useAuth();
   const scopedDashboardParams = restaurantId
     ? {
@@ -66,6 +69,8 @@ export default function Home() {
     data: dashboardOverviewResponse,
     isLoading,
     isFetching,
+    isError,
+    refetch,
   } = useGetRestaurantDashboardOverview(scopedDashboardParams);
 
   const overview = dashboardOverviewResponse?.data;
@@ -130,7 +135,7 @@ export default function Home() {
     },
   ];
 
-  const statsLoading = authLoading || isLoading || isFetching;
+  const statsLoading = !overview && (authLoading || isLoading || isFetching);
 
   return (
     <Container className="max-w-full overflow-x-clip">
@@ -143,11 +148,25 @@ export default function Home() {
         }
       />
 
-      <StatsSection
-        stats={statsData}
-        loading={statsLoading}
-        className="xl:grid-cols-5"
-      />
+      {isError ? (
+        <StatePanel
+          state="error"
+          title={feedbackT("loadFailed", { subject: feedbackT("subjects.overview") })}
+          description={feedbackT(overview ? "cachedDescription" : "loadFailedDescription")}
+          action={<Button type="button" variant="outline" disabled={isFetching || authLoading} onClick={() => void refetch()}>{feedbackT("retry", { subject: feedbackT("subjects.overview") })}</Button>}
+          compact
+        />
+      ) : null}
+      {overview ? (
+        <StatsSection stats={statsData} className="xl:grid-cols-5" />
+      ) : !isError ? (
+        <StatePanel
+          state={statsLoading ? "loading" : "unavailable"}
+          title={feedbackT(statsLoading ? "loading" : "unavailable", { subject: feedbackT("subjects.overview") })}
+          description={feedbackT(statsLoading ? "loadingDescription" : "unavailableDescription")}
+          compact
+        />
+      ) : null}
 
       <ManagementSection items={translatedManagementItems} />
 

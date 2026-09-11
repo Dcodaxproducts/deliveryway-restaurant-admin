@@ -18,6 +18,9 @@ import {
 
 import { Button } from "@/components/ui/button";
 import PaginationSection from "@/components/common/PaginationSection";
+import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
+import { StatePanel } from "@/components/common/EmptyState";
+import { StatusBadge } from "@/components/common/status-badge";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import {
   Dialog,
@@ -214,6 +217,7 @@ export default function AllergenTable() {
     data: response,
     isLoading,
     isFetching,
+    isError,
     refetch,
   } = useGetAllergenAdditiveTemplates({
     restaurantId: restaurantId || undefined,
@@ -492,48 +496,12 @@ export default function AllergenTable() {
     );
   };
 
-  const SkeletonRow = () => (
-    <tr>
-      <td colSpan={6} className="px-4 py-5">
-        <div className="grid animate-pulse grid-cols-[0.4fr_1fr_2fr_0.8fr_0.8fr_0.5fr] gap-4">
-          <div className="h-4 rounded bg-gray-200" />
-          <div className="h-4 rounded bg-gray-200" />
-          <div className="h-4 rounded bg-gray-200" />
-          <div className="h-4 rounded bg-gray-200" />
-          <div className="h-4 rounded bg-gray-200" />
-          <div className="h-4 rounded bg-gray-200" />
-        </div>
-      </td>
-    </tr>
-  );
-
-  const SkeletonCard = () => (
-    <div className="animate-pulse rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm">
-      <div className="space-y-3">
-        <div className="h-4 w-[120px] max-w-full rounded bg-gray-200" />
-        <div className="h-3 w-full rounded bg-gray-200" />
-        <div className="h-3 w-[160px] max-w-full rounded bg-gray-200" />
-      </div>
-    </div>
-  );
-
   const EmptyState = () => (
-    <div className="mx-auto max-w-[420px] px-4 py-10 text-center">
-      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-        <ShieldAlert size={22} />
-      </div>
-
-      <p className="text-base font-semibold text-gray-900">
-        {t("emptyTitle")}
-      </p>
-
-      <p className="mt-1 text-sm leading-6 text-gray-500">
-        {hasActiveFilters
-          ? t("emptyFiltered")
-          : t("emptyDescription")}
-      </p>
-
-      {hasActiveFilters ? (
+    <StatePanel
+      title={t("emptyTitle")}
+      description={hasActiveFilters ? t("emptyFiltered") : t("emptyDescription")}
+      icon={<ShieldAlert size={22} />}
+      action={hasActiveFilters ? (
         <Button
           type="button"
           variant="outline"
@@ -567,8 +535,14 @@ export default function AllergenTable() {
           </Button>
         </div>
       )}
-    </div>
+    />
   );
+
+  // DataTable owns the rows; delegate domain drag events without another table shell.
+  const desktopItem = (target: EventTarget) => {
+    const row = (target as Element).closest<HTMLTableRowElement>("tbody tr");
+    return row ? paginatedItems[row.sectionRowIndex] : undefined;
+  };
 
   return (
     <div className="w-full max-w-full overflow-hidden">
@@ -776,9 +750,7 @@ export default function AllergenTable() {
       </div>
 
       {!canMutateTemplates ? (
-        <div className="mb-6 rounded-[18px] border border-amber-100 bg-amber-50 p-4 text-sm text-amber-700">
-          {t("missingRestaurantContext")}
-        </div>
+        <StatePanel state="permission" title={t("missingRestaurantContext")} description="" compact className="mb-6" />
       ) : null}
 
       {sortBy === "manual" ? (
@@ -787,38 +759,126 @@ export default function AllergenTable() {
         </p>
       ) : null}
 
-      <div className="hidden w-full max-w-full overflow-hidden rounded-[18px] border border-gray-100 bg-white shadow-sm md:block">
-        <table className="w-full table-fixed text-sm">
-          <thead>
-            <tr className="border-b bg-[#FAFAFA] text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <th className="w-[8%] px-4 py-4 text-center">
-                <span className="sr-only">{t("manualOrder")}</span>
-              </th>
-              <th className="w-[17%] px-4 py-4">{t("code")}</th>
-              <th className="w-[35%] px-4 py-4">{t("label")}</th>
-              <th className="w-[18%] px-4 py-4 text-center">{commonT("type")}</th>
-              <th className="w-[10%] px-4 py-4 text-center">{t("usage")}</th>
-              <th className="w-[12%] px-4 py-4 text-center">{commonT("actions")}</th>
-            </tr>
-          </thead>
+      {isError ? (
+        <StatePanel state="error" title={commonT("unableToLoad")} description="" compact className="mb-4"
+          action={<Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>{commonT("refresh")}</Button>} />
+      ) : null}
+      {isError && paginatedItems.length === 0 ? null : shouldShowEmpty ? <EmptyState /> : (
+        <div
+          onDragStart={(event) => {
+            const item = desktopItem(event.target);
+            if (item) setDraggedTemplateKey(`${item.type}-${item.code}`);
+          }}
+          onDragOver={(event) => {
+            if (canReorderTemplates && desktopItem(event.target)) event.preventDefault();
+          }}
+          onDrop={(event) => {
+            const item = desktopItem(event.target);
+            if (item) handleTemplateDrop(`${item.type}-${item.code}`);
+          }}
+          onDragEnd={() => setDraggedTemplateKey(null)}
+        >
+          <ResponsiveDataView
+            data={paginatedItems}
+            rowKey={(item) => `${item.type}-${item.code}`}
+            loading={shouldShowInitialLoader || (isFetching && paginatedItems.length === 0)}
+            emptyTitle={t("emptyTitle")}
+            className="[&_tr:has([data-dragged=true])]:bg-primary/5 [&_tr:has([data-dragged=true])]:opacity-60"
+            columns={[
+              {
+                id: "order", header: <span className="sr-only">{t("manualOrder")}</span>, align: "center", cell: (item) => (
+                  <div
+                    className="flex items-center justify-center gap-0.5"
+                    data-dragged={draggedTemplateKey === `${item.type}-${item.code}`}
+                    ref={(node) => {
+                      const row = node?.closest("tr");
+                      if (row) row.draggable = canReorderTemplates && !isReordering;
+                    }}
+                  >
+                    <button
+                      type="button"
+                      disabled={!canReorderTemplates || isReordering}
+                      onKeyDown={(event) => {
+                        if (event.key === "ArrowUp") {
+                          event.preventDefault();
+                          handleTemplateMove(item, -1);
+                        }
 
-          <tbody>
-            {shouldShowInitialLoader ? (
-              Array.from({ length: 6 }).map((_, index) => (
-                <SkeletonRow key={index} />
-              ))
-            ) : shouldShowEmpty ? (
-              <tr>
-                <td colSpan={6}>
-                  <EmptyState />
-                </td>
-              </tr>
-            ) : (
-              paginatedItems.map((item) => {
-                const itemKey = `${item.type}-${item.code}`;
+                        if (event.key === "ArrowDown") {
+                          event.preventDefault();
+                          handleTemplateMove(item, 1);
+                        }
+                      }}
+                      className="cursor-grab rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
+                      aria-label={t("dragAria", {
+                        code: item.code,
+                        label: item.label,
+                      })}
+                    >
+                      <GripVertical size={16} />
+                    </button>
+                  </div>
+                )
+              },
+              {
+                id: "code", header: t("code"), cell: (item) => (
+                  <div className="inline-flex max-w-full rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                    <span className="truncate">{item.code || "-"}</span>
+                  </div>
+                )
+              },
+              {
+                id: "label", header: t("label"), cell: (item) => (
+                  <p className="truncate font-semibold text-gray-900">
+                    {item.label || "-"}
+                  </p>
+                )
+              },
+              {
+                id: "type", header: commonT("type"), align: "center", cell: (item) => (
+                  <TemplateTypeBadge type={item.type} />
+                )
+              },
+              {
+                id: "usage", header: t("usage"), align: "center", cell: () => (
+                  <span className="text-xs text-gray-500">
+                    {t("template")}
+                  </span>
+                )
+              },
+              {
+                id: "actions", header: commonT("actions"), align: "center", cell: (item) => (
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      title={commonT("edit")}
+                      disabled={!canMutateTemplates}
+                      onClick={() => openEditModal(item)}
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-primary/20 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-label={t("editAria")}
+                    >
+                      <FaPen size={13} />
+                    </button>
 
-                return (
-                <tr
+                    <button
+                      type="button"
+                      title={commonT("delete")}
+                      disabled={!canMutateTemplates}
+                      onClick={() => setDeleteTarget(item)}
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-red-200 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-label={t("deleteAria")}
+                    >
+                      <FaTrash size={13} />
+                    </button>
+                  </div>
+                )
+              },
+            ]}
+            renderMobileItem={(item) => {
+              const itemKey = `${item.type}-${item.code}`;
+
+              return (
+                <div
                   key={itemKey}
                   draggable={canReorderTemplates && !isReordering}
                   onDragStart={() => setDraggedTemplateKey(itemKey)}
@@ -827,188 +887,72 @@ export default function AllergenTable() {
                   }}
                   onDrop={() => handleTemplateDrop(itemKey)}
                   onDragEnd={() => setDraggedTemplateKey(null)}
-                  className={`border-b border-gray-100 transition hover:bg-[#FAFAFA] ${
-                    draggedTemplateKey === itemKey
-                      ? "bg-primary/5 opacity-60"
-                      : ""
-                  }`}
+                  className="w-full max-w-full overflow-hidden rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm"
                 >
-                  <td className="px-4 py-4">
-                    <div className="flex items-center justify-center gap-0.5">
-                      <button
-                        type="button"
-                        disabled={!canReorderTemplates || isReordering}
-                        onKeyDown={(event) => {
-                          if (event.key === "ArrowUp") {
-                            event.preventDefault();
-                            handleTemplateMove(item, -1);
-                          }
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="inline-flex max-w-full rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                        <span className="truncate">{item.code || "-"}</span>
+                      </div>
 
-                          if (event.key === "ArrowDown") {
-                            event.preventDefault();
-                            handleTemplateMove(item, 1);
-                          }
-                        }}
-                        className="cursor-grab rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
-                        aria-label={t("dragAria", {
-                          code: item.code,
-                          label: item.label,
-                        })}
-                      >
-                        <GripVertical size={16} />
-                      </button>
+                      <h3 className="mt-3 truncate text-[16px] font-semibold text-gray-900">
+                        {item.label || "-"}
+                      </h3>
+
+                      <p className="mt-1 text-xs text-gray-400">
+                        {item.type === "allergens" ? t("allergenDescription") : t("additiveDescription")}
+                      </p>
                     </div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="inline-flex max-w-full rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                      <span className="truncate">{item.code || "-"}</span>
-                    </div>
-                  </td>
 
-                  <td className="px-4 py-4">
-                    <p className="truncate font-semibold text-gray-900">
-                      {item.label || "-"}
-                    </p>
-                  </td>
-
-                  <td className="px-4 py-4 text-center">
                     <TemplateTypeBadge type={item.type} />
-                  </td>
-
-                  <td className="px-4 py-4 text-center">
-                    <span className="text-xs text-gray-500">
-                      {t("template")}
-                    </span>
-                  </td>
-
-                  <td className="px-4 py-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        type="button"
-                        title={commonT("edit")}
-                        disabled={!canMutateTemplates}
-                        onClick={() => openEditModal(item)}
-                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-primary/20 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label={t("editAria")}
-                      >
-                        <FaPen size={13} />
-                      </button>
-
-                      <button
-                        type="button"
-                        title={commonT("delete")}
-                        disabled={!canMutateTemplates}
-                        onClick={() => setDeleteTarget(item)}
-                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-red-200 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label={t("deleteAria")}
-                      >
-                        <FaTrash size={13} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-
-        <div className="border-t border-gray-100 px-4 py-4">
-          <PaginationSection {...pagination} onPageChange={setPage} />
-        </div>
-      </div>
-
-      <div className="w-full max-w-full space-y-4 md:hidden">
-        {shouldShowInitialLoader ? (
-          Array.from({ length: 5 }).map((_, index) => (
-            <SkeletonCard key={index} />
-          ))
-        ) : shouldShowEmpty ? (
-          <div className="rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm">
-            <EmptyState />
-          </div>
-        ) : (
-          paginatedItems.map((item) => {
-            const itemKey = `${item.type}-${item.code}`;
-
-            return (
-            <div
-              key={itemKey}
-              draggable={canReorderTemplates && !isReordering}
-              onDragStart={() => setDraggedTemplateKey(itemKey)}
-              onDragOver={(event) => {
-                if (canReorderTemplates) event.preventDefault();
-              }}
-              onDrop={() => handleTemplateDrop(itemKey)}
-              onDragEnd={() => setDraggedTemplateKey(null)}
-              className="w-full max-w-full overflow-hidden rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm"
-            >
-              <div className="flex min-w-0 items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="inline-flex max-w-full rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                    <span className="truncate">{item.code || "-"}</span>
                   </div>
 
-                  <h3 className="mt-3 truncate text-[16px] font-semibold text-gray-900">
-                    {item.label || "-"}
-                  </h3>
+                  <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
+                    <button
+                      type="button"
+                      disabled={!canReorderTemplates || isReordering}
+                      onClick={() => handleTemplateMove(item, -1)}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-gray-200 text-gray-500 disabled:cursor-not-allowed disabled:opacity-30"
+                      aria-label={t("moveUpAria", { label: item.label })}
+                    >
+                      <ArrowUp size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!canReorderTemplates || isReordering}
+                      onClick={() => handleTemplateMove(item, 1)}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-gray-200 text-gray-500 disabled:cursor-not-allowed disabled:opacity-30"
+                      aria-label={t("moveDownAria", { label: item.label })}
+                    >
+                      <ArrowDown size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!canMutateTemplates}
+                      onClick={() => openEditModal(item)}
+                      className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <FaPen size={13} />
+                      {commonT("edit")}
+                    </button>
 
-                  <p className="mt-1 text-xs text-gray-400">
-                    {item.type === "allergens" ? t("allergenDescription") : t("additiveDescription")}
-                  </p>
+                    <button
+                      type="button"
+                      disabled={!canMutateTemplates}
+                      onClick={() => setDeleteTarget(item)}
+                      className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:border-red-300 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <FaTrash size={13} />
+                      {commonT("delete")}
+                    </button>
+                  </div>
                 </div>
-
-                <TemplateTypeBadge type={item.type} />
-              </div>
-
-              <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
-                <button
-                  type="button"
-                  disabled={!canReorderTemplates || isReordering}
-                  onClick={() => handleTemplateMove(item, -1)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-gray-200 text-gray-500 disabled:cursor-not-allowed disabled:opacity-30"
-                  aria-label={t("moveUpAria", { label: item.label })}
-                >
-                  <ArrowUp size={15} />
-                </button>
-                <button
-                  type="button"
-                  disabled={!canReorderTemplates || isReordering}
-                  onClick={() => handleTemplateMove(item, 1)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-gray-200 text-gray-500 disabled:cursor-not-allowed disabled:opacity-30"
-                  aria-label={t("moveDownAria", { label: item.label })}
-                >
-                  <ArrowDown size={15} />
-                </button>
-                <button
-                  type="button"
-                  disabled={!canMutateTemplates}
-                  onClick={() => openEditModal(item)}
-                  className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <FaPen size={13} />
-                  {commonT("edit")}
-                </button>
-
-                <button
-                  type="button"
-                  disabled={!canMutateTemplates}
-                  onClick={() => setDeleteTarget(item)}
-                  className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:border-red-300 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <FaTrash size={13} />
-                  {commonT("delete")}
-                </button>
-              </div>
-            </div>
-            );
-          })
-        )}
-
-        <div className="w-full max-w-full overflow-hidden">
-          <PaginationSection {...pagination} onPageChange={setPage} />
+              );
+            }}
+          />
         </div>
-      </div>
+      )}
+      <PaginationSection {...pagination} onPageChange={setPage} />
 
       <TemplateModal
         open={open}
@@ -1050,15 +994,9 @@ function TemplateTypeBadge({ type }: { type: TemplateType }) {
   const isAllergen = type === "allergens";
 
   return (
-    <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-        isAllergen
-          ? "bg-amber-50 text-amber-700"
-          : "bg-blue-50 text-blue-700"
-      }`}
-    >
+    <StatusBadge tone={isAllergen ? "warning" : "info"}>
       {isAllergen ? t("allergen") : t("additive")}
-    </span>
+    </StatusBadge>
   );
 }
 

@@ -13,11 +13,13 @@ import {
 } from "recharts";
 import { RefreshCw } from "lucide-react";
 import { ChartPanel } from "@/components/common/ChartPanel";
+import { StatePanel } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useGetRevenueTrend } from "@/hooks/useDashboard";
 import { formatMoney } from "@/lib/currency";
+import { useTranslations } from "next-intl";
 
 export type TrendRange = "daily" | "weekly" | "monthly";
 
@@ -35,6 +37,8 @@ const RevenueGraph = ({
   range?: TrendRange;
   onRangeChange?: (range: TrendRange) => void;
 } = {}) => {
+  const common = useTranslations("common");
+  const t = useTranslations("reports");
   const {
     restaurantId,
     branchId,
@@ -63,9 +67,9 @@ const RevenueGraph = ({
   );
 
   const trendData = revenueTrendResponse?.data;
+  const hasData = trendData != null;
 
   const currency = trendData?.currency || fallbackCurrency;
-  const totalRevenueInRange = Number(trendData?.totalRevenueInRange || 0);
   const currentRange = trendData?.range || range;
 
   const chartData = useMemo<
@@ -97,7 +101,7 @@ const RevenueGraph = ({
     ? "revenueRedShadow"
     : "revenuePurpleShadow";
 
-  const loading = authLoading || isLoading || isFetching;
+  const loading = !hasData && !isError && (authLoading || isLoading || isFetching);
 
   return (
     <ChartPanel title={null} className="h-full">
@@ -108,11 +112,13 @@ const RevenueGraph = ({
               Revenue Trend
             </h3>
 
-            <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              {loading
-                ? "Loading..."
-                : formatMoney(totalRevenueInRange, currency)}
-            </div>
+            {(loading || hasData) && (
+              <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                {hasData
+                  ? formatMoney(Number(trendData.totalRevenueInRange), currency)
+                  : common("loading")}
+              </div>
+            )}
 
             {hasOnlyOneRevenuePoint ? (
               <div className="inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600">
@@ -153,36 +159,40 @@ const RevenueGraph = ({
           <button
             type="button"
             onClick={() => refetch()}
+            disabled={authLoading || isFetching}
             className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[#E7EAF0] text-gray-500 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
-            aria-label="Refresh revenue trend"
-            title="Refresh"
+            aria-label={t("refreshRevenueTrend")}
+            title={common("refresh")}
           >
-            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={16} className={isFetching ? "animate-spin" : ""} />
           </button>
         </div>
       </div>
 
-      {/* Chart */}
+      {isError && (
+        <StatePanel
+          state="error"
+          compact
+          className="mb-4"
+          title={t(hasData ? "revenueTrendRefreshFailed" : "revenueTrendFailed")}
+          description={hasData ? t("revenueTrendCached") : common("refreshAndTry")}
+          action={
+            <Button type="button" variant="outline" disabled={authLoading || isFetching} onClick={() => refetch()}>
+              {t("retryRevenueTrend")}
+            </Button>
+          }
+        />
+      )}
+
+      {(!isError || hasData) && (
       <div className="h-[260px] w-full min-w-0">
         {loading ? (
-          <div className="h-full w-full animate-pulse rounded-[16px] bg-gray-100" />
-        ) : isError ? (
-          <div className="flex h-full flex-col items-center justify-center gap-3 rounded-[16px] border border-dashed border-red-200 text-center">
-            <p className="text-sm font-medium text-red-500">
-              Failed to load revenue trend.
-            </p>
-
-            <Button
-              type="button"
-              onClick={() => refetch()}
-              className="h-9 rounded-[10px] bg-primary px-4 text-sm text-white hover:bg-primary/90"
-            >
-              Retry
-            </Button>
-          </div>
+          <div role="status" aria-label={common("loading")} className="h-full w-full animate-pulse rounded-[16px] bg-gray-100" />
+        ) : !hasData ? (
+          <StatePanel state="unavailable" title={t("revenueTrendUnavailable")} description={common("refreshAndTry")} />
         ) : chartData.length === 0 ? (
           <div className="flex h-full items-center justify-center rounded-[16px] border border-dashed border-gray-200 text-sm text-gray-400">
-            No revenue trend data available.
+            {t("noRevenueTrendData")}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
@@ -293,6 +303,7 @@ const RevenueGraph = ({
           </ResponsiveContainer>
         )}
       </div>
+      )}
     </ChartPanel>
   );
 };

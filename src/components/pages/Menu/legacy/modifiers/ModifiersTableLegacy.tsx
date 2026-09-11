@@ -6,12 +6,16 @@ import { FaPen, FaTrash } from "react-icons/fa";
 import ModifierModal from "@/components/pages/Menu/legacy/ModifierModal";
 import ModifierCategoryInfiniteSelect from "@/components/pages/Menu/modifiers/components/ModifierCategoryInfiniteSelect";
 import PaginationSection from "@/components/common/PaginationSection";
+import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
+import { StatePanel } from "@/components/common/EmptyState";
+import { StatusBadge } from "@/components/common/status-badge";
 import { Copy, MoreVertical, Search } from "lucide-react";
 import { useDuplicateModifier } from "@/hooks/useMenus";
 import { useDeleteModifier, useModifiers } from "@/hooks/useModifiers";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import { useAuth } from "@/hooks/useAuth";
-import { useClickOutside } from "@/hooks/useClickOutside";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useTranslations } from "next-intl";
 import type { Modifier } from "@/types/modifiers";
@@ -19,6 +23,7 @@ import type { Modifier } from "@/types/modifiers";
 export default function ModifiersTable() {
   const t = useTranslations("menu.modifiersTable");
   const commonT = useTranslations("common");
+  const isMobile = useIsMobile();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
@@ -51,6 +56,7 @@ export default function ModifiersTable() {
     data: response,
     isLoading,
     isFetching,
+    isError,
     refetch,
   } = useModifiers({
     page,
@@ -110,31 +116,7 @@ export default function ModifiersTable() {
     });
   };
 
-  const SkeletonRow = () => (
-    <tr>
-      <td colSpan={5} className="py-6">
-        <div className="flex animate-pulse items-center gap-3">
-          <div className="h-4 w-[160px] rounded bg-gray-200" />
-          <div className="h-4 w-[130px] rounded bg-gray-200" />
-          <div className="h-4 w-[90px] rounded bg-gray-200" />
-          <div className="h-4 w-[70px] rounded bg-gray-200" />
-          <div className="h-4 w-[50px] rounded bg-gray-200" />
-        </div>
-      </td>
-    </tr>
-  );
-
-  const SkeletonCard = () => (
-    <div className="animate-pulse rounded-[18px] border bg-white p-4 shadow-sm">
-      <div className="space-y-3">
-        <div className="h-4 w-[150px] rounded bg-gray-200" />
-        <div className="h-3 w-[90px] rounded bg-gray-200" />
-        <div className="h-3 w-[70px] rounded bg-gray-200" />
-      </div>
-    </div>
-  );
-
-  const isTableLoading = isLoading || isFetching;
+  const isTableLoading = (isLoading || isFetching) && items.length === 0;
 
   return (
     <div className="w-full">
@@ -197,193 +179,141 @@ export default function ModifiersTable() {
         </Button>
       </div>
 
-      <div className="hidden overflow-x-auto rounded-[16px] bg-white md:block">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-left text-gray-500">
-              <th className="px-2 py-3">{commonT("name")}</th>
-              <th className="px-2 text-center">{t("category")}</th>
-              <th className="px-2 text-center">{t("basePrice")}</th>
-              <th className="px-2 text-center">{commonT("status")}</th>
-              <th className="px-2 text-center">{commonT("actions")}</th>
-            </tr>
-          </thead>
+      {isError ? (
+        <StatePanel state="error" title={commonT("unableToLoad")} description="" compact className="mb-4"
+          action={<Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>{commonT("refresh")}</Button>} />
+      ) : null}
+      {(!isError || items.length > 0) && <ResponsiveDataView
+        data={items}
+        rowKey={(item) => item.id}
+        loading={isTableLoading}
+        emptyTitle={t("emptyTitle")}
+        columns={[
+          {
+            id: "name", header: commonT("name"), cell: (item) => (
+              <div className="flex flex-col">
+                <span className="block font-medium text-gray-900">
+                  {item.name || "-"}
+                </span>
+              </div>
+            )
+          },
+          { id: "category", header: t("category"), align: "center", cell: (item) => item.category?.name || t("uncategorized") },
+          { id: "price", header: t("basePrice"), align: "center", cell: (item) => formatMoney(item.priceDelta) },
+          {
+            id: "status", header: commonT("status"), align: "center", cell: (item) => (
+              <StatusBadge tone={item.isActive ? "success" : "neutral"}>
+                {item.isActive ? commonT("active") : commonT("inactive")}
+              </StatusBadge>
+            )
+          },
+          {
+            id: "actions", header: commonT("actions"), align: "center", cell: (item) => (
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelected(item);
+                    setOpen(true);
+                  }}
+                  className="text-gray-500 hover:text-primary"
+                  aria-label={t("editAria")}
+                >
+                  <FaPen size={14} />
+                </button>
 
-          <tbody>
-            {isTableLoading ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                <SkeletonRow key={index} />
-              ))
-            ) : items.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="py-10 text-center text-gray-400">
-                  {t("emptyTitle")}
-                </td>
-              </tr>
-            ) : (
-              items.map((item) => (
-                <tr key={item.id} className="border-b hover:bg-gray-50">
-                  <td className="px-2 py-4">
-                    <div className="flex flex-col">
-                      <span className="block font-medium text-gray-900">
-                        {item.name || "-"}
-                      </span>
-                    </div>
-                  </td>
+                <button
+                  type="button"
+                  onClick={() => setDeleteId(item.id)}
+                  className="text-gray-500 hover:text-red-500"
+                  aria-label={t("deleteAria")}
+                >
+                  <FaTrash size={14} />
+                </button>
 
-                  <td className="px-2 text-center text-gray-600">
-                    {item.category?.name || t("uncategorized")}
-                  </td>
+                <ActionDropdown
+                  item={item}
+                  isOpen={!isMobile && openActionId === item.id}
+                  isDuplicating={isDuplicating}
+                  onToggle={() =>
+                    setOpenActionId((prev) =>
+                      prev === item.id ? null : item.id
+                    )
+                  }
+                  onClose={() => setOpenActionId(null)}
+                  onDuplicate={handleDuplicate}
+                />
+              </div>
+            )
+          },
+        ]}
+        renderMobileItem={(item) => (
+          <div
+            key={item.id}
+            className="rounded-[18px] border bg-white p-4 shadow-sm"
+          >
+            <div className="flex flex-1 flex-col justify-between gap-3">
+              <div>
+                <h3 className="text-[16px] font-semibold text-gray-900">
+                  {item.name || "-"}
+                </h3>
+              </div>
 
-                  <td className="px-2 text-center font-medium text-gray-900">
-                    {formatMoney(item.priceDelta)}
-                  </td>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">
+                  {item.category?.name || t("uncategorized")}
+                </span>
+                <span className="text-sm font-semibold text-primary">
+                  {formatMoney(item.priceDelta)}
+                </span>
+              </div>
 
-                  <td className="px-2 text-center">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                        item.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {item.isActive ? commonT("active") : commonT("inactive")}
-                    </span>
-                  </td>
+              <div className="mt-2 flex items-center justify-between">
+                <StatusBadge tone={item.isActive ? "success" : "neutral"}>
+                  {item.isActive ? commonT("active") : commonT("inactive")}
+                </StatusBadge>
 
-                  <td className="px-2 text-center">
-                    <div className="flex items-center justify-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelected(item);
-                          setOpen(true);
-                        }}
-                        className="text-gray-500 hover:text-primary"
-                        aria-label={t("editAria")}
-                      >
-                        <FaPen size={14} />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setDeleteId(item.id)}
-                        className="text-gray-500 hover:text-red-500"
-                        aria-label={t("deleteAria")}
-                      >
-                        <FaTrash size={14} />
-                      </button>
-
-                      <ActionDropdown
-                        item={item}
-                        isOpen={openActionId === item.id}
-                        isDuplicating={isDuplicating}
-                        onToggle={() =>
-                          setOpenActionId((prev) =>
-                            prev === item.id ? null : item.id
-                          )
-                        }
-                        onClose={() => setOpenActionId(null)}
-                        onDuplicate={handleDuplicate}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
-        <div className="mt-4 px-2 pb-2">
-          <PaginationSection {...pagination} onPageChange={setPage} />
-        </div>
-      </div>
-
-      <div className="space-y-4 md:hidden">
-        {isTableLoading ? (
-          Array.from({ length: 4 }).map((_, index) => (
-            <SkeletonCard key={index} />
-          ))
-        ) : items.length === 0 ? (
-          <div className="py-10 text-center text-gray-400">
-            {t("emptyTitle")}
-          </div>
-        ) : (
-          items.map((item) => (
-            <div
-              key={item.id}
-              className="rounded-[18px] border bg-white p-4 shadow-sm"
-            >
-              <div className="flex flex-1 flex-col justify-between gap-3">
-                <div>
-                  <h3 className="text-[16px] font-semibold text-gray-900">
-                    {item.name || "-"}
-                  </h3>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">
-                    {item.category?.name || t("uncategorized")}
-                  </span>
-                  <span className="text-sm font-semibold text-primary">
-                    {formatMoney(item.priceDelta)}
-                  </span>
-                </div>
-
-                <div className="mt-2 flex items-center justify-between">
-                  <span
-                    className={`rounded-full px-2 py-1 text-xs ${
-                      item.isActive
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelected(item);
+                      setOpen(true);
+                    }}
+                    className="text-gray-500 hover:text-primary"
+                    aria-label={t("editAria")}
                   >
-                    {item.isActive ? commonT("active") : commonT("inactive")}
-                  </span>
+                    <FaPen size={14} />
+                  </button>
 
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelected(item);
-                        setOpen(true);
-                      }}
-                      className="text-gray-500 hover:text-primary"
-                      aria-label={t("editAria")}
-                    >
-                      <FaPen size={14} />
-                    </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteId(item.id)}
+                    className="text-gray-500 hover:text-red-500"
+                    aria-label={t("deleteAria")}
+                  >
+                    <FaTrash size={14} />
+                  </button>
 
-                    <button
-                      type="button"
-                      onClick={() => setDeleteId(item.id)}
-                      className="text-gray-500 hover:text-red-500"
-                      aria-label={t("deleteAria")}
-                    >
-                      <FaTrash size={14} />
-                    </button>
-
-                    <ActionDropdown
-                      item={item}
-                      isOpen={openActionId === item.id}
-                      isDuplicating={isDuplicating}
-                      onToggle={() =>
-                        setOpenActionId((prev) =>
-                          prev === item.id ? null : item.id
-                        )
-                      }
-                      onClose={() => setOpenActionId(null)}
-                      onDuplicate={handleDuplicate}
-                    />
-                  </div>
+                  <ActionDropdown
+                    item={item}
+                    isOpen={isMobile && openActionId === item.id}
+                    isDuplicating={isDuplicating}
+                    onToggle={() =>
+                      setOpenActionId((prev) =>
+                        prev === item.id ? null : item.id
+                      )
+                    }
+                    onClose={() => setOpenActionId(null)}
+                    onDuplicate={handleDuplicate}
+                  />
                 </div>
               </div>
             </div>
-          ))
+          </div>
         )}
-
-        <PaginationSection {...pagination} onPageChange={setPage} />
-      </div>
+        footer={<PaginationSection {...pagination} onPageChange={setPage} />}
+      />}
 
       <ModifierModal
         open={open}
@@ -428,28 +358,23 @@ function ActionDropdown({
   onDuplicate: (modifierId: string) => void;
 }) {
   const t = useTranslations("menu.modifiersTable");
-  const dropdownRef = useClickOutside<HTMLDivElement>(() => {
-    if (isOpen) {
-      onClose();
-    }
-  });
 
   return (
-    <div ref={dropdownRef} className="relative flex justify-center">
+    <DropdownMenu open={isOpen} onOpenChange={(open) => open ? onToggle() : onClose()} modal={false}>
+      <DropdownMenuTrigger asChild>
       <button
         type="button"
         onClick={(event) => {
           event.stopPropagation();
-          onToggle();
         }}
         className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
         aria-label={t("actionsAria")}
       >
         <MoreVertical size={17} />
       </button>
+      </DropdownMenuTrigger>
 
-      {isOpen ? (
-        <div className="absolute right-0 top-9 z-30 w-[160px] overflow-hidden rounded-[12px] border border-gray-100 bg-white py-1 text-left shadow-lg">
+      <DropdownMenuContent align="end" sideOffset={8} className="w-[160px] rounded-[12px] border-gray-100 bg-white py-1 text-left shadow-lg">
           <button
             type="button"
             disabled={isDuplicating}
@@ -466,8 +391,7 @@ function ActionDropdown({
             <Copy size={15} />
             {isDuplicating ? t("duplicating") : t("duplicate")}
           </button>
-        </div>
-      ) : null}
-    </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

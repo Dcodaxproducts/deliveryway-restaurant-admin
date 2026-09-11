@@ -9,6 +9,7 @@ interface Props {
   branches: BranchListItem[];
   meta: PaginationMeta | null;
   loading: boolean;
+  error?: string | null;
   fetchBranches: (params?: BranchFilterState) => void;
 }
 
@@ -16,6 +17,7 @@ export default function BranchesClient({
   branches,
   meta,
   loading,
+  error,
   fetchBranches,
 }: Props) {
   const [filters, setFilters] = useState<BranchFilterState>({
@@ -43,7 +45,7 @@ export default function BranchesClient({
       />
 
       <div className="px-2 lg:px-0">
-        <Table branches={branches} loading={loading} />
+        <Table branches={branches} loading={loading} error={error} />
         <PaginationSection meta={meta} onPageChange={(page) => handleFilterChange({ ...filters, page })} />
       </div>
     </>

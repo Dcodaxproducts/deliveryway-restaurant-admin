@@ -7,6 +7,9 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import { ModifierGroupModal } from "@/components/pages/Menu/legacy/ModifierGroupModal";
 import { ManageGroupModifiersDialog } from "@/components/pages/Menu/modifier-groups/components/ManageGroupModifiersDialog";
 import PaginationSection from "@/components/common/PaginationSection";
+import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
+import { StatePanel } from "@/components/common/EmptyState";
+import { StatusBadge } from "@/components/common/status-badge";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import {
   useDeleteModifierGroup,
@@ -46,6 +49,7 @@ export function ModifierGroupsTableLegacy() {
     data: response,
     isLoading,
     isFetching,
+    isError,
     refetch,
   } = useModifierGroups({
     page,
@@ -98,31 +102,6 @@ export function ModifierGroupsTableLegacy() {
     });
   };
 
-  const SkeletonRow = () => (
-    <tr>
-      <td colSpan={7} className="py-6">
-        <div className="animate-pulse flex gap-3 items-center">
-          <div className="h-4 w-[160px] bg-gray-200 rounded" />
-          <div className="h-4 w-[140px] bg-gray-200 rounded" />
-          <div className="h-4 w-[50px] bg-gray-200 rounded" />
-          <div className="h-4 w-[50px] bg-gray-200 rounded" />
-          <div className="h-4 w-[70px] bg-gray-200 rounded" />
-        </div>
-      </td>
-    </tr>
-  );
-
-  const SkeletonCard = () => (
-    <div className="animate-pulse rounded-[18px] bg-white p-4 shadow-sm border">
-      <div className="space-y-3">
-        <div className="h-4 w-[150px] bg-gray-200 rounded" />
-        <div className="h-3 w-[120px] bg-gray-200 rounded" />
-        <div className="h-3 w-[90px] bg-gray-200 rounded" />
-        <div className="h-3 w-[80px] bg-gray-200 rounded" />
-      </div>
-    </div>
-  );
-
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
@@ -163,194 +142,146 @@ export function ModifierGroupsTableLegacy() {
         </Button>
       </div>
 
-      <div className="hidden md:block overflow-x-auto rounded-[16px] bg-white">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-left text-gray-500">
-              <th className="py-3 px-2">{commonT("name")}</th>
-              <th className="px-2">{commonT("description")}</th>
-              <th className="px-2 text-center">{t("minMax")}</th>
-              <th className="px-2 text-center">{t("modifiersCount")}</th>
-              <th className="px-2 text-center">{commonT("status")}</th>
-              <th className="px-2 text-center">{t("sort")}</th>
-              <th className="px-2 text-center">{commonT("actions")}</th>
-            </tr>
-          </thead>
+      {isError ? (
+        <StatePanel state="error" title={commonT("unableToLoad")} description="" compact className="mb-4"
+          action={<Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>{commonT("refresh")}</Button>} />
+      ) : null}
+      {(!isError || items.length > 0) && <ResponsiveDataView
+        data={items}
+        rowKey={(item) => item.id}
+        loading={(isLoading || isFetching) && items.length === 0}
+        emptyTitle={t("emptyTitle")}
+        columns={[
+          {
+            id: "name", header: commonT("name"), cell: (item) => (
+              <div className="flex flex-col">
+                <span className="font-medium block">{item.name}</span>
+              </div>
+            )
+          },
+          {
+            id: "description", header: commonT("description"), cell: (item) => (
+              <span className="text-gray-500 line-clamp-1">
+                {item.description || "-"}
+              </span>
+            )
+          },
+          { id: "selection", header: t("minMax"), align: "center", cell: (item) => `${item.minSelect ?? 0}/${item.maxSelect ?? 0}` },
+          { id: "modifiers", header: t("modifiersCount"), align: "center", cell: (item) => item.modifiers?.length ?? 0 },
+          {
+            id: "status", header: commonT("status"), align: "center", cell: (item) => (
+              <StatusBadge tone={item.isActive ? "success" : "neutral"}>
+                {item.isActive ? commonT("active") : commonT("inactive")}
+              </StatusBadge>
+            )
+          },
+          { id: "sort", header: t("sort"), align: "center", cell: (item) => item.sortOrder ?? "-" },
+          {
+            id: "actions", header: commonT("actions"), align: "center", cell: (item) => (
+              <div className="flex justify-center gap-3">
+                <button
+                  onClick={() => setManageGroup(item)}
+                  className="text-gray-500 hover:text-primary"
+                  aria-label={t("manageModifiers")}
+                >
+                  <SlidersHorizontal size={15} />
+                </button>
 
-          <tbody>
-            {isLoading || isFetching ? (
-              Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-            ) : items.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="py-10 text-center text-gray-400">
-                  {t("emptyTitle")}
-                </td>
-              </tr>
-            ) : (
-              items.map((item) => (
-                <tr key={item.id} className="border-b hover:bg-gray-50">
-                  <td className="px-2 py-4">
-                    <div className="flex flex-col">
-                      <span className="font-medium block">{item.name}</span>
-                    </div>
-                  </td>
+                <button
+                  onClick={() => {
+                    setSelected(item);
+                    setOpen(true);
+                  }}
+                  aria-label={commonT("edit")}
+                  className="text-gray-500 hover:text-primary"
+                >
+                  <FaPen size={14} />
+                </button>
 
-                  <td className="px-2">
-                    <span className="text-gray-500 line-clamp-1">
-                      {item.description || "-"}
-                    </span>
-                  </td>
+                <button
+                  onClick={() => setDeleteId(item.id)}
+                  aria-label={commonT("delete")}
+                  className="text-gray-500 hover:text-red-500"
+                >
+                  <FaTrash size={14} />
+                </button>
+              </div>
+            )
+          },
+        ]}
+        renderMobileItem={(item) => (
+          <div
+            key={item.id}
+            className="rounded-[18px] bg-white p-4 shadow-sm border"
+          >
+            <div className="flex flex-1 flex-col justify-between gap-3">
+              <div>
+                <h3 className="text-[16px] font-semibold text-gray-900">
+                  {item.name}
+                </h3>
 
-                  <td className="px-2 text-center">
-                    {item.minSelect ?? 0}/{item.maxSelect ?? 0}
-                  </td>
+                <p className="text-sm text-gray-500">
+                  {item.description
+                    ? item.description.length > 60
+                      ? item.description.slice(0, 60) + "..."
+                      : item.description
+                    : commonT("noData")}
+                </p>
+              </div>
 
-                  <td className="px-2 text-center">
-                    {item.modifiers?.length ?? 0}
-                  </td>
+              <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                <p>
+                  {t("minMax")}: {item.minSelect ?? 0}/{item.maxSelect ?? 0}
+                </p>
+                <p>
+                  {t("modifiersCount")}: {item.modifiers?.length ?? 0}
+                </p>
+                <p>{t("sort")}: {item.sortOrder ?? "-"}</p>
+                <p>
+                  {commonT("status")}:{" "}
+                  {item.isActive ? commonT("active") : commonT("inactive")}
+                </p>
+              </div>
 
-                  <td className="px-2 text-center">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                        item.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {item.isActive ? commonT("active") : commonT("inactive")}
-                    </span>
-                  </td>
+              <div className="mt-2 flex justify-between items-center">
+                <StatusBadge tone={item.isActive ? "success" : "neutral"}>
+                  {item.isActive ? commonT("active") : commonT("inactive")}
+                </StatusBadge>
 
-                  <td className="px-2 text-center">
-                    {item.sortOrder ?? "-"}
-                  </td>
-
-                  <td className="px-2 text-center">
-                    <div className="flex justify-center gap-3">
-                      <button
-                        onClick={() => setManageGroup(item)}
-                        className="text-gray-500 hover:text-primary"
-                        aria-label={t("manageModifiers")}
-                      >
-                        <SlidersHorizontal size={15} />
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setSelected(item);
-                          setOpen(true);
-                        }}
-                        className="text-gray-500 hover:text-primary"
-                      >
-                        <FaPen size={14} />
-                      </button>
-
-                      <button
-                        onClick={() => setDeleteId(item.id)}
-                        className="text-gray-500 hover:text-red-500"
-                      >
-                        <FaTrash size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
-        <div className="mt-4 px-2 pb-2">
-          <PaginationSection {...pagination} onPageChange={setPage} />
-        </div>
-      </div>
-
-      <div className="space-y-4 md:hidden">
-        {isLoading || isFetching ? (
-          Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
-        ) : items.length === 0 ? (
-          <div className="py-10 text-center text-gray-400">
-            {t("emptyTitle")}
-          </div>
-        ) : (
-          items.map((item) => (
-            <div
-              key={item.id}
-              className="rounded-[18px] bg-white p-4 shadow-sm border"
-            >
-              <div className="flex flex-1 flex-col justify-between gap-3">
-                <div>
-                  <h3 className="text-[16px] font-semibold text-gray-900">
-                    {item.name}
-                  </h3>
-
-                  <p className="text-sm text-gray-500">
-                    {item.description
-                      ? item.description.length > 60
-                        ? item.description.slice(0, 60) + "..."
-                        : item.description
-                      : commonT("noData")}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                  <p>
-                    {t("minMax")}: {item.minSelect ?? 0}/{item.maxSelect ?? 0}
-                  </p>
-                  <p>
-                    {t("modifiersCount")}: {item.modifiers?.length ?? 0}
-                  </p>
-                  <p>{t("sort")}: {item.sortOrder ?? "-"}</p>
-                  <p>
-                    {commonT("status")}:{" "}
-                    {item.isActive ? commonT("active") : commonT("inactive")}
-                  </p>
-                </div>
-
-                <div className="mt-2 flex justify-between items-center">
-                  <span
-                    className={`rounded-full px-2 py-1 text-xs ${
-                      item.isActive
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setManageGroup(item)}
+                    className="text-gray-500 hover:text-primary"
+                    aria-label={t("manageModifiers")}
                   >
-                    {item.isActive ? commonT("active") : commonT("inactive")}
-                  </span>
+                    <SlidersHorizontal size={15} />
+                  </button>
 
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setManageGroup(item)}
-                      className="text-gray-500 hover:text-primary"
-                      aria-label={t("manageModifiers")}
-                    >
-                      <SlidersHorizontal size={15} />
-                    </button>
+                  <button
+                    onClick={() => {
+                      setSelected(item);
+                      setOpen(true);
+                    }}
+                    aria-label={commonT("edit")}
+                    className="text-gray-500 hover:text-primary"
+                  >
+                    <FaPen size={14} />
+                  </button>
 
-                    <button
-                      onClick={() => {
-                        setSelected(item);
-                        setOpen(true);
-                      }}
-                      className="text-gray-500 hover:text-primary"
-                    >
-                      <FaPen size={14} />
-                    </button>
-
-                    <button
-                      onClick={() => setDeleteId(item.id)}
-                      className="text-gray-500 hover:text-red-500"
-                    >
-                      <FaTrash size={14} />
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setDeleteId(item.id)}
+                    aria-label={commonT("delete")}
+                    className="text-gray-500 hover:text-red-500"
+                  >
+                    <FaTrash size={14} />
+                  </button>
                 </div>
               </div>
             </div>
-          ))
+          </div>
         )}
-
-        <PaginationSection {...pagination} onPageChange={setPage} />
-      </div>
+        footer={<PaginationSection {...pagination} onPageChange={setPage} />}
+      />}
 
       {/* EDIT MODAL */}
       <ModifierGroupModal

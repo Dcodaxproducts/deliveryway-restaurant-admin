@@ -28,6 +28,7 @@ export interface CustomerListItem {
 interface Props {
   customers?: CustomerListItem[];
   loading?: boolean;
+  error?: string | null;
   meta?: PaginationMeta | null;
   onPageChange?: (page: number) => void;
   onRefresh?: () => void;
@@ -39,6 +40,7 @@ const getFullName = (customer: CustomerListItem) =>
 export default function CustomerTable({
   customers = [],
   loading = false,
+  error,
   meta,
   onPageChange = () => undefined,
   onRefresh = () => undefined,
@@ -102,7 +104,7 @@ export default function CustomerTable({
     { id: "joined", header: t("table.joiningDate"), cell: (customer) => customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : "-" },
     { id: "status", header: t("table.blockToggle"), align: "center", cell: (customer) => <Switch checked={Boolean(customer.isActive)} onCheckedChange={() => void handleToggleStatus(customer)} /> },
     { id: "actions", header: commonT("actions"), align: "right", cell: (customer) => <RowActions actions={[
-      { id: "view", label: commonT("view"), icon: <Eye className="size-4" />, onSelect: () => openCustomer(customer) },
+      { id: "view", label: commonT("viewDetails"), icon: <Eye className="size-4" />, onSelect: () => openCustomer(customer) },
       { id: "edit", label: commonT("edit"), icon: <Pencil className="size-4" />, onSelect: () => editCustomer(customer) },
       { id: "delete", label: commonT("delete"), icon: <Trash2 className="size-4" />, destructive: true, onSelect: () => void handleDelete(customer.id) },
     ]} /> },
@@ -115,6 +117,8 @@ export default function CustomerTable({
         columns={columns}
         rowKey={(customer) => customer.id}
         loading={loading}
+        error={error}
+        errorTitle={commonT("unableToLoad")}
         emptyTitle={t("emptyTitle")}
         emptyDescription={t("emptyDescription")}
         renderMobileItem={(customer) => (
@@ -124,7 +128,7 @@ export default function CustomerTable({
               <Switch checked={Boolean(customer.isActive)} onCheckedChange={() => void handleToggleStatus(customer)} />
             </div>
             <div className="mt-4 flex items-center justify-between gap-3"><StatusBadge tone={customer.isGuest ? "warning" : "success"}>{t(customer.isGuest ? "table.guest" : "table.registered")}</StatusBadge><RowActions actions={[
-              { id: "view", label: commonT("view"), icon: <Eye className="size-4" />, onSelect: () => openCustomer(customer) },
+              { id: "view", label: commonT("viewDetails"), icon: <Eye className="size-4" />, onSelect: () => openCustomer(customer) },
               { id: "edit", label: commonT("edit"), icon: <Pencil className="size-4" />, onSelect: () => editCustomer(customer) },
               { id: "delete", label: commonT("delete"), icon: <Trash2 className="size-4" />, destructive: true, onSelect: () => void handleDelete(customer.id) },
             ]} /></div>

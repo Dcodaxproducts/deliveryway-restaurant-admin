@@ -32,6 +32,9 @@ import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import InfiniteScrollFooter from "@/components/common/infinite-scroll-footer";
 import { extractResponseItems, extractResponseMeta } from "@/lib/response";
 import { useTranslations } from "next-intl";
+import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
+import { StatePanel } from "@/components/common/EmptyState";
+import { StatusBadge } from "@/components/common/status-badge";
 
 const PAGE_LIMIT = 10;
 
@@ -80,6 +83,25 @@ export default function CategoriesTable({ refetchKey }: any) {
 
   const canFetchCategories = Boolean(restaurantId);
 
+  const querySignature = JSON.stringify({
+    restaurantId: restaurantId || "",
+    branchId: branchId || "",
+    isBranchAdmin,
+    search: debouncedSearch || "",
+    statusFilter,
+    sortOrder,
+    limit,
+  });
+  const [previousQuerySignature, setPreviousQuerySignature] = useState(querySignature);
+
+  // Reset before children commit: rows are reusable only within one query identity.
+  if (previousQuerySignature !== querySignature) {
+    setPreviousQuerySignature(querySignature);
+    setAllItems([]);
+    setHasLoadedOnce(false);
+    setPage(1);
+  }
+
   /**
    * Important:
    * Do not clear allItems inside debounce.
@@ -101,6 +123,7 @@ export default function CategoriesTable({ refetchKey }: any) {
     data: response,
     isLoading,
     isFetching,
+    isError,
     refetch,
   } = useGetMenuCategories({
     page,
@@ -163,7 +186,7 @@ export default function CategoriesTable({ refetchKey }: any) {
   }, [meta, page, limit, allItems.length, fetchedItems]);
 
   const hasMore = useMemo(() => {
-    if (!canFetchCategories || !hasLoadedOnce) return false;
+    if (!canFetchCategories || !hasLoadedOnce || isError) return false;
 
     if (pagination.total > 0) {
       return allItems.length < pagination.total;
@@ -173,6 +196,7 @@ export default function CategoriesTable({ refetchKey }: any) {
   }, [
     canFetchCategories,
     hasLoadedOnce,
+    isError,
     pagination.total,
     pagination.hasNext,
     allItems.length,
@@ -180,7 +204,7 @@ export default function CategoriesTable({ refetchKey }: any) {
 
   const shouldShowInitialLoader =
     !canFetchCategories ||
-    (!hasLoadedOnce && allItems.length === 0) ||
+    (!hasLoadedOnce && !isError && allItems.length === 0) ||
     ((isLoading || isFetching) && page === 1 && allItems.length === 0);
 
   const shouldShowEmpty =
@@ -191,7 +215,7 @@ export default function CategoriesTable({ refetchKey }: any) {
     allItems.length === 0;
 
   useEffect(() => {
-    if (!canFetchCategories || fetchedItems === null) return;
+    if (!canFetchCategories || fetchedItems === null || isFetching || isError) return;
 
     setHasLoadedOnce(true);
 
@@ -202,12 +226,9 @@ export default function CategoriesTable({ refetchKey }: any) {
 
       return mergeUniqueById(prev, fetchedItems);
     });
-  }, [fetchedItems, page, canFetchCategories]);
+  }, [fetchedItems, page, canFetchCategories, isFetching, isError, querySignature]);
 
   const resetAndFetchFirstPage = useCallback(() => {
-    setAllItems([]);
-    setHasLoadedOnce(false);
-
     setPage((prev) => {
       if (prev === 1) {
         refetch();
@@ -220,8 +241,10 @@ export default function CategoriesTable({ refetchKey }: any) {
   useEffect(() => {
     if (!restaurantId) return;
 
+    setAllItems([]);
+    setHasLoadedOnce(false);
     resetAndFetchFirstPage();
-  }, [restaurantId, resetAndFetchFirstPage]);
+  }, [restaurantId, branchId, isBranchAdmin, resetAndFetchFirstPage]);
 
   useEffect(() => {
     if (!refetchKey) return;
@@ -393,34 +416,11 @@ export default function CategoriesTable({ refetchKey }: any) {
     }
   };
 
-  const SkeletonRow = () => (
-    <tr>
-      <td colSpan={6} className="py-6">
-        <div className="flex animate-pulse items-center gap-3">
-          <div className="h-10 w-10 rounded-md bg-gray-200" />
-          <div className="h-4 w-[120px] rounded bg-gray-200" />
-        </div>
-      </td>
-    </tr>
-  );
-
-  const SkeletonCard = () => (
-    <div className="animate-pulse rounded-[18px] border bg-white p-4 shadow-sm">
-      <div className="flex gap-4">
-        <div className="h-20 w-20 rounded-[14px] bg-gray-200" />
-
-        <div className="flex-1 space-y-3">
-          <div className="h-4 w-[140px] rounded bg-gray-200" />
-          <div className="h-3 w-[100px] rounded bg-gray-200" />
-          <div className="h-3 w-[80px] rounded bg-gray-200" />
-        </div>
-      </div>
-    </div>
-  );
-
-  const EmptyState = () => (
-    <div className="py-10 text-center text-gray-400">{t("emptyTitle")}</div>
-  );
+  // DataTable owns the rows; delegate domain drag events without another table shell.
+  const desktopItem = (target: EventTarget) => {
+    const row = (target as Element).closest<HTMLTableRowElement>("tbody tr");
+    return row ? allItems[row.sectionRowIndex] : undefined;
+  };
 
   return (
     <div className="w-full">
@@ -481,229 +481,195 @@ export default function CategoriesTable({ refetchKey }: any) {
         </div>
       ) : null}
 
-      <div className="hidden overflow-x-auto rounded-[16px] bg-white md:block">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-left text-gray-500">
-              <th className="w-[48px] px-2 py-3"></th>
-              <th className="px-2 py-3">{commonT("category")}</th>
-              <th className="px-2">{commonT("description")}</th>
-              <th className="px-2 text-center">{commonT("slug")}</th>
-              <th className="px-2 text-center">{commonT("status")}</th>
-              <th className="px-2 text-center">{commonT("actions")}</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {shouldShowInitialLoader ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                <SkeletonRow key={index} />
-              ))
-            ) : shouldShowEmpty ? (
-              <tr>
-                <td colSpan={6}>
-                  <EmptyState />
-                </td>
-              </tr>
-            ) : (
-              allItems.map((item: any) => (
-                <tr
-                  key={item.id}
-                  draggable={!isBranchAdmin}
-                  onDragStart={() => handleDragStart(item.id)}
-                  onDragOver={(e) => !isBranchAdmin && e.preventDefault()}
-                  onDrop={() => handleDrop(item.id)}
-                  onDragEnd={() => setDraggedId(null)}
-                  className={`border-b transition hover:bg-gray-50 ${
-                    draggedId === item.id ? "bg-primary/5 opacity-60" : ""
-                  }`}
-                >
-                  <td className="px-2 py-4">
-                    {isBranchAdmin ? (
-                      <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
-                        {t("scoped")}
-                      </span>
-                    ) : (
-                      <div className="flex cursor-grab justify-center text-gray-400 active:cursor-grabbing">
-                        <GripVertical size={18} />
-                      </div>
-                    )}
-                  </td>
-
-                  <td className="px-2 py-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={item.imageUrl || "https://via.placeholder.com/40"}
-                        alt={item.name || t("imageAlt")}
-                        className="h-10 w-10 rounded-[10px] border object-cover"
-                        loading="lazy"
-                      />
-
-                      <div className="min-w-0">
-                        <span className="block truncate font-medium">
-                          {item.name}
-                        </span>
-
-                        {item.description ? (
-                          <span className="line-clamp-1 text-xs text-gray-400">
-                            {item.description}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="max-w-[220px] px-2">
-                    {item.description ? (
-                      <span className="block truncate text-sm text-gray-600">
-                        {item.description.length > 40
-                          ? `${item.description.slice(0, 40)}...`
-                          : item.description}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-
-                  <td className="px-2 text-center text-sm text-gray-500">
-                    {item.slug || "-"}
-                  </td>
-
-                  <td className="px-2 text-center">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                        (item.branchOverride?.isAvailable ??
-                        item.branchOverrides?.[0]?.isAvailable ??
-                        item.isAvailable ??
-                        item.isActive)
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {(item.branchOverride?.isAvailable ??
-                      item.branchOverrides?.[0]?.isAvailable ??
-                      item.isAvailable ??
-                      item.isActive)
-                        ? commonT("active")
-                        : commonT("inactive")}
-                    </span>
-                  </td>
-
-                  <td className="px-2 text-center">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className="rounded-full p-2 text-gray-500 transition hover:bg-gray-100"
-                          type="button"
-                        >
-                          <MoreVertical size={18} />
-                        </button>
-                      </DropdownMenuTrigger>
-
-                      <DropdownMenuContent align="end" className="w-[180px]">
-                        {isBranchAdmin ? (
-                          <>
-                            <DropdownMenuItem
-                              onClick={() => handleOverrideOpen(item)}
-                              className="cursor-pointer"
-                            >
-                              <SlidersHorizontal className="mr-2 h-4 w-4" />
-                              {t("branchOverride")}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                router.push(`/menu/categories/${item.id}`)
-                              }
-                              className="cursor-pointer"
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              {commonT("viewDetails")}
-                            </DropdownMenuItem>
-                          </>
-                        ) : (
-                          <>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelected(item);
-                                setOpen(true);
-                              }}
-                              className="cursor-pointer"
-                            >
-                              <FaPen className="mr-2" size={12} />
-                              {commonT("edit")}
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem
-                              onClick={() =>
-                                router.push(`/menu/categories/${item.id}`)
-                              }
-                              className="cursor-pointer"
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              {commonT("viewDetails")}
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem
-                              onClick={() => {
-                                updateCategoryStatus(
-                                  {
-                                    id: item.id,
-                                    data: {
-                                      isActive: !item.isActive,
-                                    },
-                                  },
-                                  {
-                                    onSuccess: () => {
-                                      softRefresh();
-                                    },
-                                  },
-                                );
-                              }}
-                              className="cursor-pointer"
-                            >
-                              {item.isActive ? t("deactivate") : t("activate")}
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem
-                              onClick={() => setDeleteId(item.id)}
-                              className="cursor-pointer text-red-500 focus:text-red-500"
-                            >
-                              <FaTrash className="mr-2" size={12} />
-                              {commonT("delete")}
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
-        {!shouldShowInitialLoader && !shouldShowEmpty && allItems.length > 0 ? (
-          <InfiniteScrollFooter
-            loadMoreRef={desktopLoadMoreRef}
-            onLoadMore={handleLoadMore}
-            isFetching={isFetching && page > 1}
-            hasMore={hasMore}
-            total={pagination.total}
-            shown={allItems.length}
-            label="categories"
-          />
+      <div
+        onDragStart={(event) => {
+          const item = desktopItem(event.target);
+          if (item) handleDragStart(item.id);
+        }}
+        onDragOver={(event) => {
+          if (!isBranchAdmin && desktopItem(event.target)) event.preventDefault();
+        }}
+        onDrop={(event) => {
+          const item = desktopItem(event.target);
+          if (item) handleDrop(item.id);
+        }}
+        onDragEnd={() => setDraggedId(null)}
+      >
+        {isError ? (
+          <StatePanel state="error" title={commonT("unableToLoad")} description="" compact className="mb-4"
+            action={<Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>{commonT("refresh")}</Button>} />
         ) : null}
-      </div>
+        {(!isError || allItems.length > 0) && <ResponsiveDataView
+          data={allItems}
+          rowKey={(item) => item.id}
+          loading={shouldShowInitialLoader || (isFetching && allItems.length === 0)}
+          emptyTitle={t("emptyTitle")}
+          className="[&_tr:has([data-dragged=true])]:bg-primary/5 [&_tr:has([data-dragged=true])]:opacity-60"
+          columns={[
+            {
+              id: "order", header: "", align: "center", cell: (item) => (
+                <div
+                  data-dragged={draggedId === item.id}
+                  ref={(node) => {
+                    const row = node?.closest("tr");
+                    if (row) row.draggable = !isBranchAdmin;
+                  }}
+                >
+                  {isBranchAdmin ? (
+                    <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
+                      {t("scoped")}
+                    </span>
+                  ) : (
+                    <div className="flex cursor-grab justify-center text-gray-400 active:cursor-grabbing">
+                      <GripVertical size={18} />
+                    </div>
+                  )}
+                </div>
+              )
+            },
+            {
+              id: "category", header: commonT("category"), cell: (item) => (
+                <div className="flex items-center gap-3">
+                  <img
+                    src={item.imageUrl || "https://via.placeholder.com/40"}
+                    alt={item.name || t("imageAlt")}
+                    className="h-10 w-10 rounded-[10px] border object-cover"
+                    loading="lazy"
+                  />
 
-      <div className="space-y-4 md:hidden">
-        {shouldShowInitialLoader ? (
-          Array.from({ length: 4 }).map((_, index) => (
-            <SkeletonCard key={index} />
-          ))
-        ) : shouldShowEmpty ? (
-          <EmptyState />
-        ) : (
-          allItems.map((item: any) => (
+                  <div className="min-w-0">
+                    <span className="block truncate font-medium">
+                      {item.name}
+                    </span>
+
+                    {item.description ? (
+                      <span className="line-clamp-1 text-xs text-gray-400">
+                        {item.description}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              )
+            },
+            {
+              id: "description", header: commonT("description"), className: "max-w-[220px]", cell: (item) => (
+                <>
+                  {item.description ? (
+                    <span className="block truncate text-sm text-gray-600">
+                      {item.description.length > 40
+                        ? `${item.description.slice(0, 40)}...`
+                        : item.description}
+                    </span>
+                  ) : (
+                    "-"
+                  )}
+                </>
+              )
+            },
+            { id: "slug", header: commonT("slug"), align: "center", cell: (item) => item.slug || "-" },
+            {
+              id: "status", header: commonT("status"), align: "center", cell: (item) => (
+                <StatusBadge tone={(item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive) ? "success" : "neutral"}>
+                  {(item.branchOverride?.isAvailable ??
+                    item.branchOverrides?.[0]?.isAvailable ??
+                    item.isAvailable ??
+                    item.isActive)
+                    ? commonT("active")
+                    : commonT("inactive")}
+                </StatusBadge>
+              )
+            },
+            {
+              id: "actions", header: commonT("actions"), align: "center", cell: (item) => (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="rounded-full p-2 text-gray-500 transition hover:bg-gray-100"
+                      type="button"
+                    >
+                      <MoreVertical size={18} />
+                    </button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent align="end" className="w-[180px]">
+                    {isBranchAdmin ? (
+                      <>
+                        <DropdownMenuItem
+                          onClick={() => handleOverrideOpen(item)}
+                          className="cursor-pointer"
+                        >
+                          <SlidersHorizontal className="mr-2 h-4 w-4" />
+                          {t("branchOverride")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            router.push(`/menu/categories/${item.id}`)
+                          }
+                          className="cursor-pointer"
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          {commonT("viewDetails")}
+                        </DropdownMenuItem>
+                      </>
+                    ) : (
+                      <>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelected(item);
+                            setOpen(true);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <FaPen className="mr-2" size={12} />
+                          {commonT("edit")}
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={() =>
+                            router.push(`/menu/categories/${item.id}`)
+                          }
+                          className="cursor-pointer"
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          {commonT("viewDetails")}
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={() => {
+                            updateCategoryStatus(
+                              {
+                                id: item.id,
+                                data: {
+                                  isActive: !item.isActive,
+                                },
+                              },
+                              {
+                                onSuccess: () => {
+                                  softRefresh();
+                                },
+                              },
+                            );
+                          }}
+                          className="cursor-pointer"
+                        >
+                          {item.isActive ? t("deactivate") : t("activate")}
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={() => setDeleteId(item.id)}
+                          className="cursor-pointer text-red-500 focus:text-red-500"
+                        >
+                          <FaTrash className="mr-2" size={12} />
+                          {commonT("delete")}
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )
+            },
+          ]}
+          renderMobileItem={(item) => (
             <div
               key={item.id}
               draggable={!isBranchAdmin}
@@ -711,9 +677,8 @@ export default function CategoriesTable({ refetchKey }: any) {
               onDragOver={(e) => !isBranchAdmin && e.preventDefault()}
               onDrop={() => handleDrop(item.id)}
               onDragEnd={() => setDraggedId(null)}
-              className={`rounded-[18px] border bg-white p-4 shadow-sm transition ${
-                draggedId === item.id ? "bg-primary/5 opacity-60" : ""
-              }`}
+              className={`rounded-[18px] border bg-white p-4 shadow-sm transition ${draggedId === item.id ? "bg-primary/5 opacity-60" : ""
+                }`}
             >
               <div className="mb-3 flex justify-end">
                 {isBranchAdmin ? (
@@ -756,23 +721,14 @@ export default function CategoriesTable({ refetchKey }: any) {
                   </span>
 
                   <div className="mt-2 flex items-center justify-between">
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs ${
-                        (item.branchOverride?.isAvailable ??
+                    <StatusBadge tone={(item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive) ? "success" : "neutral"}>
+                      {(item.branchOverride?.isAvailable ??
                         item.branchOverrides?.[0]?.isAvailable ??
                         item.isAvailable ??
                         item.isActive)
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {(item.branchOverride?.isAvailable ??
-                      item.branchOverrides?.[0]?.isAvailable ??
-                      item.isAvailable ??
-                      item.isActive)
                         ? commonT("active")
                         : commonT("inactive")}
-                    </span>
+                    </StatusBadge>
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -863,20 +819,34 @@ export default function CategoriesTable({ refetchKey }: any) {
                 </div>
               </div>
             </div>
-          ))
-        )}
-
-        {!shouldShowInitialLoader && !shouldShowEmpty && allItems.length > 0 ? (
-          <InfiniteScrollFooter
-            loadMoreRef={mobileLoadMoreRef}
-            onLoadMore={handleLoadMore}
-            isFetching={isFetching && page > 1}
-            hasMore={hasMore}
-            total={pagination.total}
-            shown={allItems.length}
-            label="categories"
-          />
-        ) : null}
+          )}
+          footer={!isError && !shouldShowInitialLoader && !shouldShowEmpty && allItems.length > 0 ? (
+            <>
+              <div className="hidden md:block">
+                <InfiniteScrollFooter
+                  loadMoreRef={desktopLoadMoreRef}
+                  onLoadMore={handleLoadMore}
+                  isFetching={isFetching && page > 1}
+                  hasMore={hasMore}
+                  total={pagination.total}
+                  shown={allItems.length}
+                  label="categories"
+                />
+              </div>
+              <div className="md:hidden">
+                <InfiniteScrollFooter
+                  loadMoreRef={mobileLoadMoreRef}
+                  onLoadMore={handleLoadMore}
+                  isFetching={isFetching && page > 1}
+                  hasMore={hasMore}
+                  total={pagination.total}
+                  shown={allItems.length}
+                  label="categories"
+                />
+              </div>
+            </>
+          ) : null}
+        />}
       </div>
 
       {overrideCategory ? (

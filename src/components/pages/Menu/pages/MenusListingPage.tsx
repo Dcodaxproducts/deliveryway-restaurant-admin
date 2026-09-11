@@ -1,6 +1,8 @@
 "use client";
 
-import Container from "@/components/common/Container";
+import { PageLayout } from "@/components/common/Container";
+import { SectionCard } from "@/components/common/SectionCard";
+import { StatePanel } from "@/components/common/EmptyState";
 import Categories from "@/components/pages/Menu/legacy/root-menu-components/listing/categories";
 import Header from "@/components/pages/Menu/legacy/root-menu-components/listing/header";
 import ItemList from "@/components/pages/Menu/legacy/root-menu-components/listing/itemList";
@@ -12,7 +14,6 @@ import {
   Clock3,
   Layers3,
   PackageCheck,
-  ReceiptText,
   Sparkles,
   Tag,
   Utensils,
@@ -153,6 +154,7 @@ const normalizeItemLinks = (menu?: MenuDetail) => {
 
 export default function MenusListingPage() {
   const t = useTranslations("menu.listing");
+  const commonT = useTranslations("common");
   const [editing, setEditing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { user } = useAuth();
@@ -172,7 +174,7 @@ export default function MenusListingPage() {
     isError: isMenuError,
   } = useGetMenuById(menuId || undefined);
   const menu = menuResponse?.data as MenuDetail | undefined;
-  const { data: itemsResponse, isLoading, isFetching, refetch } = useGetMenuItems({
+  const { data: itemsResponse, isLoading, isFetching, isError: isItemsError, refetch } = useGetMenuItems({
     restaurantId: restaurantId || undefined,
     menuId: menuId || undefined,
     categoryId: selectedCategory || undefined,
@@ -184,7 +186,7 @@ export default function MenusListingPage() {
   const items = detailItems.length ? detailItems : itemsResponse?.data || [];
   const loading = isLoading || isFetching;
   return (
-    <Container className="space-y-6">
+    <PageLayout>
       <Header
         title={menu?.name || t("title")}
         description={menu?.description || t("description")}
@@ -199,28 +201,32 @@ export default function MenusListingPage() {
         t={t}
       />
 
-      <AttachedCategories menu={menu} loading={isMenuLoading} t={t} />
+      <AttachedCategories menu={menu} loading={isMenuLoading} unavailable={isMenuError || !menuId || !menu} t={t} />
 
       <AttachedMenuItems
         items={detailItems}
         loading={isMenuLoading}
+        unavailable={isMenuError || !menuId || !menu}
         formatMoney={formatMoney}
         t={t}
       />
 
-      <Categories
-        editing={editing}
-        selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
-      />
+      <SectionCard variant="outlined">
+        <Categories
+          editing={editing}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
+      </SectionCard>
 
       <ItemList
         editing={editing}
         items={items}
         loading={loading}
-         refetch={refetch} 
+        error={isItemsError ? commonT("unableToLoad") : null}
+        refetch={refetch}
       />
-    </Container>
+    </PageLayout>
   );
 }
 
@@ -236,27 +242,17 @@ function MenuDetailOverview({
   t: ReturnType<typeof useTranslations>;
 }) {
   const windows = menu?.timingConfig?.windows || [];
+  const commonT = useTranslations("common");
 
   if (loading) {
     return (
-      <div className="rounded-[24px] border border-gray-100 bg-white p-5 shadow-sm">
-        <div className="h-8 w-56 animate-pulse rounded-full bg-gray-100" />
-        <div className="mt-4 grid gap-3 md:grid-cols-4">
-          {[...Array(4)].map((_, index) => (
-            <div key={index} className="h-24 animate-pulse rounded-[18px] bg-gray-100" />
-          ))}
-        </div>
-      </div>
+      <StatePanel state="loading" title={commonT("loading")} description="" />
     );
   }
 
   if (isError || !menu) {
     return (
-      <div className="rounded-[24px] border border-dashed border-gray-200 bg-white p-8 text-center">
-        <ReceiptText className="mx-auto text-gray-400" size={28} />
-        <p className="mt-3 text-base font-semibold text-gray-950">{t("detailUnavailableTitle")}</p>
-        <p className="mt-1 text-sm text-gray-500">{t("detailUnavailableDescription")}</p>
-      </div>
+      <StatePanel state="unavailable" title={t("detailUnavailableTitle")} description={t("detailUnavailableDescription")} />
     );
   }
 
@@ -264,8 +260,8 @@ function MenuDetailOverview({
   const timedTone = menu.isTimed ? "bg-primary/10 text-primary ring-primary/10" : "bg-gray-100 text-gray-600 ring-gray-200";
 
   return (
-    <section className="overflow-hidden rounded-[28px] border border-gray-100 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
-      <div className="border-b border-gray-100 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800 p-5 text-white md:p-6">
+    <SectionCard variant="outlined" padding="none">
+      <div className="border-b border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-5 md:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
@@ -276,24 +272,24 @@ function MenuDetailOverview({
                 {menu.isTimed ? t("timed") : t("standard")}
               </span>
               {menu.deletedAt ? (
-                <span className="rounded-full bg-red-500/15 px-3 py-1 text-xs font-bold text-red-100 ring-1 ring-red-300/20">
+                <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700 ring-1 ring-red-100">
                   {t("deleted")}
                 </span>
               ) : null}
             </div>
 
-            <h2 className="mt-4 text-2xl font-black tracking-[-0.04em] md:text-4xl">
+            <h2 className="mt-4 text-xl font-semibold text-[var(--ui-text)]">
               {menu.name || t("unnamedMenu")}
             </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/70">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--ui-text-muted)]">
               {menu.description || t("noDescription")}
             </p>
           </div>
 
           <div className="grid min-w-0 gap-2 text-sm lg:min-w-[260px]">
-            <MetaPill label={t("menuId")} value={menu.id} invert />
-            <MetaPill label={t("slug")} value={menu.slug || "—"} invert />
-            <MetaPill label={t("sortOrder")} value={String(menu.sortOrder ?? 0)} invert />
+            <MetaPill label={t("menuId")} value={menu.id} />
+            <MetaPill label={t("slug")} value={menu.slug || "—"} />
+            <MetaPill label={t("sortOrder")} value={String(menu.sortOrder ?? 0)} />
           </div>
         </div>
       </div>
@@ -316,7 +312,7 @@ function MenuDetailOverview({
           </div>
         </div>
       </div>
-    </section>
+    </SectionCard>
   );
 }
 
@@ -380,32 +376,32 @@ function SchedulePanel({
 function AttachedCategories({
   menu,
   loading,
+  unavailable,
   t,
 }: {
   menu?: MenuDetail;
   loading: boolean;
+  unavailable: boolean;
   t: ReturnType<typeof useTranslations>;
 }) {
   const categories = menu?.categories || [];
+  const commonT = useTranslations("common");
 
   return (
-    <section className="rounded-[24px] border border-gray-100 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold tracking-[-0.02em] text-gray-950">{t("attachedCategories")}</h2>
-          <p className="mt-1 text-sm text-gray-500">{t("attachedCategoriesDescription")}</p>
-        </div>
+    <SectionCard
+      variant="outlined"
+      title={t("attachedCategories")}
+      description={t("attachedCategoriesDescription")}
+      action={!loading && !unavailable ? (
         <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-700">
           {categories.length}
         </span>
-      </div>
-
+      ) : null}
+    >
       {loading ? (
-        <div className="mt-4 flex flex-wrap gap-3">
-          {[...Array(4)].map((_, index) => (
-            <div key={index} className="h-14 w-40 animate-pulse rounded-[16px] bg-gray-100" />
-          ))}
-        </div>
+        <StatePanel state="loading" title={commonT("loading")} description="" compact />
+      ) : unavailable ? (
+        <StatePanel state="unavailable" title={t("detailUnavailableTitle")} description={t("detailUnavailableDescription")} compact />
       ) : categories.length ? (
         <div className="mt-4 flex flex-wrap gap-3">
           {categories.map((link) => (
@@ -432,43 +428,41 @@ function AttachedCategories({
           ))}
         </div>
       ) : (
-        <p className="mt-4 rounded-[16px] border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-center text-sm font-medium text-gray-500">
-          {t("noAttachedCategories")}
-        </p>
+        <StatePanel state="empty" title={t("noAttachedCategories")} description="" compact />
       )}
-    </section>
+    </SectionCard>
   );
 }
 
 function AttachedMenuItems({
   items,
   loading,
+  unavailable,
   formatMoney,
   t,
 }: {
   items: MenuItemSummary[];
   loading: boolean;
+  unavailable: boolean;
   formatMoney: (amount?: number | string | null, currency?: string | null) => string;
   t: ReturnType<typeof useTranslations>;
 }) {
+  const commonT = useTranslations("common");
   return (
-    <section className="rounded-[24px] border border-gray-100 bg-white p-5 shadow-sm">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-xl font-bold tracking-[-0.02em] text-gray-950">{t("attachedMenuItems")}</h2>
-          <p className="mt-1 text-sm text-gray-500">{t("attachedMenuItemsDescription")}</p>
-        </div>
+    <SectionCard
+      variant="outlined"
+      title={t("attachedMenuItems")}
+      description={t("attachedMenuItemsDescription")}
+      action={!loading && !unavailable ? (
         <span className="w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
           {t("itemsCount", { count: items.length })}
         </span>
-      </div>
-
+      ) : null}
+    >
       {loading ? (
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {[...Array(3)].map((_, index) => (
-            <div key={index} className="h-64 animate-pulse rounded-[22px] bg-gray-100" />
-          ))}
-        </div>
+        <StatePanel state="loading" title={commonT("loading")} description="" compact />
+      ) : unavailable ? (
+        <StatePanel state="unavailable" title={t("detailUnavailableTitle")} description={t("detailUnavailableDescription")} compact />
       ) : items.length ? (
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {items.map((item) => (
@@ -481,11 +475,9 @@ function AttachedMenuItems({
           ))}
         </div>
       ) : (
-        <p className="mt-4 rounded-[16px] border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-center text-sm font-medium text-gray-500">
-          {t("noAttachedItems")}
-        </p>
+        <StatePanel state="empty" title={t("noAttachedItems")} description="" compact />
       )}
-    </section>
+    </SectionCard>
   );
 }
 

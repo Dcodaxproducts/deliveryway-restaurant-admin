@@ -33,6 +33,9 @@ import { useClickOutside } from "@/hooks/useClickOutside";
 import { formatMoney } from "@/lib/currency";
 import { extractResponseItems, extractResponseMeta } from "@/lib/response";
 import { useTranslations } from "next-intl";
+import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
+import { StatePanel } from "@/components/common/EmptyState";
+import { StatusBadge } from "@/components/common/status-badge";
 
 const PAGE_LIMIT = 10;
 
@@ -149,7 +152,6 @@ export default function MenuItemsTable({ refetchKey }: any) {
   } = useAuth();
 
   const reorderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const querySignatureRef = useRef<string>("");
 
   const [page, setPage] = useState(1);
   const [limit] = useState(PAGE_LIMIT);
@@ -229,27 +231,30 @@ export default function MenuItemsTable({ refetchKey }: any) {
     () =>
       JSON.stringify({
         restaurantId: restaurantId || "",
+        branchId: branchId || "",
+        isBranchAdmin,
         search: debouncedSearch || "",
         statusFilter,
         categoryId: categoryId || "",
+        limit,
       }),
-    [restaurantId, debouncedSearch, statusFilter, categoryId],
+    [restaurantId, branchId, isBranchAdmin, debouncedSearch, statusFilter, categoryId, limit],
   );
+  const [previousQuerySignature, setPreviousQuerySignature] = useState(querySignature);
 
-  useEffect(() => {
-    if (!canFetchItems) return;
-    if (querySignatureRef.current === querySignature) return;
-
-    querySignatureRef.current = querySignature;
+  // Reset before children commit: rows are reusable only within one query identity.
+  if (previousQuerySignature !== querySignature) {
+    setPreviousQuerySignature(querySignature);
     setAllItems([]);
     setHasLoadedOnce(false);
     setPage(1);
-  }, [querySignature, canFetchItems]);
+  }
 
   const {
     data: response,
     isLoading,
     isFetching,
+    isError,
     refetch,
   } = useGetMenuItems(menuItemQueryParams);
 
@@ -304,7 +309,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
   }, [meta, page, limit, allItems.length, fetchedItems]);
 
   const hasMore = useMemo(() => {
-    if (!canFetchItems || !hasLoadedOnce) return false;
+    if (!canFetchItems || !hasLoadedOnce || isError) return false;
 
     if (pagination.total > 0) {
       return allItems.length < pagination.total;
@@ -314,6 +319,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
   }, [
     canFetchItems,
     hasLoadedOnce,
+    isError,
     pagination.total,
     pagination.hasNext,
     allItems.length,
@@ -321,7 +327,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
 
   const shouldShowInitialLoader =
     !canFetchItems ||
-    (!hasLoadedOnce && allItems.length === 0) ||
+    (!hasLoadedOnce && !isError && allItems.length === 0) ||
     ((isLoading || isFetching) && page === 1 && allItems.length === 0);
 
   const shouldShowEmpty =
@@ -332,7 +338,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
     allItems.length === 0;
 
   useEffect(() => {
-    if (!canFetchItems || fetchedItems === null) return;
+    if (!canFetchItems || fetchedItems === null || isFetching || isError) return;
 
     setHasLoadedOnce(true);
 
@@ -343,12 +349,9 @@ export default function MenuItemsTable({ refetchKey }: any) {
 
       return mergeUniqueById(prev, fetchedItems);
     });
-  }, [fetchedItems, page, canFetchItems]);
+  }, [fetchedItems, page, canFetchItems, isFetching, isError, querySignature]);
 
   const resetAndFetchFirstPage = useCallback(() => {
-    setAllItems([]);
-    setHasLoadedOnce(false);
-
     setPage((prev) => {
       if (prev === 1) {
         refetch();
@@ -361,8 +364,10 @@ export default function MenuItemsTable({ refetchKey }: any) {
   useEffect(() => {
     if (!restaurantId) return;
 
+    setAllItems([]);
+    setHasLoadedOnce(false);
     resetAndFetchFirstPage();
-  }, [restaurantId, resetAndFetchFirstPage]);
+  }, [restaurantId, branchId, isBranchAdmin, resetAndFetchFirstPage]);
 
   useEffect(() => {
     if (!refetchKey) return;
@@ -593,36 +598,11 @@ export default function MenuItemsTable({ refetchKey }: any) {
     }
   };
 
-  const SkeletonRow = () => (
-    <tr>
-      <td colSpan={7} className="py-6">
-        <div className="flex animate-pulse items-center gap-3">
-          <div className="h-10 w-10 rounded-md bg-gray-200" />
-          <div className="h-4 w-[120px] rounded bg-gray-200" />
-        </div>
-      </td>
-    </tr>
-  );
-
-  const SkeletonCard = () => (
-    <div className="animate-pulse rounded-[18px] border bg-white p-4 shadow-sm">
-      <div className="flex gap-4">
-        <div className="h-20 w-20 rounded-[14px] bg-gray-200" />
-
-        <div className="flex-1 space-y-3">
-          <div className="h-4 w-[140px] rounded bg-gray-200" />
-          <div className="h-3 w-[100px] rounded bg-gray-200" />
-          <div className="h-3 w-[80px] rounded bg-gray-200" />
-        </div>
-      </div>
-    </div>
-  );
-
-  const EmptyTableState = () => (
-    <div className="py-10 text-center text-gray-400">
-      {hasActiveFilters ? t("emptyFiltered") : t("emptyTitle")}
-    </div>
-  );
+  // DataTable owns the rows; delegate domain drag events without another table shell.
+  const desktopItem = (target: EventTarget) => {
+    const row = (target as Element).closest<HTMLTableRowElement>("tbody tr");
+    return row ? allItems[row.sectionRowIndex] : undefined;
+  };
 
   return (
     <div className="w-full">
@@ -760,175 +740,135 @@ export default function MenuItemsTable({ refetchKey }: any) {
         </div>
       ) : null}
 
-      <div className="hidden overflow-x-auto rounded-[16px] bg-white md:block">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-left text-gray-500">
-              <th className="w-[48px] px-2 py-3"></th>
-              <th className="px-2 py-3">{t("item")}</th>
-              <th className="px-2">{commonT("category")}</th>
-              <th className="px-2 text-center">{commonT("price")}</th>
-              <th className="px-2 text-center">{t("prep")}</th>
-              <th className="px-2 text-center">{commonT("status")}</th>
-              <th className="px-2 text-center">{commonT("actions")}</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {shouldShowInitialLoader ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                <SkeletonRow key={index} />
-              ))
-            ) : shouldShowEmpty ? (
-              <tr>
-                <td colSpan={7}>
-                  <EmptyTableState />
-                </td>
-              </tr>
-            ) : (
-              allItems.map((item: any) => (
-                <tr
-                  key={item.id}
-                  draggable={!isBranchAdmin}
-                  onDragStart={() => handleDragStart(item.id)}
-                  onDragOver={(e) => !isBranchAdmin && e.preventDefault()}
-                  onDrop={() => handleDrop(item.id)}
-                  onDragEnd={() => setDraggedId(null)}
-                  className={`border-b transition-colors hover:bg-gray-50 ${
-                    draggedId === item.id ? "bg-primary/5 opacity-60" : ""
-                  }`}
-                >
-                  <td className="px-2 py-4">
-                    {isBranchAdmin ? (
-                      <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
-                        {t("scoped")}
-                      </span>
-                    ) : (
-                      <div className="flex cursor-grab justify-center text-gray-400 active:cursor-grabbing">
-                        <GripVertical size={18} />
-                      </div>
-                    )}
-                  </td>
-
-                  <td className="px-2 py-4">
-                    <div className="flex items-center gap-3">
-                      <MenuItemThumbnail
-                        imageUrl={item.imageUrl}
-                        name={item.name || t("imageAlt")}
-                        size="small"
-                      />
-
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-gray-900">
-                          {item.name}
-                        </p>
-
-                        {item.description ? (
-                          <p className="mt-1 max-w-[220px] truncate text-[11px] text-gray-400">
-                            {item.description}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="px-2">
-                    {item.category?.name || item.categoryName || "-"}
-                  </td>
-
-                  <td className="px-2 text-center font-medium">
-                    {(() => {
-                      const price = getItemDisplayPrice(
-                        item,
-                        t("variationBased"),
-                      );
-
-                      return (
-                        <span
-                          className={
-                            price.hasPrice
-                              ? "text-gray-900"
-                              : "rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500"
-                          }
-                        >
-                          {price.label}
-                        </span>
-                      );
-                    })()}
-                  </td>
-
-                  <td className="px-2 text-center">
-                    {t("prepMinutes", { minutes: item.prepTimeMinutes ?? "-" })}
-                  </td>
-
-                  <td className="px-2 text-center">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                        (item.branchOverride?.isAvailable ??
-                        item.branchOverrides?.[0]?.isAvailable ??
-                        item.isAvailable ??
-                        item.isActive)
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {(item.branchOverride?.isAvailable ??
-                      item.branchOverrides?.[0]?.isAvailable ??
-                      item.isAvailable ??
-                      item.isActive)
-                        ? commonT("active")
-                        : commonT("inactive")}
-                    </span>
-                  </td>
-
-                  <td className="px-2 text-center">
-                    <ActionDropdown
-                      item={item}
-                      isOpen={openActionId === item.id}
-                      isDuplicating={isDuplicating}
-                      onToggle={() =>
-                        setOpenActionId((prev) =>
-                          prev === item.id ? null : item.id,
-                        )
-                      }
-                      onClose={() => setOpenActionId(null)}
-                      onDuplicate={handleDuplicate}
-                      onEdit={handleEdit}
-                      onDelete={handleDeleteOpen}
-                      isBranchAdmin={isBranchAdmin}
-                      onOverride={handleOverrideOpen}
-                    />
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
-        {!shouldShowInitialLoader && !shouldShowEmpty && allItems.length > 0 ? (
-          <InfiniteScrollFooter
-            loadMoreRef={desktopLoadMoreRef}
-            isFetching={isFetching && page > 1}
-            hasMore={hasMore}
-            total={pagination.total}
-            shown={allItems.length}
-            label="menu items"
-            onLoadMore={handleLoadMore}
-          />
+      <div
+        onDragStart={(event) => {
+          const item = desktopItem(event.target);
+          if (item) handleDragStart(item.id);
+        }}
+        onDragOver={(event) => {
+          if (!isBranchAdmin && desktopItem(event.target)) event.preventDefault();
+        }}
+        onDrop={(event) => {
+          const item = desktopItem(event.target);
+          if (item) handleDrop(item.id);
+        }}
+        onDragEnd={() => setDraggedId(null)}
+      >
+        {isError ? (
+          <StatePanel state="error" title={commonT("unableToLoad")} description="" compact className="mb-4"
+            action={<Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>{commonT("refresh")}</Button>} />
         ) : null}
-      </div>
+        {(!isError || allItems.length > 0) && <ResponsiveDataView
+          data={allItems}
+          rowKey={(item) => item.id}
+          loading={shouldShowInitialLoader || (isFetching && allItems.length === 0)}
+          emptyTitle={hasActiveFilters ? t("emptyFiltered") : t("emptyTitle")}
+          className="[&_tr:has([data-dragged=true])]:bg-primary/5 [&_tr:has([data-dragged=true])]:opacity-60"
+          columns={[
+            {
+              id: "order", header: "", align: "center", cell: (item) => (
+                <div
+                  data-dragged={draggedId === item.id}
+                  ref={(node) => {
+                    const row = node?.closest("tr");
+                    if (row) row.draggable = !isBranchAdmin;
+                  }}
+                >
+                  {isBranchAdmin ? (
+                    <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
+                      {t("scoped")}
+                    </span>
+                  ) : (
+                    <div className="flex cursor-grab justify-center text-gray-400 active:cursor-grabbing">
+                      <GripVertical size={18} />
+                    </div>
+                  )}
+                </div>
+              )
+            },
+            {
+              id: "item", header: t("item"), cell: (item) => (
+                <div className="flex items-center gap-3">
+                  <MenuItemThumbnail
+                    imageUrl={item.imageUrl}
+                    name={item.name || t("imageAlt")}
+                    size="small"
+                  />
 
-      <div className="space-y-4 md:hidden">
-        {shouldShowInitialLoader ? (
-          Array.from({ length: 4 }).map((_, index) => (
-            <SkeletonCard key={index} />
-          ))
-        ) : shouldShowEmpty ? (
-          <div className="py-10 text-center text-gray-400">
-            {hasActiveFilters ? t("emptyFiltered") : t("emptyTitle")}
-          </div>
-        ) : (
-          allItems.map((item: any) => (
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-gray-900">
+                      {item.name}
+                    </p>
+
+                    {item.description ? (
+                      <p className="mt-1 max-w-[220px] truncate text-[11px] text-gray-400">
+                        {item.description}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              )
+            },
+            { id: "category", header: commonT("category"), cell: (item) => item.category?.name || item.categoryName || "-" },
+            {
+              id: "price", header: commonT("price"), align: "center", cell: (item) => (
+                <>
+                  {(() => {
+                    const price = getItemDisplayPrice(
+                      item,
+                      t("variationBased"),
+                    );
+
+                    return (
+                      <span
+                        className={
+                          price.hasPrice
+                            ? "text-gray-900"
+                            : "rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500"
+                        }
+                      >
+                        {price.label}
+                      </span>
+                    );
+                  })()}
+                </>
+              )
+            },
+            { id: "prep", header: t("prep"), align: "center", cell: (item) => t("prepMinutes", { minutes: item.prepTimeMinutes ?? "-" }) },
+            {
+              id: "status", header: commonT("status"), align: "center", cell: (item) => (
+                <StatusBadge tone={(item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive) ? "success" : "neutral"}>
+                  {(item.branchOverride?.isAvailable ??
+                    item.branchOverrides?.[0]?.isAvailable ??
+                    item.isAvailable ??
+                    item.isActive)
+                    ? commonT("active")
+                    : commonT("inactive")}
+                </StatusBadge>
+              )
+            },
+            {
+              id: "actions", header: commonT("actions"), align: "center", cell: (item) => (
+                <ActionDropdown
+                  item={item}
+                  isOpen={openActionId === item.id}
+                  isDuplicating={isDuplicating}
+                  onToggle={() =>
+                    setOpenActionId((prev) =>
+                      prev === item.id ? null : item.id,
+                    )
+                  }
+                  onClose={() => setOpenActionId(null)}
+                  onDuplicate={handleDuplicate}
+                  onEdit={handleEdit}
+                  onDelete={handleDeleteOpen}
+                  isBranchAdmin={isBranchAdmin}
+                  onOverride={handleOverrideOpen}
+                />
+              )
+            },
+          ]}
+          renderMobileItem={(item) => (
             <div
               key={item.id}
               draggable={!isBranchAdmin}
@@ -936,9 +876,8 @@ export default function MenuItemsTable({ refetchKey }: any) {
               onDragOver={(e) => !isBranchAdmin && e.preventDefault()}
               onDrop={() => handleDrop(item.id)}
               onDragEnd={() => setDraggedId(null)}
-              className={`rounded-[18px] border bg-white p-4 shadow-sm transition ${
-                draggedId === item.id ? "bg-primary/5 opacity-60" : ""
-              }`}
+              className={`rounded-[18px] border bg-white p-4 shadow-sm transition ${draggedId === item.id ? "bg-primary/5 opacity-60" : ""
+                }`}
             >
               <div className="mb-3 flex items-center justify-between">
                 {isBranchAdmin ? (
@@ -1022,41 +961,46 @@ export default function MenuItemsTable({ refetchKey }: any) {
                   </div>
 
                   <div className="mt-3 flex items-center justify-between">
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs ${
-                        (item.branchOverride?.isAvailable ??
+                    <StatusBadge tone={(item.branchOverride?.isAvailable ?? item.branchOverrides?.[0]?.isAvailable ?? item.isAvailable ?? item.isActive) ? "success" : "neutral"}>
+                      {(item.branchOverride?.isAvailable ??
                         item.branchOverrides?.[0]?.isAvailable ??
                         item.isAvailable ??
                         item.isActive)
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {(item.branchOverride?.isAvailable ??
-                      item.branchOverrides?.[0]?.isAvailable ??
-                      item.isAvailable ??
-                      item.isActive)
                         ? commonT("active")
                         : commonT("inactive")}
-                    </span>
+                    </StatusBadge>
                   </div>
                 </div>
               </div>
             </div>
-          ))
-        )}
-
-        {!shouldShowInitialLoader && !shouldShowEmpty && allItems.length > 0 ? (
-          <InfiniteScrollFooter
-            loadMoreRef={mobileLoadMoreRef}
-            isFetching={isFetching && page > 1}
-            hasMore={hasMore}
-            total={pagination.total}
-            shown={allItems.length}
-            label="menu items"
-            onLoadMore={handleLoadMore}
-          />
-        ) : null}
+          )}
+          footer={!isError && !shouldShowInitialLoader && !shouldShowEmpty && allItems.length > 0 ? (
+            <>
+              <div className="hidden md:block">
+                <InfiniteScrollFooter
+                  loadMoreRef={desktopLoadMoreRef}
+                  isFetching={isFetching && page > 1}
+                  hasMore={hasMore}
+                  total={pagination.total}
+                  shown={allItems.length}
+                  label="menu items"
+                  onLoadMore={handleLoadMore}
+                />
+              </div>
+              <div className="md:hidden">
+                <InfiniteScrollFooter
+                  loadMoreRef={mobileLoadMoreRef}
+                  isFetching={isFetching && page > 1}
+                  hasMore={hasMore}
+                  total={pagination.total}
+                  shown={allItems.length}
+                  label="menu items"
+                  onLoadMore={handleLoadMore}
+                />
+              </div>
+            </>
+          ) : null}
+        />}
       </div>
 
       {overrideItem ? (

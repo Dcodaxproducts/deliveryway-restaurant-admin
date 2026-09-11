@@ -11,6 +11,8 @@ import { useGetCustomersList } from "@/hooks/useCustomers";
 import { useGetCustomersStats } from "@/hooks/useDashboard";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "@/components/common/SectionCard";
+import { StatePanel } from "@/components/common/EmptyState";
+import { Button } from "@/components/ui/button";
 
 interface Customer {
   id: string;
@@ -30,8 +32,9 @@ interface Customer {
 }
 
 export default function CustomerSettingsPage() {
-  const { restaurantId, branchId, isBranchAdmin } = useAuth();
+  const { restaurantId, branchId, isBranchAdmin, loading: authLoading } = useAuth();
   const t = useTranslations("customers");
+  const feedbackT = useTranslations("common.feedback");
   const scopedBranchId = isBranchAdmin ? branchId : undefined;
 
   const [filters, setFilters] = useState({
@@ -43,7 +46,7 @@ export default function CustomerSettingsPage() {
     isGuest: undefined as boolean | undefined,
   });
 
-  const { data, isLoading, isFetching, refetch } = useGetCustomersList(
+  const { data, isLoading, isFetching, isError, refetch } = useGetCustomersList(
     restaurantId
       ? {
           page: filters.page,
@@ -62,6 +65,7 @@ export default function CustomerSettingsPage() {
     data: customerStatsResponse,
     isLoading: isStatsLoading,
     isFetching: isStatsFetching,
+    isError: isStatsError,
     refetch: refetchCustomerStats,
   } = useGetCustomersStats(
     restaurantId
@@ -127,10 +131,16 @@ export default function CustomerSettingsPage() {
       />
 
       <SectionCard padding="md" className="space-y-6">
-        <StatsSection
-          stats={customerStats}
-          loading={isStatsLoading || isStatsFetching}
-        />
+        {isStatsError ? (
+          <StatePanel state="error" title={feedbackT("loadFailed", { subject: feedbackT("subjects.customerMetrics") })}
+            description={feedbackT(customerStats ? "cachedDescription" : "loadFailedDescription")}
+            action={<Button type="button" variant="outline" disabled={isStatsFetching || authLoading} onClick={() => void refetchCustomerStats()}>{feedbackT("retry", { subject: feedbackT("subjects.customerMetrics") })}</Button>} compact />
+        ) : null}
+        {customerStats ? <StatsSection stats={customerStats} /> : !isStatsError ? (
+          <StatePanel state={authLoading || isStatsLoading || isStatsFetching ? "loading" : "unavailable"}
+            title={feedbackT(authLoading || isStatsLoading || isStatsFetching ? "loading" : "unavailable", { subject: feedbackT("subjects.customerMetrics") })}
+            description={feedbackT("unavailableDescription")} compact />
+        ) : null}
 
         {!isBranchAdmin ? (
           <BranchFilters
@@ -141,13 +151,18 @@ export default function CustomerSettingsPage() {
           />
         ) : null}
 
+        {isError && data ? (
+          <StatePanel state="error" title={feedbackT("refreshFailed", { subject: feedbackT("subjects.customers") })} description={feedbackT("cachedDescription")} compact />
+        ) : null}
         <Table
           customers={customers}
-          loading={isLoading || isFetching}
+          loading={!data && (authLoading || isLoading || isFetching)}
+          error={isError && !data ? feedbackT("loadFailedDescription") : null}
           meta={meta}
           onPageChange={handlePageChange}
           onRefresh={handleRefresh}
         />
+        {isError ? <Button type="button" variant="outline" disabled={isFetching || authLoading} onClick={() => void refetch()}>{feedbackT("retry", { subject: feedbackT("subjects.customers") })}</Button> : null}
       </SectionCard>
     </Container>
   );

@@ -10,6 +10,7 @@ import {
   Area,
 } from "recharts";
 import { ChartPanel } from "@/components/common/ChartPanel";
+import { StatePanel } from "@/components/common/EmptyState";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -41,6 +42,7 @@ const OrdersGraph = ({
     data: ordersTrendResponse,
     isLoading,
     isFetching,
+    isError,
     refetch,
   } = useGetOrdersTrend(
     restaurantId
@@ -52,11 +54,16 @@ const OrdersGraph = ({
       : undefined,
   );
 
-  const trendData = ordersTrendResponse?.data;
+  const trendData: {
+    range: TrendRange;
+    totalOrdersInRange: number;
+    points: { key: string; label: string; value: number; cumulativeTotal: number }[];
+  } | undefined = ordersTrendResponse?.data;
+  const hasData = trendData != null;
 
   const chartData = useMemo(() => {
     return (
-      trendData?.points?.map((point: any) => ({
+      trendData?.points?.map((point) => ({
         key: point.key,
         day: point.label,
         orders: point.value,
@@ -65,10 +72,9 @@ const OrdersGraph = ({
     );
   }, [trendData]);
 
-  const totalOrdersInRange = trendData?.totalOrdersInRange ?? 0;
   const currentRange = trendData?.range ?? range;
 
-  const loading = authLoading || isLoading || isFetching;
+  const loading = !hasData && !isError && (authLoading || isLoading || isFetching);
   return (
     <ChartPanel title={null} className="h-full">
       <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -78,16 +84,17 @@ const OrdersGraph = ({
               {t("orderTrend")}
             </h3>
 
-            <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              {loading
-                ? common("loading")
-                : t("ordersCount", { count: totalOrdersInRange })}
-            </div>
+            {(loading || hasData) && (
+              <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                {trendData
+                  ? t("ordersCount", { count: trendData.totalOrdersInRange })
+                  : common("loading")}
+              </div>
+            )}
           </div>
 
           <p className="mt-1 text-sm text-gray-400">
-            {t("trackOrderVolumePrefix")}{" "}
-            <span className="capitalize">{currentRange}</span> {t("range")}
+            {t("trackOrderVolume", { range: t(`trendRanges.${currentRange}`) })}
           </p>
         </div>
 
@@ -108,30 +115,49 @@ const OrdersGraph = ({
                       : "text-gray-500 hover:text-dark"
                   }`}
                 >
-                  {item}
+                  {t(`trendRanges.${item}`)}
                 </Button>
               );
             })}
           </div>
 
           <button
+            type="button"
             onClick={() => refetch()}
+            disabled={authLoading || isFetching}
             className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[#E7EAF0] text-gray-500 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
-            aria-label="Refresh order trend"
-            title="Refresh"
+            aria-label={t("refreshOrderTrend")}
+            title={common("refresh")}
           >
-            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={16} className={isFetching ? "animate-spin" : ""} />
           </button>
         </div>
       </div>
 
-      {/* Chart */}
+      {isError && (
+        <StatePanel
+          state="error"
+          compact
+          className="mb-4"
+          title={t(hasData ? "orderTrendRefreshFailed" : "orderTrendFailed")}
+          description={hasData ? t("orderTrendCached") : common("refreshAndTry")}
+          action={
+            <Button type="button" variant="outline" disabled={authLoading || isFetching} onClick={() => refetch()}>
+              {t("retryOrderTrend")}
+            </Button>
+          }
+        />
+      )}
+
+      {(!isError || hasData) && (
       <div className="h-[260px] w-full min-w-0">
         {loading ? (
-          <div className="h-full w-full animate-pulse rounded-[16px] bg-gray-100" />
+          <div role="status" aria-label={common("loading")} className="h-full w-full animate-pulse rounded-[16px] bg-gray-100" />
+        ) : !hasData ? (
+          <StatePanel state="unavailable" title={t("orderTrendUnavailable")} description={common("refreshAndTry")} />
         ) : chartData.length === 0 ? (
           <div className="flex h-full items-center justify-center rounded-[16px] border border-dashed border-gray-200 text-sm text-gray-400">
-            No order trend data available.
+            {t("noOrderTrendData")}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
@@ -161,8 +187,8 @@ const OrdersGraph = ({
               />
 
               <Tooltip
-                formatter={(value: number) => [`${value}`, "Orders"]}
-                labelFormatter={(label) => `Day: ${label}`}
+                formatter={(value: number) => [t("ordersCount", { count: value })]}
+                labelFormatter={(label) => label}
                 contentStyle={{
                   borderRadius: "12px",
                   border: "none",
@@ -190,6 +216,7 @@ const OrdersGraph = ({
           </ResponsiveContainer>
         )}
       </div>
+      )}
     </ChartPanel>
   );
 };

@@ -34,13 +34,15 @@ interface Props {
   onPageChange?: (page: number) => void;
   refresh?: () => void;
   loading?: boolean;
+  error?: string | null;
 }
 
 const getFullName = (deliveryman: DeliverymanListItem) =>
   `${deliveryman.firstName ?? ""} ${deliveryman.lastName ?? ""}`.trim() || "-";
 
-export default function DeliveryManTable({ data = [], meta, onPageChange = () => undefined, refresh = () => undefined, loading = false }: Props) {
+export default function DeliveryManTable({ data = [], meta, onPageChange = () => undefined, refresh = () => undefined, loading = false, error }: Props) {
   const t = useTranslations("deliverymen");
+  const commonT = useTranslations("common");
   const router = useRouter();
   const [detailDeliveryman, setDetailDeliveryman] = useState<DeliverymanListItem | null>(null);
   const [assignedDeliveryman, setAssignedDeliveryman] = useState<DeliverymanListItem | null>(null);
@@ -71,7 +73,7 @@ export default function DeliveryManTable({ data = [], meta, onPageChange = () =>
   };
 
   const actionsFor = (deliveryman: DeliverymanListItem) => [
-    { id: "view", label: t("actions.view"), icon: <Eye className="size-4" />, onSelect: () => setDetailDeliveryman(deliveryman) },
+    { id: "view", label: commonT("viewDetails"), icon: <Eye className="size-4" />, onSelect: () => setDetailDeliveryman(deliveryman) },
     { id: "assign", label: t("actions.assignOrder"), icon: <ClipboardList className="size-4" />, onSelect: () => setAssignedDeliveryman(deliveryman) },
     { id: "edit", label: t("actions.edit"), icon: <Pencil className="size-4" />, onSelect: () => router.push(`/deliveryman/add?editId=${deliveryman.id}`) },
     { id: "delete", label: t("actions.delete"), icon: <Trash2 className="size-4" />, destructive: true, onSelect: () => setDeleteId(deliveryman.id) },
@@ -92,6 +94,8 @@ export default function DeliveryManTable({ data = [], meta, onPageChange = () =>
         columns={columns}
         rowKey={(deliveryman) => deliveryman.id}
         loading={loading}
+        error={error}
+        errorTitle={commonT("unableToLoad")}
         emptyTitle={t("emptyTitle")}
         emptyDescription={t("emptyDescription")}
         renderMobileItem={(deliveryman) => (

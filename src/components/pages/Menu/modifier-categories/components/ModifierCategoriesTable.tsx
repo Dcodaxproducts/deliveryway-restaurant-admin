@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { FaPen, FaTrash } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import PaginationSection from "@/components/common/PaginationSection";
+import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useDeleteModifierCategory,
@@ -50,6 +51,7 @@ export default function ModifierCategoriesTable() {
     data: response,
     isLoading,
     isFetching,
+    isError,
     refetch,
   } = useModifierCategories({
     restaurantId,
@@ -140,147 +142,99 @@ export default function ModifierCategoriesTable() {
         disabled={!restaurantId}
       />
 
-      <div className="hidden overflow-x-auto rounded-[16px] bg-white md:block">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-left text-gray-500">
-              <th className="px-2 py-3">{t("name")}</th>
-              <th className="px-2">{t("slug")}</th>
-              <th className="px-2">{t("description")}</th>
-              <th className="px-2 text-center">{t("sortOrder")}</th>
-              <th className="px-2 text-center">{t("status")}</th>
-              <th className="px-2 text-center">{t("actions")}</th>
-            </tr>
-          </thead>
+      <ResponsiveDataView
+        data={categories}
+        rowKey={(category) => category.id}
+        loading={isTableLoading}
+        error={isError ? t("unableToLoad") : null}
+        errorTitle={t("modifierCategories")}
+        emptyTitle={t("noModifierCategoriesFound")}
+        emptyDescription=""
+        columns={[
+          { id: "name", header: t("name"), className: "font-medium text-gray-900", cell: (category) => category.name },
+          { id: "slug", header: t("slug"), cell: (category) => category.slug || "-" },
+          { id: "description", header: t("description"), className: "min-w-[200px] max-w-sm whitespace-normal", cell: (category) => formatModifierCategoryDescription(category.description) },
+          { id: "sort", header: t("sortOrder"), align: "center", cell: (category) => formatModifierCategorySortOrder(category.sortOrder) },
+          { id: "status", header: t("status"), align: "center", cell: (category) => <StatusBadge isActive={category.isActive} /> },
+          { id: "actions", header: t("actions"), align: "center", cell: (category) => (
+            <div className="flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => openEdit(category)}
+                className="text-gray-500 hover:text-primary"
+                aria-label={t("editModifierCategory")}
+              >
+                <FaPen size={14} />
+              </button>
 
-          <tbody>
-            {isTableLoading ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                <SkeletonRow key={index} />
-              ))
-            ) : categories.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-10 text-center text-gray-400">
-                  {t("noModifierCategoriesFound")}
-                </td>
-              </tr>
-            ) : (
-              categories.map((category) => (
-                <tr key={category.id} className="border-b hover:bg-gray-50">
-                  <td className="px-2 py-4 font-medium text-gray-900">
-                    {category.name}
-                  </td>
-                  <td className="px-2 text-gray-600">{category.slug || "-"}</td>
-                  <td className="px-2 text-gray-600">
-                    {formatModifierCategoryDescription(category.description)}
-                  </td>
-                  <td className="px-2 text-center text-gray-900">
-                    {formatModifierCategorySortOrder(category.sortOrder)}
-                  </td>
-                  <td className="px-2 text-center">
-                    <StatusBadge isActive={category.isActive} />
-                  </td>
-                  <td className="px-2 text-center">
-                    <div className="flex items-center justify-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(category)}
-                        className="text-gray-500 hover:text-primary"
-                        aria-label={t("editModifierCategory")}
-                      >
-                        <FaPen size={14} />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDeleteError("");
-                          setDeleteTarget(category);
-                        }}
-                        className="text-gray-500 hover:text-red-500"
-                        aria-label={t("deleteModifierCategory")}
-                      >
-                        <FaTrash size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
-        <div className="mt-4 px-2 pb-2">
-          <PaginationSection {...pagination} onPageChange={setPage} />
-        </div>
-      </div>
-
-      <div className="space-y-4 md:hidden">
-        {isTableLoading ? (
-          Array.from({ length: 4 }).map((_, index) => (
-            <SkeletonCard key={index} />
-          ))
-        ) : categories.length === 0 ? (
-          <div className="py-10 text-center text-gray-400">
-            {t("noModifierCategoriesFound")}
-          </div>
-        ) : (
-          categories.map((category) => (
-            <div
-              key={category.id}
-              className="rounded-[18px] border bg-white p-4 shadow-sm"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h3 className="truncate text-[16px] font-semibold text-gray-900">
-                    {category.name}
-                  </h3>
-                  <p className="mt-1 truncate text-sm text-gray-500">
-                    {category.slug || "-"}
-                  </p>
-                  <p className="mt-2 text-sm text-gray-600">
-                    {formatModifierCategoryDescription(category.description)}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(category)}
-                    className="text-gray-500 hover:text-primary"
-                    aria-label={t("editModifierCategory")}
-                  >
-                    <FaPen size={14} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDeleteError("");
-                      setDeleteTarget(category);
-                    }}
-                    className="text-gray-500 hover:text-red-500"
-                    aria-label={t("deleteModifierCategory")}
-                  >
-                    <FaTrash size={14} />
-                  </button>
-                </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteError("");
+                  setDeleteTarget(category);
+                }}
+                className="text-gray-500 hover:text-red-500"
+                aria-label={t("deleteModifierCategory")}
+              >
+                <FaTrash size={14} />
+              </button>
+            </div>
+          ) },
+        ]}
+        renderMobileItem={(category) => (
+          <div
+            key={category.id}
+            className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="truncate text-[16px] font-semibold text-gray-900">
+                  {category.name}
+                </h3>
+                <p className="mt-1 truncate text-sm text-gray-500">
+                  {category.slug || "-"}
+                </p>
+                <p className="mt-2 text-sm text-gray-600">
+                  {formatModifierCategoryDescription(category.description)}
+                </p>
               </div>
 
-              <div className="mt-4 flex items-center justify-between">
-                <span className="text-sm text-gray-500">
-                  {t("sortValue", {
-                    value: formatModifierCategorySortOrder(category.sortOrder),
-                  })}
-                </span>
-                <StatusBadge isActive={category.isActive} />
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => openEdit(category)}
+                  className="text-gray-500 hover:text-primary"
+                  aria-label={t("editModifierCategory")}
+                >
+                  <FaPen size={14} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeleteError("");
+                    setDeleteTarget(category);
+                  }}
+                  className="text-gray-500 hover:text-red-500"
+                  aria-label={t("deleteModifierCategory")}
+                >
+                  <FaTrash size={14} />
+                </button>
               </div>
             </div>
-          ))
-        )}
 
-        <PaginationSection {...pagination} onPageChange={setPage} />
-      </div>
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-sm text-gray-500">
+                {t("sortValue", {
+                  value: formatModifierCategorySortOrder(category.sortOrder),
+                })}
+              </span>
+              <StatusBadge isActive={category.isActive} />
+            </div>
+          </div>
+        )}
+        footer={<PaginationSection {...pagination} onPageChange={setPage} />}
+      />
 
       <ModifierCategoryFormDialog
         open={formOpen}
@@ -321,34 +275,5 @@ function StatusBadge({ isActive }: { isActive?: boolean }) {
     >
       {active ? t("active") : t("inactive")}
     </span>
-  );
-}
-
-function SkeletonRow() {
-  return (
-    <tr>
-      <td colSpan={6} className="py-6">
-        <div className="flex animate-pulse items-center gap-3">
-          <div className="h-4 w-[160px] rounded bg-gray-200" />
-          <div className="h-4 w-[120px] rounded bg-gray-200" />
-          <div className="h-4 w-[220px] rounded bg-gray-200" />
-          <div className="h-4 w-[70px] rounded bg-gray-200" />
-          <div className="h-4 w-[70px] rounded bg-gray-200" />
-          <div className="h-4 w-[50px] rounded bg-gray-200" />
-        </div>
-      </td>
-    </tr>
-  );
-}
-
-function SkeletonCard() {
-  return (
-    <div className="animate-pulse rounded-[18px] border bg-white p-4 shadow-sm">
-      <div className="space-y-3">
-        <div className="h-4 w-[150px] rounded bg-gray-200" />
-        <div className="h-3 w-[90px] rounded bg-gray-200" />
-        <div className="h-3 w-[220px] rounded bg-gray-200" />
-      </div>
-    </div>
   );
 }

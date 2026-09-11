@@ -1,13 +1,13 @@
 "use client";
 
-import { BarChart3, Edit, GripVertical, Loader2, Trash2 } from "lucide-react";
+import { BarChart3, Edit, GripVertical, Trash2 } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import AdminDealLifecycleBadge from "@/components/pages/Menu/deals/components/AdminDealLifecycleBadge";
 import AdminDealStatusBadge from "@/components/pages/Menu/deals/components/AdminDealStatusBadge";
-import AdminDealsEmptyState from "@/components/pages/Menu/deals/components/AdminDealsEmptyState";
+import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
 import {
   formatDealDate,
   formatDealPrice,
@@ -46,146 +46,122 @@ export default function AdminDealsTable({
   const { resolveCurrency } = useCurrency(deals[0]?.restaurantId);
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[320px] items-center justify-center rounded-[16px] border border-gray-100 bg-white">
-        <Loader2 className="h-7 w-7 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-[16px] border border-red-100 bg-red-50 p-5 text-sm text-red-700">
-        {t("unableToLoad")}
-      </div>
-    );
-  }
-
-  if (deals.length === 0) return <AdminDealsEmptyState />;
+  // Delegate desktop row events without adding domain behavior to the shared table.
+  const desktopDeal = (target: EventTarget) => {
+    const row = (target as HTMLElement).closest<HTMLTableRowElement>("tbody tr");
+    return row ? deals[row.sectionRowIndex] : undefined;
+  };
 
   return (
-    <div className="overflow-hidden rounded-[16px] border border-gray-100 bg-white">
-      <div className="hidden overflow-x-auto lg:block">
-        <table className="w-full table-fixed text-left">
-          <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
-            <tr>
-              <th className="w-10 px-2 py-3" aria-label={t("sortDeals")} />
-              <th className="w-[22%] px-4 py-3 font-semibold">{t("deal")}</th>
-              <th className="w-[14%] px-4 py-3 font-semibold">{t("dealType")}</th>
-              <th className="w-[11%] px-4 py-3 font-semibold">{t("fixedPrice")}</th>
-              <th className="w-[12%] px-4 py-3 font-semibold">{t("scope")}</th>
-              <th className="w-[18%] px-4 py-3 font-semibold">{t("schedule")}</th>
-              <th className="w-[10%] px-4 py-3 font-semibold">{t("requiredQty")}</th>
-              <th className="w-[12%] px-4 py-3 font-semibold">{commonT("status")}</th>
-              <th className="w-[10%] px-4 py-3 text-right font-semibold">
-                {commonT("actions")}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {deals.map((deal) => (
-              <tr
-                key={deal.id}
-                draggable={Boolean(onReorder) && !reordering}
-                onDragStart={() => setDraggedId(deal.id)}
-                onDragEnd={() => setDraggedId(null)}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={() => {
-                  if (draggedId && draggedId !== deal.id) {
-                    onReorder?.(draggedId, deal.id);
-                  }
-                  setDraggedId(null);
-                }}
-                className={draggedId === deal.id ? "bg-primary/5 opacity-60" : "hover:bg-gray-50/70"}
+    <div
+      onDragStart={(event) => {
+        const deal = desktopDeal(event.target);
+        if (deal) setDraggedId(deal.id);
+      }}
+      onDragEnd={() => setDraggedId(null)}
+      onDragOver={(event) => {
+        if (desktopDeal(event.target)) event.preventDefault();
+      }}
+      onDrop={(event) => {
+        const deal = desktopDeal(event.target);
+        if (!deal) return;
+        if (draggedId && draggedId !== deal.id) onReorder?.(draggedId, deal.id);
+        setDraggedId(null);
+      }}
+    >
+      <ResponsiveDataView
+        data={deals}
+        rowKey={(deal) => deal.id}
+        loading={loading}
+        error={error ? t("unableToLoad") : null}
+        errorTitle={commonT("unableToLoad")}
+        emptyTitle={t("emptyTitle")}
+        emptyDescription={t("emptyDescription")}
+        className="[&_td]:align-top [&_td]:py-4 [&_tr:has([data-dragged=true])]:bg-primary/5 [&_tr:has([data-dragged=true])]:opacity-60"
+        columns={[
+          { id: "order", header: <span className="sr-only">{t("sortDeals")}</span>, cell: (deal) => (
+            <div
+              data-dragged={draggedId === deal.id}
+              ref={(node) => {
+                const row = node?.closest("tr");
+                if (row) row.draggable = Boolean(onReorder) && !reordering;
+              }}
+            >
+              <GripVertical
+                className="mt-2 size-4 cursor-grab text-gray-400"
+                aria-hidden
+              />
+            </div>
+          ) },
+          { id: "deal", header: t("deal"), className: "min-w-[240px] max-w-[320px] whitespace-normal", cell: (deal) => (
+            <div className="flex min-w-0 items-start gap-3">
+              {deal.thumbnailUrl || deal.imageUrl ? (
+                <Image
+                  src={deal.thumbnailUrl || deal.imageUrl || ""}
+                  alt={`${deal.title} thumbnail`}
+                  width={40}
+                  height={40}
+                  unoptimized
+                  className="h-10 w-10 shrink-0 rounded-md object-cover"
+                />
+              ) : (
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100 text-xs font-semibold text-gray-400">
+                  {deal.title.slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-gray-900">
+                  {deal.title}
+                </p>
+                <p className="mt-1 text-xs text-gray-500">
+                  {deal.code || formatShortDealId(deal.id)}
+                </p>
+                <p className="mt-1 line-clamp-2 text-xs text-gray-500">
+                  {deal.description || t("noDescription")}
+                </p>
+              </div>
+            </div>
+          ) },
+          { id: "type", header: t("dealType"), cell: getDealTypeLabel },
+          { id: "price", header: t("fixedPrice"), className: "font-semibold text-gray-900", cell: (deal) => formatDealPrice(
+            deal.discountValue,
+            resolveCurrency(deal.currency)
+          ) },
+          { id: "scope", header: t("scope"), cell: getDealSelectedCountLabel },
+          { id: "schedule", header: t("schedule"), className: "text-xs", cell: (deal) => (
+            <>
+              <div>{formatDealDate(deal.startsAt)}</div>
+              <div className="mt-1 text-gray-400">{formatDealDate(deal.expiresAt)}</div>
+            </>
+          ) },
+          { id: "quantity", header: t("requiredQty"), cell: getDealRequiredQuantityLabel },
+          { id: "status", header: commonT("status"), cell: (deal) => (
+            <div className="flex flex-col items-start gap-2">
+              <AdminDealLifecycleBadge lifecycle={deal.lifecycle} />
+              <AdminDealStatusBadge deal={deal} />
+              <span className="text-xs text-gray-400">
+                {deal.branchId ? `${commonT("branch")} ${formatShortDealId(deal.branchId)}` : commonT("allBranches")}
+              </span>
+            </div>
+          ) },
+          { id: "actions", header: commonT("actions"), align: "right", cell: (deal) => (
+            <div className="flex justify-end gap-1">
+              <IconButton label={t("viewStats")} onClick={() => onStats(deal)}>
+                <BarChart3 size={16} />
+              </IconButton>
+              <IconButton
+                label={commonT("edit")}
+                onClick={() => router.push(`/menu/deals/${deal.id}/edit`)}
               >
-                <td className="px-2 py-4 align-top">
-                  <GripVertical
-                    className="mt-2 size-4 cursor-grab text-gray-400"
-                    aria-hidden
-                  />
-                </td>
-                <td className="px-4 py-4 align-top">
-                  <div className="flex min-w-0 items-start gap-3">
-                    {deal.thumbnailUrl || deal.imageUrl ? (
-                      <Image
-                        src={deal.thumbnailUrl || deal.imageUrl || ""}
-                        alt={`${deal.title} thumbnail`}
-                        width={40}
-                        height={40}
-                        unoptimized
-                        className="h-10 w-10 shrink-0 rounded-md object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100 text-xs font-semibold text-gray-400">
-                        {deal.title.slice(0, 1).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-gray-900">
-                        {deal.title}
-                      </p>
-                      <p className="mt-1 text-xs text-gray-500">
-                        {deal.code || formatShortDealId(deal.id)}
-                      </p>
-                      <p className="mt-1 line-clamp-2 text-xs text-gray-500">
-                        {deal.description || t("noDescription")}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-4 align-top text-sm text-gray-700">
-                  {getDealTypeLabel(deal)}
-                </td>
-                <td className="px-4 py-4 align-top text-sm font-semibold text-gray-900">
-                  {formatDealPrice(
-                    deal.discountValue,
-                    resolveCurrency(deal.currency)
-                  )}
-                </td>
-                <td className="px-4 py-4 align-top text-sm text-gray-700">
-                  {getDealSelectedCountLabel(deal)}
-                </td>
-                <td className="px-4 py-4 align-top text-xs text-gray-600">
-                  <div>{formatDealDate(deal.startsAt)}</div>
-                  <div className="mt-1 text-gray-400">{formatDealDate(deal.expiresAt)}</div>
-                </td>
-                <td className="px-4 py-4 align-top text-xs text-gray-600">
-                  {getDealRequiredQuantityLabel(deal)}
-                </td>
-                <td className="px-4 py-4 align-top">
-                  <div className="flex flex-col items-start gap-2">
-                    <AdminDealLifecycleBadge lifecycle={deal.lifecycle} />
-                    <AdminDealStatusBadge deal={deal} />
-                    <span className="text-xs text-gray-400">
-                      {deal.branchId ? `${commonT("branch")} ${formatShortDealId(deal.branchId)}` : commonT("allBranches")}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-4 py-4 align-top">
-                  <div className="flex justify-end gap-1">
-                    <IconButton label={t("viewStats")} onClick={() => onStats(deal)}>
-                      <BarChart3 size={16} />
-                    </IconButton>
-                    <IconButton
-                      label={commonT("edit")}
-                      onClick={() => router.push(`/menu/deals/${deal.id}/edit`)}
-                    >
-                      <Edit size={16} />
-                    </IconButton>
-                    <IconButton label={commonT("delete")} onClick={() => onDelete(deal)}>
-                      <Trash2 size={16} />
-                    </IconButton>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="divide-y divide-gray-100 lg:hidden">
-        {deals.map((deal) => (
+                <Edit size={16} />
+              </IconButton>
+              <IconButton label={commonT("delete")} onClick={() => onDelete(deal)}>
+                <Trash2 size={16} />
+              </IconButton>
+            </div>
+          ) },
+        ]}
+        renderMobileItem={(deal) => (
           <div
             key={deal.id}
             draggable={Boolean(onReorder) && !reordering}
@@ -198,7 +174,7 @@ export default function AdminDealsTable({
               }
               setDraggedId(null);
             }}
-            className="space-y-4 p-4"
+            className="space-y-4 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4"
           >
             <div className="flex items-start justify-between gap-3">
               <GripVertical className="mt-2 size-4 shrink-0 cursor-grab text-gray-400" />
@@ -264,8 +240,8 @@ export default function AdminDealsTable({
               </div>
             </div>
           </div>
-        ))}
-      </div>
+        )}
+      />
     </div>
   );
 }

@@ -9,6 +9,8 @@ import { useAuth } from "@/hooks/useAuth";
 import BranchWorkspace from "@/components/pages/BranchWorkspace/components/branch-admin/BranchWorkspace";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "@/components/common/SectionCard";
+import { StatePanel } from "@/components/common/EmptyState";
+import { Button } from "@/components/ui/button";
 
 export function BranchesPage() {
   const { isBranchAdmin } = useAuth();
@@ -23,6 +25,7 @@ export function BranchesPage() {
 export { BranchesPage as default };
 
 function RestaurantBranchesPage() {
+  const feedbackT = useTranslations("common.feedback");
   const t = useTranslations("branches");
   const [filters, setFilters] = useState({
     search: "",
@@ -32,10 +35,10 @@ function RestaurantBranchesPage() {
     page: 1,
   });
 
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const restaurantId = user?.restaurantId ?? undefined;
 
-  const { data, isLoading, refetch } = useGetBranches({
+  const { data, isLoading, isFetching, isError, refetch } = useGetBranches({
     ...filters,
     restaurantId,
   });
@@ -61,12 +64,17 @@ function RestaurantBranchesPage() {
       />
 
       <SectionCard padding="md">
+        {isError && data ? (
+          <StatePanel state="error" title={feedbackT("refreshFailed", { subject: feedbackT("subjects.branches") })} description={feedbackT("cachedDescription")} compact />
+        ) : null}
         <BranchesClient
           branches={branches}
           meta={meta}
-          loading={isLoading}
+          loading={!data && (authLoading || isLoading || isFetching)}
+          error={isError && !data ? feedbackT("loadFailedDescription") : null}
           fetchBranches={handleFetchBranches}
         />
+        {isError ? <Button type="button" variant="outline" disabled={isFetching || authLoading} onClick={() => void refetch()}>{feedbackT("retry", { subject: feedbackT("subjects.branches") })}</Button> : null}
       </SectionCard>
     </Container>
   );

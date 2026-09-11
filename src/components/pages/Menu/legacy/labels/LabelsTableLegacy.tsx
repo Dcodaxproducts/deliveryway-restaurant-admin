@@ -15,6 +15,9 @@ import {
 
 import { Button } from "@/components/ui/button";
 import PaginationSection from "@/components/common/PaginationSection";
+import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
+import { StatePanel } from "@/components/common/EmptyState";
+import { StatusBadge } from "@/components/common/status-badge";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import {
   Dialog,
@@ -135,6 +138,7 @@ export default function LabelsTable() {
     data: response,
     isLoading,
     isFetching,
+    isError,
     refetch,
   } = useGetMenuItemLabels(
     restaurantId
@@ -307,47 +311,12 @@ export default function LabelsTable() {
     );
   };
 
-  const SkeletonRow = () => (
-    <tr>
-      <td colSpan={5} className="px-4 py-5">
-        <div className="grid animate-pulse grid-cols-[1fr_2fr_1fr_0.8fr_0.5fr] gap-4">
-          <div className="h-4 rounded bg-gray-200" />
-          <div className="h-4 rounded bg-gray-200" />
-          <div className="h-4 rounded bg-gray-200" />
-          <div className="h-4 rounded bg-gray-200" />
-          <div className="h-4 rounded bg-gray-200" />
-        </div>
-      </td>
-    </tr>
-  );
-
-  const SkeletonCard = () => (
-    <div className="animate-pulse rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm">
-      <div className="space-y-3">
-        <div className="h-4 w-[140px] max-w-full rounded bg-gray-200" />
-        <div className="h-3 w-full rounded bg-gray-200" />
-        <div className="h-3 w-[160px] max-w-full rounded bg-gray-200" />
-      </div>
-    </div>
-  );
-
   const EmptyState = () => (
-    <div className="mx-auto max-w-[420px] px-4 py-10 text-center">
-      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-        <BadgeCheck size={22} />
-      </div>
-
-      <p className="text-base font-semibold text-gray-900">
-        {t("emptyTitle")}
-      </p>
-
-      <p className="mt-1 text-sm leading-6 text-gray-500">
-        {hasActiveFilters
-          ? t("emptyFiltered")
-          : t("emptyDescription")}
-      </p>
-
-      {hasActiveFilters ? (
+    <StatePanel
+      title={t("emptyTitle")}
+      description={hasActiveFilters ? t("emptyFiltered") : t("emptyDescription")}
+      icon={<BadgeCheck size={22} />}
+      action={hasActiveFilters ? (
         <Button
           type="button"
           variant="outline"
@@ -368,7 +337,7 @@ export default function LabelsTable() {
           {t("add")}
         </Button>
       )}
-    </div>
+    />
   );
 
   return (
@@ -434,7 +403,7 @@ export default function LabelsTable() {
 
           <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs text-gray-500">
             <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-              {t("showingCount", { shown: paginatedItems.length, total: filteredItems.length })}
+              {t("showingCount", { visible: paginatedItems.length, total: filteredItems.length })}
             </span>
 
             {shouldShowRefreshing ? (
@@ -532,104 +501,70 @@ export default function LabelsTable() {
       </div>
 
       {!canMutateLabels ? (
-        <div className="mb-6 rounded-[18px] border border-amber-100 bg-amber-50 p-4 text-sm text-amber-700">
-          {t("missingRestaurantContext")}
-        </div>
+        <StatePanel state="permission" title={t("missingRestaurantContext")} description="" compact className="mb-6" />
       ) : null}
 
-      <div className="hidden w-full max-w-full overflow-hidden rounded-[18px] border border-gray-100 bg-white shadow-sm md:block">
-        <table className="w-full table-fixed text-sm">
-          <thead>
-            <tr className="border-b bg-[#FAFAFA] text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <th className="w-[28%] px-4 py-4">{t("value")}</th>
-              <th className="w-[42%] px-4 py-4">{t("label")}</th>
-              <th className="w-[20%] px-4 py-4 text-center">{t("usage")}</th>
-              <th className="w-[10%] px-4 py-4 text-center">{commonT("actions")}</th>
-            </tr>
-          </thead>
+      {isError ? (
+        <StatePanel state="error" title={commonT("unableToLoad")} description="" compact className="mb-4"
+          action={<Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>{commonT("refresh")}</Button>} />
+      ) : null}
+      {isError && paginatedItems.length === 0 ? null : shouldShowEmpty ? <EmptyState /> : (
+        <ResponsiveDataView
+          data={paginatedItems}
+          rowKey={(item) => item.value}
+          loading={shouldShowInitialLoader || (isFetching && paginatedItems.length === 0)}
+          emptyTitle={t("emptyTitle")}
+          columns={[
+            {
+              id: "value", header: t("value"), cell: (item) => (
+                <div className="inline-flex max-w-full rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                  <span className="truncate">{item.value || "-"}</span>
+                </div>
+              )
+            },
+            {
+              id: "label", header: t("label"), cell: (item) => (
+                <p className="truncate font-semibold text-gray-900">
+                  {item.label || "-"}
+                </p>
+              )
+            },
+            {
+              id: "usage", header: t("usage"), align: "center", cell: () => (
+                <StatusBadge tone="info">
+                  {t("menuLabel")}
+                </StatusBadge>
+              )
+            },
+            {
+              id: "actions", header: commonT("actions"), align: "center", cell: (item) => (
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    title={commonT("edit")}
+                    disabled={!canMutateLabels}
+                    onClick={() => openEditModal(item)}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-primary/20 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label={t("editAria")}
+                  >
+                    <FaPen size={13} />
+                  </button>
 
-          <tbody>
-            {shouldShowInitialLoader ? (
-              Array.from({ length: 6 }).map((_, index) => (
-                <SkeletonRow key={index} />
-              ))
-            ) : shouldShowEmpty ? (
-              <tr>
-                <td colSpan={4}>
-                  <EmptyState />
-                </td>
-              </tr>
-            ) : (
-              paginatedItems.map((item) => (
-                <tr
-                  key={item.value}
-                  className="border-b border-gray-100 transition hover:bg-[#FAFAFA]"
-                >
-                  <td className="px-4 py-4">
-                    <div className="inline-flex max-w-full rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                      <span className="truncate">{item.value || "-"}</span>
-                    </div>
-                  </td>
-
-                  <td className="px-4 py-4">
-                    <p className="truncate font-semibold text-gray-900">
-                      {item.label || "-"}
-                    </p>
-                  </td>
-
-                  <td className="px-4 py-4 text-center">
-                    <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                      {t("menuLabel")}
-                    </span>
-                  </td>
-
-                  <td className="px-4 py-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        type="button"
-                        title={commonT("edit")}
-                        disabled={!canMutateLabels}
-                        onClick={() => openEditModal(item)}
-                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-primary/20 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label={t("editAria")}
-                      >
-                        <FaPen size={13} />
-                      </button>
-
-                      <button
-                        type="button"
-                        title={commonT("delete")}
-                        disabled={!canMutateLabels}
-                        onClick={() => setDeleteTarget(item)}
-                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-red-200 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label={t("deleteAria")}
-                      >
-                        <FaTrash size={13} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
-        <div className="border-t border-gray-100 px-4 py-4">
-          <PaginationSection {...pagination} onPageChange={setPage} />
-        </div>
-      </div>
-
-      <div className="w-full max-w-full space-y-4 md:hidden">
-        {shouldShowInitialLoader ? (
-          Array.from({ length: 5 }).map((_, index) => (
-            <SkeletonCard key={index} />
-          ))
-        ) : shouldShowEmpty ? (
-          <div className="rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm">
-            <EmptyState />
-          </div>
-        ) : (
-          paginatedItems.map((item) => (
+                  <button
+                    type="button"
+                    title={commonT("delete")}
+                    disabled={!canMutateLabels}
+                    onClick={() => setDeleteTarget(item)}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-red-200 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label={t("deleteAria")}
+                  >
+                    <FaTrash size={13} />
+                  </button>
+                </div>
+              )
+            },
+          ]}
+          renderMobileItem={(item) => (
             <div
               key={item.value}
               className="w-full max-w-full overflow-hidden rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm"
@@ -649,9 +584,9 @@ export default function LabelsTable() {
                   </p>
                 </div>
 
-                <span className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                <StatusBadge tone="info">
                   {t("label")}
-                </span>
+                </StatusBadge>
               </div>
 
               <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
@@ -676,13 +611,10 @@ export default function LabelsTable() {
                 </button>
               </div>
             </div>
-          ))
-        )}
-
-        <div className="w-full max-w-full overflow-hidden">
-          <PaginationSection {...pagination} onPageChange={setPage} />
-        </div>
-      </div>
+          )}
+        />
+      )}
+      <PaginationSection {...pagination} onPageChange={setPage} />
 
       <LabelModal
         open={open}

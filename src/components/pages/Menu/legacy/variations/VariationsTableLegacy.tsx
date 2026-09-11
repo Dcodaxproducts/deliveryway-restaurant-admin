@@ -13,6 +13,9 @@ import {
 
 import { Button } from "@/components/ui/button";
 import PaginationSection from "@/components/common/PaginationSection";
+import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
+import { StatePanel } from "@/components/common/EmptyState";
+import { StatusBadge } from "@/components/common/status-badge";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 
 import {
@@ -31,6 +34,14 @@ const PAGE_LIMIT = 10;
 type SortOrder = "ASC" | "DESC";
 type SortBy = "createdAt" | "name" | "price" | "sortOrder";
 type VariationStatusFilter = "active" | "inactive" | "all";
+type VariationRow = {
+  id: string;
+  name?: string;
+  description?: string;
+  price?: string | number | null;
+  isDefault?: boolean;
+  isActive?: boolean;
+};
 
 const STATUS_FILTER_OPTIONS: Array<{
   value: VariationStatusFilter;
@@ -180,6 +191,7 @@ export default function VariationsTable() {
     data: response,
     isLoading,
     isFetching,
+    isError,
     refetch,
   } = useGetMenuVariations(queryParams);
 
@@ -187,7 +199,7 @@ export default function VariationsTable() {
     useDeleteMenuVariation();
 
   const items = useMemo(() => {
-    return extractResponseItems(response);
+    return extractResponseItems<VariationRow>(response);
   }, [response]);
 
   const meta = useMemo(() => {
@@ -289,48 +301,12 @@ export default function VariationsTable() {
     }
   };
 
-  const SkeletonRow = () => (
-    <tr>
-      <td colSpan={6} className="px-5 py-5">
-        <div className="grid animate-pulse grid-cols-[24%_24%_13%_13%_13%_13%] gap-3">
-          <div className="h-4 rounded bg-gray-200" />
-          <div className="h-4 rounded bg-gray-200" />
-          <div className="h-4 rounded bg-gray-200" />
-          <div className="h-4 rounded bg-gray-200" />
-          <div className="h-4 rounded bg-gray-200" />
-          <div className="h-4 rounded bg-gray-200" />
-        </div>
-      </td>
-    </tr>
-  );
-
-  const SkeletonCard = () => (
-    <div className="animate-pulse rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm">
-      <div className="space-y-3">
-        <div className="h-4 w-[160px] max-w-full rounded bg-gray-200" />
-        <div className="h-3 w-full rounded bg-gray-200" />
-        <div className="h-3 w-[120px] max-w-full rounded bg-gray-200" />
-      </div>
-    </div>
-  );
-
   const EmptyState = () => (
-    <div className="mx-auto max-w-[360px] px-4 py-10 text-center">
-      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-500">
-        <SlidersHorizontal size={22} />
-      </div>
-
-      <p className="text-base font-semibold text-gray-900">
-        {t("emptyTitle")}
-      </p>
-
-      <p className="mt-1 text-sm leading-6 text-gray-500">
-        {hasActiveFilters
-          ? t("emptyFiltered")
-          : t("emptyDescription")}
-      </p>
-
-      {hasActiveFilters ? (
+    <StatePanel
+      title={t("emptyTitle")}
+      description={hasActiveFilters ? t("emptyFiltered") : t("emptyDescription")}
+      icon={<SlidersHorizontal size={22} />}
+      action={hasActiveFilters ? (
         <Button
           type="button"
           variant="outline"
@@ -350,7 +326,7 @@ export default function VariationsTable() {
           {t("add")}
         </Button>
       )}
-    </div>
+    />
   );
 
   return (
@@ -400,7 +376,7 @@ export default function VariationsTable() {
 
           <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs text-gray-500">
             <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-              {t("showingCount", { shown: items.length, total: pagination.total })}
+              {t("showingCount", { visible: items.length, total: pagination.total })}
             </span>
 
             {shouldShowRefreshing ? (
@@ -530,140 +506,92 @@ export default function VariationsTable() {
       </div>
 
       {!canFetchVariations ? (
-        <div className="rounded-[18px] border border-amber-100 bg-amber-50 p-4 text-sm text-amber-700">
-          {t("missingRestaurantContext")}
-        </div>
+        <StatePanel state="permission" title={t("missingRestaurantContext")} description="" compact className="mb-6" />
       ) : null}
 
-      <div className="hidden w-full max-w-full overflow-hidden rounded-[18px] border border-gray-100 bg-white shadow-sm md:block">
-        <table className="w-full table-fixed text-sm">
-          <thead>
-            <tr className="border-b bg-[#FAFAFA] text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <th className="w-[24%] px-5 py-4">{t("variation")}</th>
-              <th className="w-[24%] px-3 py-4">{commonT("description")}</th>
-              <th className="w-[13%] px-3 py-4 text-center">{commonT("price")}</th>
-              <th className="w-[13%] px-3 py-4 text-center">{t("default")}</th>
-              <th className="w-[13%] px-3 py-4 text-center">{commonT("status")}</th>
-              <th className="w-[13%] px-5 py-4 text-center">{commonT("actions")}</th>
-            </tr>
-          </thead>
+      {isError ? (
+        <StatePanel state="error" title={commonT("unableToLoad")} description="" compact className="mb-4"
+          action={<Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>{commonT("refresh")}</Button>} />
+      ) : null}
+      {isError && items.length === 0 ? null : shouldShowEmpty ? <EmptyState /> : (
+        <ResponsiveDataView
+          data={items}
+          rowKey={(item) => item.id}
+          loading={shouldShowInitialLoader || (isFetching && items.length === 0)}
+          emptyTitle={t("emptyTitle")}
+          columns={[
+            {
+              id: "variation", header: t("variation"), cell: (item) => (
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-gray-900">
+                    {item?.name || "-"}
+                  </p>
 
-          <tbody>
-            {shouldShowInitialLoader ? (
-              Array.from({ length: 6 }).map((_, index) => (
-                <SkeletonRow key={index} />
-              ))
-            ) : shouldShowEmpty ? (
-              <tr>
-                <td colSpan={6}>
-                  <EmptyState />
-                </td>
-              </tr>
-            ) : (
-              items.map((item: any) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-gray-100 transition hover:bg-[#FAFAFA]"
-                >
-                  <td className="px-5 py-4">
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-gray-900">
-                        {item?.name || "-"}
-                      </p>
+                  <p className="mt-0.5 truncate text-xs text-gray-400">
+                    ID: {item?.id || "-"}
+                  </p>
+                </div>
+              )
+            },
+            {
+              id: "description", header: commonT("description"), cell: (item) => (
+                <p className="line-clamp-2 break-words text-gray-600">
+                  {item?.description || commonT("noData")}
+                </p>
+              )
+            },
+            {
+              id: "price", header: commonT("price"), align: "center", cell: (item) => (
+                <span className="block truncate">
+                  {formatCurrency(item?.price)}
+                </span>
+              )
+            },
+            {
+              id: "default", header: t("default"), align: "center", cell: (item) => (
+                <StatusBadge tone={item?.isDefault ? "info" : "neutral"}>
+                  <span className="truncate">
+                    {item?.isDefault ? t("default") : commonT("no")}
+                  </span>
+                </StatusBadge>
+              )
+            },
+            {
+              id: "status", header: commonT("status"), align: "center", cell: (item) => (
+                <StatusBadge tone={item?.isActive ? "success" : "neutral"}>
+                  <span className="truncate">
+                    {item?.isActive ? commonT("active") : commonT("inactive")}
+                  </span>
+                </StatusBadge>
+              )
+            },
+            {
+              id: "actions", header: commonT("actions"), align: "center", cell: (item) => (
+                <div className="flex min-w-[88px] items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    title={commonT("edit")}
+                    onClick={() => openEditModal(item)}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-primary/20 hover:text-primary"
+                    aria-label={t("editAria")}
+                  >
+                    <FaPen size={13} />
+                  </button>
 
-                      <p className="mt-0.5 truncate text-xs text-gray-400">
-                        ID: {item?.id || "-"}
-                      </p>
-                    </div>
-                  </td>
-
-                  <td className="px-3 py-4 align-middle">
-                    <p className="line-clamp-2 break-words text-gray-600">
-                      {item?.description || commonT("noData")}
-                    </p>
-                  </td>
-
-                  <td className="px-3 py-4 text-center font-semibold text-gray-900">
-                    <span className="block truncate">
-                      {formatCurrency(item?.price)}
-                    </span>
-                  </td>
-
-                
-
-                  <td className="px-3 py-4 text-center">
-                    <span
-                      className={`inline-flex max-w-full rounded-full px-2.5 py-1 text-xs font-medium ${
-                        item?.isDefault
-                          ? "bg-primary/10 text-primary"
-                          : "bg-gray-100 text-gray-500"
-                      }`}
-                    >
-                      <span className="truncate">
-                        {item?.isDefault ? t("default") : commonT("no")}
-                      </span>
-                    </span>
-                  </td>
-
-                  <td className="px-3 py-4 text-center">
-                    <span
-                      className={`inline-flex max-w-full rounded-full px-2.5 py-1 text-xs font-medium ${
-                        item?.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      <span className="truncate">
-                        {item?.isActive ? commonT("active") : commonT("inactive")}
-                      </span>
-                    </span>
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <div className="flex min-w-[88px] items-center justify-center gap-2">
-                      <button
-                        type="button"
-                        title={commonT("edit")}
-                        onClick={() => openEditModal(item)}
-                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-primary/20 hover:text-primary"
-                        aria-label={t("editAria")}
-                      >
-                        <FaPen size={13} />
-                      </button>
-
-                      <button
-                        type="button"
-                        title={commonT("delete")}
-                        onClick={() => setDeleteId(item.id)}
-                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-red-200 hover:text-red-500"
-                        aria-label={t("deleteAria")}
-                      >
-                        <FaTrash size={13} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
-        <div className="border-t border-gray-100 px-4 py-4">
-          <PaginationSection {...pagination} onPageChange={setPage} />
-        </div>
-      </div>
-
-      <div className="w-full max-w-full space-y-4 md:hidden">
-        {shouldShowInitialLoader ? (
-          Array.from({ length: 5 }).map((_, index) => (
-            <SkeletonCard key={index} />
-          ))
-        ) : shouldShowEmpty ? (
-          <div className="rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm">
-            <EmptyState />
-          </div>
-        ) : (
-          items.map((item: any) => (
+                  <button
+                    type="button"
+                    title={commonT("delete")}
+                    onClick={() => setDeleteId(item.id)}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-red-200 hover:text-red-500"
+                    aria-label={t("deleteAria")}
+                  >
+                    <FaTrash size={13} />
+                  </button>
+                </div>
+              )
+            },
+          ]}
+          renderMobileItem={(item) => (
             <div
               key={item.id}
               className="w-full max-w-full overflow-hidden rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm"
@@ -679,15 +607,9 @@ export default function VariationsTable() {
                   </p>
                 </div>
 
-                <span
-                  className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${
-                    item?.isActive
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-600"
-                  }`}
-                >
+                <StatusBadge tone={item?.isActive ? "success" : "neutral"}>
                   {item?.isActive ? commonT("active") : commonT("inactive")}
-                </span>
+                </StatusBadge>
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2">
@@ -698,7 +620,7 @@ export default function VariationsTable() {
                   </p>
                 </div>
 
-              
+
 
                 <div className="min-w-0 rounded-[12px] bg-[#FAFAFA] p-3">
                   <p className="text-xs text-gray-400">{t("default")}</p>
@@ -735,13 +657,10 @@ export default function VariationsTable() {
                 </button>
               </div>
             </div>
-          ))
-        )}
-
-        <div className="w-full max-w-full overflow-hidden">
-          <PaginationSection {...pagination} onPageChange={setPage} />
-        </div>
-      </div>
+          )}
+        />
+      )}
+      <PaginationSection {...pagination} onPageChange={setPage} />
 
       <VariationModal
         open={open}

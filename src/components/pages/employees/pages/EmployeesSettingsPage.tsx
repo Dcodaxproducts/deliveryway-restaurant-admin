@@ -12,6 +12,7 @@ import { useGetBranches } from "@/hooks/useBranches";
 import { useGetEmployeesStats } from "@/hooks/useDashboard";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "@/components/common/SectionCard";
+import { StatePanel } from "@/components/common/EmptyState";
 
 type BranchOption = {
   id: string;
@@ -39,6 +40,7 @@ const getBranchOptions = (response: unknown): BranchOption[] => {
 const EmployeesSettingsPage = () => {
   const { branchId, isBranchAdmin } = useAuth();
   const t = useTranslations("employees");
+  const commonT = useTranslations("common");
   const scopedBranchId = isBranchAdmin ? branchId : undefined;
   const [selectedBranchId, setSelectedBranchId] = useState("");
   const activeBranchId = scopedBranchId || selectedBranchId || undefined;
@@ -57,6 +59,7 @@ const EmployeesSettingsPage = () => {
     data: employeeStatsResponse,
     isLoading: isEmployeeStatsLoading,
     isFetching: isEmployeeStatsFetching,
+    isError: isEmployeeStatsError,
     refetch: refetchEmployeeStats,
   } = useGetEmployeesStats(
     activeBranchId ? { branchId: activeBranchId } : undefined,
@@ -86,10 +89,14 @@ const EmployeesSettingsPage = () => {
       />
 
       <SectionCard padding="md" className="space-y-6">
-        <StatsSection
+        {isEmployeeStatsError ? (
+          <StatePanel state="error" title={commonT("unableToLoad")} description="" compact
+            action={<Button variant="outline" disabled={isEmployeeStatsFetching} onClick={() => void refetchEmployeeStats()}>{commonT("refresh")}</Button>} />
+        ) : null}
+        {(!isEmployeeStatsError || employeeStats) && <StatsSection
           stats={employeeStats}
-          loading={isEmployeeStatsLoading || isEmployeeStatsFetching}
-        />
+          loading={(isEmployeeStatsLoading || isEmployeeStatsFetching) && !employeeStats}
+        />}
 
         {!isBranchAdmin ? (
           <div className="flex flex-col gap-2 sm:max-w-sm">

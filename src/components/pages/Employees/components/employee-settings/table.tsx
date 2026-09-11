@@ -8,6 +8,8 @@ import type { DataTableColumn } from "@/components/common/DataTable";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import Pagination from "@/components/common/PaginationSection";
 import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
+import { StatePanel } from "@/components/common/EmptyState";
+import { Button } from "@/components/ui/button";
 import { RowActions } from "@/components/common/RowActions";
 import { StatusBadge } from "@/components/common/status-badge";
 import { Switch } from "@/components/ui/switch";
@@ -38,6 +40,7 @@ const fullName = (employee: EmployeeListItem) =>
 
 export default function EmployeeTable({ refreshFlag, search = "", onSuccess, restaurantId: scopedRestaurantId, branchId: scopedBranchId }: EmployeeTableProps) {
   const t = useTranslations("employees");
+  const commonT = useTranslations("common");
   const { restaurantId: authRestaurantId, branchId: authBranchId, isBranchAdmin } = useAuth();
   const restaurantId = scopedRestaurantId ?? authRestaurantId ?? undefined;
   const branchId = scopedBranchId ?? (isBranchAdmin ? authBranchId : undefined);
@@ -50,7 +53,7 @@ export default function EmployeeTable({ refreshFlag, search = "", onSuccess, res
     ? { page, search: search || undefined }
     : { page, search: search || undefined, restaurantId, ...(branchId ? { branchId } : {}) },
   [branchId, isBranchAdmin, page, restaurantId, search]);
-  const { data, isLoading, isFetching, refetch } = useGetStaffList(isBranchAdmin || restaurantId ? queryParams : undefined);
+  const { data, isLoading, isFetching, isError, refetch } = useGetStaffList(isBranchAdmin || restaurantId ? queryParams : undefined);
   const { mutate: deleteStaff } = useDeleteStaff({ messages: { success: t("messages.staffDeleted"), error: t("messages.failedDeleteStaff") } });
   const { mutate: updateStatus } = useUpdateStaffStatus({ messages: { success: t("messages.staffStatusUpdated"), error: t("messages.failedUpdateStatus") } });
   const employees = (data?.data || []) as EmployeeListItem[];
@@ -79,18 +82,22 @@ export default function EmployeeTable({ refreshFlag, search = "", onSuccess, res
     { id: "employee", header: t("table.employee"), cell: (employee) => <span className="font-semibold text-[var(--ui-text)]">{fullName(employee)}</span> },
     { id: "details", header: t("table.details"), cell: (employee) => <div><p>{employee.phone || "-"}</p><p className="text-xs text-[var(--ui-text-muted)]">{employee.email || "-"}</p></div> },
     { id: "role", header: t("table.role"), cell: (employee) => employee.staffRole?.name || "-" },
-    { id: "status", header: t("table.status"), cell: (employee) => <div className="flex items-center gap-3"><StatusBadge tone={employee.isActive ? "success" : "neutral"}>{employee.isActive ? t("active") : t("inactive")}</StatusBadge><Switch checked={Boolean(employee.isActive)} onCheckedChange={(value) => handleStatusChange(employee, value)} /></div> },
+    { id: "status", header: t("table.status"), cell: (employee) => <div className="flex items-center gap-3"><StatusBadge tone={employee.isActive ? "success" : "neutral"}>{employee.isActive ? commonT("active") : commonT("inactive")}</StatusBadge><Switch checked={Boolean(employee.isActive)} onCheckedChange={(value) => handleStatusChange(employee, value)} /></div> },
     { id: "actions", header: t("table.actions"), align: "right", cell: (employee) => <RowActions actions={actionsFor(employee)} /> },
   ];
 
   return (
     <>
-      <ResponsiveDataView data={employees} columns={columns} rowKey={(employee) => employee.id} loading={isLoading || isFetching} emptyTitle={t("noEmployeesFound")} renderMobileItem={(employee) => (
+      {isError ? (
+        <StatePanel state="error" title={commonT("unableToLoad")} description="" compact className="mb-4"
+          action={<Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>{commonT("refresh")}</Button>} />
+      ) : null}
+      {(!isError || employees.length > 0) && <ResponsiveDataView data={employees} columns={columns} rowKey={(employee) => employee.id} loading={(isLoading || isFetching) && employees.length === 0} emptyTitle={t("noEmployeesFound")} renderMobileItem={(employee) => (
         <article className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4 shadow-[var(--ui-shadow-xs)]">
           <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate font-semibold text-[var(--ui-text)]">{fullName(employee)}</p><p className="mt-1 truncate text-sm text-[var(--ui-text-muted)]">{employee.email || "-"}</p></div><Switch checked={Boolean(employee.isActive)} onCheckedChange={(value) => handleStatusChange(employee, value)} /></div>
           <div className="mt-4 flex items-center justify-between gap-3"><StatusBadge tone={employee.isActive ? "success" : "neutral"}>{employee.staffRole?.name || "-"}</StatusBadge><RowActions actions={actionsFor(employee)} /></div>
         </article>
-      )} footer={meta ? <Pagination {...meta} onPageChange={setPage} /> : null} />
+      )} footer={meta ? <Pagination {...meta} onPageChange={setPage} /> : null} />}
       <DeleteDialog open={Boolean(deleteId)} onOpenChange={(open) => !open && setDeleteId(null)} onConfirm={handleDelete} isLoading={isDeleting} />
       <EmployeeInvitationModal open={Boolean(editData)} onOpenChange={(open) => { if (!open) { setEditData(null); void refetch(); onSuccess?.(); } }} initialData={editData} />
     </>

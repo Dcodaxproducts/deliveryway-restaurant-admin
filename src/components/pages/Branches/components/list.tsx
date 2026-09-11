@@ -26,9 +26,10 @@ export type BranchListItem = {
 interface Props {
   branches?: BranchListItem[];
   loading?: boolean;
+  error?: string | null;
 }
 
-export default function BranchesList({ branches = [], loading }: Props) {
+export default function BranchesList({ branches = [], loading, error }: Props) {
   const commonT = useTranslations("common");
   const router = useRouter();
   const columns = useMemo<readonly DataTableColumn<BranchListItem>[]>(
@@ -47,7 +48,7 @@ export default function BranchesList({ branches = [], loading }: Props) {
       },
       {
         id: "location",
-        header: commonT("location"),
+        header: commonT("address"),
         cell: (branch) => branch.address || branch.city || "-",
       },
       {
@@ -70,7 +71,7 @@ export default function BranchesList({ branches = [], loading }: Props) {
         align: "right",
         cell: (branch) => (
           <Button variant="outline" size="sm" onClick={() => router.push(`/branches/${branch.id}`)}>
-            {commonT("view")}
+            {commonT("viewDetails")}
           </Button>
         ),
       },
@@ -84,6 +85,8 @@ export default function BranchesList({ branches = [], loading }: Props) {
       columns={columns}
       rowKey={(branch) => branch.id}
       loading={loading}
+      error={error}
+      errorTitle={commonT("unableToLoad")}
       emptyTitle={commonT("emptyBranchesTitle")}
       emptyDescription={commonT("emptyBranchesDescription")}
       renderMobileItem={({ id, name, isActive, availability, isMain, coverImage, logoUrl }) => (
