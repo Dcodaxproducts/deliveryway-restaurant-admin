@@ -1,4 +1,4 @@
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 
 const root = process.cwd();
@@ -17,6 +17,8 @@ const canonicalOwners = [
   "src/components/common/EmptyState.tsx",
   "src/components/common/FormField.tsx",
   "src/components/common/dialogs/delete-dialog.tsx",
+  "src/components/ui/form-select.tsx",
+  "src/components/ui/file-upload-control.tsx",
 ];
 
 const forbiddenDuplicatePaths = [
@@ -41,6 +43,30 @@ for (const path of forbiddenDuplicatePaths) {
 const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
 if (packageJson.dependencies?.["class-variance-authority"] === undefined) {
   throw new Error("Shared UI variants require the existing class-variance-authority dependency.");
+}
+
+async function collectTsxFiles(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) return collectTsxFiles(path);
+      return entry.name.endsWith(".tsx") && !entry.name.includes(".test.")
+        ? [path]
+        : [];
+    }),
+  );
+
+  return files.flat();
+}
+
+for (const path of await collectTsxFiles(join(root, "src"))) {
+  const source = await readFile(path, "utf8");
+  if (/<select(?:\s|>)/.test(source)) {
+    throw new Error(
+      `Browser-native select found in ${path.replace(`${root}/`, "")}; use FormSelect.`,
+    );
+  }
 }
 
 console.log(`Shared UI ownership verified (${canonicalOwners.length} canonical paths).`);
