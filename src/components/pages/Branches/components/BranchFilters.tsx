@@ -8,13 +8,12 @@ import { FilterBar } from "@/components/common/FilterBar";
 import FilterModal, { type CommonFilterValues } from "@/components/common/FilterModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatBranchAddress, type BranchListItem } from "./list";
 
-type ExportRow = {
-  name?: string;
-  city?: string;
-  address?: string;
-  phone?: string;
-  isActive?: boolean;
+type ExportRow = Pick<
+  BranchListItem,
+  "name" | "city" | "address" | "phone" | "isActive"
+> & {
   createdAt?: string;
   _count?: { items?: number };
 };
@@ -62,7 +61,7 @@ export default function BranchFilters({
     const rows = branches.map(({ name, city, address, phone, isActive, createdAt, _count }) => [
       name,
       city,
-      address,
+      formatBranchAddress(address),
       phone,
       isActive ? commonT("active") : commonT("inactive"),
       createdAt,

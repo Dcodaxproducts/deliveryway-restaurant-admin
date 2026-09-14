@@ -14,13 +14,40 @@ export type BranchListItem = {
   id: string;
   name: string;
   city?: string;
-  address?: string;
+  address?:
+    | string
+    | {
+        street?: string | null;
+        shopNumber?: string | null;
+        postalCode?: string | null;
+        city?: string | null;
+        area?: string | null;
+        state?: string | null;
+        country?: string | null;
+      }
+    | null;
   phone?: string;
   isActive?: boolean;
   availability?: BranchProps["availability"];
   isMain?: boolean;
   coverImage?: string;
   logoUrl?: string;
+};
+
+const text = (value: unknown) =>
+  typeof value === "string" || typeof value === "number" ? String(value).trim() : "";
+
+export const formatBranchAddress = (address: BranchListItem["address"]) => {
+  if (typeof address === "string") return address.trim();
+  if (!address) return "";
+
+  const streetLine = [address.street, address.shopNumber].map(text).filter(Boolean).join(" ");
+  const cityLine = [address.postalCode, address.city].map(text).filter(Boolean).join(" ");
+
+  return [streetLine, cityLine, address.area, address.state, address.country]
+    .map(text)
+    .filter(Boolean)
+    .join(", ");
 };
 
 interface Props {
@@ -31,6 +58,7 @@ interface Props {
 
 export default function BranchesList({ branches = [], loading, error }: Props) {
   const commonT = useTranslations("common");
+  const branchesT = useTranslations("branches");
   const router = useRouter();
   const columns = useMemo<readonly DataTableColumn<BranchListItem>[]>(
     () => [
@@ -41,7 +69,7 @@ export default function BranchesList({ branches = [], loading, error }: Props) {
           <div>
             <p className="font-semibold text-[var(--ui-text)]">{branch.name || "-"}</p>
             {branch.isMain ? (
-              <p className="mt-0.5 text-xs text-[var(--ui-text-muted)]">{commonT("mainBranch")}</p>
+              <p className="mt-0.5 text-xs text-[var(--ui-text-muted)]">{branchesT("mainBranch")}</p>
             ) : null}
           </div>
         ),
@@ -49,7 +77,7 @@ export default function BranchesList({ branches = [], loading, error }: Props) {
       {
         id: "location",
         header: commonT("address"),
-        cell: (branch) => branch.address || branch.city || "-",
+        cell: (branch) => formatBranchAddress(branch.address) || branch.city || "-",
       },
       {
         id: "phone",
@@ -76,7 +104,7 @@ export default function BranchesList({ branches = [], loading, error }: Props) {
         ),
       },
     ],
-    [commonT, router],
+    [branchesT, commonT, router],
   );
 
   return (
