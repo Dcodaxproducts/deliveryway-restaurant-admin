@@ -34,15 +34,28 @@ type PaginationBarFlatProps = PaginationBarBaseProps &
     hasPrevious?: boolean;
   };
 
-export type PaginationBarProps = PaginationBarMetaProps | PaginationBarFlatProps;
+export type PaginationBarProps =
+  PaginationBarMetaProps | PaginationBarFlatProps;
 export type PaginationItemValue = number | "ellipsis-start" | "ellipsis-end";
+
+export function shouldShowPageSizeSelector(
+  total: number,
+  options: readonly number[],
+): boolean {
+  const smallestOption = Math.min(...options.filter((option) => option > 0));
+
+  return Number.isFinite(smallestOption) && total > smallestOption;
+}
 
 export function getPaginationItems(
   page: number,
   totalPages: number,
 ): PaginationItemValue[] {
   if (totalPages <= 7) {
-    return Array.from({ length: Math.max(totalPages, 0) }, (_, index) => index + 1);
+    return Array.from(
+      { length: Math.max(totalPages, 0) },
+      (_, index) => index + 1,
+    );
   }
 
   const pages = new Set([1, totalPages, page - 1, page, page + 1]);
@@ -72,12 +85,15 @@ export function PaginationBar(props: PaginationBarProps) {
   const meta = getMeta(props);
   const onPageChange = props.onPageChange ?? (() => undefined);
 
-  if (!meta || meta.totalPages <= 0) return null;
+  if (!meta || meta.total <= 0 || meta.totalPages <= 0) return null;
 
   const { page, totalPages, total, limit } = meta;
-  const hasPrevious = "hasPrevious" in props ? props.hasPrevious ?? page > 1 : page > 1;
+  const hasPrevious =
+    "hasPrevious" in props ? (props.hasPrevious ?? page > 1) : page > 1;
   const hasNext =
-    "hasNext" in props ? props.hasNext ?? page < totalPages : page < totalPages;
+    "hasNext" in props
+      ? (props.hasNext ?? page < totalPages)
+      : page < totalPages;
   const from = total === 0 ? 0 : (page - 1) * limit + 1;
   const to = Math.min(page * limit, total);
 
@@ -95,19 +111,19 @@ export function PaginationBar(props: PaginationBarProps) {
 
       <Pagination className="w-auto">
         <PaginationContent>
-          <PaginationItem>
-            <Button
-              type="button"
-              aria-label={t("goToPreviousPage")}
-              disabled={!hasPrevious}
-              aria-disabled={!hasPrevious}
-              onClick={() => hasPrevious && onPageChange(page - 1)}
-              className="gap-1 rounded-[8px] border border-gray-200 px-3 disabled:opacity-45"
-            >
-              <ChevronsLeft className="size-4" />
-              <span className="hidden text-sm sm:block">{t("previous")}</span>
-            </Button>
-          </PaginationItem>
+          {hasPrevious ? (
+            <PaginationItem>
+              <Button
+                type="button"
+                aria-label={t("goToPreviousPage")}
+                onClick={() => onPageChange(page - 1)}
+                className="gap-1 rounded-[8px] border border-gray-200 px-3"
+              >
+                <ChevronsLeft className="size-4" />
+                <span className="hidden text-sm sm:block">{t("previous")}</span>
+              </Button>
+            </PaginationItem>
+          ) : null}
 
           <div className="flex rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-1">
             {getPaginationItems(page, totalPages).map((item) =>
@@ -136,19 +152,19 @@ export function PaginationBar(props: PaginationBarProps) {
             )}
           </div>
 
-          <PaginationItem>
-            <Button
-              type="button"
-              aria-label={t("goToNextPage")}
-              disabled={!hasNext}
-              aria-disabled={!hasNext}
-              onClick={() => hasNext && onPageChange(page + 1)}
-              className="gap-1 rounded-[8px] border border-gray-200 px-3 disabled:opacity-45"
-            >
-              <span className="hidden text-sm sm:block">{t("next")}</span>
-              <ChevronsRight className="size-4" />
-            </Button>
-          </PaginationItem>
+          {hasNext ? (
+            <PaginationItem>
+              <Button
+                type="button"
+                aria-label={t("goToNextPage")}
+                onClick={() => onPageChange(page + 1)}
+                className="gap-1 rounded-[8px] border border-gray-200 px-3"
+              >
+                <span className="hidden text-sm sm:block">{t("next")}</span>
+                <ChevronsRight className="size-4" />
+              </Button>
+            </PaginationItem>
+          ) : null}
         </PaginationContent>
       </Pagination>
     </div>

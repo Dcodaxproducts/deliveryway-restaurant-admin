@@ -12,6 +12,13 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   canSwitchRestaurant,
   getRecordValue,
   getStoredAuth,
@@ -21,6 +28,7 @@ import {
   saveStoredAuth,
 } from "@/lib/auth";
 import { useGetBranch } from "@/hooks/useBranches";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type RestaurantOption = {
   id: string;
@@ -117,6 +125,7 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
     isBranchAdmin && branchId ? branchId : "",
   );
   const router = useRouter();
+  const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const [restaurants, setRestaurants] = useState<RestaurantOption[]>([]);
@@ -258,6 +267,8 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
 
   useEffect(() => {
     const handleClickOutside = (e: PointerEvent) => {
+      if ((e.target as Element).closest('[data-slot="sheet-content"]')) return;
+
       if (
         containerRef.current &&
         !containerRef.current.contains(e.target as Node)
@@ -313,6 +324,121 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
     return selectedRestaurant.name;
   };
 
+  const renderPickerButton = () => (
+    <button
+      type="button"
+      onClick={() => setOpen((prev) => !prev)}
+      aria-expanded={open}
+      aria-controls="restaurant-picker-options"
+      className="flex h-12 w-full items-center justify-between gap-2 rounded-xl bg-muted px-3 text-sm transition-all hover:bg-primary/10 md:h-[56px] md:px-4"
+    >
+      <span className="flex min-w-0 items-center gap-3">
+        <BrandLogo
+          className="shrink-0 gap-0"
+          imageClassName="size-9 rounded-full bg-white shadow-sm"
+          showName={false}
+          logoUrl={selectedRestaurant?.logoUrl}
+          name={selectedRestaurant?.name}
+        />
+        <span className="truncate font-medium text-gray-800">
+          {renderLabel()}
+        </span>
+      </span>
+      <ChevronDown
+        size={18}
+        className={`shrink-0 transition-transform duration-200 ${
+          open ? "rotate-180" : ""
+        }`}
+      />
+    </button>
+  );
+
+  const renderRestaurantOptions = (mobile = false) => (
+    <>
+      <input
+        type="search"
+        value={restaurantSearch}
+        onChange={(event) => setRestaurantSearch(event.target.value)}
+        placeholder={t("searchRestaurants")}
+        className="mb-2 h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm outline-none transition focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
+      />
+
+      <div
+        id={mobile ? "restaurant-picker-options" : undefined}
+        className={cn(
+          "space-y-1 overflow-auto",
+          mobile ? "max-h-[min(60dvh,420px)]" : "max-h-[240px]",
+        )}
+        onScroll={handleRestaurantScroll}
+      >
+        {isFetching &&
+          restaurants.length === 0 &&
+          Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-[40px] animate-pulse rounded-md bg-gray-100"
+            />
+          ))}
+
+        {restaurants.map((restaurant) => (
+          <button
+            key={restaurant.id}
+            type="button"
+            onClick={() => handleSelectRestaurant(restaurant)}
+            title={`${restaurant.name ?? restaurant.id} · ${restaurant.id}`}
+            className={cn(
+              "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-all",
+              selectedRestaurant?.id === restaurant.id
+                ? "bg-primary/5 text-primary"
+                : "text-gray-700 hover:bg-gray-100",
+            )}
+          >
+            <span className="flex min-w-0 items-center gap-2">
+              <BrandLogo
+                className="shrink-0 gap-0"
+                imageClassName="size-7 rounded-full bg-white shadow-sm"
+                showName={false}
+                logoUrl={restaurant.logoUrl}
+                name={restaurant.name}
+              />
+              <span className="min-w-0 text-left">
+                <span className="block truncate">{restaurant.name}</span>
+                <span className="block truncate text-[10px] font-medium text-gray-400">
+                  {getRestaurantIdentifier(restaurant)}
+                </span>
+              </span>
+            </span>
+
+            {selectedRestaurant?.id === restaurant.id ? (
+              <Check size={14} className="shrink-0 text-primary" />
+            ) : null}
+          </button>
+        ))}
+
+        {isFetching && restaurants.length > 0 ? (
+          <div className="py-2 text-center text-xs text-gray-400">
+            {t("loadingMoreRestaurants")}
+          </div>
+        ) : null}
+
+        {!isFetching && restaurants.length === 0 ? (
+          <div className="space-y-2 py-3 text-center text-xs text-gray-500">
+            <p>{t("noRestaurants")}</p>
+            <p>{t("requestRestaurant")}</p>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="mt-2 rounded-md bg-primary px-3 py-1.5 text-xs text-white hover:bg-primary/90"
+            >
+              {t("goToLogin")}
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </>
+  );
+
   if (isBranchAdmin) {
     const branchLabel =
       assignedBranch?.name ||
@@ -348,111 +474,38 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
 
   return (
     <div ref={containerRef} className={cn("relative w-[280px]", className)}>
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex h-[52px] w-full items-center justify-between gap-2 rounded-xl bg-muted px-3 text-sm transition-all hover:bg-primary/10 md:h-[56px] md:px-4"
-      >
-        <span className="flex min-w-0 items-center gap-3">
-          <BrandLogo
-            className="shrink-0 gap-0"
-            imageClassName="size-9 rounded-full bg-white shadow-sm"
-            showName={false}
-            logoUrl={selectedRestaurant?.logoUrl}
-            name={selectedRestaurant?.name}
-          />
-          <span className="truncate font-medium text-gray-800">
-            {renderLabel()}
-          </span>
-        </span>
-        <ChevronDown
-          size={18}
-          className={`transition-transform duration-200 ${
-            open ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-
-      {open && (
-        <div className="absolute top-[110%] left-0 w-full bg-white shadow-xl rounded-xl p-3 z-50 border animate-in fade-in zoom-in-95 duration-200">
-          <p className="text-xs text-gray-400 px-2 mb-2">
-            {t("selectRestaurant")}
-          </p>
-
-          <input
-            type="search"
-            value={restaurantSearch}
-            onChange={(event) => setRestaurantSearch(event.target.value)}
-            placeholder={t("searchRestaurants")}
-            className="mb-2 h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm outline-none transition focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
-          />
-
-          <div
-            className="space-y-1 max-h-[240px] overflow-auto"
-            onScroll={handleRestaurantScroll}
+      {isMobile ? (
+        <Sheet open={open} onOpenChange={setOpen}>
+          {renderPickerButton()}
+          <SheetContent
+            side="bottom"
+            className="max-h-[85dvh] gap-0 rounded-t-2xl border-gray-200 p-0"
           >
-            {isFetching &&
-              restaurants.length === 0 &&
-              Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-[40px] rounded-md bg-gray-100 animate-pulse"
-                />
-              ))}
-
-            {restaurants.map((restaurant) => (
-              <button
-                key={restaurant.id}
-                onClick={() => handleSelectRestaurant(restaurant)}
-                title={`${restaurant.name ?? restaurant.id} · ${restaurant.id}`}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all ${
-                  selectedRestaurant?.id === restaurant.id
-                    ? "bg-primary/5 text-primary"
-                    : "hover:bg-gray-100 text-gray-700"
-                }`}
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <BrandLogo
-                    className="shrink-0 gap-0"
-                    imageClassName="size-7 rounded-full bg-white shadow-sm"
-                    showName={false}
-                    logoUrl={restaurant.logoUrl}
-                    name={restaurant.name}
-                  />
-                  <span className="min-w-0 text-left">
-                    <span className="block truncate">{restaurant.name}</span>
-                    <span className="block truncate text-[10px] font-medium text-gray-400">
-                      {getRestaurantIdentifier(restaurant)}
-                    </span>
-                  </span>
-                </span>
-
-                {selectedRestaurant?.id === restaurant.id && (
-                  <Check size={14} className="text-primary" />
-                )}
-              </button>
-            ))}
-
-            {isFetching && restaurants.length > 0 ? (
-              <div className="py-2 text-center text-xs text-gray-400">
-                {t("loadingMoreRestaurants")}
-              </div>
-            ) : null}
-
-            {!isFetching && restaurants.length === 0 && (
-              <div className="text-center text-xs text-gray-500 py-3 space-y-2">
-                <p>{t("noRestaurants")}</p>
-                <p>{t("requestRestaurant")}</p>
-
-                <button
-                  onClick={handleLogout}
-                  className="mt-2 rounded-md bg-primary px-3 py-1.5 text-xs text-white hover:bg-primary/90"
-                >
-                  {t("goToLogin")}
-                </button>
-              </div>
-            )}
-          </div>
+            <SheetHeader className="border-b border-gray-100 px-4 py-4 pr-12 text-left">
+              <SheetTitle className="text-base">
+                {t("selectRestaurant")}
+              </SheetTitle>
+              <SheetDescription>{t("searchRestaurants")}</SheetDescription>
+            </SheetHeader>
+            <div className="min-h-0 px-4 pb-4 pt-3">
+              {renderRestaurantOptions(true)}
+            </div>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <div className="relative">
+          {renderPickerButton()}
+          {open ? (
+            <div
+              id="restaurant-picker-options"
+              className="absolute left-0 top-[110%] z-50 w-full animate-in rounded-xl border bg-white p-3 shadow-xl duration-200 fade-in zoom-in-95"
+            >
+              <p className="text-xs text-gray-400 px-2 mb-2">
+                {t("selectRestaurant")}
+              </p>
+              {renderRestaurantOptions()}
+            </div>
+          ) : null}
         </div>
       )}
     </div>

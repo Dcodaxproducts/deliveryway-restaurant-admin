@@ -1,7 +1,15 @@
 "use client";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import PaginationSection from "@/components/common/PaginationSection";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import PaginationSection, {
+  shouldShowPageSizeSelector,
+} from "@/components/common/PaginationSection";
 import type { TableReservationsMeta } from "@/types/table-reservations";
 import { useTranslations } from "next-intl";
 
@@ -21,6 +29,7 @@ export default function TableReservationsPagination({
   onPageChange,
 }: TableReservationsPaginationProps) {
   const common = useTranslations("common");
+  const showPageSize = shouldShowPageSizeSelector(meta.total, limitOptions);
 
   return (
     <div className="flex flex-col gap-4">
@@ -34,21 +43,26 @@ export default function TableReservationsPagination({
         onPageChange={onPageChange}
       />
 
-      <div className="flex items-center gap-2 self-start text-sm text-gray-500 sm:self-end">
-        <span>{common("rowsPerPage")}</span>
-        <Select value={String(limit)} onValueChange={(value) => onLimitChange(Number(value))}>
-          <SelectTrigger className="h-10 w-[90px] rounded-[14px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {limitOptions.map((option) => (
-              <SelectItem key={option} value={String(option)}>
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {showPageSize ? (
+        <div className="flex items-center gap-2 self-start text-sm text-gray-500 sm:self-end">
+          <span>{common("rowsPerPage")}</span>
+          <Select
+            value={String(limit)}
+            onValueChange={(value) => onLimitChange(Number(value))}
+          >
+            <SelectTrigger className="h-10 w-[90px] rounded-[14px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {limitOptions.map((option) => (
+                <SelectItem key={option} value={String(option)}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ) : null}
     </div>
   );
 }

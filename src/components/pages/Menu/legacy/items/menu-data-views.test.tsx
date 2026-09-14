@@ -315,12 +315,12 @@ describe.each(families)("$name canonical list", (family) => {
     expect(markup).not.toContain('data-table-skeleton');
   });
 
-  it("renders canonical empty feedback and preserves pagination visibility", () => {
+  it("renders canonical empty feedback without redundant pagination", () => {
     seed(family, []);
     const markup = renderToStaticMarkup(run(family));
     expect(markup).toContain('data-state="empty"');
     expect(markup).toContain("emptyTitle");
-    expect(markup.includes('data-slot="pagination-bar"')).toBe(!["items", "categories"].includes(family.name));
+    expect(markup).not.toContain('data-slot="pagination-bar"');
   });
 
   it.each(["desktop", "mobile"])("preserves %s edit selection and confirmed delete payload", (layout) => {
