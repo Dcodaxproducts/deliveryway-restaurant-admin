@@ -32,7 +32,7 @@ export function Navbar() {
           </div>
         </div>
 
-        <div className="hidden min-h-[76px] flex-nowrap items-center gap-x-3 md:flex">
+        <div className="hidden min-h-[67px] flex-nowrap items-center gap-x-3 md:flex">
           <div className="flex shrink-0 items-center">
             <SidebarTrigger
               aria-label={t("openSidebar")}

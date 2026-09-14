@@ -47,6 +47,15 @@ describe("Partner shadcn sidebar", () => {
     expect(markup).toContain(">needHelp<");
     expect(markup).toContain("data-[active=true]:bg-primary/10");
     expect(markup).toContain("svg]:size-[20px]");
+    expect(markup).toContain("flex w-full min-w-0 flex-col gap-1.5");
+
+    const contentIndex = markup.indexOf('data-slot="sidebar-content"');
+    const supportCardIndex = markup.indexOf('data-sidebar-support-card="true"');
+    const footerIndex = markup.indexOf('data-slot="sidebar-footer"');
+
+    expect(contentIndex).toBeGreaterThan(-1);
+    expect(supportCardIndex).toBeGreaterThan(contentIndex);
+    expect(footerIndex).toBeGreaterThan(supportCardIndex);
   });
 
   it("uses shadcn icon collapse and tooltip labels", () => {

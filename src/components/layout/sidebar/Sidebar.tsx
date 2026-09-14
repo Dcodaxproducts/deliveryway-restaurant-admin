@@ -260,7 +260,7 @@ function PartnerSidebarContent(): ReactElement {
   const sidebarCta = getSidebarCta(user, role, isBranchAdmin);
 
   const renderGroup = (items: MenuItem[]) => (
-    <SidebarMenu>
+    <SidebarMenu className="gap-1.5">
       {items.map((item) => (
         <PartnerSidebarItem
           key={item.href ?? item.title}
@@ -314,10 +314,10 @@ function PartnerSidebarContent(): ReactElement {
             <SidebarGroupContent>{renderGroup(accountItems)}</SidebarGroupContent>
           </SidebarGroup>
         ) : null}
-      </SidebarContent>
-
-      <SidebarFooter className="gap-3 border-t border-sidebar-border bg-sidebar p-3">
-        <div className="relative mx-1 mt-9 rounded-2xl bg-primary px-4 pb-4 pt-12 text-white group-data-[collapsible=icon]:hidden">
+        <div
+          data-sidebar-support-card="true"
+          className="relative mx-3 mb-3 mt-10 shrink-0 rounded-2xl bg-primary px-4 pb-4 pt-12 text-white group-data-[collapsible=icon]:hidden"
+        >
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl bg-[url('/href_background.png')] bg-cover bg-center opacity-70"
@@ -344,6 +344,9 @@ function PartnerSidebarContent(): ReactElement {
             {t(sidebarCta.labelKey)}
           </Button>
         </div>
+      </SidebarContent>
+
+      <SidebarFooter className="gap-3 border-t border-sidebar-border bg-sidebar p-3">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
