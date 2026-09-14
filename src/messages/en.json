@@ -3474,6 +3474,7 @@
     "catalogHelp": "WinOrder matches main items and modifiers by name. FeastFlow sends the base item name plus ArticleSize for variations; saved names or article numbers are optional overrides. Matched WinOrder articles provide the authoritative VAT. Unknown/comment items should remain exceptions. Generic service charges still require an explicit article mapping.",
     "nameMatching": "Exact-name mode",
     "catalogFile": "WinOrder article export",
+    "chooseCatalogFile": "Choose file",
     "catalogFileHelp": "Choose a WinOrder CSV or XML export to compare article names locally. The file is not uploaded.",
     "catalogFileTooLarge": "The WinOrder catalog file must be 5 MB or smaller.",
     "catalogFileInvalid": "This is not a supported WinOrder CSV or XML article export.",

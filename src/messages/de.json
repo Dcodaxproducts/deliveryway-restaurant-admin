@@ -3474,6 +3474,7 @@
     "catalogHelp": "WinOrder gleicht Hauptartikel und Extras anhand des Namens ab. FeastFlow überträgt bei Varianten den Namen des Basisartikels zusammen mit ArticleSize; gespeicherte Namen oder Artikelnummern sind optionale Abweichungen. Für zugeordnete Artikel ist die in WinOrder konfigurierte MwSt. maßgeblich. Unbekannte Kommentarartikel dürfen nur Ausnahmen sein. Allgemeine Servicegebühren benötigen weiterhin eine explizite Artikelzuordnung.",
     "nameMatching": "Exakter Namensabgleich",
     "catalogFile": "WinOrder-Artikelexport",
+    "chooseCatalogFile": "Datei auswählen",
     "catalogFileHelp": "Wählen Sie einen WinOrder-CSV- oder XML-Export, um Artikelnamen lokal zu vergleichen. Die Datei wird nicht hochgeladen.",
     "catalogFileTooLarge": "Die WinOrder-Katalogdatei darf höchstens 5 MB groß sein.",
     "catalogFileInvalid": "Dies ist kein unterstützter WinOrder-CSV- oder XML-Artikelexport.",

@@ -22,6 +22,7 @@ import Container from "@/components/common/Container";
 import PageHeader from "@/components/common/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { FileUploadControl } from "@/components/ui/file-upload-control";
 import {
   Card,
   CardContent,
@@ -553,9 +554,10 @@ export default function WinOrderSettingsPage() {
                       </p>
                     </div>
                     <div className="w-full sm:max-w-sm">
-                      <Input
+                      <FileUploadControl
                         id="winorder-catalog-file"
-                        type="file"
+                        buttonLabel={t("chooseCatalogFile")}
+                        fileName={catalogFileName}
                         accept=".csv,.xml,text/csv,application/xml,text/xml"
                         aria-label={t("catalogFile")}
                         onChange={(event) => void compareCatalogFile(event)}
