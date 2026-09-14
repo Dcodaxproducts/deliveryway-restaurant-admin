@@ -478,8 +478,8 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
         <Sheet open={open} onOpenChange={setOpen}>
           {renderPickerButton()}
           <SheetContent
-            side="bottom"
-            className="max-h-[85dvh] gap-0 rounded-t-2xl border-gray-200 p-0"
+            side="top"
+            className="max-h-[85dvh] gap-0 rounded-b-2xl border-gray-200 p-0"
           >
             <SheetHeader className="border-b border-gray-100 px-4 py-4 pr-12 text-left">
               <SheetTitle className="text-base">
