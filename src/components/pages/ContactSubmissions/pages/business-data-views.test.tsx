@@ -15,6 +15,7 @@ import { FilterBar, type FilterBarProps } from "@/components/common/FilterBar";
 import { RowActions } from "@/components/common/RowActions";
 import PaginationSection from "@/components/common/PaginationSection";
 import { Button } from "@/components/ui/button";
+import { FormSelect } from "@/components/ui/form-select";
 import { Switch } from "@/components/ui/switch";
 import RolesTable from "@/components/pages/Employees/components/employee-settings/RolesTable";
 import { AddRoleModal } from "@/components/pages/Employees/components/employee-settings/AddRoleModal";
@@ -423,7 +424,7 @@ describe("contact submission contracts", () => {
     expect(harness.query.mock.lastCall?.[0].branchId).toBe("assigned-branch");
     expect(harness.branches).toHaveBeenLastCalledWith(undefined);
     expect(
-      nodes(filters).filter((node) => node.type === "select"),
+      nodes(filters).filter((node) => node.type === FormSelect),
     ).toHaveLength(1);
     expect(renderToStaticMarkup(<>{filters}</>)).toContain("Assigned branch");
   });
@@ -439,7 +440,7 @@ describe("contact submission contracts", () => {
     fire(
       find(
         filters,
-        (node) => node.type === "select" && node.props.value === "ALL",
+        (node) => node.type === FormSelect && node.props.value === "ALL",
       ),
       "onChange",
       { target: { value: "ARCHIVED" } },
@@ -448,7 +449,7 @@ describe("contact submission contracts", () => {
     fire(
       find(
         filters,
-        (node) => node.type === "select" && node.props.value === "",
+        (node) => node.type === FormSelect && node.props.value === "",
       ),
       "onChange",
       { target: { value: "branch-2" } },
@@ -508,7 +509,7 @@ describe("contact submission contracts", () => {
     contact();
     expect(harness.query.mock.lastCall?.[0].page).toBe(3);
     fire(
-      find(tree, (node) => node.type === "select" && node.props.value === "20"),
+      find(tree, (node) => node.type === FormSelect && node.props.value === "20"),
       "onChange",
       { target: { value: "50" } },
     );
@@ -817,7 +818,7 @@ describe("reservation FilterBar contracts", () => {
         find(
           controls,
           (node) =>
-            node.type === "select" && node.props["aria-label"] === label,
+            node.type === FormSelect && node.props["aria-label"] === label,
         ),
         "onChange",
         { target: { value } },
@@ -842,7 +843,7 @@ describe("reservation FilterBar contracts", () => {
     harness.branchAdmin = true;
     const controls = filters().props.filters;
     expect(
-      nodes(controls).filter((node) => node.type === "select"),
+      nodes(controls).filter((node) => node.type === FormSelect),
     ).toHaveLength(3);
     const locked = find(
       controls,
