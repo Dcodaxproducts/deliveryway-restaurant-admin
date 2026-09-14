@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 import ContextGate from "@/components/layout/ContextGate";
 import { Navbar } from "@/components/layout/navbar/navbar";
 import { Sidebar } from "@/components/layout/sidebar/Sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+} from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { isPublicRoute } from "@/lib/access";
-import { cn } from "@/lib/utils";
 
 type AppShellProps = {
   children: ReactNode;
@@ -18,7 +21,6 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const hideLayout = isPublicRoute(pathname);
   const { loading, user, token } = useAuth();
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   if (hideLayout) {
     return (
@@ -64,40 +66,20 @@ export function AppShell({ children }: AppShellProps) {
       >
         Skip to content
       </a>
-      <div className="fixed inset-x-0 top-0 z-[var(--ui-layer-dropdown)]">
-        <Navbar />
-      </div>
-      <div
-        className={cn(
-          "flex min-h-screen items-start",
-          "pt-[116px] md:pt-[76px]",
-        )}
-      >
-        <div
-          className={cn(
-            "hidden h-[calc(100dvh-76px)] shrink-0 overflow-hidden transition-[width] duration-200 motion-reduce:transition-none xl:fixed xl:left-0 xl:top-[76px] xl:z-[var(--ui-layer-sticky)] xl:flex",
-            isSidebarCollapsed ? "xl:w-20" : "xl:w-72",
-          )}
-        >
-          <Sidebar
-            collapsed={isSidebarCollapsed}
-            onCollapsedChange={setIsSidebarCollapsed}
-          />
-        </div>
-
-        <main
+      <SidebarProvider>
+        <Sidebar />
+        <SidebarInset
           id="main-content"
           tabIndex={-1}
-          className={cn(
-            "flex min-w-0 flex-1 flex-col",
-            "transition-[padding] duration-200 motion-reduce:transition-none",
-            isSidebarCollapsed ? "xl:pl-20" : "xl:pl-72",
-          )}
+          className="min-w-0"
         >
-          {children}
-        </main>
-      </div>
-      <ContextGate />
+          <div className="sticky top-0 z-[var(--ui-layer-dropdown)] bg-background">
+            <Navbar />
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+          <ContextGate />
+        </SidebarInset>
+      </SidebarProvider>
     </>
   );
 }

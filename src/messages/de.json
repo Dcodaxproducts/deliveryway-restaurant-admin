@@ -260,6 +260,7 @@
     "logoutSuccess": "Erfolgreich abgemeldet",
     "collapseSidebar": "Seitenleiste einklappen",
     "expandSidebar": "Seitenleiste ausklappen",
+    "platform": "Plattform",
     "accountSettings": "Kontoeinstellungen",
     "allOrders": "Alle Bestellungen",
     "notificationSoundOn": "Bestellton an",
