@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_RESTAURANT_BRANDING_PAYLOAD } from "@/config/default-branding";
+import {
+  DEFAULT_RESTAURANT_BRANDING_PAYLOAD,
+  PLATFORM_PRIMARY_COLOR,
+} from "@/config/default-branding";
 import {
   brandingPayloadToCssVariables,
   buildGeneratedStorefrontUrl,
@@ -116,10 +119,10 @@ describe("branding helpers", () => {
     expect(variables["--brand-background"]).toBe("#FFFFFF");
     expect(variables["--brand-text"]).toBe("#030401");
     expect(variables["--brand-button-radius"]).toBe("9999px");
-    expect(variables["--primary"]).toBe("#112233");
-    expect(variables["--ring"]).toBe("#112233");
+    expect(variables["--primary"]).toBe(PLATFORM_PRIMARY_COLOR);
+    expect(variables["--ring"]).toBe(PLATFORM_PRIMARY_COLOR);
     expect(variables["--dark"]).toBe("#030401");
-    expect(variables["--sidebar-ring"]).toBe("#112233");
+    expect(variables["--sidebar-ring"]).toBe(PLATFORM_PRIMARY_COLOR);
   });
 
   it("maps dark mode payload to automatic dark background and readable text variables", () => {
@@ -138,11 +141,11 @@ describe("branding helpers", () => {
     });
     const variables = brandingPayloadToCssVariables(payload);
 
-    expect(variables["--primary"]).toBe(defaultTheme.dark.primaryColor);
+    expect(variables["--primary"]).toBe(PLATFORM_PRIMARY_COLOR);
     expect(variables["--background"]).toBe("#030401");
     expect(variables["--foreground"]).toBe("#F5F5F5");
     expect(variables["--dark"]).toBe("#F5F5F5");
-    expect(variables["--sidebar-primary"]).toBe("#c1000a");
+    expect(variables["--sidebar-primary"]).toBe(PLATFORM_PRIMARY_COLOR);
   });
 
   it("normalizes provided backend GET envelope shape", () => {

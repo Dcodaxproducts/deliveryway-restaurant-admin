@@ -1,4 +1,7 @@
-import { DEFAULT_RESTAURANT_BRANDING_PAYLOAD } from "@/config/default-branding";
+import {
+  DEFAULT_RESTAURANT_BRANDING_PAYLOAD,
+  PLATFORM_PRIMARY_COLOR,
+} from "@/config/default-branding";
 import type {
   BrandingButtonStyle,
   BrandingHomeLayout,
@@ -844,14 +847,14 @@ export const brandingPayloadToCssVariables = (
     "--brand-font-family": theme.fontFamily,
     "--brand-heading-font-family": theme.headingFontFamily,
     "--brand-button-radius": buttonRadius,
-    "--primary": activeTheme.primaryColor,
-    "--ring": activeTheme.primaryColor,
+    "--primary": PLATFORM_PRIMARY_COLOR,
+    "--ring": PLATFORM_PRIMARY_COLOR,
     "--background": activeTheme.backgroundColor,
     "--foreground": activeTheme.textColor,
     "--dark": activeTheme.textColor,
     "--radius": theme.borderRadius,
-    "--sidebar-primary": theme.primaryColor,
-    "--sidebar-ring": theme.primaryColor,
+    "--sidebar-primary": PLATFORM_PRIMARY_COLOR,
+    "--sidebar-ring": PLATFORM_PRIMARY_COLOR,
   };
 };
 

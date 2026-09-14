@@ -1,5 +1,7 @@
 import type { RestaurantBrandingPayload } from "@/types/branding";
 
+export const PLATFORM_PRIMARY_COLOR = "oklch(70.5% 0.213 47.604)";
+
 export const DEFAULT_RESTAURANT_BRANDING_PAYLOAD: RestaurantBrandingPayload = {
   restaurant: {
     name: "FeastFlow Restaurant",
