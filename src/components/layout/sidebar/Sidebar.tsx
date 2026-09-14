@@ -5,7 +5,13 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { LogOut, ChevronDown, ChevronRight } from "lucide-react";
+import {
+  LogOut,
+  ChevronDown,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { menuItems, MenuItem, type SidebarRole } from "@/config/sidebarItems";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +21,11 @@ import {
   isStaffRole,
 } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
 interface SidebarItemProps {
@@ -23,6 +34,8 @@ interface SidebarItemProps {
   isOpen?: boolean;
   onOpenChange?: () => void;
   onLinkClick?: () => void;
+  collapsed?: boolean;
+  onExpand?: () => void;
   isActiveRoute: (href?: string, children?: MenuItem[]) => boolean;
 }
 
@@ -32,6 +45,8 @@ const SidebarItem = ({
   isOpen = false,
   onOpenChange,
   onLinkClick,
+  collapsed = false,
+  onExpand,
   isActiveRoute,
 }: SidebarItemProps): ReactElement => {
   const t = useTranslations("navigation");
@@ -41,42 +56,64 @@ const SidebarItem = ({
   const label = item.labelKey ? t(item.labelKey) : item.title;
 
   if (hasChildren) {
-    return (
-      <div className={isDashboard ? "mb-5 mt-5" : "mb-2.5"}>
-        <button
-          type="button"
-          aria-expanded={isOpen}
-          onClick={onOpenChange}
-          className="w-full flex items-center justify-between px-6 transition-colors"
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <div
-              className={`flex items-center justify-center size-10 rounded-xl shrink-0 ${
-                isActive ? "bg-primary text-white" : "bg-[#F9FAFB] text-primary"
-              }`}
-            >
-              <Icon size={20} strokeWidth={2.2} />
-            </div>
+    const parent = (
+      <button
+        type="button"
+        aria-expanded={collapsed ? false : isOpen}
+        aria-label={collapsed ? label : undefined}
+        onClick={() => {
+          if (collapsed) onExpand?.();
+          onOpenChange?.();
+        }}
+        className={`flex w-full items-center transition-colors ${
+          collapsed ? "justify-center px-2" : "justify-between px-6"
+        }`}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <div
+            className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
+              isActive ? "bg-primary text-white" : "bg-[#F9FAFB] text-primary"
+            }`}
+          >
+            <Icon size={20} strokeWidth={2.2} />
+          </div>
 
+          {!collapsed && (
             <span
-              className={`text-sm truncate ${
+              className={`truncate text-sm ${
                 isActive
-                  ? "text-primary font-medium"
+                  ? "font-medium text-primary"
                   : "text-gray hover:text-primary"
               }`}
             >
               {label}
             </span>
-          </div>
-
-          {isOpen ? (
-            <ChevronDown size={18} className="text-primary shrink-0" />
-          ) : (
-            <ChevronRight size={18} className="text-primary shrink-0" />
           )}
-        </button>
+        </div>
 
-        {isOpen && (
+        {!collapsed &&
+          (isOpen ? (
+            <ChevronDown size={18} className="shrink-0 text-primary" />
+          ) : (
+            <ChevronRight size={18} className="shrink-0 text-primary" />
+          ))}
+      </button>
+    );
+
+    return (
+      <div className={isDashboard ? "mb-5 mt-5" : "mb-2.5"}>
+        {collapsed ? (
+          <Tooltip>
+            <TooltipTrigger asChild>{parent}</TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8}>
+              {label}
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          parent
+        )}
+
+        {isOpen && !collapsed && (
           <div className="mt-2 space-y-1">
             {item.children?.map((child) => {
               const ChildIcon = child.icon;
@@ -112,11 +149,14 @@ const SidebarItem = ({
     );
   }
 
-  return (
+  const link = (
     <Link
       href={item.href ?? "#"}
       onClick={onLinkClick}
-      className={`flex items-center gap-3 px-6 transition-colors mb-2.5 ${
+      aria-label={collapsed ? label : undefined}
+      className={`mb-2.5 flex items-center gap-3 transition-colors ${
+        collapsed ? "justify-center px-2" : "px-6"
+      } ${
         isDashboard ? "mb-5 mt-5" : ""
       }`}
     >
@@ -128,14 +168,29 @@ const SidebarItem = ({
         <Icon size={20} strokeWidth={2.2} />
       </div>
 
-      <span
-        className={`text-sm truncate ${
-          isActive ? "text-primary font-medium" : "text-gray hover:text-primary"
-        }`}
-      >
-        {label}
-      </span>
+      {!collapsed && (
+        <span
+          className={`truncate text-sm ${
+            isActive
+              ? "font-medium text-primary"
+              : "text-gray hover:text-primary"
+          }`}
+        >
+          {label}
+        </span>
+      )}
     </Link>
+  );
+
+  return collapsed ? (
+    <Tooltip>
+      <TooltipTrigger asChild>{link}</TooltipTrigger>
+      <TooltipContent side="right" sideOffset={8}>
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  ) : (
+    link
   );
 };
 
@@ -173,8 +228,12 @@ const getSidebarCta = (
 
 function SidebarContent({
   onLinkClick,
+  collapsed = false,
+  onCollapsedChange,
 }: {
   onLinkClick?: () => void;
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
 }): ReactElement {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -273,8 +332,29 @@ function SidebarContent({
   };
 
   return (
-    <aside className="flex h-full w-72 flex-col overflow-y-auto overscroll-contain bg-white xl:overflow-y-hidden xl:hover:overflow-y-auto">
-      <nav className="flex flex-col px-0 pt-5">
+    <aside
+      data-collapsed={collapsed}
+      className={`relative flex h-full flex-col overflow-y-auto overscroll-contain bg-white transition-[width] duration-200 motion-reduce:transition-none xl:overflow-y-hidden xl:hover:overflow-y-auto ${
+        collapsed ? "w-20" : "w-72"
+      }`}
+    >
+      {onCollapsedChange && (
+        <button
+          type="button"
+          aria-label={t(collapsed ? "expandSidebar" : "collapseSidebar")}
+          aria-expanded={!collapsed}
+          onClick={() => onCollapsedChange(!collapsed)}
+          className="absolute right-3 top-3 z-10 inline-flex size-9 items-center justify-center rounded-xl border border-border bg-white text-primary shadow-sm transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        >
+          {collapsed ? (
+            <PanelLeftOpen size={18} />
+          ) : (
+            <PanelLeftClose size={18} />
+          )}
+        </button>
+      )}
+
+      <nav className="flex min-h-full flex-col px-0 pt-14">
         {mainItems.map((item) => (
           <SidebarItem
             key={item.title}
@@ -288,15 +368,21 @@ function SidebarContent({
               })
             }
             onLinkClick={handleLinkClick}
+            collapsed={collapsed}
+            onExpand={() => onCollapsedChange?.(false)}
             isActiveRoute={isActiveRoute}
           />
         ))}
 
-        <div className="mt-5 px-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-foreground">
-            {t("accountSettings")}
-          </p>
-        </div>
+        {collapsed ? (
+          <div className="mx-4 mt-5 border-t border-border" />
+        ) : (
+          <div className="mt-5 px-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-foreground">
+              {t("accountSettings")}
+            </p>
+          </div>
+        )}
 
         <div className="mt-5">
           {accountItems.map((item) => (
@@ -312,56 +398,80 @@ function SidebarContent({
                 })
               }
               onLinkClick={handleLinkClick}
+              collapsed={collapsed}
+              onExpand={() => onCollapsedChange?.(false)}
               isActiveRoute={isActiveRoute}
             />
           ))}
         </div>
 
-        <div className="px-5 pb-5 mt-28">
-          <div
-            className="relative rounded-2xl px-4 pt-14 pb-4 text-white"
-            style={{
-              backgroundImage: "url('/href_background.png')",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          >
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2">
-              <Image
-                src="/user_logo.png"
-                alt={t("supportAlt")}
-                width={90}
-                height={90}
-                className="drop-shadow-md"
-              />
-            </div>
-
-            <div className="text-left mb-4">
-              <p className="text-base font-semibold">{t("needHelp")}</p>
-              <p className="text-sm opacity-90">{t("checkDocs")}</p>
-            </div>
-
-            <Button
-              size="sm"
-              className="w-full bg-white text-primary hover:bg-white/90 font-semibold"
-              onClick={() =>
-                router.push(getSidebarCta(user, role, isBranchAdmin).href)
-              }
+        <div className={`mt-auto pb-5 ${collapsed ? "px-2 pt-8" : "px-5 pt-28"}`}>
+          {!collapsed && (
+            <div
+              className="relative rounded-2xl px-4 pt-14 pb-4 text-white"
+              style={{
+                backgroundImage: "url('/href_background.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
             >
-              {t(getSidebarCta(user, role, isBranchAdmin).labelKey)}
-            </Button>
-          </div>
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2">
+                <Image
+                  src="/user_logo.png"
+                  alt={t("supportAlt")}
+                  width={90}
+                  height={90}
+                  className="drop-shadow-md"
+                />
+              </div>
 
-          <Button
-            variant="ghost"
-            className="mt-4 flex w-full items-center justify-start gap-3 text-primary hover:bg-primary/10"
-            onClick={handleLogout}
-          >
-            <div className="size-10 rounded-xl bg-[#F9FAFB] flex items-center justify-center">
-              <LogOut size={18} />
+              <div className="text-left mb-4">
+                <p className="text-base font-semibold">{t("needHelp")}</p>
+                <p className="text-sm opacity-90">{t("checkDocs")}</p>
+              </div>
+
+              <Button
+                size="sm"
+                className="w-full bg-white text-primary hover:bg-white/90 font-semibold"
+                onClick={() =>
+                  router.push(getSidebarCta(user, role, isBranchAdmin).href)
+                }
+              >
+                {t(getSidebarCta(user, role, isBranchAdmin).labelKey)}
+              </Button>
             </div>
-            <span className="text-sm font-semibold">{t("logout")}</span>
-          </Button>
+          )}
+
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  aria-label={t("logout")}
+                  className="mt-4 flex w-full items-center justify-center px-0 text-primary hover:bg-primary/10"
+                  onClick={handleLogout}
+                >
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-[#F9FAFB]">
+                    <LogOut size={18} />
+                  </div>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                {t("logout")}
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              variant="ghost"
+              className="mt-4 flex w-full items-center justify-start gap-3 text-primary hover:bg-primary/10"
+              onClick={handleLogout}
+            >
+              <div className="size-10 rounded-xl bg-[#F9FAFB] flex items-center justify-center">
+                <LogOut size={18} />
+              </div>
+              <span className="text-sm font-semibold">{t("logout")}</span>
+            </Button>
+          )}
         </div>
       </nav>
     </aside>
@@ -370,12 +480,24 @@ function SidebarContent({
 
 export function Sidebar({
   onLinkClick,
+  collapsed = false,
+  onCollapsedChange,
 }: {
   onLinkClick?: () => void;
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
 }): ReactElement {
   return (
-    <Suspense fallback={<aside className="h-full w-72 bg-white" />}>
-      <SidebarContent onLinkClick={onLinkClick} />
+    <Suspense
+      fallback={
+        <aside className={`h-full bg-white ${collapsed ? "w-20" : "w-72"}`} />
+      }
+    >
+      <SidebarContent
+        onLinkClick={onLinkClick}
+        collapsed={collapsed}
+        onCollapsedChange={onCollapsedChange}
+      />
     </Suspense>
   );
 }

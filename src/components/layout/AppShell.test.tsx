@@ -101,7 +101,10 @@ describe("AppShell authentication boundary", () => {
   });
 
   it("renders protected content for a resolved valid session", () => {
-    expect(renderShell()).toContain("protected-dashboard");
+    const markup = renderShell();
+
+    expect(markup).toContain("protected-dashboard");
+    expect(markup).toContain("xl:pl-72");
   });
 
   it("keeps public authentication pages visible without a session", () => {

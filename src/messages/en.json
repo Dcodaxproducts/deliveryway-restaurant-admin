@@ -256,6 +256,8 @@
     "accountSettingsCta": "ACCOUNT SETTINGS",
     "logout": "Logout",
     "logoutSuccess": "Logged out successfully",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
     "allergen": "Allergen",
     "deliveryman": "Deliveryman",
     "accountSettings": "Account Settings",

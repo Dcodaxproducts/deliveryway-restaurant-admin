@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 import ContextGate from "@/components/layout/ContextGate";
@@ -18,6 +18,7 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const hideLayout = isPublicRoute(pathname);
   const { loading, user, token } = useAuth();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   if (hideLayout) {
     return (
@@ -72,8 +73,16 @@ export function AppShell({ children }: AppShellProps) {
           "pt-[116px] md:pt-[76px]",
         )}
       >
-        <div className="hidden h-[calc(100dvh-76px)] shrink-0 overflow-hidden xl:fixed xl:left-0 xl:top-[76px] xl:z-[var(--ui-layer-sticky)] xl:flex">
-          <Sidebar />
+        <div
+          className={cn(
+            "hidden h-[calc(100dvh-76px)] shrink-0 overflow-hidden transition-[width] duration-200 motion-reduce:transition-none xl:fixed xl:left-0 xl:top-[76px] xl:z-[var(--ui-layer-sticky)] xl:flex",
+            isSidebarCollapsed ? "xl:w-20" : "xl:w-72",
+          )}
+        >
+          <Sidebar
+            collapsed={isSidebarCollapsed}
+            onCollapsedChange={setIsSidebarCollapsed}
+          />
         </div>
 
         <main
@@ -81,7 +90,8 @@ export function AppShell({ children }: AppShellProps) {
           tabIndex={-1}
           className={cn(
             "flex min-w-0 flex-1 flex-col",
-            "xl:pl-72",
+            "transition-[padding] duration-200 motion-reduce:transition-none",
+            isSidebarCollapsed ? "xl:pl-20" : "xl:pl-72",
           )}
         >
           {children}

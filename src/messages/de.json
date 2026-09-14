@@ -258,6 +258,8 @@
     "accountSettingsCta": "KONTOEINSTELLUNGEN",
     "logout": "Abmelden",
     "logoutSuccess": "Erfolgreich abgemeldet",
+    "collapseSidebar": "Seitenleiste einklappen",
+    "expandSidebar": "Seitenleiste ausklappen",
     "accountSettings": "Kontoeinstellungen",
     "allOrders": "Alle Bestellungen",
     "notificationSoundOn": "Bestellton an",
