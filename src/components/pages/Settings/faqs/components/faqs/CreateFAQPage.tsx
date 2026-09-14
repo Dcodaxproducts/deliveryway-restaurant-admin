@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import {
@@ -219,7 +221,7 @@ export default function CreateFAQPage() {
                   Category
                 </label>
                 <div className="relative">
-                  <select
+                  <FormSelect
                     {...register("category")}
                     className="h-12 w-full appearance-none rounded-xl border border-[#E4E7EC] bg-[#F9FAFB] px-4 pr-10 text-sm text-[#101828] outline-none focus:border-[#D0D5DD] focus:bg-white"
                   >
@@ -228,7 +230,7 @@ export default function CreateFAQPage() {
                     <option value="Delivery">Delivery</option>
                     <option value="Payments">Payments</option>
                     <option value="Policy">Policy</option>
-                  </select>
+                  </FormSelect>
 
                   <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[#667085]">
                     ▾

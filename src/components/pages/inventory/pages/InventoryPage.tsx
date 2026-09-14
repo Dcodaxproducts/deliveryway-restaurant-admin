@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -228,7 +230,7 @@ export default function InventoryPage() {
               placeholder="Inventory item ID"
               aria-label="Inventory item ID"
             />
-            <select
+            <FormSelect
               value={movement.type}
               onChange={(event) =>
                 setMovement((prev) => ({ ...prev, type: event.target.value as MovementType }))
@@ -239,7 +241,7 @@ export default function InventoryPage() {
               <option value="IN">In</option>
               <option value="OUT">Out</option>
               <option value="ADJUSTMENT">Adjustment</option>
-            </select>
+            </FormSelect>
             <Input
               type="number"
               value={movement.quantity}

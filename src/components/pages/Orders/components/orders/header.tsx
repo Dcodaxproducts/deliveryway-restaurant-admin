@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { BellRing, Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/common/PageHeader";
@@ -113,7 +115,7 @@ export function OrdersHeader({ title, description, orders }: HeaderProps) {
               ? ordersT("notificationSoundOn")
               : ordersT("notificationSoundOff")}
           </Button>
-          <select
+          <FormSelect
             value={soundMode}
             disabled={!soundEnabled}
             aria-label={ordersT("notificationSoundMode")}
@@ -127,7 +129,7 @@ export function OrdersHeader({ title, description, orders }: HeaderProps) {
           >
             <option value="ONCE">{ordersT("notificationSoundOnce")}</option>
             <option value="REPEAT">{ordersT("notificationSoundRepeat")}</option>
-          </select>
+          </FormSelect>
           <Button asChild variant="outline" className="w-fit gap-2">
             <Link href="/auto-printing">
               <Printer size={18} />

@@ -17,7 +17,7 @@ type FormSelectProps = {
   "aria-invalid"?: React.AriaAttributes["aria-invalid"];
   "aria-label"?: string;
   "aria-labelledby"?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
   contentClassName?: string;
   defaultValue?: string | number;

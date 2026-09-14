@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { Filter, Loader2, RefreshCcw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -149,7 +151,7 @@ export default function GiftCardsFilters({
               <span className="truncate">{branchName || commonT("currentBranch")}</span>
             </Button>
           ) : (
-            <select
+            <FormSelect
               value={filters.branchId || "ALL"}
               onChange={(event) => {
                 const value = event.target.value;
@@ -163,7 +165,7 @@ export default function GiftCardsFilters({
                   {branch.name}
                 </option>
               ))}
-            </select>
+            </FormSelect>
           )}
         </div>
 
@@ -210,7 +212,7 @@ function FilterSelect({
       <label className="mb-1.5 block text-xs font-medium text-gray-600">
         {label}
       </label>
-      <select
+      <FormSelect
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-3 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
@@ -220,7 +222,7 @@ function FilterSelect({
             {option.label}
           </option>
         ))}
-      </select>
+      </FormSelect>
     </div>
   );
 }

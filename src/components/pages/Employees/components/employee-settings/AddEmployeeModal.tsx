@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { Controller, useForm, useWatch, type Control } from "react-hook-form";
@@ -367,7 +369,7 @@ export default function EmployeeInvitationModal({
               control={control}
               name="staffRoleId"
               render={({ field }) => (
-                <select
+                <FormSelect
                   id="employee-role"
                   value={field.value}
                   onChange={({ target: { value } }) => {
@@ -399,7 +401,7 @@ export default function EmployeeInvitationModal({
                       {role.name}
                     </option>
                   ))}
-                </select>
+                </FormSelect>
               )}
             />
             {errors.staffRoleId?.message ? (

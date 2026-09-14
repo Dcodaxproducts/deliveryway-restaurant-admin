@@ -1,3 +1,4 @@
+import { FormSelect } from "@/components/ui/form-select";
 import type { FieldPath, UseFormRegister } from "react-hook-form";
 import { Type } from "lucide-react";
 
@@ -127,13 +128,13 @@ export default function TypographySection({ register, getError }: TypographySect
             <label htmlFor={id} className={BRANDING_LABEL_CLASS}>
               {label}
             </label>
-            <select id={id} className={selectClassName} {...register(name)}>
+            <FormSelect id={id} className={selectClassName} {...register(name)}>
               {options.map(({ label: optionLabel, value }) => (
                 <option key={value} value={value}>
                   {optionLabel}
                 </option>
               ))}
-            </select>
+            </FormSelect>
             {getError(name) ? <p className={BRANDING_ERROR_CLASS}>{getError(name)}</p> : null}
           </div>
         ))}

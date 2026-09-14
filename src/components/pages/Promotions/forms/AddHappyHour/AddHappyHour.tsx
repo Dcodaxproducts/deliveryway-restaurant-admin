@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo } from "react";
 import {
@@ -407,7 +409,7 @@ export default function AddHappyHour() {
             render={({ field }) => (
               <div className="space-y-2">
                 <Label>{t("forms.audience")}</Label>
-                <select
+                <FormSelect
                   value={field.value}
                   onChange={field.onChange}
                   className="h-[44px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-sm"
@@ -416,7 +418,7 @@ export default function AddHappyHour() {
                   <option value="REGISTERED">
                     {t("forms.audienceRegistered")}
                   </option>
-                </select>
+                </FormSelect>
               </div>
             )}
           />
@@ -568,7 +570,7 @@ export default function AddHappyHour() {
               render={({ field }) => (
                 <div className="space-y-2">
                   <Label>{t("forms.discountType")}</Label>
-                  <select
+                  <FormSelect
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
@@ -578,7 +580,7 @@ export default function AddHappyHour() {
                     <option value="PERCENTAGE">
                       {t("forms.percentageDiscount")}
                     </option>
-                  </select>
+                  </FormSelect>
                 </div>
               )}
             />
@@ -673,7 +675,7 @@ export default function AddHappyHour() {
             render={({ field }) => (
               <div className="space-y-2">
                 <Label>{t("forms.applyMode")}</Label>
-                <select
+                <FormSelect
                   value={field.value}
                   onChange={field.onChange}
                   className="h-[44px] w-full rounded-md border border-[#BBBBBB] bg-white px-4 text-sm"
@@ -684,7 +686,7 @@ export default function AddHappyHour() {
                   <option value="SCOPED_ITEMS">
                     {t("forms.scopedItemsMode")}
                   </option>
-                </select>
+                </FormSelect>
               </div>
             )}
           />

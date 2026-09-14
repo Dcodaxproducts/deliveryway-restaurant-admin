@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { FaPen, FaTrash } from "react-icons/fa";
 import {
@@ -446,7 +448,7 @@ export default function LabelsTable() {
               {commonT("sortBy")}
             </label>
 
-            <select
+            <FormSelect
               value={sortBy}
               onChange={(event) => {
                 setSortBy(event.target.value as SortBy);
@@ -459,7 +461,7 @@ export default function LabelsTable() {
                   {getSortLabel(option.value)}
                 </option>
               ))}
-            </select>
+            </FormSelect>
           </div>
 
           <div className="min-w-0 xl:col-span-2">
@@ -467,7 +469,7 @@ export default function LabelsTable() {
               {commonT("order")}
             </label>
 
-            <select
+            <FormSelect
               value={sortOrder}
               onChange={(event) => {
                 setSortOrder(event.target.value as SortOrder);
@@ -477,7 +479,7 @@ export default function LabelsTable() {
             >
               <option value="ASC">ASC</option>
               <option value="DESC">DESC</option>
-            </select>
+            </FormSelect>
           </div>
 
           <Button

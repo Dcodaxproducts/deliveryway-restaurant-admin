@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import Section from "@/components/pages/Promotions/forms/Section";
 import FormInput from "@/components/forms/common/FormInput";
@@ -1066,7 +1068,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
           </div>
 
           {deliveryMode === "ZONE" && zones.length > 0 ? (
-            <select
+            <FormSelect
               value={safeActiveZoneIndex}
               onChange={(event) =>
                 setActiveZoneIndex(Number(event.target.value))
@@ -1083,7 +1085,7 @@ export default function EditBranchStepTwo({ data, setData }: any) {
                   })}
                 </option>
               ))}
-            </select>
+            </FormSelect>
           ) : null}
         </div>
 

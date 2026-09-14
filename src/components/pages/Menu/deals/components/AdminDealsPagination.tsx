@@ -1,3 +1,4 @@
+import { FormSelect } from "@/components/ui/form-select";
 import { Button } from "@/components/ui/button";
 import { shouldShowPageSizeSelector } from "@/components/common/PaginationSection";
 import type { AdminDealsMeta } from "@/types/admin-deals";
@@ -30,7 +31,7 @@ export default function AdminDealsPagination({
         {showPageSize ? (
           <>
             <span>{commonT("rowsPerPage")}</span>
-            <select
+            <FormSelect
               value={limit}
               onChange={(event) => onLimitChange(Number(event.target.value))}
               className="h-9 rounded-lg border border-gray-200 bg-white px-2 text-sm text-gray-700 outline-none focus:border-primary"
@@ -40,7 +41,7 @@ export default function AdminDealsPagination({
                   {option}
                 </option>
               ))}
-            </select>
+            </FormSelect>
           </>
         ) : null}
         <span>

@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import Image from "next/image";
 import { ChevronDown, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -1162,7 +1164,7 @@ export default function PosCart() {
 
           <div>
             <p className="text-xs text-gray-400 mb-2">{t("paymentMethod")}</p>
-            <select
+            <FormSelect
               value={paymentMethod}
               onChange={(event) =>
                 setPaymentMethod(event.target.value as PosPaymentMethod)
@@ -1179,7 +1181,7 @@ export default function PosCart() {
                   </option>
                 ))
               )}
-            </select>
+            </FormSelect>
           </div>
 
           {paymentMethod === "WALLET" ? (

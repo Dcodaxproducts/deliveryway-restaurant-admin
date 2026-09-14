@@ -1,3 +1,4 @@
+import { FormSelect } from "@/components/ui/form-select";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
@@ -199,7 +200,7 @@ describe("shared controls", () => {
     const markup = renderToStaticMarkup(
       <FilterBar
         search={<input aria-label="Search" />}
-        filters={<select aria-label="Status" />}
+        filters={<FormSelect aria-label="Status" />}
         actions={<Button>Apply</Button>}
         resultCount="24 results"
       />,

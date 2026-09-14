@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -320,7 +322,7 @@ export default function AdminDealForm({
             render={({ field }) => (
               <div className="space-y-2">
                 <Label>{t("audience")}</Label>
-                <select
+                <FormSelect
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
@@ -329,7 +331,7 @@ export default function AdminDealForm({
                   <option value="BOTH">{t("audienceBoth")}</option>
                   <option value="REGISTERED">{t("audienceRegistered")}</option>
                   <option value="GUEST">{t("audienceGuests")}</option>
-                </select>
+                </FormSelect>
                 <p className={MUTED_TEXT_SM_CLASS}>{t("audienceHelp")}</p>
               </div>
             )}
@@ -473,7 +475,7 @@ export default function AdminDealForm({
                       {commonT("currentBranch")}
                     </div>
                   ) : (
-                    <select
+                    <FormSelect
                       value={field.value ?? ""}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
@@ -485,7 +487,7 @@ export default function AdminDealForm({
                           {branch.name}
                         </option>
                       ))}
-                    </select>
+                    </FormSelect>
                   )}
                 </div>
               )}
@@ -989,7 +991,7 @@ function SelectField({
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <select
+      <FormSelect
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className={INPUT_BASE_CLASS}
@@ -999,7 +1001,7 @@ function SelectField({
             {option.label}
           </option>
         ))}
-      </select>
+      </FormSelect>
       {error ? <p className={FIELD_ERROR_CLASS}>{error}</p> : null}
     </div>
   );

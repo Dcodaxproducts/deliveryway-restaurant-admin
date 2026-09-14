@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { Filter, Loader2, RefreshCcw, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -184,7 +186,7 @@ export default function TableReservationsFilters({
                 {common("status")}
               </label>
 
-              <select
+              <FormSelect
                 aria-label={common("status")}
                 value={filters.status || "ALL"}
                 onChange={(event) =>
@@ -197,7 +199,7 @@ export default function TableReservationsFilters({
                     {t(option.labelKey)}
                   </option>
                 ))}
-              </select>
+              </FormSelect>
             </div>
 
             <div className="min-w-0 xl:col-span-2">
@@ -205,7 +207,7 @@ export default function TableReservationsFilters({
                 {common("sortBy")}
               </label>
 
-              <select
+              <FormSelect
                 aria-label={common("sortBy")}
                 value={filters.sortBy}
                 onChange={(event) =>
@@ -218,7 +220,7 @@ export default function TableReservationsFilters({
                     {t(option.labelKey)}
                   </option>
                 ))}
-              </select>
+              </FormSelect>
             </div>
 
             <div className="min-w-0 xl:col-span-1">
@@ -226,7 +228,7 @@ export default function TableReservationsFilters({
                 {common("order")}
               </label>
 
-              <select
+              <FormSelect
                 aria-label={common("order")}
                 value={filters.sortOrder}
                 onChange={(event) =>
@@ -238,7 +240,7 @@ export default function TableReservationsFilters({
               >
                 <option value="DESC">DESC</option>
                 <option value="ASC">ASC</option>
-              </select>
+              </FormSelect>
             </div>
 
             <div className="min-w-0 xl:col-span-1">
@@ -258,7 +260,7 @@ export default function TableReservationsFilters({
                   </span>
                 </Button>
               ) : (
-                <select
+                <FormSelect
                   aria-label={common("branch")}
                   value={filters.branchId || "ALL"}
                   onChange={(event) => {
@@ -273,7 +275,7 @@ export default function TableReservationsFilters({
                       {branch.name}
                     </option>
                   ))}
-                </select>
+                </FormSelect>
               )}
             </div>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -326,7 +328,7 @@ const restaurantId = authRestaurantId ?? undefined;
             <label className="text-sm font-medium">Display Priority</label>
 
             <div className="relative">
-              <select
+              <FormSelect
                 value={String(form.sortOrder)}
                 onChange={(e) =>
                   updateForm("sortOrder", Number(e.target.value))
@@ -339,7 +341,7 @@ const restaurantId = authRestaurantId ?? undefined;
                     {getSortOrderLabel(option.labelKey, t)}
                   </option>
                 ))}
-              </select>
+              </FormSelect>
 
               <div className="pointer-events-none absolute right-0 top-0 flex h-full w-10 items-center justify-center rounded-r-[10px] bg-primary">
                 <ChevronDown size={16} className="text-white" />

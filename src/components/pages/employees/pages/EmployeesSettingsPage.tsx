@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { useState } from "react";
 import Container from "@/components/common/Container";
 import StatsSection from "@/components/pages/Employees/components/employee-settings/stats-section";
@@ -103,7 +105,7 @@ const EmployeesSettingsPage = () => {
             <label className="text-sm font-medium text-dark" htmlFor="employee-branch-filter">
               {t("branchFilter")}
             </label>
-            <select
+            <FormSelect
               id="employee-branch-filter"
               value={selectedBranchId}
               onChange={(event) => setSelectedBranchId(event.target.value)}
@@ -116,7 +118,7 @@ const EmployeesSettingsPage = () => {
                   {branch.name || branch.branchName || branch.id}
                 </option>
               ))}
-            </select>
+            </FormSelect>
           </div>
         ) : null}
 

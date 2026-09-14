@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -505,7 +507,7 @@ export default function AutoPrintingSettings({
           </label>
 
           <div className="relative">
-            <select
+            <FormSelect
               value={form.connectionType}
               onChange={(event) =>
                 handleConnectionTypeChange(event.target.value as ConnectionType)
@@ -517,7 +519,7 @@ export default function AutoPrintingSettings({
               <option value="LAN">{t("networkIp")}</option>
               <option value="BLUETOOTH">{t("bluetooth")}</option>
               <option value="CLOUD">{t("printQueue")}</option>
-            </select>
+            </FormSelect>
 
             <div className="pointer-events-none absolute right-0 top-0 flex h-full w-10 items-center justify-center rounded-r-[10px] bg-primary">
               <ChevronDown size={16} className="text-white" />
@@ -547,7 +549,7 @@ export default function AutoPrintingSettings({
               </Button>
             </div>
 
-            <select
+            <FormSelect
               aria-label={t("printerName")}
               value={form.printerName}
               onChange={(event) => handlePrinterSelection(event.target.value)}
@@ -560,14 +562,14 @@ export default function AutoPrintingSettings({
                   {printer}
                 </option>
               ))}
-            </select>
+            </FormSelect>
           </div>
         ) : null}
 
         {isLocalConnection ? (
           <div className="mb-6">
             <label className="mb-2 block text-[16px]">{t("printMode")}</label>
-            <select
+            <FormSelect
               value={form.printMode}
               onChange={(event) =>
                 handlePrintModeChange(event.target.value as PrintingMode)
@@ -576,7 +578,7 @@ export default function AutoPrintingSettings({
             >
               <option value="ESC_POS">{t("printModeEscPos")}</option>
               <option value="PIXEL_HTML">{t("printModePixelHtml")}</option>
-            </select>
+            </FormSelect>
             <p className="mt-2 text-xs text-gray-500">
               {form.printMode === "ESC_POS"
                 ? t("printModeEscPosHint")
@@ -587,7 +589,7 @@ export default function AutoPrintingSettings({
 
         <div className="mb-6">
           <label className="mb-2 block text-[16px]">{t("paperSize")}</label>
-          <select
+          <FormSelect
             value={form.paperSize}
             onChange={(event) =>
               updateField("paperSize", event.target.value as PrintingPaperSize)
@@ -602,7 +604,7 @@ export default function AutoPrintingSettings({
             <option value="A5" disabled={form.printMode === "ESC_POS"}>
               A5
             </option>
-          </select>
+          </FormSelect>
           <p className="mt-2 text-xs text-gray-500">{t("paperSizeHint")}</p>
         </div>
 

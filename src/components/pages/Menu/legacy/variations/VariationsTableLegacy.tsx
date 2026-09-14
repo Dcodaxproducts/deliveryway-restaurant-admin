@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { useEffect, useMemo, useState } from "react";
 import { FaPen, FaTrash } from "react-icons/fa";
 import {
@@ -449,7 +451,7 @@ export default function VariationsTable() {
               {commonT("sortBy")}
             </label>
 
-            <select
+            <FormSelect
               value={sortBy}
               onChange={(event) =>
                 handleSortByChange(event.target.value as SortBy)
@@ -462,7 +464,7 @@ export default function VariationsTable() {
                   {getSortLabel(option.value)}
                 </option>
               ))}
-            </select>
+            </FormSelect>
           </div>
 
           {/* SORT ORDER */}
@@ -471,7 +473,7 @@ export default function VariationsTable() {
               {commonT("order")}
             </label>
 
-            <select
+            <FormSelect
               value={sortOrder}
               onChange={(event) =>
                 handleSortOrderChange(event.target.value as SortOrder)
@@ -481,7 +483,7 @@ export default function VariationsTable() {
             >
               <option value="DESC">DESC</option>
               <option value="ASC">ASC</option>
-            </select>
+            </FormSelect>
           </div>
 
           <Button

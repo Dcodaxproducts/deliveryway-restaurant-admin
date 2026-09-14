@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { useEffect, useMemo, useState } from "react";
 import { FaPen, FaTrash } from "react-icons/fa";
 import {
@@ -694,7 +696,7 @@ export default function AllergenTable() {
               {commonT("sortBy")}
             </label>
 
-            <select
+            <FormSelect
               value={sortBy}
               onChange={(event) => {
                 setSortBy(event.target.value as SortBy);
@@ -707,7 +709,7 @@ export default function AllergenTable() {
                   {getSortLabel(option.value)}
                 </option>
               ))}
-            </select>
+            </FormSelect>
           </div>
 
           <div className="min-w-0 xl:col-span-1">
@@ -715,7 +717,7 @@ export default function AllergenTable() {
               {commonT("order")}
             </label>
 
-            <select
+            <FormSelect
               value={sortOrder}
               disabled={sortBy === "manual"}
               onChange={(event) => {
@@ -726,7 +728,7 @@ export default function AllergenTable() {
             >
               <option value="ASC">ASC</option>
               <option value="DESC">DESC</option>
-            </select>
+            </FormSelect>
           </div>
 
           <Button
@@ -1103,7 +1105,7 @@ function TemplateModal({
               {t("templateType")}
             </label>
 
-            <select
+            <FormSelect
               value={form.type}
               disabled={isEditMode}
               onChange={(event) =>
@@ -1116,7 +1118,7 @@ function TemplateModal({
             >
               <option value="allergens">{tableT("allergen")}</option>
               <option value="additives">{tableT("additive")}</option>
-            </select>
+            </FormSelect>
 
             {isEditMode ? (
               <p className="mt-1.5 text-xs text-gray-400">

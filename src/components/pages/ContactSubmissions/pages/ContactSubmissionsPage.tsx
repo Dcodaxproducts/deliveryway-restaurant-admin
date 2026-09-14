@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   Archive,
@@ -516,7 +518,7 @@ export default function ContactSubmissionsPage() {
                 <Label className="mb-1.5 block text-xs font-medium text-gray-600">
                   Status
                 </Label>
-                <select
+                <FormSelect
                   value={status}
                   onChange={(event) => {
                     setStatus(event.target.value);
@@ -529,7 +531,7 @@ export default function ContactSubmissionsPage() {
                       {option.label}
                     </option>
                   ))}
-                </select>
+                </FormSelect>
               </div>
 
               <div className="xl:col-span-3">
@@ -541,7 +543,7 @@ export default function ContactSubmissionsPage() {
                     {user?.branchName || branchId || "Assigned branch"}
                   </div>
                 ) : (
-                  <select
+                  <FormSelect
                     value={selectedBranchId}
                     onChange={(event) => {
                       setSelectedBranchId(event.target.value);
@@ -555,7 +557,7 @@ export default function ContactSubmissionsPage() {
                         {branch.name}
                       </option>
                     ))}
-                  </select>
+                  </FormSelect>
                 )}
               </div>
 
@@ -643,7 +645,7 @@ export default function ContactSubmissionsPage() {
             hasPrevious={meta.hasPrevious}
             onPageChange={setPage}
           />
-          <select
+          <FormSelect
             value={String(limit)}
             onChange={(event) => handleLimitChange(Number(event.target.value))}
             className="h-10 w-[90px] rounded-[14px] border border-gray-200 px-3 text-sm"
@@ -653,7 +655,7 @@ export default function ContactSubmissionsPage() {
                 {option}
               </option>
             ))}
-          </select>
+          </FormSelect>
         </div>
       </SectionCard>
 

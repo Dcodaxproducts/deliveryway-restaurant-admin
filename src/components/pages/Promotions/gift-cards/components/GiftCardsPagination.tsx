@@ -1,3 +1,4 @@
+import { FormSelect } from "@/components/ui/form-select";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ export default function GiftCardsPagination({
         {showPageSize ? (
           <>
             <span>{commonT("rowsPerPage")}</span>
-            <select
+            <FormSelect
               value={limit}
               onChange={(event) => onLimitChange(Number(event.target.value))}
               className="h-9 rounded-lg border border-gray-200 bg-white px-2 text-sm text-gray-700 outline-none focus:border-primary"
@@ -41,7 +42,7 @@ export default function GiftCardsPagination({
                   {option}
                 </option>
               ))}
-            </select>
+            </FormSelect>
           </>
         ) : null}
         <span>

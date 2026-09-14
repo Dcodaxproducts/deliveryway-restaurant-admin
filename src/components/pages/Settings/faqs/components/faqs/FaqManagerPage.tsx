@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { useMemo, useState } from "react";
 import {
   Search,
@@ -364,7 +366,7 @@ export default function FAQManagerPage() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <select
+            <FormSelect
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="h-11 min-w-[160px] rounded-xl border border-[#ECEEF2] bg-white px-4 text-sm font-medium text-[#344054] outline-none focus:border-[#D0D5DD]"
@@ -376,9 +378,9 @@ export default function FAQManagerPage() {
                   {item}
                 </option>
               ))}
-            </select>
+            </FormSelect>
 
-            <select
+            <FormSelect
               value={status}
               onChange={(e) => setStatus(e.target.value as any)}
               className="h-11 min-w-[140px] rounded-xl border border-[#ECEEF2] bg-white px-4 text-sm font-medium text-[#344054] outline-none focus:border-[#D0D5DD]"
@@ -386,9 +388,9 @@ export default function FAQManagerPage() {
               <option value="ALL">All Status</option>
               <option value="PUBLISHED">Published</option>
               <option value="DRAFT">Draft</option>
-            </select>
+            </FormSelect>
 
-            <select
+            <FormSelect
               value={visibility}
               onChange={(e) => setVisibility(e.target.value as any)}
               className="h-11 min-w-[140px] rounded-xl border border-[#ECEEF2] bg-white px-4 text-sm font-medium text-[#344054] outline-none focus:border-[#D0D5DD]"
@@ -396,9 +398,9 @@ export default function FAQManagerPage() {
               <option value="ALL">All Visibility</option>
               <option value="PUBLIC">Public</option>
               <option value="PRIVATE">Private</option>
-            </select>
+            </FormSelect>
 
-            <select
+            <FormSelect
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               className="h-11 min-w-[140px] rounded-xl border border-[#ECEEF2] bg-white px-4 text-sm font-medium text-[#344054] outline-none focus:border-[#D0D5DD]"
@@ -406,7 +408,7 @@ export default function FAQManagerPage() {
               <option>Latest</option>
               <option>Oldest</option>
               <option>Published First</option>
-            </select>
+            </FormSelect>
           </div>
         </div>
 

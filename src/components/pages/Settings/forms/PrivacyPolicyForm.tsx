@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import {
   useEffect,
   useMemo,
@@ -460,7 +462,7 @@ export function RichPolicyEditor({
 
         <label className="inline-flex h-11 items-center gap-2 rounded-full border border-[#EAECF0] bg-white px-3 text-sm font-semibold text-[#475467] transition hover:bg-[#F2F4F7]">
           <Type className="size-4" />
-          <select
+          <FormSelect
             defaultValue=""
             disabled={disabled}
             onChange={(event) => {
@@ -478,7 +480,7 @@ export function RichPolicyEditor({
                 {option.label}
               </option>
             ))}
-          </select>
+          </FormSelect>
         </label>
 
         <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full border border-[#EAECF0] bg-white px-3 text-sm font-semibold text-[#475467] transition hover:bg-[#F2F4F7]">

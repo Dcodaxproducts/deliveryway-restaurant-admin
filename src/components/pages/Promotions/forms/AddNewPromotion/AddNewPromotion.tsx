@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo } from "react";
 import {
@@ -436,7 +438,7 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
             render={({ field }) => (
               <div className="space-y-2">
                 <Label>{t("forms.audience")}</Label>
-                <select
+                <FormSelect
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
@@ -447,7 +449,7 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                     {t("forms.audienceRegistered")}
                   </option>
                   <option value="GUEST">{t("forms.audienceGuests")}</option>
-                </select>
+                </FormSelect>
                 <p className={MUTED_TEXT_SM_CLASS}>{t("forms.audienceHelp")}</p>
               </div>
             )}
@@ -517,7 +519,7 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
               render={({ field }) => (
                 <div className="space-y-2">
                   <Label>{t("forms.discountType")}</Label>
-                  <select
+                  <FormSelect
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
@@ -527,7 +529,7 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                     <option value="PERCENTAGE">
                       {t("forms.percentageDiscount")}
                     </option>
-                  </select>
+                  </FormSelect>
                 </div>
               )}
             />
@@ -684,7 +686,7 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
             render={({ field }) => (
               <div className="space-y-2">
                 <Label>{t("forms.validForOrderType")}</Label>
-                <select
+                <FormSelect
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
@@ -694,7 +696,7 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                   <option value="DELIVERY">{t("forms.deliveryOnly")}</option>
                   <option value="TAKEAWAY">{t("forms.pickupOnly")}</option>
                   <option value="DINE_IN">{t("forms.dineInOnly")}</option>
-                </select>
+                </FormSelect>
                 <p className={MUTED_TEXT_SM_CLASS}>
                   {t("forms.orderTypeScopeHelp")}
                 </p>
@@ -710,7 +712,7 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
             render={({ field }) => (
               <div className="space-y-2">
                 <Label>{t("forms.applyMode")}</Label>
-                <select
+                <FormSelect
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
@@ -722,7 +724,7 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                   <option value="SCOPED_ITEMS">
                     {t("forms.scopedItemsMode")}
                   </option>
-                </select>
+                </FormSelect>
                 <p className={MUTED_TEXT_SM_CLASS}>
                   {t("forms.applyModeHelp")}
                 </p>

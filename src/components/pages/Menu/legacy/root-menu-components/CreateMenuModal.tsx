@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import {
   Dialog,
   DialogContent,
@@ -519,7 +521,7 @@ export default function CreateMenuModal({
                                 <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
                                   {t("day")}
                                 </label>
-                                <select
+                                <FormSelect
                                   value={window.day}
                                   onChange={(event) =>
                                     updateTimingWindow(
@@ -535,7 +537,7 @@ export default function CreateMenuModal({
                                       {t(`days.${day}`)}
                                     </option>
                                   ))}
-                                </select>
+                                </FormSelect>
                               </div>
 
                               <Button

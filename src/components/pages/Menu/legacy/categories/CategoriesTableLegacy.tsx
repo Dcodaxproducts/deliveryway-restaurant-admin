@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FaPen, FaTrash } from "react-icons/fa";
@@ -440,7 +442,7 @@ export default function CategoriesTable({ refetchKey }: any) {
             />
           </div>
 
-          <select
+          <FormSelect
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
@@ -450,9 +452,9 @@ export default function CategoriesTable({ refetchKey }: any) {
           >
             <option value="all">{t("statusOptions.all")}</option>
             <option value="active">{commonT("inactive")}</option>
-          </select>
+          </FormSelect>
 
-          {/* <select
+          {/* <FormSelect
       value={sortOrder}
       onChange={(e) => {
         setSortOrder(e.target.value as "ASC" | "DESC");
@@ -462,7 +464,7 @@ export default function CategoriesTable({ refetchKey }: any) {
     >
       <option value="DESC">Newest First</option>
       <option value="ASC">Oldest First</option>
-    </select> */}
+    </FormSelect> */}
 
           <Button
             disabled={!canFetchCategories}

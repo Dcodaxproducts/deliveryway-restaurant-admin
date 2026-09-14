@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { Controller, useForm, type FieldErrors } from "react-hook-form";
@@ -240,7 +242,7 @@ export default function GiftCardForm({
                     {commonT("currentBranch")}
                   </div>
                 ) : (
-                  <select
+                  <FormSelect
                     value={field.value ?? ""}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
@@ -252,7 +254,7 @@ export default function GiftCardForm({
                         {branch.name}
                       </option>
                     ))}
-                  </select>
+                  </FormSelect>
                 )}
               </div>
             )}

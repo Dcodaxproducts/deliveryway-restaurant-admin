@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import {
   useEffect,
   useMemo,
@@ -554,7 +556,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
           <div className="space-y-2">
             <Label htmlFor="menu-item-tax-type">{t("taxType")}</Label>
 
-            <select
+            <FormSelect
               id="menu-item-tax-type"
               value={form.taxTypeCode || ""}
               onChange={(event) => updateForm("taxTypeCode", event.target.value)}
@@ -569,7 +571,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
                   {taxType.label} ({formatTaxPercentage(taxType.percentage)}%)
                 </option>
               ))}
-            </select>
+            </FormSelect>
           </div>
 
           {pricingMode === "MULTIPLE" ? (

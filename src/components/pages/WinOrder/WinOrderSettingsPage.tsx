@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -354,7 +356,7 @@ export default function WinOrderSettingsPage() {
         <PageHeader title={t("title")} description={t("description")} />
         <div className="min-w-0 lg:w-[360px]">
           <Label htmlFor="winorder-branch">{t("branch")}</Label>
-          <select
+          <FormSelect
             id="winorder-branch"
             value={selectedBranchId}
             onChange={(event) => {
@@ -370,7 +372,7 @@ export default function WinOrderSettingsPage() {
                 {branch.name}
               </option>
             ))}
-          </select>
+          </FormSelect>
         </div>
       </div>
 

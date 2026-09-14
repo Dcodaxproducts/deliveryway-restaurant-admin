@@ -1,5 +1,7 @@
 "use client";
 
+import { FormSelect } from "@/components/ui/form-select";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -321,7 +323,7 @@ export function AddRoleModal({
             </p>
 
             <div className="flex gap-2">
-              <select
+              <FormSelect
                 aria-label={t("roleModal.selectAccess")}
                 value={selectedAccess}
                 onChange={({ target: { value } }) => {
@@ -340,7 +342,7 @@ export function AddRoleModal({
                     {module.name}
                   </option>
                 ))}
-              </select>
+              </FormSelect>
 
               <Button
                 type="button"
