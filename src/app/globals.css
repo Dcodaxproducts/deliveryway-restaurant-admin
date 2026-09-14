@@ -6,7 +6,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --brand-primary: #c1000a;
+  --brand-primary: oklch(70.5% 0.213 47.604);
   --brand-secondary: #030401;
   --brand-accent: #F59E0B;
   --brand-background: #F5F5F5;
