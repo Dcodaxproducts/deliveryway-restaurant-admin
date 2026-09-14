@@ -30,7 +30,7 @@ export default function AuthPageShell({ children }: AuthPageShellProps) {
         aria-labelledby="partner-login-title"
         className="relative flex items-center justify-center px-5 py-8 sm:px-10 lg:bg-white lg:px-14"
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top_right,rgba(193,0,10,0.08),transparent_64%)] lg:hidden" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top_right,color-mix(in_oklch,var(--primary)_8%,transparent),transparent_64%)] lg:hidden" />
         {children}
       </section>
     </main>

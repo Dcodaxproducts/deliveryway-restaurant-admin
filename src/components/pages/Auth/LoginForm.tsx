@@ -357,7 +357,7 @@ function LoginFormContent() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="h-[48px] w-full rounded-[12px] text-base shadow-[0_10px_24px_rgba(193,0,10,0.18)] active:scale-[0.99] sm:h-[50px]"
+              className="h-[48px] w-full rounded-[12px] text-base shadow-[0_10px_24px_color-mix(in_oklch,var(--primary)_18%,transparent)] active:scale-[0.99] sm:h-[50px]"
             >
               {isSubmitting ? t("signingIn") : t("signIn")}
             </Button>
