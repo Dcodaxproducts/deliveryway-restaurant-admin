@@ -20,6 +20,7 @@ export type ModifierGroup = {
   minSelect: number;
   maxSelect: number;
   includedSelect?: number;
+  isRequired?: boolean;
   sortOrder?: number;
   isActive?: boolean;
   modifiers?: ModifierGroupModifier[];

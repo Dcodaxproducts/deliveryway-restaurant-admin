@@ -1229,8 +1229,6 @@ const StepFour = forwardRef(({ form, setForm }: StepFourProps, ref: any) => {
       </div>
 
       <ModifierGroupAssignmentForm
-        mode="item"
-        targetId={form?.id || ""}
         restaurantId={restaurantId}
         defaultValues={modifierGroupAssignments}
         onAssignmentsChange={(assignments) => {

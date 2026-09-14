@@ -4,6 +4,7 @@ import { httpClient } from "@/lib/axios";
 import {
   createModifier,
   getModifiers,
+  syncModifierGroupLinks,
   updateModifier,
 } from "@/services/modifiers";
 
@@ -19,12 +20,14 @@ vi.mock("@/lib/axios", () => ({
 const mockedGet = vi.mocked(httpClient.get);
 const mockedPost = vi.mocked(httpClient.post);
 const mockedPatch = vi.mocked(httpClient.patch);
+const mockedDelete = vi.mocked(httpClient.delete);
 
 describe("modifiers service", () => {
   beforeEach(() => {
     mockedGet.mockReset();
     mockedPost.mockReset();
     mockedPatch.mockReset();
+    mockedDelete.mockReset();
   });
 
   it("passes categoryId to modifier list endpoint", async () => {
@@ -36,6 +39,14 @@ describe("modifiers service", () => {
             categoryId: "modifier-category-1",
             name: "Garlic Sauce",
             priceDelta: 0.5,
+            modifierGroups: [
+              {
+                id: "group-1",
+                name: "Choose sauces",
+                minSelect: 1,
+                maxSelect: 2,
+              },
+            ],
           },
         ],
       },
@@ -58,6 +69,13 @@ describe("modifiers service", () => {
     });
     expect(mockedGet.mock.calls[0]?.[0]).not.toContain("/api/v1");
     expect(response.data[0]?.categoryId).toBe("modifier-category-1");
+    expect(response.data[0]?.modifierGroups).toEqual([
+      expect.objectContaining({
+        id: "group-1",
+        minSelect: 1,
+        maxSelect: 2,
+      }),
+    ]);
   });
 
   it("creates modifiers without isActive and updates modifiers with isActive", async () => {
@@ -96,5 +114,27 @@ describe("modifiers service", () => {
     });
     expect(mockedPost.mock.calls[0]?.[0]).not.toContain("/api/v1");
     expect(mockedPatch.mock.calls[0]?.[0]).not.toContain("/api/v1");
+  });
+
+  it("syncs only changed modifier group links", async () => {
+    mockedPost.mockResolvedValue({ success: true });
+    mockedDelete.mockResolvedValue({ success: true });
+
+    await syncModifierGroupLinks({
+      modifierId: "modifier-1",
+      previousGroupIds: ["group-1", "group-2"],
+      nextGroupIds: ["group-2", "group-3"],
+      sortOrder: 4,
+    });
+
+    expect(mockedPost).toHaveBeenCalledWith(
+      "/menu/modifier-groups/group-3/modifiers/modifier-1",
+      { sortOrder: 4 }
+    );
+    expect(mockedDelete).toHaveBeenCalledWith(
+      "/menu/modifier-groups/group-1/modifiers/modifier-1"
+    );
+    expect(mockedPost).toHaveBeenCalledTimes(1);
+    expect(mockedDelete).toHaveBeenCalledTimes(1);
   });
 });

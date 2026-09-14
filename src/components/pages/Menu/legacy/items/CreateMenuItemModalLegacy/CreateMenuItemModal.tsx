@@ -1181,12 +1181,7 @@ export default function CreateMenuItemModal({
         assignModifierGroupToItem({
           itemId,
           groupId: assignment.groupId,
-          data: {
-            selectionType: assignment.selectionType,
-            minSelect: assignment.minSelect,
-            maxSelect: assignment.maxSelect,
-            sortOrder: assignment.sortOrder,
-          },
+          data: {},
         })
       )
     );

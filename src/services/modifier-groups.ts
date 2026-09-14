@@ -132,6 +132,7 @@ export const normalizeModifierGroup = (
     minSelect: getNumber(group, "minSelect", 0),
     maxSelect: getNumber(group, "maxSelect", 0),
     includedSelect: getNumber(group, "includedSelect", 0),
+    isRequired: getOptionalBoolean(group, "isRequired"),
     sortOrder: getOptionalNumber(group, "sortOrder"),
     isActive: getOptionalBoolean(group, "isActive"),
     modifiers: rawModifiers

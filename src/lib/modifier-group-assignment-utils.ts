@@ -5,7 +5,10 @@ import type {
   ModifierGroupSelectionType,
 } from "@/types/modifier-group-assignments";
 import type { MenuItemModifierGroup } from "@/types/menu-items";
-import type { ModifierGroupModifier } from "@/types/modifier-groups";
+import type {
+  ModifierGroup,
+  ModifierGroupModifier,
+} from "@/types/modifier-groups";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -93,6 +96,12 @@ const normalizeGroupSummary = (
     description:
       getNullableString(groupSource, "description") ??
       getNullableString(source, "description"),
+    minSelect: getOptionalNumber(groupSource, "minSelect"),
+    maxSelect: getOptionalNumber(groupSource, "maxSelect"),
+    ...(typeof groupSource.isRequired === "boolean"
+      ? { isRequired: groupSource.isRequired }
+      : {}),
+    sortOrder: getOptionalNumber(groupSource, "sortOrder"),
     modifiers: rawModifiers
       .map(normalizeGroupModifier)
       .filter((modifier): modifier is ModifierGroupModifier =>
@@ -142,6 +151,26 @@ const normalizeGroupModifier = (
     category: normalizeModifierCategory(source.category),
   };
 };
+
+export const buildModifierGroupAssignment = (
+  group: ModifierGroup
+): MenuItemModifierGroupAssignment => ({
+  groupId: group.id,
+  group: {
+    id: group.id,
+    name: group.name,
+    description: group.description,
+    minSelect: group.minSelect,
+    maxSelect: group.maxSelect,
+    isRequired: group.isRequired,
+    sortOrder: group.sortOrder,
+    modifiers: group.modifiers,
+  },
+  selectionType: group.maxSelect > 1 ? "MULTIPLE" : "SINGLE",
+  minSelect: group.minSelect,
+  maxSelect: group.maxSelect,
+  sortOrder: group.sortOrder ?? 0,
+});
 
 export const normalizeMenuItemModifierGroups = (
   value: unknown
@@ -216,22 +245,24 @@ export const normalizeMenuItemModifierGroupAssignments = (
 
       if (!groupId) return null;
 
-      const minSelect = getNumber(entry, "minSelect", 0);
-      const maxSelect = getNumber(
-        entry,
-        "maxSelect",
-        getSelectionType(entry) === "SINGLE" ? 1 : Math.max(minSelect, 1)
-      );
+      const minSelect = group?.minSelect ?? getNumber(entry, "minSelect", 0);
+      const maxSelect =
+        group?.maxSelect ??
+        getNumber(
+          entry,
+          "maxSelect",
+          getSelectionType(entry) === "SINGLE" ? 1 : Math.max(minSelect, 1)
+        );
 
       return {
         id: getOptionalString(entry, "id"),
         itemId: getOptionalString(entry, "itemId"),
         groupId,
         group,
-        selectionType: getSelectionType(entry),
+        selectionType: maxSelect > 1 ? "MULTIPLE" : "SINGLE",
         minSelect,
         maxSelect,
-        sortOrder: getNumber(entry, "sortOrder", 0),
+        sortOrder: group?.sortOrder ?? getNumber(entry, "sortOrder", 0),
       };
     })
     .filter(

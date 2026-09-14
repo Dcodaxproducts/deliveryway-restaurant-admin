@@ -11,6 +11,10 @@ export type ModifierGroupAssignmentGroup = {
   id: string;
   name: string;
   description?: string | null;
+  minSelect?: number;
+  maxSelect?: number;
+  isRequired?: boolean;
+  sortOrder?: number;
   modifiers?: Array<{
     id: string;
     name: string;
@@ -39,4 +43,4 @@ export type MenuCategoryModifierGroupAssignment =
     group?: ModifierGroupAssignmentGroup;
   };
 
-export type AssignModifierGroupPayload = ModifierGroupAssignmentRules;
+export type AssignModifierGroupPayload = Partial<ModifierGroupAssignmentRules>;

@@ -4,12 +4,14 @@ import { extractResponseItems, extractResponseMeta } from "@/lib/response";
 import type {
   Modifier,
   ModifierCategorySummary,
+  ModifierGroupSummary,
   ModifierCreatePayload,
   ModifierListParams,
   ModifiersListResponse,
   ModifiersMeta,
   ModifierUpdatePayload,
 } from "@/types/modifiers";
+import type { AttachModifierToGroupPayload } from "@/types/modifier-groups";
 
 const MODIFIERS_ENDPOINT = "/menu/modifiers";
 
@@ -65,6 +67,28 @@ const normalizeCategorySummary = (
   };
 };
 
+const normalizeModifierGroupSummary = (
+  group: unknown
+): ModifierGroupSummary | null => {
+  if (!isRecord(group)) return null;
+
+  const id = getString(group, "id");
+  const name = getString(group, "name");
+
+  if (!id || !name) return null;
+
+  return {
+    id,
+    name,
+    description: getNullableString(group, "description"),
+    minSelect: getOptionalNumber(group, "minSelect") ?? 0,
+    maxSelect: getOptionalNumber(group, "maxSelect") ?? 1,
+    isRequired: getOptionalBoolean(group, "isRequired"),
+    sortOrder: getOptionalNumber(group, "sortOrder"),
+    isActive: getOptionalBoolean(group, "isActive"),
+  };
+};
+
 export const normalizeModifier = (modifier: unknown): Modifier | null => {
   if (!isRecord(modifier)) return null;
 
@@ -72,6 +96,11 @@ export const normalizeModifier = (modifier: unknown): Modifier | null => {
   const name = getString(modifier, "name");
   const category = normalizeCategorySummary(modifier.category);
   const categoryId = getString(modifier, "categoryId") || category?.id || "";
+  const modifierGroups = Array.isArray(modifier.modifierGroups)
+    ? modifier.modifierGroups
+        .map(normalizeModifierGroupSummary)
+        .filter((group): group is ModifierGroupSummary => Boolean(group))
+    : [];
 
   if (!id || !name) return null;
 
@@ -80,6 +109,7 @@ export const normalizeModifier = (modifier: unknown): Modifier | null => {
     restaurantId: getNullableString(modifier, "restaurantId"),
     categoryId,
     category,
+    modifierGroups,
     name,
     priceDelta: getOptionalNumber(modifier, "priceDelta"),
     sortOrder: getOptionalNumber(modifier, "sortOrder"),
@@ -165,23 +195,70 @@ export const getModifiers = async (
   return normalizeModifiersResponse(response, params);
 };
 
-export const createModifier = (payload: ModifierCreatePayload) => {
+export const normalizeModifierResponse = (response: unknown) => {
+  if (isRecord(response) && "data" in response) {
+    return normalizeModifier(response.data);
+  }
+
+  return normalizeModifier(response);
+};
+
+export const createModifier = async (payload: ModifierCreatePayload) => {
   const createPayload = {
     ...payload,
   } as ModifierCreatePayload & { isActive?: boolean };
   delete createPayload.isActive;
 
-  return httpClient.post<unknown, ModifierCreatePayload>(
+  const response = await httpClient.post<unknown, ModifierCreatePayload>(
     MODIFIERS_ENDPOINT,
     createPayload
   );
+
+  return normalizeModifierResponse(response);
 };
 
-export const updateModifier = (id: string, payload: ModifierUpdatePayload) =>
-  httpClient.patch<unknown, ModifierUpdatePayload>(
+export const updateModifier = async (
+  id: string,
+  payload: ModifierUpdatePayload
+) => {
+  const response = await httpClient.patch<unknown, ModifierUpdatePayload>(
     `${MODIFIERS_ENDPOINT}/${id}`,
     payload
   );
+
+  return normalizeModifierResponse(response);
+};
+
+export const syncModifierGroupLinks = async ({
+  modifierId,
+  previousGroupIds,
+  nextGroupIds,
+  sortOrder,
+}: {
+  modifierId: string;
+  previousGroupIds: string[];
+  nextGroupIds: string[];
+  sortOrder?: number;
+}) => {
+  const previous = new Set(previousGroupIds);
+  const next = new Set(nextGroupIds);
+  const groupIdsToAttach = nextGroupIds.filter((groupId) => !previous.has(groupId));
+  const groupIdsToDetach = previousGroupIds.filter((groupId) => !next.has(groupId));
+
+  await Promise.all([
+    ...groupIdsToAttach.map((groupId) =>
+      httpClient.post<unknown, AttachModifierToGroupPayload>(
+        `/menu/modifier-groups/${groupId}/modifiers/${modifierId}`,
+        { sortOrder }
+      )
+    ),
+    ...groupIdsToDetach.map((groupId) =>
+      httpClient.delete<unknown>(
+        `/menu/modifier-groups/${groupId}/modifiers/${modifierId}`
+      )
+    ),
+  ]);
+};
 
 export const deleteModifier = (id: string) =>
   httpClient.delete<unknown>(`${MODIFIERS_ENDPOINT}/${id}`);

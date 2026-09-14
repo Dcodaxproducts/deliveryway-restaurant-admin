@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import {
   useEffect,
   useMemo,
@@ -17,6 +17,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { useCreateModifier, useUpdateModifier } from "@/hooks/useModifiers";
+import { useModifierGroups } from "@/hooks/useModifierGroups";
 import { useAuth } from "@/hooks/useAuth";
 import ModifierCategoryInfiniteSelect from "@/components/pages/Menu/modifiers/components/ModifierCategoryInfiniteSelect";
 import {
@@ -27,6 +28,7 @@ import {
 import { getApiErrorMessage } from "@/lib/errors";
 import { useTranslations } from "next-intl";
 import type { Modifier } from "@/types/modifiers";
+import { syncModifierGroupLinks } from "@/services/modifiers";
 
 interface ModifierForm {
   categoryId: string;
@@ -34,6 +36,7 @@ interface ModifierForm {
   priceDelta: string;
   sortOrder: string;
   isActive: boolean;
+  modifierGroupIds: string[];
 }
 
 const getEmptyForm = (): ModifierForm => ({
@@ -42,6 +45,7 @@ const getEmptyForm = (): ModifierForm => ({
   priceDelta: "0",
   sortOrder: "0",
   isActive: true,
+  modifierGroupIds: [],
 });
 
 type ModifierModalProps = {
@@ -69,9 +73,21 @@ export default function ModifierModal({
     useUpdateModifier();
 
   const [form, setForm] = useState<ModifierForm>(getEmptyForm());
+  const [isSyncingGroups, setIsSyncingGroups] = useState(false);
+
+  const { data: modifierGroupsResponse, isLoading: isLoadingGroups } =
+    useModifierGroups({
+      restaurantId,
+      page: 1,
+      limit: 100,
+    });
+  const modifierGroups = useMemo(
+    () => modifierGroupsResponse?.data ?? [],
+    [modifierGroupsResponse?.data]
+  );
 
   const isEditMode = Boolean(initialData?.id);
-  const isSubmitting = isCreating || isUpdating;
+  const isSubmitting = isCreating || isUpdating || isSyncingGroups;
 
   useEffect(() => {
     if (!open) return;
@@ -87,6 +103,8 @@ export default function ModifierModal({
           String(initialData?.sortOrder ?? 0)
         ),
         isActive: initialData?.isActive ?? true,
+        modifierGroupIds:
+          initialData.modifierGroups?.map((group) => group.id) ?? [],
       });
 
       return;
@@ -112,9 +130,16 @@ export default function ModifierModal({
     return Boolean(form.name?.trim() && form.categoryId.trim());
   }, [form.categoryId, form.name]);
 
-  const closeModal = () => {
-    if (isSubmitting) return;
+  const toggleModifierGroup = (groupId: string) => {
+    setForm((current) => ({
+      ...current,
+      modifierGroupIds: current.modifierGroupIds.includes(groupId)
+        ? current.modifierGroupIds.filter((id) => id !== groupId)
+        : [...current.modifierGroupIds, groupId],
+    }));
+  };
 
+  const closeModal = () => {
     setForm(getEmptyForm());
     onOpenChange(false);
   };
@@ -162,6 +187,8 @@ const handleSubmit = async () => {
   };
 
   try {
+    let modifierId = initialData?.id;
+
     if (isEditMode && initialData?.id) {
       /**
        * PATCH /menu/modifiers/:id does NOT accept restaurantId.
@@ -179,19 +206,36 @@ const handleSubmit = async () => {
       /**
        * POST /menu/modifiers requires restaurantId.
        */
-      await createModifier({
+      const createdModifier = await createModifier({
         categoryId: basePayload.categoryId,
         name: basePayload.name,
         priceDelta: basePayload.priceDelta,
         sortOrder: basePayload.sortOrder,
         restaurantId: String(restaurantId),
       });
+      modifierId = createdModifier?.id;
     }
 
+    if (!modifierId) {
+      throw new Error("Modifier was saved but no modifier id was returned");
+    }
+
+    setIsSyncingGroups(true);
+    await syncModifierGroupLinks({
+      modifierId,
+      previousGroupIds:
+        initialData?.modifierGroups?.map((group) => group.id) ?? [],
+      nextGroupIds: form.modifierGroupIds,
+      sortOrder,
+    });
+
+    setIsSyncingGroups(false);
     refresh?.();
     closeModal();
   } catch (error: unknown) {
     toast.error(getApiErrorMessage(error, t("saveFailed")));
+  } finally {
+    setIsSyncingGroups(false);
   }
 };
 
@@ -231,6 +275,9 @@ const handleSubmit = async () => {
               placeholder={t("categoryPlaceholder")}
               disabled={isSubmitting}
             />
+            <p className="text-xs leading-5 text-gray-500">
+              {t("categoryHelp")}
+            </p>
           </div>
 
           <InputField
@@ -240,6 +287,70 @@ const handleSubmit = async () => {
             placeholder={t("namePlaceholder")}
             disabled={isSubmitting}
           />
+
+          <div className="space-y-2">
+            <div>
+              <p className="text-sm font-medium text-gray-700">
+                {t("modifierGroups")}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-gray-500">
+                {t("modifierGroupsHelp")}
+              </p>
+            </div>
+
+            <div className="max-h-48 space-y-2 overflow-y-auto rounded-[12px] border border-gray-200 bg-[#FAFAFA] p-2">
+              {isLoadingGroups ? (
+                <div className="flex items-center justify-center gap-2 p-4 text-sm text-gray-500">
+                  <Loader2 size={16} className="animate-spin" />
+                  {t("loadingGroups")}
+                </div>
+              ) : modifierGroups.length === 0 ? (
+                <p className="p-4 text-center text-sm text-gray-500">
+                  {t("noGroups")}
+                </p>
+              ) : (
+                modifierGroups.map((group) => {
+                  const selected = form.modifierGroupIds.includes(group.id);
+
+                  return (
+                    <button
+                      key={group.id}
+                      type="button"
+                      onClick={() => toggleModifierGroup(group.id)}
+                      disabled={isSubmitting}
+                      aria-pressed={selected}
+                      className={`flex w-full items-start gap-3 rounded-[10px] border p-3 text-left transition ${
+                        selected
+                          ? "border-primary bg-primary/5"
+                          : "border-gray-100 bg-white hover:border-primary/30"
+                      }`}
+                    >
+                      <span
+                        className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-[6px] border ${
+                          selected
+                            ? "border-primary bg-primary text-white"
+                            : "border-gray-300 text-transparent"
+                        }`}
+                      >
+                        <Check size={14} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-medium text-gray-900">
+                          {group.name}
+                        </span>
+                        <span className="mt-1 block text-xs text-gray-500">
+                          {t("groupRules", {
+                            min: group.minSelect,
+                            max: group.maxSelect,
+                          })}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
 
           <InputField
             label={t("sortOrder")}

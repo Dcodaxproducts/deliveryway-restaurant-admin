@@ -95,6 +95,9 @@ describe("menu item modifier required payload", () => {
           id: "group-bread",
           name: "Choose Bread",
           description: "Pick one bread",
+          minSelect: 1,
+          maxSelect: 1,
+          sortOrder: 1,
           modifiers: [
             {
               id: "modifier-white-bread",

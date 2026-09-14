@@ -6,11 +6,23 @@ export type ModifierCategorySummary = {
   slug?: string;
 };
 
+export type ModifierGroupSummary = {
+  id: string;
+  name: string;
+  description?: string | null;
+  minSelect: number;
+  maxSelect: number;
+  isRequired?: boolean;
+  sortOrder?: number;
+  isActive?: boolean;
+};
+
 export type Modifier = {
   id: string;
   restaurantId?: string | null;
   categoryId: string;
   category?: ModifierCategorySummary | null;
+  modifierGroups?: ModifierGroupSummary[];
   name: string;
   priceDelta?: number;
   sortOrder?: number;
