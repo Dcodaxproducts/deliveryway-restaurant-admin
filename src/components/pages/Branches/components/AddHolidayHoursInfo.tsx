@@ -237,7 +237,7 @@ export function AddHolidayHoursInfo({
                   {t("specialSchedule")}
                 </div>
 
-                <DialogTitle className="text-[22px] font-semibold leading-tight tracking-tight text-gray-950 sm:text-[26px]">
+                <DialogTitle className="tracking-tight text-gray-950">
                   {t("holidayOpeningHours")}
                 </DialogTitle>
 

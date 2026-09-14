@@ -293,7 +293,7 @@ export function OrderStatusUpdateDialog({
             onSubmit={handleSubmit(onSubmit)}
           >
             <DialogHeader className="space-y-2">
-              <DialogTitle className="text-[24px] font-bold text-gray-950">
+              <DialogTitle className="font-semibold text-gray-950">
                 {isConfirmingPlacedOrder
                   ? t("acceptOrderTitle")
                   : t("updateStatusTitle")}
@@ -511,7 +511,7 @@ export function OrderStatusUpdateDialog({
         ) : (
           <div className="p-5 sm:p-7">
             <DialogHeader>
-              <DialogTitle className="text-[24px] font-bold text-gray-950">
+              <DialogTitle className="font-semibold text-gray-950">
                 {t("setCustomDeliveryTime")}
               </DialogTitle>
               <DialogDescription className="mt-2 text-sm leading-6 text-gray-500">

@@ -255,7 +255,7 @@ const handleSubmit = async () => {
     >
       <DialogContent className="max-h-[95vh] max-w-[520px] overflow-auto rounded-[20px] bg-[#F5F5F5] p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold">
+          <DialogTitle>
             {isEditMode ? t("editTitle") : t("addTitle")}
           </DialogTitle>
 

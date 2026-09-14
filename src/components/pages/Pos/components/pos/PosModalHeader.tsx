@@ -11,7 +11,7 @@ export default function PosModalHeader({
 }: ReservationModalHeaderProps) {
   return (
     <div className="text-center space-y-2">
-      <h2 className="text-[28px] font-semibold text-[#101828]">
+      <h2 className="text-xl font-semibold leading-7 text-[#101828]">
         {title}
       </h2>
 

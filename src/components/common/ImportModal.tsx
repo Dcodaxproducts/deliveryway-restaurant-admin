@@ -187,7 +187,7 @@ export default function ImportModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[420px] rounded-[20px] p-7 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
         <DialogHeader>
-          <DialogTitle className="text-[24px] font-semibold">
+          <DialogTitle>
             {title}
           </DialogTitle>
           <p className="text-sm text-gray-500">{subtitle}</p>

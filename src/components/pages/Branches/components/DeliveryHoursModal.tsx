@@ -329,7 +329,7 @@ export default function DeliveryHoursModal({
               <Truck size={22} />
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-2xl font-semibold">
+              <DialogTitle>
                 {t("deliveryHours")}
               </DialogTitle>
               <p className="mt-1 text-sm text-gray-500">{branchName}</p>

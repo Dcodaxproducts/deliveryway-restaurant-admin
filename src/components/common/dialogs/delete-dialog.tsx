@@ -41,9 +41,9 @@ export function ConfirmDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[400px] rounded-[var(--ui-radius-panel)] p-6 sm:p-[30px]">
+            <DialogContent className="max-w-[380px] rounded-[var(--ui-radius-panel)] p-5 sm:p-6">
                 <DialogHeader className="flex flex-col items-center text-center gap-[12px]">
-                    <div className="flex size-14 items-center justify-center rounded-[var(--ui-radius-card)] bg-[var(--ui-danger-soft)]">
+                    <div className="flex size-12 items-center justify-center rounded-[var(--ui-radius-card)] bg-[var(--ui-danger-soft)]">
                         <Trash2 size={24} className="text-[var(--ui-danger)]" />
                     </div>
                     <DialogTitle className="text-[18px] font-semibold text-gray-800">

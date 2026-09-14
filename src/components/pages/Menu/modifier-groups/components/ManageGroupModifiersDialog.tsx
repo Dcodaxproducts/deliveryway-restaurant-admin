@@ -267,9 +267,9 @@ export function ManageGroupModifiersDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] overflow-auto rounded-[20px] bg-[#F5F5F5] p-4 sm:w-full sm:max-w-[calc(100vw-2rem)] sm:p-6 xl:max-w-[1180px]">
+      <DialogContent className="max-h-[90dvh] w-[calc(100vw-1.5rem)] max-w-[960px] overflow-auto rounded-[20px] bg-[#F5F5F5] p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold">
+          <DialogTitle>
             {t("title")}
           </DialogTitle>
           <p className="text-sm text-gray-500">

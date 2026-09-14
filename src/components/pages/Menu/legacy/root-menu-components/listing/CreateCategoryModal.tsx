@@ -68,7 +68,7 @@ export default function CreateCategoryModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[420px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-auto">
         <DialogHeader className="space-y-1">
-          <DialogTitle className="text-2xl font-semibold">
+          <DialogTitle>
             {t("title")}
           </DialogTitle>
           <p className="text-sm text-gray-500">

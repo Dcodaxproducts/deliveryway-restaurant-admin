@@ -230,8 +230,8 @@ export default function AssignOrderModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] w-[calc(100vw-24px)] max-w-none overflow-hidden border-0 p-0 shadow-2xl sm:w-[calc(100vw-48px)] sm:max-w-[calc(100vw-48px)] 2xl:max-w-[1500px]">
-        <div className="flex max-h-[92vh] min-w-0 flex-col overflow-hidden">
+      <DialogContent className="max-h-[90dvh] w-[calc(100vw-24px)] max-w-[1080px] overflow-hidden border-0 p-0 shadow-2xl sm:w-[calc(100vw-48px)]">
+        <div className="flex max-h-[90dvh] min-w-0 flex-col overflow-hidden">
           <div
             className="px-6 py-5 text-white"
             style={{

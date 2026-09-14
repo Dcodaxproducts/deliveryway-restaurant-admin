@@ -1736,7 +1736,7 @@ export default function AddToCartModal({
 
           <div className="absolute bottom-4 left-5 right-5">
             <DialogHeader>
-              <DialogTitle className="line-clamp-2 text-left text-2xl font-bold text-white">
+              <DialogTitle className="line-clamp-2 text-left font-semibold text-white">
                 {item?.name}
               </DialogTitle>
             </DialogHeader>

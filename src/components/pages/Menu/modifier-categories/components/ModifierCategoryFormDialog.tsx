@@ -178,7 +178,7 @@ export default function ModifierCategoryFormDialog({
     >
       <DialogContent className="max-h-[95vh] max-w-[560px] overflow-auto rounded-[20px] bg-[#F5F5F5] p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold">
+          <DialogTitle>
             {isEditMode ? "Edit category" : "Add category"}
           </DialogTitle>
 

@@ -197,7 +197,7 @@ export function ModifierGroupModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-h-[90vh] max-w-[420px] overflow-auto rounded-[20px] bg-[#F5F5F5] p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold">
+          <DialogTitle>
             {isEditMode ? t("editTitle") : t("addTitle")}
           </DialogTitle>
 

@@ -195,7 +195,7 @@ export function TemporaryBranchClosureModal({
         {mode === "main" ? (
           <div className="p-5 sm:p-7">
             <DialogHeader>
-              <DialogTitle className="text-[24px] font-bold text-gray-950">
+              <DialogTitle className="font-semibold text-gray-950">
                 {t("pauseOperations")}
               </DialogTitle>
 
@@ -340,7 +340,7 @@ export function TemporaryBranchClosureModal({
         ) : (
           <div className="p-5 sm:p-7">
             <DialogHeader>
-              <DialogTitle className="text-[24px] font-bold text-gray-950">
+              <DialogTitle className="font-semibold text-gray-950">
                 {t("setCustomPauseTime")}
               </DialogTitle>
 

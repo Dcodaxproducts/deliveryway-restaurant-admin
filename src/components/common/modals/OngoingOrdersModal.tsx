@@ -49,7 +49,7 @@ export default function OngoingOrdersModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-     <DialogContent className="w-full sm:max-w-[630px] rounded-[28px] px-10 py-8 bg-[#F5F5F5]">
+     <DialogContent className="w-full max-w-[620px] rounded-[20px] bg-[#F5F5F5] p-6">
 
        <PosModalHeader
               title="Ongoing Orders"

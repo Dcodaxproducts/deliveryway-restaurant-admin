@@ -329,9 +329,9 @@ export function CreateBranchModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="flex max-h-[calc(100dvh-2rem)] max-w-[1120px] flex-col gap-0 overflow-hidden rounded-[24px] border-0 bg-white p-0 shadow-2xl shadow-slate-900/15">
+      <DialogContent className="flex max-h-[90dvh] max-w-[960px] flex-col gap-0 overflow-hidden rounded-[20px] border-0 bg-white p-0 shadow-2xl shadow-slate-900/15">
         <DialogHeader className="shrink-0 border-b border-slate-200 bg-gradient-to-br from-primary/[0.08] via-white to-orange-50/70 px-6 py-5 pr-16 sm:px-8 sm:py-6">
-          <DialogTitle className="text-2xl font-semibold tracking-[-0.02em] text-slate-950">
+          <DialogTitle className="tracking-[-0.02em] text-slate-950">
             {t("createBranch")}
           </DialogTitle>
           <p className={MUTED_TEXT_SM_CLASS}>{t("createDescription")}</p>

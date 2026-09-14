@@ -523,18 +523,16 @@ export default function RestaurantInvoicesModal({
     <Dialog open={open} onOpenChange={onOpenChange} modal>
       <DialogContent
         className="
-          flex h-[96vh] !w-[calc(100vw-24px)] !max-w-none flex-col overflow-hidden
-          rounded-[26px] border-0 bg-[#F7F7F7] p-0 shadow-2xl
+          flex h-[90dvh] !w-[calc(100vw-24px)] !max-w-[1000px] flex-col overflow-hidden
+          rounded-[20px] border-0 bg-[#F7F7F7] p-0 shadow-2xl
           sm:!w-[calc(100vw-48px)]
-          lg:!w-[980px]
-          xl:!w-[1120px]
         "
         onCloseAutoFocus={(event) => event.preventDefault()}
       >
         <DialogHeader className="shrink-0 border-b border-gray-200 bg-white px-6 py-5 sm:px-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <DialogTitle className="text-[28px] font-semibold tracking-tight text-gray-950">
+              <DialogTitle className="tracking-tight text-gray-950">
                 Restaurant Invoices
               </DialogTitle>
 

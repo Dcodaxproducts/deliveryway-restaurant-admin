@@ -262,7 +262,7 @@ export default function AddCustomerModal({
     >
       <DialogContent className="max-w-[420px] rounded-[20px] bg-[#F5F5F5] p-6">
         <DialogHeader className="space-y-1">
-          <DialogTitle className="text-2xl font-semibold">
+          <DialogTitle>
             {step === "form"
               ? isEditMode
                 ? t("editCustomer")

@@ -153,7 +153,7 @@ export default function MakeReservationModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange} >
       <DialogContent
-        className="w-full sm:max-w-[618px] rounded-[28px] px-10 py-8 bg-white max-h-[95vh] overflow-auto text-black"
+        className="max-h-[90dvh] w-full max-w-[620px] overflow-auto rounded-[20px] bg-white p-6 text-black"
         onClick={(e) => e.stopPropagation()}
       >
         <PosModalHeader

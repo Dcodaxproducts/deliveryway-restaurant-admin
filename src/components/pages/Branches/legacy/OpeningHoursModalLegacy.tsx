@@ -399,7 +399,7 @@ export function OpeningHoursModalLegacy({
       onCloseAutoFocus={(e) => e.preventDefault()}
     >
       <DialogHeader className="min-w-0">
-        <DialogTitle className="text-2xl font-semibold">
+        <DialogTitle>
           {t("openingHours")}
         </DialogTitle>
         <p className="text-sm text-gray-500">{branchName}</p>

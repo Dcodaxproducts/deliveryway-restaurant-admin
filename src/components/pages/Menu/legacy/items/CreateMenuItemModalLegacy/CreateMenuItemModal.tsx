@@ -1262,13 +1262,13 @@ export default function CreateMenuItemModal({
         }
       }}
     >
-      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] overflow-hidden rounded-[24px] bg-[#F5F5F5] p-0 sm:w-full sm:max-w-[calc(100vw-2rem)] xl:max-w-[1180px]">
+      <DialogContent className="max-h-[90dvh] w-[calc(100vw-1.5rem)] max-w-[960px] overflow-hidden rounded-[20px] bg-[#F5F5F5] p-0">
         <div
           ref={scrollContainerRef}
-          className="max-h-[95vh] overflow-y-auto overflow-x-hidden p-5 sm:p-8 [scrollbar-width:thin]"
+          className="max-h-[90dvh] overflow-y-auto overflow-x-hidden p-4 sm:p-6 [scrollbar-width:thin]"
         >
           <DialogHeader>
-            <DialogTitle className="text-[24px] font-semibold sm:text-[26px]">
+            <DialogTitle>
               {isEditMode ? t("editTitle") : t("createTitle")}
             </DialogTitle>
 
@@ -1279,7 +1279,7 @@ export default function CreateMenuItemModal({
             <StepProgress currentStep={currentStep} />
           </DialogHeader>
 
-          <div className="mt-6 min-w-0 overflow-hidden rounded-[20px] bg-white p-4 sm:p-6">
+          <div className="mt-5 min-w-0 overflow-hidden rounded-2xl bg-white p-4 sm:p-5">
             {currentStep === 1 && (
               <StepOne
                 ref={stepRef}
@@ -1306,10 +1306,10 @@ export default function CreateMenuItemModal({
             )}
           </div>
 
-          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant="ghost"
-              className="h-[44px] rounded-[12px] text-[16px] text-gray-700"
+              className="h-10 rounded-xl text-sm text-gray-700"
               onClick={resetAndClose}
               disabled={isSubmitting}
             >
@@ -1322,14 +1322,14 @@ export default function CreateMenuItemModal({
                   variant="outline"
                   onClick={prevStep}
                   disabled={isSubmitting}
-                  className="h-[44px] rounded-[12px]"
+                  className="h-10 rounded-xl"
                 >
                   {commonT("previous")}
                 </Button>
               )}
 
               <Button
-                className="h-[44px] rounded-[12px] bg-primary px-10 text-white hover:bg-primary/90"
+                className="h-10 rounded-xl bg-primary px-6 text-white hover:bg-primary/90"
                 onClick={currentStep < 5 ? nextStep : () => void handleSubmit()}
                 disabled={isSubmitting}
               >

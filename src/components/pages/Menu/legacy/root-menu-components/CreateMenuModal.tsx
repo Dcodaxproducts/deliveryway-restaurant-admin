@@ -369,7 +369,7 @@ export default function CreateMenuModal({
     >
       <DialogContent className="max-w-[680px] rounded-[20px] p-6 bg-[#F5F5F5] max-h-[95vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold">
+          <DialogTitle>
             {isEdit ? t("editTitle") : t("createTitle")}
           </DialogTitle>
         </DialogHeader>

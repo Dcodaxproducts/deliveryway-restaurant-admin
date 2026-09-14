@@ -45,7 +45,7 @@ export function OrderStatusProgressDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[460px] rounded-[24px] border-0 bg-white p-6 shadow-xl">
         <DialogHeader className="space-y-2">
-          <DialogTitle className="text-[22px] font-bold text-gray-950">
+          <DialogTitle className="font-semibold text-gray-950">
             {t("statusProgressTitle")}
           </DialogTitle>
           <DialogDescription className="text-sm leading-6 text-gray-500">

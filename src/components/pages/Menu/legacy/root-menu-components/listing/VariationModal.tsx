@@ -241,7 +241,7 @@ export default function VariationModal({
     >
       <DialogContent className="max-h-[95vh] max-w-[680px] overflow-auto rounded-[22px] bg-[#F5F5F5] p-6">
         <DialogHeader className="space-y-1">
-          <DialogTitle className="text-2xl font-semibold text-gray-900">
+          <DialogTitle className="text-gray-900">
             {modalTitle}
           </DialogTitle>
 
