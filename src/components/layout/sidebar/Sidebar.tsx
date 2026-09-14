@@ -3,12 +3,14 @@
 import type { ReactElement } from "react";
 import { Suspense, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronRight, LogOut } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import BrandLogo from "@/components/common/BrandLogo";
+import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -34,9 +36,16 @@ import {
 import { menuItems, MenuItem, type SidebarRole } from "@/config/sidebarItems";
 import { useAuth } from "@/hooks/useAuth";
 import {
+  getStaffDefaultRedirectPath,
   hasStaffPermission,
   isStaffRole,
 } from "@/lib/auth";
+
+const primaryNavigationClassName =
+  "h-9 text-gray transition-colors hover:bg-primary/10 hover:text-primary data-[active=true]:bg-primary/10 data-[active=true]:font-medium data-[active=true]:text-primary [&>svg]:size-[20px] [&>svg]:text-primary";
+
+const secondaryNavigationClassName =
+  "h-8 text-gray transition-colors hover:bg-primary/10 hover:text-primary data-[active=true]:bg-primary/10 data-[active=true]:font-medium data-[active=true]:text-primary [&>svg]:size-[20px] [&>svg]:text-primary";
 
 type PartnerSidebarItemProps = {
   item: MenuItem;
@@ -62,7 +71,12 @@ function PartnerSidebarItem({
   if (!item.children?.length) {
     return (
       <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
+        <SidebarMenuButton
+          asChild
+          isActive={isActive}
+          tooltip={label}
+          className={primaryNavigationClassName}
+        >
           <Link href={item.href ?? "#"} onClick={onNavigate}>
             <Icon />
             <span>{label}</span>
@@ -84,7 +98,11 @@ function PartnerSidebarItem({
     >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton isActive={isActive} tooltip={label}>
+          <SidebarMenuButton
+            isActive={isActive}
+            tooltip={label}
+            className={primaryNavigationClassName}
+          >
             <Icon />
             <span>{label}</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -103,6 +121,7 @@ function PartnerSidebarItem({
                   <SidebarMenuSubButton
                     asChild
                     isActive={isActiveRoute(child.href, child.children)}
+                    className={secondaryNavigationClassName}
                   >
                     <Link href={child.href ?? "#"} onClick={onNavigate}>
                       {ChildIcon ? <ChildIcon /> : null}
@@ -119,12 +138,46 @@ function PartnerSidebarItem({
   );
 }
 
+const getSidebarCta = (
+  user: ReturnType<typeof useAuth>["user"],
+  role: ReturnType<typeof useAuth>["role"],
+  isBranchAdmin: boolean,
+): {
+  href: string;
+  labelKey:
+    | "myBranchCta"
+    | "addMenuCta"
+    | "manageBranchCta"
+    | "manageOrdersCta"
+    | "openPosCta"
+    | "accountSettingsCta";
+} => {
+  if (isBranchAdmin) {
+    return { href: "/branch-workspace", labelKey: "myBranchCta" };
+  }
+
+  if (isStaffRole(role, user?.actorType)) {
+    const href = getStaffDefaultRedirectPath(user);
+
+    if (href === "/branches") return { href, labelKey: "manageBranchCta" };
+    if (href === "/orders") return { href, labelKey: "manageOrdersCta" };
+    if (href === "/pos") return { href, labelKey: "openPosCta" };
+    if (href === "/") {
+      return { href: "/profile", labelKey: "accountSettingsCta" };
+    }
+
+    return { href, labelKey: "addMenuCta" };
+  }
+
+  return { href: "/menu?create=true", labelKey: "addMenuCta" };
+};
+
 function PartnerSidebarContent(): ReactElement {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations("navigation");
-  const { user, role, logout } = useAuth();
+  const { user, role, isBranchAdmin, logout } = useAuth();
   const { setOpenMobile } = useSidebar();
   const routeKey = `${pathname}?${searchParams.toString()}`;
   const [menuState, setMenuState] = useState<{
@@ -204,6 +257,8 @@ function PartnerSidebarContent(): ReactElement {
     setTimeout(() => router.push("/login"), 500);
   };
 
+  const sidebarCta = getSidebarCta(user, role, isBranchAdmin);
+
   const renderGroup = (items: MenuItem[]) => (
     <SidebarMenu>
       {items.map((item) => (
@@ -261,10 +316,41 @@ function PartnerSidebarContent(): ReactElement {
         ) : null}
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="gap-3 border-t border-sidebar-border bg-sidebar p-3">
+        <div className="relative mx-1 mt-9 rounded-2xl bg-primary px-4 pb-4 pt-12 text-white group-data-[collapsible=icon]:hidden">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl bg-[url('/href_background.png')] bg-cover bg-center opacity-70"
+          />
+          <Image
+            src="/user_logo.png"
+            alt={t("supportAlt")}
+            width={82}
+            height={82}
+            className="absolute -top-9 left-1/2 -translate-x-1/2 drop-shadow-md"
+          />
+          <div className="relative mb-3 text-left">
+            <p className="text-sm font-semibold">{t("needHelp")}</p>
+            <p className="text-xs text-white/90">{t("checkDocs")}</p>
+          </div>
+          <Button
+            size="sm"
+            className="relative h-8 w-full rounded-full bg-white font-semibold text-primary hover:bg-white/90"
+            onClick={() => {
+              setOpenMobile(false);
+              router.push(sidebarCta.href);
+            }}
+          >
+            {t(sidebarCta.labelKey)}
+          </Button>
+        </div>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip={t("logout")} onClick={handleLogout}>
+            <SidebarMenuButton
+              tooltip={t("logout")}
+              onClick={handleLogout}
+              className="h-9 font-semibold text-primary hover:bg-primary/10 hover:text-primary [&>svg]:size-[20px] [&>svg]:text-primary"
+            >
               <LogOut />
               <span>{t("logout")}</span>
             </SidebarMenuButton>

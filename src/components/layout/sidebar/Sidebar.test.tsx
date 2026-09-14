@@ -22,6 +22,7 @@ vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({
     user: { role: "BUSINESS_ADMIN", actorType: "BUSINESS_ADMIN" },
     role: "BUSINESS_ADMIN",
+    isBranchAdmin: false,
     logout: vi.fn(),
   }),
 }));
@@ -42,6 +43,10 @@ describe("Partner shadcn sidebar", () => {
     expect(markup).toContain('data-slot="sidebar-menu-button"');
     expect(markup).toContain('class="group/menu-item relative group/collapsible"');
     expect(markup).toContain(">dashboard<");
+    expect(markup).toContain("user_logo.png");
+    expect(markup).toContain(">needHelp<");
+    expect(markup).toContain("data-[active=true]:bg-primary/10");
+    expect(markup).toContain("svg]:size-[20px]");
   });
 
   it("uses shadcn icon collapse and tooltip labels", () => {
@@ -51,5 +56,6 @@ describe("Partner shadcn sidebar", () => {
     expect(markup).toContain('data-collapsible="icon"');
     expect(markup).toContain('data-slot="sidebar-menu-button"');
     expect(markup).toContain("[scrollbar-width:none]");
+    expect(markup).toContain("group-data-[collapsible=icon]:hidden");
   });
 });

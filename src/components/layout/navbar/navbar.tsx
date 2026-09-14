@@ -32,21 +32,21 @@ export function Navbar() {
           </div>
         </div>
 
-        <div className="hidden min-h-[76px] flex-nowrap items-center justify-between gap-x-3 md:flex">
-          <div className="order-1 flex items-center gap-3">
+        <div className="hidden min-h-[76px] flex-nowrap items-center gap-x-3 md:flex">
+          <div className="flex shrink-0 items-center">
             <SidebarTrigger
               aria-label={t("openSidebar")}
-              className="size-9 text-primary"
+              className="size-9 rounded-lg bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
             />
           </div>
 
           <SearchBar />
 
-          <div className="order-3 w-full min-w-0 md:order-none md:w-auto md:shrink-0">
+          <div className="w-full min-w-0 md:w-auto md:shrink-0">
             <RestaurantPicker className="w-full md:w-[280px]" />
           </div>
 
-          <div className="order-2 ml-auto flex shrink-0 items-center gap-1 md:order-none lg:gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-1 lg:gap-2">
             <LanguageSelector />
             <NotificationBell />
             <div className="hidden h-12 w-px bg-primary lg:block" />
