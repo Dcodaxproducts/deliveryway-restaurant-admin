@@ -330,12 +330,12 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
       onClick={() => setOpen((prev) => !prev)}
       aria-expanded={open}
       aria-controls="restaurant-picker-options"
-      className="flex h-12 w-full items-center justify-between gap-2 rounded-xl bg-muted px-3 text-sm transition-all hover:bg-primary/10 md:h-[56px] md:px-4"
+      className="flex h-10 w-full items-center justify-between gap-2 rounded-xl bg-muted px-3 text-sm transition-all hover:bg-primary/10 md:px-4"
     >
       <span className="flex min-w-0 items-center gap-3">
         <BrandLogo
           className="shrink-0 gap-0"
-          imageClassName="size-9 rounded-full bg-white shadow-sm"
+          imageClassName="size-7 rounded-full bg-white shadow-sm"
           showName={false}
           logoUrl={selectedRestaurant?.logoUrl}
           name={selectedRestaurant?.name}
@@ -452,13 +452,13 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
         onClick={() => router.push("/branch-workspace")}
         title={branchId ? `Branch ID: ${branchId}` : branchLabel}
         className={cn(
-          "flex h-[52px] w-full items-center gap-3 rounded-xl bg-primary/10 px-3 text-left text-sm text-primary ring-1 ring-primary/20 transition hover:bg-primary/15 md:h-[56px] md:max-w-[340px] md:px-4",
+          "flex h-10 w-full items-center gap-3 rounded-xl bg-primary/10 px-3 text-left text-sm text-primary ring-1 ring-primary/20 transition hover:bg-primary/15 md:max-w-[340px] md:px-4",
           className,
         )}
       >
         <BrandLogo
           className="shrink-0 gap-0"
-          imageClassName="size-9 rounded-full bg-white shadow-sm"
+          imageClassName="size-7 rounded-full bg-white shadow-sm"
           showName={false}
           name={branchLabel}
         />

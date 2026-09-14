@@ -34,7 +34,7 @@ export default function LanguageSelector() {
           type="button"
           variant="outline"
           aria-label={navigation("changeLanguage")}
-          className="h-10 rounded-xl border-primary/10 bg-primary/10 px-3 text-xs font-semibold text-primary shadow-none hover:bg-primary/20 lg:h-12"
+          className="h-9 rounded-xl border-primary/10 bg-primary/10 px-3 text-xs font-semibold text-primary shadow-none hover:bg-primary/20"
         >
           {SHORT_LABELS[locale]}
           <ChevronDown size={14} />

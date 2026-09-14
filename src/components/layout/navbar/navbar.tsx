@@ -32,7 +32,7 @@ export function Navbar() {
           </div>
         </div>
 
-        <div className="hidden min-h-[67px] flex-nowrap items-center gap-x-3 md:flex">
+        <div className="hidden h-[67px] flex-nowrap items-center gap-x-3 py-3 md:flex">
           <div className="flex shrink-0 items-center">
             <SidebarTrigger
               aria-label={t("openSidebar")}
@@ -49,7 +49,7 @@ export function Navbar() {
           <div className="ml-auto flex shrink-0 items-center gap-1 lg:gap-2">
             <LanguageSelector />
             <NotificationBell />
-            <div className="hidden h-12 w-px bg-primary lg:block" />
+            <div className="hidden h-8 w-px bg-primary/50 lg:block" />
             <ProfileSection />
           </div>
         </div>

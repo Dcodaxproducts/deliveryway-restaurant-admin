@@ -120,8 +120,8 @@ export function GlobalSearch() {
   };
 
   return (
-    <div ref={containerRef} className="hidden md:block flex-1 max-w-7xl ml-3 ">
-      <div className="relative flex items-center bg-white border border-gray-300 rounded-lg px-3 h-[56px] focus-within:ring-2 focus-within:ring-ring transition-all">
+    <div ref={containerRef} className="ml-3 hidden max-w-7xl flex-1 md:block">
+      <div className="relative flex h-10 items-center rounded-lg border border-gray-300 bg-white px-3 transition-all focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20">
         <Input
           type="text"
           placeholder={t("placeholder")}
@@ -138,12 +138,12 @@ export function GlobalSearch() {
           aria-expanded={isOpen}
           aria-controls="global-search-dropdown"
           aria-autocomplete="list"
-          className="flex-1 border-none shadow-none focus-visible:ring-0 h-full px-0 text-base"
+          className="h-full flex-1 border-none px-0 text-sm shadow-none focus-visible:ring-0"
         />
         {isFetching && shouldSearch ? (
-          <Loader2 className="w-[22px] h-[22px] animate-spin text-gray-400 stroke-1" />
+          <Loader2 className="size-5 animate-spin text-gray-400 stroke-1" />
         ) : (
-          <Search className="w-[24px] h-[24px] text-gray-400 stroke-1" />
+          <Search className="size-5 text-gray-400 stroke-1" />
         )}
 
         {isOpen && shouldSearch ? (

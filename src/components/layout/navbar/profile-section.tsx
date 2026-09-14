@@ -48,19 +48,19 @@ export default function ProfileSection() {
       <div className="relative">
         <Button
           variant={null}
-          className="flex h-auto items-center justify-between gap-0 rounded-lg p-0 lg:gap-[24px] lg:py-2 lg:pl-[25px]"
+          className="flex h-10 items-center justify-between gap-0 rounded-lg p-0 lg:gap-3 lg:pl-3"
         >
           <div className="flex flex-col items-start justify-center">
             {/* Hide 'Hello' and 'User Name' on mobile */}
-            <span className="lg:text-base text-muted-foreground hidden lg:block">{navbar("hello")}</span>
-            <span className="lg:text-base font-semibold text-foreground hidden lg:block">
+            <span className="hidden text-xs text-muted-foreground lg:block">{navbar("hello")}</span>
+            <span className="hidden text-sm font-semibold leading-tight text-foreground lg:block">
               {displayName}
             </span>
           </div>
 
           {/* Avatar = Trigger */}
           <DropdownMenuTrigger asChild>
-            <Avatar className="w-10 h-10 lg:w-13 lg:h-13 cursor-pointer">
+            <Avatar className="size-9 cursor-pointer lg:size-10">
               {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
