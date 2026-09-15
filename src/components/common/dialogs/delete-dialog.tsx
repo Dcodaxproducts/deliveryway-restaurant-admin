@@ -9,8 +9,9 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { LoaderCircle, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 
 export type ConfirmDialogProps = {
     open: boolean;
@@ -21,6 +22,8 @@ export type ConfirmDialogProps = {
     description?: string;
     confirmLabel?: string;
     cancelLabel?: string;
+    busyLabel?: string;
+    error?: ReactNode;
     tone?: "danger" | "default";
 };
 
@@ -33,6 +36,8 @@ export function ConfirmDialog({
     description,
     confirmLabel,
     cancelLabel,
+    busyLabel,
+    error,
     tone = "danger",
 }: ConfirmDialogProps) {
     const t = useTranslations("common");
@@ -40,19 +45,39 @@ export function ConfirmDialog({
     const dialogDescription = description ?? t("deleteConfirmation");
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[380px] rounded-[var(--ui-radius-panel)] p-5 sm:p-6">
+        <Dialog
+            open={open}
+            onOpenChange={(nextOpen) => {
+                if (!nextOpen && isLoading) return;
+                onOpenChange(nextOpen);
+            }}
+        >
+            <DialogContent
+                showCloseButton={!isLoading}
+                onEscapeKeyDown={(event) => isLoading && event.preventDefault()}
+                onPointerDownOutside={(event) => isLoading && event.preventDefault()}
+                className="max-w-[380px] rounded-[var(--ui-radius-panel)] p-5 sm:p-6"
+            >
                 <DialogHeader className="flex flex-col items-center text-center gap-[12px]">
                     <div className="flex size-12 items-center justify-center rounded-[var(--ui-radius-card)] bg-[var(--ui-danger-soft)]">
                         <Trash2 size={24} className="text-[var(--ui-danger)]" />
                     </div>
-                    <DialogTitle className="text-[18px] font-semibold text-gray-800">
+                    <DialogTitle className="text-[18px] font-semibold text-[var(--ui-text)]">
                         {dialogTitle}
                     </DialogTitle>
-                    <DialogDescription className="text-sm text-gray-500 text-center">
+                    <DialogDescription className="text-center text-sm text-[var(--ui-text-muted)]">
                         {dialogDescription}
                     </DialogDescription>
                 </DialogHeader>
+
+                {error ? (
+                    <div
+                        role="alert"
+                        className="rounded-[var(--ui-radius-control)] bg-[var(--ui-danger-soft)] px-3 py-2 text-sm text-[var(--ui-danger)]"
+                    >
+                        {error}
+                    </div>
+                ) : null}
 
                 <DialogFooter className="flex gap-[12px] mt-[24px] sm:flex-row">
                     <Button
@@ -71,7 +96,12 @@ export function ConfirmDialog({
                         onClick={onConfirm}
                         disabled={isLoading}
                     >
-                        {isLoading ? t("deleting") : (confirmLabel ?? t("delete"))}
+                        {isLoading ? (
+                            <>
+                                <LoaderCircle aria-hidden="true" className="animate-spin" />
+                                {busyLabel ?? t("deleting")}
+                            </>
+                        ) : (confirmLabel ?? t("delete"))}
                     </Button>
                 </DialogFooter>
             </DialogContent>

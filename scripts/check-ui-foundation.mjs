@@ -16,6 +16,10 @@ const canonicalOwners = [
   "src/components/common/status-badge.tsx",
   "src/components/common/EmptyState.tsx",
   "src/components/common/FormField.tsx",
+  "src/components/common/FormLayout.tsx",
+  "src/components/common/DetailLayout.tsx",
+  "src/components/common/SettingsLayout.tsx",
+  "src/components/common/ResponsiveDialog.tsx",
   "src/components/common/dialogs/delete-dialog.tsx",
   "src/components/ui/form-select.tsx",
   "src/components/ui/file-upload-control.tsx",
@@ -25,6 +29,10 @@ const forbiddenDuplicatePaths = [
   "src/components/common/pagination.tsx",
   "src/components/common/page-section.tsx",
   "src/components/common/TableSkeleton.tsx",
+  "src/components/common/FormActions.tsx",
+  "src/components/common/FormSection.tsx",
+  "src/components/common/DetailPanel.tsx",
+  "src/components/common/InfoList.tsx",
 ];
 
 for (const path of canonicalOwners) {
