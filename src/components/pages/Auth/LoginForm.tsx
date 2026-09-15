@@ -11,17 +11,23 @@ import { useTranslations } from "next-intl";
 import { Building2, Store, UserCog } from "lucide-react";
 
 import FormInput from "@/components/forms/common/FormInput";
-import AuthPageShell from "@/components/pages/Auth/components/AuthPageShell";
+import AuthPageShell, {
+  AuthBrand,
+  AuthCard,
+} from "@/components/pages/Auth/components/AuthPageShell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuthContext } from "@/components/providers/auth-provider";
-import { getRoleLabel, getStaffDefaultRedirectPath, hasStaffPanelAccess, isAllowedAdminRole, isStaffRole } from "@/lib/auth";
+import {
+  getRoleLabel,
+  getStaffDefaultRedirectPath,
+  hasStaffPanelAccess,
+  isAllowedAdminRole,
+  isStaffRole,
+} from "@/lib/auth";
 import { getSafeRedirectPath } from "@/lib/auth-routes";
 import { authApi } from "@/services/auth/auth.api";
-import {
-  loginSchema,
-  type LoginFormValues,
-} from "@/validations/auth";
+import { loginSchema, type LoginFormValues } from "@/validations/auth";
 import { cn } from "@/lib/utils";
 
 const loginRoles: Array<{
@@ -75,9 +81,13 @@ const loadGoogleIdentityScript = () =>
 
     if (existingScript) {
       existingScript.addEventListener("load", () => resolve(), { once: true });
-      existingScript.addEventListener("error", () => reject(new Error("Google login failed to load")), {
-        once: true,
-      });
+      existingScript.addEventListener(
+        "error",
+        () => reject(new Error("Google login failed to load")),
+        {
+          once: true,
+        },
+      );
       return;
     }
 
@@ -131,7 +141,10 @@ function LoginFormContent() {
         return;
       }
 
-      if (isStaffRole(user.role, user.actorType) && !hasStaffPanelAccess(user)) {
+      if (
+        isStaffRole(user.role, user.actorType) &&
+        !hasStaffPanelAccess(user)
+      ) {
         toast.error(t("notAuthorized"));
         return;
       }
@@ -149,7 +162,9 @@ function LoginFormContent() {
         : user.role === "BRANCH_ADMIN"
           ? "/branch-workspace"
           : "/";
-      const redirectPath = getSafeRedirectPath(searchParams.get("redirect") ?? defaultRedirectPath);
+      const redirectPath = getSafeRedirectPath(
+        searchParams.get("redirect") ?? defaultRedirectPath,
+      );
 
       router.push(redirectPath);
     } catch (error) {
@@ -197,7 +212,10 @@ function LoginFormContent() {
               return;
             }
 
-            if (isStaffRole(user.role, user.actorType) && !hasStaffPanelAccess(user)) {
+            if (
+              isStaffRole(user.role, user.actorType) &&
+              !hasStaffPanelAccess(user)
+            ) {
               toast.error(t("notAuthorized"));
               return;
             }
@@ -214,9 +232,15 @@ function LoginFormContent() {
               : user.role === "BRANCH_ADMIN"
                 ? "/branch-workspace"
                 : "/";
-            router.push(getSafeRedirectPath(searchParams.get("redirect") ?? defaultRedirectPath));
+            router.push(
+              getSafeRedirectPath(
+                searchParams.get("redirect") ?? defaultRedirectPath,
+              ),
+            );
           } catch (error) {
-            toast.error(error instanceof Error ? error.message : t("genericError"));
+            toast.error(
+              error instanceof Error ? error.message : t("genericError"),
+            );
           } finally {
             setIsGoogleSubmitting(false);
           }
@@ -231,18 +255,14 @@ function LoginFormContent() {
   };
 
   return (
-    <AuthPageShell>
-      <div className="relative w-full max-w-[440px] rounded-[28px] border border-black/[0.06] bg-white px-5 py-6 shadow-[0_24px_70px_rgba(42,27,20,0.08)] sm:px-9 sm:py-10 lg:border-0 lg:px-0 lg:shadow-none">
-        <Image
-          src="/feastflow-logo.png"
-          alt="FeastFlow"
-          width={360}
-          height={87}
-          className="mx-auto h-auto w-[140px] sm:w-[164px]"
-          priority
-        />
+    <AuthPageShell titleId="partner-login-title">
+      <AuthCard>
+        <AuthBrand />
 
-        <h1 id="partner-login-title" className="mt-5 text-center text-[26px] font-semibold tracking-[-0.03em] text-gray-950 sm:mt-8 sm:text-[30px]">
+        <h1
+          id="partner-login-title"
+          className="mt-5 text-center text-[26px] font-semibold tracking-[-0.03em] text-gray-950 sm:mt-8 sm:text-[30px]"
+        >
           {t("welcomeTitle")}
         </h1>
 
@@ -250,7 +270,11 @@ function LoginFormContent() {
           {t("loginSubtitle")}
         </p>
 
-        <form className="mt-5 space-y-4 sm:mt-7 sm:space-y-5" noValidate onSubmit={submitLogin}>
+        <form
+          className="mt-5 space-y-4 sm:mt-7 sm:space-y-5"
+          noValidate
+          onSubmit={submitLogin}
+        >
           <Controller
             control={control}
             name="email"
@@ -318,7 +342,7 @@ function LoginFormContent() {
                           value === "STAFF" && "sm:col-span-2",
                           selected
                             ? "border-primary bg-primary/[0.045] shadow-[0_10px_28px_rgba(193,18,31,0.10)]"
-                            : "border-gray-200 bg-white hover:border-primary/40 hover:bg-[#faf8f6]"
+                            : "border-gray-200 bg-white hover:border-primary/40 hover:bg-[#faf8f6]",
                         )}
                       >
                         <span
@@ -326,7 +350,7 @@ function LoginFormContent() {
                             "inline-flex size-9 items-center justify-center rounded-full transition",
                             selected
                               ? "bg-primary text-white"
-                              : "bg-gray-100 text-gray-500 group-hover:text-primary"
+                              : "bg-gray-100 text-gray-500 group-hover:text-primary",
                           )}
                         >
                           <Icon className="size-4" />
@@ -348,7 +372,10 @@ function LoginFormContent() {
               {t("rememberMe")}
             </label>
 
-            <Link href="/forgot-password" className="rounded-sm text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+            <Link
+              href="/forgot-password"
+              className="rounded-sm text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
               {t("forgotPasswordLink")}
             </Link>
           </div>
@@ -374,19 +401,26 @@ function LoginFormContent() {
               onClick={handleGoogleLogin}
               className="flex h-[48px] w-full items-center justify-center gap-3 rounded-[12px] border border-gray-300 bg-white text-sm font-medium transition duration-200 hover:border-gray-400 hover:bg-[#faf8f6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50 sm:h-[50px]"
             >
-              <Image src="/google_icon.png" alt={t("googleAlt")} width={18} height={18} />
+              <Image
+                src="/google_icon.png"
+                alt={t("googleAlt")}
+                width={18}
+                height={18}
+              />
               {isGoogleSubmitting ? t("signingIn") : t("signInWithGoogle")}
             </button>
           </div>
         </form>
-      </div>
+      </AuthCard>
     </AuthPageShell>
   );
 }
 
 export function LoginForm() {
   return (
-    <Suspense fallback={<div className="py-10 text-center">Loading login...</div>}>
+    <Suspense
+      fallback={<div className="py-10 text-center">Loading login...</div>}
+    >
       <LoginFormContent />
     </Suspense>
   );

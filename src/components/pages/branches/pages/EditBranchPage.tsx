@@ -4,9 +4,12 @@ import { JSX, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import Header from "@/components/pages/Branches/components/header";
 import Container from "@/components/common/Container";
+import { FormActions, FormLayout } from "@/components/common/FormLayout";
+import PageHeader from "@/components/common/PageHeader";
+import { SectionCard } from "@/components/common/SectionCard";
 import TabButton from "@/components/ui/TabButton";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useGetBranchDeliveryTime,
@@ -20,7 +23,6 @@ import {
   editBranchSchema,
   EditBranchBasicInfoStep,
   EditBranchDeliveryStep,
-  EditBranchSectionHeader,
   EditBranchWorkingHoursStep,
   getBranchSettingsValidationError,
   getDeliveryConfigValidationError,
@@ -47,6 +49,7 @@ type BranchesEditPageProps = {
 
 export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
   const t = useTranslations("branches");
+  const commonT = useTranslations("common");
   const [activeTab, setActiveTab] = useState<EditTab>("basicInfo");
   const [branchData, setBranchData] = useState<BranchFormData | null>(null);
 
@@ -275,28 +278,61 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
 
   return (
     <Container>
-      <Header title={headerTitle} description={headerDescription} />
-
-      <div className="space-y-8 rounded-[14px] bg-white shadow-sm lg:p-8">
-        <div className="flex flex-wrap items-center gap-3">
-          {steps.map(({ key, tabLabel }) => (
-            <TabButton
-              key={key}
-              active={activeTab === key}
-              onClick={() => setActiveTab(key)}
+      <div className="space-y-5">
+        <PageHeader
+          title={headerTitle}
+          description={headerDescription}
+          tabs={
+            <div
+              className="flex gap-2 overflow-x-auto pb-1"
+              aria-label={t("editBranch")}
             >
-              {tabLabel}
-            </TabButton>
-          ))}
-        </div>
-
-        <EditBranchSectionHeader
-          title={currentStep.title}
-          description={currentStep.description}
-          onPrimaryAction={handleSave}
+              {steps.map(({ key, tabLabel }) => (
+                <TabButton
+                  key={key}
+                  active={activeTab === key}
+                  onClick={() => setActiveTab(key)}
+                >
+                  {tabLabel}
+                </TabButton>
+              ))}
+            </div>
+          }
         />
 
-        {currentStep.component}
+        <FormLayout
+          actions={
+            <FormActions
+              sticky
+              primary={
+                <Button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={
+                    !branchData ||
+                    branchQuery.isLoading ||
+                    updateBranchMutation.isPending ||
+                    updateDeliveryTimeMutation.isPending
+                  }
+                >
+                  {updateBranchMutation.isPending ||
+                  updateDeliveryTimeMutation.isPending
+                    ? commonT("saving")
+                    : commonT("save")}
+                </Button>
+              }
+            />
+          }
+        >
+          <SectionCard
+            title={currentStep.title}
+            description={currentStep.description}
+            variant="outlined"
+            padding="lg"
+          >
+            {currentStep.component}
+          </SectionCard>
+        </FormLayout>
       </div>
     </Container>
   );

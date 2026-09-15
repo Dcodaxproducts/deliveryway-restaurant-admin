@@ -1,79 +1,83 @@
 "use client";
 
+import Link from "next/link";
+import { ArrowRight, CheckCircle2, ClipboardCheck, Store } from "lucide-react";
 import { useTranslations } from "next-intl";
+
+import AuthPageShell, {
+  AuthBrand,
+  AuthCard,
+  AUTH_DESCRIPTION_CLASS,
+  AUTH_TITLE_CLASS,
+} from "@/components/pages/Auth/components/AuthPageShell";
+import { Button } from "@/components/ui/button";
 
 const RegisterInfoPage = () => {
   const t = useTranslations("auth");
+  const steps = [
+    {
+      title: t("registerRestaurant"),
+      description: t("registerRestaurantDescription"),
+      icon: Store,
+    },
+    {
+      title: t("approvalProcess"),
+      description: t("approvalProcessDescription"),
+      icon: ClipboardCheck,
+    },
+    {
+      title: t("manageOperations"),
+      description: t("manageOperationsDescription"),
+      icon: CheckCircle2,
+    },
+  ];
 
   return (
-    <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6 lg:px-8">
-      <section className="mx-auto flex min-h-[70vh] max-w-4xl items-center justify-center">
-        <div className="w-full rounded-3xl border border-border bg-card p-6 text-center shadow-sm sm:p-10 lg:p-14">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <span className="text-2xl font-bold">A</span>
-          </div>
+    <AuthPageShell>
+      <AuthCard className="max-w-[560px]">
+        <AuthBrand />
+        <p className="mb-3 mt-7 text-center text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+          {t("adminPanel")}
+        </p>
 
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-primary">
-            {t("adminPanel")}
-          </p>
+        <h1 id="auth-page-title" className={AUTH_TITLE_CLASS}>
+          {t("registerInfoTitle")}
+        </h1>
 
-          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-            {t("registerInfoTitle")}
-          </h1>
+        <p className={AUTH_DESCRIPTION_CLASS}>{t("registerInfoDescription")}</p>
 
-          <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-            {t("registerInfoDescription")}
-          </p>
-
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-7 grid gap-3 sm:grid-cols-2">
+          <Button asChild className="h-12 rounded-[12px]">
             <a
               href="https://restaurant-landing-page-brown-eight.vercel.app/"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 sm:w-auto"
             >
               {t("goToRegistrationPage")}
+              <ArrowRight size={16} aria-hidden="true" />
             </a>
+          </Button>
 
-            <a
-              href="/login"
-              className="inline-flex w-full items-center justify-center rounded-full border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground transition hover:bg-muted sm:w-auto"
-            >
-              {t("adminLogin")}
-            </a>
-          </div>
-
-          <div className="mt-10 grid gap-4 text-left sm:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <h2 className="text-sm font-semibold text-foreground">
-                {t("registerRestaurant")}
-              </h2>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                {t("registerRestaurantDescription")}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <h2 className="text-sm font-semibold text-foreground">
-                {t("approvalProcess")}
-              </h2>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                {t("approvalProcessDescription")}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <h2 className="text-sm font-semibold text-foreground">
-                {t("manageOperations")}
-              </h2>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                {t("manageOperationsDescription")}
-              </p>
-            </div>
-          </div>
+          <Button asChild variant="outline" className="h-12 rounded-[12px]">
+            <Link href="/login">{t("adminLogin")}</Link>
+          </Button>
         </div>
-      </section>
-    </main>
+
+        <div className="mt-8 grid gap-3 text-left sm:grid-cols-3">
+          {steps.map(({ title, description, icon: Icon }) => (
+            <section key={title} className="rounded-2xl bg-[#faf8f6] p-4">
+              <Icon className="size-5 text-primary" aria-hidden="true" />
+              <h2 className="mt-3 text-sm font-semibold text-gray-950">
+                {title}
+              </h2>
+              <p className="mt-1.5 text-xs leading-5 text-gray-600">
+                {description}
+              </p>
+            </section>
+          ))}
+        </div>
+      </AuthCard>
+    </AuthPageShell>
   );
 };
 

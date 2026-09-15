@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -11,10 +11,12 @@ import { useTranslations } from "next-intl";
 
 import FormInput from "@/components/forms/common/FormInput";
 import AuthPageShell, {
-  AUTH_CARD_CLASS,
+  AuthBrand,
+  AuthCard,
   AUTH_DESCRIPTION_CLASS,
   AUTH_DIVIDER_LINE_CLASS,
   AUTH_PRIMARY_SUBMIT_BUTTON_CLASS,
+  AUTH_SECONDARY_LINK_CLASS,
   AUTH_TITLE_CLASS,
 } from "@/components/pages/Auth/components/AuthPageShell";
 import { Button } from "@/components/ui/button";
@@ -97,16 +99,15 @@ const ResetPasswordForm = () => {
 
   return (
     <AuthPageShell>
-      <div className={AUTH_CARD_CLASS}>
-        <div className="mb-6 flex justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none">
-              <path d="M12 1C9 1 7 3 7 6V8H6C4.9 8 4 8.9 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.9 19.1 8 18 8H17V6C17 3 15 1 12 1Z" fill="#ECF0F4" />
-            </svg>
+      <AuthCard>
+        <AuthBrand />
+        <div className="mb-5 mt-7 flex justify-center">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/[0.09] text-primary">
+            <ShieldCheck size={21} aria-hidden="true" />
           </div>
         </div>
 
-        <h1 className={AUTH_TITLE_CLASS}>
+        <h1 id="auth-page-title" className={AUTH_TITLE_CLASS}>
           {t("resetPasswordTitle")}
         </h1>
 
@@ -114,7 +115,11 @@ const ResetPasswordForm = () => {
           {t("resetPasswordDescription")}
         </p>
 
-        <form className="mt-8 space-y-6" noValidate onSubmit={handleSubmit(onSubmit)}>
+        <form
+          className="mt-8 space-y-6"
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <Controller
             control={control}
             name="email"
@@ -149,13 +154,15 @@ const ResetPasswordForm = () => {
 
           <div className="flex items-center justify-between text-sm">
             {countdown > 0 ? (
-              <span className="text-gray-500">{t("resendOtpCountdown", { seconds: countdown })}</span>
+              <span className="text-gray-500">
+                {t("resendOtpCountdown", { seconds: countdown })}
+              </span>
             ) : (
               <button
                 type="button"
                 onClick={handleResendOtp}
                 disabled={isResending}
-                className="text-blue-600 hover:underline"
+                className="rounded-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               >
                 {isResending ? t("sending") : t("resendOtp")}
               </button>
@@ -210,12 +217,12 @@ const ResetPasswordForm = () => {
             <div className={AUTH_DIVIDER_LINE_CLASS} />
           </div>
 
-          <Link href="/login" className="flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] border border-gray-300 text-sm font-medium text-blue-600 transition hover:bg-gray-50">
-            <ArrowLeft size={16} />
+          <Link href="/login" className={AUTH_SECONDARY_LINK_CLASS}>
+            <ArrowLeft size={16} aria-hidden="true" />
             {t("backToLogin")}
           </Link>
         </form>
-      </div>
+      </AuthCard>
     </AuthPageShell>
   );
 };

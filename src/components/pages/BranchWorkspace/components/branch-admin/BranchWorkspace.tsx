@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 
 import Container from "@/components/common/Container";
-import Header from "@/components/common/PageHeader";
+import PageHeader from "@/components/common/PageHeader";
+import { SectionCard } from "@/components/common/SectionCard";
 import BranchAdminScopeBanner from "@/components/pages/BranchWorkspace/components/branch-admin/BranchAdminScopeBanner";
 import { BranchCard } from "@/components/cards/BranchCard";
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,7 @@ export default function BranchWorkspace() {
   return (
     <Container>
       <div className="space-y-6">
-        <Header
+        <PageHeader
           title={isBranchAdmin ? "My Branch Workspace" : "Branch Workspace"}
           description="A single-branch command center for branch admins."
         />
@@ -89,11 +90,11 @@ export default function BranchWorkspace() {
           </div>
         ) : null}
 
-        <section className="rounded-[22px] bg-white p-5 shadow-sm lg:p-6">
+        <SectionCard variant="raised" padding="lg">
           <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-[15px] bg-primary/10 text-primary">
-                <Store size={20} />
+                <Store size={20} aria-hidden="true" />
               </div>
 
               <div>
@@ -101,7 +102,8 @@ export default function BranchWorkspace() {
                   Assigned branch
                 </h2>
                 <p className="text-sm text-gray-500">
-                  Restaurant {restaurantId || "-"} • Branch {effectiveBranchId || "-"}
+                  Restaurant {restaurantId || "-"} • Branch{" "}
+                  {effectiveBranchId || "-"}
                 </p>
               </div>
             </div>
@@ -118,11 +120,11 @@ export default function BranchWorkspace() {
               </Button>
 
               {effectiveBranchId ? (
-                <Link href={`/branches/edit?branchId=${effectiveBranchId}`}>
-                  <Button type="button" className="rounded-[12px]">
+                <Button asChild type="button" className="rounded-[12px]">
+                  <Link href={`/branches/edit?branchId=${effectiveBranchId}`}>
                     Edit branch profile
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               ) : null}
             </div>
           </div>
@@ -148,7 +150,7 @@ export default function BranchWorkspace() {
               Branch details could not be loaded.
             </div>
           ) : null}
-        </section>
+        </SectionCard>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {quickActions.map((action) => {
@@ -162,7 +164,7 @@ export default function BranchWorkspace() {
               >
                 <div className="flex items-start gap-4">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] bg-[#F9FAFB] text-primary transition group-hover:bg-primary group-hover:text-white">
-                    <Icon size={20} />
+                    <Icon size={20} aria-hidden="true" />
                   </div>
 
                   <div>
