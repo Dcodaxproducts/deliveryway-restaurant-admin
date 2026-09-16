@@ -107,6 +107,7 @@ export default function EmployeeInvitationModal({
   const createStaffMutation = useCreateStaff({
     messages: {
       success: t("messages.staffCreated"),
+      invitationNotSent: t("messages.staffCreatedNoInvitation"),
       error: t("messages.failedCreateStaff"),
     },
   });

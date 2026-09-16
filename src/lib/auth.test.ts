@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  clearTransientWorkspaceSelection,
   getStaffDefaultRedirectPath,
   getStaffRoutePermissionAccesses,
   hasStaffMenuAccess,
@@ -15,6 +16,37 @@ import {
 } from "@/lib/auth";
 
 describe("auth helpers", () => {
+  it("clears a persisted business-admin workspace before authorized restaurants load", () => {
+    const user = normalizeUser({
+      id: "owner-1",
+      email: "owner@example.com",
+      role: "BUSINESS_ADMIN",
+      restaurantId: "stale-restaurant",
+      branchId: "stale-branch",
+      branchName: "Old Branch",
+    });
+
+    expect(clearTransientWorkspaceSelection(user)).toEqual(
+      expect.objectContaining({
+        restaurantId: null,
+        branchId: null,
+        branchName: null,
+      }),
+    );
+  });
+
+  it("preserves fixed restaurant and branch scopes", () => {
+    const user = normalizeUser({
+      id: "branch-admin-1",
+      email: "branch@example.com",
+      role: "BRANCH_ADMIN",
+      restaurantId: "restaurant-1",
+      branchId: "branch-1",
+    });
+
+    expect(clearTransientWorkspaceSelection(user)).toBe(user);
+  });
+
   it("requires a fresh restaurant choice for multi-restaurant business admins", () => {
     const user = normalizeUser({
       id: "owner-1",

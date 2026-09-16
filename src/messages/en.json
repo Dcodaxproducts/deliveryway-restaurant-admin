@@ -2503,6 +2503,7 @@
       "unableLoadRestaurants": "Unable to load restaurants",
       "unableSaveRole": "Unable to save role",
       "staffCreated": "Staff created successfully!",
+      "staffCreatedNoInvitation": "Staff created, but the invitation email was not sent.",
       "failedCreateStaff": "Failed to create staff",
       "staffUpdated": "Staff updated successfully!",
       "failedUpdateStaff": "Failed to update staff",

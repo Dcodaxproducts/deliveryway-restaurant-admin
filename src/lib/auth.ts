@@ -246,6 +246,22 @@ export const isRestaurantAdminRole = (role?: string | null) => {
   );
 };
 
+export const clearTransientWorkspaceSelection = (
+  user?: AuthUser | null,
+): AuthUser | null => {
+  if (!user) return null;
+  if (normalizeRoleName(user.role) !== ADMIN_ROLES.BUSINESS_ADMIN) {
+    return user;
+  }
+
+  return {
+    ...user,
+    restaurantId: null,
+    branchId: null,
+    branchName: null,
+  };
+};
+
 export const isAllowedAdminRole = (role?: string | null) => {
   return (
     isBranchAdminRole(role) || isRestaurantAdminRole(role) || isStaffRole(role)

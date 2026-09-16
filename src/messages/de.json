@@ -2503,6 +2503,7 @@
       "unableLoadRestaurants": "Restaurants konnten nicht geladen werden",
       "unableSaveRole": "Rolle konnte nicht gespeichert werden",
       "staffCreated": "Mitarbeiter erfolgreich erstellt!",
+      "staffCreatedNoInvitation": "Mitarbeiter erstellt, aber die Einladungs-E-Mail wurde nicht gesendet.",
       "failedCreateStaff": "Mitarbeiter konnte nicht erstellt werden",
       "staffUpdated": "Mitarbeiter erfolgreich aktualisiert!",
       "failedUpdateStaff": "Mitarbeiter konnte nicht aktualisiert werden",

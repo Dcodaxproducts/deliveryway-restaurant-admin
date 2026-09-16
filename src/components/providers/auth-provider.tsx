@@ -14,6 +14,7 @@ import { getRequestLocale } from "@/config/i18n";
 import {
   AuthStorage,
   AuthUser,
+  clearTransientWorkspaceSelection,
   clearStoredAuth,
   getStoredAuth,
   normalizeAuthPayload,
@@ -98,7 +99,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         try {
-          const me = await fetchMe(stored.accessToken, stored);
+          const me = clearTransientWorkspaceSelection(
+            await fetchMe(stored.accessToken, stored),
+          );
           const normalizedStored = normalizeAuthPayload({ ...stored, user: me }, stored);
 
           saveStoredAuth(normalizedStored);
@@ -110,7 +113,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
           if (!isUnauthorized) {
             void error;
-            setUser(normalizeUser(stored.user, null));
+            setUser(
+              clearTransientWorkspaceSelection(
+                normalizeUser(stored.user, null),
+              ),
+            );
             setToken(stored.accessToken);
             setLoading(false);
             return;
@@ -127,7 +134,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
 
           const updatedStored = getStoredAuth();
-          const me = await fetchMe(newAccessToken, updatedStored);
+          const me = clearTransientWorkspaceSelection(
+            await fetchMe(newAccessToken, updatedStored),
+          );
           const normalizedStored = normalizeAuthPayload(
             { ...updatedStored, accessToken: newAccessToken, user: me },
             updatedStored
@@ -149,10 +158,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = (data: unknown) => {
     const normalizedData = normalizeAuthPayload(data);
+    const user = clearTransientWorkspaceSelection(normalizedData.user);
+    const sanitizedData = { ...normalizedData, user };
 
-    saveStoredAuth(normalizedData);
-    setToken(normalizedData.accessToken || null);
-    setUser(normalizedData.user || null);
+    saveStoredAuth(sanitizedData);
+    setToken(sanitizedData.accessToken || null);
+    setUser(user);
   };
 
   const logout = () => {

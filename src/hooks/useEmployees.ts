@@ -17,7 +17,12 @@ import {
 
 type EmployeeMutationMessages = {
   success?: string;
+  invitationNotSent?: string;
   error?: string;
+};
+
+type StaffCreationResponse = {
+  invitationEmailSent?: boolean;
 };
 
 type EmployeeMutationOptions = {
@@ -35,8 +40,15 @@ export const useCreateStaff = (options?: EmployeeMutationOptions) => {
 
   return useMutation({
     mutationFn: createStaff,
-    onSuccess: () => {
+    onSuccess: (response: StaffCreationResponse) => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
+      if (response.invitationEmailSent === false) {
+        toast.warning(
+          options?.messages?.invitationNotSent ||
+            "Staff created, but the invitation email was not sent.",
+        );
+        return;
+      }
       toast.success(
         options?.messages?.success || "Staff created successfully!",
       );
