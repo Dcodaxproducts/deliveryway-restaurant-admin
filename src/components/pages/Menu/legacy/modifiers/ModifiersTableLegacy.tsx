@@ -9,13 +9,18 @@ import PaginationSection from "@/components/common/PaginationSection";
 import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
 import { StatePanel } from "@/components/common/EmptyState";
 import { StatusBadge } from "@/components/common/status-badge";
+import { MenuManagementActions } from "@/components/pages/Menu/shared/MenuManagementPage";
 import { Copy, MoreVertical, Search } from "lucide-react";
 import { useDuplicateModifier } from "@/hooks/useMenus";
 import { useDeleteModifier, useModifiers } from "@/hooks/useModifiers";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useTranslations } from "next-intl";
 import type { Modifier } from "@/types/modifiers";
@@ -120,7 +125,7 @@ export default function ModifiersTable() {
 
   return (
     <div className="w-full">
-      <div className="mb-4 flex justify-end">
+      <MenuManagementActions>
         <Button
           onClick={() => {
             setSelected(null);
@@ -130,7 +135,7 @@ export default function ModifiersTable() {
         >
           {t("add")}
         </Button>
-      </div>
+      </MenuManagementActions>
 
       <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center">
         <div className="relative w-full max-w-[420px]">
@@ -171,100 +176,69 @@ export default function ModifiersTable() {
       </div>
 
       {isError ? (
-        <StatePanel state="error" title={commonT("unableToLoad")} description="" compact className="mb-4"
-          action={<Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>{commonT("refresh")}</Button>} />
+        <StatePanel
+          state="error"
+          title={commonT("unableToLoad")}
+          description=""
+          compact
+          className="mb-4"
+          action={
+            <Button
+              variant="outline"
+              disabled={isFetching}
+              onClick={() => void refetch()}
+            >
+              {commonT("refresh")}
+            </Button>
+          }
+        />
       ) : null}
-      {(!isError || items.length > 0) && <ResponsiveDataView
-        data={items}
-        rowKey={(item) => item.id}
-        loading={isTableLoading}
-        emptyTitle={t("emptyTitle")}
-        columns={[
-          {
-            id: "name", header: commonT("name"), cell: (item) => (
-              <div className="flex flex-col">
-                <span className="block font-medium text-gray-900">
-                  {item.name || "-"}
-                </span>
-              </div>
-            )
-          },
-          { id: "category", header: t("category"), align: "center", cell: (item) => item.category?.name || t("uncategorized") },
-          { id: "price", header: t("basePrice"), align: "center", cell: (item) => formatMoney(item.priceDelta) },
-          {
-            id: "status", header: commonT("status"), align: "center", cell: (item) => (
-              <StatusBadge tone={item.isActive ? "success" : "neutral"}>
-                {item.isActive ? commonT("active") : commonT("inactive")}
-              </StatusBadge>
-            )
-          },
-          {
-            id: "actions", header: commonT("actions"), align: "center", cell: (item) => (
-              <div className="flex items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelected(item);
-                    setOpen(true);
-                  }}
-                  className="text-gray-500 hover:text-primary"
-                  aria-label={t("editAria")}
-                >
-                  <FaPen size={14} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setDeleteId(item.id)}
-                  className="text-gray-500 hover:text-red-500"
-                  aria-label={t("deleteAria")}
-                >
-                  <FaTrash size={14} />
-                </button>
-
-                <ActionDropdown
-                  item={item}
-                  isOpen={!isMobile && openActionId === item.id}
-                  isDuplicating={isDuplicating}
-                  onToggle={() =>
-                    setOpenActionId((prev) =>
-                      prev === item.id ? null : item.id
-                    )
-                  }
-                  onClose={() => setOpenActionId(null)}
-                  onDuplicate={handleDuplicate}
-                />
-              </div>
-            )
-          },
-        ]}
-        renderMobileItem={(item) => (
-          <div
-            key={item.id}
-            className="rounded-[18px] border bg-white p-4 shadow-sm"
-          >
-            <div className="flex flex-1 flex-col justify-between gap-3">
-              <div>
-                <h3 className="text-[16px] font-semibold text-gray-900">
-                  {item.name || "-"}
-                </h3>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">
-                  {item.category?.name || t("uncategorized")}
-                </span>
-                <span className="text-sm font-semibold text-primary">
-                  {formatMoney(item.priceDelta)}
-                </span>
-              </div>
-
-              <div className="mt-2 flex items-center justify-between">
+      {(!isError || items.length > 0) && (
+        <ResponsiveDataView
+          data={items}
+          rowKey={(item) => item.id}
+          loading={isTableLoading}
+          emptyTitle={t("emptyTitle")}
+          columns={[
+            {
+              id: "name",
+              header: commonT("name"),
+              cell: (item) => (
+                <div className="flex flex-col">
+                  <span className="block font-medium text-gray-900">
+                    {item.name || "-"}
+                  </span>
+                </div>
+              ),
+            },
+            {
+              id: "category",
+              header: t("category"),
+              align: "center",
+              cell: (item) => item.category?.name || t("uncategorized"),
+            },
+            {
+              id: "price",
+              header: t("basePrice"),
+              align: "center",
+              cell: (item) => formatMoney(item.priceDelta),
+            },
+            {
+              id: "status",
+              header: commonT("status"),
+              align: "center",
+              cell: (item) => (
                 <StatusBadge tone={item.isActive ? "success" : "neutral"}>
                   {item.isActive ? commonT("active") : commonT("inactive")}
                 </StatusBadge>
-
-                <div className="flex items-center gap-3">
+              ),
+            },
+            {
+              id: "actions",
+              header: commonT("actions"),
+              align: "center",
+              cell: (item) => (
+                <div className="flex items-center justify-center gap-3">
                   <button
                     type="button"
                     onClick={() => {
@@ -288,23 +262,88 @@ export default function ModifiersTable() {
 
                   <ActionDropdown
                     item={item}
-                    isOpen={isMobile && openActionId === item.id}
+                    isOpen={!isMobile && openActionId === item.id}
                     isDuplicating={isDuplicating}
                     onToggle={() =>
                       setOpenActionId((prev) =>
-                        prev === item.id ? null : item.id
+                        prev === item.id ? null : item.id,
                       )
                     }
                     onClose={() => setOpenActionId(null)}
                     onDuplicate={handleDuplicate}
                   />
                 </div>
+              ),
+            },
+          ]}
+          renderMobileItem={(item) => (
+            <div
+              key={item.id}
+              className="rounded-[18px] border bg-white p-4 shadow-sm"
+            >
+              <div className="flex flex-1 flex-col justify-between gap-3">
+                <div>
+                  <h3 className="text-[16px] font-semibold text-gray-900">
+                    {item.name || "-"}
+                  </h3>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">
+                    {item.category?.name || t("uncategorized")}
+                  </span>
+                  <span className="text-sm font-semibold text-primary">
+                    {formatMoney(item.priceDelta)}
+                  </span>
+                </div>
+
+                <div className="mt-2 flex items-center justify-between">
+                  <StatusBadge tone={item.isActive ? "success" : "neutral"}>
+                    {item.isActive ? commonT("active") : commonT("inactive")}
+                  </StatusBadge>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelected(item);
+                        setOpen(true);
+                      }}
+                      className="text-gray-500 hover:text-primary"
+                      aria-label={t("editAria")}
+                    >
+                      <FaPen size={14} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDeleteId(item.id)}
+                      className="text-gray-500 hover:text-red-500"
+                      aria-label={t("deleteAria")}
+                    >
+                      <FaTrash size={14} />
+                    </button>
+
+                    <ActionDropdown
+                      item={item}
+                      isOpen={isMobile && openActionId === item.id}
+                      isDuplicating={isDuplicating}
+                      onToggle={() =>
+                        setOpenActionId((prev) =>
+                          prev === item.id ? null : item.id,
+                        )
+                      }
+                      onClose={() => setOpenActionId(null)}
+                      onDuplicate={handleDuplicate}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        footer={<PaginationSection {...pagination} onPageChange={setPage} />}
-      />}
+          )}
+          footer={<PaginationSection {...pagination} onPageChange={setPage} />}
+        />
+      )}
 
       <ModifierModal
         open={open}
@@ -351,37 +390,45 @@ function ActionDropdown({
   const t = useTranslations("menu.modifiersTable");
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={(open) => open ? onToggle() : onClose()} modal={false}>
+    <DropdownMenu
+      open={isOpen}
+      onOpenChange={(open) => (open ? onToggle() : onClose())}
+      modal={false}
+    >
       <DropdownMenuTrigger asChild>
-      <button
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation();
-        }}
-        className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
-        aria-label={t("actionsAria")}
-      >
-        <MoreVertical size={17} />
-      </button>
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+          }}
+          className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
+          aria-label={t("actionsAria")}
+        >
+          <MoreVertical size={17} />
+        </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" sideOffset={8} className="w-[160px] rounded-[12px] border-gray-100 bg-white py-1 text-left shadow-lg">
-          <button
-            type="button"
-            disabled={isDuplicating}
-            onMouseDown={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
+      <DropdownMenuContent
+        align="end"
+        sideOffset={8}
+        className="w-[160px] rounded-[12px] border-gray-100 bg-white py-1 text-left shadow-lg"
+      >
+        <button
+          type="button"
+          disabled={isDuplicating}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
 
-              if (isDuplicating) return;
+            if (isDuplicating) return;
 
-              onDuplicate(item.id);
-            }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <Copy size={15} />
-            {isDuplicating ? t("duplicating") : t("duplicate")}
-          </button>
+            onDuplicate(item.id);
+          }}
+          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Copy size={15} />
+          {isDuplicating ? t("duplicating") : t("duplicate")}
+        </button>
       </DropdownMenuContent>
     </DropdownMenu>
   );

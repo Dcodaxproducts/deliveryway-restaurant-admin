@@ -6,6 +6,7 @@ import Header from "@/components/pages/Menu/legacy/root-menu-components/header";
 import Table from "@/components/pages/Menu/legacy/root-menu-components/list";
 import BranchFilters from "@/components/pages/Branches/components/BranchFilters";
 import PaginationSection from "@/components/common/PaginationSection";
+import { SectionCard } from "@/components/common/SectionCard";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetRestaurantMenus } from "@/hooks/useMenus";
@@ -56,11 +57,7 @@ const extractMeta = (response: any) => {
 
 export default function MenusPage() {
   const t = useTranslations("menu.overview");
-  const {
-    restaurantId,
-    isBranchAdmin,
-    loading: authLoading,
-  } = useAuth();
+  const { restaurantId, isBranchAdmin, loading: authLoading } = useAuth();
 
   const [filters, setFilters] = useState({ search: "" });
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -83,7 +80,7 @@ export default function MenusPage() {
       restaurantId: restaurantId || undefined,
       search: debouncedSearch || undefined,
     }),
-    [page, limit, restaurantId, debouncedSearch]
+    [page, limit, restaurantId, debouncedSearch],
   );
 
   const {
@@ -104,7 +101,7 @@ export default function MenusPage() {
     const totalPages = Number(
       meta?.totalPages ??
         meta?.pages ??
-        (total > 0 && pageSize > 0 ? Math.ceil(total / pageSize) : 1)
+        (total > 0 && pageSize > 0 ? Math.ceil(total / pageSize) : 1),
     );
 
     return {
@@ -116,16 +113,16 @@ export default function MenusPage() {
         typeof meta?.hasNext === "boolean"
           ? meta.hasNext
           : typeof meta?.hasNextPage === "boolean"
-          ? meta.hasNextPage
-          : currentPage < (totalPages || 1),
+            ? meta.hasNextPage
+            : currentPage < (totalPages || 1),
       hasPrevious:
         typeof meta?.hasPrevious === "boolean"
           ? meta.hasPrevious
           : typeof meta?.hasPrev === "boolean"
-          ? meta.hasPrev
-          : typeof meta?.hasPrevPage === "boolean"
-          ? meta.hasPrevPage
-          : currentPage > 1,
+            ? meta.hasPrev
+            : typeof meta?.hasPrevPage === "boolean"
+              ? meta.hasPrevPage
+              : currentPage > 1,
     };
   }, [meta, menus.length, page, limit]);
 
@@ -153,13 +150,11 @@ export default function MenusPage() {
       <Header
         title={isBranchAdmin ? t("branchCatalogTitle") : t("title")}
         description={
-          isBranchAdmin
-            ? t("branchCatalogDescription")
-            : t("description")
+          isBranchAdmin ? t("branchCatalogDescription") : t("description")
         }
       />
 
-      <div className="space-y-[32px] rounded-[14px] bg-white shadow-sm lg:p-[30px]">
+      <SectionCard padding="md" className="space-y-6">
         {!isBranchAdmin ? (
           <BranchFilters
             branches={menus}
@@ -181,7 +176,7 @@ export default function MenusPage() {
             <PaginationSection {...pagination} onPageChange={setPage} />
           </div>
         </div>
-      </div>
+      </SectionCard>
     </Container>
   );
 }

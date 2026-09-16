@@ -13,6 +13,7 @@ export type SegmentedControlProps<T extends string> = {
   onValueChange: (value: T) => void;
   ariaLabel: string;
   disabled?: boolean;
+  size?: "compact" | "default";
   className?: string;
 };
 
@@ -22,6 +23,7 @@ export function SegmentedControl<T extends string>({
   onValueChange,
   ariaLabel,
   disabled = false,
+  size = "compact",
   className,
 }: SegmentedControlProps<T>) {
   return (
@@ -45,7 +47,8 @@ export function SegmentedControl<T extends string>({
             disabled={disabled}
             onClick={() => onValueChange(option.value)}
             className={cn(
-              "h-8 min-w-0 flex-1 rounded-[var(--ui-radius-control)] px-2.5 text-xs font-medium transition-[background-color,color,box-shadow,transform] duration-[var(--ui-motion-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ui-focus-ring)] focus-visible:ring-offset-1 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60",
+              "min-w-0 flex-1 rounded-[var(--ui-radius-control)] font-medium transition-[background-color,color,box-shadow,transform] duration-[var(--ui-motion-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ui-focus-ring)] focus-visible:ring-offset-1 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60",
+              size === "default" ? "h-10 px-3 text-sm" : "h-8 px-2.5 text-xs",
               active
                 ? "bg-[var(--ui-surface)] text-primary shadow-[var(--ui-shadow-xs)] ring-1 ring-primary/15 hover:bg-[var(--ui-surface)] hover:text-primary"
                 : "text-[var(--ui-text-muted)] hover:bg-[var(--ui-surface)]/75 hover:text-[var(--ui-text)]",

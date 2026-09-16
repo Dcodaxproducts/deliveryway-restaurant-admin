@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { PageActionGroup } from "@/components/common/PageActionGroup";
 
 export type PageHeaderProps = {
   title: string;
@@ -28,10 +29,14 @@ export default function PageHeader({
 }: PageHeaderProps) {
   return (
     <header data-slot="page-header" className={cn("space-y-3", className)}>
-      {breadcrumbs ? <div data-slot="page-header-breadcrumbs">{breadcrumbs}</div> : null}
+      {breadcrumbs ? (
+        <div data-slot="page-header-breadcrumbs">{breadcrumbs}</div>
+      ) : null}
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          {backAction ? <div className="shrink-0 pt-0.5">{backAction}</div> : null}
+          {backAction ? (
+            <div className="shrink-0 pt-0.5">{backAction}</div>
+          ) : null}
           <div className="min-w-0 space-y-1">
             {eyebrow ? (
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
@@ -59,9 +64,7 @@ export default function PageHeader({
           </div>
         </div>
         {actions ? (
-          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
-            {actions}
-          </div>
+          <PageActionGroup className="shrink-0">{actions}</PageActionGroup>
         ) : null}
       </div>
       {tabs ? <div data-slot="page-header-tabs">{tabs}</div> : null}

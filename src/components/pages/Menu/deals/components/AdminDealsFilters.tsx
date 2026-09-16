@@ -24,8 +24,6 @@ type AdminDealsFiltersProps = {
   branchOptions: AdminDealBranchOption[];
   isBranchAdmin: boolean;
   branchName?: string;
-  visibleCount: number;
-  totalCount: number;
   isFetching: boolean;
   onFiltersChange: (filters: Partial<AdminDealsFilterState>) => void;
 };
@@ -35,8 +33,6 @@ export default function AdminDealsFilters({
   branchOptions,
   isBranchAdmin,
   branchName,
-  visibleCount,
-  totalCount,
   isFetching,
   onFiltersChange,
 }: AdminDealsFiltersProps) {
@@ -53,9 +49,9 @@ export default function AdminDealsFilters({
 
   const hasActiveFilters = Boolean(
     searchValue.trim() ||
-      filters.search ||
-      filters.lifecycle !== "ALL" ||
-      filters.branchId
+    filters.search ||
+    filters.lifecycle !== "ALL" ||
+    filters.branchId,
   );
 
   useEffect(() => {
@@ -80,14 +76,16 @@ export default function AdminDealsFilters({
   };
 
   return (
-    <div className="w-full max-w-full overflow-hidden rounded-[20px] border border-gray-100 bg-white p-4 shadow-sm">
+    <div className="w-full max-w-full overflow-hidden rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-4">
       <div className="mb-4 flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
             <Filter size={18} />
           </div>
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-gray-900">{t("filtersTitle")}</h3>
+            <h3 className="text-sm font-semibold text-gray-900">
+              {t("filtersTitle")}
+            </h3>
             <p className="mt-1 text-xs text-gray-500">
               {t("filtersDescription")}
             </p>
@@ -95,11 +93,6 @@ export default function AdminDealsFilters({
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs text-gray-500">
-          <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-            {totalCount > 0
-              ? t("showingOf", { visible: visibleCount, total: totalCount })
-              : commonT("shown", { count: visibleCount })}
-          </span>
           {isFetching ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 font-medium text-primary">
               <Loader2 size={12} className="animate-spin" />
@@ -126,7 +119,7 @@ export default function AdminDealsFilters({
               onKeyDown={(event) => {
                 if (event.key === "Enter") handleSearch();
               }}
-              className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+              className="h-10 w-full min-w-0 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] pl-11 pr-4 text-sm text-[var(--ui-text)] outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
             />
           </div>
         </div>
@@ -148,9 +141,11 @@ export default function AdminDealsFilters({
               type="button"
               variant="outline"
               disabled
-              className="h-[44px] w-full justify-start rounded-[14px] border-gray-200 bg-[#FAFAFA] px-3 text-gray-500"
+              className="h-10 w-full justify-start rounded-[var(--ui-radius-control)] bg-[var(--ui-surface)] px-3 text-[var(--ui-text-muted)]"
             >
-              <span className="truncate">{branchName || commonT("currentBranch")}</span>
+              <span className="truncate">
+                {branchName || commonT("currentBranch")}
+              </span>
             </Button>
           ) : (
             <FormSelect
@@ -159,7 +154,7 @@ export default function AdminDealsFilters({
                 const value = event.target.value;
                 onFiltersChange({ branchId: value === "ALL" ? "" : value });
               }}
-              className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-3 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+              className="h-10 w-full min-w-0 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] px-3 text-sm text-[var(--ui-text)] outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
             >
               <option value="ALL">{commonT("allBranches")}</option>
               {branchOptions.map((branch) => (
@@ -174,7 +169,7 @@ export default function AdminDealsFilters({
         <Button
           type="button"
           onClick={handleSearch}
-          className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm hover:bg-primary/90 md:w-full xl:col-span-1"
+          className="h-10 rounded-[var(--ui-radius-control)] bg-primary px-5 text-white hover:bg-primary/90 md:w-full xl:col-span-1"
         >
           {commonT("search")}
         </Button>
@@ -184,7 +179,7 @@ export default function AdminDealsFilters({
           variant="outline"
           disabled={!hasActiveFilters && !isFetching}
           onClick={handleReset}
-          className="h-[44px] rounded-[14px] border-gray-200 px-4 text-gray-700 md:w-full xl:col-span-1"
+          className="h-10 rounded-[var(--ui-radius-control)] px-4 text-[var(--ui-text)] md:w-full xl:col-span-1"
         >
           <RefreshCcw size={15} className="mr-2" />
           {commonT("reset")}
@@ -217,7 +212,7 @@ function FilterSelect({
       <FormSelect
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-3 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+        className="h-10 w-full min-w-0 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] px-3 text-sm text-[var(--ui-text)] outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

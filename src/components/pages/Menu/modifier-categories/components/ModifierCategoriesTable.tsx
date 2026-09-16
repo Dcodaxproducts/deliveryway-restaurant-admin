@@ -6,6 +6,7 @@ import { FaPen, FaTrash } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import PaginationSection from "@/components/common/PaginationSection";
 import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
+import { MenuManagementActions } from "@/components/pages/Menu/shared/MenuManagementPage";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useDeleteModifierCategory,
@@ -112,14 +113,14 @@ export default function ModifierCategoriesTable() {
 
   return (
     <div className="w-full">
-      <div className="mb-4 flex justify-end">
+      <MenuManagementActions>
         <Button
           onClick={openCreate}
           className="h-[40px] rounded-[12px] bg-primary px-4 text-white"
         >
           {t("addCategory")}
         </Button>
-      </div>
+      </MenuManagementActions>
 
       <ModifierCategoryFilters
         search={search}
@@ -142,35 +143,66 @@ export default function ModifierCategoriesTable() {
         emptyTitle={t("noModifierCategoriesFound")}
         emptyDescription=""
         columns={[
-          { id: "name", header: t("name"), className: "font-medium text-gray-900", cell: (category) => category.name },
-          { id: "slug", header: t("slug"), cell: (category) => category.slug || "-" },
-          { id: "description", header: t("description"), className: "min-w-[200px] max-w-sm whitespace-normal", cell: (category) => formatModifierCategoryDescription(category.description) },
-          { id: "sort", header: t("sortOrder"), align: "center", cell: (category) => formatModifierCategorySortOrder(category.sortOrder) },
-          { id: "status", header: t("status"), align: "center", cell: (category) => <StatusBadge isActive={category.isActive} /> },
-          { id: "actions", header: t("actions"), align: "center", cell: (category) => (
-            <div className="flex items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => openEdit(category)}
-                className="text-gray-500 hover:text-primary"
-                aria-label={t("editModifierCategory")}
-              >
-                <FaPen size={14} />
-              </button>
+          {
+            id: "name",
+            header: t("name"),
+            className: "font-medium text-gray-900",
+            cell: (category) => category.name,
+          },
+          {
+            id: "slug",
+            header: t("slug"),
+            cell: (category) => category.slug || "-",
+          },
+          {
+            id: "description",
+            header: t("description"),
+            className: "min-w-[200px] max-w-sm whitespace-normal",
+            cell: (category) =>
+              formatModifierCategoryDescription(category.description),
+          },
+          {
+            id: "sort",
+            header: t("sortOrder"),
+            align: "center",
+            cell: (category) =>
+              formatModifierCategorySortOrder(category.sortOrder),
+          },
+          {
+            id: "status",
+            header: t("status"),
+            align: "center",
+            cell: (category) => <StatusBadge isActive={category.isActive} />,
+          },
+          {
+            id: "actions",
+            header: t("actions"),
+            align: "center",
+            cell: (category) => (
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => openEdit(category)}
+                  className="text-gray-500 hover:text-primary"
+                  aria-label={t("editModifierCategory")}
+                >
+                  <FaPen size={14} />
+                </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setDeleteError("");
-                  setDeleteTarget(category);
-                }}
-                className="text-gray-500 hover:text-red-500"
-                aria-label={t("deleteModifierCategory")}
-              >
-                <FaTrash size={14} />
-              </button>
-            </div>
-          ) },
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeleteError("");
+                    setDeleteTarget(category);
+                  }}
+                  className="text-gray-500 hover:text-red-500"
+                  aria-label={t("deleteModifierCategory")}
+                >
+                  <FaTrash size={14} />
+                </button>
+              </div>
+            ),
+          },
         ]}
         renderMobileItem={(category) => (
           <div

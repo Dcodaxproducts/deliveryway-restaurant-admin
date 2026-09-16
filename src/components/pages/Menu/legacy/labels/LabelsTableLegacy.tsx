@@ -20,6 +20,7 @@ import PaginationSection from "@/components/common/PaginationSection";
 import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
 import { StatePanel } from "@/components/common/EmptyState";
 import { StatusBadge } from "@/components/common/status-badge";
+import { MenuManagementActions } from "@/components/pages/Menu/shared/MenuManagementPage";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import {
   Dialog,
@@ -95,7 +96,7 @@ const normalizeText = (value: string) => {
 const sortLabels = (
   items: LabelItem[],
   sortBy: SortBy,
-  sortOrder: SortOrder
+  sortOrder: SortOrder,
 ) => {
   return [...items].sort((a, b) => {
     const aValue = normalizeText(a?.[sortBy] || "");
@@ -147,7 +148,7 @@ export default function LabelsTable() {
       ? {
           restaurantId,
         }
-      : undefined
+      : undefined,
   );
 
   const { mutate: createLabel, isPending: isCreating } =
@@ -193,7 +194,10 @@ export default function LabelsTable() {
   };
 
   const hasActiveFilters = Boolean(
-    search.trim() || debouncedSearch || sortBy !== "label" || sortOrder !== "ASC"
+    search.trim() ||
+    debouncedSearch ||
+    sortBy !== "label" ||
+    sortOrder !== "ASC",
   );
   const getSortLabel = (value: SortBy) =>
     value === "value" ? t("value") : t("label");
@@ -264,7 +268,7 @@ export default function LabelsTable() {
           setDeleteTarget(null);
           refetch();
         },
-      }
+      },
     );
   };
 
@@ -291,7 +295,7 @@ export default function LabelsTable() {
             setSelected(null);
             refetch();
           },
-        }
+        },
       );
 
       return;
@@ -309,42 +313,46 @@ export default function LabelsTable() {
           setPage(1);
           refetch();
         },
-      }
+      },
     );
   };
 
   const EmptyState = () => (
     <StatePanel
       title={t("emptyTitle")}
-      description={hasActiveFilters ? t("emptyFiltered") : t("emptyDescription")}
+      description={
+        hasActiveFilters ? t("emptyFiltered") : t("emptyDescription")
+      }
       icon={<BadgeCheck size={22} />}
-      action={hasActiveFilters ? (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleResetFilters}
-          className="mt-4 rounded-[12px]"
-        >
-          <RefreshCcw size={16} className="mr-2" />
-          {t("resetFilters")}
-        </Button>
-      ) : (
-        <Button
-          type="button"
-          onClick={openCreateModal}
-          disabled={!canMutateLabels}
-          className="mt-4 rounded-[12px] bg-primary text-white hover:bg-primary/90"
-        >
-          <PlusCircle size={18} className="mr-2" />
-          {t("add")}
-        </Button>
-      )}
+      action={
+        hasActiveFilters ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleResetFilters}
+            className="mt-4 rounded-[12px]"
+          >
+            <RefreshCcw size={16} className="mr-2" />
+            {t("resetFilters")}
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            onClick={openCreateModal}
+            disabled={!canMutateLabels}
+            className="mt-4 rounded-[12px] bg-primary text-white hover:bg-primary/90"
+          >
+            <PlusCircle size={18} className="mr-2" />
+            {t("add")}
+          </Button>
+        )
+      }
     />
   );
 
   return (
     <div className="w-full max-w-full overflow-hidden">
-      <div className="mb-5 flex justify-end">
+      <MenuManagementActions>
         <Button
           type="button"
           onClick={openCreateModal}
@@ -354,7 +362,7 @@ export default function LabelsTable() {
           <PlusCircle size={18} className="mr-2" />
           {t("add")}
         </Button>
-      </div>
+      </MenuManagementActions>
 
       <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
         <SummaryCard
@@ -487,43 +495,76 @@ export default function LabelsTable() {
       </div>
 
       {!canMutateLabels ? (
-        <StatePanel state="permission" title={t("missingRestaurantContext")} description="" compact className="mb-6" />
+        <StatePanel
+          state="permission"
+          title={t("missingRestaurantContext")}
+          description=""
+          compact
+          className="mb-6"
+        />
       ) : null}
 
       {isError ? (
-        <StatePanel state="error" title={commonT("unableToLoad")} description="" compact className="mb-4"
-          action={<Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>{commonT("refresh")}</Button>} />
+        <StatePanel
+          state="error"
+          title={commonT("unableToLoad")}
+          description=""
+          compact
+          className="mb-4"
+          action={
+            <Button
+              variant="outline"
+              disabled={isFetching}
+              onClick={() => void refetch()}
+            >
+              {commonT("refresh")}
+            </Button>
+          }
+        />
       ) : null}
-      {isError && paginatedItems.length === 0 ? null : shouldShowEmpty ? <EmptyState /> : (
+      {isError && paginatedItems.length === 0 ? null : shouldShowEmpty ? (
+        <EmptyState />
+      ) : (
         <ResponsiveDataView
           data={paginatedItems}
           rowKey={(item) => item.value}
-          loading={shouldShowInitialLoader || (isFetching && paginatedItems.length === 0)}
+          loading={
+            shouldShowInitialLoader ||
+            (isFetching && paginatedItems.length === 0)
+          }
           emptyTitle={t("emptyTitle")}
           columns={[
             {
-              id: "value", header: t("value"), cell: (item) => (
+              id: "value",
+              header: t("value"),
+              cell: (item) => (
                 <div className="inline-flex max-w-full rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                   <span className="truncate">{item.value || "-"}</span>
                 </div>
-              )
+              ),
             },
             {
-              id: "label", header: t("label"), cell: (item) => (
+              id: "label",
+              header: t("label"),
+              cell: (item) => (
                 <p className="truncate font-semibold text-gray-900">
                   {item.label || "-"}
                 </p>
-              )
+              ),
             },
             {
-              id: "usage", header: t("usage"), align: "center", cell: () => (
-                <StatusBadge tone="info">
-                  {t("menuLabel")}
-                </StatusBadge>
-              )
+              id: "usage",
+              header: t("usage"),
+              align: "center",
+              cell: () => (
+                <StatusBadge tone="info">{t("menuLabel")}</StatusBadge>
+              ),
             },
             {
-              id: "actions", header: commonT("actions"), align: "center", cell: (item) => (
+              id: "actions",
+              header: commonT("actions"),
+              align: "center",
+              cell: (item) => (
                 <div className="flex items-center justify-center gap-2">
                   <button
                     type="button"
@@ -547,7 +588,7 @@ export default function LabelsTable() {
                     <FaTrash size={13} />
                   </button>
                 </div>
-              )
+              ),
             },
           ]}
           renderMobileItem={(item) => (
@@ -570,9 +611,7 @@ export default function LabelsTable() {
                   </p>
                 </div>
 
-                <StatusBadge tone="info">
-                  {t("label")}
-                </StatusBadge>
+                <StatusBadge tone="info">{t("label")}</StatusBadge>
               </div>
 
               <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
@@ -720,9 +759,7 @@ function LabelModal({
                 {isEditMode ? t("editTitle") : t("addTitle")}
               </DialogTitle>
 
-              <p className="mt-1 text-sm text-gray-500">
-                {t("description")}
-              </p>
+              <p className="mt-1 text-sm text-gray-500">{t("description")}</p>
             </div>
 
             <button
@@ -767,21 +804,14 @@ function LabelModal({
               className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15"
             />
 
-            <p className="mt-1.5 text-xs text-gray-400">
-              {t("valueHelp")}
-            </p>
+            <p className="mt-1.5 text-xs text-gray-400">{t("valueHelp")}</p>
           </div>
 
           <div className="rounded-[14px] border border-blue-100 bg-blue-50 p-4">
             <div className="flex items-start gap-3">
-              <BadgeCheck
-                size={18}
-                className="mt-0.5 shrink-0 text-blue-600"
-              />
+              <BadgeCheck size={18} className="mt-0.5 shrink-0 text-blue-600" />
 
-              <p className="text-sm leading-6 text-blue-800">
-                {t("help")}
-              </p>
+              <p className="text-sm leading-6 text-blue-800">{t("help")}</p>
             </div>
           </div>
         </div>

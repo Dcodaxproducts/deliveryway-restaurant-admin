@@ -1,9 +1,10 @@
 "use client";
 
 import PageHeader from "@/components/common/PageHeader";
+import { PageTabs } from "@/components/common/PageTabs";
 import { Button } from "@/components/ui/button";
-import { Layers3, ListTree, Plus, Tags } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { LayoutGrid, Layers3, ListTree, Plus, Tags } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import CreateMenuModal from "./CreateMenuModal";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +18,7 @@ interface HeaderProps {
 export default function BranchesHeader({ title, description }: HeaderProps) {
   const t = useTranslations("menu.header");
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { isBranchAdmin } = useAuth();
 
@@ -29,12 +31,17 @@ export default function BranchesHeader({ title, description }: HeaderProps) {
   }, [searchParams]);
 
   const navigationActions = [
+    { label: t("overview"), href: "/menu", icon: LayoutGrid },
     ...(!isBranchAdmin
       ? [{ label: t("modifiers"), href: "/menu/modifier", icon: Layers3 }]
       : []),
     { label: t("categories"), href: "/menu/categories", icon: Tags },
     { label: t("items"), href: "/menu/items", icon: ListTree },
   ];
+  const activeNavigation =
+    navigationActions
+      .filter(({ href }) => href !== "/menu")
+      .find(({ href }) => pathname.startsWith(href))?.href ?? "/menu";
 
   return (
     <>
@@ -42,35 +49,29 @@ export default function BranchesHeader({ title, description }: HeaderProps) {
         title={title}
         description={description}
         actions={
-          <div className="flex max-w-full flex-nowrap items-center gap-2 overflow-x-auto">
-            <div className="flex max-w-full items-center gap-1 overflow-x-auto rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-1 shadow-[var(--ui-shadow-xs)]">
-              {navigationActions.map(({ label, href, icon: Icon }) => (
-                <Button
-                  key={href}
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-[var(--ui-text-muted)] hover:bg-[var(--ui-brand-soft)] hover:text-primary"
-                  onClick={() => router.push(href)}
-                >
-                  <Icon aria-hidden="true" className="size-4" />
-                  {label}
-                </Button>
-              ))}
-            </div>
-
-            {!isBranchAdmin ? (
-              <Button
-                type="button"
-                size="sm"
-                className="shadow-[var(--ui-shadow-xs)]"
-                onClick={() => setCreateMenu(true)}
-              >
-                <Plus aria-hidden="true" className="size-4" />
-                {t("addMenu")}
-              </Button>
-            ) : null}
-          </div>
+          !isBranchAdmin ? (
+            <Button
+              type="button"
+              className="shadow-[var(--ui-shadow-xs)]"
+              onClick={() => setCreateMenu(true)}
+            >
+              <Plus aria-hidden="true" className="size-4" />
+              {t("addMenu")}
+            </Button>
+          ) : null
+        }
+        tabs={
+          <PageTabs
+            value={activeNavigation}
+            ariaLabel={t("menuNavigation")}
+            options={navigationActions.map(({ label, href, icon: Icon }) => ({
+              value: href,
+              label,
+              icon: <Icon aria-hidden="true" className="size-4" />,
+            }))}
+            onValueChange={(href) => router.push(href)}
+            className="w-fit"
+          />
         }
       />
 

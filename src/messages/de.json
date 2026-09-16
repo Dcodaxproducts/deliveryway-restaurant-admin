@@ -963,10 +963,12 @@
       "emptyDescription": "Fuegen Sie Menueartikel hinzu, um diese Liste aufzubauen."
     },
     "header": {
+      "overview": "Uebersicht",
       "modifiers": "Modifier",
       "categories": "Kategorien",
       "items": "Artikel",
       "addMenu": "Menue hinzufuegen",
+      "menuNavigation": "Bereiche der Menueverwaltung",
       "importTitle": "Menue importieren",
       "importSubtitle": "Menue-Daten hochladen oder importieren"
     },

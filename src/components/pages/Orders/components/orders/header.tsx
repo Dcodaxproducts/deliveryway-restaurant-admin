@@ -87,11 +87,11 @@ export function OrdersHeader({ title, description, orders }: HeaderProps) {
   };
 
   return (
-    <>
-      <div className="flex w-full min-w-0 flex-col justify-between gap-3 lg:flex-row lg:items-center lg:gap-5">
-        <Header title={title} description={description} />
-
-        <div className="flex min-w-0 flex-wrap items-stretch gap-2 sm:items-center lg:justify-end">
+    <Header
+      title={title}
+      description={description}
+      actions={
+        <>
           <Button
             type="button"
             variant="outline"
@@ -108,7 +108,7 @@ export function OrdersHeader({ title, description, orders }: HeaderProps) {
               }
               window.dispatchEvent(new Event(ORDER_SOUND_SETTING_EVENT));
             }}
-            className="w-fit gap-2"
+            className="w-full gap-2 sm:w-auto"
           >
             <BellRing size={18} />
             {soundEnabled
@@ -125,12 +125,12 @@ export function OrdersHeader({ title, description, orders }: HeaderProps) {
               window.localStorage.setItem(ORDER_SOUND_MODE_STORAGE_KEY, next);
               window.dispatchEvent(new Event(ORDER_SOUND_SETTING_EVENT));
             }}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-10 w-full min-w-[180px] rounded-[var(--ui-radius-control)] border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             <option value="ONCE">{ordersT("notificationSoundOnce")}</option>
             <option value="REPEAT">{ordersT("notificationSoundRepeat")}</option>
           </FormSelect>
-          <Button asChild variant="outline" className="w-fit gap-2">
+          <Button asChild variant="outline" className="w-full gap-2 sm:w-auto">
             <Link href="/auto-printing">
               <Printer size={18} />
               {ordersT("printingSettings")}
@@ -139,13 +139,13 @@ export function OrdersHeader({ title, description, orders }: HeaderProps) {
           <Button
             onClick={handleExport}
             variant="outline"
-            className="w-fit sm:w-auto justify-between sm:justify-start flex items-center gap-2"
+            className="w-full gap-2 sm:w-auto"
           >
             <Download size={18} className="text-gray-600" />
-            <p className="pt-1">{common("export")}</p>
+            <span>{common("export")}</span>
           </Button>
-        </div>
-      </div>
-    </>
+        </>
+      }
+    />
   );
 }

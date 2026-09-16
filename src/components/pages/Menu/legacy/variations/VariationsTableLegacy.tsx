@@ -16,14 +16,13 @@ import {
 import { Button } from "@/components/ui/button";
 import PaginationSection from "@/components/common/PaginationSection";
 import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
+import { SegmentedControl } from "@/components/common/SegmentedControl";
 import { StatePanel } from "@/components/common/EmptyState";
 import { StatusBadge } from "@/components/common/status-badge";
+import { MenuManagementActions } from "@/components/pages/Menu/shared/MenuManagementPage";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 
-import {
-  useDeleteMenuVariation,
-  useGetMenuVariations,
-} from "@/hooks/useMenus";
+import { useDeleteMenuVariation, useGetMenuVariations } from "@/hooks/useMenus";
 
 import VariationModal from "@/components/pages/Menu/legacy/root-menu-components/listing/VariationModal";
 import { useAuth } from "@/hooks/useAuth";
@@ -76,7 +75,6 @@ const SORT_OPTIONS: Array<{
     value: "price",
   },
 ];
-
 
 const formatPrice = (value: any) => {
   const numeric = Number(value ?? 0);
@@ -139,10 +137,10 @@ export default function VariationsTable() {
   const hasActiveFilters = useMemo(() => {
     return Boolean(
       search.trim() ||
-        debouncedSearch ||
-        statusFilter !== "active" ||
-        sortBy !== "createdAt" ||
-        sortOrder !== "DESC"
+      debouncedSearch ||
+      statusFilter !== "active" ||
+      sortBy !== "createdAt" ||
+      sortOrder !== "DESC",
     );
   }, [search, debouncedSearch, statusFilter, sortBy, sortOrder]);
 
@@ -216,7 +214,7 @@ export default function VariationsTable() {
     const totalPages = Number(
       meta?.totalPages ??
         meta?.pages ??
-        (total > 0 && pageSize > 0 ? Math.ceil(total / pageSize) : 1)
+        (total > 0 && pageSize > 0 ? Math.ceil(total / pageSize) : 1),
     );
 
     return {
@@ -232,8 +230,8 @@ export default function VariationsTable() {
         typeof meta?.hasPrevious === "boolean"
           ? meta.hasPrevious
           : typeof meta?.hasPrev === "boolean"
-          ? meta.hasPrev
-          : currentPage > 1,
+            ? meta.hasPrev
+            : currentPage > 1,
     };
   }, [meta, items.length, page, limit]);
 
@@ -306,34 +304,38 @@ export default function VariationsTable() {
   const EmptyState = () => (
     <StatePanel
       title={t("emptyTitle")}
-      description={hasActiveFilters ? t("emptyFiltered") : t("emptyDescription")}
+      description={
+        hasActiveFilters ? t("emptyFiltered") : t("emptyDescription")
+      }
       icon={<SlidersHorizontal size={22} />}
-      action={hasActiveFilters ? (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleResetFilters}
-          className="mt-4 rounded-[12px]"
-        >
-          <RefreshCcw size={16} className="mr-2" />
-          {t("resetFilters")}
-        </Button>
-      ) : (
-        <Button
-          type="button"
-          onClick={openCreateModal}
-          className="mt-4 rounded-[12px] bg-primary text-white hover:bg-primary/90"
-        >
-          <PlusCircle size={18} className="mr-2" />
-          {t("add")}
-        </Button>
-      )}
+      action={
+        hasActiveFilters ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleResetFilters}
+            className="mt-4 rounded-[12px]"
+          >
+            <RefreshCcw size={16} className="mr-2" />
+            {t("resetFilters")}
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            onClick={openCreateModal}
+            className="mt-4 rounded-[12px] bg-primary text-white hover:bg-primary/90"
+          >
+            <PlusCircle size={18} className="mr-2" />
+            {t("add")}
+          </Button>
+        )
+      }
     />
   );
 
   return (
     <div className="w-full max-w-full overflow-hidden">
-      <div className="mb-5 flex justify-end">
+      <MenuManagementActions>
         <Button
           type="button"
           onClick={openCreateModal}
@@ -342,7 +344,7 @@ export default function VariationsTable() {
           <PlusCircle size={18} className="mr-2" />
           {t("add")}
         </Button>
-      </div>
+      </MenuManagementActions>
 
       {/* FILTERS */}
       <div className="mb-6 w-full max-w-full overflow-hidden rounded-[20px] border border-gray-100 bg-white p-4 shadow-sm">
@@ -405,27 +407,17 @@ export default function VariationsTable() {
               {commonT("status")}
             </label>
 
-            <div className="grid min-w-0 grid-cols-3 gap-2 rounded-[14px] bg-[#F7F7F7] p-1">
-              {STATUS_FILTER_OPTIONS.map((option) => {
-                const isActive = statusFilter === option.value;
-
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => handleStatusChange(option.value)}
-                    disabled={!canFetchVariations}
-                    className={`h-[38px] min-w-0 rounded-[11px] px-2 text-xs font-semibold transition ${
-                      isActive
-                        ? "bg-white text-primary shadow-sm ring-1 ring-primary/10"
-                        : "text-gray-500 hover:bg-white/70 hover:text-gray-800"
-                    } disabled:cursor-not-allowed disabled:opacity-60`}
-                  >
-                    <span className="block truncate">{getStatusLabel(option.value)}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <SegmentedControl
+              value={statusFilter}
+              options={STATUS_FILTER_OPTIONS.map((option) => ({
+                value: option.value,
+                label: getStatusLabel(option.value),
+              }))}
+              onValueChange={handleStatusChange}
+              ariaLabel={commonT("status")}
+              disabled={!canFetchVariations}
+              size="default"
+            />
           </div>
 
           {/* SORT BY */}
@@ -491,22 +483,48 @@ export default function VariationsTable() {
       </div>
 
       {!canFetchVariations ? (
-        <StatePanel state="permission" title={t("missingRestaurantContext")} description="" compact className="mb-6" />
+        <StatePanel
+          state="permission"
+          title={t("missingRestaurantContext")}
+          description=""
+          compact
+          className="mb-6"
+        />
       ) : null}
 
       {isError ? (
-        <StatePanel state="error" title={commonT("unableToLoad")} description="" compact className="mb-4"
-          action={<Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>{commonT("refresh")}</Button>} />
+        <StatePanel
+          state="error"
+          title={commonT("unableToLoad")}
+          description=""
+          compact
+          className="mb-4"
+          action={
+            <Button
+              variant="outline"
+              disabled={isFetching}
+              onClick={() => void refetch()}
+            >
+              {commonT("refresh")}
+            </Button>
+          }
+        />
       ) : null}
-      {isError && items.length === 0 ? null : shouldShowEmpty ? <EmptyState /> : (
+      {isError && items.length === 0 ? null : shouldShowEmpty ? (
+        <EmptyState />
+      ) : (
         <ResponsiveDataView
           data={items}
           rowKey={(item) => item.id}
-          loading={shouldShowInitialLoader || (isFetching && items.length === 0)}
+          loading={
+            shouldShowInitialLoader || (isFetching && items.length === 0)
+          }
           emptyTitle={t("emptyTitle")}
           columns={[
             {
-              id: "variation", header: t("variation"), cell: (item) => (
+              id: "variation",
+              header: t("variation"),
+              cell: (item) => (
                 <div className="min-w-0">
                   <p className="truncate font-semibold text-gray-900">
                     {item?.name || "-"}
@@ -516,42 +534,56 @@ export default function VariationsTable() {
                     ID: {item?.id || "-"}
                   </p>
                 </div>
-              )
+              ),
             },
             {
-              id: "description", header: commonT("description"), cell: (item) => (
+              id: "description",
+              header: commonT("description"),
+              cell: (item) => (
                 <p className="line-clamp-2 break-words text-gray-600">
                   {item?.description || commonT("noData")}
                 </p>
-              )
+              ),
             },
             {
-              id: "price", header: commonT("price"), align: "center", cell: (item) => (
+              id: "price",
+              header: commonT("price"),
+              align: "center",
+              cell: (item) => (
                 <span className="block truncate">
                   {formatCurrency(item?.price)}
                 </span>
-              )
+              ),
             },
             {
-              id: "default", header: t("default"), align: "center", cell: (item) => (
+              id: "default",
+              header: t("default"),
+              align: "center",
+              cell: (item) => (
                 <StatusBadge tone={item?.isDefault ? "info" : "neutral"}>
                   <span className="truncate">
                     {item?.isDefault ? t("default") : commonT("no")}
                   </span>
                 </StatusBadge>
-              )
+              ),
             },
             {
-              id: "status", header: commonT("status"), align: "center", cell: (item) => (
+              id: "status",
+              header: commonT("status"),
+              align: "center",
+              cell: (item) => (
                 <StatusBadge tone={item?.isActive ? "success" : "neutral"}>
                   <span className="truncate">
                     {item?.isActive ? commonT("active") : commonT("inactive")}
                   </span>
                 </StatusBadge>
-              )
+              ),
             },
             {
-              id: "actions", header: commonT("actions"), align: "center", cell: (item) => (
+              id: "actions",
+              header: commonT("actions"),
+              align: "center",
+              cell: (item) => (
                 <div className="flex min-w-[88px] items-center justify-center gap-2">
                   <button
                     type="button"
@@ -573,7 +605,7 @@ export default function VariationsTable() {
                     <FaTrash size={13} />
                   </button>
                 </div>
-              )
+              ),
             },
           ]}
           renderMobileItem={(item) => (
@@ -604,8 +636,6 @@ export default function VariationsTable() {
                     {formatCurrency(item?.price)}
                   </p>
                 </div>
-
-
 
                 <div className="min-w-0 rounded-[12px] bg-[#FAFAFA] p-3">
                   <p className="text-xs text-gray-400">{t("default")}</p>

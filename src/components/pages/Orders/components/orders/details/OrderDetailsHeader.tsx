@@ -1,14 +1,26 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Ban, CalendarClock, Printer, RefreshCw, Truck, XCircle } from "lucide-react";
+import {
+  Ban,
+  CalendarClock,
+  Printer,
+  RefreshCw,
+  Truck,
+  XCircle,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import PageHeader from "@/components/common/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
-import { useSendOrderOutForDelivery, useSendOrderWithExternalDriver, useUpdateOrderStatus } from "@/hooks/useOrders";
+import {
+  useSendOrderOutForDelivery,
+  useSendOrderWithExternalDriver,
+  useUpdateOrderStatus,
+} from "@/hooks/useOrders";
 import { reprintOrder } from "@/lib/accepted-order-printing";
 import {
   canDirectlyUpdateOrderStatus,
@@ -57,7 +69,8 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const handledAutoOpen = useRef(false);
   const [isReprinting, setIsReprinting] = useState(false);
-  const [progressOrder, setProgressOrder] = useState<OrderStatusProgressState | null>(null);
+  const [progressOrder, setProgressOrder] =
+    useState<OrderStatusProgressState | null>(null);
 
   const nextStatus = getNextOrderStatus(order);
   const statusLabel = ORDER_STATUS_LABEL_KEYS[order.status]
@@ -66,9 +79,10 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
   const canUpdateStatus = Boolean(nextStatus);
   const canSendOutForDelivery = canSendDeliveryOrderOutDirectly(order);
   const canUseExternalDriver = canUseExternalDeliveryFulfillment(order);
-  const actionLabel = nextStatus && ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus]
-    ? t(ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus])
-    : common("updateStatus");
+  const actionLabel =
+    nextStatus && ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus]
+      ? t(ORDER_STATUS_ACTION_LABEL_KEYS[nextStatus])
+      : common("updateStatus");
   const canUseTerminalActions = canTerminateOrderStatus(order);
   const isPreorder = isFutureOrder({
     isScheduled: order.isScheduled === true,
@@ -79,10 +93,7 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
     : null;
 
   useEffect(() => {
-    if (
-      handledAutoOpen.current ||
-      searchParams.get("acceptOrder") !== "1"
-    ) {
+    if (handledAutoOpen.current || searchParams.get("acceptOrder") !== "1") {
       return;
     }
 
@@ -121,7 +132,9 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
     });
   };
 
-  const handleTerminalStatusAction = async (status: "CANCELLED" | "REJECTED") => {
+  const handleTerminalStatusAction = async (
+    status: "CANCELLED" | "REJECTED",
+  ) => {
     const updatedOrder = await updateStatusMutation.mutateAsync({
       orderId: order.id,
       payload: { status },
@@ -175,7 +188,10 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
   return (
     <>
       {isPreorder && scheduledTime ? (
-        <div className="mb-5 flex items-center gap-3 rounded-xl border-2 border-red-600 bg-red-50 px-4 py-3 text-red-900 shadow-sm" role="status">
+        <div
+          className="mb-5 flex items-center gap-3 rounded-xl border-2 border-red-600 bg-red-50 px-4 py-3 text-red-900 shadow-sm"
+          role="status"
+        >
           <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-red-600 text-white">
             <CalendarClock size={24} />
           </span>
@@ -187,119 +203,114 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
           </div>
         </div>
       ) : null}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        {/* Left Section */}
-        <div className="flex flex-col gap-1">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 break-all">
-            {t("detailsTitle", { id: order.id })}
-          </h1>
-
-          <p className="text-xs sm:text-sm text-gray-500">
-            <span className="text-primary">{breadcrumbParts[0]} /</span>{" "}
+      <PageHeader
+        className="mb-6"
+        title={t("detailsTitle", { id: order.id })}
+        breadcrumbs={
+          <p className="text-sm text-[var(--ui-text-muted)]">
+            <span className="text-primary">{breadcrumbParts[0]}</span>
+            <span aria-hidden="true"> / </span>
             {breadcrumbParts[1]}
           </p>
-        </div>
+        }
+        actions={
+          <>
+            <span className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-[var(--ui-radius-control)] bg-emerald-500 px-4 text-sm font-medium text-white sm:w-auto">
+              <Truck size={16} className="sm:w-[18px] sm:h-[18px]" />
+              {statusLabel}
+            </span>
 
-        {/* Right Section */}
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          {/* Existing Status Display */}
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full sm:w-auto justify-center sm:justify-start rounded-[10px] h-10 bg-green-500 text-white hover:bg-green-500 text-xs sm:text-sm font-medium px-4 flex items-center gap-2 cursor-default"
-          >
-            <Truck size={16} className="sm:w-[18px] sm:h-[18px]" />
-            {statusLabel}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isReprinting || !(order.restaurantId ?? user?.restaurantId)}
-            onClick={() => {
-              void handleReprintAction();
-            }}
-            className="w-full sm:w-auto justify-center rounded-[10px] h-10 text-xs sm:text-sm font-medium px-4 flex items-center gap-2"
-          >
-            <Printer size={16} />
-            {isReprinting ? t("reprintingOrder") : t("reprintOrder")}
-          </Button>
-
-          {canUpdateStatus ? (
             <Button
               type="button"
               variant="outline"
-              disabled={updateStatusMutation.isPending}
+              disabled={
+                isReprinting || !(order.restaurantId ?? user?.restaurantId)
+              }
               onClick={() => {
-                void handleStatusAction();
+                void handleReprintAction();
               }}
-              className="w-full sm:w-auto justify-center rounded-[10px] h-10 text-xs sm:text-sm font-medium px-4 flex items-center gap-2"
+              className="w-full gap-2 sm:w-auto"
             >
-              <RefreshCw size={16} />
-              {actionLabel}
+              <Printer size={16} />
+              {isReprinting ? t("reprintingOrder") : t("reprintOrder")}
             </Button>
-          ) : null}
 
-          {canSendOutForDelivery ? (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={sendOutForDeliveryMutation.isPending}
-              onClick={() => {
-                void handleSendOutForDeliveryAction();
-              }}
-              className="w-full justify-center rounded-[10px] border-primary/30 bg-primary/5 px-4 text-xs font-medium text-primary hover:bg-primary/10 hover:text-primary sm:w-auto sm:text-sm"
-            >
-              <Truck size={16} />
-              {t("sendOutForDeliveryDirect")}
-            </Button>
-          ) : null}
-
-          {canUseExternalDriver ? (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={externalDriverMutation.isPending}
-              onClick={() => {
-                void handleExternalDriverAction();
-              }}
-              className="w-full justify-center rounded-[10px] border-primary/30 bg-primary/5 px-4 text-xs font-medium text-primary hover:bg-primary/10 hover:text-primary sm:w-auto sm:text-sm"
-            >
-              <Truck size={16} />
-              {t("externalDriver")}
-            </Button>
-          ) : null}
-
-          {canUseTerminalActions ? (
-            <>
+            {canUpdateStatus ? (
               <Button
                 type="button"
                 variant="outline"
                 disabled={updateStatusMutation.isPending}
                 onClick={() => {
-                  void handleTerminalStatusAction("CANCELLED");
+                  void handleStatusAction();
                 }}
-                className="w-full sm:w-auto justify-center rounded-[10px] h-10 text-xs sm:text-sm font-medium px-4 flex items-center gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                className="w-full gap-2 sm:w-auto"
               >
-                <XCircle size={16} />
-                {t(ORDER_TERMINAL_ACTION_LABEL_KEYS.CANCELLED)}
+                <RefreshCw size={16} />
+                {actionLabel}
               </Button>
+            ) : null}
+
+            {canSendOutForDelivery ? (
               <Button
                 type="button"
                 variant="outline"
-                disabled={updateStatusMutation.isPending}
+                disabled={sendOutForDeliveryMutation.isPending}
                 onClick={() => {
-                  void handleTerminalStatusAction("REJECTED");
+                  void handleSendOutForDeliveryAction();
                 }}
-                className="w-full sm:w-auto justify-center rounded-[10px] h-10 text-xs sm:text-sm font-medium px-4 flex items-center gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                className="w-full border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary sm:w-auto"
               >
-                <Ban size={16} />
-                {t(ORDER_TERMINAL_ACTION_LABEL_KEYS.REJECTED)}
+                <Truck size={16} />
+                {t("sendOutForDeliveryDirect")}
               </Button>
-            </>
-          ) : null}
-        </div>
-      </div>
+            ) : null}
+
+            {canUseExternalDriver ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={externalDriverMutation.isPending}
+                onClick={() => {
+                  void handleExternalDriverAction();
+                }}
+                className="w-full border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary sm:w-auto"
+              >
+                <Truck size={16} />
+                {t("externalDriver")}
+              </Button>
+            ) : null}
+
+            {canUseTerminalActions ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={updateStatusMutation.isPending}
+                  onClick={() => {
+                    void handleTerminalStatusAction("CANCELLED");
+                  }}
+                  className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto"
+                >
+                  <XCircle size={16} />
+                  {t(ORDER_TERMINAL_ACTION_LABEL_KEYS.CANCELLED)}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={updateStatusMutation.isPending}
+                  onClick={() => {
+                    void handleTerminalStatusAction("REJECTED");
+                  }}
+                  className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto"
+                >
+                  <Ban size={16} />
+                  {t(ORDER_TERMINAL_ACTION_LABEL_KEYS.REJECTED)}
+                </Button>
+              </>
+            ) : null}
+          </>
+        }
+      />
 
       <OrderStatusUpdateDialog
         open={statusDialogOpen}

@@ -81,13 +81,14 @@ export function OrdersFilters({
     { label: t("status.CANCELLED"), value: "CANCELLED" },
     { label: t("status.REJECTED"), value: "REJECTED" },
   ];
-  const scheduleFilters: Array<{ label: string; value: OrdersScheduleFilter }> = [
-    { label: t("scheduleFilterAll"), value: "ALL" },
-    { label: t("scheduleFilterPreorders"), value: "PREORDERS" },
-    { label: t("scheduleFilterToday"), value: "TODAY_SCHEDULED" },
-    { label: t("scheduleFilterPast"), value: "PAST_SCHEDULED" },
-    { label: t("scheduleFilterCustom"), value: "CUSTOM_RANGE" },
-  ];
+  const scheduleFilters: Array<{ label: string; value: OrdersScheduleFilter }> =
+    [
+      { label: t("scheduleFilterAll"), value: "ALL" },
+      { label: t("scheduleFilterPreorders"), value: "PREORDERS" },
+      { label: t("scheduleFilterToday"), value: "TODAY_SCHEDULED" },
+      { label: t("scheduleFilterPast"), value: "PAST_SCHEDULED" },
+      { label: t("scheduleFilterCustom"), value: "CUSTOM_RANGE" },
+    ];
   const selectedScheduleLabel =
     scheduleFilters.find(({ value }) => value === scheduleFilter)?.label ??
     t("scheduleFilterAll");
@@ -119,9 +120,8 @@ export function OrdersFilters({
   };
 
   return (
-    <div className="w-full rounded-lg border border-gray-100 bg-white p-4 shadow-sm lg:p-[20px]">
+    <div className="w-full rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-4">
       <div className="grid gap-4 xl:grid-cols-[minmax(280px,1fr)_auto_auto] xl:items-center">
-
         <div className="relative flex-1">
           <Search
             size={22}
@@ -138,12 +138,12 @@ export function OrdersFilters({
             }}
             type="text"
             placeholder={t("searchPlaceholder")}
-            className="h-[49px] w-full rounded-[16px] border border-gray-200 pl-12 pr-[112px] text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/10 sm:pr-[150px]"
+            className="h-10 w-full rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] pl-11 pr-[112px] text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/10 sm:pr-[150px]"
           />
 
           <Button
             onClick={handleSearch}
-            className="absolute right-0 h-full rounded-[14px] bg-primary px-5 text-white sm:px-8"
+            className="absolute right-0 h-full rounded-[var(--ui-radius-control)] bg-primary px-5 text-white sm:px-8"
           >
             {common("search")}
           </Button>
@@ -153,7 +153,10 @@ export function OrdersFilters({
           {/* STATUS */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="h-[48px] justify-between gap-2 rounded-[14px] border border-red-100 bg-red-50 px-5 text-red-600 hover:text-white">
+              <Button
+                variant="outline"
+                className="h-10 justify-between gap-2 rounded-[var(--ui-radius-control)] bg-[var(--ui-surface)] px-4 text-[var(--ui-text)]"
+              >
                 <span className="truncate">
                   {statuses.find(({ value }) => value === status)?.label}
                 </span>
@@ -179,7 +182,10 @@ export function OrdersFilters({
           {/* SORT */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="h-[48px] justify-between gap-2 rounded-[14px] border border-red-100 bg-red-50 px-5 text-red-600 hover:text-white">
+              <Button
+                variant="outline"
+                className="h-10 justify-between gap-2 rounded-[var(--ui-radius-control)] bg-[var(--ui-surface)] px-4 text-[var(--ui-text)]"
+              >
                 {sort === "DESC" ? common("newest") : common("oldest")}
                 <ChevronDown size={18} />
               </Button>
@@ -208,12 +214,12 @@ export function OrdersFilters({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 rounded-[18px] border border-gray-100 bg-gray-50 p-3 lg:grid-cols-[minmax(220px,280px)_minmax(260px,1fr)_auto] lg:items-center">
+      <div className="mt-4 grid gap-3 border-t border-[var(--ui-border)] pt-4 lg:grid-cols-[minmax(220px,280px)_minmax(260px,1fr)_auto] lg:items-center">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              className="h-[48px] justify-between gap-2 rounded-[14px] border-gray-200 bg-white px-5 text-gray-700"
+              className="h-10 justify-between gap-2 rounded-[var(--ui-radius-control)] bg-[var(--ui-surface)] px-4 text-[var(--ui-text)]"
             >
               <span className="truncate">{selectedScheduleLabel}</span>
               <ChevronDown size={18} />
@@ -238,7 +244,7 @@ export function OrdersFilters({
             variant="outline"
             disabled={scheduleFilter !== "CUSTOM_RANGE"}
             onClick={() => setCalendarOpen((current) => !current)}
-            className="h-[48px] w-full justify-start gap-3 rounded-[14px] border-gray-200 bg-white px-5 text-left text-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-10 w-full justify-start gap-3 rounded-[var(--ui-radius-control)] bg-[var(--ui-surface)] px-4 text-left text-[var(--ui-text)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <CalendarDays size={18} className="text-primary" />
             <span className="truncate">{rangeLabel}</span>
@@ -265,7 +271,8 @@ export function OrdersFilters({
                   weekdays: "grid grid-cols-7 gap-1 text-xs text-gray-400",
                   week: "grid grid-cols-7 gap-1",
                   day: "h-8 w-8 text-center text-sm",
-                  day_button: "h-8 w-8 rounded-full text-sm hover:bg-primary/10",
+                  day_button:
+                    "h-8 w-8 rounded-full text-sm hover:bg-primary/10",
                   range_start:
                     "[&>button]:bg-primary [&>button]:text-white [&>button]:hover:bg-primary",
                   range_end:
@@ -285,7 +292,7 @@ export function OrdersFilters({
           type="button"
           variant="ghost"
           onClick={clearScheduleFilters}
-          className="h-[48px] justify-center gap-2 rounded-[14px] px-5 text-gray-500 hover:text-gray-900"
+          className="h-10 justify-center gap-2 rounded-[var(--ui-radius-control)] px-4 text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]"
         >
           <X size={16} />
           {common("clear")}

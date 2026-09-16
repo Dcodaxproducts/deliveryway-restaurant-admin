@@ -963,10 +963,12 @@
       "emptyDescription": "Add menu items to this menu to start building the listing."
     },
     "header": {
+      "overview": "Overview",
       "modifiers": "Modifiers",
       "categories": "Categories",
       "items": "Items",
       "addMenu": "Add menu",
+      "menuNavigation": "Menu management sections",
       "importTitle": "Import menu",
       "importSubtitle": "Upload or import menu data"
     },

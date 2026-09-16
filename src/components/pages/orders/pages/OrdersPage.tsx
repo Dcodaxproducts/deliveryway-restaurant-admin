@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import StatsSection from "@/components/common/stats-section";
+import { PageTabs } from "@/components/common/PageTabs";
+import { SectionCard } from "@/components/common/SectionCard";
 import { OrdersHeader } from "@/components/pages/Orders/components/orders/header";
 import Container from "@/components/common/Container";
 import {
   OrdersTable,
   type OrdersTableRow,
 } from "@/components/pages/Orders/components/orders/table";
-import { Button } from "@/components/ui/button";
 import { OrdersFilters } from "@/components/pages/Orders/components/orders/OrdersFilters";
 import { useAuth } from "@/hooks/useAuth";
 import PaginationSection from "@/components/common/PaginationSection";
@@ -202,6 +203,14 @@ export function OrdersPage() {
     isBranchAdmin,
     t,
   );
+  const tabOptions = [
+    { value: "today", label: t("todayOrders") },
+    { value: "all", label: t("allOrders") },
+    { value: "payment-pending", label: t("paymentPendingOrders") },
+    { value: "delivery", label: t("deliveryOrders") },
+    { value: "pickup", label: t("pickupOrders") },
+    { value: "group", label: t("groupOrders") },
+  ] satisfies ReadonlyArray<{ value: OrderTab; label: string }>;
 
   return (
     <Container>
@@ -211,62 +220,20 @@ export function OrdersPage() {
         orders={sortedOrders}
       />
 
-      <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6">
+      <SectionCard padding="md" className="space-y-6">
         <StatsSection
           stats={dynamicStats}
           loading={orderReportQuery.isLoading || orderReportQuery.isFetching}
           className="xl:grid-cols-3 2xl:grid-cols-6"
         />
 
-        <div className="flex items-center gap-0 flex-wrap text-sm lg:text-base">
-          <TabButton
-            active={activeTab === "today"}
-            tone="primary"
-            onClick={() => handleTabChange("today")}
-          >
-            {t("todayOrders")}
-          </TabButton>
-
-          <TabButton
-            active={activeTab === "all"}
-            tone="primary"
-            onClick={() => handleTabChange("all")}
-          >
-            {t("allOrders")}
-          </TabButton>
-
-          <TabButton
-            active={activeTab === "payment-pending"}
-            tone="accent"
-            onClick={() => handleTabChange("payment-pending")}
-          >
-            {t("paymentPendingOrders")}
-          </TabButton>
-
-          <TabButton
-            active={activeTab === "delivery"}
-            tone="accent"
-            onClick={() => handleTabChange("delivery")}
-          >
-            {t("deliveryOrders")}
-          </TabButton>
-
-          <TabButton
-            active={activeTab === "pickup"}
-            tone="primary"
-            onClick={() => handleTabChange("pickup")}
-          >
-            {t("pickupOrders")}
-          </TabButton>
-
-          <TabButton
-            active={activeTab === "group"}
-            tone="primary"
-            onClick={() => handleTabChange("group")}
-          >
-            {t("groupOrders")}
-          </TabButton>
-        </div>
+        <PageTabs
+          value={activeTab}
+          options={tabOptions}
+          onValueChange={handleTabChange}
+          ariaLabel={t("title")}
+          className="w-fit"
+        />
 
         <>
           <OrdersFilters
@@ -298,39 +265,7 @@ export function OrdersPage() {
             onPageChange={(newPage: number) => setPage(newPage)}
           />
         </>
-      </div>
+      </SectionCard>
     </Container>
-  );
-}
-
-function TabButton({
-  active,
-  tone,
-  children,
-  onClick,
-}: {
-  active: boolean;
-  tone: "primary" | "accent";
-  children: React.ReactNode;
-  onClick: () => void;
-}) {
-  const activeClass =
-    tone === "accent"
-      ? "bg-[var(--brand-accent)] text-white hover:bg-[var(--brand-accent)]/90 focus-visible:ring-[var(--brand-accent)]/30"
-      : "bg-primary text-white hover:bg-primary/90 focus-visible:ring-primary/30";
-
-  return (
-    <Button
-      onClick={onClick}
-      variant="ghost"
-      aria-pressed={active}
-      className={`rounded-[14px] px-3 py-2.5 text-sm font-semibold transition-colors sm:px-6 ${
-        active
-          ? activeClass
-          : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus-visible:ring-gray-200"
-      }`}
-    >
-      {children}
-    </Button>
   );
 }

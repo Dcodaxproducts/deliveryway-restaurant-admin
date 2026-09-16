@@ -64,12 +64,12 @@ export default function AdminDealsPage() {
           includeInactive: false,
           sortOrder: "ASC",
         }
-      : undefined
+      : undefined,
   );
 
   const branchOptions = useMemo(
     () => getBranchOptions(branchesQuery.data),
-    [branchesQuery.data]
+    [branchesQuery.data],
   );
 
   const scopedBranchId = isBranchAdmin
@@ -92,7 +92,7 @@ export default function AdminDealsPage() {
       page,
       restaurantId,
       scopedBranchId,
-    ]
+    ],
   );
 
   const dealsQuery = useAdminDeals(params);
@@ -119,7 +119,7 @@ export default function AdminDealsPage() {
       }));
       setPage(1);
     },
-    []
+    [],
   );
 
   const handleDelete = async () => {
@@ -140,9 +140,7 @@ export default function AdminDealsPage() {
   }, [deals]);
 
   const canReorder =
-    page === 1 &&
-    !filters.search &&
-    filters.lifecycle === "ALL";
+    page === 1 && !filters.search && filters.lifecycle === "ALL";
 
   const handleReorder = (fromId: string, toId: string) => {
     if (!canReorder) return;
@@ -172,7 +170,6 @@ export default function AdminDealsPage() {
   return (
     <Container>
       <AdminDealsHeader
-        total={meta.total}
         isRefreshing={dealsQuery.isFetching}
         onRefresh={() => dealsQuery.refetch()}
       />
@@ -183,8 +180,6 @@ export default function AdminDealsPage() {
           branchOptions={branchOptions}
           isBranchAdmin={isBranchAdmin}
           branchName={user?.branchName ?? undefined}
-          visibleCount={deals.length}
-          totalCount={meta.total}
           isFetching={dealsQuery.isFetching}
           onFiltersChange={handleFiltersChange}
         />

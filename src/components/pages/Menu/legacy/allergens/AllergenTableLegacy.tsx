@@ -21,8 +21,10 @@ import {
 import { Button } from "@/components/ui/button";
 import PaginationSection from "@/components/common/PaginationSection";
 import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
+import { SegmentedControl } from "@/components/common/SegmentedControl";
 import { StatePanel } from "@/components/common/EmptyState";
 import { StatusBadge } from "@/components/common/status-badge";
+import { MenuManagementActions } from "@/components/pages/Menu/shared/MenuManagementPage";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import {
   Dialog,
@@ -113,11 +115,11 @@ const extractTemplateItems = (response: any): TemplateItem[] => {
   ];
 
   const allergensRaw = allergensCandidates.find((candidate) =>
-    Array.isArray(candidate)
+    Array.isArray(candidate),
   );
 
   const additivesRaw = additivesCandidates.find((candidate) =>
-    Array.isArray(candidate)
+    Array.isArray(candidate),
   );
 
   const allergens: TemplateItem[] = Array.isArray(allergensRaw)
@@ -150,7 +152,7 @@ const normalizeText = (value: string) => {
 const sortTemplates = (
   items: TemplateItem[],
   sortBy: SortBy,
-  sortOrder: SortOrder
+  sortOrder: SortOrder,
 ) => {
   if (sortBy === "manual") return [...items];
 
@@ -173,11 +175,9 @@ const sortTemplates = (
       return sortOrder === "ASC" ? result : -result;
     }
 
-    const aValue =
-      normalizeText(a?.[sortBy] || "");
+    const aValue = normalizeText(a?.[sortBy] || "");
 
-    const bValue =
-      normalizeText(b?.[sortBy] || "");
+    const bValue = normalizeText(b?.[sortBy] || "");
 
     const result = aValue.localeCompare(bValue, undefined, {
       numeric: true,
@@ -289,7 +289,7 @@ export default function AllergenTable() {
     const searchedItems = keyword
       ? typeFilteredItems.filter((item) => {
           const searchableText = `${item.code} ${item.label} ${getTypeLabel(
-            item.type
+            item.type,
           )}`.toLowerCase();
 
           return searchableText.includes(keyword);
@@ -317,10 +317,10 @@ export default function AllergenTable() {
 
   const hasActiveFilters = Boolean(
     search.trim() ||
-      debouncedSearch ||
-      typeFilter !== "all" ||
-      sortBy !== "manual" ||
-      sortOrder !== "ASC"
+    debouncedSearch ||
+    typeFilter !== "all" ||
+    sortBy !== "manual" ||
+    sortOrder !== "ASC",
   );
   const canReorderTemplates = Boolean(
     canMutateTemplates && sortBy === "manual" && !debouncedSearch,
@@ -401,7 +401,7 @@ export default function AllergenTable() {
           setDeleteTarget(null);
           refetch();
         },
-      }
+      },
     );
   };
 
@@ -429,7 +429,7 @@ export default function AllergenTable() {
             setSelected(null);
             refetch();
           },
-        }
+        },
       );
 
       return;
@@ -449,7 +449,7 @@ export default function AllergenTable() {
           setPage(1);
           refetch();
         },
-      }
+      },
     );
   };
 
@@ -483,10 +483,7 @@ export default function AllergenTable() {
     setDraggedTemplateKey(null);
   };
 
-  const handleTemplateMove = (
-    item: TemplateItem,
-    offset: -1 | 1,
-  ) => {
+  const handleTemplateMove = (item: TemplateItem, offset: -1 | 1) => {
     if (!canReorderTemplates || isReordering) return;
 
     saveTemplateOrder(
@@ -501,42 +498,46 @@ export default function AllergenTable() {
   const EmptyState = () => (
     <StatePanel
       title={t("emptyTitle")}
-      description={hasActiveFilters ? t("emptyFiltered") : t("emptyDescription")}
+      description={
+        hasActiveFilters ? t("emptyFiltered") : t("emptyDescription")
+      }
       icon={<ShieldAlert size={22} />}
-      action={hasActiveFilters ? (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleResetFilters}
-          className="mt-4 rounded-[12px]"
-        >
-          <RefreshCcw size={16} className="mr-2" />
-          {t("resetFilters")}
-        </Button>
-      ) : (
-        <div className="mt-4 flex flex-col justify-center gap-2 sm:flex-row">
-          <Button
-            type="button"
-            onClick={() => openCreateModal("allergens")}
-            disabled={!canMutateTemplates}
-            className="rounded-[12px] bg-primary text-white hover:bg-primary/90"
-          >
-            <PlusCircle size={18} className="mr-2" />
-            {t("addAllergen")}
-          </Button>
-
+      action={
+        hasActiveFilters ? (
           <Button
             type="button"
             variant="outline"
-            onClick={() => openCreateModal("additives")}
-            disabled={!canMutateTemplates}
-            className="rounded-[12px]"
+            onClick={handleResetFilters}
+            className="mt-4 rounded-[12px]"
           >
-            <PlusCircle size={18} className="mr-2" />
-            {t("addAdditive")}
+            <RefreshCcw size={16} className="mr-2" />
+            {t("resetFilters")}
           </Button>
-        </div>
-      )}
+        ) : (
+          <div className="mt-4 flex flex-col justify-center gap-2 sm:flex-row">
+            <Button
+              type="button"
+              onClick={() => openCreateModal("allergens")}
+              disabled={!canMutateTemplates}
+              className="rounded-[12px] bg-primary text-white hover:bg-primary/90"
+            >
+              <PlusCircle size={18} className="mr-2" />
+              {t("addAllergen")}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => openCreateModal("additives")}
+              disabled={!canMutateTemplates}
+              className="rounded-[12px]"
+            >
+              <PlusCircle size={18} className="mr-2" />
+              {t("addAdditive")}
+            </Button>
+          </div>
+        )
+      }
     />
   );
 
@@ -548,8 +549,8 @@ export default function AllergenTable() {
 
   return (
     <div className="w-full max-w-full overflow-hidden">
-      <div className="mb-5 flex justify-end">
-        <div className="flex flex-col gap-2 sm:flex-row">
+      <MenuManagementActions>
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
             onClick={() => openCreateModal("allergens")}
@@ -571,7 +572,7 @@ export default function AllergenTable() {
             {t("addAdditive")}
           </Button>
         </div>
-      </div>
+      </MenuManagementActions>
 
       <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
         <SummaryCard
@@ -650,26 +651,16 @@ export default function AllergenTable() {
               {commonT("type")}
             </label>
 
-            <div className="grid min-w-0 grid-cols-3 gap-2 rounded-[14px] bg-[#F7F7F7] p-1">
-              {TYPE_FILTER_OPTIONS.map((option) => {
-                const isActive = typeFilter === option.value;
-
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => handleTypeFilterChange(option.value)}
-                    className={`h-[38px] min-w-0 rounded-[11px] px-2 text-xs font-semibold transition ${
-                      isActive
-                        ? "bg-white text-primary shadow-sm ring-1 ring-primary/10"
-                        : "text-gray-500 hover:bg-white/70 hover:text-gray-800"
-                    }`}
-                  >
-                    <span className="block truncate">{getFilterLabel(option.value)}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <SegmentedControl
+              value={typeFilter}
+              options={TYPE_FILTER_OPTIONS.map((option) => ({
+                value: option.value,
+                label: getFilterLabel(option.value),
+              }))}
+              onValueChange={handleTypeFilterChange}
+              ariaLabel={commonT("type")}
+              size="default"
+            />
           </div>
 
           <div className="min-w-0 xl:col-span-2">
@@ -733,27 +724,48 @@ export default function AllergenTable() {
       </div>
 
       {!canMutateTemplates ? (
-        <StatePanel state="permission" title={t("missingRestaurantContext")} description="" compact className="mb-6" />
+        <StatePanel
+          state="permission"
+          title={t("missingRestaurantContext")}
+          description=""
+          compact
+          className="mb-6"
+        />
       ) : null}
 
       {sortBy === "manual" ? (
-        <p className="mb-3 text-xs text-gray-500">
-          {t("manualOrderHelp")}
-        </p>
+        <p className="mb-3 text-xs text-gray-500">{t("manualOrderHelp")}</p>
       ) : null}
 
       {isError ? (
-        <StatePanel state="error" title={commonT("unableToLoad")} description="" compact className="mb-4"
-          action={<Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>{commonT("refresh")}</Button>} />
+        <StatePanel
+          state="error"
+          title={commonT("unableToLoad")}
+          description=""
+          compact
+          className="mb-4"
+          action={
+            <Button
+              variant="outline"
+              disabled={isFetching}
+              onClick={() => void refetch()}
+            >
+              {commonT("refresh")}
+            </Button>
+          }
+        />
       ) : null}
-      {isError && paginatedItems.length === 0 ? null : shouldShowEmpty ? <EmptyState /> : (
+      {isError && paginatedItems.length === 0 ? null : shouldShowEmpty ? (
+        <EmptyState />
+      ) : (
         <div
           onDragStart={(event) => {
             const item = desktopItem(event.target);
             if (item) setDraggedTemplateKey(`${item.type}-${item.code}`);
           }}
           onDragOver={(event) => {
-            if (canReorderTemplates && desktopItem(event.target)) event.preventDefault();
+            if (canReorderTemplates && desktopItem(event.target))
+              event.preventDefault();
           }}
           onDrop={(event) => {
             const item = desktopItem(event.target);
@@ -764,18 +776,27 @@ export default function AllergenTable() {
           <ResponsiveDataView
             data={paginatedItems}
             rowKey={(item) => `${item.type}-${item.code}`}
-            loading={shouldShowInitialLoader || (isFetching && paginatedItems.length === 0)}
+            loading={
+              shouldShowInitialLoader ||
+              (isFetching && paginatedItems.length === 0)
+            }
             emptyTitle={t("emptyTitle")}
             className="[&_tr:has([data-dragged=true])]:bg-primary/5 [&_tr:has([data-dragged=true])]:opacity-60"
             columns={[
               {
-                id: "order", header: <span className="sr-only">{t("manualOrder")}</span>, align: "center", cell: (item) => (
+                id: "order",
+                header: <span className="sr-only">{t("manualOrder")}</span>,
+                align: "center",
+                cell: (item) => (
                   <div
                     className="flex items-center justify-center gap-0.5"
-                    data-dragged={draggedTemplateKey === `${item.type}-${item.code}`}
+                    data-dragged={
+                      draggedTemplateKey === `${item.type}-${item.code}`
+                    }
                     ref={(node) => {
                       const row = node?.closest("tr");
-                      if (row) row.draggable = canReorderTemplates && !isReordering;
+                      if (row)
+                        row.draggable = canReorderTemplates && !isReordering;
                     }}
                   >
                     <button
@@ -801,36 +822,45 @@ export default function AllergenTable() {
                       <GripVertical size={16} />
                     </button>
                   </div>
-                )
+                ),
               },
               {
-                id: "code", header: t("code"), cell: (item) => (
+                id: "code",
+                header: t("code"),
+                cell: (item) => (
                   <div className="inline-flex max-w-full rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                     <span className="truncate">{item.code || "-"}</span>
                   </div>
-                )
+                ),
               },
               {
-                id: "label", header: t("label"), cell: (item) => (
+                id: "label",
+                header: t("label"),
+                cell: (item) => (
                   <p className="truncate font-semibold text-gray-900">
                     {item.label || "-"}
                   </p>
-                )
+                ),
               },
               {
-                id: "type", header: commonT("type"), align: "center", cell: (item) => (
-                  <TemplateTypeBadge type={item.type} />
-                )
+                id: "type",
+                header: commonT("type"),
+                align: "center",
+                cell: (item) => <TemplateTypeBadge type={item.type} />,
               },
               {
-                id: "usage", header: t("usage"), align: "center", cell: () => (
-                  <span className="text-xs text-gray-500">
-                    {t("template")}
-                  </span>
-                )
+                id: "usage",
+                header: t("usage"),
+                align: "center",
+                cell: () => (
+                  <span className="text-xs text-gray-500">{t("template")}</span>
+                ),
               },
               {
-                id: "actions", header: commonT("actions"), align: "center", cell: (item) => (
+                id: "actions",
+                header: commonT("actions"),
+                align: "center",
+                cell: (item) => (
                   <div className="flex items-center justify-center gap-2">
                     <button
                       type="button"
@@ -854,7 +884,7 @@ export default function AllergenTable() {
                       <FaTrash size={13} />
                     </button>
                   </div>
-                )
+                ),
               },
             ]}
             renderMobileItem={(item) => {
@@ -883,7 +913,9 @@ export default function AllergenTable() {
                       </h3>
 
                       <p className="mt-1 text-xs text-gray-400">
-                        {item.type === "allergens" ? t("allergenDescription") : t("additiveDescription")}
+                        {item.type === "allergens"
+                          ? t("allergenDescription")
+                          : t("additiveDescription")}
                       </p>
                     </div>
 
@@ -962,10 +994,18 @@ export default function AllergenTable() {
         onConfirm={handleDelete}
         isLoading={isDeleting}
         title={t("deleteTitle", {
-          type: deleteTarget ? (deleteTarget.type === "allergens" ? t("allergen") : t("additive")) : t("template"),
+          type: deleteTarget
+            ? deleteTarget.type === "allergens"
+              ? t("allergen")
+              : t("additive")
+            : t("template"),
         })}
         description={t("deleteDescription", {
-          type: deleteTarget ? (deleteTarget.type === "allergens" ? t("allergen").toLowerCase() : t("additive").toLowerCase()) : t("template").toLowerCase(),
+          type: deleteTarget
+            ? deleteTarget.type === "allergens"
+              ? t("allergen").toLowerCase()
+              : t("additive").toLowerCase()
+            : t("template").toLowerCase(),
         })}
       />
     </div>
@@ -1067,16 +1107,17 @@ function TemplateModal({
             <div>
               <DialogTitle className="text-xl font-semibold text-gray-950">
                 {isEditMode
-                  ? t("editTitle", { type: form.type === "allergens" ? tableT("allergen") : tableT("additive") })
+                  ? t("editTitle", {
+                      type:
+                        form.type === "allergens"
+                          ? tableT("allergen")
+                          : tableT("additive"),
+                    })
                   : t("addTitle")}
               </DialogTitle>
 
-              <p className="mt-1 text-sm text-gray-500">
-                {t("description")}
-              </p>
+              <p className="mt-1 text-sm text-gray-500">{t("description")}</p>
             </div>
-
-          
           </div>
         </DialogHeader>
 
@@ -1174,12 +1215,12 @@ function TemplateModal({
 
               <p
                 className={`text-sm leading-6 ${
-                  form.type === "allergens"
-                    ? "text-amber-800"
-                    : "text-blue-800"
+                  form.type === "allergens" ? "text-amber-800" : "text-blue-800"
                 }`}
               >
-                {form.type === "allergens" ? tableT("allergenDescription") : tableT("additiveDescription")}
+                {form.type === "allergens"
+                  ? tableT("allergenDescription")
+                  : tableT("additiveDescription")}
               </p>
             </div>
           </div>
@@ -1208,9 +1249,19 @@ function TemplateModal({
                 {commonT("saving")}
               </>
             ) : isEditMode ? (
-              t("update", { type: form.type === "allergens" ? tableT("allergen") : tableT("additive") })
+              t("update", {
+                type:
+                  form.type === "allergens"
+                    ? tableT("allergen")
+                    : tableT("additive"),
+              })
             ) : (
-              t("create", { type: form.type === "allergens" ? tableT("allergen") : tableT("additive") })
+              t("create", {
+                type:
+                  form.type === "allergens"
+                    ? tableT("allergen")
+                    : tableT("additive"),
+              })
             )}
           </Button>
         </div>
