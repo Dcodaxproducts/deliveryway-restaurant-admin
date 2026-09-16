@@ -23,6 +23,9 @@ type EmployeeMutationMessages = {
 
 type StaffCreationResponse = {
   invitationEmailSent?: boolean;
+  meta?: {
+    invitationEmailSent?: boolean;
+  };
 };
 
 type EmployeeMutationOptions = {
@@ -42,7 +45,9 @@ export const useCreateStaff = (options?: EmployeeMutationOptions) => {
     mutationFn: createStaff,
     onSuccess: (response: StaffCreationResponse) => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
-      if (response.invitationEmailSent === false) {
+      const invitationEmailSent =
+        response.meta?.invitationEmailSent ?? response.invitationEmailSent;
+      if (invitationEmailSent === false) {
         toast.warning(
           options?.messages?.invitationNotSent ||
             "Staff created, but the invitation email was not sent.",
