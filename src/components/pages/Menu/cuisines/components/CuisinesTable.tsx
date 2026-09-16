@@ -9,7 +9,6 @@ import {
   ResponsiveDataView,
 } from "@/components/common/ResponsiveDataView";
 import type { DataTableColumn } from "@/components/common/DataTable";
-import { SectionCard } from "@/components/common/SectionCard";
 import { StatePanel } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/common/status-badge";
@@ -119,11 +118,7 @@ export default function CuisinesTable() {
   );
 
   return (
-    <SectionCard
-      title={t("cuisines")}
-      description={t("cuisinesDescription")}
-      action={<StatusBadge tone="neutral">{t("readOnly")}</StatusBadge>}
-    >
+    <div className="space-y-4">
       <CuisineFilters
         search={search}
         onSearchChange={setSearch}
@@ -159,7 +154,7 @@ export default function CuisinesTable() {
         footer={<PaginationSection {...pagination} onPageChange={setPage} />}
       />
       {isError ? <Button type="button" variant="outline" disabled={isFetching} onClick={() => void refetch()}>{feedbackT("retry", { subject: feedbackT("subjects.cuisines") })}</Button> : null}
-    </SectionCard>
+    </div>
   );
 }
 

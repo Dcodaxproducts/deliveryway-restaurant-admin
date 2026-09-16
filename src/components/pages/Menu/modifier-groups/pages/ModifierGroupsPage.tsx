@@ -1,24 +1,18 @@
 "use client";
 
-import Container from "@/components/common/Container";
-import Header from "@/components/common/PageHeader";
 import { ModifierGroupsTable } from "@/components/pages/Menu/modifier-groups/components/ModifierGroupsTable/ModifierGroupsTable";
 import { useTranslations } from "next-intl";
-import { SectionCard } from "@/components/common/SectionCard";
+import { MenuManagementPage } from "@/components/pages/Menu/shared/MenuManagementPage";
 
 export function ModifierGroupsPage() {
   const t = useTranslations("menu");
 
   return (
-    <Container>
-      <Header
-        title={t("modifierGroupsTitle")}
-        description={t("modifierGroupsDescription")}
-      />
-
-      <SectionCard padding="md">
-        <ModifierGroupsTable />
-      </SectionCard>
-    </Container>
+    <MenuManagementPage
+      title={t("modifierGroupsTitle")}
+      description={t("modifierGroupsDescription")}
+    >
+      <ModifierGroupsTable />
+    </MenuManagementPage>
   );
 }

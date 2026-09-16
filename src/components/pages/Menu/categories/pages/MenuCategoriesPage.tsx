@@ -1,15 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Container from "@/components/common/Container";
-import Header from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import CategoriesTable from "@/components/pages/Menu/categories/components/CategoriesTable/CategoriesTable";
 import CreateCategoryModalParent from "@/components/pages/Menu/legacy/root-menu-components/listing/CreateCategoryModalParent";
 import { useTranslations } from "next-intl";
-import { SectionCard } from "@/components/common/SectionCard";
+import { MenuManagementPage } from "@/components/pages/Menu/shared/MenuManagementPage";
 
 const MenuCategoriesPage = () => {
   const { isBranchAdmin } = useAuth();
@@ -22,39 +20,35 @@ const MenuCategoriesPage = () => {
   };
 
   return (
-    <Container>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between w-full">
-        <Header
-          title={isBranchAdmin ? t("categoryBranchOverrides") : t("categoriesTitle")}
-          description={
-            isBranchAdmin
-              ? t("categoryBranchOverridesDescription")
-              : t("categoriesDescription")
-          }
-        />
-
-        {!isBranchAdmin ? (
-        <Button
-          onClick={() => setOpen(true)}
-          className="h-[44px] rounded-[14px] px-5 flex items-center gap-2 bg-primary hover:bg-red-700 text-white text-[15px] font-[500] shadow-md"
-        >
-          <PlusCircle size={18} />
-          {t("addCategories")}
-        </Button>
-        ) : null}
-      </div>
-
-      <SectionCard padding="md">
+    <>
+      <MenuManagementPage
+        title={isBranchAdmin ? t("categoryBranchOverrides") : t("categoriesTitle")}
+        description={
+          isBranchAdmin
+            ? t("categoryBranchOverridesDescription")
+            : t("categoriesDescription")
+        }
+        actions={
+          !isBranchAdmin ? (
+            <Button
+              onClick={() => setOpen(true)}
+              className="h-10 px-4 shadow-[var(--ui-shadow-xs)]"
+            >
+              <PlusCircle aria-hidden="true" size={17} />
+              {t("addCategories")}
+            </Button>
+          ) : undefined
+        }
+      >
         <CategoriesTable refetchKey={refetchKey} />
-      </SectionCard>
+      </MenuManagementPage>
 
-      {/*  GLOBAL MODAL */}
       <CreateCategoryModalParent
         open={open}
         onOpenChange={setOpen}
         onSuccess={handleSuccess}
       />
-    </Container>
+    </>
   );
 };
 

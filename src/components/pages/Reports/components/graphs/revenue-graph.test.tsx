@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createTranslator, type AbstractIntlMessages } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChartPanelProps } from "@/components/common/ChartPanel";
+import { SegmentedControl, type SegmentedControlProps } from "@/components/common/SegmentedControl";
 import { formatMoney } from "@/lib/currency";
 import en from "@/messages/en.json";
 import de from "@/messages/de.json";
@@ -179,7 +180,11 @@ describe.each(["en", "de"] as const)("%s Revenue Trend feedback", (locale) => {
     const change = vi.fn();
     renderToStaticMarkup(<RevenueGraph range="monthly" onRangeChange={change} />);
     expect(harness.query).toHaveBeenCalledExactlyOnceWith({ restaurantId: "restaurant-1", branchId: "branch-1", range: "monthly" });
-    (action("weekly").props.onClick as () => void)();
+    const ranges = nodes(harness.chartChildren).find((node) => node.type === SegmentedControl) as
+      | ReactElement<SegmentedControlProps<"daily" | "weekly" | "monthly">>
+      | undefined;
+    expect(ranges).toBeDefined();
+    ranges!.props.onValueChange("weekly");
     expect(change).toHaveBeenCalledExactlyOnceWith("weekly");
     (action(t("refreshRevenueTrend")).props.onClick as () => void)();
     expect(harness.trend.refetch).toHaveBeenCalledExactlyOnceWith();

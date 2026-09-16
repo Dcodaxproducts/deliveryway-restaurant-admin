@@ -78,9 +78,6 @@ export default function BranchFilters({
     document.body.removeChild(link);
   };
 
-  const visibleCount =
-    branches?.filter(({ name }) => name?.toLowerCase().includes(search.toLowerCase())).length ?? 0;
-
   return (
     <>
       <FilterBar
@@ -110,11 +107,6 @@ export default function BranchFilters({
               {commonT("search")}
             </Button>
           </form>
-        }
-        resultCount={
-          branches
-            ? t("filtersShowing", { visible: visibleCount, total: branches.length })
-            : undefined
         }
         actions={
           <>

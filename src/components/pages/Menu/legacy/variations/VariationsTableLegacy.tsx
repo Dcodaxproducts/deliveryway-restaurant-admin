@@ -333,18 +333,7 @@ export default function VariationsTable() {
 
   return (
     <div className="w-full max-w-full overflow-hidden">
-      {/* PAGE HEADER */}
-      <div className="mb-5 flex min-w-0 flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-[20px] font-semibold text-gray-900">
-            {t("title")}
-          </h2>
-
-          <p className="mt-1 text-sm text-gray-500">
-            {t("description")}
-          </p>
-        </div>
-
+      <div className="mb-5 flex justify-end">
         <Button
           type="button"
           onClick={openCreateModal}
@@ -376,18 +365,12 @@ export default function VariationsTable() {
             </div>
           </div>
 
-          <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs text-gray-500">
-            <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-              {t("showingCount", { visible: items.length, total: pagination.total })}
+          {shouldShowRefreshing ? (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+              <Loader2 size={12} className="animate-spin" />
+              {commonT("refreshing")}
             </span>
-
-            {shouldShowRefreshing ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 font-medium text-primary">
-                <Loader2 size={12} className="animate-spin" />
-                {commonT("refreshing")}
-              </span>
-            ) : null}
-          </div>
+          ) : null}
         </div>
 
         <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">

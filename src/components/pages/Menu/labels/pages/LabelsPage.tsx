@@ -1,25 +1,19 @@
 "use client";
 
-import Container from "@/components/common/Container";
-import Header from "@/components/common/PageHeader";
 import LabelsTable from "@/components/pages/Menu/labels/components/LabelsTable/LabelsTable";
 import { useTranslations } from "next-intl";
-import { SectionCard } from "@/components/common/SectionCard";
+import { MenuManagementPage } from "@/components/pages/Menu/shared/MenuManagementPage";
 
 const LabelsPage = () => {
   const t = useTranslations("menu");
 
   return (
-    <Container>
-      <Header
-        title={t("labelsTitleLong")}
-        description={t("labelsDescriptionLong")}
-      />
-
-      <SectionCard padding="md">
-        <LabelsTable />
-      </SectionCard>
-    </Container>
+    <MenuManagementPage
+      title={t("labelsTitleLong")}
+      description={t("labelsDescriptionLong")}
+    >
+      <LabelsTable />
+    </MenuManagementPage>
   );
 };
 

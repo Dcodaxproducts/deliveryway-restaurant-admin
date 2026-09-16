@@ -315,12 +315,19 @@ describe.each(families)("$name canonical list", (family) => {
     expect(markup).not.toContain('data-table-skeleton');
   });
 
-  it("renders canonical empty feedback without redundant pagination", () => {
+  it("renders canonical empty feedback with the result summary at the footer", () => {
     seed(family, []);
     const markup = renderToStaticMarkup(run(family));
     expect(markup).toContain('data-state="empty"');
     expect(markup).toContain("emptyTitle");
-    expect(markup).not.toContain('data-slot="pagination-bar"');
+    if (["categories", "items"].includes(family.name)) {
+      expect(markup).not.toContain('data-slot="pagination-bar"');
+    } else {
+      expect(markup.match(/data-slot="pagination-bar"/g)).toHaveLength(1);
+      expect(markup).toContain(
+        'paginationSummaryEmpty:{&quot;total&quot;:0}',
+      );
+    }
   });
 
   it.each(["desktop", "mobile"])("preserves %s edit selection and confirmed delete payload", (layout) => {
@@ -456,12 +463,12 @@ describe("catalog-specific parity", () => {
     expect(harness.state[pageIndex]).toBe(2);
   });
 
-  it.each(["labels", "variations"])("supplies the %s count translation's visible parameter", (name) => {
+  it.each(["labels", "variations"])("keeps the %s result count in the data footer", (name) => {
     const family = families.find((entry) => entry.name === name)!;
     seed(family);
     const markup = renderToStaticMarkup(run(family));
-    expect(markup).toContain("showingCount:{&quot;visible&quot;:1,&quot;total&quot;:1}");
-    expect(markup).not.toContain("&quot;shown&quot;");
+    expect(markup).not.toContain("showingCount:");
+    expect(markup).toContain("paginationSummary:");
   });
 
   it.each([false, true])("opens only the visible modifier dropdown and uses portalled content (mobile=%s)", (mobile) => {

@@ -120,16 +120,7 @@ export default function ModifiersTable() {
 
   return (
     <div className="w-full">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-[18px] font-semibold text-gray-900">
-            {t("title")}
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            {t("description")}
-          </p>
-        </div>
-
+      <div className="mb-4 flex justify-end">
         <Button
           onClick={() => {
             setSelected(null);

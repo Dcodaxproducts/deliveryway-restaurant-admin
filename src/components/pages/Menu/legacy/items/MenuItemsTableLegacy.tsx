@@ -626,21 +626,12 @@ export default function MenuItemsTable({ refetchKey }: any) {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
-            <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-              {t("showingCount", {
-                shown: allItems.length,
-                total: pagination.total,
-              })}
+          {isFetching && !shouldShowInitialLoader ? (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+              <Loader2 size={12} className="animate-spin" />
+              {commonT("refreshing")}
             </span>
-
-            {isFetching && !shouldShowInitialLoader ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 font-medium text-primary">
-                <Loader2 size={12} className="animate-spin" />
-                {commonT("refreshing")}
-              </span>
-            ) : null}
-          </div>
+          ) : null}
         </div>
 
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px_260px_auto_auto] lg:items-end">

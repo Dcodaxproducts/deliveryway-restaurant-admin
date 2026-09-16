@@ -112,16 +112,7 @@ export default function ModifierCategoriesTable() {
 
   return (
     <div className="w-full">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-[18px] font-semibold text-gray-900">
-            {t("modifierCategories")}
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            {t("modifierCategoriesDescription")}
-          </p>
-        </div>
-
+      <div className="mb-4 flex justify-end">
         <Button
           onClick={openCreate}
           className="h-[40px] rounded-[12px] bg-primary px-4 text-white"

@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createTranslator, type AbstractIntlMessages } from "next-intl";
 import type { ChartPanelProps } from "@/components/common/ChartPanel";
+import { SegmentedControl, type SegmentedControlProps } from "@/components/common/SegmentedControl";
 import type { RowActionsProps } from "@/components/common/RowActions";
 import PieStatsGraph from "@/components/pages/Dashboard/components/dashboard/PieStatsGraph";
 import OrdersGraph from "@/components/pages/Reports/components/graphs/orders-graph";
@@ -197,7 +198,11 @@ describe.each(["en", "de"] as const)("%s dashboard browser findings", (locale) =
     const change = vi.fn();
     renderToStaticMarkup(<OrdersGraph range="monthly" onRangeChange={change} />);
     expect(harness.query).toHaveBeenCalledExactlyOnceWith({ restaurantId: "restaurant-1", branchId: "branch-1", range: "monthly" });
-    (action(t("trendRanges.weekly")).props.onClick as () => void)();
+    const ranges = nodes(harness.chartChildren).find((node) => node.type === SegmentedControl) as
+      | ReactElement<SegmentedControlProps<"daily" | "weekly" | "monthly">>
+      | undefined;
+    expect(ranges).toBeDefined();
+    ranges!.props.onValueChange("weekly");
     expect(change).toHaveBeenCalledExactlyOnceWith("weekly");
     (action(t("refreshOrderTrend")).props.onClick as () => void)();
     expect(harness.trend.refetch).toHaveBeenCalledExactlyOnceWith();
@@ -206,7 +211,9 @@ describe.each(["en", "de"] as const)("%s dashboard browser findings", (locale) =
   it("retains the dashboard default range and restaurant-only scope", () => {
     const markup = renderToStaticMarkup(<OrdersGraph />);
     expect(harness.query).toHaveBeenCalledExactlyOnceWith({ restaurantId: "restaurant-1", range: "daily" });
-    expect(markup).toContain("grid-cols-3");
+    expect(markup).toContain('data-slot="segmented-control"');
+    expect(markup).toContain('aria-pressed="true"');
+    expect(markup).toContain("hover:text-primary");
     expect(markup).toContain("h-[220px]");
     expect(markup).toContain("2xl:flex-row");
     expect(markup).not.toContain("h-[260px]");

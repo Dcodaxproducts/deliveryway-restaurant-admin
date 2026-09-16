@@ -172,7 +172,8 @@ describe.each([
       </NextIntlClientProvider>,
     );
 
-    expect(emptyMarkup).not.toContain('data-slot="pagination-bar"');
+    expect(emptyMarkup).toContain('data-slot="pagination-bar"');
+    expect(emptyMarkup).toContain(messages.common.paginationSummaryEmpty.replace("{total}", "0"));
     expect(emptyMarkup).not.toContain(messages.common.rowsPerPage);
     expect(limitedMarkup).toContain('data-slot="pagination-bar"');
     expect(limitedMarkup).not.toContain(messages.common.rowsPerPage);

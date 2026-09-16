@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { ChartPanel } from "@/components/common/ChartPanel";
 import { StatePanel } from "@/components/common/EmptyState";
+import { SegmentedControl } from "@/components/common/SegmentedControl";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -99,27 +100,16 @@ const OrdersGraph = ({
         </div>
 
         <div className="flex min-w-0 items-center justify-between gap-2 2xl:justify-end">
-          <div className="grid min-w-0 grid-cols-3 items-center rounded-[10px] bg-[#F5F6F8] p-1">
-            {(["daily", "weekly", "monthly"] as TrendRange[]).map((item) => {
-              const active = range === item;
-
-              return (
-                <Button
-                  key={item}
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setRange(item)}
-                  className={`h-8 min-w-0 rounded-[8px] px-2.5 text-xs font-medium capitalize transition-all ${
-                    active
-                      ? "bg-white text-primary shadow-sm hover:bg-white"
-                      : "text-gray-500 hover:text-dark"
-                  }`}
-                >
-                  {t(`trendRanges.${item}`)}
-                </Button>
-              );
-            })}
-          </div>
+          <SegmentedControl
+            value={range}
+            onValueChange={setRange}
+            ariaLabel={t("orderTrendRange")}
+            className="w-full sm:w-auto"
+            options={(["daily", "weekly", "monthly"] as const).map((item) => ({
+              value: item,
+              label: t(`trendRanges.${item}`),
+            }))}
+          />
 
           <button
             type="button"

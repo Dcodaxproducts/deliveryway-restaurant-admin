@@ -104,11 +104,7 @@ export function ModifierGroupsTableLegacy() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[18px] font-semibold text-gray-900">
-          {t("title")}
-        </h2>
-
+      <div className="mb-4 flex justify-end">
         <Button
           onClick={() => {
             setSelected(null);

@@ -1,21 +1,20 @@
 "use client";
 
-import Container from "@/components/common/Container";
-import Header from "@/components/common/PageHeader";
 import CuisinesTable from "@/components/pages/Menu/cuisines/components/CuisinesTable";
-import { SectionCard } from "@/components/common/SectionCard";
+import { StatusBadge } from "@/components/common/status-badge";
+import { MenuManagementPage } from "@/components/pages/Menu/shared/MenuManagementPage";
+import { useTranslations } from "next-intl";
 
 export default function CuisinesPage() {
-  return (
-    <Container>
-      <Header
-        title="Cuisines"
-        description="View global cuisine tags available for menu items."
-      />
+  const t = useTranslations("common");
 
-      <SectionCard padding="md">
-        <CuisinesTable />
-      </SectionCard>
-    </Container>
+  return (
+    <MenuManagementPage
+      title={t("cuisines")}
+      description={t("cuisinesDescription")}
+      actions={<StatusBadge tone="neutral">{t("readOnly")}</StatusBadge>}
+    >
+      <CuisinesTable />
+    </MenuManagementPage>
   );
 }

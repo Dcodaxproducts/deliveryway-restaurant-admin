@@ -85,7 +85,7 @@ export function PaginationBar(props: PaginationBarProps) {
   const meta = getMeta(props);
   const onPageChange = props.onPageChange ?? (() => undefined);
 
-  if (!meta || meta.total <= 0 || meta.totalPages <= 0) return null;
+  if (!meta) return null;
 
   const { page, totalPages, total, limit } = meta;
   const hasPrevious =
@@ -106,67 +106,71 @@ export function PaginationBar(props: PaginationBarProps) {
       )}
     >
       <p className="text-sm tabular-nums text-[var(--ui-text-muted)]">
-        {t("paginationSummary", { from, to, total })}
+        {total === 0
+          ? t("paginationSummaryEmpty", { total })
+          : t("paginationSummary", { from, to, total })}
       </p>
 
-      <Pagination className="w-auto">
-        <PaginationContent>
-          {hasPrevious ? (
-            <PaginationItem>
-              <Button
-                type="button"
-                aria-label={t("goToPreviousPage")}
-                onClick={() => onPageChange(page - 1)}
-                className="gap-1 rounded-[8px] border border-gray-200 px-3"
-              >
-                <ChevronsLeft className="size-4" />
-                <span className="hidden text-sm sm:block">{t("previous")}</span>
-              </Button>
-            </PaginationItem>
-          ) : null}
+      {total > 0 && totalPages > 0 ? (
+        <Pagination className="w-auto">
+          <PaginationContent>
+            {hasPrevious ? (
+              <PaginationItem>
+                <Button
+                  type="button"
+                  aria-label={t("goToPreviousPage")}
+                  onClick={() => onPageChange(page - 1)}
+                  className="gap-1 rounded-[8px] border border-gray-200 px-3"
+                >
+                  <ChevronsLeft className="size-4" />
+                  <span className="hidden text-sm sm:block">{t("previous")}</span>
+                </Button>
+              </PaginationItem>
+            ) : null}
 
-          <div className="flex rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-1">
-            {getPaginationItems(page, totalPages).map((item) =>
-              typeof item === "number" ? (
-                <PaginationItem key={item}>
-                  <Button
-                    type="button"
-                    variant={item === page ? "default" : "ghost"}
-                    size="icon"
-                    aria-current={item === page ? "page" : undefined}
-                    aria-label={`Page ${item}`}
-                    onClick={() => onPageChange(item)}
-                    className={cn(
-                      "rounded-[8px] text-base font-normal",
-                      item === page ? "text-white" : "text-primary",
-                    )}
-                  >
-                    {item}
-                  </Button>
-                </PaginationItem>
-              ) : (
-                <PaginationItem key={item}>
-                  <PaginationEllipsis aria-hidden="true" />
-                </PaginationItem>
-              ),
-            )}
-          </div>
+            <div className="flex rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-1">
+              {getPaginationItems(page, totalPages).map((item) =>
+                typeof item === "number" ? (
+                  <PaginationItem key={item}>
+                    <Button
+                      type="button"
+                      variant={item === page ? "default" : "ghost"}
+                      size="icon"
+                      aria-current={item === page ? "page" : undefined}
+                      aria-label={`Page ${item}`}
+                      onClick={() => onPageChange(item)}
+                      className={cn(
+                        "rounded-[8px] text-base font-normal",
+                        item === page ? "text-white" : "text-primary",
+                      )}
+                    >
+                      {item}
+                    </Button>
+                  </PaginationItem>
+                ) : (
+                  <PaginationItem key={item}>
+                    <PaginationEllipsis aria-hidden="true" />
+                  </PaginationItem>
+                ),
+              )}
+            </div>
 
-          {hasNext ? (
-            <PaginationItem>
-              <Button
-                type="button"
-                aria-label={t("goToNextPage")}
-                onClick={() => onPageChange(page + 1)}
-                className="gap-1 rounded-[8px] border border-gray-200 px-3"
-              >
-                <span className="hidden text-sm sm:block">{t("next")}</span>
-                <ChevronsRight className="size-4" />
-              </Button>
-            </PaginationItem>
-          ) : null}
-        </PaginationContent>
-      </Pagination>
+            {hasNext ? (
+              <PaginationItem>
+                <Button
+                  type="button"
+                  aria-label={t("goToNextPage")}
+                  onClick={() => onPageChange(page + 1)}
+                  className="gap-1 rounded-[8px] border border-gray-200 px-3"
+                >
+                  <span className="hidden text-sm sm:block">{t("next")}</span>
+                  <ChevronsRight className="size-4" />
+                </Button>
+              </PaginationItem>
+            ) : null}
+          </PaginationContent>
+        </Pagination>
+      ) : null}
     </div>
   );
 }

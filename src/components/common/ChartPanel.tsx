@@ -37,7 +37,7 @@ export function ChartPanel({
     <SectionCard
       data-slot="chart-panel"
       padding="md"
-      className={cn("h-full min-w-0", className)}
+      className={cn("min-w-0", className)}
       title={
         <div className="flex flex-wrap items-center gap-3">
           <span>{title}</span>

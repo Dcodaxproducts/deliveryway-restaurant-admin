@@ -14,6 +14,7 @@ import {
   PaginationBar,
 } from "@/components/common/PaginationSection";
 import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
+import { SegmentedControl } from "@/components/common/SegmentedControl";
 import { SectionCard } from "@/components/common/SectionCard";
 import { StatusBadge } from "@/components/common/status-badge";
 import { StatCard } from "@/components/cards/stats-card";
@@ -171,6 +172,26 @@ describe("shared data patterns", () => {
 });
 
 describe("shared controls", () => {
+  it("keeps the selected segment readable across hover and pressed states", () => {
+    const markup = renderToStaticMarkup(
+      <SegmentedControl
+        value="daily"
+        ariaLabel="Revenue range"
+        onValueChange={() => undefined}
+        options={[
+          { value: "daily", label: "Daily" },
+          { value: "weekly", label: "Weekly" },
+          { value: "monthly", label: "Monthly" },
+        ]}
+      />,
+    );
+
+    expect(markup).toContain('data-slot="segmented-control"');
+    expect(markup).toContain('aria-pressed="true"');
+    expect(markup).toContain("hover:text-primary");
+    expect(markup).toContain("Daily");
+  });
+
   it("keeps pagination windows bounded for large result sets", () => {
     expect(getPaginationItems(1, 3)).toEqual([1, 2, 3]);
     expect(getPaginationItems(50, 100)).toEqual([
@@ -194,6 +215,18 @@ describe("shared controls", () => {
     );
     expect(markup).toContain('data-slot="pagination-bar"');
     expect(markup).not.toContain(">52<");
+  });
+
+  it("keeps an empty result summary at the data footer without page controls", () => {
+    const markup = renderToStaticMarkup(
+      <PaginationBar page={1} totalPages={1} total={0} limit={10} />,
+    );
+
+    expect(markup).toContain('data-slot="pagination-bar"');
+    expect(markup).toContain(
+      'paginationSummaryEmpty:{&quot;total&quot;:0}',
+    );
+    expect(markup).not.toContain("<button");
   });
 
   it("composes shared filters without owning feature state", () => {
