@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { StatePanel } from "@/components/common/EmptyState";
 import { FilterBar, FilterSheet } from "@/components/common/FilterBar";
-import { FormField, getFormFieldDescriptionId } from "@/components/common/FormField";
+import {
+  FormField,
+  getFormFieldDescriptionId,
+} from "@/components/common/FormField";
 import { PageLayout } from "@/components/common/Container";
 import PageHeader from "@/components/common/PageHeader";
 import {
@@ -18,6 +21,7 @@ import { SegmentedControl } from "@/components/common/SegmentedControl";
 import { SectionCard } from "@/components/common/SectionCard";
 import { StatusBadge } from "@/components/common/status-badge";
 import { StatCard } from "@/components/cards/stats-card";
+import StatGrid from "@/components/common/stats-section";
 import ManagementCard from "@/components/cards/ManagementCard";
 import { ConfirmDialog } from "@/components/common/dialogs/delete-dialog";
 
@@ -26,8 +30,8 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("next-intl", () => ({
-  useTranslations: () =>
-    (key: string, values?: Record<string, string | number>) =>
+  useTranslations:
+    () => (key: string, values?: Record<string, string | number>) =>
       values ? `${key}:${JSON.stringify(values)}` : key,
 }));
 
@@ -68,7 +72,10 @@ describe("shared layout patterns", () => {
           actions={<Button>Add branch</Button>}
           tabs={<nav>Active</nav>}
         />
-        <SectionCard title="All branches" description="One shared section surface">
+        <SectionCard
+          title="All branches"
+          description="One shared section surface"
+        >
           Content
         </SectionCard>
       </PageLayout>,
@@ -102,6 +109,26 @@ describe("shared layout patterns", () => {
     expect(markup).not.toContain("md:p-6");
     expect(markup).toContain("1,248");
     expect(markup).toContain("8.4%");
+  });
+
+  it("keeps metric loading cards the same height and caps wide grids at three columns", () => {
+    const stats = Array.from({ length: 6 }, (_, index) => ({
+      _id: `metric-${index}`,
+      title: `Metric ${index + 1}`,
+      value: index,
+      icon: "orders" as const,
+      trend: { direction: "up" as const, percentage: `${index}` },
+    }));
+    const loadingMarkup = renderToStaticMarkup(
+      <StatGrid stats={stats} loading />,
+    );
+    const loadedMarkup = renderToStaticMarkup(<StatGrid stats={stats} />);
+
+    expect(loadingMarkup).toContain("xl:grid-cols-3");
+    expect(loadingMarkup).not.toContain("xl:grid-cols-4");
+    expect(loadingMarkup).not.toContain("2xl:grid-cols-6");
+    expect(loadingMarkup.match(/min-h-\[88px\]/g)).toHaveLength(6);
+    expect(loadedMarkup.match(/min-h-\[88px\]/g)).toHaveLength(6);
   });
 
   it("keeps dashboard management cards compact without reducing their content", () => {
@@ -163,7 +190,11 @@ describe("shared data patterns", () => {
       <StatePanel title="No branches" description="Add the first branch" />,
     );
     const errorMarkup = renderToStaticMarkup(
-      <StatePanel state="error" title="Could not load branches" description="Try again" />,
+      <StatePanel
+        state="error"
+        title="Could not load branches"
+        description="Try again"
+      />,
     );
 
     expect(emptyMarkup).toContain('data-state="empty"');
@@ -223,9 +254,7 @@ describe("shared controls", () => {
     );
 
     expect(markup).toContain('data-slot="pagination-bar"');
-    expect(markup).toContain(
-      'paginationSummaryEmpty:{&quot;total&quot;:0}',
-    );
+    expect(markup).toContain("paginationSummaryEmpty:{&quot;total&quot;:0}");
     expect(markup).not.toContain("<button");
   });
 
@@ -244,10 +273,12 @@ describe("shared controls", () => {
   });
 
   it("provides stable form help and error relationships", () => {
-    expect(getFormFieldDescriptionId("name", { hasHelp: true })).toBe("name-help");
-    expect(getFormFieldDescriptionId("name", { hasHelp: true, hasError: true })).toBe(
-      "name-error",
+    expect(getFormFieldDescriptionId("name", { hasHelp: true })).toBe(
+      "name-help",
     );
+    expect(
+      getFormFieldDescriptionId("name", { hasHelp: true, hasError: true }),
+    ).toBe("name-error");
 
     const markup = renderToStaticMarkup(
       <FormField id="name" label="Name" required error="Name is required">

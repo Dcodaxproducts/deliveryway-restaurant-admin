@@ -5,7 +5,6 @@ import { FormSelect } from "@/components/ui/form-select";
 import { useEffect, useMemo, useState } from "react";
 import { FaPen, FaTrash } from "react-icons/fa";
 import {
-  Filter,
   Loader2,
   PlusCircle,
   RefreshCcw,
@@ -111,21 +110,10 @@ export default function VariationsTable() {
 
   const canFetchVariations = Boolean(restaurantId);
 
-  const activeStatusOption = useMemo(() => {
-    return (
-      STATUS_FILTER_OPTIONS.find((option) => option.value === statusFilter) ||
-      STATUS_FILTER_OPTIONS[0]
-    );
-  }, [statusFilter]);
   const getStatusLabel = (value: VariationStatusFilter) => {
     if (value === "active") return commonT("active");
     if (value === "inactive") return commonT("inactive");
     return t("all");
-  };
-  const getStatusHelper = (value: VariationStatusFilter) => {
-    if (value === "active") return t("onlyActive");
-    if (value === "inactive") return t("onlyInactive");
-    return t("activeAndInactive");
   };
   const getSortLabel = (value: SortBy) => {
     if (value === "createdAt") return t("latest");
@@ -346,37 +334,12 @@ export default function VariationsTable() {
         </Button>
       </MenuManagementActions>
 
-      {/* FILTERS */}
-      <div className="mb-6 w-full max-w-full overflow-hidden rounded-[20px] border border-gray-100 bg-white p-4 shadow-sm">
-        <div className="mb-4 flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
-              <Filter size={18} />
-            </div>
-
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-gray-900">
-                {t("filtersTitle")}
-              </h3>
-              <p className="mt-1 text-xs text-gray-500">
-                {t("filtersDescription")}{" "}
-                <span className="font-medium text-gray-700">
-                  {getStatusHelper(activeStatusOption.value)}
-                </span>
-              </p>
-            </div>
-          </div>
-
-          {shouldShowRefreshing ? (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-              <Loader2 size={12} className="animate-spin" />
-              {commonT("refreshing")}
-            </span>
-          ) : null}
-        </div>
-
-        <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
-          <div className="min-w-0 xl:col-span-4">
+      <div
+        aria-busy={shouldShowRefreshing}
+        className="mb-4 w-full max-w-full rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-3.5"
+      >
+        <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(240px,2fr)_minmax(250px,1.5fr)_minmax(150px,1fr)_minmax(100px,0.55fr)_auto] xl:items-end">
+          <div className="min-w-0">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("search")}
             </label>
@@ -396,13 +359,13 @@ export default function VariationsTable() {
                     handleManualSearch();
                   }
                 }}
-                className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                className="h-10 w-full min-w-0 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] pl-11 pr-4 text-sm text-[var(--ui-text)] outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
               />
             </div>
           </div>
 
           {/* STATUS */}
-          <div className="min-w-0 xl:col-span-3">
+          <div className="min-w-0">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("status")}
             </label>
@@ -421,7 +384,7 @@ export default function VariationsTable() {
           </div>
 
           {/* SORT BY */}
-          <div className="min-w-0 xl:col-span-2">
+          <div className="min-w-0">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("sortBy")}
             </label>
@@ -432,7 +395,7 @@ export default function VariationsTable() {
                 handleSortByChange(event.target.value as SortBy)
               }
               disabled={!canFetchVariations}
-              className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-10 w-full min-w-0 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] px-4 text-sm text-[var(--ui-text)] outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -443,7 +406,7 @@ export default function VariationsTable() {
           </div>
 
           {/* SORT ORDER */}
-          <div className="min-w-0 xl:col-span-1">
+          <div className="min-w-0">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("order")}
             </label>
@@ -454,31 +417,41 @@ export default function VariationsTable() {
                 handleSortOrderChange(event.target.value as SortOrder)
               }
               disabled={!canFetchVariations}
-              className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-3 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-10 w-full min-w-0 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] px-3 text-sm text-[var(--ui-text)] outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <option value="DESC">DESC</option>
               <option value="ASC">ASC</option>
             </FormSelect>
           </div>
 
-          <Button
-            disabled={!canFetchVariations}
-            onClick={handleManualSearch}
-            className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm hover:bg-primary/90 md:w-full xl:col-span-1"
-          >
-            {commonT("search")}
-          </Button>
+          <div className="flex min-w-0 items-center gap-2 md:col-span-2 xl:col-span-1">
+            <Button
+              disabled={!canFetchVariations}
+              onClick={handleManualSearch}
+              className="h-10 min-w-[88px] flex-1 xl:flex-none"
+            >
+              {commonT("search")}
+            </Button>
 
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!canFetchVariations || (!hasActiveFilters && !isFetching)}
-            onClick={handleResetFilters}
-            className="h-[44px] rounded-[14px] border-gray-200 px-4 text-gray-700 md:w-full xl:col-span-1"
-          >
-            <RefreshCcw size={15} className="mr-2" />
-            {commonT("reset")}
-          </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={
+                !canFetchVariations || (!hasActiveFilters && !isFetching)
+              }
+              onClick={handleResetFilters}
+              className="h-10 min-w-[96px] flex-1 xl:flex-none"
+            >
+              <RefreshCcw size={15} />
+              {commonT("reset")}
+            </Button>
+            {shouldShowRefreshing ? (
+              <span className="sr-only" aria-live="polite">
+                <Loader2 size={12} className="animate-spin" />
+                {commonT("refreshing")}
+              </span>
+            ) : null}
+          </div>
         </div>
       </div>
 

@@ -13,7 +13,7 @@ type TableReservationsStatsProps = {
 
 const countByStatus = (reservations: TableReservation[], status: string) => {
   return reservations.filter(
-    (reservation) => reservation.status.toUpperCase() === status
+    (reservation) => reservation.status.toUpperCase() === status,
   ).length;
 };
 
@@ -80,11 +80,5 @@ export default function TableReservationsStats({
     },
   ];
 
-  return (
-    <StatsSection
-      stats={stats}
-      loading={loading}
-      className="xl:grid-cols-4"
-    />
-  );
+  return <StatsSection stats={stats} loading={loading} />;
 }

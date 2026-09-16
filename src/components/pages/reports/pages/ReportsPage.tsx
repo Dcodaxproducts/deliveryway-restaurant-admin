@@ -339,21 +339,13 @@ export default function Orders() {
           />
         ) : activeTab === "financial" ? (
           <>
-            <StatsSection
-              stats={activeStats}
-              loading={activeLoading}
-              className="xl:grid-cols-4"
-            />
+            <StatsSection stats={activeStats} loading={activeLoading} />
 
             <RevenueAnalytics range={range} onRangeChange={handleRangeChange} />
           </>
         ) : (
           <>
-            <StatsSection
-              stats={activeStats}
-              loading={activeLoading}
-              className="xl:grid-cols-4"
-            />
+            <StatsSection stats={activeStats} loading={activeLoading} />
 
             <OrdersGraph range={range} onRangeChange={handleRangeChange} />
           </>

@@ -224,7 +224,6 @@ export function OrdersPage() {
         <StatsSection
           stats={dynamicStats}
           loading={orderReportQuery.isLoading || orderReportQuery.isFetching}
-          className="xl:grid-cols-3 2xl:grid-cols-6"
         />
 
         <PageTabs

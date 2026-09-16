@@ -17,7 +17,12 @@ import { Button } from "@/components/ui/button";
 export default function Home() {
   const t = useTranslations("dashboard");
   const feedbackT = useTranslations("common.feedback");
-  const { restaurantId, branchId, isBranchAdmin, loading: authLoading } = useAuth();
+  const {
+    restaurantId,
+    branchId,
+    isBranchAdmin,
+    loading: authLoading,
+  } = useAuth();
   const scopedDashboardParams = restaurantId
     ? {
         restaurantId,
@@ -37,7 +42,7 @@ export default function Home() {
                 actionLabel: t("management.branchWorkspaceAction"),
                 actionHref: "/branch-workspace",
               }
-            : item
+            : item,
         )
     : managementData;
 
@@ -53,7 +58,10 @@ export default function Home() {
       reports: "reports",
       promotions: "promotions",
     };
-    const key = item.actionHref === "/branch-workspace" ? "branchWorkspace" : keyById[item.id];
+    const key =
+      item.actionHref === "/branch-workspace"
+        ? "branchWorkspace"
+        : keyById[item.id];
 
     if (!key) return item;
 
@@ -108,7 +116,9 @@ export default function Home() {
       iconStyle: "default",
       trend: {
         direction: "up",
-        percentage: t("activeSuffix", { count: overview?.activeCustomers ?? 0 }),
+        percentage: t("activeSuffix", {
+          count: overview?.activeCustomers ?? 0,
+        }),
       },
     },
     {
@@ -119,7 +129,9 @@ export default function Home() {
       iconStyle: "default",
       trend: {
         direction: "up",
-        percentage: t("totalSuffix", { count: overview?.totalDeliverymen ?? 0 }),
+        percentage: t("totalSuffix", {
+          count: overview?.totalDeliverymen ?? 0,
+        }),
       },
     },
     {
@@ -151,19 +163,36 @@ export default function Home() {
       {isError ? (
         <StatePanel
           state="error"
-          title={feedbackT("loadFailed", { subject: feedbackT("subjects.overview") })}
-          description={feedbackT(overview ? "cachedDescription" : "loadFailedDescription")}
-          action={<Button type="button" variant="outline" disabled={isFetching || authLoading} onClick={() => void refetch()}>{feedbackT("retry", { subject: feedbackT("subjects.overview") })}</Button>}
+          title={feedbackT("loadFailed", {
+            subject: feedbackT("subjects.overview"),
+          })}
+          description={feedbackT(
+            overview ? "cachedDescription" : "loadFailedDescription",
+          )}
+          action={
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isFetching || authLoading}
+              onClick={() => void refetch()}
+            >
+              {feedbackT("retry", { subject: feedbackT("subjects.overview") })}
+            </Button>
+          }
           compact
         />
       ) : null}
       {overview ? (
-        <StatsSection stats={statsData} className="xl:grid-cols-5" />
+        <StatsSection stats={statsData} />
       ) : !isError ? (
         <StatePanel
           state={statsLoading ? "loading" : "unavailable"}
-          title={feedbackT(statsLoading ? "loading" : "unavailable", { subject: feedbackT("subjects.overview") })}
-          description={feedbackT(statsLoading ? "loadingDescription" : "unavailableDescription")}
+          title={feedbackT(statsLoading ? "loading" : "unavailable", {
+            subject: feedbackT("subjects.overview"),
+          })}
+          description={feedbackT(
+            statsLoading ? "loadingDescription" : "unavailableDescription",
+          )}
           compact
         />
       ) : null}

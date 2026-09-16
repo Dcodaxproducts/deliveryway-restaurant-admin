@@ -6,7 +6,6 @@ import { createPortal } from "react-dom";
 import Container from "@/components/common/Container";
 import { PageActionGroup } from "@/components/common/PageActionGroup";
 import PageHeader from "@/components/common/PageHeader";
-import { SectionCard } from "@/components/common/SectionCard";
 
 type MenuManagementPageProps = {
   title: string;
@@ -54,7 +53,7 @@ export function MenuManagementPage({
         }
       />
       <MenuManagementActionsTarget.Provider value={actionsTarget}>
-        <SectionCard padding="md">{children}</SectionCard>
+        {children}
       </MenuManagementActionsTarget.Provider>
     </Container>
   );

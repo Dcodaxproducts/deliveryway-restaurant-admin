@@ -241,15 +241,19 @@ const StatCard = ({
   icon: React.ReactNode;
 }) => {
   return (
-    <div className="rounded-[16px] border border-gray-100 bg-white p-4 shadow-sm">
+    <div className="flex min-h-[88px] items-center rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-3.5">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
           {icon}
         </div>
 
         <div className="min-w-0">
-          <p className="text-xl font-semibold text-gray-950">{value}</p>
-          <p className="mt-1 text-sm text-gray-500">{title}</p>
+          <p className="text-base font-semibold tabular-nums text-[var(--ui-text)]">
+            {value}
+          </p>
+          <p className="mt-1 text-xs leading-4 text-[var(--ui-text-muted)]">
+            {title}
+          </p>
         </div>
       </div>
     </div>
@@ -480,10 +484,10 @@ export default function CustomerLoyaltyManager() {
   };
 
   return (
-    <section className="rounded-[20px] bg-white p-4 shadow-sm lg:p-6">
+    <section className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4 sm:p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-950">
+          <h2 className="text-base font-semibold text-[var(--ui-text)]">
             {t("customerLoyalty")}
           </h2>
           <p className="mt-1 text-sm leading-6 text-gray-500">
@@ -584,17 +588,17 @@ export default function CustomerLoyaltyManager() {
           </p>
         </div>
       ) : isLoading ? (
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className="h-[90px] animate-pulse rounded-[16px] bg-gray-100"
+              className="h-[88px] animate-pulse rounded-[var(--ui-radius-card)] bg-gray-100"
             />
           ))}
         </div>
       ) : (
         <>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {stats.map((stat) => (
               <StatCard
                 key={stat.title}
@@ -757,33 +761,54 @@ export default function CustomerLoyaltyManager() {
                         <th className="px-4 py-3">{t("date")}</th>
                         <th className="px-4 py-3">{t("type")}</th>
                         <th className="px-4 py-3 text-right">{t("amount")}</th>
-                        <th className="px-4 py-3 text-right">{t("balanceAfter")}</th>
+                        <th className="px-4 py-3 text-right">
+                          {t("balanceAfter")}
+                        </th>
                         <th className="px-4 py-3">{t("note")}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {walletHistory.map((row: any, index: number) => {
                         const amount = Number(row?.amount || 0);
-                        const isCredit = amount >= 0 || String(row?.type || "").toLowerCase().includes("credit");
-                        const rowCurrency = resolveCurrency(row?.currency || walletCurrency);
+                        const isCredit =
+                          amount >= 0 ||
+                          String(row?.type || "")
+                            .toLowerCase()
+                            .includes("credit");
+                        const rowCurrency = resolveCurrency(
+                          row?.currency || walletCurrency,
+                        );
 
                         return (
-                          <tr key={row?.id || index} className="border-b border-gray-100 transition hover:bg-[#FAFAFA]">
+                          <tr
+                            key={row?.id || index}
+                            className="border-b border-gray-100 transition hover:bg-[#FAFAFA]"
+                          >
                             <td className="px-4 py-4 text-gray-700">
-                              {formatDate(row?.createdAt || row?.date, dateLocale)}
+                              {formatDate(
+                                row?.createdAt || row?.date,
+                                dateLocale,
+                              )}
                             </td>
                             <td className="px-4 py-4">
-                              <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${isCredit ? "bg-green-50 text-green" : "bg-red-50 text-red-600"}`}>
+                              <span
+                                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${isCredit ? "bg-green-50 text-green" : "bg-red-50 text-red-600"}`}
+                              >
                                 {isCredit ? t("credit") : t("debit")}
                               </span>
                             </td>
-                            <td className={`px-4 py-4 text-right font-semibold ${isCredit ? "text-green" : "text-red-600"}`}>
-                              {isCredit ? "+" : "-"}{formatMoney(Math.abs(amount), rowCurrency)}
+                            <td
+                              className={`px-4 py-4 text-right font-semibold ${isCredit ? "text-green" : "text-red-600"}`}
+                            >
+                              {isCredit ? "+" : "-"}
+                              {formatMoney(Math.abs(amount), rowCurrency)}
                             </td>
                             <td className="px-4 py-4 text-right text-gray-700">
                               {formatMoney(row?.balanceAfter || 0, rowCurrency)}
                             </td>
-                            <td className="px-4 py-4 text-gray-600">{row?.note || "-"}</td>
+                            <td className="px-4 py-4 text-gray-600">
+                              {row?.note || "-"}
+                            </td>
                           </tr>
                         );
                       })}
@@ -1006,14 +1031,24 @@ export default function CustomerLoyaltyManager() {
               <div className="grid grid-cols-2 gap-2 rounded-[14px] bg-[#F7F7F7] p-1">
                 <button
                   type="button"
-                  onClick={() => setWalletAdjustmentForm((prev) => ({ ...prev, isCredit: true }))}
+                  onClick={() =>
+                    setWalletAdjustmentForm((prev) => ({
+                      ...prev,
+                      isCredit: true,
+                    }))
+                  }
                   className={`h-[40px] rounded-[11px] text-sm font-semibold transition ${walletAdjustmentForm.isCredit ? "bg-white text-green shadow-sm" : "text-gray-500 hover:bg-white/70"}`}
                 >
                   {t("creditWallet")}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setWalletAdjustmentForm((prev) => ({ ...prev, isCredit: false }))}
+                  onClick={() =>
+                    setWalletAdjustmentForm((prev) => ({
+                      ...prev,
+                      isCredit: false,
+                    }))
+                  }
                   className={`h-[40px] rounded-[11px] text-sm font-semibold transition ${!walletAdjustmentForm.isCredit ? "bg-white text-red-600 shadow-sm" : "text-gray-500 hover:bg-white/70"}`}
                 >
                   {t("debitWallet")}
@@ -1031,7 +1066,10 @@ export default function CustomerLoyaltyManager() {
                 step="0.01"
                 value={walletAdjustmentForm.amount}
                 onChange={(event) =>
-                  setWalletAdjustmentForm((prev) => ({ ...prev, amount: event.target.value }))
+                  setWalletAdjustmentForm((prev) => ({
+                    ...prev,
+                    amount: event.target.value,
+                  }))
                 }
                 placeholder="10.00"
                 className="h-[44px] rounded-[12px] border-gray-300 focus:border-gray-400"
@@ -1045,7 +1083,10 @@ export default function CustomerLoyaltyManager() {
               <textarea
                 value={walletAdjustmentForm.note}
                 onChange={(event) =>
-                  setWalletAdjustmentForm((prev) => ({ ...prev, note: event.target.value }))
+                  setWalletAdjustmentForm((prev) => ({
+                    ...prev,
+                    note: event.target.value,
+                  }))
                 }
                 placeholder={t("walletAdjustmentReason")}
                 rows={4}

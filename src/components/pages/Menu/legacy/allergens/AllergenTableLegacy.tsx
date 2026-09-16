@@ -8,7 +8,6 @@ import {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
-  Filter,
   FlaskConical,
   GripVertical,
   Loader2,
@@ -255,21 +254,10 @@ export default function AllergenTable() {
     return allItems.filter((item) => item.type === "additives").length;
   }, [allItems]);
 
-  const activeTypeOption = useMemo(() => {
-    return (
-      TYPE_FILTER_OPTIONS.find((option) => option.value === typeFilter) ||
-      TYPE_FILTER_OPTIONS[0]
-    );
-  }, [typeFilter]);
   const getFilterLabel = (value: TemplateFilter) => {
     if (value === "all") return t("filterAll");
     if (value === "allergens") return t("allergens");
     return t("additives");
-  };
-  const getFilterHelper = (value: TemplateFilter) => {
-    if (value === "all") return t("helperAll");
-    if (value === "allergens") return t("helperAllergens");
-    return t("helperAdditives");
   };
   const getSortLabel = (value: SortBy) => {
     if (value === "manual") return t("manualOrder");
@@ -574,7 +562,7 @@ export default function AllergenTable() {
         </div>
       </MenuManagementActions>
 
-      <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
         <SummaryCard
           label={t("totalTemplates")}
           value={allItems.length}
@@ -592,36 +580,12 @@ export default function AllergenTable() {
         />
       </div>
 
-      <div className="mb-6 w-full max-w-full overflow-hidden rounded-[20px] border border-gray-100 bg-white p-4 shadow-sm">
-        <div className="mb-4 flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
-              <Filter size={18} />
-            </div>
-
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-gray-900">
-                {t("filtersTitle")}
-              </h3>
-              <p className="mt-1 text-xs text-gray-500">
-                {t("filtersDescription")}{" "}
-                <span className="font-medium text-gray-700">
-                  {getFilterHelper(activeTypeOption.value)}
-                </span>
-              </p>
-            </div>
-          </div>
-
-          {shouldShowRefreshing ? (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-              <Loader2 size={12} className="animate-spin" />
-              {commonT("refreshing")}
-            </span>
-          ) : null}
-        </div>
-
-        <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
-          <div className="min-w-0 xl:col-span-4">
+      <div
+        aria-busy={shouldShowRefreshing}
+        className="mb-4 w-full max-w-full rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-3.5"
+      >
+        <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(240px,2fr)_minmax(250px,1.5fr)_minmax(150px,1fr)_minmax(100px,0.55fr)_auto] xl:items-end">
+          <div className="min-w-0">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("search")}
             </label>
@@ -641,12 +605,12 @@ export default function AllergenTable() {
                     handleManualSearch();
                   }
                 }}
-                className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                className="h-10 w-full min-w-0 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] pl-11 pr-4 text-sm text-[var(--ui-text)] outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
               />
             </div>
           </div>
 
-          <div className="min-w-0 xl:col-span-3">
+          <div className="min-w-0">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("type")}
             </label>
@@ -663,7 +627,7 @@ export default function AllergenTable() {
             />
           </div>
 
-          <div className="min-w-0 xl:col-span-2">
+          <div className="min-w-0">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("sortBy")}
             </label>
@@ -674,7 +638,7 @@ export default function AllergenTable() {
                 setSortBy(event.target.value as SortBy);
                 setPage(1);
               }}
-              className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+              className="h-10 w-full min-w-0 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] px-4 text-sm text-[var(--ui-text)] outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -684,7 +648,7 @@ export default function AllergenTable() {
             </FormSelect>
           </div>
 
-          <div className="min-w-0 xl:col-span-1">
+          <div className="min-w-0">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("order")}
             </label>
@@ -696,30 +660,37 @@ export default function AllergenTable() {
                 setSortOrder(event.target.value as SortOrder);
                 setPage(1);
               }}
-              className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-3 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:text-gray-400"
+              className="h-10 w-full min-w-0 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] px-3 text-sm text-[var(--ui-text)] outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:text-gray-400"
             >
               <option value="ASC">ASC</option>
               <option value="DESC">DESC</option>
             </FormSelect>
           </div>
 
-          <Button
-            onClick={handleManualSearch}
-            className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm hover:bg-primary/90 md:w-full xl:col-span-1"
-          >
-            {commonT("search")}
-          </Button>
+          <div className="flex min-w-0 items-center gap-2 md:col-span-2 xl:col-span-1">
+            <Button
+              onClick={handleManualSearch}
+              className="h-10 min-w-[88px] flex-1 xl:flex-none"
+            >
+              {commonT("search")}
+            </Button>
 
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!hasActiveFilters && !isFetching}
-            onClick={handleResetFilters}
-            className="h-[44px] rounded-[14px] border-gray-200 px-4 text-gray-700 md:w-full xl:col-span-1"
-          >
-            <RefreshCcw size={15} className="mr-2" />
-            {commonT("reset")}
-          </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!hasActiveFilters && !isFetching}
+              onClick={handleResetFilters}
+              className="h-10 min-w-[96px] flex-1 xl:flex-none"
+            >
+              <RefreshCcw size={15} />
+              {commonT("reset")}
+            </Button>
+            {shouldShowRefreshing ? (
+              <span className="sr-only" aria-live="polite">
+                {commonT("refreshing")}
+              </span>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -1033,16 +1004,18 @@ function SummaryCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-4 rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
+    <div className="flex min-h-[88px] items-center gap-3 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-3.5">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-[var(--ui-radius-control)] bg-[var(--ui-brand-soft)] text-primary">
         {icon}
       </div>
 
       <div>
-        <p className="text-2xl font-semibold leading-none text-gray-950">
+        <p className="text-base font-semibold leading-none tabular-nums text-[var(--ui-text)]">
           {value}
         </p>
-        <p className="mt-1 text-sm text-gray-500">{label}</p>
+        <p className="mt-1 text-xs leading-4 text-[var(--ui-text-muted)]">
+          {label}
+        </p>
       </div>
     </div>
   );

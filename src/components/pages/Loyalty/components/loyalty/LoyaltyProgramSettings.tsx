@@ -70,15 +70,19 @@ const StatCard = ({
   icon: React.ReactNode;
 }) => {
   return (
-    <div className="rounded-[16px] border border-gray-100 bg-white p-4 shadow-sm">
+    <div className="flex min-h-[88px] items-center rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-3.5">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
           {icon}
         </div>
 
         <div className="min-w-0">
-          <p className="text-xl font-semibold text-gray-950">{value}</p>
-          <p className="mt-1 text-sm text-gray-500">{title}</p>
+          <p className="text-base font-semibold tabular-nums text-[var(--ui-text)]">
+            {value}
+          </p>
+          <p className="mt-1 text-xs leading-4 text-[var(--ui-text-muted)]">
+            {title}
+          </p>
         </div>
       </div>
     </div>
@@ -296,15 +300,12 @@ export default function LoyaltyProgramSettings({
   };
 
   return (
-    <section className="rounded-[20px] bg-white p-4 shadow-sm lg:p-6">
+    <section className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4 sm:p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-950">
+          <h2 className="text-base font-semibold text-[var(--ui-text)]">
             {t("programSettingsTitle")}
           </h2>
-          <p className="mt-1 text-sm leading-6 text-gray-500">
-            {t("programSettingsDescription")}
-          </p>
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -313,7 +314,7 @@ export default function LoyaltyProgramSettings({
             variant="outline"
             onClick={() => refetch()}
             disabled={isLoading || isFetching || isUpdating}
-            className="h-[42px] rounded-[12px]"
+            className="rounded-[var(--ui-radius-control)]"
           >
             {isFetching ? (
               <Loader2 size={16} className="mr-2 animate-spin" />
@@ -327,7 +328,7 @@ export default function LoyaltyProgramSettings({
             type="button"
             onClick={handleSubmit}
             disabled={readOnly || isLoading || isUpdating || !restaurantId}
-            className="h-[42px] rounded-[12px] bg-primary px-5 text-white hover:bg-primary/90"
+            className="rounded-[var(--ui-radius-control)] bg-primary px-5 text-white hover:bg-primary/90"
           >
             {isUpdating ? (
               <Loader2 size={16} className="mr-2 animate-spin" />
@@ -346,16 +347,16 @@ export default function LoyaltyProgramSettings({
       ) : null}
 
       {isLoading ? (
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className="h-[90px] animate-pulse rounded-[16px] bg-gray-100"
+              className="h-[88px] animate-pulse rounded-[var(--ui-radius-card)] bg-gray-100"
             />
           ))}
         </div>
       ) : (
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {stats.map((stat) => (
             <StatCard
               key={stat.title}

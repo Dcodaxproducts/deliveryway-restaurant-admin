@@ -154,7 +154,7 @@ it("renders genuine successful empty employee data and zero stats", () => {
   harness.state = [];
   harness.result.data = { data: { totalEmployees: 0, activeEmployees: 0, inactiveEmployees: 0, totalRoles: 0 } };
   const stats = nodes(run(EmployeesSettingsPage)).find((node) => node.type === StatsSection)!;
-  expect(renderToStaticMarkup(stats).match(/>0<\/p>/g)).toHaveLength(4);
+  expect(renderToStaticMarkup(stats).match(/>0<\/(?:div|p)>/g)).toHaveLength(4);
 });
 
 it.each([false, true])("preserves employee list and stats branch scope (branchAdmin=%s)", (branchAdmin) => {

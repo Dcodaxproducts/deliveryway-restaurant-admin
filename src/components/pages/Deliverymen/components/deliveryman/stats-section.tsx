@@ -1,7 +1,7 @@
 "use client";
 
-import { Bike, UserCheck, UserX, Wifi } from "lucide-react";
-import { cn } from "@/lib/utils";
+import StatGrid from "@/components/common/stats-section";
+import type { StatItem } from "@/types/stats";
 import { useTranslations } from "next-intl";
 
 type DeliverymanStatusBreakdown = {
@@ -32,72 +32,38 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
       (item) => item.status?.toUpperCase() === "AVAILABLE",
     )?.count ?? 0;
 
-  const cards = [
+  const cards: StatItem[] = [
     {
+      _id: "total-deliverymen",
       title: t("stats.totalDeliverymen"),
       value: totalDeliverymen,
-      icon: Bike,
+      icon: "users",
+      iconStyle: "default",
     },
     {
+      _id: "active-deliverymen",
       title: t("stats.activeDeliverymen"),
       value: activeDeliverymen,
-      icon: UserCheck,
+      icon: "completed",
+      iconStyle: "default",
     },
     {
+      _id: "inactive-deliverymen",
       title: t("stats.inactiveDeliverymen"),
       value: inactiveDeliverymen,
-      icon: UserX,
+      icon: "cancelled",
+      iconStyle: "danger",
     },
     {
+      _id: "available-deliverymen",
       title: t("stats.availableNow"),
       value: availableDeliverymen,
-      icon: Wifi,
+      icon: "ongoing",
+      iconStyle: "default",
     },
   ];
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {cards.map((stat, index) => {
-        const Icon = stat.icon;
-
-        return (
-          <div
-            key={index}
-            className="bg-white p-6 rounded-[14px] border border-[#EDEFF2] flex items-center gap-[24px]"
-          >
-            <div
-              className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center bg-gray/10 text-primary shrink-0",
-              )}
-            >
-              {loading ? (
-                <div className="h-5 w-5 animate-pulse rounded-full bg-gray-200" />
-              ) : (
-                <Icon size={22} />
-              )}
-            </div>
-
-            <div className="space-y-2 flex-1">
-              {loading ? (
-                <>
-                  <div className="h-8 w-16 rounded-md bg-gray-200 animate-pulse" />
-                  <div className="h-4 w-28 rounded-md bg-gray-200 animate-pulse" />
-                </>
-              ) : (
-                <>
-                  <p className="text-[32px] font-semibold text-dark leading-none">
-                    {stat.value}
-                  </p>
-
-                  <p className="text-base text-gray">{stat.title}</p>
-                </>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
+  return <StatGrid stats={cards} loading={loading} />;
 };
 
 export default StatsSection;

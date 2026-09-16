@@ -12,7 +12,7 @@ export type StatItem = {
   title: string;
   value: string | number;
   icon: StatIcon;
-  trend: {
+  trend?: {
     direction: "up" | "down";
     percentage: string;
   };
