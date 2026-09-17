@@ -40,6 +40,7 @@ import {
   useUpdateCoupon,
 } from "@/hooks/usePromotions";
 import { getLocalTodayDateTimeInputValue } from "@/lib/date-input";
+import { getApiErrorMessage } from "@/lib/errors";
 import AsyncMultiSelect from "@/components/ui/AsyncMultiSelect";
 import { getMenuItems } from "@/services/menu/menu.api";
 import { getMenuCategories } from "@/services/menu/categories/menu-categories.api";
@@ -281,6 +282,8 @@ export default function AddNewCoupon() {
         isEdit ? t("toasts.couponUpdated") : t("toasts.couponCreated"),
       );
       router.push("/promotion-management");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, t("toasts.somethingWentWrong")));
     } finally {
       setSaving(false);
     }
@@ -588,7 +591,12 @@ export default function AddNewCoupon() {
 
         <FormActions
           secondary={
-            <Button type="button" variant="outline" onClick={resetCouponForm} disabled={saving}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={resetCouponForm}
+              disabled={saving}
+            >
               {t("actions.reset")}
             </Button>
           }

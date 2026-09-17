@@ -251,13 +251,25 @@ export type CouponQueryParams = {
   limit?: number;
 };
 
+type CouponFormStatePayload = Partial<CouponPayload> & {
+  selectedMenuItems?: unknown;
+  selectedCategories?: unknown;
+};
+
+const toCouponRequestBody = (payload: CouponFormStatePayload) => {
+  const body = { ...payload };
+  delete body.selectedMenuItems;
+  delete body.selectedCategories;
+  return body;
+};
+
 export const getCoupons = async (params?: CouponQueryParams) => {
   const response = await api.get("/coupons", { params });
   return response.data;
 };
 
 export const createCoupon = async (payload: Partial<CouponPayload>) => {
-  const response = await api.post("/coupons", payload);
+  const response = await api.post("/coupons", toCouponRequestBody(payload));
   return response.data;
 };
 
@@ -265,7 +277,7 @@ export const updateCoupon = async (
   id: string,
   payload: Partial<CouponPayload>,
 ) => {
-  const body = { ...payload };
+  const body = toCouponRequestBody(payload);
   delete body.restaurantId;
 
   const response = await api.patch(`/coupons/${id}`, body);
