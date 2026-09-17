@@ -49,7 +49,11 @@ const secondaryNavigationClassName =
 
 type PartnerSidebarItemProps = {
   item: MenuItem;
-  isActiveRoute: (href?: string, children?: MenuItem[]) => boolean;
+  isActiveRoute: (
+    href?: string,
+    children?: MenuItem[],
+    siblings?: MenuItem[],
+  ) => boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onNavigate: () => void;
@@ -120,7 +124,11 @@ function PartnerSidebarItem({
                 <SidebarMenuSubItem key={child.href ?? child.title}>
                   <SidebarMenuSubButton
                     asChild
-                    isActive={isActiveRoute(child.href, child.children)}
+                    isActive={isActiveRoute(
+                      child.href,
+                      child.children,
+                      item.children,
+                    )}
                     className={secondaryNavigationClassName}
                   >
                     <Link href={child.href ?? "#"} onClick={onNavigate}>
@@ -218,9 +226,17 @@ function PartnerSidebarContent(): ReactElement {
   const mainItems = allowedItems.filter((item) => item.section === "main");
   const accountItems = allowedItems.filter((item) => item.section === "account");
 
-  const isActiveRoute = (href?: string, children?: MenuItem[]): boolean => {
+  const isActiveRoute = (
+    href?: string,
+    children?: MenuItem[],
+    siblings?: MenuItem[],
+  ): boolean => {
     if (!pathname) return false;
-    if (children?.some((child) => isActiveRoute(child.href, child.children))) {
+    if (
+      children?.some((child) =>
+        isActiveRoute(child.href, child.children, children),
+      )
+    ) {
       return true;
     }
     if (!href) return false;
@@ -233,6 +249,17 @@ function PartnerSidebarContent(): ReactElement {
         : pathname === hrefPath || pathname.startsWith(`${hrefPath}/`);
 
     if (!pathMatches) return false;
+
+    const hasMoreSpecificSibling = siblings?.some((sibling) => {
+      if (!sibling.href || sibling.href === href) return false;
+      const [siblingPath] = sibling.href.split("?");
+      return (
+        siblingPath.length > hrefPath.length &&
+        (pathname === siblingPath || pathname.startsWith(`${siblingPath}/`))
+      );
+    });
+
+    if (hasMoreSpecificSibling) return false;
     if (!hrefTab) return true;
 
     return (searchParams.get("tab") || "all") === hrefTab;
@@ -243,7 +270,7 @@ function PartnerSidebarContent(): ReactElement {
       ? menuState.openKey
       : allowedItems.find((item) =>
           item.children?.some((child) =>
-            isActiveRoute(child.href, child.children),
+            isActiveRoute(child.href, child.children, item.children),
           ),
         )?.title ?? null;
 

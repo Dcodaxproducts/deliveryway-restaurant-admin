@@ -4,10 +4,13 @@ import { describe, expect, it, vi } from "vitest";
 import { Sidebar } from "@/components/layout/sidebar/Sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
+let currentPathname = "/";
+let currentSearchParams = new URLSearchParams();
+
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/",
+  usePathname: () => currentPathname,
   useRouter: () => ({ push: vi.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => currentSearchParams,
 }));
 
 vi.mock("next-intl", () => ({
@@ -67,4 +70,30 @@ describe("Partner shadcn sidebar", () => {
     expect(markup).toContain("[scrollbar-width:none]");
     expect(markup).toContain("group-data-[collapsible=icon]:hidden");
   });
+
+  it.each([
+    ["/menu/categories", "/menu", "/menu/categories"],
+    [
+      "/promotion-management/gift-cards",
+      "/promotion-management",
+      "/promotion-management/gift-cards",
+    ],
+  ])(
+    "activates only the most specific child for %s",
+    (pathname, parentHref, childHref) => {
+      currentPathname = pathname;
+      currentSearchParams = new URLSearchParams();
+
+      const markup = renderSidebar(true);
+      const parentLink = markup.match(
+        new RegExp(`<a[^>]*href="${parentHref}"[^>]*>`),
+      )?.[0];
+      const childLink = markup.match(
+        new RegExp(`<a[^>]*href="${childHref}"[^>]*>`),
+      )?.[0];
+
+      expect(parentLink).toContain('data-active="false"');
+      expect(childLink).toContain('data-active="true"');
+    },
+  );
 });
