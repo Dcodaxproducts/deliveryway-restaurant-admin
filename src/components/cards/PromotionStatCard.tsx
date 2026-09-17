@@ -15,10 +15,10 @@ export default function PromotionStatCard({
   loading = false,
 }: Props) {
   return (
-    <div className="bg-white border border-[#EDEFF2] rounded-xl p-6 flex items-center gap-4">
+    <div data-slot="stat-card" className="flex min-h-[88px] items-center gap-3 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-3.5">
       <div
         className={cn(
-          "w-10 h-10 rounded-full bg-[#F9F9F9] flex items-center justify-center text-primary shrink-0"
+          "flex size-9 shrink-0 items-center justify-center rounded-[var(--ui-radius-control)] bg-[var(--ui-brand-soft)] text-primary"
         )}
       >
         {loading ? (
@@ -36,8 +36,8 @@ export default function PromotionStatCard({
           </>
         ) : (
           <>
-            <p className="text-2xl font-semibold text-dark">{value ?? 0}</p>
-            <p className="text-sm text-gray-500">{label}</p>
+            <p className="text-base font-semibold leading-none tabular-nums text-[var(--ui-text)]">{value ?? 0}</p>
+            <p className="mt-1 text-[11px] leading-4 text-[var(--ui-text-muted)]">{label}</p>
           </>
         )}
       </div>

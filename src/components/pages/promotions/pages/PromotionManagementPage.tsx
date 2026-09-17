@@ -12,6 +12,8 @@ import PromotionTabs from "@/components/pages/Promotions/components/PromotionMan
 import PromotionsPage from "@/components/pages/Promotions/components/PromotionManagement/PromotionsPage/PromotionsPage";
 import HappyHourPage from "@/components/pages/Promotions/components/PromotionManagement/HappyHourPage/HappyHourPage";
 import { useAuth } from "@/hooks/useAuth";
+import { SectionCard } from "@/components/common/SectionCard";
+import { StatePanel } from "@/components/common/EmptyState";
 
 type PromotionTabValue = "overview" | "coupons" | "promotions" | "happy-hours";
 
@@ -94,7 +96,15 @@ const PromotionManagementPage = () => {
     [pathname, router, searchParams]
   );
 
-  if (authLoading || isBranchAdmin) {
+  if (authLoading) {
+    return (
+      <Container>
+        <StatePanel state="loading" />
+      </Container>
+    );
+  }
+
+  if (isBranchAdmin) {
     return null;
   }
 
@@ -105,7 +115,7 @@ const PromotionManagementPage = () => {
         description={t("managementDescription")}
       />
 
-      <div className="flex w-full flex-col gap-[32px] rounded-[14px] bg-white p-[30px]">
+      <SectionCard className="flex w-full flex-col gap-6" padding="md">
         <PromotionTabs
           tabs={PROMOTION_TABS.map((tab) => ({
             label: t(tab.labelKey),
@@ -128,7 +138,7 @@ const PromotionManagementPage = () => {
         {activeTab === "promotions" ? <PromotionsPage /> : null}
 
         {activeTab === "happy-hours" ? <HappyHourPage /> : null}
-      </div>
+      </SectionCard>
     </Container>
   );
 };

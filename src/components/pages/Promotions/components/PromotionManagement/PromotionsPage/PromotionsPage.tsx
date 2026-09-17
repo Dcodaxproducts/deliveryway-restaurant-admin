@@ -9,16 +9,42 @@ import PromotionsTable from "./table";
 import { useGetAdminPromotionCampaigns } from "@/hooks/usePromotions";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslations } from "next-intl";
+import { StatePanel } from "@/components/common/EmptyState";
 
-const getListFromResponse = (response: any) => {
-  if (Array.isArray(response?.data)) return response.data;
-  if (Array.isArray(response?.data?.data)) return response.data.data;
+type CampaignSummary = Record<string, unknown> & {
+  id: string;
+  status?: string;
+  isActive?: boolean;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const toCampaigns = (value: unknown): CampaignSummary[] =>
+  Array.isArray(value)
+    ? value.filter(
+        (item): item is CampaignSummary => isRecord(item) && typeof item.id === "string",
+      )
+    : [];
+
+const getListFromResponse = (response: unknown) => {
+  if (!isRecord(response)) return [];
+  if (Array.isArray(response.data)) return toCampaigns(response.data);
+  if (isRecord(response.data) && Array.isArray(response.data.data)) {
+    return toCampaigns(response.data.data);
+  }
   return [];
 };
 
-const getMetaFromResponse = (response: any) => {
-  return response?.meta ?? response?.data?.meta ?? {};
+const getMetaFromResponse = (response: unknown): Record<string, unknown> => {
+  if (!isRecord(response)) return {};
+  if (isRecord(response.meta)) return response.meta;
+  if (isRecord(response.data) && isRecord(response.data.meta)) return response.data.meta;
+  return {};
 };
+
+const metaNumber = (meta: Record<string, unknown>, key: string, fallback: number) =>
+  typeof meta[key] === "number" ? meta[key] : fallback;
 
 export default function PromotionsPage() {
   const t = useTranslations("promotions");
@@ -28,7 +54,7 @@ export default function PromotionsPage() {
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  const { data, isLoading, isFetching } = useGetAdminPromotionCampaigns({
+  const { data, isLoading, isFetching, isError } = useGetAdminPromotionCampaigns({
     restaurantId,
     branchId,
     page,
@@ -40,18 +66,18 @@ export default function PromotionsPage() {
   const loading = isLoading || isFetching;
 
   const stats = useMemo(() => {
-    const total = meta?.total ?? promotions.length;
+    const total = metaNumber(meta, "total", promotions.length);
 
     const active = promotions.filter(
-      (item: any) => item?.status === "ACTIVE" || item?.isActive
+      (item) => item.status === "ACTIVE" || item.isActive
     ).length;
 
     const upcoming = promotions.filter(
-      (item: any) => item?.status === "SCHEDULED"
+      (item) => item.status === "SCHEDULED"
     ).length;
 
     const expired = promotions.filter(
-      (item: any) => item?.status === "EXPIRED"
+      (item) => item.status === "EXPIRED"
     ).length;
 
     return {
@@ -60,7 +86,7 @@ export default function PromotionsPage() {
       upcoming,
       expired,
     };
-  }, [promotions, meta?.total]);
+  }, [promotions, meta]);
 
   return (
     <div className="mt-1 space-y-10">
@@ -102,19 +128,23 @@ export default function PromotionsPage() {
         />
       </div>
 
+      {isError ? (
+        <StatePanel state="error" />
+      ) : (
       <PromotionsTable
         promotions={promotions}
         loading={loading}
         meta={{
-          page: meta?.page ?? page,
-          limit: meta?.limit ?? limit,
-          total: meta?.total ?? 0,
-          totalPages: meta?.totalPages ?? 1,
-          hasNext: Boolean(meta?.hasNext),
-          hasPrevious: Boolean(meta?.hasPrevious),
+          page: metaNumber(meta, "page", page),
+          limit: metaNumber(meta, "limit", limit),
+          total: metaNumber(meta, "total", 0),
+          totalPages: metaNumber(meta, "totalPages", 1),
+          hasNext: Boolean(meta.hasNext),
+          hasPrevious: Boolean(meta.hasPrevious),
         }}
         onPageChange={setPage}
       />
+      )}
     </div>
   );
 }

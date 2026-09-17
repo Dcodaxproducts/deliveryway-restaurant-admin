@@ -2,11 +2,12 @@
 
 import { FormSelect } from "@/components/ui/form-select";
 
-import { Filter, Loader2, RefreshCcw, Search } from "lucide-react";
+import { Loader2, RefreshCcw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
+import { FilterBar } from "@/components/common/FilterBar";
 
 export type GiftCardsFilterState = {
   search: string;
@@ -80,19 +81,31 @@ export default function GiftCardsFilters({
   };
 
   return (
-    <div className="w-full max-w-full overflow-hidden rounded-[20px] border border-gray-100 bg-white p-4 shadow-sm">
-      <div className="mb-4 flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
-            <Filter size={18} />
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-gray-900">{t("filtersTitle")}</h3>
-            <p className="mt-1 text-xs text-gray-500">{t("filtersDescription")}</p>
+    <FilterBar
+      search={
+        <div className="min-w-0">
+          <label className="mb-1.5 block text-xs font-medium text-[var(--ui-text-muted)]">
+            {commonT("search")}
+          </label>
+          <div className="relative min-w-0">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ui-text-subtle)]"
+              size={17}
+            />
+            <input
+              placeholder={t("searchPlaceholder")}
+              value={searchValue}
+              onChange={(event) => setSearchValue(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") handleSearch();
+              }}
+              className="h-10 w-full min-w-0 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] pl-10 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-[var(--ui-focus-ring)]"
+            />
           </div>
         </div>
-
-        <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs text-gray-500">
+      }
+      resultCount={
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
             {totalCount > 0
               ? t("showingOf", { visible: visibleCount, total: totalCount })
@@ -105,39 +118,16 @@ export default function GiftCardsFilters({
             </span>
           ) : null}
         </div>
-      </div>
-
-      <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
-        <div className="min-w-0 xl:col-span-4">
-          <label className="mb-1.5 block text-xs font-medium text-gray-600">
-            {commonT("search")}
-          </label>
-          <div className="relative min-w-0">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              size={18}
-            />
-            <input
-              placeholder={t("searchPlaceholder")}
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") handleSearch();
-              }}
-              className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
-            />
-          </div>
-        </div>
-
-        <FilterSelect
-          label={t("lifecycleLabel")}
-          value={filters.lifecycle}
-          options={lifecycleOptions}
-          onChange={(lifecycle) => onFiltersChange({ lifecycle })}
-          className="xl:col-span-2"
-        />
-
-        <div className="min-w-0 xl:col-span-3">
+      }
+      filters={
+        <>
+          <FilterSelect
+            label={t("lifecycleLabel")}
+            value={filters.lifecycle}
+            options={lifecycleOptions}
+            onChange={(lifecycle) => onFiltersChange({ lifecycle })}
+          />
+          <div className="min-w-44">
           <label className="mb-1.5 block text-xs font-medium text-gray-600">
             {commonT("branch")}
           </label>
@@ -146,7 +136,7 @@ export default function GiftCardsFilters({
               type="button"
               variant="outline"
               disabled
-              className="h-[44px] w-full justify-start rounded-[14px] border-gray-200 bg-[#FAFAFA] px-3 text-gray-500"
+              className="w-full justify-start"
             >
               <span className="truncate">{branchName || commonT("currentBranch")}</span>
             </Button>
@@ -157,7 +147,7 @@ export default function GiftCardsFilters({
                 const value = event.target.value;
                 onFiltersChange({ branchId: value === "ALL" ? "" : value });
               }}
-              className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-3 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+              className="h-10 w-full min-w-0 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-[var(--ui-focus-ring)]"
             >
               <option value="ALL">{commonT("allBranches")}</option>
               {branchOptions.map((branch) => (
@@ -167,28 +157,26 @@ export default function GiftCardsFilters({
               ))}
             </FormSelect>
           )}
-        </div>
-
-        <Button
-          type="button"
-          onClick={handleSearch}
-          className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm hover:bg-primary/90 md:w-full xl:col-span-1"
-        >
-          {commonT("search")}
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          disabled={!hasActiveFilters && !isFetching}
-          onClick={handleReset}
-          className="h-[44px] rounded-[14px] border-gray-200 px-4 text-gray-700 md:w-full xl:col-span-2"
-        >
-          <RefreshCcw size={15} className="mr-2" />
-          {commonT("reset")}
-        </Button>
-      </div>
-    </div>
+          </div>
+        </>
+      }
+      actions={
+        <>
+          <Button type="button" onClick={handleSearch}>
+            {commonT("search")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!hasActiveFilters && !isFetching}
+            onClick={handleReset}
+          >
+            <RefreshCcw size={15} />
+            {commonT("reset")}
+          </Button>
+        </>
+      }
+    />
   );
 }
 
@@ -215,7 +203,7 @@ function FilterSelect({
       <FormSelect
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-3 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+        className="h-10 min-w-40 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-[var(--ui-focus-ring)]"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

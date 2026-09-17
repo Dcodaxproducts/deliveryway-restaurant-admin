@@ -35,10 +35,11 @@ export default function GiftCardsHeader({
   const visibilityDisabled = visibilityLoading || visibilityUpdating;
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <Header title={t("title")} description={t("description")} />
-
-      <div className="flex flex-wrap items-center gap-2">
+    <Header
+      title={t("title")}
+      description={t("description")}
+      actions={
+        <>
         {canManageVisibility ? (
           <label className="flex h-[42px] items-center gap-3 rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700">
             <span>{t("websiteVisibility")}</span>
@@ -58,7 +59,6 @@ export default function GiftCardsHeader({
           variant="outline"
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="h-[42px] rounded-[12px]"
         >
           <RefreshCw
             size={16}
@@ -69,12 +69,12 @@ export default function GiftCardsHeader({
         <Button
           type="button"
           onClick={() => router.push("/promotion-management/gift-cards/add")}
-          className="h-[42px] rounded-[12px] bg-primary text-white hover:bg-primary/90"
         >
           <Plus size={16} className="mr-2" />
           {t("addGiftCard")}
         </Button>
-      </div>
-    </div>
+        </>
+      }
+    />
   );
 }

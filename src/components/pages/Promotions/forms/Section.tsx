@@ -1,8 +1,5 @@
 "use client";
-import { Info } from "lucide-react";
-import clsx from "clsx";
-
-import { MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
+import { FormSection } from "@/components/common/FormLayout";
 
 interface SectionProps {
   label?: string;
@@ -26,33 +23,15 @@ export default function Section({
   withMargin = false, // ⭐ default adds spacing between sections
 }: SectionProps) {
   return (
-    <div
-      className={clsx(
-        "grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-12 bg-white rounded-[14px]",
-        padded && "p-8",     // use tailwind scale (better than p-[30px])
-        withMargin && "mb-9", // ⭐ bottom spacing
-        className
-      )}
+    <FormSection
+      title={label}
+      padding={padded ? "lg" : "none"}
+      className={`${withMargin ? "mb-5" : ""} ${className || ""}`}
+      fieldsClassName={contentClassName}
     >
-      {/* Label */}
-      {label && (
-        <div
-          className={clsx(
-            `space-y-14 ${MUTED_TEXT_SM_CLASS} pt-1`,
-            labelClassName
-          )}
-        >
-          <div className="flex items-center gap-2">
-            <Info size={14} />
-            <span className="font-medium">{label}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Content */}
-      <div className={clsx("space-y-6", contentClassName)}>
+      <div className={`space-y-6 ${labelClassName || ""}`}>
         {children}
       </div>
-    </div>
+    </FormSection>
   );
 }

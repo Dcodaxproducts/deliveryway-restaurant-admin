@@ -2691,6 +2691,7 @@
       "everyDay": "Jeden Tag"
     },
     "actions": {
+      "view": "Ansehen",
       "edit": "Bearbeiten",
       "delete": "Löschen",
       "close": "Schließen",

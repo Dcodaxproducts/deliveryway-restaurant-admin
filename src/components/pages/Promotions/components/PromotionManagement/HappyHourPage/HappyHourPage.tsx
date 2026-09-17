@@ -9,16 +9,42 @@ import HappyHoursTable from "./table";
 import { useGetAdminHappyHours } from "@/hooks/usePromotions";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslations } from "next-intl";
+import { StatePanel } from "@/components/common/EmptyState";
 
-const getListFromResponse = (response: any) => {
-  if (Array.isArray(response?.data)) return response.data;
-  if (Array.isArray(response?.data?.data)) return response.data.data;
+type HappyHourSummary = Record<string, unknown> & {
+  id: string;
+  status?: string;
+  isActive?: boolean;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const toHappyHours = (value: unknown): HappyHourSummary[] =>
+  Array.isArray(value)
+    ? value.filter(
+        (item): item is HappyHourSummary => isRecord(item) && typeof item.id === "string",
+      )
+    : [];
+
+const getListFromResponse = (response: unknown) => {
+  if (!isRecord(response)) return [];
+  if (Array.isArray(response.data)) return toHappyHours(response.data);
+  if (isRecord(response.data) && Array.isArray(response.data.data)) {
+    return toHappyHours(response.data.data);
+  }
   return [];
 };
 
-const getMetaFromResponse = (response: any) => {
-  return response?.meta ?? response?.data?.meta ?? {};
+const getMetaFromResponse = (response: unknown): Record<string, unknown> => {
+  if (!isRecord(response)) return {};
+  if (isRecord(response.meta)) return response.meta;
+  if (isRecord(response.data) && isRecord(response.data.meta)) return response.data.meta;
+  return {};
 };
+
+const metaNumber = (meta: Record<string, unknown>, key: string, fallback: number) =>
+  typeof meta[key] === "number" ? meta[key] : fallback;
 
 export default function HappyHoursPage() {
   const t = useTranslations("promotions");
@@ -28,7 +54,7 @@ export default function HappyHoursPage() {
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  const { data, isLoading, isFetching } = useGetAdminHappyHours({
+  const { data, isLoading, isFetching, isError } = useGetAdminHappyHours({
     restaurantId,
     branchId,
     page,
@@ -40,18 +66,18 @@ export default function HappyHoursPage() {
   const loading = isLoading || isFetching;
 
   const stats = useMemo(() => {
-    const total = meta?.total ?? happyHours.length;
+    const total = metaNumber(meta, "total", happyHours.length);
 
     const active = happyHours.filter(
-      (item: any) => item?.status === "ACTIVE" || item?.isActive
+      (item) => item.status === "ACTIVE" || item.isActive
     ).length;
 
     const upcoming = happyHours.filter(
-      (item: any) => item?.status === "SCHEDULED"
+      (item) => item.status === "SCHEDULED"
     ).length;
 
     const expired = happyHours.filter(
-      (item: any) => item?.status === "EXPIRED"
+      (item) => item.status === "EXPIRED"
     ).length;
 
     return {
@@ -60,7 +86,7 @@ export default function HappyHoursPage() {
       upcoming,
       expired,
     };
-  }, [happyHours, meta?.total]);
+  }, [happyHours, meta]);
 
   return (
     <div className="mt-1 space-y-10">
@@ -102,19 +128,23 @@ export default function HappyHoursPage() {
         />
       </div>
 
+      {isError ? (
+        <StatePanel state="error" />
+      ) : (
       <HappyHoursTable
         happyHours={happyHours}
         loading={loading}
         meta={{
-          page: meta?.page ?? page,
-          limit: meta?.limit ?? limit,
-          total: meta?.total ?? 0,
-          totalPages: meta?.totalPages ?? 1,
-          hasNext: Boolean(meta?.hasNext),
-          hasPrevious: Boolean(meta?.hasPrevious),
+          page: metaNumber(meta, "page", page),
+          limit: metaNumber(meta, "limit", limit),
+          total: metaNumber(meta, "total", 0),
+          totalPages: metaNumber(meta, "totalPages", 1),
+          hasNext: Boolean(meta.hasNext),
+          hasPrevious: Boolean(meta.hasPrevious),
         }}
         onPageChange={setPage}
       />
+      )}
     </div>
   );
 }

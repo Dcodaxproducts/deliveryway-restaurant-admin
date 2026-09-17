@@ -10,7 +10,10 @@ import StatsSection from "@/components/common/stats-section";
 import Container from "@/components/common/Container";
 import Header from "@/components/common/PageHeader";
 import RevenueAnalytics from "@/components/pages/Dashboard/components/dashboard/revenue-trend-section";
-import TabButton from "@/components/ui/TabButton";
+import { PageTabs } from "@/components/common/PageTabs";
+import { SectionCard } from "@/components/common/SectionCard";
+import { FilterBar } from "@/components/common/FilterBar";
+import { StatePanel } from "@/components/common/EmptyState";
 import OrdersGraph from "@/components/pages/Reports/components/graphs/orders-graph";
 import type { TrendRange } from "@/components/pages/Reports/components/graphs/orders-graph";
 import { GeneratedInvoiceHistoryTable } from "@/components/pages/Orders/components/orders/GeneratedInvoiceHistoryTable";
@@ -84,6 +87,7 @@ export default function Orders() {
     data: financialReportResponse,
     isLoading: financialLoading,
     isFetching: financialFetching,
+    isError: financialError,
   } = useGetFinancialReport(
     scopedReportParams
       ? { ...scopedReportParams, ...reportDateRange }
@@ -94,6 +98,7 @@ export default function Orders() {
     data: ordersReportResponse,
     isLoading: ordersLoading,
     isFetching: ordersFetching,
+    isError: ordersError,
   } = useGetOrdersReport(
     scopedReportParams
       ? { ...scopedReportParams, ...reportDateRange }
@@ -154,6 +159,12 @@ export default function Orders() {
       : activeTab === "financial"
         ? financialLoading || financialFetching
         : ordersLoading || ordersFetching);
+  const activeError =
+    activeTab === "invoice-history"
+      ? subscriptionInvoicesQuery.isError
+      : activeTab === "financial"
+        ? financialError
+        : ordersError;
 
   const handleDownloadActiveReportPdf = () => {
     if (!restaurantId) {
@@ -216,122 +227,106 @@ export default function Orders() {
 
   return (
     <Container>
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <Header title={title} description={description} />
-
-        <div className="flex flex-col gap-3 sm:flex-row">
-          {activeTab !== "invoice-history" ? (
+      <Header
+        title={title}
+        description={description}
+        actions={
+          activeTab !== "invoice-history" ? (
             <Button
               type="button"
               variant="outline"
               disabled={activeLoading || !restaurantId}
               onClick={handleDownloadActiveReportPdf}
-              className="h-[44px] rounded-[12px] border-gray-200 px-5 text-gray-700"
             >
               <Download size={17} className="mr-2" />
               {t("downloadPdf")}
             </Button>
-          ) : null}
-        </div>
-      </div>
+          ) : null
+        }
+      />
 
-      <div className="space-y-5 rounded-lg bg-white p-4 shadow-sm lg:p-5">
-        <div className="flex max-w-full flex-wrap items-center gap-2">
-          <TabButton
-            active={activeTab === "financial"}
-            onClick={() => handleTabChange("financial")}
-          >
-            {t("tabs.financial")}
-          </TabButton>
-
-          <TabButton
-            active={activeTab === "order"}
-            onClick={() => handleTabChange("order")}
-          >
-            {t("tabs.orders")}
-          </TabButton>
-
-          <TabButton
-            active={activeTab === "invoice-history"}
-            onClick={() => handleTabChange("invoice-history")}
-          >
-            {t("tabs.invoiceHistory")}
-          </TabButton>
-        </div>
+      <SectionCard className="space-y-5" padding="md">
+        <PageTabs
+          value={activeTab}
+          ariaLabel={title}
+          options={[
+            { value: "financial", label: t("tabs.financial") },
+            { value: "order", label: t("tabs.orders") },
+            { value: "invoice-history", label: t("tabs.invoiceHistory") },
+          ]}
+          onValueChange={handleTabChange}
+        />
 
         {activeTab !== "invoice-history" ? (
-          <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 lg:flex-row lg:items-end">
-            <div className="flex items-center gap-2 pb-1 text-sm font-medium text-gray-700 lg:mr-2">
-              <CalendarDays size={18} />
-              {t("customPeriod")}
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleLastMonth}
-              className="h-10 bg-white"
-            >
-              {t("lastMonth")}
-            </Button>
-            <label className="grid gap-1 text-xs font-medium text-gray-600">
-              {t("fromDate")}
-              <Input
-                type="date"
-                value={draftCustomPeriod.from}
-                max={draftCustomPeriod.to || undefined}
-                onChange={(event) =>
-                  setDraftCustomPeriod((current) => ({
-                    ...current,
-                    from: event.target.value,
-                  }))
-                }
-                className="h-10 bg-white"
-              />
-            </label>
-            <label className="grid gap-1 text-xs font-medium text-gray-600">
-              {t("toDate")}
-              <Input
-                type="date"
-                value={draftCustomPeriod.to}
-                min={draftCustomPeriod.from || undefined}
-                onChange={(event) =>
-                  setDraftCustomPeriod((current) => ({
-                    ...current,
-                    to: event.target.value,
-                  }))
-                }
-                className="h-10 bg-white"
-              />
-            </label>
-            <Button
-              type="button"
-              onClick={handleApplyCustomPeriod}
-              className="h-10"
-            >
-              {t("applyPeriod")}
-            </Button>
-            {customPeriod ? (
+          <FilterBar
+            search={
+              <div className="flex items-center gap-2 pb-2 text-sm font-medium text-[var(--ui-text-muted)] lg:pb-0">
+                <CalendarDays size={18} />
+                {t("customPeriod")}
+              </div>
+            }
+            filters={
+              <>
+                <label className="grid gap-1 text-xs font-medium text-[var(--ui-text-muted)]">
+                  {t("fromDate")}
+                  <Input
+                    type="date"
+                    value={draftCustomPeriod.from}
+                    max={draftCustomPeriod.to || undefined}
+                    onChange={(event) =>
+                      setDraftCustomPeriod((current) => ({
+                        ...current,
+                        from: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label className="grid gap-1 text-xs font-medium text-[var(--ui-text-muted)]">
+                  {t("toDate")}
+                  <Input
+                    type="date"
+                    value={draftCustomPeriod.to}
+                    min={draftCustomPeriod.from || undefined}
+                    onChange={(event) =>
+                      setDraftCustomPeriod((current) => ({
+                        ...current,
+                        to: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+              </>
+            }
+            actions={
+              <>
+                <Button type="button" variant="outline" onClick={handleLastMonth}>
+                  {t("lastMonth")}
+                </Button>
+                <Button type="button" onClick={handleApplyCustomPeriod}>
+                  {t("applyPeriod")}
+                </Button>
+                {customPeriod ? (
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleResetCustomPeriod}
-                className="h-10"
               >
                 {t("resetPeriod")}
               </Button>
-            ) : null}
-            {customPeriod ? (
-              <p className="text-sm text-gray-600 lg:ml-auto lg:pb-2">
-                {t("selectedPeriod", {
-                  from: customPeriod.from,
-                  to: customPeriod.to,
-                })}
-              </p>
-            ) : null}
-          </div>
+                ) : null}
+              </>
+            }
+            resultCount={
+              customPeriod
+                ? t("selectedPeriod", { from: customPeriod.from, to: customPeriod.to })
+                : undefined
+            }
+          />
         ) : null}
 
-        {activeTab === "invoice-history" ? (
+        {activeError ? (
+          <StatePanel state="error" title={t("restaurantUnavailable")} description="" />
+        ) : activeTab === "invoice-history" ? (
           <GeneratedInvoiceHistoryTable
             invoices={billingInvoices}
             loading={activeLoading}
@@ -350,7 +345,7 @@ export default function Orders() {
             <OrdersGraph range={range} onRangeChange={handleRangeChange} />
           </>
         )}
-      </div>
+      </SectionCard>
     </Container>
   );
 }

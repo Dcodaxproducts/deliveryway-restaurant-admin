@@ -13,6 +13,8 @@ import { useGetBranches } from "@/hooks/useBranches";
 import { useGiftCard, useUpdateGiftCard } from "@/hooks/useGiftCards";
 import type { GiftCardFormValues } from "@/types/gift-cards";
 import { buildGiftCardUpdatePayload } from "@/validations/gift-cards";
+import Container from "@/components/common/Container";
+import { StatePanel } from "@/components/common/EmptyState";
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -78,17 +80,17 @@ export default function EditGiftCardPage() {
 
   if (giftCardQuery.isLoading) {
     return (
-      <div className="flex min-h-[320px] items-center justify-center text-sm text-gray-500">
-        {t("loadingDetail")}
-      </div>
+      <Container>
+        <StatePanel state="loading" title={t("loadingDetail")} description="" />
+      </Container>
     );
   }
 
   if (giftCardQuery.error || !giftCardQuery.data) {
     return (
-      <div className="rounded-[16px] border border-red-100 bg-red-50 p-5 text-sm text-red-700">
-        {t("unableToLoad")}
-      </div>
+      <Container>
+        <StatePanel state="error" title={t("unableToLoad")} description="" />
+      </Container>
     );
   }
 

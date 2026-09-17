@@ -20,6 +20,9 @@ import { ImageUploadField } from "@/components/forms/common/ImageUploadField";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { FormActions } from "@/components/common/FormLayout";
+import { StatePanel } from "@/components/common/EmptyState";
 import PageWrapper from "@/components/pages/Promotions/forms/PageWrapper";
 import Section from "@/components/pages/Promotions/forms/Section";
 import AsyncMultiSelect from "@/components/ui/AsyncMultiSelect";
@@ -127,7 +130,7 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
 
   const values = useWatch({ control }) as PromotionFormValues;
 
-  const { data: detailResponse, isLoading: detailLoading } =
+  const { data: detailResponse, isLoading: detailLoading, isError: detailError } =
     useGetAdminPromotionCampaignDetail(id ?? undefined, {
       restaurantId,
       branchId: authBranchId,
@@ -350,9 +353,15 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
   if (detailLoading && isEditMode) {
     return (
       <PageWrapper title={pageTitle}>
-        <div className="flex min-h-[300px] items-center justify-center">
-          <Loader2 className="h-7 w-7 animate-spin text-primary" />
-        </div>
+        <StatePanel state="loading" description="" />
+      </PageWrapper>
+    );
+  }
+
+  if (detailError && isEditMode) {
+    return (
+      <PageWrapper title={pageTitle}>
+        <StatePanel state="error" title={t("toasts.somethingWentWrong")} description="" />
       </PageWrapper>
     );
   }
@@ -807,25 +816,19 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
           )}
         </Section>
 
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            disabled={submitting}
-            className="h-[44px] rounded-lg border px-6 text-sm font-medium text-gray-600 disabled:opacity-60"
-          >
-            {t("actions.cancel")}
-          </button>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="inline-flex h-[44px] items-center gap-2 rounded-lg bg-primary px-6 text-sm font-medium text-white disabled:opacity-60"
-          >
-            {submitting && <Loader2 size={16} className="animate-spin" />}
-            {isEditMode ? t("updatePromotion") : t("createPromotion")}
-          </button>
-        </div>
+        <FormActions
+          secondary={
+            <Button type="button" variant="outline" onClick={() => router.back()} disabled={submitting}>
+              {t("actions.cancel")}
+            </Button>
+          }
+          primary={
+            <Button type="submit" disabled={submitting}>
+              {submitting && <Loader2 size={16} className="animate-spin" />}
+              {isEditMode ? t("updatePromotion") : t("createPromotion")}
+            </Button>
+          }
+        />
       </form>
     </PageWrapper>
   );

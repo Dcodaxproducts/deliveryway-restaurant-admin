@@ -44,6 +44,8 @@ import AsyncMultiSelect from "@/components/ui/AsyncMultiSelect";
 import { getMenuItems } from "@/services/menu/menu.api";
 import { getMenuCategories } from "@/services/menu/categories/menu-categories.api";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { FormActions } from "@/components/common/FormLayout";
 
 const defaultValues: CouponFormValues = {
   code: "",
@@ -584,24 +586,18 @@ export default function AddNewCoupon() {
           />
         </Section>
 
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={resetCouponForm}
-            disabled={saving}
-            className="h-[44px] rounded-lg border px-6 text-sm font-medium text-gray-600 disabled:opacity-60"
-          >
-            {t("actions.reset")}
-          </button>
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="inline-flex h-[44px] items-center gap-2 rounded-lg bg-primary px-6 text-sm font-medium text-white disabled:opacity-60"
-          >
-            {saving ? t("actions.saving") : t("actions.save")}
-          </button>
-        </div>
+        <FormActions
+          secondary={
+            <Button type="button" variant="outline" onClick={resetCouponForm} disabled={saving}>
+              {t("actions.reset")}
+            </Button>
+          }
+          primary={
+            <Button type="submit" disabled={saving}>
+              {saving ? t("actions.saving") : t("actions.save")}
+            </Button>
+          }
+        />
       </form>
     </PageWrapper>
   );

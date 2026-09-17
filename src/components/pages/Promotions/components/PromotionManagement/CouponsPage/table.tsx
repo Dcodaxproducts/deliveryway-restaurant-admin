@@ -25,6 +25,8 @@ import {
   isRecord,
   normalizeApiRecords,
 } from "@/components/pages/Promotions/utils/option-normalizers";
+import { ResponsiveDialog } from "@/components/common/ResponsiveDialog";
+import { Button } from "@/components/ui/button";
 
 type Coupon = {
   id: string;
@@ -96,7 +98,13 @@ const CouponsTable = () => {
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Coupon | null>(null);
 
-  const { data: couponsResponse, refetch } = useGetCoupons({
+  const {
+    data: couponsResponse,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useGetCoupons({
     restaurantId: restaurantId || undefined,
     page,
     limit: 10,
@@ -123,6 +131,14 @@ const CouponsTable = () => {
     const limit = meta?.limit || 10;
     return (currentPage - 1) * limit + index + 1;
   };
+
+  if (isLoading || (isFetching && !coupons.length)) {
+    return <EmptyState state="loading" title={commonT("loading")} description="" />;
+  }
+
+  if (error) {
+    return <EmptyState state="error" title={commonT("unableToLoad")} description="" />;
+  }
 
   if (!coupons.length) {
     return (
@@ -240,31 +256,88 @@ const CouponsTable = () => {
         </Table>
       </div>
 
+      <div className="grid gap-3 md:hidden">
+        {coupons.map((coupon, index) => (
+          <section
+            key={coupon.id}
+            className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">{coupon.title || coupon.code}</p>
+                <p className="mt-1 text-xs text-[var(--ui-text-muted)]">
+                  {t("labels.code")}: {coupon.code}
+                </p>
+              </div>
+              <Switch
+                checked={coupon.isActive}
+                disabled={!restaurantId || toggleCouponStatusMutation.isPending}
+                aria-label={t("columns.status")}
+                onCheckedChange={() => toggleStatus(coupon)}
+              />
+            </div>
+            <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <dt className="text-[var(--ui-text-muted)]">{t("columns.sl")}</dt>
+                <dd className="mt-1 font-medium">{getSerial(index)}</dd>
+              </div>
+              <div>
+                <dt className="text-[var(--ui-text-muted)]">{t("labels.amount")}</dt>
+                <dd className="mt-1 font-medium">{coupon.discountValue ?? "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-[var(--ui-text-muted)]">{t("labels.type")}</dt>
+                <dd className="mt-1 font-medium">{coupon.discountType || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-[var(--ui-text-muted)]">{t("columns.totalUsage")}</dt>
+                <dd className="mt-1 font-medium">{coupon.usedCount ?? 0}</dd>
+              </div>
+            </dl>
+            <div className="mt-4 flex justify-end gap-2 border-t border-[var(--ui-border)] pt-3">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setSelectedCoupon(coupon);
+                  setOpenView(true);
+                }}
+              >
+                <Eye />
+                {t("actions.view")}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => router.push(`/promotion-management/coupons/add?coupon=${coupon.code}`)}
+              >
+                <Pencil />
+                {t("actions.edit")}
+              </Button>
+            </div>
+          </section>
+        ))}
+      </div>
+
       <div className="mt-6">
         <PaginationSection meta={meta} onPageChange={setPage} />
       </div>
 
-      {openView && selectedCoupon && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-
-          <div className="bg-white w-[520px] rounded-2xl shadow-2xl overflow-hidden">
-
-            <div className="flex justify-between items-center px-6 py-4 border-b">
-              <div>
-                <h2 className="text-lg font-semibold">{t("couponDetails")}</h2>
-                <p className="text-sm text-gray-500">{selectedCoupon.code}</p>
-              </div>
-              <button
-                onClick={() => setOpenView(false)}
-                className="text-gray-400 hover:text-black text-xl"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="p-6 grid grid-cols-2 gap-5 text-sm">
-
+      <ResponsiveDialog
+        open={openView && Boolean(selectedCoupon)}
+        onOpenChange={setOpenView}
+        title={t("couponDetails")}
+        description={selectedCoupon?.code}
+        actions={
+          <Button type="button" onClick={() => setOpenView(false)}>
+            {t("actions.close")}
+          </Button>
+        }
+      >
+        {selectedCoupon ? (
+          <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
               {[
                 [t("labels.title"), selectedCoupon.title],
                 [t("labels.discount"), selectedCoupon.discountValue],
@@ -275,26 +348,14 @@ const CouponsTable = () => {
                 [t("labels.perUserLimit"), selectedCoupon.maxUsesPerCustomer],
                 [t("labels.status"), selectedCoupon.isActive ? commonT("active") : commonT("inactive")],
               ].map(([label, value], idx) => (
-                <div key={idx} className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-500 text-xs">{label}</p>
-                  <p className="font-semibold mt-1">{value}</p>
+                <div key={idx} className="rounded-[var(--ui-radius-control)] bg-[var(--ui-surface-subtle)] p-3">
+                  <p className="text-xs text-[var(--ui-text-muted)]">{label}</p>
+                  <p className="mt-1 font-semibold">{value}</p>
                 </div>
               ))}
-
-            </div>
-
-            <div className="px-6 py-4 border-t flex justify-end">
-              <button
-                onClick={() => setOpenView(false)}
-                className="px-5 py-2 bg-primary text-white rounded-md"
-              >
-                {t("actions.close")}
-              </button>
-            </div>
-
           </div>
-        </div>
-      )}
+        ) : null}
+      </ResponsiveDialog>
       <DeleteDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(value) => {

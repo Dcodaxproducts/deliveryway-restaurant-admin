@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { getLocalTodayDateTimeInputValue } from "@/lib/date-input";
 import type { GiftCard, GiftCardFormValues } from "@/types/gift-cards";
 import { giftCardFormSchema } from "@/validations/gift-cards";
+import { FormActions } from "@/components/common/FormLayout";
 
 export type GiftCardFormBranchOption = {
   id: string;
@@ -305,25 +306,19 @@ export default function GiftCardForm({
           />
         </Section>
 
-        <div className="flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={submitting}
-            className="h-[44px] rounded-lg px-6"
-          >
-            {commonT("cancel")}
-          </Button>
-          <Button
-            type="submit"
-            disabled={submitting}
-            className="inline-flex h-[44px] items-center gap-2 rounded-lg bg-primary px-6 text-sm font-medium text-white disabled:opacity-60"
-          >
-            {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
-            {submitLabel}
-          </Button>
-        </div>
+        <FormActions
+          secondary={
+            <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
+              {commonT("cancel")}
+            </Button>
+          }
+          primary={
+            <Button type="submit" disabled={submitting}>
+              {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
+              {submitLabel}
+            </Button>
+          }
+        />
       </form>
     </PageWrapper>
   );
