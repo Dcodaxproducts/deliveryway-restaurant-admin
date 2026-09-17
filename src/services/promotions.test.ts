@@ -110,6 +110,48 @@ describe("promotions service", () => {
     );
   });
 
+  it("strips form-only coupon selectors from create and update requests", async () => {
+    mockedPost.mockResolvedValue({ data: { id: "coupon-1" } });
+    mockedPatch.mockResolvedValue({ data: { id: "coupon-1" } });
+
+    const payload = {
+      code: "SAVE10",
+      title: "Save 10",
+      restaurantId: "restaurant-1",
+      discountType: "FLAT",
+      discountValue: 10,
+      selectedMenuItems: [{ value: "item-1", label: "Pizza" }],
+      selectedCategories: [{ value: "category-1", label: "Mains" }],
+      scopeMenuItemIds: ["item-1"],
+      scopeCategoryIds: ["category-1"],
+    };
+
+    await createCoupon(payload);
+    await updateCoupon("coupon-1", payload);
+
+    expect(mockedPost).toHaveBeenCalledWith(
+      "/coupons",
+      expect.not.objectContaining({
+        selectedMenuItems: expect.anything(),
+        selectedCategories: expect.anything(),
+      }),
+    );
+    expect(mockedPatch).toHaveBeenCalledWith(
+      "/coupons/coupon-1",
+      expect.not.objectContaining({
+        selectedMenuItems: expect.anything(),
+        selectedCategories: expect.anything(),
+      }),
+    );
+    expect(mockedPost).toHaveBeenCalledWith(
+      "/coupons",
+      expect.objectContaining({
+        scopeMenuItemIds: ["item-1"],
+        scopeCategoryIds: ["category-1"],
+      }),
+    );
+  });
+
   it("fetches happy hour detail from the dedicated endpoint with scoped params", async () => {
     mockedGet.mockResolvedValueOnce({
       data: {
