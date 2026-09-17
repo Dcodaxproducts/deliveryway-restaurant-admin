@@ -8,7 +8,7 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { DatePickerInput } from "@/components/common/DateTimeInputs";
 import { Time24Picker } from "@/components/ui/time-24-picker";
 
 import {
@@ -170,11 +170,11 @@ export default function MakeReservationModal({
           <Separator className="my-3" />
 
           <CollapsibleContent className="mt-4 space-y-4 px-1">
-            <Input
-              type="date"
+            <DatePickerInput
               min={todayDate}
               value={reservationDate}
-              onChange={(e) => setReservationDate(e.target.value)}
+              onChange={setReservationDate}
+              ariaLabel="Reservation date"
             />
 
             <Time24Picker

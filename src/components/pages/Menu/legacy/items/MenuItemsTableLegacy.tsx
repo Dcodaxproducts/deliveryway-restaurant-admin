@@ -23,9 +23,9 @@ import {
   ImageOff,
   Loader2,
   MoreVertical,
-  Search,
   SlidersHorizontal,
 } from "lucide-react";
+import { SearchField } from "@/components/common/SearchField";
 import CreateMenuItemModal from "@/components/pages/Menu/legacy/root-menu-components/CreateMenuItemModal/CreateMenuItemModal";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -564,19 +564,6 @@ export default function MenuItemsTable({ refetchKey }: any) {
     resetAndFetchFirstPage();
   };
 
-  const handleManualSearch = () => {
-    if (!canFetchItems) return;
-
-    const nextSearch = search.trim();
-
-    setPage(1);
-    setDebouncedSearch(nextSearch);
-
-    if (page === 1 && debouncedSearch === nextSearch) {
-      refetch();
-    }
-  };
-
   const handleStatusChange = (value: MenuItemStatusFilter) => {
     setStatusFilter(value);
     setPage(1);
@@ -641,22 +628,14 @@ export default function MenuItemsTable({ refetchKey }: any) {
               {commonT("search")}
             </label>
 
-            <div className="relative">
-              <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                size={18}
-              />
-
-              <input
+            <div>
+              <SearchField
                 placeholder={t("searchPlaceholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    handleManualSearch();
-                  }
-                }}
-                className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                onClear={() => setSearch("")}
+                disabled={!canFetchItems}
+                className="bg-[var(--ui-surface-subtle)]"
               />
             </div>
           </div>
@@ -695,11 +674,8 @@ export default function MenuItemsTable({ refetchKey }: any) {
           </div>
 
           <FilterActions
-            searchLabel={commonT("search")}
             resetLabel={commonT("reset")}
-            onSearch={handleManualSearch}
             onReset={handleResetFilters}
-            searchDisabled={!canFetchItems}
             resetDisabled={!canFetchItems || (!hasActiveFilters && !isFetching)}
             className="md:col-span-2 2xl:col-span-3"
           />

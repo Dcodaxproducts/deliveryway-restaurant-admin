@@ -127,7 +127,6 @@ export default function CuisinesTable() {
           setStatusFilter(value);
           setPage(1);
         }}
-        onSearch={() => void refetch()}
       />
       {isError && response ? (
         <StatePanel state="error" title={feedbackT("refreshFailed", { subject: feedbackT("subjects.cuisines") })} description={feedbackT("cachedDescription")} compact />

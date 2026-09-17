@@ -2,11 +2,12 @@
 
 import { FormSelect } from "@/components/ui/form-select";
 
-import { Filter, Loader2, Search } from "lucide-react";
+import { Filter, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FilterActions } from "@/components/common/FilterActions";
+import { SearchField } from "@/components/common/SearchField";
 import { useTranslations } from "next-intl";
 
 export type AdminDealsFilterState = {
@@ -63,10 +64,6 @@ export default function AdminDealsFilters({
     return () => window.clearTimeout(timeoutId);
   }, [onFiltersChange, searchValue]);
 
-  const handleSearch = () => {
-    onFiltersChange({ search: searchValue.trim() });
-  };
-
   const handleReset = () => {
     setSearchValue("");
     onFiltersChange({
@@ -108,19 +105,12 @@ export default function AdminDealsFilters({
           <label className="mb-1.5 block text-xs font-medium text-gray-600">
             {commonT("search")}
           </label>
-          <div className="relative min-w-0">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              size={18}
-            />
-            <input
+          <div className="min-w-0">
+            <SearchField
               placeholder={t("searchPlaceholder")}
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") handleSearch();
-              }}
-              className="h-10 w-full min-w-0 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] pl-11 pr-4 text-sm text-[var(--ui-text)] outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+              onClear={() => setSearchValue("")}
             />
           </div>
         </div>
@@ -168,9 +158,7 @@ export default function AdminDealsFilters({
         </div>
 
         <FilterActions
-          searchLabel={commonT("search")}
           resetLabel={commonT("reset")}
-          onSearch={handleSearch}
           onReset={handleReset}
           resetDisabled={!hasActiveFilters && !isFetching}
           className="md:col-span-2 2xl:col-span-5 2xl:justify-end"

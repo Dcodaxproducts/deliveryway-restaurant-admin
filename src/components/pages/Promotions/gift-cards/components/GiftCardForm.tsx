@@ -25,6 +25,7 @@ import { getLocalTodayDateTimeInputValue } from "@/lib/date-input";
 import type { GiftCard, GiftCardFormValues } from "@/types/gift-cards";
 import { giftCardFormSchema } from "@/validations/gift-cards";
 import { FormActions } from "@/components/common/FormLayout";
+import { DateTimePickerInput } from "@/components/common/DateTimeInputs";
 
 export type GiftCardFormBranchOption = {
   id: string;
@@ -375,13 +376,13 @@ function DateField({ label, value, error, onChange, onBlur }: DateFieldProps) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Input
-        type="datetime-local"
+      <DateTimePickerInput
         min={getLocalTodayDateTimeInputValue()}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={onChange}
         onBlur={onBlur}
         className={INPUT_BASE_CLASS}
+        ariaLabel={label}
       />
       {error ? <p className={FIELD_ERROR_CLASS}>{error}</p> : null}
     </div>

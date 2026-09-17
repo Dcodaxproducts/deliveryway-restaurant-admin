@@ -18,7 +18,7 @@ import OrdersGraph from "@/components/pages/Reports/components/graphs/orders-gra
 import type { TrendRange } from "@/components/pages/Reports/components/graphs/orders-graph";
 import { GeneratedInvoiceHistoryTable } from "@/components/pages/Orders/components/orders/GeneratedInvoiceHistoryTable";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DatePickerInput } from "@/components/common/DateTimeInputs";
 import { useAuth } from "@/hooks/useAuth";
 import { useBranding } from "@/hooks/useBranding";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -269,30 +269,30 @@ export default function Orders() {
               <>
                 <label className="grid gap-1 text-xs font-medium text-[var(--ui-text-muted)]">
                   {t("fromDate")}
-                  <Input
-                    type="date"
+                  <DatePickerInput
                     value={draftCustomPeriod.from}
                     max={draftCustomPeriod.to || undefined}
-                    onChange={(event) =>
+                    onChange={(value) =>
                       setDraftCustomPeriod((current) => ({
                         ...current,
-                        from: event.target.value,
+                        from: value,
                       }))
                     }
+                    ariaLabel={t("fromDate")}
                   />
                 </label>
                 <label className="grid gap-1 text-xs font-medium text-[var(--ui-text-muted)]">
                   {t("toDate")}
-                  <Input
-                    type="date"
+                  <DatePickerInput
                     value={draftCustomPeriod.to}
                     min={draftCustomPeriod.from || undefined}
-                    onChange={(event) =>
+                    onChange={(value) =>
                       setDraftCustomPeriod((current) => ({
                         ...current,
-                        to: event.target.value,
+                        to: value,
                       }))
                     }
+                    ariaLabel={t("toDate")}
                   />
                 </label>
               </>

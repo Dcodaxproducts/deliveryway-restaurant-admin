@@ -32,8 +32,8 @@ export default function PageHeader({
       {breadcrumbs ? (
         <div data-slot="page-header-breadcrumbs">{breadcrumbs}</div>
       ) : null}
-      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
+      <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
           {backAction ? (
             <div className="shrink-0 pt-0.5">{backAction}</div>
           ) : null}
@@ -64,7 +64,7 @@ export default function PageHeader({
           </div>
         </div>
         {actions ? (
-          <PageActionGroup className="shrink-0">{actions}</PageActionGroup>
+          <PageActionGroup className="xl:w-auto xl:max-w-[70%] xl:shrink-0">{actions}</PageActionGroup>
         ) : null}
       </div>
       {tabs ? <div data-slot="page-header-tabs">{tabs}</div> : null}

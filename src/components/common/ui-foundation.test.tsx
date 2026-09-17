@@ -235,19 +235,18 @@ describe("shared controls", () => {
     expect(segments).toContain("bg-[var(--ui-brand-soft)]");
   });
 
-  it("keeps filter actions equally sized and able to wrap without clipping", () => {
+  it("keeps the reset action compact without rendering a redundant search button", () => {
     const markup = renderToStaticMarkup(
       <FilterActions
-        searchLabel="Search"
         resetLabel="Reset"
-        onSearch={() => undefined}
         onReset={() => undefined}
       />,
     );
 
     expect(markup).toContain('data-slot="filter-actions"');
-    expect(markup).toContain("grid-cols-2");
-    expect(markup).toContain("sm:min-w-[104px]");
+    expect(markup).toContain("min-w-[96px]");
+    expect(markup).toContain("Reset");
+    expect(markup).not.toContain("Search");
   });
 
   it("keeps the selected segment readable across hover and pressed states", () => {

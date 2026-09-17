@@ -5,6 +5,7 @@ import { FormSelect } from "@/components/ui/form-select";
 import Image from "next/image";
 import { ChevronDown, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DateTimePickerInput } from "@/components/common/DateTimeInputs";
 import {
   Collapsible,
   CollapsibleContent,
@@ -21,10 +22,7 @@ import {
   setClientStorageItem,
 } from "@/services/storage";
 import { getApiErrorMessage } from "@/lib/errors";
-import {
-  DATE_TIME_24_HOUR_INPUT_LANG,
-  getLocalTodayDateTimeInputValue,
-} from "@/lib/date-input";
+import { getLocalTodayDateTimeInputValue } from "@/lib/date-input";
 import { useGetCustomer } from "@/hooks/useCustomers";
 import { useGetBranchForEdit } from "@/hooks/useBranches";
 import { useRestaurantPaymentManagement } from "@/hooks/useRestaurantPaymentManagement";
@@ -1219,13 +1217,12 @@ export default function PosCart() {
               <p className="text-xs text-gray-400 mb-2">
                 {t("scheduledOrderTime")}
               </p>
-              <input
+              <DateTimePickerInput
                 value={scheduledOrderTime}
-                onChange={(event) => setScheduledOrderTime(event.target.value)}
+                onChange={setScheduledOrderTime}
                 min={getLocalTodayDateTimeInputValue()}
-                lang={DATE_TIME_24_HOUR_INPUT_LANG}
-                type="datetime-local"
                 className="h-10 w-full rounded-md border px-3 text-sm"
+                ariaLabel={t("scheduledOrderTime")}
               />
             </div>
 

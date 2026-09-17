@@ -2,12 +2,13 @@
 
 import { FormSelect } from "@/components/ui/form-select";
 
-import { Filter, Loader2, Search } from "lucide-react";
+import { Filter, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FilterBar } from "@/components/common/FilterBar";
 import { FilterActions } from "@/components/common/FilterActions";
+import { SearchField } from "@/components/common/SearchField";
 import { useTranslations } from "next-intl";
 
 export type TableReservationsFilterState = {
@@ -100,10 +101,6 @@ export default function TableReservationsFilters({
     return () => window.clearTimeout(timeoutId);
   }, [onFiltersChange, searchValue]);
 
-  const handleManualSearch = () => {
-    onFiltersChange({ search: searchValue.trim() });
-  };
-
   const handleResetFilters = () => {
     setSearchValue("");
     onFiltersChange({
@@ -161,23 +158,14 @@ export default function TableReservationsFilters({
                 {common("search")}
               </label>
 
-              <div className="relative min-w-0">
-                <Search
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
-
-                <input
+              <div className="min-w-0">
+                <SearchField
                   aria-label={common("search")}
                   placeholder={t("searchPlaceholder")}
                   value={searchValue}
                   onChange={(event) => setSearchValue(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      handleManualSearch();
-                    }
-                  }}
-                  className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                  onClear={() => setSearchValue("")}
+                  className="bg-[var(--ui-surface-subtle)]"
                 />
               </div>
             </div>
@@ -281,9 +269,7 @@ export default function TableReservationsFilters({
             </div>
 
             <FilterActions
-              searchLabel={common("search")}
               resetLabel={common("reset")}
-              onSearch={handleManualSearch}
               onReset={handleResetFilters}
               resetDisabled={!hasActiveFilters && !isFetching}
               className="md:col-span-2 2xl:col-span-2"

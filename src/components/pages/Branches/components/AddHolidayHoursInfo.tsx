@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { DayPicker, type DateRange } from "react-day-picker";
+import { type DateRange } from "react-day-picker";
 import {
   AlertCircle,
   CalendarDays,
@@ -23,6 +23,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Time24Picker } from "@/components/ui/time-24-picker";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useTranslations } from "next-intl";
 
 import {
@@ -513,56 +515,30 @@ function HolidayHourItem({
       <div className="grid gap-4 p-4 md:grid-cols-12">
         <div className="md:col-span-12">
           <FieldGroup label={labels.holidayDateOrRange} required>
-          <div className={`relative ${calendarOpen ? "z-30" : ""}`}>
-            <button
-              type="button"
-              disabled={isSaving}
-              onClick={() => setCalendarOpen((current) => !current)}
-              className="flex h-[44px] w-full items-center rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-10 pr-3 text-left text-sm text-gray-800 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <CalendarDays
-                size={17}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSaving}
+                className="h-10 w-full justify-start bg-[var(--ui-surface-subtle)] px-3 text-left font-normal"
+              >
+                <CalendarDays aria-hidden="true" />
+                <span className={selectedLabel ? "truncate" : "truncate text-[var(--ui-text-subtle)]"}>
+                  {selectedLabel || labels.selectHolidayDate}
+                </span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="max-w-[calc(100vw-2rem)]" align="start">
+              <Calendar
+                mode="range"
+                selected={selectedRange}
+                onSelect={handleDateSelect}
+                disabled={calendarStartDate ? { before: calendarStartDate } : undefined}
+                initialFocus
               />
-              <span className={selectedLabel ? "truncate" : "truncate text-gray-400"}>
-                {selectedLabel || labels.selectHolidayDate}
-              </span>
-            </button>
-
-            {calendarOpen ? (
-              <div className="absolute left-0 top-[50px] z-50 w-max max-w-[calc(100vw-48px)] overflow-x-auto rounded-[16px] border border-gray-200 bg-white p-3 shadow-xl">
-                <DayPicker
-                  mode="range"
-                  selected={selectedRange}
-                  onSelect={handleDateSelect}
-                  disabled={calendarStartDate ? { before: calendarStartDate } : undefined}
-                  className="text-sm"
-                  classNames={{
-                    months: "flex",
-                    month: "space-y-3",
-                    month_caption: "flex justify-center pb-2 text-sm font-semibold text-gray-900",
-                    nav: "absolute left-3 right-3 top-3 flex items-center justify-between",
-                    button_previous:
-                      "rounded-full p-1 text-gray-500 hover:bg-gray-100",
-                    button_next: "rounded-full p-1 text-gray-500 hover:bg-gray-100",
-                    weekdays: "grid grid-cols-7 gap-1 text-xs text-gray-400",
-                    week: "grid grid-cols-7 gap-1",
-                    day: "h-8 w-8 text-center text-sm",
-                    day_button:
-                      "h-8 w-8 rounded-full text-sm hover:bg-primary/10",
-                    selected:
-                      "[&>button]:bg-primary [&>button]:text-white [&>button]:hover:bg-primary",
-                    range_middle:
-                      "[&>button]:rounded-none [&>button]:bg-primary/10 [&>button]:text-primary",
-                    today: "[&>button]:ring-1 [&>button]:ring-primary",
-                    disabled:
-                      "pointer-events-none text-gray-400 opacity-100",
-                    outside: "text-gray-400",
-                  }}
-                />
-              </div>
-            ) : null}
-          </div>
+            </PopoverContent>
+          </Popover>
           </FieldGroup>
         </div>
 

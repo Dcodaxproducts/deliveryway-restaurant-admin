@@ -13,6 +13,7 @@ import {
 } from "@/components/common/ResponsiveDataView";
 import { FilterBar, type FilterBarProps } from "@/components/common/FilterBar";
 import { FilterActions } from "@/components/common/FilterActions";
+import { SearchField } from "@/components/common/SearchField";
 import { RowActions } from "@/components/common/RowActions";
 import PaginationSection from "@/components/common/PaginationSection";
 import { Button } from "@/components/ui/button";
@@ -856,24 +857,18 @@ describe("reservation FilterBar contracts", () => {
     expect(renderToStaticMarkup(locked)).toContain("Assigned branch");
   });
 
-  it("preserves trimmed Enter/button search and ignores other keys", () => {
+  it("leaves search submission to the debounced input contract", () => {
     const onChange = vi.fn();
     let controls = filters(onChange).props.filters;
     fire(
-      find(controls, (node) => node.type === "input"),
+      find(controls, (node) => node.type === SearchField),
       "onChange",
       { target: { value: "  dinner  " } },
     );
     controls = filters(onChange).props.filters;
-    const input = find(controls, (node) => node.type === "input");
-    fire(input, "onKeyDown", { key: "Escape" });
+    const actions = find(controls, (node) => node.type === FilterActions);
+    expect(actions.props.onSearch).toBeUndefined();
     expect(onChange).not.toHaveBeenCalled();
-    fire(input, "onKeyDown", { key: "Enter" });
-    fire(find(controls, (node) => node.type === FilterActions), "onSearch");
-    expect(onChange.mock.calls).toEqual([
-      [{ search: "dinner" }],
-      [{ search: "dinner" }],
-    ]);
   });
 
   it("retains 400ms debounce and cancels obsolete searches", () => {
@@ -882,7 +877,7 @@ describe("reservation FilterBar contracts", () => {
     const onChange = vi.fn();
     let controls = filters(onChange).props.filters;
     fire(
-      find(controls, (node) => node.type === "input"),
+      find(controls, (node) => node.type === SearchField),
       "onChange",
       { target: { value: "old" } },
     );
@@ -891,7 +886,7 @@ describe("reservation FilterBar contracts", () => {
     vi.advanceTimersByTime(200);
     cancel?.();
     fire(
-      find(controls, (node) => node.type === "input"),
+      find(controls, (node) => node.type === SearchField),
       "onChange",
       { target: { value: "  latest  " } },
     );
@@ -926,14 +921,14 @@ describe("reservation FilterBar contracts", () => {
       sortOrder: "ASC",
     }).props.filters;
     fire(
-      find(controls, (node) => node.type === "input"),
+      find(controls, (node) => node.type === SearchField),
       "onChange",
       { target: { value: "cake" } },
     );
     fire(find(controls, (node) => node.type === FilterActions), "onReset");
     expect(onChange).toHaveBeenCalledExactlyOnceWith(defaults);
     expect(
-      find(filters(onChange).props.filters, (node) => node.type === "input")
+      find(filters(onChange).props.filters, (node) => node.type === SearchField)
         .props.value,
     ).toBe("");
   });

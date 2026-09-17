@@ -25,9 +25,9 @@ import {
   GripVertical,
   Loader2,
   MoreVertical,
-  Search,
   SlidersHorizontal,
 } from "lucide-react";
+import { SearchField } from "@/components/common/SearchField";
 import CreateCategoryModalParent from "@/components/pages/Menu/legacy/root-menu-components/listing/CreateCategoryModalParent";
 import { useRouter } from "next/navigation";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
@@ -37,6 +37,7 @@ import { useTranslations } from "next-intl";
 import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
 import { StatePanel } from "@/components/common/EmptyState";
 import { StatusBadge } from "@/components/common/status-badge";
+import { FilterBar } from "@/components/common/FilterBar";
 
 const PAGE_LIMIT = 10;
 
@@ -405,19 +406,6 @@ export default function CategoriesTable({ refetchKey }: any) {
     resetAndFetchFirstPage();
   };
 
-  const handleManualSearch = () => {
-    if (!canFetchCategories) return;
-
-    const nextSearch = search.trim();
-
-    setPage(1);
-    setDebouncedSearch(nextSearch);
-
-    if (page === 1 && debouncedSearch === nextSearch) {
-      refetch();
-    }
-  };
-
   // DataTable owns the rows; delegate domain drag events without another table shell.
   const desktopItem = (target: EventTarget) => {
     const row = (target as Element).closest<HTMLTableRowElement>("tbody tr");
@@ -426,55 +414,32 @@ export default function CategoriesTable({ refetchKey }: any) {
 
   return (
     <div className="w-full">
-      <div className="mb-6 rounded-[18px] border bg-white p-4 shadow-sm">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <div className="relative flex-1">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              size={18}
-            />
-
-            <input
-              placeholder={t("searchPlaceholder")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-
+      <FilterBar
+        className="mb-6"
+        search={
+          <SearchField
+            placeholder={t("searchPlaceholder")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onClear={() => setSearch("")}
+            disabled={!canFetchCategories}
+            className="bg-[var(--ui-surface-subtle)]"
+          />
+        }
+        filters={
           <FormSelect
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="h-[44px] rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm focus:outline-none"
+            className="h-10 min-w-[12rem] rounded-[var(--ui-radius-control)] border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] px-3 text-sm sm:w-56"
           >
             <option value="all">{t("statusOptions.all")}</option>
             <option value="active">{commonT("inactive")}</option>
           </FormSelect>
-
-          {/* <FormSelect
-      value={sortOrder}
-      onChange={(e) => {
-        setSortOrder(e.target.value as "ASC" | "DESC");
-        setPage(1);
-      }}
-      className="h-[44px] rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm focus:outline-none"
-    >
-      <option value="DESC">Newest First</option>
-      <option value="ASC">Oldest First</option>
-    </FormSelect> */}
-
-          <Button
-            disabled={!canFetchCategories}
-            onClick={handleManualSearch}
-            className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm"
-          >
-            {commonT("search")}
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {isReordering && !isBranchAdmin ? (
         <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">

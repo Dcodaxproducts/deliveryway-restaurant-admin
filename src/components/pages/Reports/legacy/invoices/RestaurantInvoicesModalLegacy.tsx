@@ -9,7 +9,6 @@ import {
   Loader2,
   MessageSquare,
   ReceiptText,
-  Search,
   User,
   Wallet,
 } from "lucide-react";
@@ -18,6 +17,7 @@ import { toast } from "sonner";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatMoney, resolveCurrency } from "@/lib/currency";
+import { SearchField } from "@/components/common/SearchField";
 
 import {
   Dialog,
@@ -478,10 +478,6 @@ export default function RestaurantInvoicesModal({
 
   const previewCurrency = getInvoiceCurrency(filteredInvoices[0] || invoices[0]);
 
-  const handleSearchClick = () => {
-    setSearch((current) => current.trim());
-  };
-
   const handleDownloadInvoice = async (invoice: AdminInvoice) => {
     if (!restaurantId) {
       toast.error("Restaurant is not available");
@@ -617,34 +613,16 @@ export default function RestaurantInvoicesModal({
             </div>
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <div className="relative flex-1">
-              <Search
-                size={17}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-              />
-
-              <input
+          <div className="mt-4">
+            <div className="min-w-0">
+              <SearchField
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    handleSearchClick();
-                  }
-                }}
+                onClear={() => setSearch("")}
                 placeholder="Search invoice, customer, branch, order ID..."
-                className="h-[48px] w-full rounded-[14px] border border-gray-200 bg-white pl-10 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/15"
+                className="h-10"
               />
             </div>
-
-            <Button
-              type="button"
-              onClick={handleSearchClick}
-              className="h-[48px] rounded-[14px] px-9 font-semibold bg-primary text-white transition hover:bg-primary/90"
-            >
-              <Search size={17}  />
-              Search
-            </Button>
           </div>
         </div>
 

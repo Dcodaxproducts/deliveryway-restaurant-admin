@@ -279,9 +279,8 @@ describe("modifier categories presentation", () => {
     expect(filters.disabled).toBe(true);
     filters.onSearchChange("new search");
     filters.onInactiveChange(true);
-    filters.onSearch();
     expect(harness.state[2]).toBe("new search");
-    expect(harness.refetch).toHaveBeenCalledOnce();
+    expect(harness.refetch).not.toHaveBeenCalled();
     render();
     expect(harness.query).toHaveBeenLastCalledWith(expect.objectContaining({ restaurantId: undefined, inactive: true, page: 1 }));
   });

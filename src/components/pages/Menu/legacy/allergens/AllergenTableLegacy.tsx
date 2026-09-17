@@ -13,9 +13,9 @@ import {
   Loader2,
   PlusCircle,
   RefreshCcw,
-  Search,
   ShieldAlert,
 } from "lucide-react";
+import { SearchField } from "@/components/common/SearchField";
 
 import { Button } from "@/components/ui/button";
 import { FilterActions } from "@/components/common/FilterActions";
@@ -348,17 +348,6 @@ export default function AllergenTable() {
     setOpen(true);
   };
 
-  const handleManualSearch = () => {
-    const nextSearch = search.trim();
-
-    setDebouncedSearch(nextSearch);
-    setPage(1);
-
-    if (debouncedSearch === nextSearch) {
-      refetch();
-    }
-  };
-
   const handleTypeFilterChange = (value: TemplateFilter) => {
     setTypeFilter(value);
     setPage(1);
@@ -592,22 +581,13 @@ export default function AllergenTable() {
               {commonT("search")}
             </label>
 
-            <div className="relative min-w-0">
-              <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                size={18}
-              />
-
-              <input
+            <div className="min-w-0">
+              <SearchField
                 placeholder={t("searchPlaceholder")}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    handleManualSearch();
-                  }
-                }}
-                className="h-10 w-full min-w-0 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] pl-11 pr-4 text-sm text-[var(--ui-text)] outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                onClear={() => setSearch("")}
+                className="bg-[var(--ui-surface-subtle)]"
               />
             </div>
           </div>
@@ -671,9 +651,7 @@ export default function AllergenTable() {
 
           <div className="min-w-0 md:col-span-2 2xl:col-span-3">
             <FilterActions
-              searchLabel={commonT("search")}
               resetLabel={commonT("reset")}
-              onSearch={handleManualSearch}
               onReset={handleResetFilters}
               resetDisabled={!hasActiveFilters && !isFetching}
             />

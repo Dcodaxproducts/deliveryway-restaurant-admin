@@ -10,7 +10,8 @@ import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
 import { StatePanel } from "@/components/common/EmptyState";
 import { StatusBadge } from "@/components/common/status-badge";
 import { MenuManagementActions } from "@/components/pages/Menu/shared/MenuManagementPage";
-import { Copy, MoreVertical, Search } from "lucide-react";
+import { Copy, MoreVertical } from "lucide-react";
+import { SearchField } from "@/components/common/SearchField";
 import { useDuplicateModifier } from "@/hooks/useMenus";
 import { useDeleteModifier, useModifiers } from "@/hooks/useModifiers";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
@@ -138,17 +139,14 @@ export default function ModifiersTable() {
       </MenuManagementActions>
 
       <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center">
-        <div className="relative w-full max-w-[420px]">
-          <Search
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-            size={18}
-          />
-
-          <input
+        <div className="w-full max-w-[420px]">
+          <SearchField
             placeholder={t("searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            onClear={() => setSearch("")}
+            disabled={!restaurantId}
+            className="bg-[var(--ui-surface-subtle)]"
           />
         </div>
 
@@ -166,13 +164,6 @@ export default function ModifiersTable() {
           />
         </div>
 
-        <Button
-          onClick={() => refetch()}
-          disabled={!restaurantId}
-          className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm disabled:opacity-60"
-        >
-          {commonT("search")}
-        </Button>
       </div>
 
       {isError ? (

@@ -9,6 +9,7 @@ import { Controller, useForm, useWatch, type FieldErrors } from "react-hook-form
 import { toast } from "sonner";
 
 import { FIELD_ERROR_CLASS, INPUT_BASE_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
+import { DateTimePickerInput } from "@/components/common/DateTimeInputs";
 import FormInput from "@/components/forms/common/FormInput";
 import { ImageUploadField } from "@/components/forms/common/ImageUploadField";
 import AdminDealCategorySelector from "@/components/pages/Menu/deals/components/AdminDealCategorySelector";
@@ -1019,11 +1020,10 @@ function DateField({ label, value, error, onChange, onBlur }: DateFieldProps) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Input
-        type="datetime-local"
+      <DateTimePickerInput
         min={getLocalTodayDateTimeInputValue()}
         value={value ?? ""}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={onChange}
         onBlur={onBlur}
         className={INPUT_BASE_CLASS}
       />

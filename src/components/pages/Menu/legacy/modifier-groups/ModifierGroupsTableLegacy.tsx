@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FaPen, FaTrash } from "react-icons/fa";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
+import { SearchField } from "@/components/common/SearchField";
 import { ModifierGroupModal } from "@/components/pages/Menu/legacy/ModifierGroupModal";
 import { ManageGroupModifiersDialog } from "@/components/pages/Menu/modifier-groups/components/ManageGroupModifiersDialog";
 import PaginationSection from "@/components/common/PaginationSection";
@@ -118,25 +119,17 @@ export function ModifierGroupsTableLegacy() {
       </MenuManagementActions>
 
       <div className="mb-6 flex items-center gap-3">
-        <div className="relative w-full max-w-[420px]">
-          <Search
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-            size={18}
-          />
-          <input
+        <div className="w-full max-w-[420px]">
+          <SearchField
             placeholder={t("searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            onClear={() => setSearch("")}
+            disabled={!restaurantId}
+            className="bg-[var(--ui-surface-subtle)]"
           />
         </div>
 
-        <Button
-          onClick={() => refetch()}
-          className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm"
-        >
-          {commonT("search")}
-        </Button>
       </div>
 
       {isError ? (

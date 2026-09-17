@@ -1,7 +1,7 @@
 "use client";
 
-import { LocateFixed, MapPin, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { LocateFixed, MapPin } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { SearchField } from "@/components/common/SearchField";
 import { Input } from "@/components/ui/input";
 import {
   isValidLatitude,
@@ -81,7 +82,6 @@ export function GuestAddressLocationPicker({
   onChange,
 }: GuestAddressLocationPickerProps) {
   const t = useTranslations("pos");
-  const commonT = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<NominatimResult[]>([]);
@@ -123,23 +123,38 @@ export function GuestAddressLocationPicker({
     setOpen(false);
   };
 
-  const searchLocations = async () => {
+  useEffect(() => {
     const trimmedQuery = query.trim();
-    if (!trimmedQuery) return;
-
-    try {
-      setSearching(true);
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&q=${encodeURIComponent(trimmedQuery)}`,
-      );
-      const data: unknown = await response.json();
-      setResults(getResultArray(data));
-    } catch {
-      toast.error(t("locationSearchFailed"));
-    } finally {
+    if (trimmedQuery.length < 3) {
+      setResults([]);
       setSearching(false);
+      return;
     }
-  };
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        setSearching(true);
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&q=${encodeURIComponent(trimmedQuery)}`,
+          { signal: controller.signal },
+        );
+        const data: unknown = await response.json();
+        setResults(getResultArray(data));
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          toast.error(t("locationSearchFailed"));
+        }
+      } finally {
+        if (!controller.signal.aborted) setSearching(false);
+      }
+    }, 450);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [query, t]);
 
   const useCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -221,30 +236,16 @@ export function GuestAddressLocationPicker({
 
           <div className="space-y-4">
             <div className="flex flex-col gap-2 sm:flex-row">
-              <div className="relative flex-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <Input
+              <div className="min-w-0 flex-1">
+                <SearchField
                   value={query}
+                  aria-busy={searching}
                   onChange={(event) => setQuery(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      void searchLocations();
-                    }
-                  }}
+                  onClear={() => setQuery("")}
                   placeholder={t("searchLocationPlaceholder")}
                   className="h-11 pl-9 text-sm"
                 />
               </div>
-              <Button
-                type="button"
-                onClick={() => void searchLocations()}
-                disabled={searching}
-                className="h-11 gap-2"
-              >
-                <Search className="h-4 w-4" />
-                {searching ? commonT("loading") : commonT("search")}
-              </Button>
               <Button
                 type="button"
                 variant="outline"

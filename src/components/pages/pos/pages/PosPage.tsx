@@ -21,6 +21,8 @@ type PosMenuItem = {
 export default function Orders() {
   const t = useTranslations("pos");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [itemPage, setItemPage] = useState(1);
   const [allItems, setAllItems] = useState<PosMenuItem[]>([]);
   const { user, isBranchAdmin } = useAuth();
@@ -29,6 +31,7 @@ export default function Orders() {
   const { data: itemsResponse, isLoading, isFetching } = useGetMenuItems({
     restaurantId: restaurantId || undefined,
     categoryId: selectedCategory || undefined,
+    search: debouncedSearchQuery || undefined,
     page: itemPage,
     limit: itemLimit,
   });
@@ -51,9 +54,17 @@ export default function Orders() {
   const loading = isLoading || isFetching;
 
   useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery.trim());
+    }, 350);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  useEffect(() => {
     setItemPage(1);
     setAllItems([]);
-  }, [selectedCategory, restaurantId]);
+  }, [debouncedSearchQuery, selectedCategory, restaurantId]);
 
   useEffect(() => {
     setAllItems((currentItems) => {
@@ -79,7 +90,7 @@ export default function Orders() {
         }
       />
 
-      <PosSearchFilter />
+      <PosSearchFilter query={searchQuery} onQueryChange={setSearchQuery} />
 
       <DetailLayout
         aside={

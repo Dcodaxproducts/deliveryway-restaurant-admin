@@ -19,9 +19,9 @@ import FormInput from "@/components/forms/common/FormInput";
 import { ImageUploadField } from "@/components/forms/common/ImageUploadField";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormActions } from "@/components/common/FormLayout";
+import { DateTimePickerInput } from "@/components/common/DateTimeInputs";
 import { StatePanel } from "@/components/common/EmptyState";
 import PageWrapper from "@/components/pages/Promotions/forms/PageWrapper";
 import Section from "@/components/pages/Promotions/forms/Section";
@@ -632,13 +632,13 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
               render={({ field, fieldState }) => (
                 <div className="space-y-2">
                   <Label>{t("forms.startsAt")}</Label>
-                  <Input
-                    type="datetime-local"
+                  <DateTimePickerInput
                     min={minimumDateTime}
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(value) => field.onChange(value)}
                     onBlur={field.onBlur}
                     className={INPUT_BASE_CLASS}
+                    ariaLabel={t("forms.startsAt")}
                   />
                   {fieldState.error?.message ? (
                     <p className={FIELD_ERROR_CLASS}>
@@ -655,13 +655,13 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
               render={({ field, fieldState }) => (
                 <div className="space-y-2">
                   <Label>{t("forms.expiresAt")}</Label>
-                  <Input
-                    type="datetime-local"
+                  <DateTimePickerInput
                     min={minimumDateTime}
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(value) => field.onChange(value)}
                     onBlur={field.onBlur}
                     className={INPUT_BASE_CLASS}
+                    ariaLabel={t("forms.expiresAt")}
                   />
                   {fieldState.error?.message ? (
                     <p className={FIELD_ERROR_CLASS}>

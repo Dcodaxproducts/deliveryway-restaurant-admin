@@ -130,7 +130,6 @@ export default function ModifierCategoriesTable() {
           setInactive(value);
           setPage(1);
         }}
-        onSearch={() => void refetch()}
         disabled={!restaurantId}
       />
 

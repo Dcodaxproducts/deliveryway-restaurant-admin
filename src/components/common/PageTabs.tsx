@@ -29,7 +29,7 @@ export function PageTabs<T extends string>({
       aria-label={ariaLabel}
       data-slot="page-tabs"
       className={cn(
-        "flex w-fit max-w-full items-center gap-1 overflow-x-auto rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-1 shadow-[var(--ui-shadow-xs)]",
+        "scroll-hidden flex w-fit max-w-full items-center gap-1 overflow-x-auto rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-1 shadow-[var(--ui-shadow-xs)]",
         className,
       )}
     >

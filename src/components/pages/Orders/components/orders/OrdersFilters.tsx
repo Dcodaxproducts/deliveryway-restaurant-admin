@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DayPicker, type DateRange } from "react-day-picker";
-import { CalendarDays, ChevronDown, Search, X } from "lucide-react";
+import { type DateRange } from "react-day-picker";
+import { CalendarDays, ChevronDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,6 +15,8 @@ import type {
   OrdersScheduleFilter,
 } from "@/components/pages/Orders/utils/orders-schedule-filters";
 import { useTranslations } from "next-intl";
+import { SearchField } from "@/components/common/SearchField";
+import { Calendar } from "@/components/ui/calendar";
 
 interface Props {
   onSearch: (value: string) => void;
@@ -61,10 +63,6 @@ export function OrdersFilters({
 
     return () => window.clearTimeout(timer);
   }, [onSearch, searchValue]);
-
-  const handleSearch = () => {
-    onSearch(searchValue.trim());
-  };
 
   const statuses = [
     { label: t("allStatus"), value: "ALL" },
@@ -122,31 +120,14 @@ export function OrdersFilters({
   return (
     <div className="w-full rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-4">
       <div className="grid gap-4 xl:grid-cols-[minmax(280px,1fr)_auto_auto] xl:items-center">
-        <div className="relative flex-1">
-          <Search
-            size={22}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-          />
-
-          <input
+        <div className="min-w-0 flex-1">
+          <SearchField
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleSearch();
-              }
-            }}
-            type="text"
+            onClear={() => setSearchValue("")}
             placeholder={t("searchPlaceholder")}
-            className="h-10 w-full rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] pl-11 pr-[112px] text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/10 sm:pr-[150px]"
+            className="h-10"
           />
-
-          <Button
-            onClick={handleSearch}
-            className="absolute right-0 h-full rounded-[var(--ui-radius-control)] bg-primary px-5 text-white sm:px-8"
-          >
-            {common("search")}
-          </Button>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:flex">
@@ -252,7 +233,7 @@ export function OrdersFilters({
 
           {calendarOpen && scheduleFilter === "CUSTOM_RANGE" ? (
             <div className="absolute left-0 top-[56px] z-50 w-max max-w-[calc(100vw-48px)] overflow-x-auto rounded-[20px] border border-gray-200 bg-white p-3 shadow-xl">
-              <DayPicker
+            <Calendar
                 mode="range"
                 selected={selectedRange}
                 onSelect={handleRangeSelect}

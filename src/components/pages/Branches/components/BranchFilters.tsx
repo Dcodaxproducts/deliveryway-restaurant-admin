@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Download, Search, SlidersHorizontal } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Download, SlidersHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { FilterBar } from "@/components/common/FilterBar";
 import FilterModal, { type CommonFilterValues } from "@/components/common/FilterModal";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchField } from "@/components/common/SearchField";
 import { formatBranchAddress, type BranchListItem } from "./list";
 
 type ExportRow = Pick<
@@ -44,7 +44,13 @@ export default function BranchFilters({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState(filters.search ?? "");
 
-  const handleSearch = () => onFilterChange({ search, page: 1 });
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      onFilterChange({ search: search.trim(), page: 1 });
+    }, 400);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [onFilterChange, search]);
 
   const exportCSV = () => {
     if (!branches?.length) return;
@@ -82,31 +88,16 @@ export default function BranchFilters({
     <>
       <FilterBar
         search={
-          <form
-            className="flex min-w-0 gap-2"
-            onSubmit={(event) => {
-              event.preventDefault();
-              handleSearch();
-            }}
-          >
-            <div className="relative min-w-0 flex-1">
-              <Search
-                aria-hidden="true"
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ui-text-subtle)]"
-              />
-              <Input
-                type="search"
+          <div className="min-w-0">
+            <div className="min-w-0 flex-1">
+              <SearchField
                 placeholder={commonT("searchByName")}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                className="h-11 pl-10"
+                onClear={() => setSearch("")}
               />
             </div>
-            <Button type="submit" className="h-11 px-5">
-              {commonT("search")}
-            </Button>
-          </form>
+          </div>
         }
         actions={
           <>

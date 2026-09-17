@@ -1,12 +1,10 @@
-import { Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { SearchField } from "@/components/common/SearchField";
 
 type ModifierCategoryFiltersProps = {
   search: string;
   onSearchChange: (value: string) => void;
   inactive: boolean;
   onInactiveChange: (value: boolean) => void;
-  onSearch: () => void;
   disabled?: boolean;
 };
 
@@ -15,22 +13,18 @@ export default function ModifierCategoryFilters({
   onSearchChange,
   inactive,
   onInactiveChange,
-  onSearch,
   disabled = false,
 }: ModifierCategoryFiltersProps) {
   return (
     <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center">
-      <div className="relative w-full max-w-[420px]">
-        <Search
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-          size={18}
-        />
-
-        <input
+      <div className="w-full max-w-[420px]">
+        <SearchField
           placeholder="Search categories..."
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
-          className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          onClear={() => onSearchChange("")}
+          disabled={disabled}
+          className="bg-[var(--ui-surface-subtle)]"
         />
       </div>
 
@@ -44,13 +38,6 @@ export default function ModifierCategoryFilters({
         Show inactive
       </label>
 
-      <Button
-        onClick={onSearch}
-        disabled={disabled}
-        className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm disabled:opacity-60"
-      >
-        Search
-      </Button>
     </div>
   );
 }

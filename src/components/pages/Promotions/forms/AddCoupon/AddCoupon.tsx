@@ -47,6 +47,7 @@ import { getMenuCategories } from "@/services/menu/categories/menu-categories.ap
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { FormActions } from "@/components/common/FormLayout";
+import { DateTimePickerInput } from "@/components/common/DateTimeInputs";
 
 const defaultValues: CouponFormValues = {
   code: "",
@@ -402,14 +403,10 @@ export default function AddNewCoupon() {
             control={control}
             name="startsAt"
             render={({ field }) => (
-              <FormInput
-                label={t("forms.startsAtOptional")}
-                type="datetime-local"
-                min={minimumDateTime}
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
+              <div className="space-y-2">
+                <Label>{t("forms.startsAtOptional")}</Label>
+                <DateTimePickerInput min={minimumDateTime} value={field.value} onChange={field.onChange} onBlur={field.onBlur} ariaLabel={t("forms.startsAtOptional")} />
+              </div>
             )}
           />
 
@@ -417,14 +414,10 @@ export default function AddNewCoupon() {
             control={control}
             name="expiresAt"
             render={({ field }) => (
-              <FormInput
-                label={t("forms.expiresAtOptional")}
-                type="datetime-local"
-                min={minimumDateTime}
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
+              <div className="space-y-2">
+                <Label>{t("forms.expiresAtOptional")}</Label>
+                <DateTimePickerInput min={minimumDateTime} value={field.value} onChange={field.onChange} onBlur={field.onBlur} ariaLabel={t("forms.expiresAtOptional")} />
+              </div>
             )}
           />
         </Section>

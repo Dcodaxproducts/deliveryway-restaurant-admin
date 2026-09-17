@@ -18,10 +18,10 @@ import { toast } from "sonner";
 import FormInput from "@/components/forms/common/FormInput";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { FormActions } from "@/components/common/FormLayout";
+import { DatePickerInput } from "@/components/common/DateTimeInputs";
 import { StatePanel } from "@/components/common/EmptyState";
 import { Time24Picker } from "@/components/ui/time-24-picker";
 import PageWrapper from "@/components/pages/Promotions/forms/PageWrapper";
@@ -439,13 +439,13 @@ export default function AddHappyHour() {
               render={({ field, fieldState }) => (
                 <div className="space-y-2">
                   <Label>{t("forms.startsAt")}</Label>
-                  <Input
-                    type="date"
+                  <DatePickerInput
                     min={minimumDate}
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(value) => field.onChange(value)}
                     onBlur={field.onBlur}
                     className={INPUT_BASE_CLASS}
+                    ariaLabel={t("forms.startsAt")}
                   />
                   {fieldState.error?.message ? (
                     <p className={FIELD_ERROR_CLASS}>
@@ -462,13 +462,13 @@ export default function AddHappyHour() {
               render={({ field, fieldState }) => (
                 <div className="space-y-2">
                   <Label>{t("forms.expiresAt")}</Label>
-                  <Input
-                    type="date"
+                  <DatePickerInput
                     min={minimumDate}
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(value) => field.onChange(value)}
                     onBlur={field.onBlur}
                     className={INPUT_BASE_CLASS}
+                    ariaLabel={t("forms.expiresAt")}
                   />
                   {fieldState.error?.message ? (
                     <p className={FIELD_ERROR_CLASS}>

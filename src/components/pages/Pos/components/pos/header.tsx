@@ -1,5 +1,7 @@
 "use client";
 
+import { CalendarPlus } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import Header from "@/components/common/PageHeader";
 import { useState } from "react";
@@ -21,12 +23,12 @@ export default function PosHeader({ title, description }: HeaderProps) {
       <Header
         title={title}
         description={description}
+        className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4 shadow-[var(--ui-shadow-xs)] sm:p-5"
         actions={
-        <Button
-          onClick={() => setOpenMakeReservation(true)}
-        >
-          {t("makeReservation")}
-        </Button>
+          <Button onClick={() => setOpenMakeReservation(true)}>
+            <CalendarPlus aria-hidden="true" />
+            {t("makeReservation")}
+          </Button>
         }
       />
       <MakeReservationModal

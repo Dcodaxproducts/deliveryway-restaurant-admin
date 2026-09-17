@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { FilterSheet } from "@/components/common/FilterBar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Radio } from "@/components/ui/radioBtn";
-import FormInput from "@/components/forms/common/FormInput";
+import { DatePickerInput } from "@/components/common/DateTimeInputs";
+import { Label } from "@/components/ui/label";
 import { getLocalTodayInputValue } from "@/lib/date-input";
 import { useTranslations } from "next-intl";
 
@@ -172,23 +173,17 @@ export default function FilterModal({
 
           {/* CREATION DATE */}
 
-          <FormInput
-            label={t("creationDate")}
-            type="date"
-            min={todayDate}
-            value={creationDate}
-            onChange={setCreationDate}
-          />
+          <div className="space-y-2">
+            <Label>{t("creationDate")}</Label>
+            <DatePickerInput min={todayDate} value={creationDate} onChange={setCreationDate} ariaLabel={t("creationDate")} />
+          </div>
 
           {/* MODIFIED DATE */}
 
-          <FormInput
-            label={t("modifiedDate")}
-            type="date"
-            min={todayDate}
-            value={modifiedDate}
-            onChange={setModifiedDate}
-          />
+          <div className="space-y-2">
+            <Label>{t("modifiedDate")}</Label>
+            <DatePickerInput min={todayDate} value={modifiedDate} onChange={setModifiedDate} ariaLabel={t("modifiedDate")} />
+          </div>
 
           {/* OPTIONS */}
 

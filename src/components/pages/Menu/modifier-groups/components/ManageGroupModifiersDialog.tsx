@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Search } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { SearchField } from "@/components/common/SearchField";
 import {
   Dialog,
   DialogContent,
@@ -58,7 +59,6 @@ export function ManageGroupModifiersDialog({
   restaurantId,
 }: ManageGroupModifiersDialogProps) {
   const t = useTranslations("menu.modifierGroupsTable.manage");
-  const commonT = useTranslations("common");
   const { formatMoney } = useCurrency(restaurantId);
   const [page, setPage] = useState(1);
   const [limit] = useState(8);
@@ -133,7 +133,6 @@ export function ManageGroupModifiersDialog({
     data: modifiersResponse,
     isLoading,
     isFetching,
-    refetch,
   } = useModifiers({
     restaurantId,
     categoryId: categoryId || undefined,
@@ -314,16 +313,14 @@ export function ManageGroupModifiersDialog({
 
           <section className="rounded-[16px] bg-white p-4">
             <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
-              <div className="relative w-full">
-                <Search
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
-                <input
+              <div className="w-full">
+                <SearchField
                   placeholder={t("searchPlaceholder")}
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  onClear={() => setSearch("")}
+                  disabled={!restaurantId}
+                  className="bg-[var(--ui-surface-subtle)]"
                 />
               </div>
 
@@ -341,14 +338,6 @@ export function ManageGroupModifiersDialog({
                 />
               </div>
 
-              <Button
-                type="button"
-                onClick={() => void refetch()}
-                disabled={!restaurantId}
-                className="h-[44px] w-full rounded-[14px] bg-primary px-5 text-white lg:w-auto"
-              >
-                {commonT("search")}
-              </Button>
             </div>
 
             <div className="space-y-3">

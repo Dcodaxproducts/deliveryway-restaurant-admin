@@ -8,10 +8,17 @@ import FilterModal from "@/components/common/FilterModal";
 import { FilterBar } from "@/components/common/FilterBar";
 import { useTranslations } from "next-intl";
 
-export default function PosSearchFilter() {
+type PosSearchFilterProps = {
+  query: string;
+  onQueryChange: (query: string) => void;
+};
+
+export default function PosSearchFilter({
+  query,
+  onQueryChange,
+}: PosSearchFilterProps) {
   const t = useTranslations("pos");
   const commonT = useTranslations("common");
-  const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
 
   return (
@@ -20,21 +27,20 @@ export default function PosSearchFilter() {
         search={
           <BorderedSearchBar
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onSearch={() => undefined}
+            onChange={(event) => onQueryChange(event.target.value)}
             placeholder={t("searchPlaceholder")}
             className="w-full"
           />
         }
         actions={
-        <Button
-          onClick={() => setOpen(true)}
-          variant="outline"
-          className="w-full px-4 text-[var(--ui-text-muted)] sm:w-auto"
-        >
-          <SlidersHorizontal size={18} />
-          {commonT("filter")}
-        </Button>
+          <Button
+            onClick={() => setOpen(true)}
+            variant="outline"
+            className="w-full px-4 text-[var(--ui-text-muted)] sm:w-auto"
+          >
+            <SlidersHorizontal size={18} />
+            {commonT("filter")}
+          </Button>
         }
       />
       <FilterModal open={open} onOpenChange={setOpen} />

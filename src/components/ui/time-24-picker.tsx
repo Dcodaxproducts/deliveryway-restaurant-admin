@@ -1,11 +1,5 @@
-"use client";
-
-import TimePicker from "react-time-picker";
-import type { ComponentProps } from "react";
-
+import { Input } from "@/components/ui/input";
 import { normalizeTime24 } from "@/hooks/use-time-24";
-
-type TimePickerValue = ComponentProps<typeof TimePicker>["value"];
 
 type Time24PickerProps = {
   value?: string | null;
@@ -17,7 +11,6 @@ type Time24PickerProps = {
   maxTime?: string;
   error?: string | boolean | null;
   className?: string;
-  allowClear?: boolean;
   placeholder?: string;
   id?: string;
 };
@@ -32,32 +25,27 @@ export function Time24Picker({
   maxTime,
   error,
   className = "",
-  allowClear = false,
   placeholder,
   id,
 }: Time24PickerProps) {
   const normalizedValue = value ? normalizeTime24(value) : "";
 
   return (
-    <TimePicker
+    <Input
+      type="time"
       id={id}
       name={name}
-      value={normalizedValue as TimePickerValue}
-      onChange={(nextValue) => {
-        const next = typeof nextValue === "string" ? nextValue : "";
+      value={normalizedValue}
+      onChange={(event) => {
+        const next = event.target.value;
         onChange(next ? normalizeTime24(next) : "");
       }}
       disabled={disabled}
       required={required}
-      minTime={minTime}
-      maxTime={maxTime}
-      format="HH:mm"
-      disableClock
-      clockIcon={null}
-      clearIcon={allowClear ? undefined : null}
-      hourPlaceholder="HH"
-      minutePlaceholder="MM"
-      className={`time-24-picker ${className}`}
+      min={minTime}
+      max={maxTime}
+      placeholder={placeholder}
+      className={className}
       aria-invalid={Boolean(error) || undefined}
       aria-label={placeholder || name || "Time"}
     />

@@ -2,12 +2,13 @@
 
 import { FormSelect } from "@/components/ui/form-select";
 
-import { Loader2, RefreshCcw, Search } from "lucide-react";
+import { Loader2, RefreshCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { FilterBar } from "@/components/common/FilterBar";
+import { SearchField } from "@/components/common/SearchField";
 
 export type GiftCardsFilterState = {
   search: string;
@@ -67,10 +68,6 @@ export default function GiftCardsFilters({
     return () => window.clearTimeout(timeoutId);
   }, [onFiltersChange, searchValue]);
 
-  const handleSearch = () => {
-    onFiltersChange({ search: searchValue.trim() });
-  };
-
   const handleReset = () => {
     setSearchValue("");
     onFiltersChange({
@@ -87,19 +84,12 @@ export default function GiftCardsFilters({
           <label className="mb-1.5 block text-xs font-medium text-[var(--ui-text-muted)]">
             {commonT("search")}
           </label>
-          <div className="relative min-w-0">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ui-text-subtle)]"
-              size={17}
-            />
-            <input
+          <div className="min-w-0">
+            <SearchField
               placeholder={t("searchPlaceholder")}
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") handleSearch();
-              }}
-              className="h-10 w-full min-w-0 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] pl-10 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-[var(--ui-focus-ring)]"
+              onClear={() => setSearchValue("")}
             />
           </div>
         </div>
@@ -161,20 +151,15 @@ export default function GiftCardsFilters({
         </>
       }
       actions={
-        <>
-          <Button type="button" onClick={handleSearch}>
-            {commonT("search")}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!hasActiveFilters && !isFetching}
-            onClick={handleReset}
-          >
-            <RefreshCcw size={15} />
-            {commonT("reset")}
-          </Button>
-        </>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={!hasActiveFilters && !isFetching}
+          onClick={handleReset}
+        >
+          <RefreshCcw size={15} />
+          {commonT("reset")}
+        </Button>
       }
     />
   );
