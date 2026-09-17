@@ -8,6 +8,9 @@ import OrderDetailsMain from "@/components/pages/Orders/components/orders/detail
 import OrderDetailsHeader from "@/components/pages/Orders/components/orders/details/OrderDetailsHeader";
 import OrderTrackingSection from "@/components/pages/Orders/components/orders/details/OrderTrackingSection";
 import UserProfile from "@/components/pages/Orders/components/orders/details/UserProfile";
+import Container from "@/components/common/Container";
+import { DetailLayout } from "@/components/common/DetailLayout";
+import { StatePanel } from "@/components/common/EmptyState";
 import { useGetOrderById } from "@/hooks/useOrders";
 import { silenceOrderAlert } from "@/hooks/useRealtimeOrderNotifications";
 import { shouldSilenceOrderAlertOnDetailsOpen } from "@/lib/new-order-navigation";
@@ -29,19 +32,24 @@ export default function OrderDetails() {
   }, [orderId, shouldSilenceAlert]);
 
   if (loading || !order) {
-    return <div className="p-6">{t("loadingOrder")}</div>;
+    return (
+      <Container>
+        <StatePanel
+          state="loading"
+          title={t("loadingOrder")}
+          description=""
+        />
+      </Container>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-muted/40 p-6 w-full">
+    <Container width="wide">
       <OrderDetailsHeader order={order} />
-
-      <div className="flex flex-col md:flex-row w-full gap-10">
+      <DetailLayout aside={<UserProfile order={order} />}>
         <OrderTrackingSection order={order} />
-        <UserProfile order={order} />
-      </div>
-
-      <OrderDetailsMain order={order} />
-    </div>
+        <OrderDetailsMain order={order} />
+      </DetailLayout>
+    </Container>
   );
 }

@@ -11,12 +11,18 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetMenuItems } from "@/hooks/useMenus";
 import { useTranslations } from "next-intl";
+import { DetailLayout, DetailPanel } from "@/components/common/DetailLayout";
+
+type PosMenuItem = {
+  id: string;
+  [key: string]: unknown;
+};
 
 export default function Orders() {
   const t = useTranslations("pos");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [itemPage, setItemPage] = useState(1);
-  const [allItems, setAllItems] = useState<any[]>([]);
+  const [allItems, setAllItems] = useState<PosMenuItem[]>([]);
   const { user, isBranchAdmin } = useAuth();
   const restaurantId = user?.restaurantId;
   const itemLimit = 10;
@@ -28,7 +34,10 @@ export default function Orders() {
   });
 
   const items = allItems;
-  const latestItems = useMemo(() => itemsResponse?.data || [], [itemsResponse?.data]);
+  const latestItems = useMemo<PosMenuItem[]>(
+    () => (Array.isArray(itemsResponse?.data) ? itemsResponse.data : []),
+    [itemsResponse?.data],
+  );
   const itemMeta = itemsResponse?.meta;
   const totalItems = Number(itemMeta?.total) || items.length;
   const totalItemPages = Math.max(
@@ -52,8 +61,8 @@ export default function Orders() {
 
       if (itemPage === 1) return sourceItems;
 
-      const existingIds = new Set(currentItems.map((item: any) => item?.id));
-      const nextItems = sourceItems.filter((item: any) => !existingIds.has(item?.id));
+      const existingIds = new Set(currentItems.map((item) => item.id));
+      const nextItems = sourceItems.filter((item) => !existingIds.has(item.id));
 
       return [...currentItems, ...nextItems];
     });
@@ -72,11 +81,14 @@ export default function Orders() {
 
       <PosSearchFilter />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* LEFT SIDE */}
-        <div className="lg:col-span-9">
-          
+      <DetailLayout
+        aside={
+          <DetailPanel padding="none">
+            <PosCart />
+          </DetailPanel>
+        }
+      >
+        <div className="space-y-5">
           <Categories
             showAddNew={false}
             selectedCategory={selectedCategory}
@@ -100,13 +112,7 @@ export default function Orders() {
             editing={false}
           />
         </div>
-
-        {/* RIGHT SIDE */}
-        <div className="lg:col-span-3">
-          <PosCart />
-        </div>
-
-      </div>
+      </DetailLayout>
     </Container>
   );
 }

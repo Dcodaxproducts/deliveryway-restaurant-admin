@@ -608,6 +608,7 @@
     "loadingDetails": "Loading order details...",
     "loadingOrder": "Loading order...",
     "groupOrder": "Group Order",
+    "participants": "Participants",
     "groupOrderDescription": "Organizing {totalItems} items across {participants} participants.",
     "printLabel": "Print Label",
     "payment": "Payment",

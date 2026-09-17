@@ -1,6 +1,7 @@
 import Container from "@/components/common/Container";
 import Header from "@/components/common/PageHeader";
 import SettingsForm from "@/components/pages/Settings/forms/SettingsForm";
+import { SettingsLayout } from "@/components/common/SettingsLayout";
 
 const PaymentSettingsPage = () => {
   return (
@@ -9,7 +10,9 @@ const PaymentSettingsPage = () => {
         title="Payment Settings"
         description="Review wallet payouts and request manual payout transfers"
       />
-      <SettingsForm variant="payments" />
+      <SettingsLayout>
+        <SettingsForm variant="payments" />
+      </SettingsLayout>
     </Container>
   );
 };

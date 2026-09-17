@@ -40,6 +40,7 @@ import {
   settingsSchema,
   type SettingsFormValues,
 } from "@/validations/settings";
+import { DetailPanel } from "@/components/common/DetailLayout";
 
 const defaultValues: SettingsFormValues = {
   globalTaxPercentage: "",
@@ -139,7 +140,7 @@ export default function SettingsForm({
       hasStaffPermission(user, ["payment-settings"], ["create", "write"]);
 
     return (
-      <div className="space-y-[24px] rounded-[14px] bg-white p-4 lg:p-[30px]">
+      <DetailPanel className="space-y-6" padding="lg">
         {canViewPaymentMethods ? (
           <RestaurantPaymentMethodsSection restaurantId={restaurantId} />
         ) : null}
@@ -153,7 +154,7 @@ export default function SettingsForm({
             Payment settings are available for restaurant and branch admins.
           </p>
         )}
-      </div>
+      </DetailPanel>
     );
   }
 

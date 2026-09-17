@@ -4,52 +4,60 @@ import { Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { formatDeliveryAddress } from "@/components/pages/Orders/components/orders/details/order-details-utils";
+import { DetailPanel, InfoList } from "@/components/common/DetailLayout";
 
-const UserProfile = ({ order }: { order: any }) => {
+type UserProfileOrder = {
+  customer?: {
+    avatarUrl?: string | null;
+    fullName?: string | null;
+  } | null;
+  customerNote?: string | null;
+  deliveryAddress?: Parameters<typeof formatDeliveryAddress>[0];
+};
+
+const UserProfile = ({ order }: { order: UserProfileOrder }) => {
   const t = useTranslations("orders");
   const customer = order?.customer;
   const deliveryAddress = formatDeliveryAddress(order?.deliveryAddress);
 
   return (
-    <div className="pt-9 min-w-[320px] mx-auto bg-white rounded-lg shadow-lg relative h-full">
-      <div className="flex flex-col items-center text-center pb-28">
-        {/* Avatar */}
+    <DetailPanel
+      title={t("customer")}
+      className="overflow-hidden"
+      padding="none"
+    >
+      <div className="flex flex-col items-center px-5 py-6 text-center">
         <img
           src={customer?.avatarUrl || "/dummy-user-2.jpg"}
-          alt="User"
-          className="w-32 h-32 rounded-xl object-cover mb-4"
+          alt={customer?.fullName || t("unknownUser")}
+          className="mb-4 size-24 rounded-[var(--ui-radius-card)] object-cover"
         />
-
-        {/* Name */}
-        <h3 className="text-xl font-semibold">
+        <h3 className="text-lg font-semibold">
           {customer?.fullName || t("unknownUser")}
         </h3>
-
-        {/* Role */}
-        <p className="text-sm text-primary mb-4 bg-primary/10 rounded-full px-4 py-1">
+        <p className="mt-1 rounded-full bg-[var(--ui-brand-soft)] px-3 py-1 text-xs font-medium text-primary">
           {t("customerRole")}
         </p>
-
-        {/* Note */}
-        <div className="w-full px-6 py-3 rounded-lg text-left">
-          <h4 className="text-lg font-medium mb-2">{t("noteOrder")}</h4>
-          <p className="text-sm text-gray-600">
-            {order?.customerNote || t("noOrderNote")}
-          </p>
-        </div>
       </div>
-
-      {/*  ABSOLUTE BOTTOM BAR */}
-      <div className="absolute bottom-0 left-0 w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-4 px-6 rounded-b-lg flex items-center space-x-4">
-        <div className="bg-white text-red-600 rounded-full p-2">
-          <Truck className="w-5 h-5" />
-        </div>
-
-        <p className="text-sm whitespace-pre-line">
-          {deliveryAddress || t("takeawayOrder")}
-        </p>
+      <div className="border-t border-[var(--ui-border)] px-5 py-5">
+        <InfoList
+          columns={1}
+          items={[
+            {
+              id: "note",
+              label: t("noteOrder"),
+              value: order.customerNote || t("noOrderNote"),
+            },
+            {
+              id: "address",
+              label: t("deliveryAddress"),
+              value: deliveryAddress || t("takeawayOrder"),
+              icon: <Truck />,
+            },
+          ]}
+        />
       </div>
-    </div>
+    </DetailPanel>
   );
 };
 

@@ -608,6 +608,7 @@
     "loadingDetails": "Bestelldetails werden geladen...",
     "loadingOrder": "Bestellung wird geladen...",
     "groupOrder": "Gruppenbestellung",
+    "participants": "Teilnehmer",
     "groupOrderDescription": "Organisiert {totalItems} Artikel über {participants} Teilnehmer.",
     "printLabel": "Label drucken",
     "payment": "Zahlung",

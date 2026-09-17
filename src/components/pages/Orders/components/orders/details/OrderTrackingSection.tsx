@@ -1,14 +1,25 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { Phone, MapPin } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { formatDeliveryAddress } from "@/components/pages/Orders/components/orders/details/order-details-utils";
 import { formatTime24 } from "@/lib/date-time-format";
+import { DetailPanel, InfoList } from "@/components/common/DetailLayout";
 
 type Props = {
-  order: any;
+  order: {
+    status?: string | null;
+    isScheduled?: boolean | null;
+    orderTime?: string | null;
+    customer?: {
+      id?: string | null;
+      avatarUrl?: string | null;
+      fullName?: string | null;
+      phone?: string | null;
+    } | null;
+    deliveryAddress?: Parameters<typeof formatDeliveryAddress>[0];
+  };
 };
 
 export default function OrderTrackingSection({ order }: Props) {
@@ -22,9 +33,9 @@ export default function OrderTrackingSection({ order }: Props) {
     : t("estimatedMinutes");
 
   return (
-    <Card className="w-full rounded-2xl shadow-sm border-0">
-      <CardContent className="p-6 pt-0 space-y-8">
-        <div className="relative bg-muted/40 rounded-2xl h-[280px] overflow-hidden">
+    <DetailPanel title={t("trackOrders")} description={order.status || t("tracking")}>
+      <div className="space-y-6">
+        <div className="relative h-[220px] overflow-hidden rounded-[var(--ui-radius-card)] bg-[var(--ui-surface-subtle)] sm:h-[260px]">
 
    <svg
             viewBox="0 0 700 140"
@@ -59,61 +70,50 @@ export default function OrderTrackingSection({ order }: Props) {
             <circle cx="640" cy="100" r="12" fill="#dc2626" />
           </svg>
           {/* TIME BUBBLE */}
-          <div className="absolute left-[250px] top-[60px] bg-white shadow-md rounded-xl px-4 py-2 text-sm font-semibold z-10">
+          <div className="absolute left-1/2 top-[60px] z-10 -translate-x-1/2 rounded-[var(--ui-radius-control)] bg-[var(--ui-surface-raised)] px-4 py-2 text-sm font-semibold shadow-[var(--ui-shadow-sm)]">
             {estimatedTime}
             <p className="text-[11px] text-muted-foreground font-normal">
               {t("estimatedTime")}
             </p>
           </div>
 
-          <div className="absolute right-8 top-8 text-right z-10">
-            <h3 className="text-lg font-semibold">{t("trackOrders")}</h3>
-            <p className="text-sm text-muted-foreground">
-              {order?.status || t("tracking")}
-            </p>
-          </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-
-          {/* LEFT */}
-          <div className="space-y-3">
-            <p className="font-semibold text-base">{t("customer")}</p>
-
-            <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 items-center gap-4 sm:w-1/3">
               <img
                 src={order?.customer?.avatarUrl || "/dummy-user.jpg"}
                 alt={order?.customer?.fullName || t("customer")}
-                className="w-14 h-14 rounded-xl object-cover"
+                className="size-12 rounded-[var(--ui-radius-control)] object-cover"
               />
-
-              <div>
-                <p className="font-semibold text-base">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">
                   {order?.customer?.fullName || "N/A"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {t("customerId", { id: order?.customer?.id })}
+                  {t("customerId", { id: order.customer?.id || "—" })}
                 </p>
               </div>
-            </div>
           </div>
-
-          {/* RIGHT */}
-          <div className="flex flex-wrap items-center gap-10">
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <Phone size={16} />
-              {order?.customer?.phone || "N/A"}
-            </div>
-
-            <div className="flex items-center gap-3 text-sm text-muted-foreground max-w-[260px]">
-              <MapPin size={16} />
-              <span className="whitespace-pre-line">
-                {deliveryAddress || t("takeawayOrder")}
-              </span>
-            </div>
-          </div>
+          <InfoList
+            className="flex-1"
+            items={[
+              {
+                id: "phone",
+                label: t("phone"),
+                value: order.customer?.phone,
+                icon: <Phone />,
+              },
+              {
+                id: "address",
+                label: t("deliveryAddress"),
+                value: deliveryAddress || t("takeawayOrder"),
+                icon: <MapPin />,
+              },
+            ]}
+          />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </DetailPanel>
   );
 }
