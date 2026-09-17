@@ -185,17 +185,28 @@ type OrderPeriodReportData = {
   onlineAmount?: number;
   totalOrders?: number;
   totalRevenue?: number;
+  payoutActivity?: Array<{
+    id: string;
+    requestedAt: string;
+    status: string;
+    amount: number;
+    currency?: string | null;
+    paidAt?: string | null;
+    paymentReference?: string | null;
+  }>;
 };
+
+const formatReportMoney = (value: number, currency?: string | null) =>
+  `${new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)} ${resolveCurrency(currency)}`;
 
 const formatReportDate = (value?: string) => {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return new Intl.DateTimeFormat("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
+  return date.toISOString().slice(0, 10);
 };
 
 const drawOrderReportHeader = (
@@ -255,15 +266,26 @@ const renderOrderPeriodReport = ({
 }) => {
   drawOrderReportHeader(doc, restaurantName, period);
 
+  addSectionTitle(doc, "Order Payment Details", 98);
+
   autoTable(doc, {
-    startY: 96,
-    head: [["Order ID", "Date", "Payment Method", "Payment Status", "Amount"]],
+    startY: 108,
+    head: [[
+      "Order ID",
+      "Date",
+      "Paid By",
+      "Status",
+      `Total (${resolveCurrency(currency)})`,
+    ]],
     body: (data.orders ?? []).map((order) => [
       order.id,
       formatReportDate(order.createdAt),
-      prettyLabel(order.paymentMethod),
-      prettyLabel(order.paymentStatus),
-      formatInvoiceCurrency(order.totalAmount, currency),
+      order.paymentMethod.toUpperCase(),
+      order.paymentStatus.toUpperCase(),
+      new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(order.totalAmount),
     ]),
     margin: { top: 90, left: 40, right: 40, bottom: 150 },
     theme: "plain",
@@ -300,17 +322,17 @@ const renderOrderPeriodReport = ({
       ["Offline/Cash Orders", String(data.offlineOrderCount ?? 0)],
       [
         "Offline/Cash Total",
-        formatInvoiceCurrency(data.offlineAmount ?? 0, currency),
+        formatReportMoney(data.offlineAmount ?? 0, currency),
       ],
       ["Online Payment Orders", String(data.onlineOrderCount ?? 0)],
       [
         "Online Payment Total",
-        formatInvoiceCurrency(data.onlineAmount ?? 0, currency),
+        formatReportMoney(data.onlineAmount ?? 0, currency),
       ],
       ["Total Orders", String(data.totalOrders ?? 0)],
       [
         "Total Revenue",
-        formatInvoiceCurrency(data.totalRevenue ?? 0, currency),
+        formatReportMoney(data.totalRevenue ?? 0, currency),
       ],
     ],
     margin: { left: 40, right: 40, bottom: 52 },
@@ -321,6 +343,58 @@ const renderOrderPeriodReport = ({
       1: { halign: "right", cellWidth: 265 },
     },
   } as any);
+
+  const payoutActivity = data.payoutActivity ?? [];
+  let payoutY = getFinalY(doc, summaryY + 150) + 24;
+  const pageHeight = doc.internal.pageSize.getHeight();
+  if (payoutY > pageHeight - 90) {
+    doc.addPage();
+    drawOrderReportHeader(doc, restaurantName, period);
+    payoutY = 98;
+  }
+
+  addSectionTitle(doc, "Payout Activity", payoutY);
+  if (payoutActivity.length === 0) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...PDF_GRAY_COLOR);
+    doc.text(
+      "No payout request activity for this selected period.",
+      40,
+      payoutY + 18,
+    );
+  } else {
+    autoTable(doc, {
+      startY: payoutY + 10,
+      head: [["Request", "Requested", "Status", "Paid", "Amount", "Reference"]],
+      body: payoutActivity.map((request) => [
+        request.id,
+        formatReportDate(request.requestedAt),
+        request.status.toUpperCase(),
+        request.paidAt ? formatReportDate(request.paidAt) : "-",
+        formatReportMoney(request.amount, request.currency ?? currency),
+        request.paymentReference ?? "-",
+      ]),
+      margin: { top: 90, left: 40, right: 40, bottom: 52 },
+      theme: "plain",
+      styles: {
+        font: "helvetica",
+        fontSize: 7,
+        cellPadding: 5,
+        textColor: PDF_DARK_COLOR,
+        lineColor: PDF_BORDER_COLOR,
+        lineWidth: { bottom: 0.4 },
+      },
+      headStyles: {
+        fillColor: PDF_LIGHT_GRAY_COLOR,
+        textColor: PDF_GRAY_COLOR,
+        fontStyle: "bold",
+      },
+      didDrawPage: ({ pageNumber }: HookData) => {
+        if (pageNumber > 1) drawOrderReportHeader(doc, restaurantName, period);
+      },
+    } as any);
+  }
 
   drawOrderReportFooter(doc);
 };
