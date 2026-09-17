@@ -7,6 +7,7 @@ import CreateCategoryModalParent from "./CreateCategoryModalParent";
 import useCategories from "@/hooks/useCategories";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import { useTranslations } from "next-intl";
+import { SectionCard } from "@/components/common/SectionCard";
 
 interface CategoriesProps {
   editing?: boolean;
@@ -72,14 +73,13 @@ useEffect(() => {
   if (categoryPage > totalCategoryPages) {
     setCategoryPage(Math.max(1, totalCategoryPages));
   }
-}, [categoryPage, totalCategoryPages]);
+  }, [categoryPage, totalCategoryPages]);
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[24px] font-semibold text-gray-900">
-          {t("title")}
-        </h2>
-
+    <SectionCard
+      variant="outlined"
+      padding="sm"
+      title={t("title")}
+      action={
         <div className="flex items-center gap-2">
           {totalCategoryPages > 1 && (
             <div className="flex items-center gap-2">
@@ -89,7 +89,7 @@ useEffect(() => {
                 size="icon"
                 disabled={!hasPreviousCategoryPage || fetching}
                 onClick={() => setCategoryPage((page) => Math.max(1, page - 1))}
-                className="h-9 w-9 rounded-[10px] border-gray-200 text-gray-700 hover:bg-white hover:text-gray-900 hover:shadow-md disabled:opacity-40"
+                className="h-8 w-8 rounded-[var(--ui-radius-control)] border-[var(--ui-border)] text-[var(--ui-text-muted)] disabled:opacity-40"
                 aria-label="Show previous categories"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -102,7 +102,7 @@ useEffect(() => {
                 onClick={() =>
                   setCategoryPage((page) => page + 1)
                 }
-                className="h-9 w-9 rounded-[10px] border-gray-200 text-gray-700 hover:bg-white hover:text-gray-900 hover:shadow-md disabled:opacity-40"
+                className="h-8 w-8 rounded-[var(--ui-radius-control)] border-[var(--ui-border)] text-[var(--ui-text-muted)] disabled:opacity-40"
                 aria-label="Show next categories"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -115,7 +115,7 @@ useEffect(() => {
             <Button
               variant="link"
               size="sm"
-              className="inline-flex items-center gap-2 text-primary underline hover:no-underline font-semibold text-[16px]"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary"
               onClick={() => setCreateCategory(true)}
             >
               <PlusCircle className="w-4 h-4" />
@@ -124,16 +124,17 @@ useEffect(() => {
           </div>
           )}
         </div>
-      </div>
+      }
+    >
 
       {/* Category Pills */}
 
   {loading ? (
-  <div className="flex flex-wrap gap-x-3 gap-y-5 max-w-[900px]">
+  <div className="flex max-w-full flex-wrap gap-2">
     {[...Array(6)].map((_, i) => (
       <div
         key={i}
-        className="relative h-[42px] w-[140px] rounded-[12px] border border-gray-200 bg-white px-4 py-2 animate-pulse overflow-hidden"
+        className="relative h-9 w-[132px] overflow-hidden rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] px-4 py-2 animate-pulse"
       >
         {/* soft shimmer */}
         <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-gray-100 to-transparent" />
@@ -144,7 +145,7 @@ useEffect(() => {
     ))}
   </div>
 ) : (
-        <div className="flex flex-wrap gap-x-3 gap-y-5 max-w-[900px]">
+        <div className="flex max-w-full flex-wrap gap-2">
           {categories.map((category) => {
             const isActive = selectedCategory === category.id;
 
@@ -154,16 +155,16 @@ useEffect(() => {
                   onClick={() => onSelectCategory(category.id)}
                   variant="outline"
                   className={`
-                    rounded-[12px]
-                    px-5
-                    py-2
+                    h-9
+                    rounded-[var(--ui-radius-control)]
+                    px-4
                     text-sm
                     font-medium
                     transition
                     ${
                       isActive
-                        ? "bg-primary text-white border-primary hover:bg-primary hover:text-white hover:shadow-md"
-                        : "text-[#6A7282] border-[#6A7282] bg-transparent hover:bg-transparent hover:text-[#6A7282] hover:shadow-md"
+                        ? "border-primary bg-primary text-white hover:bg-primary hover:text-white"
+                        : "border-[var(--ui-border)] bg-[var(--ui-surface)] text-[var(--ui-text-muted)] hover:bg-[var(--ui-surface-subtle)] hover:text-[var(--ui-text)]"
                     }
                   `}
                 >
@@ -216,6 +217,6 @@ useEffect(() => {
     name: categories.find((c) => c.id === deletingCategoryId)?.name || t("thisCategory"),
   })}
 />
-    </div>
+    </SectionCard>
   );
 }

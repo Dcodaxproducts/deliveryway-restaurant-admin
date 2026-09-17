@@ -43,7 +43,11 @@ export function FilterBar({
           {resultCount}
         </div>
       ) : null}
-      {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+          {actions}
+        </div>
+      ) : null}
     </div>
   );
 }

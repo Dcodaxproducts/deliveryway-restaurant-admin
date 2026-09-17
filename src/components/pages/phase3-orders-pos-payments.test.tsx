@@ -17,6 +17,10 @@ describe("Phase 3 order, POS, and payment screen family", () => {
     const posHeader = projectFile(
       "src/components/pages/Pos/components/pos/header.tsx",
     );
+    const posSearch = projectFile(
+      "src/components/pages/Pos/components/pos/PosSearchFilter.tsx",
+    );
+    const menuCard = projectFile("src/components/cards/MenuItemCard.tsx");
     const payments = projectFile(
       "src/components/pages/Settings/pages/PaymentSettingsPage.tsx",
     );
@@ -31,6 +35,8 @@ describe("Phase 3 order, POS, and payment screen family", () => {
     expect(pos).toContain("<DetailLayout");
     expect(pos).toContain("<DetailPanel padding=\"none\">");
     expect(posHeader).toContain("actions={");
+    expect(posSearch).toContain("<FilterBar");
+    expect(menuCard).toContain('density === "compact"');
     expect(payments).toContain("<SettingsLayout>");
   });
 

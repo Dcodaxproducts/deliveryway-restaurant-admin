@@ -2,10 +2,11 @@
 
 import { FormSelect } from "@/components/ui/form-select";
 
-import { Filter, Loader2, RefreshCcw, Search } from "lucide-react";
+import { Filter, Loader2, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { FilterActions } from "@/components/common/FilterActions";
 import { useTranslations } from "next-intl";
 
 export type AdminDealsFilterState = {
@@ -102,8 +103,8 @@ export default function AdminDealsFilters({
         </div>
       </div>
 
-      <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
-        <div className="min-w-0 xl:col-span-3">
+      <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-12 2xl:items-end">
+        <div className="min-w-0 2xl:col-span-3">
           <label className="mb-1.5 block text-xs font-medium text-gray-600">
             {commonT("search")}
           </label>
@@ -129,10 +130,10 @@ export default function AdminDealsFilters({
           value={filters.lifecycle}
           options={lifecycleOptions}
           onChange={(lifecycle) => onFiltersChange({ lifecycle })}
-          className="xl:col-span-2"
+          className="2xl:col-span-2"
         />
 
-        <div className="min-w-0 xl:col-span-2">
+        <div className="min-w-0 2xl:col-span-2">
           <label className="mb-1.5 block text-xs font-medium text-gray-600">
             {commonT("branch")}
           </label>
@@ -166,24 +167,14 @@ export default function AdminDealsFilters({
           )}
         </div>
 
-        <Button
-          type="button"
-          onClick={handleSearch}
-          className="h-10 rounded-[var(--ui-radius-control)] bg-primary px-5 text-white hover:bg-primary/90 md:w-full xl:col-span-1"
-        >
-          {commonT("search")}
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          disabled={!hasActiveFilters && !isFetching}
-          onClick={handleReset}
-          className="h-10 rounded-[var(--ui-radius-control)] px-4 text-[var(--ui-text)] md:w-full xl:col-span-1"
-        >
-          <RefreshCcw size={15} className="mr-2" />
-          {commonT("reset")}
-        </Button>
+        <FilterActions
+          searchLabel={commonT("search")}
+          resetLabel={commonT("reset")}
+          onSearch={handleSearch}
+          onReset={handleReset}
+          resetDisabled={!hasActiveFilters && !isFetching}
+          className="md:col-span-2 2xl:col-span-5 2xl:justify-end"
+        />
       </div>
     </div>
   );

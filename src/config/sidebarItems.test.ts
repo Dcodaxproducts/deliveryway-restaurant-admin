@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { menuItems } from "@/config/sidebarItems";
 
 describe("order management navigation", () => {
-  it("opens All Orders with the Today's Orders page tab selected", () => {
+  it("keeps order views inside the Orders workspace instead of duplicating sidebar links", () => {
     const orderManagement = menuItems.find(
       (item) => item.labelKey === "orderManagement",
     );
@@ -17,9 +17,9 @@ describe("order management navigation", () => {
       .flatMap((item) => item.children ?? [])
       .find((item) => item.labelKey === "invoiceHistory");
 
-    expect(orderManagement?.href).toBe("/orders?tab=today");
+    expect(orderManagement?.href).toBe("/orders");
     expect(todayOrdersNavigationItem).toBeUndefined();
-    expect(allOrdersNavigationItem?.href).toBe("/orders?tab=today");
+    expect(allOrdersNavigationItem).toBeUndefined();
     expect(invoiceItem).toBeUndefined();
   });
 });

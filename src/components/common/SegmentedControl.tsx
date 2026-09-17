@@ -32,7 +32,7 @@ export function SegmentedControl<T extends string>({
       aria-label={ariaLabel}
       data-slot="segmented-control"
       className={cn(
-        "flex min-w-0 items-center rounded-[var(--ui-radius-compact)] bg-[var(--ui-surface-subtle)] p-1",
+        "flex w-fit max-w-full min-w-0 items-center gap-1 overflow-x-auto rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-1 shadow-[var(--ui-shadow-xs)]",
         className,
       )}
     >
@@ -47,11 +47,11 @@ export function SegmentedControl<T extends string>({
             disabled={disabled}
             onClick={() => onValueChange(option.value)}
             className={cn(
-              "min-w-0 flex-1 rounded-[var(--ui-radius-control)] font-medium transition-[background-color,color,box-shadow,transform] duration-[var(--ui-motion-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ui-focus-ring)] focus-visible:ring-offset-1 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60",
-              size === "default" ? "h-10 px-3 text-sm" : "h-8 px-2.5 text-xs",
+              "shrink-0 whitespace-nowrap rounded-[var(--ui-radius-control)] font-medium transition-[background-color,color,box-shadow,transform] duration-[var(--ui-motion-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ui-focus-ring)] focus-visible:ring-offset-1 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60",
+              size === "default" ? "h-9 px-3 text-sm" : "h-8 px-2.5 text-xs",
               active
-                ? "bg-[var(--ui-surface)] text-primary shadow-[var(--ui-shadow-xs)] ring-1 ring-primary/15 hover:bg-[var(--ui-surface)] hover:text-primary"
-                : "text-[var(--ui-text-muted)] hover:bg-[var(--ui-surface)]/75 hover:text-[var(--ui-text)]",
+                ? "bg-[var(--ui-brand-soft)] text-primary shadow-[var(--ui-shadow-xs)] hover:bg-[var(--ui-brand-soft)] hover:text-primary"
+                : "text-[var(--ui-text-muted)] hover:bg-[var(--ui-surface-subtle)] hover:text-[var(--ui-text)]",
             )}
           >
             {option.label}

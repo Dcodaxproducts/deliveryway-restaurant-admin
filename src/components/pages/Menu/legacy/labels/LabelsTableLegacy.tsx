@@ -2,7 +2,7 @@
 
 import { FormSelect } from "@/components/ui/form-select";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaPen, FaTrash } from "react-icons/fa";
 import {
   BadgeCheck,
@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { FilterActions } from "@/components/common/FilterActions";
+import PromotionStatCard from "@/components/cards/PromotionStatCard";
 import PaginationSection from "@/components/common/PaginationSection";
 import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
 import { StatePanel } from "@/components/common/EmptyState";
@@ -365,19 +367,19 @@ export default function LabelsTable() {
       </MenuManagementActions>
 
       <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
-        <SummaryCard
+        <PromotionStatCard
           label={t("totalLabels")}
           value={allItems.length}
           icon={<BadgeCheck size={18} />}
         />
 
-        <SummaryCard
+        <PromotionStatCard
           label={t("visibleTemplates")}
           value={filteredItems.length}
           icon={<Tag size={18} />}
         />
 
-        <SummaryCard
+        <PromotionStatCard
           label={t("currentPage")}
           value={paginatedItems.length}
           icon={<Filter size={18} />}
@@ -409,8 +411,8 @@ export default function LabelsTable() {
           ) : null}
         </div>
 
-        <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
-          <div className="min-w-0 xl:col-span-5">
+        <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-12 2xl:items-end">
+          <div className="min-w-0 2xl:col-span-5">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("search")}
             </label>
@@ -435,7 +437,7 @@ export default function LabelsTable() {
             </div>
           </div>
 
-          <div className="min-w-0 xl:col-span-3">
+          <div className="min-w-0 2xl:col-span-3">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("sortBy")}
             </label>
@@ -456,7 +458,7 @@ export default function LabelsTable() {
             </FormSelect>
           </div>
 
-          <div className="min-w-0 xl:col-span-2">
+          <div className="min-w-0 2xl:col-span-2">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("order")}
             </label>
@@ -474,23 +476,14 @@ export default function LabelsTable() {
             </FormSelect>
           </div>
 
-          <Button
-            onClick={handleManualSearch}
-            className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm hover:bg-primary/90 md:w-full xl:col-span-1"
-          >
-            {commonT("search")}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!hasActiveFilters && !isFetching}
-            onClick={handleResetFilters}
-            className="h-[44px] rounded-[14px] border-gray-200 px-4 text-gray-700 md:w-full xl:col-span-1"
-          >
-            <RefreshCcw size={15} className="mr-2" />
-            {commonT("reset")}
-          </Button>
+          <FilterActions
+            searchLabel={commonT("search")}
+            resetLabel={commonT("reset")}
+            onSearch={handleManualSearch}
+            onReset={handleResetFilters}
+            resetDisabled={!hasActiveFilters && !isFetching}
+            className="md:col-span-2 2xl:col-span-2"
+          />
         </div>
       </div>
 
@@ -667,31 +660,6 @@ export default function LabelsTable() {
         title={t("deleteTitle")}
         description={t("deleteDescription")}
       />
-    </div>
-  );
-}
-
-function SummaryCard({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: number;
-  icon: ReactNode;
-}) {
-  return (
-    <div className="flex items-center gap-4 rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
-        {icon}
-      </div>
-
-      <div>
-        <p className="text-2xl font-semibold leading-none text-gray-950">
-          {value}
-        </p>
-        <p className="mt-1 text-sm text-gray-500">{label}</p>
-      </div>
     </div>
   );
 }

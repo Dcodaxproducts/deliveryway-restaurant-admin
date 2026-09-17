@@ -12,6 +12,7 @@ import {
   type ResponsiveDataViewProps,
 } from "@/components/common/ResponsiveDataView";
 import { FilterBar, type FilterBarProps } from "@/components/common/FilterBar";
+import { FilterActions } from "@/components/common/FilterActions";
 import { RowActions } from "@/components/common/RowActions";
 import PaginationSection from "@/components/common/PaginationSection";
 import { Button } from "@/components/ui/button";
@@ -868,7 +869,7 @@ describe("reservation FilterBar contracts", () => {
     fire(input, "onKeyDown", { key: "Escape" });
     expect(onChange).not.toHaveBeenCalled();
     fire(input, "onKeyDown", { key: "Enter" });
-    fire(button(controls, "search"));
+    fire(find(controls, (node) => node.type === FilterActions), "onSearch");
     expect(onChange.mock.calls).toEqual([
       [{ search: "dinner" }],
       [{ search: "dinner" }],
@@ -906,11 +907,17 @@ describe("reservation FilterBar contracts", () => {
   it("preserves reset defaults and its disabled/fetching rules", () => {
     const onChange = vi.fn();
     expect(
-      button(filters(onChange).props.filters, "reset").props.disabled,
+      find(
+        filters(onChange).props.filters,
+        (node) => node.type === FilterActions,
+      ).props.resetDisabled,
     ).toBe(true);
     harness.fetching = true;
     expect(
-      button(filters(onChange).props.filters, "reset").props.disabled,
+      find(
+        filters(onChange).props.filters,
+        (node) => node.type === FilterActions,
+      ).props.resetDisabled,
     ).toBe(false);
     harness.fetching = false;
     const controls = filters(onChange, {
@@ -923,7 +930,7 @@ describe("reservation FilterBar contracts", () => {
       "onChange",
       { target: { value: "cake" } },
     );
-    fire(button(controls, "reset"));
+    fire(find(controls, (node) => node.type === FilterActions), "onReset");
     expect(onChange).toHaveBeenCalledExactlyOnceWith(defaults);
     expect(
       find(filters(onChange).props.filters, (node) => node.type === "input")

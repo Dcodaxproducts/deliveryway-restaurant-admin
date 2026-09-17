@@ -78,9 +78,9 @@ export default function ItemList({
 
   return (
     <SectionCard
-      variant="plain"
-      padding="none"
-      className="w-full overflow-visible py-4"
+      variant={isPOS ? "outlined" : "plain"}
+      padding={isPOS ? "sm" : "none"}
+      className={isPOS ? "w-full overflow-visible" : "w-full overflow-visible py-4"}
       title={headerText || t("title")}
       action={(
         <div className="flex flex-wrap items-center justify-end gap-3">
@@ -135,6 +135,7 @@ export default function ItemList({
                 key={item.id}
                 item={item}
                 editing={canManageItems}
+                density={isPOS ? "compact" : "default"}
                 onEdit={() => {
                   setSelectedItem(item);
                   setCreateMenuItem(true);

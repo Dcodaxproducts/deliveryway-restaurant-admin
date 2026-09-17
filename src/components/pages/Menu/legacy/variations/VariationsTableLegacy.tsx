@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { FilterActions } from "@/components/common/FilterActions";
 import PaginationSection from "@/components/common/PaginationSection";
 import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
 import { SegmentedControl } from "@/components/common/SegmentedControl";
@@ -338,8 +339,8 @@ export default function VariationsTable() {
         aria-busy={shouldShowRefreshing}
         className="mb-4 w-full max-w-full rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-3.5"
       >
-        <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(240px,2fr)_minmax(250px,1.5fr)_minmax(150px,1fr)_minmax(100px,0.55fr)_auto] xl:items-end">
-          <div className="min-w-0">
+        <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-12 2xl:items-end">
+          <div className="min-w-0 2xl:col-span-3">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("search")}
             </label>
@@ -365,7 +366,7 @@ export default function VariationsTable() {
           </div>
 
           {/* STATUS */}
-          <div className="min-w-0">
+          <div className="min-w-0 2xl:col-span-3">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("status")}
             </label>
@@ -384,7 +385,7 @@ export default function VariationsTable() {
           </div>
 
           {/* SORT BY */}
-          <div className="min-w-0">
+          <div className="min-w-0 2xl:col-span-2">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("sortBy")}
             </label>
@@ -406,7 +407,7 @@ export default function VariationsTable() {
           </div>
 
           {/* SORT ORDER */}
-          <div className="min-w-0">
+          <div className="min-w-0 2xl:col-span-1">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("order")}
             </label>
@@ -424,27 +425,17 @@ export default function VariationsTable() {
             </FormSelect>
           </div>
 
-          <div className="flex min-w-0 items-center gap-2 md:col-span-2 xl:col-span-1">
-            <Button
-              disabled={!canFetchVariations}
-              onClick={handleManualSearch}
-              className="h-10 min-w-[88px] flex-1 xl:flex-none"
-            >
-              {commonT("search")}
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              disabled={
+          <div className="min-w-0 md:col-span-2 2xl:col-span-3">
+            <FilterActions
+              searchLabel={commonT("search")}
+              resetLabel={commonT("reset")}
+              onSearch={handleManualSearch}
+              onReset={handleResetFilters}
+              searchDisabled={!canFetchVariations}
+              resetDisabled={
                 !canFetchVariations || (!hasActiveFilters && !isFetching)
               }
-              onClick={handleResetFilters}
-              className="h-10 min-w-[96px] flex-1 xl:flex-none"
-            >
-              <RefreshCcw size={15} />
-              {commonT("reset")}
-            </Button>
+            />
             {shouldShowRefreshing ? (
               <span className="sr-only" aria-live="polite">
                 <Loader2 size={12} className="animate-spin" />

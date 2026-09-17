@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { FilterActions } from "@/components/common/FilterActions";
+import { SegmentedControl } from "@/components/common/SegmentedControl";
 import CategoryInfiniteSelect from "@/components/common/CategoryInfiniteSelect";
 import { FaPen, FaTrash } from "react-icons/fa";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,7 +23,6 @@ import {
   ImageOff,
   Loader2,
   MoreVertical,
-  RefreshCcw,
   Search,
   SlidersHorizontal,
 } from "lucide-react";
@@ -634,8 +635,8 @@ export default function MenuItemsTable({ refetchKey }: any) {
           ) : null}
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px_260px_auto_auto] lg:items-end">
-          <div className="min-w-0">
+        <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-12 2xl:items-end">
+          <div className="min-w-0 2xl:col-span-4">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("search")}
             </label>
@@ -660,35 +661,26 @@ export default function MenuItemsTable({ refetchKey }: any) {
             </div>
           </div>
 
-          <div className="min-w-0">
+          <div className="min-w-0 2xl:col-span-3">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("status")}
             </label>
 
-            <div className="grid grid-cols-2 gap-2 rounded-[14px] bg-[#F7F7F7] p-1">
-              {STATUS_FILTER_OPTIONS.map((option) => {
-                const isActive = statusFilter === option.value;
-
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => handleStatusChange(option.value)}
-                    disabled={!canFetchItems}
-                    className={`h-[38px] rounded-[11px] px-3 text-xs font-semibold transition ${
-                      isActive
-                        ? "bg-white text-primary shadow-sm ring-1 ring-primary/10"
-                        : "text-gray-500 hover:bg-white/70 hover:text-gray-800"
-                    } disabled:cursor-not-allowed disabled:opacity-60`}
-                  >
-                    {getStatusLabel(option.value)}
-                  </button>
-                );
-              })}
-            </div>
+            <SegmentedControl
+              value={statusFilter}
+              options={STATUS_FILTER_OPTIONS.map((option) => ({
+                value: option.value,
+                label: getStatusLabel(option.value),
+              }))}
+              onValueChange={handleStatusChange}
+              ariaLabel={commonT("status")}
+              disabled={!canFetchItems}
+              size="default"
+              className="w-full"
+            />
           </div>
 
-          <div className="min-w-0">
+          <div className="min-w-0 2xl:col-span-2">
             <label className="mb-1.5 block text-xs font-medium text-gray-600">
               {commonT("category")}
             </label>
@@ -702,25 +694,15 @@ export default function MenuItemsTable({ refetchKey }: any) {
             />
           </div>
 
-          <Button
-            type="button"
-            disabled={!canFetchItems}
-            onClick={handleManualSearch}
-            className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm hover:bg-primary/90"
-          >
-            {commonT("search")}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!canFetchItems || (!hasActiveFilters && !isFetching)}
-            onClick={handleResetFilters}
-            className="h-[44px] rounded-[14px] border-gray-200 px-4 text-gray-700"
-          >
-            <RefreshCcw size={15} className="mr-2" />
-            {commonT("reset")}
-          </Button>
+          <FilterActions
+            searchLabel={commonT("search")}
+            resetLabel={commonT("reset")}
+            onSearch={handleManualSearch}
+            onReset={handleResetFilters}
+            searchDisabled={!canFetchItems}
+            resetDisabled={!canFetchItems || (!hasActiveFilters && !isFetching)}
+            className="md:col-span-2 2xl:col-span-3"
+          />
         </div>
       </div>
 

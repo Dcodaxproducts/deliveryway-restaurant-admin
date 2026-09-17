@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { StatePanel } from "@/components/common/EmptyState";
 import { FilterBar, FilterSheet } from "@/components/common/FilterBar";
+import { FilterActions } from "@/components/common/FilterActions";
+import { PageTabs } from "@/components/common/PageTabs";
 import {
   FormField,
   getFormFieldDescriptionId,
@@ -203,6 +205,51 @@ describe("shared data patterns", () => {
 });
 
 describe("shared controls", () => {
+  it("keeps page tabs and segmented filters on the same non-wrapping control rhythm", () => {
+    const tabs = renderToStaticMarkup(
+      <PageTabs
+        value="overview"
+        ariaLabel="Menu views"
+        onValueChange={() => undefined}
+        options={[
+          { value: "overview", label: "Overview" },
+          { value: "categories", label: "Categories" },
+        ]}
+      />,
+    );
+    const segments = renderToStaticMarkup(
+      <SegmentedControl
+        value="active"
+        ariaLabel="Status"
+        onValueChange={() => undefined}
+        options={[
+          { value: "active", label: "Active cuisines" },
+          { value: "inactive", label: "Inactive cuisines" },
+        ]}
+      />,
+    );
+
+    expect(tabs).toContain("whitespace-nowrap");
+    expect(segments).toContain("whitespace-nowrap");
+    expect(tabs).toContain("bg-[var(--ui-brand-soft)]");
+    expect(segments).toContain("bg-[var(--ui-brand-soft)]");
+  });
+
+  it("keeps filter actions equally sized and able to wrap without clipping", () => {
+    const markup = renderToStaticMarkup(
+      <FilterActions
+        searchLabel="Search"
+        resetLabel="Reset"
+        onSearch={() => undefined}
+        onReset={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain('data-slot="filter-actions"');
+    expect(markup).toContain("grid-cols-2");
+    expect(markup).toContain("sm:min-w-[104px]");
+  });
+
   it("keeps the selected segment readable across hover and pressed states", () => {
     const markup = renderToStaticMarkup(
       <SegmentedControl

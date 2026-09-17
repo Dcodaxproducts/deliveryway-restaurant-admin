@@ -10,12 +10,14 @@ import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import { useDeleteMenuItem } from "@/hooks/useMenus";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useTranslations } from "next-intl";
+import { cn } from "@/lib/utils";
 
 type Props = {
   item: any;
   editing?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
+  density?: "default" | "compact";
 };
 
 const FALLBACK_IMAGE = "/burgerTwo.jpg";
@@ -140,7 +142,13 @@ const getDiscountedPrice = (item: any, originalPrice: number) => {
   return calculatedPrice >= 0 && calculatedPrice < originalPrice ? calculatedPrice : null;
 };
 
-export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props) {
+export default function MenuItemCard({
+  item,
+  editing,
+  onEdit,
+  onDelete,
+  density = "default",
+}: Props) {
   const t = useTranslations("pos.menuCard");
   const { formatMoney } = useCurrency(item?.restaurantId);
   const [open, setOpen] = useState(false);
@@ -168,7 +176,12 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
   };
 
   return (
-    <article className="group relative flex h-full min-h-[270px] w-full flex-col overflow-hidden rounded-[22px] border border-border/70 bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl">
+    <article
+      className={cn(
+        "group relative flex h-full w-full flex-col overflow-hidden rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] shadow-[var(--ui-shadow-xs)] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[var(--ui-shadow-sm)]",
+        density === "compact" ? "min-h-[224px]" : "min-h-[270px]",
+      )}
+    >
       {editing ? (
         <div className="absolute right-2.5 top-2.5 z-20 flex items-center gap-2">
           <button
@@ -191,7 +204,12 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
         </div>
       ) : null}
 
-      <div className="relative h-[180px] w-full overflow-hidden bg-muted">
+      <div
+        className={cn(
+          "relative w-full overflow-hidden bg-muted",
+          density === "compact" ? "h-[120px]" : "h-[180px]",
+        )}
+      >
         <Image
           src={image}
           alt={itemName}
@@ -204,7 +222,12 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/25 to-transparent" />
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col p-4">
+      <div
+        className={cn(
+          "flex min-h-0 flex-1 flex-col",
+          density === "compact" ? "p-3" : "p-4",
+        )}
+      >
         <div className="mb-2.5 flex min-w-0 items-center justify-between gap-3">
           <span className="min-w-0 truncate rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary ring-1 ring-primary/10">
             {categoryName}
@@ -216,12 +239,24 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
           </div>
         </div>
 
-        <div className="min-h-[92px]">
-          <h3 className="line-clamp-2 text-lg font-bold leading-snug tracking-[-0.02em] text-foreground">
+        <div className={density === "compact" ? "min-h-[66px]" : "min-h-[92px]"}>
+          <h3
+            className={cn(
+              "line-clamp-2 font-semibold tracking-[-0.02em] text-foreground",
+              density === "compact" ? "text-sm leading-5" : "text-lg leading-snug",
+            )}
+          >
             {itemName}
           </h3>
 
-          <p className="mt-1.5 line-clamp-2 text-[13px] leading-5 text-muted-foreground">
+          <p
+            className={cn(
+              "line-clamp-2 text-muted-foreground",
+              density === "compact"
+                ? "mt-1 text-xs leading-4"
+                : "mt-1.5 text-[13px] leading-5",
+            )}
+          >
             {description}
           </p>
         </div>
@@ -231,7 +266,12 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {t("price")}
             </p>
-            <p className="mt-1 flex flex-wrap items-baseline gap-2 truncate text-2xl font-extrabold tracking-[-0.04em] text-foreground">
+            <p
+              className={cn(
+                "mt-1 flex flex-wrap items-baseline gap-2 truncate font-semibold tabular-nums text-foreground",
+                density === "compact" ? "text-base" : "text-2xl tracking-[-0.04em]",
+              )}
+            >
               {discountedPrice !== null ? (
                 <>
                   <span className="text-primary">{formatMoney(discountedPrice, item?.currency)}</span>
@@ -249,7 +289,10 @@ export default function MenuItemCard({ item, editing, onEdit, onDelete }: Props)
             type="button"
             size="icon"
             onClick={() => setOpen(true)}
-            className="h-11 w-11 shrink-0 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:bg-primary/90"
+            className={cn(
+              "shrink-0 rounded-[var(--ui-radius-control)] bg-primary text-primary-foreground transition hover:bg-primary/90",
+              density === "compact" ? "h-9 w-9" : "h-11 w-11 shadow-lg shadow-primary/20",
+            )}
             aria-label={t("addToCartAria", { name: itemName })}
           >
             <Plus size={18} />

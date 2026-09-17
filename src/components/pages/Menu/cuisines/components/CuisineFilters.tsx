@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FilterBar } from "@/components/common/FilterBar";
+import { SegmentedControl } from "@/components/common/SegmentedControl";
 
 export type CuisineStatusFilter = "all" | "active" | "inactive";
 
@@ -43,26 +44,16 @@ export default function CuisineFilters({
           className="h-11 w-full rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
       </div>}
-      filters={<div className="flex h-11 max-w-full overflow-x-auto rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-1">
-        {statusOptions.map((option) => {
-          const isSelected = statusFilter === option.value;
-
-          return (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => onStatusFilterChange(option.value)}
-              className={`rounded-[var(--ui-radius-control)] px-3 text-sm font-medium transition-colors ${
-                isSelected
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-gray-600 hover:bg-white hover:text-gray-900"
-              }`}
-            >
-              {option.label}
-            </button>
-          );
-        })}
-      </div>}
+      filters={
+        <SegmentedControl
+          value={statusFilter}
+          options={statusOptions}
+          onValueChange={onStatusFilterChange}
+          ariaLabel="Cuisine status"
+          disabled={disabled}
+          size="default"
+        />
+      }
       actions={<Button
         onClick={onSearch}
         disabled={disabled}

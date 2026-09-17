@@ -96,4 +96,15 @@ describe("Partner shadcn sidebar", () => {
       expect(childLink).toContain('data-active="true"');
     },
   );
+
+  it("uses page tabs as the single owner of order workspace views", () => {
+    currentPathname = "/orders";
+    currentSearchParams = new URLSearchParams("tab=delivery");
+
+    const markup = renderSidebar(true);
+
+    expect(markup.match(/href="\/orders"/g)).toHaveLength(1);
+    expect(markup).not.toContain('href="/orders?tab=delivery"');
+    expect(markup).not.toContain(">deliveryOrders<");
+  });
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactElement } from "react";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -71,10 +71,24 @@ function PartnerSidebarItem({
   const Icon = item.icon;
   const label = item.labelKey ? t(item.labelKey) : item.title;
   const isActive = isActiveRoute(item.href, item.children);
+  const itemRef = useRef<HTMLLIElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const timeoutId = window.setTimeout(() => {
+      itemRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }, 220);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [open]);
 
   if (!item.children?.length) {
     return (
-      <SidebarMenuItem>
+      <SidebarMenuItem ref={itemRef}>
         <SidebarMenuButton
           asChild
           isActive={isActive}
@@ -100,7 +114,7 @@ function PartnerSidebarItem({
       }}
       className="group/collapsible"
     >
-      <SidebarMenuItem>
+      <SidebarMenuItem ref={itemRef}>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton
             isActive={isActive}

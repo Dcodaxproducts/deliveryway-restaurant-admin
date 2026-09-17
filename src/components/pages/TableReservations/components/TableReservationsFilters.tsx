@@ -2,11 +2,12 @@
 
 import { FormSelect } from "@/components/ui/form-select";
 
-import { Filter, Loader2, RefreshCcw, Search } from "lucide-react";
+import { Filter, Loader2, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FilterBar } from "@/components/common/FilterBar";
+import { FilterActions } from "@/components/common/FilterActions";
 import { useTranslations } from "next-intl";
 
 export type TableReservationsFilterState = {
@@ -154,8 +155,8 @@ export default function TableReservationsFilters({
             </div>
           </div>
 
-          <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
-            <div className="min-w-0 xl:col-span-4">
+          <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-12 2xl:items-end">
+            <div className="min-w-0 2xl:col-span-4">
               <label className="mb-1.5 block text-xs font-medium text-gray-600">
                 {common("search")}
               </label>
@@ -181,7 +182,7 @@ export default function TableReservationsFilters({
               </div>
             </div>
 
-            <div className="min-w-0 xl:col-span-2">
+            <div className="min-w-0 2xl:col-span-2">
               <label className="mb-1.5 block text-xs font-medium text-gray-600">
                 {common("status")}
               </label>
@@ -202,7 +203,7 @@ export default function TableReservationsFilters({
               </FormSelect>
             </div>
 
-            <div className="min-w-0 xl:col-span-2">
+            <div className="min-w-0 2xl:col-span-2">
               <label className="mb-1.5 block text-xs font-medium text-gray-600">
                 {common("sortBy")}
               </label>
@@ -223,7 +224,7 @@ export default function TableReservationsFilters({
               </FormSelect>
             </div>
 
-            <div className="min-w-0 xl:col-span-1">
+            <div className="min-w-0 2xl:col-span-1">
               <label className="mb-1.5 block text-xs font-medium text-gray-600">
                 {common("order")}
               </label>
@@ -243,7 +244,7 @@ export default function TableReservationsFilters({
               </FormSelect>
             </div>
 
-            <div className="min-w-0 xl:col-span-1">
+            <div className="min-w-0 2xl:col-span-1">
               <label className="mb-1.5 block text-xs font-medium text-gray-600">
                 {common("branch")}
               </label>
@@ -279,24 +280,14 @@ export default function TableReservationsFilters({
               )}
             </div>
 
-            <Button
-              type="button"
-              onClick={handleManualSearch}
-              className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm hover:bg-primary/90 md:w-full xl:col-span-1"
-            >
-              {common("search")}
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!hasActiveFilters && !isFetching}
-              onClick={handleResetFilters}
-              className="h-[44px] rounded-[14px] border-gray-200 px-4 text-gray-700 md:w-full xl:col-span-1"
-            >
-              <RefreshCcw size={15} className="mr-2" />
-              {common("reset")}
-            </Button>
+            <FilterActions
+              searchLabel={common("search")}
+              resetLabel={common("reset")}
+              onSearch={handleManualSearch}
+              onReset={handleResetFilters}
+              resetDisabled={!hasActiveFilters && !isFetching}
+              className="md:col-span-2 2xl:col-span-2"
+            />
           </div>
         </div>
       }

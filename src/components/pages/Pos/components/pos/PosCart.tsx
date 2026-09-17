@@ -754,16 +754,16 @@ export default function PosCart() {
   const billing = formatPosCartBilling(cartQuery.data, cartItems);
 
   return (
-    <div className="w-full bg-white rounded-xl border p-4 flex flex-col gap-4">
-      <Collapsible defaultOpen>
-        <CollapsibleTrigger className="flex justify-between w-full text-sm font-medium">
+    <div className="flex w-full flex-col gap-3 p-3">
+      <Collapsible defaultOpen className="overflow-hidden rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)]">
+        <CollapsibleTrigger className="flex h-11 w-full items-center justify-between px-3 text-sm font-semibold text-[var(--ui-text)]">
           {t("cartList")}
           <ChevronDown size={18} />
         </CollapsibleTrigger>
 
-        <Separator className="my-3" />
+        <Separator />
 
-        <CollapsibleContent>
+        <CollapsibleContent className="p-3">
           {loading ? (
             <p className="text-center text-sm text-gray-400 py-6">
               {commonT("loading")}
@@ -778,7 +778,7 @@ export default function PosCart() {
               {cartItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-3 border p-2 rounded-md items-center"
+                  className="flex items-center gap-3 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-2.5"
                 >
                   <div className="w-12 h-12 relative rounded-md overflow-hidden">
                     <Image
@@ -830,20 +830,35 @@ export default function PosCart() {
                     ) : null}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => updateQuantity(item.id, "dec")}>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-xs"
+                      onClick={() => updateQuantity(item.id, "dec")}
+                    >
                       -
-                    </button>
-                    <span>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, "inc")}>
+                    </Button>
+                    <span className="min-w-5 text-center text-xs font-semibold tabular-nums">
+                      {item.quantity}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-xs"
+                      onClick={() => updateQuantity(item.id, "inc")}
+                    >
                       +
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
                       onClick={() => deleteItem(item.id)}
-                      className="text-red-500 text-xs"
+                      className="text-red-500 hover:bg-red-50 hover:text-red-600"
                     >
                       ✕
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -852,16 +867,16 @@ export default function PosCart() {
         </CollapsibleContent>
       </Collapsible>
 
-      <Collapsible defaultOpen>
-        <CollapsibleTrigger className="flex justify-between w-full text-sm font-medium">
+      <Collapsible defaultOpen className="overflow-hidden rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)]">
+        <CollapsibleTrigger className="flex h-11 w-full items-center justify-between px-3 text-sm font-semibold text-[var(--ui-text)]">
           {t("orderInformation")}
           <ChevronDown size={18} />
         </CollapsibleTrigger>
 
-        <Separator className="my-3" />
+        <Separator />
 
-        <CollapsibleContent className="space-y-4">
-          <div className="rounded-md border bg-gray-50 p-3 text-sm">
+        <CollapsibleContent className="space-y-4 p-3">
+          <div className="rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-3 text-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-medium text-gray-900">
@@ -1298,15 +1313,15 @@ export default function PosCart() {
         </CollapsibleContent>
       </Collapsible>
 
-      <Collapsible defaultOpen>
-        <CollapsibleTrigger className="flex justify-between w-full text-sm font-medium">
+      <Collapsible defaultOpen className="overflow-hidden rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)]">
+        <CollapsibleTrigger className="flex h-11 w-full items-center justify-between px-3 text-sm font-semibold text-[var(--ui-text)]">
           {t("billing")}
           <ChevronDown size={18} />
         </CollapsibleTrigger>
 
-        <Separator className="my-3" />
+        <Separator />
 
-        <CollapsibleContent className="space-y-3 text-sm">
+        <CollapsibleContent className="space-y-3 p-3 text-sm">
           <div className="flex justify-between text-gray-500">
             <span>{t("subtotal")}</span>
             <span>{formatMoney(billing.subtotal)}</span>
