@@ -1897,6 +1897,7 @@ function PostalRuleInput({
       </span>
       <input
         value={value}
+        placeholder={label}
         onChange={(event) => onChange(event.target.value)}
         className="h-11 w-full min-w-0 rounded-md border border-[#BBBBBB] px-3 text-sm outline-none placeholder:text-[#BBBBBB] focus:border-primary focus:ring-1 focus:ring-primary"
       />

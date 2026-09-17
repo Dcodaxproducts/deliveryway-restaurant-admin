@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import type { Matcher } from "react-day-picker";
-import { Input } from "@/components/ui/input";
+import { TimeSelectFields } from "@/components/ui/time-24-picker";
 import {
   Popover,
   PopoverContent,
@@ -62,9 +62,16 @@ export function DatePickerInput({
 }: DateInputProps) {
   const [open, setOpen] = useState(false);
   const selected = toDate(value);
+  const [visibleMonth, setVisibleMonth] = useState(selected ?? new Date());
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (nextOpen) setVisibleMonth(selected ?? new Date());
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           type="button"
@@ -88,6 +95,8 @@ export function DatePickerInput({
       <PopoverContent className="max-w-[calc(100vw-2rem)]" align="start">
         <Calendar
           mode="single"
+          month={visibleMonth}
+          onMonthChange={setVisibleMonth}
           selected={selected}
           disabled={toDisabledMatcher(min, max)}
           onSelect={(nextDate) => {
@@ -114,6 +123,7 @@ export function DateTimePickerInput({
 }: DateInputProps) {
   const [open, setOpen] = useState(false);
   const selected = toDateTime(value);
+  const [visibleMonth, setVisibleMonth] = useState(selected ?? new Date());
   const minDate = min?.slice(0, 10);
   const maxDate = max?.slice(0, 10);
   const timeValue = selected ? format(selected, "HH:mm") : "00:00";
@@ -126,7 +136,13 @@ export function DateTimePickerInput({
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (nextOpen) setVisibleMonth(selected ?? new Date());
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           type="button"
@@ -149,6 +165,8 @@ export function DateTimePickerInput({
       <PopoverContent className="max-w-[calc(100vw-2rem)]" align="start">
         <Calendar
           mode="single"
+          month={visibleMonth}
+          onMonthChange={setVisibleMonth}
           selected={selected}
           disabled={toDisabledMatcher(minDate, maxDate)}
           onSelect={(nextDate) => {
@@ -157,14 +175,10 @@ export function DateTimePickerInput({
           initialFocus
         />
         <div className="border-t border-[var(--ui-border)] p-3">
-          <Input
-            type="time"
+          <TimeSelectFields
             value={timeValue}
-            aria-label="Time"
-            className="h-10"
-            onChange={(event) =>
-              update(selected ?? new Date(), event.target.value)
-            }
+            idPrefix="date-time"
+            onChange={(nextTime) => update(selected ?? visibleMonth, nextTime)}
           />
         </div>
       </PopoverContent>

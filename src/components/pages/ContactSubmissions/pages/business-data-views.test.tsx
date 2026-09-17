@@ -14,6 +14,7 @@ import {
 import { FilterBar, type FilterBarProps } from "@/components/common/FilterBar";
 import { FilterActions } from "@/components/common/FilterActions";
 import { SearchField } from "@/components/common/SearchField";
+import PageHeader from "@/components/common/PageHeader";
 import { RowActions } from "@/components/common/RowActions";
 import PaginationSection from "@/components/common/PaginationSection";
 import { Button } from "@/components/ui/button";
@@ -284,12 +285,17 @@ function gifts(onDelete = vi.fn(), rows = [giftCard]) {
   );
 }
 function contactFilters(tree: ReactNode) {
-  return (
-    find(
-      tree,
-      (node) => node.type === FilterBar,
-    ) as ReactElement<FilterBarProps>
-  ).props.filters;
+  return contactFilterBar(tree).props.filters;
+}
+function contactFilterBar(tree: ReactNode) {
+  return find(
+    tree,
+    (node) => node.type === FilterBar,
+  ) as ReactElement<FilterBarProps>;
+}
+function contactHeaderActions(tree: ReactNode) {
+  return find(tree, (node) => node.type === PageHeader).props
+    .actions as ReactNode;
 }
 
 beforeEach(() => {
@@ -462,7 +468,7 @@ describe("contact submission contracts", () => {
       status: "ARCHIVED",
       branchId: "branch-2",
     });
-    fire(button(contactFilters(tree), "Clear filters"));
+    fire(button(contactFilterBar(tree).props.actions, "Clear filters"));
     contact();
     expect(harness.query.mock.lastCall?.[0]).toMatchObject({
       page: 1,
@@ -482,7 +488,7 @@ describe("contact submission contracts", () => {
       3,
     );
     fire(
-      find(contactFilters(tree), (node) => node.type === "input"),
+      find(contactFilterBar(tree).props.search, (node) => node.type === SearchField),
       "onChange",
       { target: { value: "  cake  " } },
     );
@@ -520,10 +526,10 @@ describe("contact submission contracts", () => {
       page: 1,
       limit: 50,
     });
-    fire(button(tree, "Refresh"));
+    fire(button(contactHeaderActions(tree), "Refresh"));
     expect(harness.refetch).toHaveBeenCalledOnce();
     harness.fetching = true;
-    expect(button(contact(), "Refresh").props.disabled).toBe(true);
+    expect(button(contactHeaderActions(contact()), "Refresh").props.disabled).toBe(true);
     expect(view(contact()).props.loading).toBe(false);
   });
 

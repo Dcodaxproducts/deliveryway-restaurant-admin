@@ -148,6 +148,7 @@ const DeliveryManForm = ({
                         assignedBranchLabel ||
                         t("assignedBranch")
                       }
+                      placeholder={t("form.selectBranch")}
                       readOnly
                       className="h-[44px] border-[#BBBBBB] bg-gray-50 text-gray-600"
                     />
@@ -220,6 +221,7 @@ function ControlledField({
         render={({ field }) => (
           <Input
             id={id}
+            placeholder={label}
             value={field.value ?? ""}
             onChange={({ target: { value } }) => field.onChange(value)}
             onBlur={field.onBlur}

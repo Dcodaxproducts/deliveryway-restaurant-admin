@@ -10,7 +10,6 @@ import {
   Mail,
   MessageSquareReply,
   RefreshCw,
-  Search,
 } from "lucide-react";
 
 import Container from "@/components/common/Container";
@@ -22,8 +21,10 @@ import type { DataTableColumn } from "@/components/common/DataTable";
 import { ResponsiveDataView } from "@/components/common/ResponsiveDataView";
 import { RowActions } from "@/components/common/RowActions";
 import { SectionCard } from "@/components/common/SectionCard";
+import { SearchField } from "@/components/common/SearchField";
 import { StatusBadge } from "@/components/common/status-badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -159,11 +160,12 @@ function ContactSubmissionReplyDialog({
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <Label htmlFor="reply-subject">Subject</Label>
-            <input
+            <Input
               id="reply-subject"
               value={subject}
               onChange={(event) => setSubject(event.target.value)}
-              className="h-11 w-full rounded-[14px] border border-gray-200 px-4 text-sm outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+              placeholder="Reply subject"
+              className="h-10 rounded-[var(--ui-radius-control)]"
               maxLength={160}
               required
             />
@@ -175,7 +177,8 @@ function ContactSubmissionReplyDialog({
               id="reply-message"
               value={message}
               onChange={(event) => setMessage(event.target.value)}
-              className="min-h-36 rounded-[14px]"
+              placeholder="Write your reply"
+              className="min-h-36 rounded-[var(--ui-radius-control)]"
               maxLength={4000}
               required
             />
@@ -461,61 +464,53 @@ export default function ContactSubmissionsPage() {
 
   return (
     <Container>
-      <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-2">
-          <PageHeader
-            title="Contact Submissions"
-            description={
-              isBranchAdmin
-                ? "Manage customer contact requests for your assigned branch."
-                : "Review, reply to, and archive customer contact requests."
-            }
-          />
-          <p className="text-sm text-gray-500">
-            {meta.total} submission{meta.total === 1 ? "" : "s"} found
-          </p>
-        </div>
-
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => submissionsQuery.refetch()}
-          disabled={submissionsQuery.isFetching}
-          className="w-fit items-center gap-2"
-        >
-          <RefreshCw
-            size={18}
-            className={submissionsQuery.isFetching ? "animate-spin" : ""}
-          />
-          Refresh
-        </Button>
-      </div>
+      <PageHeader
+        title="Contact Submissions"
+        description={
+          isBranchAdmin
+            ? "Manage customer contact requests for your assigned branch."
+            : "Review, reply to, and archive customer contact requests."
+        }
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => submissionsQuery.refetch()}
+            disabled={submissionsQuery.isFetching}
+          >
+            <RefreshCw
+              aria-hidden="true"
+              className={submissionsQuery.isFetching ? "animate-spin" : ""}
+            />
+            Refresh
+          </Button>
+        }
+      />
 
       <SectionCard padding="md" className="space-y-6">
         <FilterBar
           resultCount={`${meta.total} submission${meta.total === 1 ? "" : "s"}`}
+          search={
+            <div className="min-w-0 lg:min-w-72">
+              <Label
+                htmlFor="contact-submission-search"
+                className="mb-1.5 block text-xs font-medium text-[var(--ui-text-muted)]"
+              >
+                Search
+              </Label>
+              <SearchField
+                id="contact-submission-search"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                onClear={() => setSearchInput("")}
+                placeholder="Name, email, subject, or message"
+              />
+            </div>
+          }
           filters={
-            <div className="grid w-full gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
-              <div className="xl:col-span-4">
-                <Label className="mb-1.5 block text-xs font-medium text-gray-600">
-                  Search
-                </Label>
-                <div className="relative">
-                  <Search
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
-                  <input
-                    value={searchInput}
-                    onChange={(event) => setSearchInput(event.target.value)}
-                    placeholder="Search name, email, subject, or message"
-                    className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
-                  />
-                </div>
-              </div>
-
-              <div className="xl:col-span-2">
-                <Label className="mb-1.5 block text-xs font-medium text-gray-600">
+            <>
+              <div className="min-w-44 flex-1 sm:flex-none">
+                <Label className="mb-1.5 block text-xs font-medium text-[var(--ui-text-muted)]">
                   Status
                 </Label>
                 <FormSelect
@@ -524,7 +519,7 @@ export default function ContactSubmissionsPage() {
                     setStatus(event.target.value);
                     setPage(1);
                   }}
-                  className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                  className="h-10 rounded-[var(--ui-radius-control)] text-sm"
                 >
                   {statusOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -534,12 +529,12 @@ export default function ContactSubmissionsPage() {
                 </FormSelect>
               </div>
 
-              <div className="xl:col-span-3">
-                <Label className="mb-1.5 block text-xs font-medium text-gray-600">
+              <div className="min-w-52 flex-1 sm:flex-none">
+                <Label className="mb-1.5 block text-xs font-medium text-[var(--ui-text-muted)]">
                   Branch
                 </Label>
                 {isBranchAdmin ? (
-                  <div className="flex h-[44px] items-center rounded-[14px] border border-gray-200 bg-gray-50 px-4 text-sm text-gray-600">
+                  <div className="flex h-10 items-center rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] px-3 text-sm text-[var(--ui-text-muted)]">
                     {user?.branchName || branchId || "Assigned branch"}
                   </div>
                 ) : (
@@ -549,7 +544,7 @@ export default function ContactSubmissionsPage() {
                       setSelectedBranchId(event.target.value);
                       setPage(1);
                     }}
-                    className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                    className="h-10 rounded-[var(--ui-radius-control)] text-sm"
                   >
                     <option value="">All branches</option>
                     {branchOptions.map((branch) => (
@@ -560,24 +555,23 @@ export default function ContactSubmissionsPage() {
                   </FormSelect>
                 )}
               </div>
-
-              <div className="xl:col-span-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-[44px] w-full"
-                  onClick={() => {
-                    setSearchInput("");
-                    setSearch("");
-                    setStatus("ALL");
-                    setSelectedBranchId("");
-                    setPage(1);
-                  }}
-                >
-                  Clear filters
-                </Button>
-              </div>
-            </div>
+            </>
+          }
+          actions={
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                setSearchInput("");
+                setSearch("");
+                setStatus("ALL");
+                setSelectedBranchId("");
+                setPage(1);
+              }}
+            >
+              Clear filters
+            </Button>
           }
         />
 

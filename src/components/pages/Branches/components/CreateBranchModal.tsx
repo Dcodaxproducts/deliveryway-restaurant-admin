@@ -441,6 +441,7 @@ export function CreateBranchModal({
                     id="create-branch-table-count"
                     type="number"
                     min={0}
+                    placeholder="0"
                     className={`${INPUT_CLASS} bg-white`}
                     aria-invalid={Boolean(errors.settings?.tableCount?.message)}
                     {...register("settings.tableCount", {

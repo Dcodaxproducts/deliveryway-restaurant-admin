@@ -63,7 +63,7 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
     },
   ];
 
-  return <StatGrid stats={cards} loading={loading} />;
+  return <StatGrid stats={cards} loading={loading} columns={4} />;
 };
 
 export default StatsSection;

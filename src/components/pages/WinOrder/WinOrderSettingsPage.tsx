@@ -461,6 +461,7 @@ export default function WinOrderSettingsPage() {
                 <Input
                   id="store-id"
                   value={storeId}
+                  placeholder={t("storeId")}
                   onChange={(e) => setStoreId(e.target.value)}
                   disabled={!canEdit}
                   type="number"
@@ -478,6 +479,7 @@ export default function WinOrderSettingsPage() {
                 <Input
                   id="store-name"
                   value={storeName}
+                  placeholder={t("storeName")}
                   onChange={(e) => setStoreName(e.target.value)}
                   disabled={!canEdit}
                   className="mt-2"
@@ -848,6 +850,7 @@ function MappingRow({
         <Input
           className="mt-1 h-10"
           value={value.no}
+          placeholder={articleNumberLabel}
           disabled={disabled}
           onChange={(event) => onChange({ ...value, no: event.target.value })}
         />

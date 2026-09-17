@@ -27,17 +27,36 @@ describe("partner control consistency", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("routes date and datetime selection through shared shadcn controls", () => {
-    const nativeDateOffenders = tsxFiles.filter((path) =>
-      /type="(?:date|datetime-local)"/.test(readFileSync(path, "utf8")),
+  it("routes date and time selection through shared shadcn controls", () => {
+    const nativeDateTimeOffenders = tsxFiles.filter((path) =>
+      /type="(?:date|time|datetime-local)"/.test(readFileSync(path, "utf8")),
     );
     const directCalendarOffenders = tsxFiles.filter((path) => {
       if (path.endsWith("/ui/calendar.tsx")) return false;
       return /\bDayPicker\b/.test(readFileSync(path, "utf8"));
     });
 
-    expect(nativeDateOffenders).toEqual([]);
+    expect(nativeDateTimeOffenders).toEqual([]);
     expect(directCalendarOffenders).toEqual([]);
+  });
+
+  it("keeps calendar navigation clickable and primary hover behavior canonical", () => {
+    const calendarSource = readFileSync(
+      new URL("../ui/calendar.tsx", import.meta.url),
+      "utf8",
+    );
+    const inconsistentPrimaryButtons = tsxFiles.filter((path) => {
+      const source = readFileSync(path, "utf8");
+      return (
+        /bg-primary[^"\n]*hover:bg-(?:red-(?:600|700|800)|\[#e14f20\])/.test(
+          source,
+        ) || /bg-red-500[^"\n]*hover:bg-red-600/.test(source)
+      );
+    });
+
+    expect(calendarSource).toContain('className={cn("relative p-3"');
+    expect(calendarSource).toContain("pointer-events-auto size-8");
+    expect(inconsistentPrimaryButtons).toEqual([]);
   });
 
   it("keeps scrollbars thin and removes browser arrow controls", () => {

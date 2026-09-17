@@ -16,20 +16,20 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("relative p-3", className)}
       classNames={{
         months: "flex flex-col gap-4 sm:flex-row",
         month: "space-y-4",
         month_caption: "relative flex h-9 items-center justify-center",
         caption_label: "text-sm font-semibold",
-        nav: "absolute inset-x-3 top-3 flex items-center justify-between",
+        nav: "pointer-events-none absolute inset-x-3 top-3 z-10 flex items-center justify-between",
         button_previous: cn(
           buttonVariants({ variant: "outline", size: "icon-sm" }),
-          "size-8 bg-transparent p-0 opacity-70 hover:opacity-100",
+          "pointer-events-auto size-8 bg-transparent p-0 opacity-70 hover:opacity-100",
         ),
         button_next: cn(
           buttonVariants({ variant: "outline", size: "icon-sm" }),
-          "size-8 bg-transparent p-0 opacity-70 hover:opacity-100",
+          "pointer-events-auto size-8 bg-transparent p-0 opacity-70 hover:opacity-100",
         ),
         month_grid: "w-full border-collapse",
         weekdays: "flex",

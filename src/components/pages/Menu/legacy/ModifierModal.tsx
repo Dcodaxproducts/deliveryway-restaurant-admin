@@ -438,6 +438,7 @@ function InputField({
       <input
         type={type}
         value={value}
+        placeholder={label}
         onChange={(e: ChangeEvent<HTMLInputElement>) =>
           onChange(e.target.value)
         }

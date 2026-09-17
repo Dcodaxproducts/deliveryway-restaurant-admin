@@ -194,6 +194,7 @@ export function PaymentStatusUpdateDialog({
             <Textarea
               id="payment-status-note"
               value={paymentStatusNote}
+              placeholder={t("paymentStatusReason")}
               onChange={(event) => {
                 setPaymentStatusNote(event.target.value);
                 setIsConfirming(false);

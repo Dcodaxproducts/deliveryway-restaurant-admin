@@ -279,7 +279,7 @@ export default function EditProfile() {
           <Button
             type="submit"
             disabled={saving || uploading}
-            className="h-[46px] w-full rounded-xl bg-primary text-white hover:bg-red-600"
+            className="h-[46px] w-full rounded-xl"
           >
             {saving ? common("saving") : t("saveProfile")}
           </Button>

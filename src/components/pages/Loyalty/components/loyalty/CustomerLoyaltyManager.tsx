@@ -241,7 +241,10 @@ const StatCard = ({
   icon: React.ReactNode;
 }) => {
   return (
-    <div className="flex min-h-[88px] items-center rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-3.5">
+    <div
+      data-slot="loyalty-stat-card"
+      className="flex min-h-[88px] items-center rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-3.5"
+    >
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
           {icon}
@@ -588,7 +591,7 @@ export default function CustomerLoyaltyManager() {
           </p>
         </div>
       ) : isLoading ? (
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
@@ -598,7 +601,7 @@ export default function CustomerLoyaltyManager() {
         </div>
       ) : (
         <>
-          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {stats.map((stat) => (
               <StatCard
                 key={stat.title}

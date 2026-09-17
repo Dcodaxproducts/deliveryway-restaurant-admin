@@ -352,7 +352,7 @@ const fetchMessages = async () => {
             <button
               onClick={handleSend}
               disabled={sending}
-              className="ml-2 bg-primary hover:bg-[#e14f20] transition p-2 rounded-full text-white"
+              className="ml-2 rounded-full bg-primary p-2 text-white transition hover:bg-primary/90"
             >
               {sending ? (
                 <Loader2 size={14} className="animate-spin" />

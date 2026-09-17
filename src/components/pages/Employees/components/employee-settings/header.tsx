@@ -51,7 +51,7 @@ export default function EmployeeSettingsHeader({
 
           <Button
             onClick={() => setOpen(true)}
-            className="h-[44px] rounded-[12px] px-5 flex items-center gap-2 bg-primary hover:bg-red-700 text-white text-[15px] font-[500]"
+            className="h-[44px] rounded-[12px] px-5 text-[15px] font-[500]"
           >
             {t("addNew")}
           </Button>

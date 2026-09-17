@@ -348,7 +348,7 @@ export function AddRoleModal({
                 type="button"
                 onClick={handleAddPermission}
                 disabled={isAddDisabled}
-                className="bg-red-500 px-5 text-white hover:bg-red-600 disabled:opacity-50"
+                className="px-5 disabled:opacity-50"
               >
                 {t("actions.add")}
               </Button>
@@ -464,7 +464,7 @@ export function AddRoleModal({
           <Button
             type="submit"
             disabled={loading}
-            className="h-[46px] w-full rounded-xl bg-red-500 text-white hover:bg-red-600"
+            className="h-[46px] w-full rounded-xl"
           >
             {loading
               ? isEditMode

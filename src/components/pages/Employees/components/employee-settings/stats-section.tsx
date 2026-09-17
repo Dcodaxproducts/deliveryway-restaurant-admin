@@ -64,7 +64,7 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
 
   return (
     <div className="space-y-6">
-      <StatGrid stats={cards} loading={loading} />
+      <StatGrid stats={cards} loading={loading} columns={4} />
 
       <div className="rounded-[14px] border border-[#EDEFF2] bg-white p-6">
         <div className="mb-4 flex items-center justify-between gap-3">

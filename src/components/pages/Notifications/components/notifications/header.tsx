@@ -48,7 +48,7 @@ export default function NotificationsHeader({
         variant="default"
         disabled={!hasUnread || loading}
         onClick={handleMarkAllRead}
-        className="h-[44px] rounded-[12px] px-5 flex items-center gap-2 bg-primary hover:bg-red-800 text-white text-[15px] font-[500] disabled:opacity-50"
+        className="h-[44px] rounded-[12px] px-5 text-[15px] font-[500] disabled:opacity-50"
       >
         {loading ? common("updating") : t("markAllRead")}
       </Button>

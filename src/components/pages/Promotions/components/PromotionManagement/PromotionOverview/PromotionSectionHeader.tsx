@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
 
 type PromotionTabValue = "overview" | "coupons" | "promotions" | "happy-hours";
 
@@ -56,13 +57,13 @@ export default function PromotionSectionHeader({
         ) : null}
 
         {actionLabel && actionHref ? (
-          <button
+          <Button
             type="button"
             onClick={handleAction}
-            className="inline-flex h-[44px] shrink-0 items-center justify-center rounded-[12px] bg-primary px-5 text-sm font-medium text-white transition hover:bg-red-700"
+            className="h-[44px] shrink-0 rounded-[12px] px-5"
           >
             {actionLabel}
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>

@@ -499,6 +499,7 @@ function ModifierOption({
           type="number"
           min={0}
           value={sortOrder}
+          placeholder="0"
           disabled={attached || isAttaching}
           onKeyDown={blockInvalidNumberKeys}
           onPaste={blockNegativeNumberPaste}

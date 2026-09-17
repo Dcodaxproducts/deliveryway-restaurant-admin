@@ -6,12 +6,13 @@ export type StatGridProps = {
   stats: StatItem[];
   className?: string;
   loading?: boolean;
-  columns?: 2 | 3;
+  columns?: 2 | 3 | 4;
 };
 
 const columnClassNames = {
   2: "xl:grid-cols-2",
   3: "xl:grid-cols-3",
+  4: "xl:grid-cols-4",
 } as const;
 
 export function StatGrid({

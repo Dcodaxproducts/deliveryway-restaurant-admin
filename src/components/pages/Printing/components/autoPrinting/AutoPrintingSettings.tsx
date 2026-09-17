@@ -486,7 +486,7 @@ export default function AutoPrintingSettings({
             type="button"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="mt-5 h-[40px] rounded-[12px] bg-primary px-8 hover:bg-red-800"
+            className="mt-5 h-[40px] rounded-[12px] px-8"
           >
             {refreshing ? (
               <Loader2 size={16} className="mr-2 animate-spin" />
@@ -643,7 +643,7 @@ export default function AutoPrintingSettings({
             type="button"
             onClick={handleSave}
             disabled={updating || discovering || testing}
-            className="h-[40px] rounded-[12px] bg-primary px-16 py-1.5 hover:bg-red-800"
+            className="h-[40px] rounded-[12px] px-16 py-1.5"
           >
             {updating ? (
               <>
@@ -749,7 +749,7 @@ export default function AutoPrintingSettings({
             type="button"
             onClick={handleSave}
             disabled={updating}
-            className="h-[40px] rounded-[12px] bg-primary px-16 py-1.5 hover:bg-red-800"
+            className="h-[40px] rounded-[12px] px-16 py-1.5"
           >
             {updating ? (
               <>

@@ -506,7 +506,7 @@ export default function EmployeeInvitationModal({
           <Button
             type="submit"
             disabled={loading}
-            className="mt-6 h-[46px] w-full rounded-xl bg-primary text-white hover:bg-red-600"
+            className="mt-6 h-[46px] w-full rounded-xl"
           >
             {loading
               ? isEdit
@@ -560,6 +560,7 @@ function EmployeeField({
           return (
             <FieldInput
               id={id}
+              placeholder={label}
               {...(type === "password"
                 ? { showLabel, hideLabel }
                 : { type })}

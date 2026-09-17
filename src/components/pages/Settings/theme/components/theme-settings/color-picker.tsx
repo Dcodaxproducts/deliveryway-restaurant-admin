@@ -64,6 +64,7 @@ export default function ColorPicker({
           <Input
             id={`${id}-text`}
             type="text"
+            placeholder="#000000"
             aria-invalid={Boolean(error)}
             className={textInputClassName}
             {...register(name)}

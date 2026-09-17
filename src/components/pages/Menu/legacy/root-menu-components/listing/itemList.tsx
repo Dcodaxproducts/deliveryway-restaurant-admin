@@ -119,7 +119,7 @@ export default function ItemList({
           icon={<PlusCircle />}
           action={showAddNew ? (
             <Button
-              className="bg-primary hover:bg-red-600 text-white rounded-[10px] px-5"
+              className="rounded-[10px] px-5"
               onClick={() => setCreateMenuItem(true)}
             >
               <PlusCircle className="w-4 h-4 mr-2" />

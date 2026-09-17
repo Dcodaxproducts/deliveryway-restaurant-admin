@@ -1164,6 +1164,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
               <Textarea
                 id="refund-note"
                 value={refundNote}
+                placeholder={t("refundReason")}
                 onChange={(event) => {
                   setRefundNote(event.target.value);
                   setIsRefundConfirming(false);
@@ -1315,6 +1316,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
               <Textarea
                 id="payment-status-note"
                 value={paymentStatusNote}
+                placeholder={t("paymentStatusReason")}
                 onChange={(event) => {
                   setPaymentStatusNote(event.target.value);
                   setIsPaymentStatusConfirming(false);
