@@ -80,6 +80,23 @@ export const getStringValue = (
   return typeof value === "string" ? value : undefined;
 };
 
+const getNullableStringValue = (
+  source: Record<string, unknown> | null | undefined,
+  keys: string[],
+): string | null | undefined => {
+  if (!source) return undefined;
+
+  for (const key of keys) {
+    if (!Object.prototype.hasOwnProperty.call(source, key)) continue;
+
+    const value = source[key];
+    if (value === null) return null;
+    if (typeof value === "string") return value;
+  }
+
+  return undefined;
+};
+
 export const getRecordValue = (
   source: Record<string, unknown> | null | undefined,
   key: string,
@@ -501,38 +518,50 @@ export const normalizeUser = (
 
   const branchRestaurant = getRecordValue(branch, "restaurant");
 
+  const sourceTenantId = getNullableStringValue(source, [
+    "tenantId",
+    "tenant_id",
+    "tid",
+  ]);
   const tenantId =
-    getStringValue(source, "tenantId") ??
-    getStringValue(source, "tenant_id") ??
-    getStringValue(source, "tid") ??
-    getStringValue(tenant, "id") ??
-    fallback?.tenantId ??
-    null;
+    typeof sourceTenantId === "string"
+      ? sourceTenantId
+      : (getStringValue(tenant, "id") ??
+        (sourceTenantId === null ? null : fallback?.tenantId ?? null));
 
+  const sourceRestaurantId = getNullableStringValue(source, [
+    "restaurantId",
+    "restaurant_id",
+    "rid",
+  ]);
   let restaurantId =
-    getStringValue(source, "restaurantId") ??
-    getStringValue(source, "restaurant_id") ??
-    getStringValue(source, "rid") ??
-    getStringValue(restaurant, "id") ??
-    getStringValue(branch, "restaurantId") ??
-    getStringValue(branch, "restaurant_id") ??
-    getStringValue(branchRestaurant, "id") ??
-    fallback?.restaurantId ??
-    null;
+    typeof sourceRestaurantId === "string"
+      ? sourceRestaurantId
+      : (getStringValue(restaurant, "id") ??
+        getStringValue(branch, "restaurantId") ??
+        getStringValue(branch, "restaurant_id") ??
+        getStringValue(branchRestaurant, "id") ??
+        (sourceRestaurantId === null
+          ? null
+          : fallback?.restaurantId ?? null));
 
+  const sourceBranchId = getNullableStringValue(source, [
+    "branchId",
+    "branch_id",
+    "bid",
+  ]);
   let branchId =
-    getStringValue(source, "branchId") ??
-    getStringValue(source, "branch_id") ??
-    getStringValue(source, "bid") ??
-    getStringValue(branch, "id") ??
-    fallback?.branchId ??
-    null;
+    typeof sourceBranchId === "string"
+      ? sourceBranchId
+      : (getStringValue(branch, "id") ??
+        (sourceBranchId === null ? null : fallback?.branchId ?? null));
 
+  const sourceBranchName = getNullableStringValue(source, ["branchName"]);
   const branchName =
-    getStringValue(source, "branchName") ??
-    getStringValue(branch, "name") ??
-    fallback?.branchName ??
-    null;
+    typeof sourceBranchName === "string"
+      ? sourceBranchName
+      : (getStringValue(branch, "name") ??
+        (sourceBranchName === null ? null : fallback?.branchName ?? null));
 
   const restaurantAccess = getRestaurantAccess(
     getRecordValue(source, "restaurantAccess"),

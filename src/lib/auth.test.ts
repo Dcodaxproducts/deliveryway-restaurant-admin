@@ -9,6 +9,7 @@ import {
   hasStaffPermission,
   isBranchAdminRole,
   isStaffRouteAllowed,
+  normalizeAuthPayload,
   normalizePermissionAccess,
   normalizePermissionOperation,
   normalizeUser,
@@ -27,6 +28,40 @@ describe("auth helpers", () => {
     });
 
     expect(clearTransientWorkspaceSelection(user)).toEqual(
+      expect.objectContaining({
+        restaurantId: null,
+        branchId: null,
+        branchName: null,
+      }),
+    );
+  });
+
+  it("does not restore stale workspace ids when a refreshed user explicitly clears them", () => {
+    const fallback = {
+      accessToken: "access-token",
+      user: normalizeUser({
+        id: "owner-1",
+        email: "owner@example.com",
+        role: "BUSINESS_ADMIN",
+        restaurantId: "stale-restaurant",
+        branchId: "stale-branch",
+        branchName: "Old Branch",
+      }),
+    };
+
+    const normalized = normalizeAuthPayload(
+      {
+        user: {
+          ...fallback.user,
+          restaurantId: null,
+          branchId: null,
+          branchName: null,
+        },
+      },
+      fallback,
+    );
+
+    expect(normalized.user).toEqual(
       expect.objectContaining({
         restaurantId: null,
         branchId: null,
