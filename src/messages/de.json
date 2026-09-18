@@ -2942,6 +2942,7 @@
     "bio": "Bio",
     "bioPlaceholder": "Erzählen Sie Kunden kurz etwas über sich",
     "saveProfile": "Profil speichern",
+    "profileDetails": "Profildetails",
     "profileUpdated": "Profil erfolgreich aktualisiert",
     "updateProfileError": "Profil konnte nicht aktualisiert werden"
   },

@@ -1,16 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Camera, Trash2 } from "lucide-react";
+import { Camera, Loader2, Save, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SectionCard } from "@/components/common/SectionCard";
+import { FormActions } from "@/components/common/FormLayout";
+import { ProfileIdentityCard } from "@/components/pages/Profile/components/ProfileIdentityCard";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useFileUpload } from "@/hooks/useFileUpload";
@@ -179,61 +180,55 @@ export default function EditProfile() {
   };
 
   return (
-    <Card className="w-full rounded-2xl border-none bg-white p-10 shadow-none">
-      <form id={PROFILE_FORM_ID} className="space-y-10" noValidate onSubmit={handleSubmit(onSubmit)}>
-        <div className="flex flex-col items-center">
-          <div className="relative">
-            <Avatar className="h-44 w-44 rounded-2xl shadow-md">
-              {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
-              <AvatarFallback className="rounded-2xl text-4xl font-semibold">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+    <form id={PROFILE_FORM_ID} noValidate onSubmit={handleSubmit(onSubmit)}>
+      <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <ProfileIdentityCard
+          avatarUrl={avatarUrl}
+          initials={initials}
+          name={displayName}
+          email={user?.email}
+          description={bio || t("noDescription")}
+          notice={uploading ? t("uploadingImage") : null}
+          actions={
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFile}
+                className="sr-only"
+              />
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFile}
-              className="sr-only"
-            />
-
-            <button
-              type="button"
-              aria-label={avatarUrl ? t("changePhoto") : t("uploadPhoto")}
-              onClick={openFilePicker}
-              disabled={uploading}
-              className="absolute bottom-2 right-2 rounded-full border bg-white p-2 shadow hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <Camera size={16} className="text-gray-700" />
-            </button>
-
-            {avatarUrl ? (
               <button
                 type="button"
-                aria-label={t("removePhoto")}
-                onClick={clearAvatar}
-                className="absolute bottom-2 left-2 rounded-full border bg-white p-2 shadow hover:bg-gray-50"
+                aria-label={avatarUrl ? t("changePhoto") : t("uploadPhoto")}
+                onClick={openFilePicker}
+                disabled={uploading}
+                className="absolute -bottom-1 -right-1 inline-flex size-8 items-center justify-center rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] text-[var(--ui-text-muted)] shadow-[var(--ui-shadow-xs)] transition-colors hover:bg-[var(--ui-surface-subtle)] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <Trash2 size={16} className="text-red-500" />
+                <Camera aria-hidden="true" className="size-4" />
               </button>
-            ) : null}
-          </div>
-          {uploading ? <p className="mt-2 text-xs text-gray-400">{t("uploadingImage")}</p> : null}
 
-          <h2 className="mt-6 text-2xl font-semibold text-[#030401]">
-            {displayName}
-          </h2>
+              {avatarUrl ? (
+                <button
+                  type="button"
+                  aria-label={t("removePhoto")}
+                  onClick={clearAvatar}
+                  className="absolute -bottom-1 -left-1 inline-flex size-8 items-center justify-center rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] text-[var(--ui-danger)] shadow-[var(--ui-shadow-xs)] transition-colors hover:bg-[var(--ui-danger-soft)]"
+                >
+                  <Trash2 aria-hidden="true" className="size-4" />
+                </button>
+              ) : null}
+            </>
+          }
+        />
 
-          <p className="text-sm text-[#909090]">{user?.email ?? "—"}</p>
-
-          <p className="mt-3 max-w-lg text-center text-sm leading-relaxed text-[#909090]">
-            {bio ?? t("noDescription")}
-          </p>
-        </div>
-
-        <div className="mx-auto max-w-[80%] space-y-6 min-w-[70%]">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <SectionCard
+          padding="md"
+          title={t("profileDetails")}
+          className="space-y-4"
+        >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FormInput
               id="profile-first-name"
               label={t("firstName")}
@@ -250,7 +245,7 @@ export default function EditProfile() {
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FormInput
               id="profile-phone"
               label={t("phoneNumber")}
@@ -258,7 +253,6 @@ export default function EditProfile() {
               errorText={errors.phone?.message}
               {...register("phone")}
             />
-            <div className="hidden md:block" />
           </div>
 
           <div>
@@ -268,7 +262,7 @@ export default function EditProfile() {
             <textarea
               id="profile-bio"
               placeholder={t("bioPlaceholder")}
-              className="min-h-28 w-full rounded-[9px] border border-[#BBBBBB] px-3 py-2 text-sm outline-none focus:border-2 focus:border-primary"
+              className="min-h-28 w-full rounded-[var(--ui-radius-control)] border border-[var(--ui-border-strong)] bg-[var(--ui-surface)] px-3 py-2 text-sm text-[var(--ui-text)] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-[var(--ui-focus-ring)]/20"
               {...register("bio")}
             />
             {errors.bio?.message ? (
@@ -276,16 +270,32 @@ export default function EditProfile() {
             ) : null}
           </div>
 
-          <Button
-            type="submit"
-            disabled={saving || uploading}
-            className="h-[46px] w-full rounded-xl"
-          >
-            {saving ? common("saving") : t("saveProfile")}
-          </Button>
-        </div>
-      </form>
-    </Card>
+          <FormActions
+            secondary={
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push("/profile")}
+                disabled={saving}
+              >
+                <X aria-hidden="true" />
+                {common("cancel")}
+              </Button>
+            }
+            primary={
+              <Button type="submit" disabled={saving || uploading}>
+                {saving ? (
+                  <Loader2 aria-hidden="true" className="animate-spin" />
+                ) : (
+                  <Save aria-hidden="true" />
+                )}
+                {saving ? common("saving") : common("save")}
+              </Button>
+            }
+          />
+        </SectionCard>
+      </div>
+    </form>
   );
 }
 
@@ -312,7 +322,7 @@ function FormInput({
         placeholder={placeholder}
         aria-invalid={Boolean(errorText)}
         aria-describedby={errorText ? `${id}-error` : undefined}
-        className="h-11 w-full rounded-[9px] border-[#BBBBBB] focus:border-2 focus:border-primary focus-visible:ring-0 focus:outline-none read-only:bg-gray-50"
+        className="h-10 w-full rounded-[var(--ui-radius-control)] border-[var(--ui-border-strong)] bg-[var(--ui-surface)] text-sm focus:border-primary focus-visible:ring-[var(--ui-focus-ring)]/20 read-only:bg-[var(--ui-surface-subtle)]"
         {...props}
         onChange={(event) => {
           const { target } = event;

@@ -104,7 +104,33 @@ describe("reported Partner UI follow-up", () => {
     expect(faqPage).not.toContain("<Sparkles");
     expect(faqPage).not.toContain(" as any");
     expect(legalProfile).toContain("actions={");
+    expect(legalProfile).toContain("<PromotionStatCard");
+    expect(legalProfile).not.toContain("function SummaryCard");
     expect(legalProfile).toContain('state="loading"');
     expect(legalProfile).toContain("var(--ui-surface-subtle)");
+  });
+
+  it("uses the compact shared profile identity and canonical page actions", () => {
+    const profileHeader = projectFile(
+      "src/components/pages/Profile/components/ProfileHeader.tsx",
+    );
+    const userProfile = projectFile(
+      "src/components/pages/Profile/components/UserProfile.tsx",
+    );
+    const editProfile = projectFile(
+      "src/components/pages/Profile/components/EditProfileForm.tsx",
+    );
+    const identityCard = projectFile(
+      "src/components/pages/Profile/components/ProfileIdentityCard.tsx",
+    );
+
+    expect(profileHeader).toContain("<PageHeader");
+    expect(profileHeader).toContain("actions={");
+    expect(userProfile).toContain("<ProfileIdentityCard");
+    expect(editProfile).toContain("<ProfileIdentityCard");
+    expect(editProfile).toContain("<FormActions");
+    expect(identityCard).toContain('className="size-20');
+    expect(userProfile).not.toContain("h-44 w-44");
+    expect(editProfile).not.toContain("h-44 w-44");
   });
 });

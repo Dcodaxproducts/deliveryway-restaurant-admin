@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 
 import PageLayout from "@/components/common/Container";
+import PromotionStatCard from "@/components/cards/PromotionStatCard";
 import { StatePanel } from "@/components/common/EmptyState";
 import PageHeader from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
@@ -216,24 +217,20 @@ export function LegalProfilePage() {
       ) : (
         <>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            <SummaryCard
-              icon={ShieldCheck}
-              eyebrow={t("status")}
-              title={isDirty ? t("unsaved") : t("synced")}
-              description={canEdit ? t("editable") : t("readOnly")}
-              tone={isDirty ? "warning" : "success"}
+            <PromotionStatCard
+              icon={<ShieldCheck aria-hidden="true" className="size-4" />}
+              value={isDirty ? t("unsaved") : t("synced")}
+              label={t("status")}
             />
-            <SummaryCard
-              icon={ReceiptText}
-              eyebrow={t("profileCoverage")}
-              title={t("completionCount", { count: completionCount })}
-              description={t("completionDescription")}
+            <PromotionStatCard
+              icon={<ReceiptText aria-hidden="true" className="size-4" />}
+              value={t("completionCount", { count: completionCount })}
+              label={t("profileCoverage")}
             />
-            <SummaryCard
-              icon={FileText}
-              eyebrow={t("publicReflection")}
-              title={t("privacyContent")}
-              description={t("publicReflectionDescription")}
+            <PromotionStatCard
+              icon={<FileText aria-hidden="true" className="size-4" />}
+              value={t("privacyContent")}
+              label={t("publicReflection")}
             />
           </div>
 
@@ -244,14 +241,14 @@ export function LegalProfilePage() {
           ) : null}
 
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
-            <SectionCard padding="lg" className="space-y-5">
+            <SectionCard padding="md" className="space-y-4">
               <SectionHeader
                 icon={Building2}
                 title={t("businessSectionTitle")}
                 description={t("businessSectionDescription")}
               />
 
-              <div className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-4">
+              <div className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-3.5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-[var(--ui-radius-control)] bg-[var(--ui-brand-soft)] text-primary">
@@ -272,7 +269,7 @@ export function LegalProfilePage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-3.5 md:grid-cols-2">
                 <Field
                   id="legal-business-name"
                   label={t("legalBusinessName")}
@@ -291,14 +288,14 @@ export function LegalProfilePage() {
                 />
               </div>
 
-              <div className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-4">
+              <div className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-3.5">
                 <SectionHeader
                   icon={MapPin}
                   title={t("addressSectionTitle")}
                   description={t("addressSectionDescription")}
                   compact
                 />
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div className="mt-3.5 grid gap-3.5 md:grid-cols-2">
                   <Field
                     id="business-street"
                     label={t("street")}
@@ -359,7 +356,7 @@ export function LegalProfilePage() {
                   onChange={(event) =>
                     updateField("contractText", event.target.value)
                   }
-                  className="min-h-[320px] resize-y rounded-[var(--ui-radius-card)] border-[var(--ui-border-strong)] bg-[var(--ui-surface)] px-4 py-3 text-sm leading-7 text-[var(--ui-text)] shadow-none focus-visible:ring-[var(--ui-focus-ring)]/20 disabled:cursor-not-allowed disabled:bg-[var(--ui-surface-subtle)]"
+                  className="min-h-56 resize-y rounded-[var(--ui-radius-card)] border-[var(--ui-border-strong)] bg-[var(--ui-surface)] px-3.5 py-3 text-sm leading-6 text-[var(--ui-text)] shadow-none focus-visible:ring-[var(--ui-focus-ring)]/20 disabled:cursor-not-allowed disabled:bg-[var(--ui-surface-subtle)]"
                 />
               </div>
             </SectionCard>
@@ -406,51 +403,6 @@ export function LegalProfilePage() {
         </>
       )}
     </PageLayout>
-  );
-}
-
-function SummaryCard({
-  icon: Icon,
-  eyebrow,
-  title,
-  description,
-  tone = "neutral",
-}: {
-  icon: typeof ShieldCheck;
-  eyebrow: string;
-  title: string;
-  description: string;
-  tone?: "neutral" | "success" | "warning";
-}) {
-  return (
-    <div className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4 shadow-[var(--ui-shadow-xs)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-[var(--ui-text-subtle)]">
-            {eyebrow}
-          </p>
-          <p className="mt-1.5 text-lg font-semibold text-[var(--ui-text)]">
-            {title}
-          </p>
-          <p className="mt-1 text-sm leading-5 text-[var(--ui-text-muted)]">
-            {description}
-          </p>
-        </div>
-        <span
-          className={cn(
-            "inline-flex size-9 shrink-0 items-center justify-center rounded-[var(--ui-radius-control)]",
-            tone === "success" &&
-              "bg-[var(--ui-success-soft)] text-[var(--ui-success)]",
-            tone === "warning" &&
-              "bg-[var(--ui-warning-soft)] text-[var(--ui-warning)]",
-            tone === "neutral" &&
-              "bg-[var(--ui-surface-subtle)] text-[var(--ui-text-muted)]",
-          )}
-        >
-          <Icon className="size-5" />
-        </span>
-      </div>
-    </div>
   );
 }
 

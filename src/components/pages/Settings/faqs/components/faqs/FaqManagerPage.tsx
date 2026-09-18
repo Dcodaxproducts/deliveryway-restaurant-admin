@@ -85,11 +85,11 @@ function FAQRow({
   const deleting = deletingFaqId === item.id;
 
   return (
-    <article className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] shadow-[var(--ui-shadow-xs)] transition duration-[var(--ui-motion-normal)] hover:border-[var(--ui-border-strong)] hover:shadow-[var(--ui-shadow-sm)]">
-      <div className="px-4 py-4 sm:px-5">
-        <div className="flex items-start justify-between gap-4">
+    <article className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] transition duration-[var(--ui-motion-normal)] hover:border-[var(--ui-border-strong)]">
+      <div className="p-3.5 sm:px-4">
+        <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="mb-2.5 flex flex-wrap items-center gap-2">
+            <div className="mb-2 flex flex-wrap items-center gap-1.5">
               <StatusBadge tone={isPublished ? "success" : "warning"} size="sm">
                 {item.status}
               </StatusBadge>
@@ -107,16 +107,16 @@ function FAQRow({
               </span>
             </div>
 
-            <h3 className="text-base font-semibold leading-6 text-[var(--ui-text)]">
+            <h3 className="text-sm font-semibold leading-5 text-[var(--ui-text)]">
               {item.question}
             </h3>
 
-            <p className="mt-1.5 max-w-[900px] text-sm leading-6 text-[var(--ui-text-muted)]">
+            <p className="mt-1 line-clamp-2 max-w-[900px] text-xs leading-5 text-[var(--ui-text-muted)] sm:text-sm">
               {item.answer}
             </p>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1">
             <Button asChild variant="outline" size="icon-sm">
               <Link href={`/faqs/add?id=${item.id}`} title="Edit FAQ">
                 <Pencil aria-hidden="true" />
