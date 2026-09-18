@@ -1,10 +1,9 @@
 "use client";
 
-import { Clock3 } from "lucide-react";
+import { Check, ChevronDown, Clock3 } from "lucide-react";
 import { useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { FormSelect } from "@/components/ui/form-select";
 import {
   Popover,
   PopoverContent,
@@ -42,6 +41,99 @@ const MINUTES = Array.from({ length: 60 }, (_, minute) =>
   String(minute).padStart(2, "0"),
 );
 
+type TimeDropdownProps = {
+  id: string;
+  label: string;
+  value: string;
+  options: string[];
+  open: boolean;
+  disabled?: boolean;
+  onOpenChange: (open: boolean) => void;
+  onChange: (value: string) => void;
+};
+
+function TimeDropdown({
+  id,
+  label,
+  value,
+  options,
+  open,
+  disabled,
+  onOpenChange,
+  onChange,
+}: TimeDropdownProps) {
+  const listboxId = `${id}-listbox`;
+
+  return (
+    <div className="relative min-w-0">
+      <button
+        type="button"
+        id={id}
+        aria-label={label}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? listboxId : undefined}
+        disabled={disabled}
+        data-slot="time-dropdown-trigger"
+        className="flex h-10 w-full items-center justify-between gap-2 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] px-3 text-sm text-[var(--ui-text)] outline-none transition-[border-color,box-shadow] focus:border-primary focus:ring-2 focus:ring-[var(--ui-focus-ring)]/20 disabled:cursor-not-allowed disabled:opacity-50"
+        onClick={() => onOpenChange(!open)}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            onOpenChange(true);
+          }
+          if (event.key === "Escape") onOpenChange(false);
+        }}
+      >
+        <span className={cn("truncate", !value && "text-[var(--ui-text-subtle)]")}>
+          {value || label}
+        </span>
+        <ChevronDown
+          aria-hidden="true"
+          className={cn(
+            "size-4 shrink-0 text-[var(--ui-text-muted)] transition-transform",
+            open && "rotate-180",
+          )}
+        />
+      </button>
+      {open ? (
+        <div
+          id={listboxId}
+          role="listbox"
+          aria-label={label}
+          data-slot="time-dropdown-content"
+          className="absolute inset-x-0 bottom-[calc(100%+0.25rem)] z-[var(--ui-layer-dropdown)] max-h-48 overflow-y-auto rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-1 shadow-[var(--ui-shadow-md)]"
+        >
+          {options.map((option) => {
+            const selected = option === value;
+
+            return (
+              <button
+                type="button"
+                key={option}
+                role="option"
+                aria-selected={selected}
+                data-slot="time-dropdown-option"
+                className={cn(
+                  "flex h-8 w-full items-center justify-between rounded-[calc(var(--ui-radius-control)-2px)] px-2.5 text-left text-sm outline-none hover:bg-[var(--ui-surface-muted)] focus-visible:bg-[var(--ui-surface-muted)]",
+                  selected && "bg-primary/10 font-medium text-primary",
+                )}
+                onClick={() => {
+                  onChange(option);
+                  onOpenChange(false);
+                }}
+              >
+                <span>{option}</span>
+                {selected ? <Check aria-hidden="true" className="size-3.5" /> : null}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function TimeSelectFields({
   value,
   onChange,
@@ -53,6 +145,7 @@ export function TimeSelectFields({
   const resolvedIdPrefix = idPrefix ?? generatedId;
   const normalizedValue = value ? normalizeTime24(value) : "";
   const [hour = "", minute = ""] = normalizedValue.split(":");
+  const [openField, setOpenField] = useState<"hour" | "minute" | null>(null);
 
   const updateHour = (nextHour: string) => {
     onChange(`${nextHour}:${minute || "00"}`);
@@ -67,47 +160,29 @@ export function TimeSelectFields({
       data-slot="time-select-fields"
       className={cn("grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2", className)}
     >
-      <FormSelect
-        native
+      <TimeDropdown
         id={`${resolvedIdPrefix}-hour`}
-        aria-label="Hour"
+        label="Hour"
         value={hour}
-        onChange={(event) => updateHour(event.target.value)}
+        options={HOURS}
+        open={openField === "hour"}
+        onOpenChange={(open) => setOpenField(open ? "hour" : null)}
+        onChange={updateHour}
         disabled={disabled}
-        className="h-10 rounded-[var(--ui-radius-control)] text-sm"
-        contentClassName="max-h-64"
-      >
-        <option value="" disabled>
-          Hour
-        </option>
-        {HOURS.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </FormSelect>
+      />
       <span aria-hidden="true" className="font-semibold text-[var(--ui-text-muted)]">
         :
       </span>
-      <FormSelect
-        native
+      <TimeDropdown
         id={`${resolvedIdPrefix}-minute`}
-        aria-label="Minute"
+        label="Minute"
         value={minute}
-        onChange={(event) => updateMinute(event.target.value)}
+        options={MINUTES}
+        open={openField === "minute"}
+        onOpenChange={(open) => setOpenField(open ? "minute" : null)}
+        onChange={updateMinute}
         disabled={disabled}
-        className="h-10 rounded-[var(--ui-radius-control)] text-sm"
-        contentClassName="max-h-64"
-      >
-        <option value="" disabled>
-          Minute
-        </option>
-        {MINUTES.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </FormSelect>
+      />
     </div>
   );
 }

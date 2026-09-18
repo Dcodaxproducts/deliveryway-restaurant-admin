@@ -41,7 +41,11 @@ describe("reported Partner UI follow-up", () => {
     expect(dateTimeInputs).toContain("<TimeSelectFields");
     expect(popover).toContain("onInteractOutside");
     expect(popover).toContain('[data-slot="select-content"]');
-    expect(timePicker.match(/native/g)).toHaveLength(2);
+    expect(timePicker).toContain('data-slot="time-dropdown-content"');
+    expect(timePicker).toContain("max-h-48 overflow-y-auto");
+    expect(timePicker).toContain('openField === "hour"');
+    expect(timePicker).toContain('openField === "minute"');
+    expect(timePicker).not.toContain("<select");
     const tipInput = posCart.slice(
       posCart.indexOf("value={tipAmount}"),
       posCart.indexOf("value={tipAmount}") + 300,
