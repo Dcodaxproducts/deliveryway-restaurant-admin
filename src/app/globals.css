@@ -66,6 +66,7 @@
   --ui-surface: var(--brand-surface);
   --ui-surface-subtle: #FAFAFA;
   --ui-surface-raised: #FFFFFF;
+  --ui-skeleton: #E9E9E9;
   --ui-text: var(--brand-text);
   --ui-text-muted: #686868;
   --ui-text-subtle: #909090;

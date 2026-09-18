@@ -15,7 +15,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import Header from "@/components/common/PageHeader";
+import PageLayout from "@/components/common/Container";
+import { StatePanel } from "@/components/common/EmptyState";
+import PageHeader from "@/components/common/PageHeader";
+import { SectionCard } from "@/components/common/SectionCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,7 +66,7 @@ export function LegalProfilePage() {
   const commonT = useTranslations("common");
   const { user, restaurantId, isBranchAdmin, loading: authLoading } = useAuth();
   const [draftProfile, setDraftProfile] = useState<LegalProfile>(
-    createEmptyLegalProfile()
+    createEmptyLegalProfile(),
   );
   const [hasLoadedInitialProfile, setHasLoadedInitialProfile] = useState(false);
 
@@ -71,6 +74,7 @@ export function LegalProfilePage() {
     data: savedProfile,
     isLoading,
     isFetching,
+    isError,
     refetch,
   } = useLegalProfile(restaurantId);
   const { mutateAsync: saveLegalProfile, isPending: isSaving } =
@@ -80,11 +84,10 @@ export function LegalProfilePage() {
   const canEdit = Boolean(restaurantId) && !isBranchAdmin;
   const savedPayload = useMemo(
     () => toPayload(savedProfile ?? createEmptyLegalProfile(restaurantId)),
-    [restaurantId, savedProfile]
+    [restaurantId, savedProfile],
   );
   const draftPayload = useMemo(() => toPayload(draftProfile), [draftProfile]);
-  const isDirty =
-    JSON.stringify(draftPayload) !== JSON.stringify(savedPayload);
+  const isDirty = JSON.stringify(draftPayload) !== JSON.stringify(savedPayload);
   const addressPreview = formatAddressPreview(draftProfile);
   const ownerName = user ? getDisplayName(user) : "-";
   const completionItems = [
@@ -108,7 +111,7 @@ export function LegalProfilePage() {
 
   const updateAddressField = (
     key: keyof LegalProfilePayload["businessAddress"],
-    value: string
+    value: string,
   ) => {
     setDraftProfile((profile) => ({
       ...profile,
@@ -143,33 +146,15 @@ export function LegalProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1440px] space-y-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <Header
-            title={t("title")}
-            description={t("description")}
-            titleClassName="text-[24px] sm:text-[30px] font-semibold text-[#101828] leading-tight"
-            descriptionClassName="mt-1 max-w-3xl text-sm text-[#667085] leading-6"
-          />
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => refetch()}
-              disabled={loading || isFetching}
-              className="h-10 rounded-full border-[#D0D5DD] bg-white text-[#344054]"
-            >
-              {isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />}
-              {commonT("refresh")}
-            </Button>
+    <PageLayout
+      actions={
+        canEdit ? (
+          <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="outline"
               onClick={handleReset}
               disabled={loading || isSaving || !isDirty}
-              className="h-10 rounded-full border-[#D0D5DD] bg-white text-[#344054]"
             >
               {commonT("reset")}
             </Button>
@@ -177,189 +162,250 @@ export function LegalProfilePage() {
               type="button"
               onClick={handleSave}
               disabled={loading || isSaving || !canEdit || !isDirty}
-              className="h-10 rounded-full bg-[#C1121F] px-5 text-white hover:bg-[#A30F1A]"
             >
               {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
               {isSaving ? commonT("saving") : commonT("save")}
             </Button>
           </div>
-        </div>
+        ) : null
+      }
+    >
+      <PageHeader
+        title={t("title")}
+        description={t("description")}
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void refetch()}
+            disabled={loading || isFetching}
+          >
+            {isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+            {commonT("refresh")}
+          </Button>
+        }
+      />
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <SummaryCard
-            icon={ShieldCheck}
-            eyebrow={t("status")}
-            title={isDirty ? t("unsaved") : t("synced")}
-            description={canEdit ? t("editable") : t("readOnly")}
-            tone={isDirty ? "warning" : "success"}
-          />
-          <SummaryCard
-            icon={ReceiptText}
-            eyebrow={t("profileCoverage")}
-            title={t("completionCount", { count: completionCount })}
-            description={t("completionDescription")}
-          />
-          <SummaryCard
-            icon={FileText}
-            eyebrow={t("publicReflection")}
-            title={t("privacyContent")}
-            description={t("publicReflectionDescription")}
-          />
-        </div>
-
-        {!canEdit ? (
-          <div className="rounded-2xl border border-[#FEDF89] bg-[#FFFAEB] px-4 py-3 text-sm font-medium text-[#B54708]">
-            {t("branchReadOnlyNotice")}
-          </div>
-        ) : null}
-
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
-          <section className="space-y-5 rounded-[24px] border border-[#EAECF0] bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] sm:p-6">
-            <SectionHeader
-              icon={Building2}
-              title={t("businessSectionTitle")}
-              description={t("businessSectionDescription")}
+      {!restaurantId && !authLoading ? (
+        <StatePanel
+          state="unavailable"
+          title={t("missingRestaurant")}
+          description={commonT("selectRestaurantToContinue")}
+        />
+      ) : isError && !savedProfile ? (
+        <StatePanel
+          state="error"
+          title={commonT("unableToLoad")}
+          description={t("description")}
+          action={
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void refetch()}
+            >
+              {commonT("refresh")}
+            </Button>
+          }
+        />
+      ) : loading && !savedProfile ? (
+        <StatePanel
+          state="loading"
+          title={t("title")}
+          description={t("description")}
+        />
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <SummaryCard
+              icon={ShieldCheck}
+              eyebrow={t("status")}
+              title={isDirty ? t("unsaved") : t("synced")}
+              description={canEdit ? t("editable") : t("readOnly")}
+              tone={isDirty ? "warning" : "success"}
             />
+            <SummaryCard
+              icon={ReceiptText}
+              eyebrow={t("profileCoverage")}
+              title={t("completionCount", { count: completionCount })}
+              description={t("completionDescription")}
+            />
+            <SummaryCard
+              icon={FileText}
+              eyebrow={t("publicReflection")}
+              title={t("privacyContent")}
+              description={t("publicReflectionDescription")}
+            />
+          </div>
 
-            <div className="rounded-2xl border border-[#EAECF0] bg-[#FCFCFD] p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-[#C1121F] ring-1 ring-[#FEE4E2]">
-                    <UserRound className="size-5" />
-                  </span>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#98A2B3]">
-                      {t("ownerName")}
-                    </p>
-                    <p className="mt-1 text-base font-semibold text-[#101828]">
-                      {ownerName}
-                    </p>
-                  </div>
-                </div>
-                <span className="w-fit rounded-full border border-[#EAECF0] bg-white px-3 py-1 text-xs font-semibold text-[#667085]">
-                  {t("authProfileOwner")}
-                </span>
-              </div>
+          {!canEdit ? (
+            <div className="rounded-[var(--ui-radius-card)] border border-[var(--ui-warning)]/20 bg-[var(--ui-warning-soft)] px-4 py-3 text-sm font-medium text-[var(--ui-warning)]">
+              {t("branchReadOnlyNotice")}
             </div>
+          ) : null}
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field
-                id="legal-business-name"
-                label={t("legalBusinessName")}
-                value={draftProfile.legalBusinessName}
-                placeholder={t("legalBusinessNamePlaceholder")}
-                disabled={!canEdit || loading}
-                onChange={(value) => updateField("legalBusinessName", value)}
-              />
-              <Field
-                id="tax-number"
-                label={t("taxNumber")}
-                value={draftProfile.taxNumber}
-                placeholder={t("taxNumberPlaceholder")}
-                disabled={!canEdit || loading}
-                onChange={(value) => updateField("taxNumber", value)}
-              />
-            </div>
-
-            <div className="rounded-2xl border border-[#EAECF0] bg-[#FCFCFD] p-4">
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+            <SectionCard padding="lg" className="space-y-5">
               <SectionHeader
-                icon={MapPin}
-                title={t("addressSectionTitle")}
-                description={t("addressSectionDescription")}
-                compact
+                icon={Building2}
+                title={t("businessSectionTitle")}
+                description={t("businessSectionDescription")}
               />
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
+
+              <div className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-[var(--ui-radius-control)] bg-[var(--ui-brand-soft)] text-primary">
+                      <UserRound className="size-5" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-medium text-[var(--ui-text-subtle)]">
+                        {t("ownerName")}
+                      </p>
+                      <p className="mt-1 text-base font-semibold text-[var(--ui-text)]">
+                        {ownerName}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="w-fit rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] px-3 py-1 text-xs font-medium text-[var(--ui-text-muted)]">
+                    {t("authProfileOwner")}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
                 <Field
-                  id="business-street"
-                  label={t("street")}
-                  value={draftProfile.businessAddress.street}
-                  placeholder={t("streetPlaceholder")}
+                  id="legal-business-name"
+                  label={t("legalBusinessName")}
+                  value={draftProfile.legalBusinessName}
+                  placeholder={t("legalBusinessNamePlaceholder")}
                   disabled={!canEdit || loading}
-                  onChange={(value) => updateAddressField("street", value)}
+                  onChange={(value) => updateField("legalBusinessName", value)}
                 />
                 <Field
-                  id="business-shop-number"
-                  label={t("shopNumber")}
-                  value={draftProfile.businessAddress.shopNumber}
-                  placeholder={t("shopNumberPlaceholder")}
+                  id="tax-number"
+                  label={t("taxNumber")}
+                  value={draftProfile.taxNumber}
+                  placeholder={t("taxNumberPlaceholder")}
                   disabled={!canEdit || loading}
-                  onChange={(value) => updateAddressField("shopNumber", value)}
-                />
-                <Field
-                  id="business-state"
-                  label={t("state")}
-                  value={draftProfile.businessAddress.state}
-                  placeholder={t("statePlaceholder")}
-                  disabled={!canEdit || loading}
-                  onChange={(value) => updateAddressField("state", value)}
-                />
-                <Field
-                  id="business-city"
-                  label={t("city")}
-                  value={draftProfile.businessAddress.city}
-                  placeholder={t("cityPlaceholder")}
-                  disabled={!canEdit || loading}
-                  onChange={(value) => updateAddressField("city", value)}
-                />
-                <Field
-                  id="business-country"
-                  label={t("country")}
-                  value={draftProfile.businessAddress.country}
-                  placeholder={t("countryPlaceholder")}
-                  disabled={!canEdit || loading}
-                  onChange={(value) => updateAddressField("country", value)}
+                  onChange={(value) => updateField("taxNumber", value)}
                 />
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="contract-text" className="text-sm font-semibold text-[#344054]">
-                {t("contractText")}
-              </Label>
-              <Textarea
-                id="contract-text"
-                value={draftProfile.contractText}
-                placeholder={t("contractTextPlaceholder")}
-                disabled={!canEdit || loading}
-                onChange={(event) => updateField("contractText", event.target.value)}
-                className="min-h-[360px] resize-y rounded-2xl border-[#D0D5DD] bg-white px-5 py-4 text-sm leading-7 text-[#344054] shadow-none focus-visible:ring-[#C1121F]/20 disabled:cursor-not-allowed disabled:bg-[#F9FAFB]"
-              />
-            </div>
-          </section>
-
-          <aside className="space-y-4">
-            <div className="rounded-[24px] border border-[#EAECF0] bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#98A2B3]">
-                {t("customerPreview")}
-              </p>
-              <h2 className="mt-3 text-xl font-semibold text-[#101828]">
-                {draftProfile.legalBusinessName || t("emptyBusinessName")}
-              </h2>
-              <div className="mt-4 space-y-3 text-sm">
-                <PreviewRow label={t("ownerName")} value={ownerName} />
-                <PreviewRow label={t("taxNumber")} value={draftProfile.taxNumber || "-"} />
-                <PreviewRow label={t("address")} value={addressPreview || "-"} />
-              </div>
-              <div className="mt-5 rounded-2xl bg-[#F8F9FB] p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#98A2B3]">
-                  {t("contractText")}
-                </p>
-                {draftProfile.contractText.trim() ? (
-                  <div
-                    className="mt-3 max-h-[360px] overflow-auto text-sm leading-6 text-[#475467] [&_a]:font-semibold [&_a]:text-[#C1121F] [&_h1]:mb-3 [&_h1]:mt-5 [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:leading-tight [&_h1]:text-[#101828] [&_h2]:mb-2 [&_h2]:mt-5 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:text-[#101828] [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-[#101828] [&_li]:my-1 [&_ol]:my-3 [&_ol]:pl-5 [&_p]:mb-3 [&_strong]:text-[#101828] [&_ul]:my-3 [&_ul]:pl-5"
-                    dangerouslySetInnerHTML={{ __html: draftProfile.contractText }}
+              <div className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-4">
+                <SectionHeader
+                  icon={MapPin}
+                  title={t("addressSectionTitle")}
+                  description={t("addressSectionDescription")}
+                  compact
+                />
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <Field
+                    id="business-street"
+                    label={t("street")}
+                    value={draftProfile.businessAddress.street}
+                    placeholder={t("streetPlaceholder")}
+                    disabled={!canEdit || loading}
+                    onChange={(value) => updateAddressField("street", value)}
                   />
-                ) : (
-                  <p className="mt-2 text-sm leading-6 text-[#475467]">
-                    {t("emptyContract")}
-                  </p>
-                )}
+                  <Field
+                    id="business-shop-number"
+                    label={t("shopNumber")}
+                    value={draftProfile.businessAddress.shopNumber}
+                    placeholder={t("shopNumberPlaceholder")}
+                    disabled={!canEdit || loading}
+                    onChange={(value) =>
+                      updateAddressField("shopNumber", value)
+                    }
+                  />
+                  <Field
+                    id="business-state"
+                    label={t("state")}
+                    value={draftProfile.businessAddress.state}
+                    placeholder={t("statePlaceholder")}
+                    disabled={!canEdit || loading}
+                    onChange={(value) => updateAddressField("state", value)}
+                  />
+                  <Field
+                    id="business-city"
+                    label={t("city")}
+                    value={draftProfile.businessAddress.city}
+                    placeholder={t("cityPlaceholder")}
+                    disabled={!canEdit || loading}
+                    onChange={(value) => updateAddressField("city", value)}
+                  />
+                  <Field
+                    id="business-country"
+                    label={t("country")}
+                    value={draftProfile.businessAddress.country}
+                    placeholder={t("countryPlaceholder")}
+                    disabled={!canEdit || loading}
+                    onChange={(value) => updateAddressField("country", value)}
+                  />
+                </div>
               </div>
-            </div>
-          </aside>
-        </div>
-      </div>
-    </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="contract-text"
+                  className="text-sm font-medium text-[var(--ui-text)]"
+                >
+                  {t("contractText")}
+                </Label>
+                <Textarea
+                  id="contract-text"
+                  value={draftProfile.contractText}
+                  placeholder={t("contractTextPlaceholder")}
+                  disabled={!canEdit || loading}
+                  onChange={(event) =>
+                    updateField("contractText", event.target.value)
+                  }
+                  className="min-h-[320px] resize-y rounded-[var(--ui-radius-card)] border-[var(--ui-border-strong)] bg-[var(--ui-surface)] px-4 py-3 text-sm leading-7 text-[var(--ui-text)] shadow-none focus-visible:ring-[var(--ui-focus-ring)]/20 disabled:cursor-not-allowed disabled:bg-[var(--ui-surface-subtle)]"
+                />
+              </div>
+            </SectionCard>
+
+            <aside className="space-y-4">
+              <SectionCard padding="md">
+                <p className="text-xs font-medium text-[var(--ui-text-subtle)]">
+                  {t("customerPreview")}
+                </p>
+                <h2 className="mt-2 text-xl font-semibold text-[var(--ui-text)]">
+                  {draftProfile.legalBusinessName || t("emptyBusinessName")}
+                </h2>
+                <div className="mt-4 space-y-3 text-sm">
+                  <PreviewRow label={t("ownerName")} value={ownerName} />
+                  <PreviewRow
+                    label={t("taxNumber")}
+                    value={draftProfile.taxNumber || "-"}
+                  />
+                  <PreviewRow
+                    label={t("address")}
+                    value={addressPreview || "-"}
+                  />
+                </div>
+                <div className="mt-5 rounded-[var(--ui-radius-card)] bg-[var(--ui-surface-subtle)] p-4">
+                  <p className="text-xs font-medium text-[var(--ui-text-subtle)]">
+                    {t("contractText")}
+                  </p>
+                  {draftProfile.contractText.trim() ? (
+                    <div
+                      className="mt-3 max-h-[360px] overflow-auto text-sm leading-6 text-[var(--ui-text-muted)] [&_a]:font-semibold [&_a]:text-primary [&_h1]:mb-3 [&_h1]:mt-5 [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:leading-tight [&_h1]:text-[var(--ui-text)] [&_h2]:mb-2 [&_h2]:mt-5 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:text-[var(--ui-text)] [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-[var(--ui-text)] [&_li]:my-1 [&_ol]:my-3 [&_ol]:pl-5 [&_p]:mb-3 [&_strong]:text-[var(--ui-text)] [&_ul]:my-3 [&_ul]:pl-5"
+                      dangerouslySetInnerHTML={{
+                        __html: draftProfile.contractText,
+                      }}
+                    />
+                  ) : (
+                    <p className="mt-2 text-sm leading-6 text-[var(--ui-text-muted)]">
+                      {t("emptyContract")}
+                    </p>
+                  )}
+                </div>
+              </SectionCard>
+            </aside>
+          </div>
+        </>
+      )}
+    </PageLayout>
   );
 }
 
@@ -377,21 +423,28 @@ function SummaryCard({
   tone?: "neutral" | "success" | "warning";
 }) {
   return (
-    <div className="rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+    <div className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4 shadow-[var(--ui-shadow-xs)]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#98A2B3]">
+          <p className="text-xs font-medium text-[var(--ui-text-subtle)]">
             {eyebrow}
           </p>
-          <p className="mt-2 text-xl font-semibold text-[#101828]">{title}</p>
-          <p className="mt-1 text-sm leading-5 text-[#667085]">{description}</p>
+          <p className="mt-1.5 text-lg font-semibold text-[var(--ui-text)]">
+            {title}
+          </p>
+          <p className="mt-1 text-sm leading-5 text-[var(--ui-text-muted)]">
+            {description}
+          </p>
         </div>
         <span
           className={cn(
-            "inline-flex size-10 shrink-0 items-center justify-center rounded-full",
-            tone === "success" && "bg-[#ECFDF3] text-[#039855]",
-            tone === "warning" && "bg-[#FFFAEB] text-[#DC6803]",
-            tone === "neutral" && "bg-[#F2F4F7] text-[#475467]"
+            "inline-flex size-9 shrink-0 items-center justify-center rounded-[var(--ui-radius-control)]",
+            tone === "success" &&
+              "bg-[var(--ui-success-soft)] text-[var(--ui-success)]",
+            tone === "warning" &&
+              "bg-[var(--ui-warning-soft)] text-[var(--ui-warning)]",
+            tone === "neutral" &&
+              "bg-[var(--ui-surface-subtle)] text-[var(--ui-text-muted)]",
           )}
         >
           <Icon className="size-5" />
@@ -414,14 +467,21 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[#FFF1F2] text-[#C1121F]">
+      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-[var(--ui-radius-control)] bg-[var(--ui-brand-soft)] text-primary">
         <Icon className="size-5" />
       </span>
       <div>
-        <h2 className={cn("font-semibold text-[#101828]", compact ? "text-base" : "text-xl")}>
+        <h2
+          className={cn(
+            "font-semibold text-[var(--ui-text)]",
+            compact ? "text-base" : "text-lg",
+          )}
+        >
           {title}
         </h2>
-        <p className="mt-1 text-sm leading-6 text-[#667085]">{description}</p>
+        <p className="mt-1 text-sm leading-6 text-[var(--ui-text-muted)]">
+          {description}
+        </p>
       </div>
     </div>
   );
@@ -444,7 +504,7 @@ function Field({
 }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={id} className="text-sm font-semibold text-[#344054]">
+      <Label htmlFor={id} className="text-sm font-medium text-[var(--ui-text)]">
         {label}
       </Label>
       <Input
@@ -453,7 +513,7 @@ function Field({
         placeholder={placeholder}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
-        className="h-12 rounded-xl border-[#D0D5DD] bg-white text-[#101828] shadow-none focus-visible:ring-[#C1121F]/20"
+        className="h-11 rounded-[var(--ui-radius-control)] border-[var(--ui-border-strong)] bg-[var(--ui-surface)] text-sm text-[var(--ui-text)] shadow-none focus-visible:ring-[var(--ui-focus-ring)]/20"
       />
     </div>
   );
@@ -462,10 +522,12 @@ function Field({
 function PreviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#98A2B3]">
+      <p className="text-xs font-medium text-[var(--ui-text-subtle)]">
         {label}
       </p>
-      <p className="mt-1 break-words font-medium text-[#344054]">{value}</p>
+      <p className="mt-1 break-words font-medium text-[var(--ui-text)]">
+        {value}
+      </p>
     </div>
   );
 }

@@ -62,6 +62,8 @@ describe("reported Partner UI follow-up", () => {
 
   it("renders a structured sidebar skeleton and only real menu ratings", () => {
     const appShell = projectFile("src/components/layout/AppShell.tsx");
+    const skeleton = projectFile("src/components/ui/skeleton.tsx");
+    const globalStyles = projectFile("src/app/globals.css");
     const navbar = projectFile("src/components/layout/navbar/navbar.tsx");
     const globalSearch = projectFile(
       "src/components/layout/navbar/GlobalSearch.tsx",
@@ -69,10 +71,40 @@ describe("reported Partner UI follow-up", () => {
     const menuItemCard = projectFile("src/components/cards/MenuItemCard.tsx");
 
     expect(appShell).toContain('data-slot="sidebar-loading-skeleton"');
+    expect(appShell).not.toContain("bg-neutral-200");
+    expect(skeleton).toContain("bg-[var(--ui-skeleton)]");
+    expect(skeleton).not.toContain("bg-accent");
+    expect(globalStyles).toContain("--ui-skeleton: #E9E9E9");
     expect(navbar).toContain("md:w-[220px] xl:w-[280px]");
     expect(globalSearch).toContain("hidden min-w-0 max-w-7xl flex-1");
     expect(menuItemCard).toContain("getDisplayRating");
     expect(menuItemCard).not.toContain(">4.5<");
     expect(menuItemCard).toContain('density === "compact" ? "min-h-0"');
+  });
+
+  it("uses the shared page system for FAQs and the Legal & Tax Profile", () => {
+    const faqPage = projectFile(
+      "src/components/pages/Settings/faqs/components/faqs/FaqManagerPage.tsx",
+    );
+    const legalProfile = projectFile(
+      "src/components/pages/Settings/pages/LegalProfilePage.tsx",
+    );
+
+    for (const source of [faqPage, legalProfile]) {
+      expect(source).toContain("<PageLayout");
+      expect(source).toContain("<PageHeader");
+      expect(source).toContain("<SectionCard");
+      expect(source).toContain("<StatePanel");
+    }
+
+    expect(faqPage).toContain("<FilterBar");
+    expect(faqPage).toContain("<PromotionStatCard");
+    expect(faqPage).toContain("<StatusBadge");
+    expect(faqPage).not.toContain("<Star");
+    expect(faqPage).not.toContain("<Sparkles");
+    expect(faqPage).not.toContain(" as any");
+    expect(legalProfile).toContain("actions={");
+    expect(legalProfile).toContain('state="loading"');
+    expect(legalProfile).toContain("var(--ui-surface-subtle)");
   });
 });

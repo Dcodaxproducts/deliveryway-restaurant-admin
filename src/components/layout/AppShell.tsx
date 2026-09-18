@@ -66,12 +66,12 @@ export function AppShell({ children }: AppShellProps) {
             </div>
           </aside>
           <div className="mx-auto w-full max-w-[var(--ui-content-admin)] space-y-6 p-[var(--ui-page-gutter)] lg:py-6">
-            <div className="h-20 max-w-xl animate-pulse rounded-[var(--ui-radius-card)] bg-neutral-200" />
+            <Skeleton className="h-20 max-w-xl rounded-[var(--ui-radius-card)]" />
             <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
               {Array.from({ length: 4 }).map((_, index) => (
-                <div
+                <Skeleton
                   key={index}
-                  className="h-32 animate-pulse rounded-[var(--ui-radius-card)] bg-neutral-200"
+                  className="h-32 rounded-[var(--ui-radius-card)]"
                 />
               ))}
             </div>
