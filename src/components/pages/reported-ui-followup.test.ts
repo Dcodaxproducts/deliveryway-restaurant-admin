@@ -32,12 +32,16 @@ describe("reported Partner UI follow-up", () => {
     const dateTimeInputs = projectFile(
       "src/components/common/DateTimeInputs.tsx",
     );
+    const popover = projectFile("src/components/ui/popover.tsx");
+    const timePicker = projectFile("src/components/ui/time-24-picker.tsx");
     const posCart = projectFile(
       "src/components/pages/Pos/components/pos/PosCart.tsx",
     );
 
-    expect(dateTimeInputs).toContain("onInteractOutside");
-    expect(dateTimeInputs).toContain('[data-slot="select-content"]');
+    expect(dateTimeInputs).toContain("<TimeSelectFields");
+    expect(popover).toContain("onInteractOutside");
+    expect(popover).toContain('[data-slot="select-content"]');
+    expect(timePicker.match(/native/g)).toHaveLength(2);
     const tipInput = posCart.slice(
       posCart.indexOf("value={tipAmount}"),
       posCart.indexOf("value={tipAmount}") + 300,
@@ -130,6 +134,10 @@ describe("reported Partner UI follow-up", () => {
     expect(editProfile).toContain("<ProfileIdentityCard");
     expect(editProfile).toContain("<FormActions");
     expect(identityCard).toContain('className="size-20');
+    expect(userProfile).toContain('className="space-y-4"');
+    expect(editProfile).toContain('className="space-y-4"');
+    expect(userProfile).not.toContain("xl:grid-cols-[320px_minmax(0,1fr)]");
+    expect(editProfile).not.toContain("xl:grid-cols-[320px_minmax(0,1fr)]");
     expect(userProfile).not.toContain("h-44 w-44");
     expect(editProfile).not.toContain("h-44 w-44");
   });
@@ -149,6 +157,9 @@ describe("reported Partner UI follow-up", () => {
     }
 
     expect(contentSettings).toContain('<PageLayout width="wide">');
+    expect(contentSettings).toContain("Story content");
+    expect(contentSettings).toContain("<RichPolicyEditor");
+    expect(contentSettings).not.toContain("lg:grid-cols-3");
     expect(contentSettings).not.toContain('className="min-h-screen');
     expect(printingSettings).toContain("<SettingsLayout");
     expect(printingSettings).toContain("<Checkbox");
@@ -158,5 +169,17 @@ describe("reported Partner UI follow-up", () => {
     expect(sidebar).toContain(
       "activeMenuKey === item.title || openMenuKey === item.title",
     );
+  });
+
+  it("reuses rich text for legal narrative content and protects nested popovers globally", () => {
+    const legalProfile = projectFile(
+      "src/components/pages/Settings/pages/LegalProfilePage.tsx",
+    );
+    const popover = projectFile("src/components/ui/popover.tsx");
+
+    expect(legalProfile).toContain("<RichPolicyEditor");
+    expect(legalProfile).not.toContain('id="contract-text"');
+    expect(popover).toContain("onInteractOutside");
+    expect(popover).toContain('[data-slot="select-content"]');
   });
 });

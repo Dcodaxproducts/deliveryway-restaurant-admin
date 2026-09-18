@@ -17,4 +17,17 @@ describe("FormSelect", () => {
     expect(markup.match(/<select/g)).toHaveLength(1);
     expect(markup).toContain('<select aria-hidden="true"');
   });
+
+  it("supports a single-chevron native mode for controls inside popovers", () => {
+    const markup = renderToStaticMarkup(
+      <FormSelect native value="05" onChange={() => undefined}>
+        <option value="05">05</option>
+        <option value="06">06</option>
+      </FormSelect>,
+    );
+
+    expect(markup).toContain('data-slot="form-select-native"');
+    expect(markup).toContain("appearance-none");
+    expect(markup.match(/<svg/g)).toHaveLength(1);
+  });
 });

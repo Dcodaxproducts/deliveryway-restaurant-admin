@@ -23,7 +23,7 @@ import { SectionCard } from "@/components/common/SectionCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichPolicyEditor } from "@/components/pages/Settings/forms/PrivacyPolicyForm";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useLegalProfile,
@@ -343,20 +343,18 @@ export function LegalProfilePage() {
 
               <div className="space-y-2">
                 <Label
-                  htmlFor="contract-text"
+                  htmlFor="contract-text-editor"
                   className="text-sm font-medium text-[var(--ui-text)]"
                 >
                   {t("contractText")}
                 </Label>
-                <Textarea
-                  id="contract-text"
+                <RichPolicyEditor
+                  id="contract-text-editor"
                   value={draftProfile.contractText}
                   placeholder={t("contractTextPlaceholder")}
                   disabled={!canEdit || loading}
-                  onChange={(event) =>
-                    updateField("contractText", event.target.value)
-                  }
-                  className="min-h-56 resize-y rounded-[var(--ui-radius-card)] border-[var(--ui-border-strong)] bg-[var(--ui-surface)] px-3.5 py-3 text-sm leading-6 text-[var(--ui-text)] shadow-none focus-visible:ring-[var(--ui-focus-ring)]/20 disabled:cursor-not-allowed disabled:bg-[var(--ui-surface-subtle)]"
+                  onChange={(value) => updateField("contractText", value)}
+                  compact
                 />
               </div>
             </SectionCard>

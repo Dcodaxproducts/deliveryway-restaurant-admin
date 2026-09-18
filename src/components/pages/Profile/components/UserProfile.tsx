@@ -71,7 +71,7 @@ export default function UserProfile() {
   ];
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+    <div className="space-y-4">
       <ProfileIdentityCard
         avatarUrl={avatarUrl}
         initials={initials}

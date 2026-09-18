@@ -68,6 +68,7 @@ export function TimeSelectFields({
       className={cn("grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2", className)}
     >
       <FormSelect
+        native
         id={`${resolvedIdPrefix}-hour`}
         aria-label="Hour"
         value={hour}
@@ -89,6 +90,7 @@ export function TimeSelectFields({
         :
       </span>
       <FormSelect
+        native
         id={`${resolvedIdPrefix}-minute`}
         aria-label="Minute"
         value={minute}

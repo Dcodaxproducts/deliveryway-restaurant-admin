@@ -95,15 +95,6 @@ export function DatePickerInput({
       <PopoverContent
         className="max-w-[calc(100vw-2rem)]"
         align="start"
-        onInteractOutside={(event) => {
-          const target = event.target;
-          if (
-            target instanceof Element &&
-            target.closest('[data-slot="select-content"]')
-          ) {
-            event.preventDefault();
-          }
-        }}
       >
         <Calendar
           mode="single"

@@ -19,14 +19,31 @@ function PopoverContent({
   className,
   align = "start",
   sideOffset = 4,
+  onInteractOutside,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+  const handleInteractOutside: NonNullable<
+    React.ComponentProps<typeof PopoverPrimitive.Content>["onInteractOutside"]
+  > = (event) => {
+    onInteractOutside?.(event);
+    if (event.defaultPrevented) return;
+
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest('[data-slot="select-content"]')
+    ) {
+      event.preventDefault();
+    }
+  };
+
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}
         sideOffset={sideOffset}
+        onInteractOutside={handleInteractOutside}
         className={cn(
           "z-[var(--ui-layer-dropdown)] w-auto rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-popover p-0 text-popover-foreground shadow-[var(--ui-shadow-md)] outline-none",
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",

@@ -70,9 +70,13 @@ async function collectTsxFiles(directory) {
 
 for (const path of await collectTsxFiles(join(root, "src"))) {
   const source = await readFile(path, "utf8");
-  if (/<select(?:\s|>)/.test(source)) {
+  const relativePath = path.replace(`${root}/`, "");
+  const isCanonicalSelectOwner =
+    relativePath === "src/components/ui/form-select.tsx";
+
+  if (/<select(?:\s|>)/.test(source) && !isCanonicalSelectOwner) {
     throw new Error(
-      `Browser-native select found in ${path.replace(`${root}/`, "")}; use FormSelect.`,
+      `Browser-native select found in ${relativePath}; use FormSelect.`,
     );
   }
 }

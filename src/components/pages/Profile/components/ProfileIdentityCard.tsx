@@ -26,7 +26,7 @@ export function ProfileIdentityCard({
 }: ProfileIdentityCardProps) {
   return (
     <SectionCard padding="md" className="h-fit">
-      <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left xl:flex-col xl:items-center xl:text-center">
+      <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left">
         <div className="relative shrink-0">
           <Avatar className="size-20 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] shadow-[var(--ui-shadow-xs)]">
             {avatarUrl ? <AvatarImage src={avatarUrl} alt={name} /> : null}
@@ -37,8 +37,8 @@ export function ProfileIdentityCard({
           {actions}
         </div>
 
-        <div className="mt-3 min-w-0 sm:ml-4 sm:mt-0 xl:ml-0 xl:mt-3">
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start xl:justify-center">
+        <div className="mt-3 min-w-0 sm:ml-4 sm:mt-0">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
             <h2 className="truncate text-lg font-semibold text-[var(--ui-text)]">
               {name || "-"}
             </h2>

@@ -360,6 +360,9 @@ const paragraphsToHtml = (value: string) =>
     )
     .join("\n");
 
+const toRichTextHtml = (value: string) =>
+  /<\/?[a-z][^>]*>/i.test(value) ? value : paragraphsToHtml(value);
+
 const buildCardsHtml = (items: AboutCardField[]) =>
   items
     .filter((item) => item.title.trim() || item.description.trim())
@@ -384,7 +387,7 @@ const buildAboutPageHtml = (
   ${draft.story.badge.trim() ? `<p><strong>${escapeHtml(draft.story.badge)}</strong></p>` : ""}
   ${draft.story.eyebrow.trim() ? `<p>${escapeHtml(draft.story.eyebrow)}</p>` : ""}
   <h2>${escapeHtml(draft.story.title)}</h2>
-  ${paragraphsToHtml(draft.story.paragraphs)}
+  ${toRichTextHtml(draft.story.paragraphs)}
 </section>
 
 <section data-about-section="mission-vision-values">
@@ -426,12 +429,14 @@ export function RichPolicyEditor({
   onChange,
   placeholder,
   disabled = false,
+  compact = false,
 }: {
   id?: string;
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
   disabled?: boolean;
+  compact?: boolean;
 }) {
   const editorRef = useRef<HTMLDivElement>(null);
   const latestExternalValue = useRef("");
@@ -624,7 +629,8 @@ export function RichPolicyEditor({
         onBlur={syncEditorValue}
         data-placeholder={placeholder}
         className={cn(
-          "prose-editor min-h-[420px] w-full overflow-auto bg-white px-5 py-4 text-sm leading-7 text-[#344054] outline-none empty:before:pointer-events-none empty:before:text-[#98A2B3] empty:before:content-[attr(data-placeholder)] [&_a]:font-semibold [&_a]:text-[#C1121F] [&_h1]:mb-4 [&_h1]:mt-7 [&_h1]:text-3xl [&_h1]:font-semibold [&_h1]:leading-tight [&_h1]:text-[#101828] [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:text-[#101828] [&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-[#101828] [&_li]:my-1 [&_ol]:my-4 [&_ol]:pl-6 [&_p]:mb-4 [&_strong]:text-[#101828] [&_ul]:my-4 [&_ul]:pl-6",
+          "prose-editor w-full overflow-auto bg-white px-5 py-4 text-sm leading-7 text-[#344054] outline-none empty:before:pointer-events-none empty:before:text-[#98A2B3] empty:before:content-[attr(data-placeholder)] [&_a]:font-semibold [&_a]:text-[#C1121F] [&_h1]:mb-4 [&_h1]:mt-7 [&_h1]:text-3xl [&_h1]:font-semibold [&_h1]:leading-tight [&_h1]:text-[#101828] [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:text-[#101828] [&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-[#101828] [&_li]:my-1 [&_ol]:my-4 [&_ol]:pl-6 [&_p]:mb-4 [&_strong]:text-[#101828] [&_ul]:my-4 [&_ul]:pl-6",
+          compact ? "min-h-56" : "min-h-[420px]",
           disabled && "cursor-not-allowed bg-[#F9FAFB] opacity-80",
         )}
       />
@@ -895,7 +901,7 @@ function AboutPageSectionEditor({
   return (
     <div className="space-y-4">
       <EditableSectionCard icon={ImageIcon} title="Hero / banner">
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="space-y-4">
           <AboutImageUpload
             label="Hero image"
             value={value.hero.imageUrl}
@@ -903,21 +909,21 @@ function AboutPageSectionEditor({
               updateObjectSection("hero", { ...value.hero, imageUrl })
             }
           />
-          <AboutTextInput
-            label="Title"
-            value={value.hero.title}
-            onChange={(title) =>
-              updateObjectSection("hero", { ...value.hero, title })
-            }
-          />
-          <AboutTextInput
-            label="Subtitle"
-            value={value.hero.subtitle}
-            onChange={(subtitle) =>
-              updateObjectSection("hero", { ...value.hero, subtitle })
-            }
-          />
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
+            <AboutTextInput
+              label="Title"
+              value={value.hero.title}
+              onChange={(title) =>
+                updateObjectSection("hero", { ...value.hero, title })
+              }
+            />
+            <AboutTextInput
+              label="Subtitle"
+              value={value.hero.subtitle}
+              onChange={(subtitle) =>
+                updateObjectSection("hero", { ...value.hero, subtitle })
+              }
+            />
             <AboutTextInput
               label="CTA label"
               value={value.hero.ctaLabel}
@@ -937,7 +943,7 @@ function AboutPageSectionEditor({
       </EditableSectionCard>
 
       <EditableSectionCard icon={FileText} title="Our Story">
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="space-y-4">
           <AboutImageUpload
             label="Story image"
             value={value.story.imageUrl}
@@ -945,40 +951,47 @@ function AboutPageSectionEditor({
               updateObjectSection("story", { ...value.story, imageUrl })
             }
           />
-          <AboutTextInput
-            label="Badge"
-            value={value.story.badge}
-            onChange={(badge) =>
-              updateObjectSection("story", { ...value.story, badge })
-            }
-          />
-          <AboutTextInput
-            label="Eyebrow"
-            value={value.story.eyebrow}
-            onChange={(eyebrow) =>
-              updateObjectSection("story", { ...value.story, eyebrow })
-            }
-          />
-          <AboutTextInput
-            label="Title"
-            value={value.story.title}
-            onChange={(title) =>
-              updateObjectSection("story", { ...value.story, title })
-            }
-          />
+          <div className="grid gap-4 md:grid-cols-2">
+            <AboutTextInput
+              label="Badge"
+              value={value.story.badge}
+              onChange={(badge) =>
+                updateObjectSection("story", { ...value.story, badge })
+              }
+            />
+            <AboutTextInput
+              label="Eyebrow"
+              value={value.story.eyebrow}
+              onChange={(eyebrow) =>
+                updateObjectSection("story", { ...value.story, eyebrow })
+              }
+            />
+            <AboutTextInput
+              label="Title"
+              value={value.story.title}
+              onChange={(title) =>
+                updateObjectSection("story", { ...value.story, title })
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold text-[#344054]">
+              Story content
+            </Label>
+            <RichPolicyEditor
+              value={toRichTextHtml(value.story.paragraphs)}
+              onChange={(paragraphs) =>
+                updateObjectSection("story", { ...value.story, paragraphs })
+              }
+              placeholder="Write your restaurant story"
+              compact
+            />
+          </div>
         </div>
-        <AboutTextArea
-          label="Paragraphs"
-          value={value.story.paragraphs}
-          onChange={(paragraphs) =>
-            updateObjectSection("story", { ...value.story, paragraphs })
-          }
-          rows={6}
-        />
       </EditableSectionCard>
 
       <EditableSectionCard icon={Target} title="Mission / Vision / Values">
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           {value.missionVisionValues.map((item, index) => (
             <CardFields
               key={index}
@@ -993,7 +1006,7 @@ function AboutPageSectionEditor({
       </EditableSectionCard>
 
       <EditableSectionCard icon={MousePointerClick} title="Why Choose Us">
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           {value.whyChooseUs.map((item, index) => (
             <CardFields
               key={index}
