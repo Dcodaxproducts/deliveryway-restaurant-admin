@@ -27,6 +27,7 @@ export function useGiftCards(params: GiftCardsListParams) {
   return useQuery({
     queryKey: queryKeys.giftCards.list(params),
     queryFn: () => getGiftCards(params),
+    enabled: Boolean(params.restaurantId),
     placeholderData: (previousData) => previousData,
   });
 }

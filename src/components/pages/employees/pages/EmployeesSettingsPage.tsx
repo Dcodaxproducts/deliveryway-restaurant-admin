@@ -15,6 +15,7 @@ import { useGetEmployeesStats } from "@/hooks/useDashboard";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "@/components/common/SectionCard";
 import { StatePanel } from "@/components/common/EmptyState";
+import { PageTabs } from "@/components/common/PageTabs";
 
 type BranchOption = {
   id: string;
@@ -98,6 +99,7 @@ const EmployeesSettingsPage = () => {
         {(!isEmployeeStatsError || employeeStats) && <StatsSection
           stats={employeeStats}
           loading={(isEmployeeStatsLoading || isEmployeeStatsFetching) && !employeeStats}
+          showRoleBreakdown={activeTab === "roles"}
         />}
 
         {!isBranchAdmin ? (
@@ -122,34 +124,16 @@ const EmployeesSettingsPage = () => {
           </div>
         ) : null}
 
-        {/* Tabs */}
-        <div className="flex gap-3 flex-wrap">
-          {[
-            { key: "employees", label: t("employees") },
-            { key: "roles", label: t("roles") },
-          ].map((tab) => {
-            const isActive = activeTab === tab.key;
+        <PageTabs
+          value={activeTab}
+          options={[
+            { value: "employees", label: t("employees") },
+            { value: "roles", label: t("roles") },
+          ]}
+          onValueChange={setActiveTab}
+          ariaLabel={`${t("employees")} / ${t("roles")}`}
+        />
 
-            return (
-              <Button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key as "employees" | "roles")}
-                className={`
-                  h-[42px] px-5 rounded-[12px] text-[14px] font-medium transition-all
-                  ${
-                    isActive
-                      ? "bg-primary text-white shadow-sm"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }
-                `}
-              >
-                {tab.label}
-              </Button>
-            );
-          })}
-        </div>
-
-        {/* Content */}
         {activeTab === "employees" && (
           <EmployeeTable
             refreshFlag={refreshEmployees}

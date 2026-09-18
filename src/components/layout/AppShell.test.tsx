@@ -70,6 +70,7 @@ describe("AppShell authentication boundary", () => {
 
     expect(markup).not.toContain("protected-dashboard");
     expect(markup).toContain('aria-label="Loading workspace"');
+    expect(markup).toContain('data-slot="sidebar-loading-skeleton"');
     expect(markup).toContain("animate-pulse");
   });
 

@@ -142,6 +142,15 @@ const getDiscountedPrice = (item: any, originalPrice: number) => {
   return calculatedPrice >= 0 && calculatedPrice < originalPrice ? calculatedPrice : null;
 };
 
+const getDisplayRating = (item: any) => {
+  const rating = toNumber(
+    item?.averageRating ?? item?.rating ?? item?.reviewAverage,
+    0,
+  );
+
+  return rating > 0 ? Math.min(rating, 5) : null;
+};
+
 export default function MenuItemCard({
   item,
   editing,
@@ -159,6 +168,7 @@ export default function MenuItemCard({
   const image = useMemo(() => getImageUrl(item?.imageUrl), [item?.imageUrl]);
   const price = useMemo(() => getDisplayPrice(item), [item]);
   const discountedPrice = useMemo(() => getDiscountedPrice(item, price), [item, price]);
+  const rating = getDisplayRating(item);
 
   const itemName = item?.name || t("fallbackName");
   const categoryName = item?.category?.name || t("uncategorized");
@@ -179,7 +189,7 @@ export default function MenuItemCard({
     <article
       className={cn(
         "group relative flex h-full w-full flex-col overflow-hidden rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] shadow-[var(--ui-shadow-xs)] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[var(--ui-shadow-sm)]",
-        density === "compact" ? "min-h-[224px]" : "min-h-[270px]",
+        density === "compact" ? "min-h-0" : "min-h-[250px]",
       )}
     >
       {editing ? (
@@ -233,13 +243,17 @@ export default function MenuItemCard({
             {categoryName}
           </span>
 
-          <div className="flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-amber-500 ring-1 ring-amber-100">
-            <Star size={14} fill="currentColor" />
-            <span className="text-xs font-semibold text-foreground">4.5</span>
-          </div>
+          {rating !== null ? (
+            <div className="flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-amber-500 ring-1 ring-amber-100">
+              <Star size={14} fill="currentColor" />
+              <span className="text-xs font-semibold text-foreground">
+                {rating.toFixed(1)}
+              </span>
+            </div>
+          ) : null}
         </div>
 
-        <div className={density === "compact" ? "min-h-[66px]" : "min-h-[92px]"}>
+        <div className={density === "compact" ? "min-h-[56px]" : "min-h-[76px]"}>
           <h3
             className={cn(
               "line-clamp-2 font-semibold tracking-[-0.02em] text-foreground",
@@ -261,7 +275,7 @@ export default function MenuItemCard({
           </p>
         </div>
 
-        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+        <div className="mt-auto flex items-end justify-between gap-3 pt-3">
           <div className="min-w-0">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {t("price")}

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
 type GiftCardsHeaderProps = {
-  total: number;
+  hasRestaurantScope: boolean;
   isRefreshing: boolean;
   canManageVisibility: boolean;
   visibilityEnabled: boolean;
@@ -20,7 +20,7 @@ type GiftCardsHeaderProps = {
 };
 
 export default function GiftCardsHeader({
-  total,
+  hasRestaurantScope,
   isRefreshing,
   canManageVisibility,
   visibilityEnabled,
@@ -39,41 +39,44 @@ export default function GiftCardsHeader({
       title={t("title")}
       description={t("description")}
       actions={
-        <>
-        {canManageVisibility ? (
-          <label className="flex h-[42px] items-center gap-3 rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700">
-            <span>{t("websiteVisibility")}</span>
-            <Switch
-              checked={visibilityEnabled}
-              disabled={visibilityDisabled}
-              aria-label={t("websiteVisibility")}
-              onCheckedChange={(checked) => onVisibilityChange(Boolean(checked))}
-            />
-          </label>
-        ) : null}
-        <span className="rounded-full bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600">
-          {t("total", { total: total.toLocaleString() })}
-        </span>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onRefresh}
-          disabled={isRefreshing}
-        >
-          <RefreshCw
-            size={16}
-            className={isRefreshing ? "mr-2 animate-spin" : "mr-2"}
-          />
-          {commonT("refresh")}
-        </Button>
-        <Button
-          type="button"
-          onClick={() => router.push("/promotion-management/gift-cards/add")}
-        >
-          <Plus size={16} className="mr-2" />
-          {t("addGiftCard")}
-        </Button>
-        </>
+        hasRestaurantScope ? (
+          <>
+            {canManageVisibility ? (
+              <label className="flex h-[42px] items-center gap-3 rounded-[12px] border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700">
+                <span>{t("websiteVisibility")}</span>
+                <Switch
+                  checked={visibilityEnabled}
+                  disabled={visibilityDisabled}
+                  aria-label={t("websiteVisibility")}
+                  onCheckedChange={(checked) =>
+                    onVisibilityChange(Boolean(checked))
+                  }
+                />
+              </label>
+            ) : null}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+            >
+              <RefreshCw
+                size={16}
+                className={isRefreshing ? "mr-2 animate-spin" : "mr-2"}
+              />
+              {commonT("refresh")}
+            </Button>
+            <Button
+              type="button"
+              onClick={() =>
+                router.push("/promotion-management/gift-cards/add")
+              }
+            >
+              <Plus size={16} className="mr-2" />
+              {t("addGiftCard")}
+            </Button>
+          </>
+        ) : null
       }
     />
   );

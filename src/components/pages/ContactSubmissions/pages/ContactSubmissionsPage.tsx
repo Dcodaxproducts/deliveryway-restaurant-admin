@@ -489,7 +489,11 @@ export default function ContactSubmissionsPage() {
 
       <SectionCard padding="md" className="space-y-6">
         <FilterBar
-          resultCount={`${meta.total} submission${meta.total === 1 ? "" : "s"}`}
+          resultCount={
+            meta.total > 0
+              ? `${meta.total} submission${meta.total === 1 ? "" : "s"}`
+              : undefined
+          }
           search={
             <div className="min-w-0 lg:min-w-72">
               <Label

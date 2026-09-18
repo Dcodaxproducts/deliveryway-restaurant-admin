@@ -21,9 +21,14 @@ type EmployeeStats = {
 interface StatsSectionProps {
   stats?: EmployeeStats;
   loading?: boolean;
+  showRoleBreakdown?: boolean;
 }
 
-const StatsSection = ({ stats, loading }: StatsSectionProps) => {
+const StatsSection = ({
+  stats,
+  loading,
+  showRoleBreakdown = false,
+}: StatsSectionProps) => {
   const t = useTranslations("employees");
   const totalEmployees = stats?.totalEmployees ?? 0;
   const activeEmployees = stats?.activeEmployees ?? 0;
@@ -66,57 +71,50 @@ const StatsSection = ({ stats, loading }: StatsSectionProps) => {
     <div className="space-y-6">
       <StatGrid stats={cards} loading={loading} columns={4} />
 
-      <div className="rounded-[14px] border border-[#EDEFF2] bg-white p-6">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-lg font-semibold text-dark">
-              {t("stats.roleBreakdown")}
-            </h3>
-            <p className="text-sm text-gray">
-              {t("stats.roleBreakdownDescription")}
-            </p>
+      {showRoleBreakdown && roleBreakdown.length > 0 ? (
+        <div className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-dark">
+                {t("stats.roleBreakdown")}
+              </h3>
+              <p className="text-sm text-gray">
+                {t("stats.roleBreakdownDescription")}
+              </p>
+            </div>
           </div>
-        </div>
 
-        {loading ? (
-          <div className="space-y-3">
-            {[0, 1, 2].map((item) => (
-              <div
-                key={item}
-                className="h-10 animate-pulse rounded-lg bg-gray-100"
-              />
-            ))}
-          </div>
-        ) : roleBreakdown.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[420px] text-left text-sm">
-              <thead>
-                <tr className="border-b border-[#EDEFF2] text-gray">
-                  <th className="py-3 font-medium">{t("table.role")}</th>
-                  <th className="py-3 text-right font-medium">
-                    {t("stats.employeeCount")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {roleBreakdown.map((role) => (
-                  <tr
-                    key={role.staffRoleId || role.name}
-                    className="border-b border-[#F3F4F6] last:border-0"
-                  >
-                    <td className="py-3 font-medium text-dark">
-                      {role.name || t("stats.unassigned")}
-                    </td>
-                    <td className="py-3 text-right text-gray">{role.count}</td>
+          {loading ? null : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[420px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-[#EDEFF2] text-gray">
+                    <th className="py-3 font-medium">{t("table.role")}</th>
+                    <th className="py-3 text-right font-medium">
+                      {t("stats.employeeCount")}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="text-sm text-gray">{t("stats.noRoleBreakdown")}</p>
-        )}
-      </div>
+                </thead>
+                <tbody>
+                  {roleBreakdown.map((role) => (
+                    <tr
+                      key={role.staffRoleId || role.name}
+                      className="border-b border-[#F3F4F6] last:border-0"
+                    >
+                      <td className="py-3 font-medium text-dark">
+                        {role.name || t("stats.unassigned")}
+                      </td>
+                      <td className="py-3 text-right text-gray">
+                        {role.count}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 };

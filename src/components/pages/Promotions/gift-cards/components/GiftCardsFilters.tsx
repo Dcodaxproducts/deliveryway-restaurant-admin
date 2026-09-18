@@ -94,13 +94,13 @@ export default function GiftCardsFilters({
           </div>
         </div>
       }
-      resultCount={
+      resultCount={totalCount > 0 || isFetching ? (
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-            {totalCount > 0
-              ? t("showingOf", { visible: visibleCount, total: totalCount })
-              : commonT("shown", { count: visibleCount })}
-          </span>
+          {totalCount > 0 ? (
+            <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
+              {t("showingOf", { visible: visibleCount, total: totalCount })}
+            </span>
+          ) : null}
           {isFetching ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 font-medium text-primary">
               <Loader2 size={12} className="animate-spin" />
@@ -108,7 +108,7 @@ export default function GiftCardsFilters({
             </span>
           ) : null}
         </div>
-      }
+      ) : undefined}
       filters={
         <>
           <FilterSelect

@@ -120,7 +120,10 @@ export function GlobalSearch() {
   };
 
   return (
-    <div ref={containerRef} className="ml-3 hidden max-w-7xl flex-1 md:block">
+    <div
+      ref={containerRef}
+      className="ml-3 hidden min-w-0 max-w-7xl flex-1 md:block"
+    >
       <div className="relative flex h-10 items-center rounded-lg border border-gray-300 bg-white px-3 transition-all focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20">
         <Input
           type="text"
@@ -138,7 +141,7 @@ export function GlobalSearch() {
           aria-expanded={isOpen}
           aria-controls="global-search-dropdown"
           aria-autocomplete="list"
-          className="h-full flex-1 border-none px-0 text-sm shadow-none focus-visible:ring-0"
+          className="h-full min-w-0 flex-1 border-none px-0 text-sm shadow-none focus-visible:ring-0"
         />
         {isFetching && shouldSearch ? (
           <Loader2 className="size-5 animate-spin text-gray-400 stroke-1" />

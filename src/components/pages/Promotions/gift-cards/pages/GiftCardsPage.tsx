@@ -21,6 +21,8 @@ import {
 import { ADMIN_ROLES } from "@/lib/auth";
 import type { GiftCard, GiftCardsListParams } from "@/types/gift-cards";
 import { SectionCard } from "@/components/common/SectionCard";
+import { StatePanel } from "@/components/common/EmptyState";
+import { useTranslations } from "next-intl";
 
 const defaultFilters: GiftCardsFilterState = {
   search: "",
@@ -49,11 +51,15 @@ const getBranchOptions = (payload: unknown): GiftCardBranchOption[] => {
 };
 
 export default function GiftCardsPage() {
-  const { user, restaurantId, branchId, role, isBranchAdmin } = useAuth();
+  const commonT = useTranslations("common");
+  const { user, restaurantId, branchId, role, isBranchAdmin, loading } =
+    useAuth();
   const [filters, setFilters] = useState(defaultFilters);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
-  const [giftCardToDelete, setGiftCardToDelete] = useState<GiftCard | null>(null);
+  const [giftCardToDelete, setGiftCardToDelete] = useState<GiftCard | null>(
+    null,
+  );
   const canManageVisibility =
     Boolean(restaurantId) &&
     (role === ADMIN_ROLES.BUSINESS_ADMIN || role === "SUPER_ADMIN");
@@ -65,12 +71,12 @@ export default function GiftCardsPage() {
           includeInactive: false,
           sortOrder: "ASC",
         }
-      : undefined
+      : undefined,
   );
 
   const branchOptions = useMemo(
     () => getBranchOptions(branchesQuery.data),
-    [branchesQuery.data]
+    [branchesQuery.data],
   );
 
   const scopedBranchId = isBranchAdmin
@@ -86,12 +92,19 @@ export default function GiftCardsPage() {
       branchId: scopedBranchId,
       lifecycle: filters.lifecycle !== "ALL" ? filters.lifecycle : undefined,
     }),
-    [filters.lifecycle, filters.search, limit, page, restaurantId, scopedBranchId]
+    [
+      filters.lifecycle,
+      filters.search,
+      limit,
+      page,
+      restaurantId,
+      scopedBranchId,
+    ],
   );
 
   const giftCardsQuery = useGiftCards(params);
   const giftCardsVisibilityQuery = useRestaurantGiftCardsVisibility(
-    canManageVisibility ? restaurantId : undefined
+    canManageVisibility ? restaurantId : undefined,
   );
   const updateVisibilityMutation = useUpdateRestaurantGiftCardsVisibility();
   const deleteMutation = useDeleteGiftCard();
@@ -113,7 +126,7 @@ export default function GiftCardsPage() {
       }));
       setPage(1);
     },
-    []
+    [],
   );
 
   const handleDelete = async () => {
@@ -141,7 +154,7 @@ export default function GiftCardsPage() {
   return (
     <Container>
       <GiftCardsHeader
-        total={meta.total}
+        hasRestaurantScope={Boolean(restaurantId)}
         isRefreshing={giftCardsQuery.isFetching}
         canManageVisibility={canManageVisibility}
         visibilityEnabled={giftCardsVisibilityQuery.data ?? false}
@@ -152,33 +165,44 @@ export default function GiftCardsPage() {
       />
 
       <SectionCard padding="md" className="space-y-6">
-        <GiftCardsFilters
-          filters={filters}
-          branchOptions={branchOptions}
-          isBranchAdmin={isBranchAdmin}
-          branchName={user?.branchName ?? undefined}
-          visibleCount={giftCards.length}
-          totalCount={meta.total}
-          isFetching={giftCardsQuery.isFetching}
-          onFiltersChange={handleFiltersChange}
-        />
+        {!loading && !restaurantId ? (
+          <StatePanel
+            state="unavailable"
+            title={commonT("selectRestaurantRequired")}
+            description={commonT("selectRestaurantToContinue")}
+            compact
+          />
+        ) : (
+          <>
+            <GiftCardsFilters
+              filters={filters}
+              branchOptions={branchOptions}
+              isBranchAdmin={isBranchAdmin}
+              branchName={user?.branchName ?? undefined}
+              visibleCount={giftCards.length}
+              totalCount={meta.total}
+              isFetching={giftCardsQuery.isFetching}
+              onFiltersChange={handleFiltersChange}
+            />
 
-        <GiftCardsTable
-          giftCards={giftCards}
-          loading={giftCardsQuery.isLoading}
-          error={giftCardsQuery.error}
-          onDelete={setGiftCardToDelete}
-        />
+            <GiftCardsTable
+              giftCards={giftCards}
+              loading={giftCardsQuery.isLoading}
+              error={giftCardsQuery.error}
+              onDelete={setGiftCardToDelete}
+            />
 
-        <GiftCardsPagination
-          meta={meta}
-          limit={limit}
-          onLimitChange={(nextLimit) => {
-            setLimit(nextLimit);
-            setPage(1);
-          }}
-          onPageChange={setPage}
-        />
+            <GiftCardsPagination
+              meta={meta}
+              limit={limit}
+              onLimitChange={(nextLimit) => {
+                setLimit(nextLimit);
+                setPage(1);
+              }}
+              onPageChange={setPage}
+            />
+          </>
+        )}
       </SectionCard>
 
       <GiftCardDeleteDialog

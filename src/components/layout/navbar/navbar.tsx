@@ -43,7 +43,7 @@ export function Navbar() {
           <SearchBar />
 
           <div className="w-full min-w-0 md:w-auto md:shrink-0">
-            <RestaurantPicker className="w-full md:w-[280px]" />
+            <RestaurantPicker className="w-full md:w-[220px] xl:w-[280px]" />
           </div>
 
           <div className="ml-auto flex shrink-0 items-center gap-1 lg:gap-2">

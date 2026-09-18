@@ -1232,7 +1232,7 @@ export default function PosCart() {
                 value={tipAmount}
                 onChange={(event) => setTipAmount(event.target.value)}
                 min="0"
-                step="0.01"
+                step="1"
                 type="number"
                 placeholder="0.00"
                 className="h-10 w-full rounded-md border px-3 text-sm"
