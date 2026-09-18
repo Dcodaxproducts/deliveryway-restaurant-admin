@@ -143,6 +143,7 @@ export const useGetLoyaltyProgram = (params?: GetLoyaltyProgramParams) => {
   return useQuery({
     queryKey: loyaltyKeys.program(params?.restaurantId),
     queryFn: () => getLoyaltyProgram(params),
+    enabled: Boolean(params?.restaurantId),
   });
 };
 

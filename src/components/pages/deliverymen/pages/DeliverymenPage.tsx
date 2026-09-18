@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 
 const Deliveryman = () => {
   const feedbackT = useTranslations("common.feedback");
+  const commonT = useTranslations("common");
   const { restaurantId, branchId, isBranchAdmin, loading } = useAuth();
   const t = useTranslations("deliverymen");
   const scopedBranchId = isBranchAdmin ? branchId : undefined;
@@ -90,28 +91,39 @@ const Deliveryman = () => {
             description={feedbackT("unavailableDescription")} compact />
         ) : null}
 
-        {!isBranchAdmin ? (
-          <BranchFilters
-            branches={deliverymen}
-            filters={filters}
-            onFilterChange={handleFilterChange}
+        {!loading && !restaurantId ? (
+          <StatePanel
+            state="unavailable"
+            title={commonT("selectRestaurantRequired")}
+            description={commonT("selectRestaurantToContinue")}
+            compact
           />
-        ) : null}
+        ) : (
+          <>
+            {!isBranchAdmin ? (
+              <BranchFilters
+                branches={deliverymen}
+                filters={filters}
+                onFilterChange={handleFilterChange}
+              />
+            ) : null}
 
-        {isError && data ? (
-          <StatePanel state="error" title={feedbackT("refreshFailed", { subject: feedbackT("subjects.deliverymen") })} description={feedbackT("cachedDescription")} compact />
-        ) : null}
-        <Table
-          data={deliverymen}
-          meta={meta}
-          loading={isTableLoading}
-          error={isError && !data ? feedbackT("loadFailedDescription") : null}
-          onPageChange={(page: number) =>
-            setFilters((prev) => ({ ...prev, page }))
-          }
-          refresh={handleRefresh}
-        />
-        {isError ? <Button type="button" variant="outline" disabled={isFetching || loading} onClick={() => void refetch()}>{feedbackT("retry", { subject: feedbackT("subjects.deliverymen") })}</Button> : null}
+            {isError && data ? (
+              <StatePanel state="error" title={feedbackT("refreshFailed", { subject: feedbackT("subjects.deliverymen") })} description={feedbackT("cachedDescription")} compact />
+            ) : null}
+            <Table
+              data={deliverymen}
+              meta={meta}
+              loading={isTableLoading}
+              error={isError && !data ? feedbackT("loadFailedDescription") : null}
+              onPageChange={(page: number) =>
+                setFilters((prev) => ({ ...prev, page }))
+              }
+              refresh={handleRefresh}
+            />
+            {isError ? <Button type="button" variant="outline" disabled={isFetching || loading} onClick={() => void refetch()}>{feedbackT("retry", { subject: feedbackT("subjects.deliverymen") })}</Button> : null}
+          </>
+        )}
       </SectionCard>
     </Container>
   );

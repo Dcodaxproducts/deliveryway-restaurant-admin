@@ -332,6 +332,16 @@ describe("notifications feedback", () => {
 });
 
 describe("query and retry contracts", () => {
+  it("shows an explicit deliveryman restriction without a selected restaurant", () => {
+    harness.restaurantId = null;
+
+    const tree = run(DeliverymenPage);
+    const markup = renderToStaticMarkup(tree);
+
+    expect(markup).toContain("Please select a restaurant");
+    expect(nodes(tree).some((node) => node.type === DeliveryManTable)).toBe(false);
+  });
+
   it.each([
     { render: CustomersPage, component: CustomerStats, name: "customers", row: customer, data: { totalCustomers: 17 } },
     { render: DeliverymenPage, component: DeliverymanStats, name: "deliverymen", row: deliveryman, data: { totalDeliverymen: 17 } },

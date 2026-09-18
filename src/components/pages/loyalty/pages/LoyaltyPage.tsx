@@ -29,10 +29,12 @@ export default function LoyaltyManagementPage() {
       ) : null}
 
       <div className="mt-6 space-y-6">
-        <LoyaltyProgramSettings
-          restaurantId={normalizedRestaurantId}
-          readOnly={isBranchAdmin}
-        />
+        {normalizedRestaurantId ? (
+          <LoyaltyProgramSettings
+            restaurantId={normalizedRestaurantId}
+            readOnly={isBranchAdmin}
+          />
+        ) : null}
 
         <CustomerLoyaltyManager />
       </div>

@@ -37,6 +37,7 @@ export const useDeliverymen = (params?: {
   return useQuery({
     queryKey: ["deliverymen", params],
     queryFn: () => getDeliverymenList(params),
+    enabled: Boolean(params?.restaurantId),
   });
 };
 
