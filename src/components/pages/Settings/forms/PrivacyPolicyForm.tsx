@@ -49,7 +49,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import Header from "@/components/common/PageHeader";
+import PageLayout from "@/components/common/Container";
+import PageHeader from "@/components/common/PageHeader";
+import { SectionCard } from "@/components/common/SectionCard";
+import PromotionStatCard from "@/components/cards/PromotionStatCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -102,18 +105,46 @@ type EditorButton = {
 
 const editorButtonGroups: EditorButton[][] = [
   [
-    { label: "Paragraph", icon: Pilcrow, action: { type: "block", value: "p" } },
-    { label: "Heading 1", icon: Heading1, action: { type: "block", value: "h1" } },
-    { label: "Heading 2", icon: Heading2, action: { type: "block", value: "h2" } },
-    { label: "Heading 3", icon: Heading3, action: { type: "block", value: "h3" } },
+    {
+      label: "Paragraph",
+      icon: Pilcrow,
+      action: { type: "block", value: "p" },
+    },
+    {
+      label: "Heading 1",
+      icon: Heading1,
+      action: { type: "block", value: "h1" },
+    },
+    {
+      label: "Heading 2",
+      icon: Heading2,
+      action: { type: "block", value: "h2" },
+    },
+    {
+      label: "Heading 3",
+      icon: Heading3,
+      action: { type: "block", value: "h3" },
+    },
   ],
   [
     { label: "Bold", icon: Bold, action: { type: "command", command: "bold" } },
-    { label: "Italic", icon: Italic, action: { type: "command", command: "italic" } },
-    { label: "Underline", icon: Underline, action: { type: "command", command: "underline" } },
+    {
+      label: "Italic",
+      icon: Italic,
+      action: { type: "command", command: "italic" },
+    },
+    {
+      label: "Underline",
+      icon: Underline,
+      action: { type: "command", command: "underline" },
+    },
   ],
   [
-    { label: "Bulleted list", icon: List, action: { type: "command", command: "insertUnorderedList" } },
+    {
+      label: "Bulleted list",
+      icon: List,
+      action: { type: "command", command: "insertUnorderedList" },
+    },
     {
       label: "Numbered list",
       icon: ListOrdered,
@@ -121,13 +152,33 @@ const editorButtonGroups: EditorButton[][] = [
     },
   ],
   [
-    { label: "Align left", icon: AlignLeft, action: { type: "command", command: "justifyLeft" } },
-    { label: "Align center", icon: AlignCenter, action: { type: "command", command: "justifyCenter" } },
-    { label: "Align right", icon: AlignRight, action: { type: "command", command: "justifyRight" } },
+    {
+      label: "Align left",
+      icon: AlignLeft,
+      action: { type: "command", command: "justifyLeft" },
+    },
+    {
+      label: "Align center",
+      icon: AlignCenter,
+      action: { type: "command", command: "justifyCenter" },
+    },
+    {
+      label: "Align right",
+      icon: AlignRight,
+      action: { type: "command", command: "justifyRight" },
+    },
   ],
   [
-    { label: "Undo", icon: Undo2, action: { type: "command", command: "undo" } },
-    { label: "Redo", icon: Redo2, action: { type: "command", command: "redo" } },
+    {
+      label: "Undo",
+      icon: Undo2,
+      action: { type: "command", command: "undo" },
+    },
+    {
+      label: "Redo",
+      icon: Redo2,
+      action: { type: "command", command: "redo" },
+    },
     {
       label: "Clear formatting",
       icon: RemoveFormatting,
@@ -136,7 +187,14 @@ const editorButtonGroups: EditorButton[][] = [
   ],
 ];
 
-const editorSwatches = ["#101828", "#475467", "#C1121F", "#1D7FA8", "#027A48", "#B54708"];
+const editorSwatches = [
+  "#101828",
+  "#475467",
+  "#C1121F",
+  "#1D7FA8",
+  "#027A48",
+  "#B54708",
+];
 
 const editorFontSizes = [
   { label: "Small", value: "2" },
@@ -180,7 +238,8 @@ const buildPreviewDocument = (content: string, emptyPreview: string) => {
 </html>`;
 };
 
-const countWords = (value: string) => value.trim().split(/\s+/).filter(Boolean).length;
+const countWords = (value: string) =>
+  value.trim().split(/\s+/).filter(Boolean).length;
 
 type ContentField = "privacyPolicy" | "aboutUs";
 
@@ -222,7 +281,8 @@ const defaultAboutPageDraft: AboutPageDraft = {
   hero: {
     imageUrl: "",
     title: "About Us",
-    subtitle: "Fresh food, warm service, and a customer experience built around your table.",
+    subtitle:
+      "Fresh food, warm service, and a customer experience built around your table.",
     ctaLabel: "Order Now",
     ctaHref: "/",
   },
@@ -241,11 +301,13 @@ const defaultAboutPageDraft: AboutPageDraft = {
     },
     {
       title: "Vision",
-      description: "Become the neighborhood favorite for quality food and reliable service.",
+      description:
+        "Become the neighborhood favorite for quality food and reliable service.",
     },
     {
       title: "Values",
-      description: "Hospitality, consistency, transparency, and respect for every customer.",
+      description:
+        "Hospitality, consistency, transparency, and respect for every customer.",
     },
   ],
   whyChooseUs: [
@@ -259,7 +321,8 @@ const defaultAboutPageDraft: AboutPageDraft = {
     },
     {
       title: "Quality food",
-      description: "Fresh ingredients and kitchen standards customers can trust.",
+      description:
+        "Fresh ingredients and kitchen standards customers can trust.",
     },
   ],
 };
@@ -291,7 +354,10 @@ const paragraphsToHtml = (value: string) =>
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean)
-    .map((paragraph) => `<p>${escapeHtml(paragraph).replaceAll("\n", "<br />")}</p>`)
+    .map(
+      (paragraph) =>
+        `<p>${escapeHtml(paragraph).replaceAll("\n", "<br />")}</p>`,
+    )
     .join("\n");
 
 const buildCardsHtml = (items: AboutCardField[]) =>
@@ -303,7 +369,9 @@ const buildCardsHtml = (items: AboutCardField[]) =>
     )
     .join("\n");
 
-const buildAboutPageHtml = (draft: AboutPageDraft) => `<!-- ${aboutPageMarkerPrefix}${encodeAboutDraft(draft)} -->
+const buildAboutPageHtml = (
+  draft: AboutPageDraft,
+) => `<!-- ${aboutPageMarkerPrefix}${encodeAboutDraft(draft)} -->
 <section data-about-section="hero">
   ${draft.hero.imageUrl.trim() ? `<img src="${escapeHtml(draft.hero.imageUrl)}" alt="${escapeHtml(draft.hero.title)}" />` : ""}
   <h1>${escapeHtml(draft.hero.title)}</h1>
@@ -346,7 +414,8 @@ const parseAboutPageDraft = (value: string) => {
     ...defaultAboutPageDraft,
     story: {
       ...defaultAboutPageDraft.story,
-      paragraphs: stripHtmlToText(value) || defaultAboutPageDraft.story.paragraphs,
+      paragraphs:
+        stripHtmlToText(value) || defaultAboutPageDraft.story.paragraphs,
     },
   };
 };
@@ -404,7 +473,7 @@ export function RichPolicyEditor({
   };
 
   return (
-    <div className="overflow-hidden rounded-[24px] border border-[#D0D5DD] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.05)]">
+    <div className="overflow-hidden rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)]">
       <div className="flex flex-wrap items-center gap-2 border-b border-[#EAECF0] bg-[#FCFCFD] px-3 py-3">
         {editorButtonGroups.map((group, groupIndex) => (
           <div
@@ -436,13 +505,22 @@ export function RichPolicyEditor({
             <button
               key={color}
               type="button"
-              onClick={() => runCommand({ type: "command", command: "foreColor", value: color })}
+              onClick={() =>
+                runCommand({
+                  type: "command",
+                  command: "foreColor",
+                  value: color,
+                })
+              }
               disabled={disabled}
               className="size-9 rounded-full p-2 transition hover:bg-[#F2F4F7] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C1121F] disabled:cursor-not-allowed disabled:opacity-50"
               title={`Text color ${color}`}
               aria-label={`Text color ${color}`}
             >
-              <span className="block size-full rounded-full border border-black/10" style={{ backgroundColor: color }} />
+              <span
+                className="block size-full rounded-full border border-black/10"
+                style={{ backgroundColor: color }}
+              />
             </button>
           ))}
         </div>
@@ -454,7 +532,11 @@ export function RichPolicyEditor({
             className="size-6 cursor-pointer rounded border-0 bg-transparent p-0"
             disabled={disabled}
             onChange={(event) =>
-              runCommand({ type: "command", command: "foreColor", value: event.target.value })
+              runCommand({
+                type: "command",
+                command: "foreColor",
+                value: event.target.value,
+              })
             }
             aria-label="Custom text color"
           />
@@ -466,7 +548,11 @@ export function RichPolicyEditor({
             defaultValue=""
             disabled={disabled}
             onChange={(event) => {
-              runCommand({ type: "command", command: "fontSize", value: event.target.value });
+              runCommand({
+                type: "command",
+                command: "fontSize",
+                value: event.target.value,
+              });
               event.target.value = "";
             }}
             className="cursor-pointer bg-transparent text-sm font-semibold text-[#475467] outline-none disabled:cursor-not-allowed"
@@ -490,7 +576,11 @@ export function RichPolicyEditor({
             className="size-6 cursor-pointer rounded border-0 bg-transparent p-0"
             disabled={disabled}
             onChange={(event) =>
-              runCommand({ type: "command", command: "hiliteColor", value: event.target.value })
+              runCommand({
+                type: "command",
+                command: "hiliteColor",
+                value: event.target.value,
+              })
             }
             aria-label="Highlight color"
           />
@@ -534,7 +624,7 @@ export function RichPolicyEditor({
         onBlur={syncEditorValue}
         data-placeholder={placeholder}
         className={cn(
-          "prose-editor min-h-[560px] w-full overflow-auto bg-white px-6 py-5 text-sm leading-7 text-[#344054] outline-none empty:before:pointer-events-none empty:before:text-[#98A2B3] empty:before:content-[attr(data-placeholder)] [&_a]:font-semibold [&_a]:text-[#C1121F] [&_h1]:mb-4 [&_h1]:mt-7 [&_h1]:text-3xl [&_h1]:font-semibold [&_h1]:leading-tight [&_h1]:text-[#101828] [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:text-[#101828] [&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-[#101828] [&_li]:my-1 [&_ol]:my-4 [&_ol]:pl-6 [&_p]:mb-4 [&_strong]:text-[#101828] [&_ul]:my-4 [&_ul]:pl-6",
+          "prose-editor min-h-[420px] w-full overflow-auto bg-white px-5 py-4 text-sm leading-7 text-[#344054] outline-none empty:before:pointer-events-none empty:before:text-[#98A2B3] empty:before:content-[attr(data-placeholder)] [&_a]:font-semibold [&_a]:text-[#C1121F] [&_h1]:mb-4 [&_h1]:mt-7 [&_h1]:text-3xl [&_h1]:font-semibold [&_h1]:leading-tight [&_h1]:text-[#101828] [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:text-[#101828] [&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-[#101828] [&_li]:my-1 [&_ol]:my-4 [&_ol]:pl-6 [&_p]:mb-4 [&_strong]:text-[#101828] [&_ul]:my-4 [&_ul]:pl-6",
           disabled && "cursor-not-allowed bg-[#F9FAFB] opacity-80",
         )}
       />
@@ -615,7 +705,9 @@ function AboutImageUpload({
   const [isDragging, setIsDragging] = useState(false);
   const { uploadFile, uploading } = useFileUpload();
   const previewSrc = localPreviewUrl || value.trim();
-  const previewBackgroundImage = previewSrc ? `url(${JSON.stringify(previewSrc)})` : undefined;
+  const previewBackgroundImage = previewSrc
+    ? `url(${JSON.stringify(previewSrc)})`
+    : undefined;
 
   useEffect(() => {
     return () => {
@@ -713,7 +805,7 @@ function AboutImageUpload({
             <div
               role="img"
               aria-label={`${label} preview`}
-              className="h-44 w-full bg-cover bg-center"
+              className="h-32 w-full bg-cover bg-center"
               style={{ backgroundImage: previewBackgroundImage }}
             />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent px-4 py-3">
@@ -742,7 +834,7 @@ function AboutImageUpload({
             ) : null}
           </div>
         ) : (
-          <div className="flex min-h-44 flex-col items-center justify-center px-5 py-7 text-center">
+          <div className="flex min-h-32 flex-col items-center justify-center px-5 py-5 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#C1121F]/5 text-[#C1121F] shadow-sm">
               {uploading ? (
                 <Loader2 className="size-6 animate-spin" />
@@ -756,7 +848,10 @@ function AboutImageUpload({
               Drag & drop image here
             </p>
             <p className="mt-1 text-xs text-[#667085]">
-              or <span className="font-medium text-[#C1121F]">click to browse</span>
+              or{" "}
+              <span className="font-medium text-[#C1121F]">
+                click to browse
+              </span>
             </p>
             <p className="mt-1 text-[11px] text-[#98A2B3]">PNG, JPG, WEBP</p>
           </div>
@@ -773,8 +868,11 @@ function AboutImageUpload({
   );
 }
 
-function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps) {
-  const updateObjectSection = <TSection extends AboutDraftSection,>(
+function AboutPageSectionEditor({
+  value,
+  onChange,
+}: AboutPageSectionEditorProps) {
+  const updateObjectSection = <TSection extends AboutDraftSection>(
     section: TSection,
     nextValue: AboutPageDraft[TSection],
   ) => {
@@ -801,28 +899,38 @@ function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps
           <AboutImageUpload
             label="Hero image"
             value={value.hero.imageUrl}
-            onChange={(imageUrl) => updateObjectSection("hero", { ...value.hero, imageUrl })}
+            onChange={(imageUrl) =>
+              updateObjectSection("hero", { ...value.hero, imageUrl })
+            }
           />
           <AboutTextInput
             label="Title"
             value={value.hero.title}
-            onChange={(title) => updateObjectSection("hero", { ...value.hero, title })}
+            onChange={(title) =>
+              updateObjectSection("hero", { ...value.hero, title })
+            }
           />
           <AboutTextInput
             label="Subtitle"
             value={value.hero.subtitle}
-            onChange={(subtitle) => updateObjectSection("hero", { ...value.hero, subtitle })}
+            onChange={(subtitle) =>
+              updateObjectSection("hero", { ...value.hero, subtitle })
+            }
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <AboutTextInput
               label="CTA label"
               value={value.hero.ctaLabel}
-              onChange={(ctaLabel) => updateObjectSection("hero", { ...value.hero, ctaLabel })}
+              onChange={(ctaLabel) =>
+                updateObjectSection("hero", { ...value.hero, ctaLabel })
+              }
             />
             <AboutTextInput
               label="CTA link"
               value={value.hero.ctaHref}
-              onChange={(ctaHref) => updateObjectSection("hero", { ...value.hero, ctaHref })}
+              onChange={(ctaHref) =>
+                updateObjectSection("hero", { ...value.hero, ctaHref })
+              }
             />
           </div>
         </div>
@@ -833,28 +941,38 @@ function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps
           <AboutImageUpload
             label="Story image"
             value={value.story.imageUrl}
-            onChange={(imageUrl) => updateObjectSection("story", { ...value.story, imageUrl })}
+            onChange={(imageUrl) =>
+              updateObjectSection("story", { ...value.story, imageUrl })
+            }
           />
           <AboutTextInput
             label="Badge"
             value={value.story.badge}
-            onChange={(badge) => updateObjectSection("story", { ...value.story, badge })}
+            onChange={(badge) =>
+              updateObjectSection("story", { ...value.story, badge })
+            }
           />
           <AboutTextInput
             label="Eyebrow"
             value={value.story.eyebrow}
-            onChange={(eyebrow) => updateObjectSection("story", { ...value.story, eyebrow })}
+            onChange={(eyebrow) =>
+              updateObjectSection("story", { ...value.story, eyebrow })
+            }
           />
           <AboutTextInput
             label="Title"
             value={value.story.title}
-            onChange={(title) => updateObjectSection("story", { ...value.story, title })}
+            onChange={(title) =>
+              updateObjectSection("story", { ...value.story, title })
+            }
           />
         </div>
         <AboutTextArea
           label="Paragraphs"
           value={value.story.paragraphs}
-          onChange={(paragraphs) => updateObjectSection("story", { ...value.story, paragraphs })}
+          onChange={(paragraphs) =>
+            updateObjectSection("story", { ...value.story, paragraphs })
+          }
           rows={6}
         />
       </EditableSectionCard>
@@ -866,7 +984,9 @@ function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps
               key={index}
               index={index}
               item={item}
-              onChange={(nextItem) => updateArrayItem("missionVisionValues", index, nextItem)}
+              onChange={(nextItem) =>
+                updateArrayItem("missionVisionValues", index, nextItem)
+              }
             />
           ))}
         </div>
@@ -879,7 +999,9 @@ function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps
               key={index}
               index={index}
               item={item}
-              onChange={(nextItem) => updateArrayItem("whyChooseUs", index, nextItem)}
+              onChange={(nextItem) =>
+                updateArrayItem("whyChooseUs", index, nextItem)
+              }
             />
           ))}
         </div>
@@ -898,7 +1020,7 @@ function EditableSectionCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-[#EAECF0] bg-[#FCFCFD] p-4">
+    <section className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-3.5">
       <div className="mb-4 flex items-center gap-2">
         <span className="inline-flex size-9 items-center justify-center rounded-xl bg-white text-[#C1121F] shadow-sm">
           <Icon className="size-4" />
@@ -920,7 +1042,7 @@ function CardFields({
   onChange: (value: AboutCardField) => void;
 }) {
   return (
-    <div className="space-y-3 rounded-2xl border border-[#EAECF0] bg-white p-4">
+    <div className="space-y-3 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-3.5">
       <AboutTextInput
         label={`Card ${index + 1} title`}
         value={item.title}
@@ -970,10 +1092,17 @@ function CustomerAppContentPage({
   const commonT = useTranslations("common");
   const { restaurantId, loading: authLoading } = useAuth();
   const [draftContent, setDraftContent] = useState("");
-  const [draftAboutPage, setDraftAboutPage] = useState<AboutPageDraft>(defaultAboutPageDraft);
+  const [draftAboutPage, setDraftAboutPage] = useState<AboutPageDraft>(
+    defaultAboutPageDraft,
+  );
   const [hasLoadedInitialContent, setHasLoadedInitialContent] = useState(false);
 
-  const { data: content, isLoading, isFetching, refetch } = useCustomerAppContent(restaurantId);
+  const {
+    data: content,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useCustomerAppContent(restaurantId);
   const { data: publicAboutUs } = usePublicAboutUs(restaurantId);
   const { data: publicPolicy } = usePublicPrivacyPolicy(restaurantId);
   const updateAboutUs = useUpdateCustomerAppAboutUs();
@@ -982,8 +1111,8 @@ function CustomerAppContentPage({
   const savedContent = content?.[contentField] ?? "";
   const publishedContent =
     contentField === "aboutUs"
-      ? publicAboutUs?.aboutUs ?? ""
-      : publicPolicy?.privacyPolicy ?? "";
+      ? (publicAboutUs?.aboutUs ?? "")
+      : (publicPolicy?.privacyPolicy ?? "");
   const publicLink = restaurantId ? buildPublicLink() : "";
   const isAboutUsPage = contentField === "aboutUs";
   const currentDraftContent = isAboutUsPage
@@ -993,12 +1122,17 @@ function CustomerAppContentPage({
   const isDirty = currentDraftContent !== savedContent;
   const loading = authLoading || isLoading;
   const isSaving =
-    contentField === "aboutUs" ? updateAboutUs.isPending : updatePrivacyPolicy.isPending;
+    contentField === "aboutUs"
+      ? updateAboutUs.isPending
+      : updatePrivacyPolicy.isPending;
   const previewDocument = useMemo(
     () => buildPreviewDocument(previewContent, emptyPreview),
     [emptyPreview, previewContent],
   );
-  const wordCount = useMemo(() => countWords(stripHtmlToText(currentDraftContent)), [currentDraftContent]);
+  const wordCount = useMemo(
+    () => countWords(stripHtmlToText(currentDraftContent)),
+    [currentDraftContent],
+  );
   const characterCount = currentDraftContent.length;
   const hasPublishedContent = publishedContent.trim().length > 0;
 
@@ -1012,7 +1146,13 @@ function CustomerAppContentPage({
     }
 
     setHasLoadedInitialContent(true);
-  }, [contentField, emptyTemplate, hasLoadedInitialContent, isLoading, savedContent]);
+  }, [
+    contentField,
+    emptyTemplate,
+    hasLoadedInitialContent,
+    isLoading,
+    savedContent,
+  ]);
 
   const handleReset = () => {
     if (contentField === "aboutUs") {
@@ -1057,19 +1197,11 @@ function CustomerAppContentPage({
   };
 
   const publicPageSection = (
-    <section className="rounded-3xl border border-[#EAECF0] bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-base font-semibold text-[#101828]">
-            {t("publicPageTitle")}
-          </h2>
-          <p className="mt-1 text-sm leading-6 text-[#667085]">
-            {t("publicPageDescription")}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-4 rounded-2xl border border-[#EAECF0] bg-[#F8F9FB] p-3">
+    <SectionCard
+      title={t("publicPageTitle")}
+      description={t("publicPageDescription")}
+    >
+      <div className="rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-3">
         <code className="block break-all text-xs leading-5 text-[#475467]">
           {publicLink || t("missingRestaurant")}
         </code>
@@ -1078,200 +1210,164 @@ function CustomerAppContentPage({
       <Button
         type="button"
         variant="outline"
+        size="sm"
         onClick={handleCopyPublicLink}
         disabled={!publicLink}
-        className="mt-4 h-10 rounded-full border-[#D0D5DD] bg-white text-[#344054]"
+        className="mt-3"
       >
         <Copy />
         {t("copyLink")}
       </Button>
-    </section>
+    </SectionCard>
   );
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1440px] space-y-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <Header
-            title={t("title")}
-            description={t("description")}
-            titleClassName="text-[24px] sm:text-[30px] font-semibold text-[#101828] leading-tight"
-            descriptionClassName="mt-1 max-w-3xl text-sm text-[#667085] leading-6"
-          />
-
-          <div className="flex flex-wrap items-center gap-2">
+    <PageLayout width="wide">
+      <PageHeader
+        title={t("title")}
+        description={t("description")}
+        actions={
+          <>
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => refetch()}
               disabled={loading || isFetching}
-              className="h-10 rounded-full border-[#D0D5DD] bg-white text-[#344054]"
             >
-              {isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+              {isFetching ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <RefreshCw />
+              )}
               {commonT("refresh")}
             </Button>
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={handleReset}
               disabled={loading || isSaving || !isDirty}
-              className="h-10 rounded-full border-[#D0D5DD] bg-white text-[#344054]"
             >
               {commonT("reset")}
             </Button>
             <Button
               type="button"
+              size="sm"
               onClick={handleSave}
               disabled={loading || isSaving || !restaurantId || !isDirty}
-              className="h-10 rounded-full bg-[#C1121F] px-5 text-white hover:bg-[#A30F1A]"
             >
               {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
               {isSaving ? commonT("saving") : commonT("save")}
             </Button>
-          </div>
-        </div>
+          </>
+        }
+      />
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-semibold uppercase text-[#98A2B3]">
-                  {t("status")}
-                </p>
-                <p className="mt-2 text-xl font-semibold text-[#101828]">
-                  {isDirty ? t("unsaved") : t("synced")}
-                </p>
-              </div>
-              <ShieldCheck className={cn("size-5", isDirty ? "text-[#F79009]" : "text-[#12B76A]")} />
-            </div>
-          </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <PromotionStatCard
+          icon={<ShieldCheck className="size-4" />}
+          value={isDirty ? t("unsaved") : t("synced")}
+          label={t("status")}
+        />
+        <PromotionStatCard
+          icon={<FileText className="size-4" />}
+          value={`${wordCount.toLocaleString()} ${t("words")}`}
+          label={`${characterCount.toLocaleString()} ${t("characters")}`}
+        />
+        <PromotionStatCard
+          icon={<Globe2 className="size-4" />}
+          value={hasPublishedContent ? t("available") : t("notPublished")}
+          label={t("publicPopup")}
+        />
+      </div>
 
-          <div className="rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-            <p className="text-[11px] font-semibold uppercase text-[#98A2B3]">
-              {t("coverage")}
-            </p>
-            <p className="mt-2 text-xl font-semibold text-[#101828]">
-              {wordCount.toLocaleString()} {t("words")}
-            </p>
-            <p className="mt-1 text-xs text-[#667085]">
-              {characterCount.toLocaleString()} {t("characters")}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-semibold uppercase text-[#98A2B3]">
-                  {t("publicPopup")}
-                </p>
-                <p className="mt-2 text-xl font-semibold text-[#101828]">
-                  {hasPublishedContent ? t("available") : t("notPublished")}
-                </p>
-              </div>
-              <Globe2 className="size-5 text-[#1D7FA8]" />
-            </div>
-          </div>
-        </div>
-
-        <div
-          className={cn(
-            "grid grid-cols-1 gap-5",
-            isAboutUsPage && "xl:grid-cols-[1.1fr_0.9fr]",
-          )}
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-5",
+          isAboutUsPage && "xl:grid-cols-[1.1fr_0.9fr]",
+        )}
+      >
+        <SectionCard
+          title={
+            <span className="inline-flex items-center gap-2">
+              <FileText className="size-4 text-primary" />
+              {t("editorTitle")}
+            </span>
+          }
+          description={t("editorDescription")}
+          action={
+            <span className="inline-flex items-center gap-1.5 rounded-[var(--ui-radius-control)] bg-[var(--ui-surface-subtle)] px-2.5 py-1 text-xs font-medium text-[var(--ui-text-muted)]">
+              <FileText className="size-3.5" />
+              {isAboutUsPage ? t("sectionEditor") : t("richEditor")}
+            </span>
+          }
         >
-          <section className="overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-            <div className="border-b border-[#EAECF0] px-5 py-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <FileText className="size-4 text-[#C1121F]" />
-                    <h2 className="text-base font-semibold text-[#101828]">
-                      {t("editorTitle")}
-                    </h2>
-                  </div>
-                  <p className="mt-1 text-sm leading-6 text-[#667085]">
-                    {t("editorDescription")}
+          {loading ? (
+            <div className="flex min-h-[420px] items-center justify-center rounded-[var(--ui-radius-card)] border border-dashed border-[var(--ui-border)] bg-[var(--ui-surface-subtle)]">
+              <Loader2 className="size-6 animate-spin text-[var(--ui-text-subtle)]" />
+            </div>
+          ) : isAboutUsPage ? (
+            <AboutPageSectionEditor
+              value={draftAboutPage}
+              onChange={setDraftAboutPage}
+            />
+          ) : (
+            <RichPolicyEditor
+              value={draftContent}
+              onChange={setDraftContent}
+              placeholder={t("placeholder")}
+            />
+          )}
+        </SectionCard>
+
+        {isAboutUsPage ? (
+          <aside className="space-y-5">
+            <SectionCard
+              title={
+                <span className="inline-flex items-center gap-2">
+                  <Eye className="size-4 text-[var(--ui-info)]" />
+                  {t("previewTitle")}
+                </span>
+              }
+              description={t("previewDescription")}
+              action={
+                isDirty ? (
+                  <span className="rounded-[var(--ui-radius-control)] bg-[var(--ui-warning-soft)] px-2.5 py-1 text-xs font-medium text-[var(--ui-warning)]">
+                    {t("draft")}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-[var(--ui-radius-control)] bg-[var(--ui-success-soft)] px-2.5 py-1 text-xs font-medium text-[var(--ui-success)]">
+                    <CheckCircle2 className="size-3.5" />
+                    {t("live")}
+                  </span>
+                )
+              }
+            >
+              <div className="overflow-hidden rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)]">
+                <div className="border-b border-[var(--ui-border)] px-4 py-3">
+                  <p className="text-sm font-semibold text-[var(--ui-text)]">
+                    {t("modalTitle")}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--ui-text-muted)]">
+                    {t("modalSubtitle")}
                   </p>
                 </div>
-
-                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#F8F9FB] px-3 py-1 text-xs font-semibold text-[#475467]">
-                  <FileText className="size-3.5" />
-                  {isAboutUsPage ? t("sectionEditor") : t("richEditor")}
-                </span>
+                <iframe
+                  title={t("previewTitle")}
+                  sandbox=""
+                  srcDoc={previewDocument}
+                  className="h-[420px] w-full bg-white"
+                />
               </div>
-            </div>
+            </SectionCard>
 
-            <div className="p-5">
-              {loading ? (
-                <div className="flex min-h-[520px] items-center justify-center rounded-2xl border border-dashed border-[#D0D5DD] bg-[#FCFCFD]">
-                  <Loader2 className="size-6 animate-spin text-[#98A2B3]" />
-                </div>
-              ) : isAboutUsPage ? (
-                <AboutPageSectionEditor
-                  value={draftAboutPage}
-                  onChange={setDraftAboutPage}
-                />
-              ) : (
-                <RichPolicyEditor
-                  value={draftContent}
-                  onChange={setDraftContent}
-                  placeholder={t("placeholder")}
-                />
-              )}
-            </div>
-          </section>
-
-          {isAboutUsPage ? (
-            <aside className="space-y-5">
-              <section className="overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-                <div className="border-b border-[#EAECF0] px-5 py-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Eye className="size-4 text-[#1D7FA8]" />
-                        <h2 className="text-base font-semibold text-[#101828]">
-                          {t("previewTitle")}
-                        </h2>
-                      </div>
-                      <p className="mt-1 text-sm text-[#667085]">{t("previewDescription")}</p>
-                    </div>
-
-                    {isDirty ? (
-                      <span className="rounded-full bg-[#FFF7E6] px-3 py-1 text-xs font-semibold text-[#B54708]">
-                        {t("draft")}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF3] px-3 py-1 text-xs font-semibold text-[#027A48]">
-                        <CheckCircle2 className="size-3.5" />
-                        {t("live")}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-[#F8F9FB] p-4">
-                  <div className="overflow-hidden rounded-[24px] border border-[#EAECF0] bg-white shadow-sm">
-                    <div className="border-b border-[#EAECF0] px-5 py-4">
-                      <p className="text-sm font-semibold text-[#101828]">{t("modalTitle")}</p>
-                      <p className="mt-1 text-xs text-[#667085]">{t("modalSubtitle")}</p>
-                    </div>
-                    <iframe
-                      title={t("previewTitle")}
-                      sandbox=""
-                      srcDoc={previewDocument}
-                      className="h-[460px] w-full bg-white"
-                    />
-                  </div>
-                </div>
-              </section>
-
-              {publicPageSection}
-            </aside>
-          ) : (
-            publicPageSection
-          )}
-        </div>
+            {publicPageSection}
+          </aside>
+        ) : (
+          publicPageSection
+        )}
       </div>
-    </div>
+    </PageLayout>
   );
 }

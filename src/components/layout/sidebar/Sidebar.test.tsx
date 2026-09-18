@@ -44,7 +44,9 @@ describe("Partner shadcn sidebar", () => {
     expect(markup).toContain('data-slot="sidebar-wrapper"');
     expect(markup).toContain('data-state="expanded"');
     expect(markup).toContain('data-slot="sidebar-menu-button"');
-    expect(markup).toContain('class="group/menu-item relative group/collapsible"');
+    expect(markup).toContain(
+      'class="group/menu-item relative group/collapsible"',
+    );
     expect(markup).toContain(">dashboard<");
     expect(markup).toContain("user_logo.png");
     expect(markup).toContain(">needHelp<");
@@ -106,5 +108,19 @@ describe("Partner shadcn sidebar", () => {
     expect(markup.match(/href="\/orders"/g)).toHaveLength(1);
     expect(markup).not.toContain('href="/orders?tab=delivery"');
     expect(markup).not.toContain(">deliveryOrders<");
+  });
+
+  it("keeps the active submenu expanded on a child route", () => {
+    currentPathname = "/content-management/about";
+    currentSearchParams = new URLSearchParams();
+
+    const markup = renderSidebar(true);
+    const activeChildLink = markup.match(
+      /<a[^>]*href="\/content-management\/about"[^>]*>/,
+    )?.[0];
+
+    expect(activeChildLink).toContain('data-active="true"');
+    expect(markup).toContain('data-state="open"');
+    expect(markup).toContain(">privacyPolicy<");
   });
 });

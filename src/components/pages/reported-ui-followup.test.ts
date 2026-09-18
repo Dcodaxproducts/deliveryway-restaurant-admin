@@ -133,4 +133,30 @@ describe("reported Partner UI follow-up", () => {
     expect(userProfile).not.toContain("h-44 w-44");
     expect(editProfile).not.toContain("h-44 w-44");
   });
+
+  it("keeps content and printer settings on the compact shared page system", () => {
+    const contentSettings = projectFile(
+      "src/components/pages/Settings/forms/PrivacyPolicyForm.tsx",
+    );
+    const printingSettings = projectFile(
+      "src/components/pages/Printing/components/autoPrinting/AutoPrintingSettings.tsx",
+    );
+    const sidebar = projectFile("src/components/layout/sidebar/Sidebar.tsx");
+
+    for (const source of [contentSettings, printingSettings]) {
+      expect(source).toContain("<SectionCard");
+      expect(source).toContain("<PromotionStatCard");
+    }
+
+    expect(contentSettings).toContain('<PageLayout width="wide">');
+    expect(contentSettings).not.toContain('className="min-h-screen');
+    expect(printingSettings).toContain("<SettingsLayout");
+    expect(printingSettings).toContain("<Checkbox");
+    expect(printingSettings).not.toContain(
+      "pointer-events-none absolute right-0",
+    );
+    expect(sidebar).toContain(
+      "activeMenuKey === item.title || openMenuKey === item.title",
+    );
+  });
 });

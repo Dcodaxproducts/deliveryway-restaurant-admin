@@ -220,7 +220,7 @@ function PartnerSidebarContent(): ReactElement {
       if (item.href === "/profile") return true;
       return Boolean(
         item.permissionAccesses?.length &&
-          hasStaffPermission(user, item.permissionAccesses),
+        hasStaffPermission(user, item.permissionAccesses),
       );
     }
 
@@ -238,7 +238,9 @@ function PartnerSidebarContent(): ReactElement {
 
   const allowedItems = filterAllowedItems(menuItems);
   const mainItems = allowedItems.filter((item) => item.section === "main");
-  const accountItems = allowedItems.filter((item) => item.section === "account");
+  const accountItems = allowedItems.filter(
+    (item) => item.section === "account",
+  );
 
   const isActiveRoute = (
     href?: string,
@@ -279,14 +281,14 @@ function PartnerSidebarContent(): ReactElement {
     return (searchParams.get("tab") || "all") === hrefTab;
   };
 
+  const activeMenuKey =
+    allowedItems.find((item) =>
+      item.children?.some((child) =>
+        isActiveRoute(child.href, child.children, item.children),
+      ),
+    )?.title ?? null;
   const openMenuKey =
-    menuState.routeKey === routeKey
-      ? menuState.openKey
-      : allowedItems.find((item) =>
-          item.children?.some((child) =>
-            isActiveRoute(child.href, child.children, item.children),
-          ),
-        )?.title ?? null;
+    menuState.routeKey === routeKey ? menuState.openKey : null;
 
   const handleNavigate = (): void => {
     setOpenMobile(false);
@@ -307,11 +309,16 @@ function PartnerSidebarContent(): ReactElement {
           key={item.href ?? item.title}
           item={item}
           isActiveRoute={isActiveRoute}
-          open={openMenuKey === item.title}
+          open={activeMenuKey === item.title || openMenuKey === item.title}
           onOpenChange={(open) =>
             setMenuState({
               routeKey,
-              openKey: open ? item.title : null,
+              openKey:
+                !open && activeMenuKey === item.title
+                  ? item.title
+                  : open
+                    ? item.title
+                    : null,
             })
           }
           onNavigate={handleNavigate}
@@ -352,7 +359,9 @@ function PartnerSidebarContent(): ReactElement {
         {accountItems.length ? (
           <SidebarGroup>
             <SidebarGroupLabel>{t("accountSettings")}</SidebarGroupLabel>
-            <SidebarGroupContent>{renderGroup(accountItems)}</SidebarGroupContent>
+            <SidebarGroupContent>
+              {renderGroup(accountItems)}
+            </SidebarGroupContent>
           </SidebarGroup>
         ) : null}
         <div
