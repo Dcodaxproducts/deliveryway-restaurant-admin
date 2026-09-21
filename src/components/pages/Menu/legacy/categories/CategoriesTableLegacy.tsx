@@ -39,7 +39,7 @@ import { StatePanel } from "@/components/common/EmptyState";
 import { StatusBadge } from "@/components/common/status-badge";
 import { FilterBar } from "@/components/common/FilterBar";
 
-const PAGE_LIMIT = 10;
+const PAGE_LIMIT = 100;
 
 const mergeUniqueById = (prev: any[], next: any[]) => {
   const map = new Map<string, any>();
@@ -58,7 +58,6 @@ export default function CategoriesTable({ refetchKey }: any) {
   const commonT = useTranslations("common");
   const { restaurantId, branchId, isBranchAdmin } = useAuth();
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
 
   const router = useRouter();
 
@@ -133,7 +132,8 @@ export default function CategoriesTable({ refetchKey }: any) {
     limit,
     search: debouncedSearch || undefined,
     restaurantId: restaurantId || undefined,
-    sortOrder,
+    sortBy: "sortOrder",
+    sortOrder: "ASC",
 
     // only include inactive when "all" selected
     includeInactive: statusFilter === "all",
