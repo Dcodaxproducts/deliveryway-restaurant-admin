@@ -155,7 +155,7 @@ export function FormActions({
       className={cn(
         "flex min-w-0 flex-col-reverse gap-2 border-t border-[var(--ui-border)] pt-4 sm:flex-row sm:items-center sm:justify-between",
         sticky &&
-          "sticky bottom-0 z-[var(--ui-layer-sticky)] -mx-4 bg-[var(--ui-surface)]/95 px-4 pb-4 backdrop-blur sm:-mx-5 sm:px-5",
+          "sticky bottom-0 z-[var(--ui-layer-sticky)] -mx-[var(--ui-page-gutter)] bg-[var(--ui-surface)]/95 px-[var(--ui-page-gutter)] pb-4 backdrop-blur",
         className,
       )}
       {...props}
@@ -174,4 +174,3 @@ export function FormActions({
     </div>
   );
 }
-

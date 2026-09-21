@@ -22,6 +22,14 @@ describe("Phase 3 remaining Partner workflows", () => {
     expect(page).not.toContain("<AddDeliveryManHeader");
   });
 
+  it("keeps sticky form actions aligned to the responsive page gutter", () => {
+    const formLayout = projectFile("src/components/common/FormLayout.tsx");
+
+    expect(formLayout).toContain("-mx-[var(--ui-page-gutter)]");
+    expect(formLayout).toContain("px-[var(--ui-page-gutter)]");
+    expect(formLayout).not.toContain("sm:-mx-5 sm:px-5");
+  });
+
   it("preserves deliveryman scope, validation, and mutation contracts", () => {
     const page = projectFile(
       "src/components/pages/deliverymen/pages/AddDeliverymanPage.tsx",
