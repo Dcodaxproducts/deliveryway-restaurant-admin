@@ -1,5 +1,5 @@
-import PrivacyPolicyRoutePage from "@/components/pages/settings/pages/PrivacyPolicyPage";
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <PrivacyPolicyRoutePage />;
+  redirect("/content-management");
 }

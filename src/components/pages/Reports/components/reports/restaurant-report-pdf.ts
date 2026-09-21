@@ -196,6 +196,27 @@ type OrderPeriodReportData = {
   }>;
 };
 
+export const buildOrderPaymentDetailsTable = (
+  orders: OrderReportRow[],
+  currency?: string,
+) => ({
+  head: [
+    "Order ID",
+    "Order Date & Time",
+    "Paid By",
+    `Total (${resolveCurrency(currency)})`,
+  ],
+  body: orders.map((order) => [
+    order.id,
+    formatDateTime(order.createdAt),
+    order.paymentMethod.toUpperCase(),
+    new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(order.totalAmount),
+  ]),
+});
+
 const formatReportMoney = (value: number, currency?: string | null) =>
   `${new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
@@ -267,28 +288,15 @@ const renderOrderPeriodReport = ({
   drawOrderReportHeader(doc, restaurantName, period);
 
   addSectionTitle(doc, "Order Payment Details", 98);
+  const paymentDetails = buildOrderPaymentDetailsTable(
+    data.orders ?? [],
+    currency,
+  );
 
   autoTable(doc, {
     startY: 108,
-    head: [
-      [
-        "Order ID",
-        "Date",
-        "Paid By",
-        "Status",
-        `Total (${resolveCurrency(currency)})`,
-      ],
-    ],
-    body: (data.orders ?? []).map((order) => [
-      order.id,
-      formatReportDate(order.createdAt),
-      order.paymentMethod.toUpperCase(),
-      order.paymentStatus.toUpperCase(),
-      new Intl.NumberFormat("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(order.totalAmount),
-    ]),
+    head: [paymentDetails.head],
+    body: paymentDetails.body,
     margin: { top: 90, left: 40, right: 40, bottom: 150 },
     theme: "plain",
     styles: {
@@ -305,11 +313,10 @@ const renderOrderPeriodReport = ({
       fontStyle: "bold",
     },
     columnStyles: {
-      0: { cellWidth: 185 },
-      1: { cellWidth: 75 },
-      2: { cellWidth: 95 },
-      3: { cellWidth: 85 },
-      4: { cellWidth: 75, halign: "right" },
+      0: { cellWidth: 205 },
+      1: { cellWidth: 125 },
+      2: { cellWidth: 110 },
+      3: { cellWidth: 100, halign: "right" },
     },
     didDrawPage: ({ pageNumber }: HookData) => {
       if (pageNumber > 1) drawOrderReportHeader(doc, restaurantName, period);
