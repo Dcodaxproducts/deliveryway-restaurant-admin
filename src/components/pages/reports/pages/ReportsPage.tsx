@@ -45,16 +45,18 @@ export default function Orders() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
+    user,
     restaurantId,
     branchId,
     isBranchAdmin,
+    scopedParams,
     loading: authLoading,
   } = useAuth();
   const { currency: fallbackCurrency } = useCurrency(restaurantId);
   const { restaurant } = useBranding();
-  const scopedReportParams = restaurantId
+  const scopedReportParams = user
     ? {
-        restaurantId,
+        ...scopedParams,
         ...(isBranchAdmin && branchId ? { branchId } : {}),
       }
     : undefined;

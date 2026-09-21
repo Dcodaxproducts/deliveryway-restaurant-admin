@@ -1,5 +1,5 @@
-import { LegalProfilePage } from "@/components/pages/Settings/pages/LegalProfilePage";
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <LegalProfilePage />;
+  redirect("/content-management");
 }
