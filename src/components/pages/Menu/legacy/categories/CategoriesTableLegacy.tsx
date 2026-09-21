@@ -33,7 +33,7 @@ import InfiniteScrollFooter from "@/components/common/infinite-scroll-footer";
 import { extractResponseItems, extractResponseMeta } from "@/lib/response";
 import { useTranslations } from "next-intl";
 
-const PAGE_LIMIT = 10;
+const PAGE_LIMIT = 100;
 
 const mergeUniqueById = (prev: any[], next: any[]) => {
   const map = new Map<string, any>();
@@ -52,7 +52,6 @@ export default function CategoriesTable({ refetchKey }: any) {
   const commonT = useTranslations("common");
   const { restaurantId, branchId, isBranchAdmin } = useAuth();
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
 
   const router = useRouter();
 
@@ -107,7 +106,8 @@ export default function CategoriesTable({ refetchKey }: any) {
     limit,
     search: debouncedSearch || undefined,
     restaurantId: restaurantId || undefined,
-    sortOrder,
+    sortBy: "sortOrder",
+    sortOrder: "ASC",
 
     // only include inactive when "all" selected
     includeInactive: statusFilter === "all",
@@ -451,18 +451,6 @@ export default function CategoriesTable({ refetchKey }: any) {
             <option value="all">{t("statusOptions.all")}</option>
             <option value="active">{commonT("inactive")}</option>
           </select>
-
-          {/* <select
-      value={sortOrder}
-      onChange={(e) => {
-        setSortOrder(e.target.value as "ASC" | "DESC");
-        setPage(1);
-      }}
-      className="h-[44px] rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm focus:outline-none"
-    >
-      <option value="DESC">Newest First</option>
-      <option value="ASC">Oldest First</option>
-    </select> */}
 
           <Button
             disabled={!canFetchCategories}
