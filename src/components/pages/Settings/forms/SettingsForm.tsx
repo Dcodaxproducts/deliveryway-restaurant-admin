@@ -99,6 +99,18 @@ type SettingsFormProps = {
   variant?: "global" | "payments";
 };
 
+const formatBillingPeriodDate = (value?: string | null) => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+};
+
 export default function SettingsForm({
   variant = "global",
 }: SettingsFormProps) {
@@ -457,7 +469,7 @@ function RestaurantWalletPayoutSection({
           Restaurant Wallet & Payouts
         </span>
       }
-      description="Available payout is the platform-held amount after commission, transaction fees, VAT, and previous payouts."
+      description="Invoice totals cover only the current billing period. Wallet balance and generated invoice history continue across periods."
       action={
         <Button
           type="button"
@@ -481,6 +493,15 @@ function RestaurantWalletPayoutSection({
         </Button>
       }
     >
+      {walletQuery.data?.billingPeriod ? (
+        <p className="text-xs font-medium text-[var(--ui-text-muted)]">
+          Current period:{" "}
+          {formatBillingPeriodDate(walletQuery.data.billingPeriod.from) ?? "-"}
+          {" - "}
+          {formatBillingPeriodDate(walletQuery.data.billingPeriod.to) ?? "-"}
+        </p>
+      ) : null}
+
       {walletQuery.data?.activePlan ? (
         <p className="rounded-[var(--ui-radius-control)] bg-[var(--ui-brand-soft)] px-3 py-2 text-sm text-[var(--ui-text)]">
           Active plan: <strong>{walletQuery.data.activePlan.name}</strong>
@@ -524,7 +545,7 @@ function RestaurantWalletPayoutSection({
         />
         <PaymentSummaryCard
           icon={<Banknote size={18} />}
-          label="Total successful order amount"
+          label="This period successful orders"
           value={formatOptionalMoney(
             walletQuery.data?.totalOrderAmount ?? null,
             walletCurrency,
@@ -533,7 +554,7 @@ function RestaurantWalletPayoutSection({
         />
         <PaymentSummaryCard
           icon={<CreditCard size={18} />}
-          label="Platform-held amount"
+          label="This period platform-held amount"
           value={formatOptionalMoney(
             walletQuery.data?.platformCollectedAmount ??
               walletQuery.data?.grossCollectedAmount ??
@@ -544,7 +565,7 @@ function RestaurantWalletPayoutSection({
         />
         <PaymentSummaryCard
           icon={<Info size={18} />}
-          label="Restaurant-paid transaction fees"
+          label="This period transaction fees"
           value={formatOptionalMoney(
             walletQuery.data?.restaurantTransactionFeeAmount ?? null,
             walletCurrency,
@@ -562,7 +583,7 @@ function RestaurantWalletPayoutSection({
         />
         <PaymentSummaryCard
           icon={<Info size={18} />}
-          label="Platform commission"
+          label="This period platform commission"
           value={formatOptionalMoney(
             walletQuery.data?.commissionLiabilityAmount ?? null,
             walletCurrency,

@@ -60,6 +60,10 @@ describe("restaurant payment management service", () => {
           vatPercentage: "19",
           vatAmount: "20.90",
           billingMonth: "2026-09",
+          billingPeriod: {
+            from: "2026-09-01T00:00:00.000Z",
+            to: "2026-10-01T00:00:00.000Z",
+          },
           monthlyFeeAmount: "159",
           monthlyFeeScheduledToDate: "79.50",
           monthlyFeeDeductedBefore: "39.75",
@@ -105,6 +109,10 @@ describe("restaurant payment management service", () => {
       vatPercentage: 19,
       vatAmount: 20.9,
       billingMonth: "2026-09",
+      billingPeriod: {
+        from: "2026-09-01T00:00:00.000Z",
+        to: "2026-10-01T00:00:00.000Z",
+      },
       monthlyFeeAmount: 159,
       monthlyFeeScheduledToDate: 79.5,
       monthlyFeeDeductedBefore: 39.75,
