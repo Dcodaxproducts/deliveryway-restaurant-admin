@@ -133,7 +133,7 @@ type Family = {
 };
 const families: Family[] = [
   { name: "allergens", component: AllergenTable, columns: ["order", "code", "label", "type", "usage", "actions"], accumulated: 6, selected: 9, deleted: 11 },
-  { name: "categories", component: CategoriesTable, columns: ["order", "category", "description", "slug", "status", "actions"], accumulated: 6, loaded: 7, selected: 9, deleted: 11 },
+  { name: "categories", component: CategoriesTable, columns: ["order", "category", "description", "slug", "status", "actions"], accumulated: 5, loaded: 6, selected: 8, deleted: 10 },
   { name: "items", component: MenuItemsTable, columns: ["order", "item", "category", "price", "prep", "status", "actions"], accumulated: 6, loaded: 7, selected: 9, deleted: 11 },
   { name: "labels", component: LabelsTable, columns: ["value", "label", "usage", "actions"], selected: 6, deleted: 7 },
   { name: "modifiers", component: ModifiersTable, columns: ["name", "category", "price", "status", "actions"], selected: 6, deleted: 4 },
@@ -355,7 +355,11 @@ describe.each(families)("$name canonical list", (family) => {
 
 describe("catalog-specific parity", () => {
   describe.each(["categories", "items"])("%s accumulator identity", (name) => {
-    it.each(["search", "status", "sort-or-category", "branch", "restaurant", "permission", "missing-restaurant"])("removes A before rendering a changed %s query B and after B fails", async (identity) => {
+    const identities = name === "categories"
+      ? ["search", "status", "branch", "restaurant", "permission", "missing-restaurant"]
+      : ["search", "status", "sort-or-category", "branch", "restaurant", "permission", "missing-restaurant"];
+
+    it.each(identities)("removes A before rendering a changed %s query B and after B fails", async (identity) => {
       const family = families.find((entry) => entry.name === name)!;
       seed(family);
       const responseA = harness.response;
@@ -370,10 +374,10 @@ describe("catalog-specific parity", () => {
       });
       try {
         expect(renderToStaticMarkup(run(family))).toContain(row.name);
-        harness.state[name === "categories" ? 2 : 0] = 2;
-        if (identity === "search") harness.state[name === "categories" ? 5 : 3] = "search B";
+        harness.state[name === "categories" ? 1 : 0] = 2;
+        if (identity === "search") harness.state[name === "categories" ? 4 : 3] = "search B";
         if (identity === "status") harness.state[name === "categories" ? 0 : 4] = "inactive";
-        if (identity === "sort-or-category") harness.state[name === "categories" ? 1 : 5] = name === "categories" ? "ASC" : "category-B";
+        if (identity === "sort-or-category") harness.state[5] = "category-B";
         if (identity === "branch") harness.branchId = "branch-B";
         if (identity === "restaurant") harness.restaurantId = "restaurant-B";
         if (identity === "permission") harness.isBranchAdmin = true;
@@ -385,7 +389,7 @@ describe("catalog-specific parity", () => {
         const loading = run(family);
         expect(renderToStaticMarkup(loading).includes(row.name)).toBe(false);
         expect(view(loading).props.data).toEqual([]);
-        expect(harness.state[name === "categories" ? 2 : 0]).toBe(1);
+        expect(harness.state[name === "categories" ? 1 : 0]).toBe(1);
         await pending;
         expect(harness.isError).toBe(true);
         harness.effects = [];
@@ -421,12 +425,12 @@ describe("catalog-specific parity", () => {
     const family = families.find((entry) => entry.name === name)!;
     const second = { ...row, id: "row-2", name: "Second page" };
     seed(family, [row, second]);
-    harness.state[name === "categories" ? 2 : 0] = 2;
+    harness.state[name === "categories" ? 1 : 0] = 2;
     const tree = run(family);
     const modal = nodes(tree).find((node) => typeof node.props.onSuccess === "function")!;
     expect(modal).toBeDefined();
     (modal.props.onSuccess as () => void)();
-    expect(harness.state[name === "categories" ? 2 : 0]).toBe(1);
+    expect(harness.state[name === "categories" ? 1 : 0]).toBe(1);
     expect(harness.state[family.accumulated!]).toEqual([row, second]);
 
     // The page-one cache must not overwrite accumulated pages while its refresh
@@ -448,7 +452,7 @@ describe("catalog-specific parity", () => {
   it.each(["categories", "items"])("does not skip a failed %s load-more page and retries that query", (name) => {
     const family = families.find((entry) => entry.name === name)!;
     seed(family);
-    const pageIndex = name === "categories" ? 2 : 0;
+    const pageIndex = name === "categories" ? 1 : 0;
     harness.state[pageIndex] = 2;
     harness.response = undefined;
     harness.isError = true;
@@ -493,7 +497,7 @@ describe("catalog-specific parity", () => {
   });
 
   it.each([
-    ["categories", { page: 1, limit: 10, search: undefined, restaurantId: "restaurant-1", sortOrder: "DESC", includeInactive: true, inactive: undefined }],
+    ["categories", { page: 1, limit: 100, search: undefined, restaurantId: "restaurant-1", sortBy: "sortOrder", sortOrder: "ASC", includeInactive: true, inactive: undefined }],
     ["modifiers", { page: 1, limit: 10, search: undefined, restaurantId: "restaurant-1", categoryId: undefined }],
     ["modifier-groups", { page: 1, limit: 10, search: undefined, restaurantId: "restaurant-1" }],
     ["labels", { restaurantId: "restaurant-1" }],
@@ -555,7 +559,7 @@ describe("catalog-specific parity", () => {
     expect(markup).toContain("inactive");
     expect(markup).toContain('draggable="false"');
     expect(harness.query).toHaveBeenCalledWith(expect.objectContaining({ restaurantId: "restaurant-1" }));
-    expect(harness.state[name === "items" ? 13 : 12]).toEqual(element.props.data[0]);
+    expect(harness.state[name === "items" ? 13 : 11]).toEqual(element.props.data[0]);
   });
 
   it.each(["items", "modifiers"])("preserves %s duplicate action and pending guard in both layouts", (name) => {
@@ -658,7 +662,7 @@ describe("catalog-specific parity", () => {
     try {
       (updatedWrapper.props.onDrop as (event: unknown) => void)({ target: { closest: () => ({ sectionRowIndex: 1 }) } });
       vi.runAllTimers();
-      expect((harness.state[6] as Row[]).map((item) => item.code)).toEqual(["A2", "A1"]);
+      expect((harness.state[family.accumulated!] as Row[]).map((item) => item.code)).toEqual(["A2", "A1"]);
       expect(harness.mutate).toHaveBeenCalledTimes(1);
       const payload = harness.mutate.mock.lastCall![0];
       expect(name === "allergens" ? payload.allergens.map((item: Row) => item.code) : payload.items.map((item: Row) => item.id)).toEqual(name === "allergens" ? ["A2", "A1"] : ["row-2", "row-1"]);
@@ -679,7 +683,7 @@ describe("catalog-specific parity", () => {
     try {
       (target.props.onDrop as () => void)();
       vi.runAllTimers();
-      expect((harness.state[6] as Row[]).map((item) => item.code)).toEqual(["A2", "A1"]);
+      expect((harness.state[family.accumulated!] as Row[]).map((item) => item.code)).toEqual(["A2", "A1"]);
     } finally { vi.useRealTimers(); }
 
     if (name === "allergens") harness.restaurantId = null;

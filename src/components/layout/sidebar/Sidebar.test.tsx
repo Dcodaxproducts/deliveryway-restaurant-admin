@@ -123,6 +123,6 @@ describe("Partner shadcn sidebar", () => {
 
     expect(activeChildLink).toContain('data-active="true"');
     expect(markup).toContain('data-state="open"');
-    expect(markup).toContain(">privacyPolicy<");
+    expect(markup).not.toContain(">privacyPolicy<");
   });
 });

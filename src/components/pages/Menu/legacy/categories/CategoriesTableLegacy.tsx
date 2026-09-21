@@ -91,7 +91,7 @@ export default function CategoriesTable({ refetchKey }: any) {
     isBranchAdmin,
     search: debouncedSearch || "",
     statusFilter,
-    sortOrder,
+    sortOrder: "ASC",
     limit,
   });
   const [previousQuerySignature, setPreviousQuerySignature] = useState(querySignature);
