@@ -40,7 +40,7 @@ import {
   settingsSchema,
   type SettingsFormValues,
 } from "@/validations/settings";
-import { DetailPanel } from "@/components/common/DetailLayout";
+import { SectionCard } from "@/components/common/SectionCard";
 
 const defaultValues: SettingsFormValues = {
   globalTaxPercentage: "",
@@ -140,7 +140,7 @@ export default function SettingsForm({
       hasStaffPermission(user, ["payment-settings"], ["create", "write"]);
 
     return (
-      <DetailPanel className="space-y-6" padding="lg">
+      <div className="space-y-5">
         {canViewPaymentMethods ? (
           <RestaurantPaymentMethodsSection restaurantId={restaurantId} />
         ) : null}
@@ -154,7 +154,7 @@ export default function SettingsForm({
             Payment settings are available for restaurant and branch admins.
           </p>
         )}
-      </DetailPanel>
+      </div>
     );
   }
 
@@ -449,39 +449,16 @@ function RestaurantWalletPayoutSection({
   };
 
   return (
-    <section className="space-y-[18px] rounded-[14px] border border-[#E8E8E8] p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-[6px]">
-          <div className="flex items-center gap-2">
-            <Banknote size={18} className="text-primary" />
-            <h2 className="text-lg font-semibold text-dark">
-              Restaurant Wallet & Payouts
-            </h2>
-          </div>
-          <p className="text-sm text-gray">
-            Available payout is the platform-held amount minus commission on all
-            successful orders, restaurant-paid transaction fees, VAT, and
-            previous payouts. The wallet is debited after Super Admin marks a
-            payout as paid.
-          </p>
-          {walletQuery.data?.activePlan ? (
-            <p className="rounded-[10px] bg-primary/5 px-3 py-2 text-sm text-dark">
-              Active plan: <strong>{walletQuery.data.activePlan.name}</strong>
-              {walletQuery.data.activePlan.commissionType === "FIXED"
-                ? ` · ${formatCurrency(
-                    walletQuery.data.activePlan.commissionFixedAmount ?? 0,
-                    walletCurrency,
-                  )} commission per successful order`
-                : ` · ${walletQuery.data.activePlan.commissionPercentage ?? 0}% commission on all successful orders`}
-              {walletQuery.data.activePlan.commissionCapAmount !== null
-                ? ` · capped at ${formatCurrency(
-                    walletQuery.data.activePlan.commissionCapAmount,
-                    walletCurrency,
-                  )}`
-                : ""}
-            </p>
-          ) : null}
-        </div>
+    <SectionCard
+      className="space-y-5"
+      title={
+        <span className="flex items-center gap-2">
+          <Banknote size={18} className="text-primary" aria-hidden="true" />
+          Restaurant Wallet & Payouts
+        </span>
+      }
+      description="Available payout is the platform-held amount after commission, transaction fees, VAT, and previous payouts."
+      action={
         <Button
           type="button"
           variant="outline"
@@ -494,16 +471,33 @@ function RestaurantWalletPayoutSection({
             walletQuery.isFetching ||
             payoutRequestsQuery.isFetching
           }
-          className="h-[40px] rounded-[10px]"
         >
           {walletQuery.isFetching || payoutRequestsQuery.isFetching ? (
-            <Loader2 className="mr-2 size-4 animate-spin" />
+            <Loader2 className="size-4 animate-spin" />
           ) : (
-            <RefreshCw className="mr-2 size-4" />
+            <RefreshCw className="size-4" />
           )}
           Refresh
         </Button>
-      </div>
+      }
+    >
+      {walletQuery.data?.activePlan ? (
+        <p className="rounded-[var(--ui-radius-control)] bg-[var(--ui-brand-soft)] px-3 py-2 text-sm text-[var(--ui-text)]">
+          Active plan: <strong>{walletQuery.data.activePlan.name}</strong>
+          {walletQuery.data.activePlan.commissionType === "FIXED"
+            ? ` · ${formatCurrency(
+                walletQuery.data.activePlan.commissionFixedAmount ?? 0,
+                walletCurrency,
+              )} commission per successful order`
+            : ` · ${walletQuery.data.activePlan.commissionPercentage ?? 0}% commission on all successful orders`}
+          {walletQuery.data.activePlan.commissionCapAmount !== null
+            ? ` · capped at ${formatCurrency(
+                walletQuery.data.activePlan.commissionCapAmount,
+                walletCurrency,
+              )}`
+            : ""}
+        </p>
+      ) : null}
 
       {walletQuery.isError ? (
         <p className="rounded-[10px] bg-red-50 px-3 py-2 text-sm text-red-600">
@@ -604,7 +598,7 @@ function RestaurantWalletPayoutSection({
         />
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_1.1fr]">
+      <div className="grid items-start gap-5 xl:grid-cols-2">
         {hasAutomatedPayoutProvider ? (
           <div className="rounded-[12px] bg-green-50 p-4">
             <h3 className="text-sm font-semibold text-green-800">
@@ -617,7 +611,7 @@ function RestaurantWalletPayoutSection({
             </p>
           </div>
         ) : (
-          <div className="space-y-4 rounded-[12px] bg-gray-50 p-4">
+          <div className="space-y-4 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-4">
             <div>
               <h3 className="text-sm font-semibold text-dark">
                 Request payout
@@ -703,7 +697,6 @@ function RestaurantWalletPayoutSection({
               type="button"
               onClick={submit}
               disabled={!canSubmit}
-              className="h-[44px] rounded-[10px]"
             >
               {createPayoutRequest.isPending ? (
                 <Loader2 className="mr-2 size-4 animate-spin" />
@@ -715,7 +708,7 @@ function RestaurantWalletPayoutSection({
           </div>
         )}
 
-        <div className="space-y-3">
+        <div className="min-h-full space-y-3 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-4">
           <h3 className="text-sm font-semibold text-dark">Payout requests</h3>
           {payoutRequestsQuery.isLoading ? (
             <div className="h-[180px] animate-pulse rounded-[10px] bg-gray-100" />
@@ -766,7 +759,7 @@ function RestaurantWalletPayoutSection({
           ) : null}
         </div>
       </div>
-    </section>
+    </SectionCard>
   );
 }
 

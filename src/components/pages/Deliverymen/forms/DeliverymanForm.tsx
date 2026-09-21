@@ -72,7 +72,6 @@ const DeliveryManForm = ({
   return (
     <FormSection
       title={t("form.setupBasicInfo")}
-      description={t("manageDetails")}
       columns={2}
     >
       <ControlledField

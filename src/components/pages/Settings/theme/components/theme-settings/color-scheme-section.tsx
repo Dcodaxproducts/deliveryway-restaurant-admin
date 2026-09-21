@@ -21,9 +21,9 @@ type ColorFieldConfig = {
   value: string;
 };
 
-const colorGroupClassName = "space-y-5 rounded-[16px] border border-gray-100 p-4";
-const colorGroupTitleClassName = "text-base font-semibold text-dark";
-const colorGroupDescriptionClassName = "text-sm text-gray";
+const colorGroupClassName = "space-y-4 rounded-[var(--ui-radius-control)] bg-[var(--ui-surface-subtle)] p-4";
+const colorGroupTitleClassName = "text-sm font-semibold text-[var(--ui-text)]";
+const colorGroupDescriptionClassName = "mt-1 text-xs leading-5 text-[var(--ui-text-muted)]";
 
 export default function ColorSchemeSection({ register, setValue, values, getError }: ColorSchemeSectionProps) {
   const { theme } = values.restaurant.branding;
@@ -182,21 +182,27 @@ export default function ColorSchemeSection({ register, setValue, values, getErro
           <h4 className={colorGroupTitleClassName}>Light Theme Colors</h4>
           <p className={colorGroupDescriptionClassName}>Used when storefront theme mode is Light.</p>
         </div>
-        {lightColorFields.map(renderColorField)}
+        <div className="grid gap-4 md:grid-cols-2">
+          {lightColorFields.map(renderColorField)}
+        </div>
       </div>
       <div className={colorGroupClassName}>
         <div>
           <h4 className={colorGroupTitleClassName}>Dark Theme Colors</h4>
           <p className={colorGroupDescriptionClassName}>Used when storefront theme mode is Dark, or System while the customer prefers dark mode.</p>
         </div>
-        {darkColorFields.map(renderColorField)}
+        <div className="grid gap-4 md:grid-cols-2">
+          {darkColorFields.map(renderColorField)}
+        </div>
       </div>
       <div className={colorGroupClassName}>
         <div>
           <h4 className={colorGroupTitleClassName}>App & Checkout Colors</h4>
           <p className={colorGroupDescriptionClassName}>Shared mobile app and checkout state colors.</p>
         </div>
-        {appColorFields.map(renderColorField)}
+        <div className="grid gap-4 md:grid-cols-2">
+          {appColorFields.map(renderColorField)}
+        </div>
       </div>
     </div>
   );

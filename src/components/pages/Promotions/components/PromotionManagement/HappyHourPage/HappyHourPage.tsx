@@ -10,6 +10,7 @@ import { useGetAdminHappyHours } from "@/hooks/usePromotions";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslations } from "next-intl";
 import { StatePanel } from "@/components/common/EmptyState";
+import { SectionCard } from "@/components/common/SectionCard";
 
 type HappyHourSummary = Record<string, unknown> & {
   id: string;
@@ -89,7 +90,7 @@ export default function HappyHoursPage() {
   }, [happyHours, meta]);
 
   return (
-    <div className="mt-1 space-y-10">
+    <div className="mt-1 space-y-6">
       <PromotionSectionHeader
         title={t("happyHours")}
         description={t("happyHoursDescription")}
@@ -98,7 +99,7 @@ export default function HappyHoursPage() {
         actionHref="/promotion-management/happy-hour/add"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <PromotionStatCard
           icon={<Clock size={18} />}
           value={stats.total}
@@ -131,19 +132,21 @@ export default function HappyHoursPage() {
       {isError ? (
         <StatePanel state="error" />
       ) : (
-      <HappyHoursTable
-        happyHours={happyHours}
-        loading={loading}
-        meta={{
-          page: metaNumber(meta, "page", page),
-          limit: metaNumber(meta, "limit", limit),
-          total: metaNumber(meta, "total", 0),
-          totalPages: metaNumber(meta, "totalPages", 1),
-          hasNext: Boolean(meta.hasNext),
-          hasPrevious: Boolean(meta.hasPrevious),
-        }}
-        onPageChange={setPage}
-      />
+        <SectionCard padding="none">
+          <HappyHoursTable
+            happyHours={happyHours}
+            loading={loading}
+            meta={{
+              page: metaNumber(meta, "page", page),
+              limit: metaNumber(meta, "limit", limit),
+              total: metaNumber(meta, "total", 0),
+              totalPages: metaNumber(meta, "totalPages", 1),
+              hasNext: Boolean(meta.hasNext),
+              hasPrevious: Boolean(meta.hasPrevious),
+            }}
+            onPageChange={setPage}
+          />
+        </SectionCard>
       )}
     </div>
   );

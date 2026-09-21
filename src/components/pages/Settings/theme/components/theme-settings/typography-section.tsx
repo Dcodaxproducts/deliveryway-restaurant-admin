@@ -44,7 +44,7 @@ const fontFamilyOptions = [
   { label: "Serif", value: "Georgia, Cambria, 'Times New Roman', Times, serif" },
 ];
 
-const selectClassName = "h-[52px] w-full rounded-[12px] border border-gray-200 bg-white px-3 text-base outline-none focus:ring-2 focus:ring-primary/20";
+const selectClassName = "h-11 w-full rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20";
 
 export default function TypographySection({ register, getError }: TypographySectionProps) {
   const textFields: TextFieldConfig[] = [
@@ -103,11 +103,11 @@ export default function TypographySection({ register, getError }: TypographySect
 
   return (
     <div className={BRANDING_PANEL_CLASS}>
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-4 flex items-center gap-3">
         <Type className="text-gray-500" />
         <h3 className={BRANDING_SECTION_TITLE_CLASS}>Typography & Layout</h3>
       </div>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {textFields.map(({ id, label, name, placeholder }) => (
           <div key={name}>
             <label htmlFor={id} className={BRANDING_LABEL_CLASS}>

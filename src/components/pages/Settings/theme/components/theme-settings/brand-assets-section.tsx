@@ -111,20 +111,22 @@ export default function BrandAssetsSection({ register, setValue, values, getErro
         <ImageIcon className="text-gray-500" />
         <h3 className={BRANDING_SECTION_TITLE_CLASS}>Brand Assets</h3>
       </div>
-      {assetFields.map(({ id, title, recommendation, name, linkedNames, value }) => (
-        <FileUploader
-          key={name}
-          id={id}
-          title={title}
-          recommendation={recommendation}
-          name={name}
-          linkedNames={linkedNames}
-          value={value}
-          register={register}
-          setValue={setValue}
-          error={getError(name)}
-        />
-      ))}
+      <div className="grid gap-5 lg:grid-cols-2">
+        {assetFields.map(({ id, title, recommendation, name, linkedNames, value }) => (
+          <FileUploader
+            key={name}
+            id={id}
+            title={title}
+            recommendation={recommendation}
+            name={name}
+            linkedNames={linkedNames}
+            value={value}
+            register={register}
+            setValue={setValue}
+            error={getError(name)}
+          />
+        ))}
+      </div>
     </div>
   );
 }

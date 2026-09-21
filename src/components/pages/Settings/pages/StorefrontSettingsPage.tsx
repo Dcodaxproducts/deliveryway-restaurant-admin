@@ -345,7 +345,7 @@ export function StorefrontSettingsPage() {
             />
           }
         >
-          <div className="space-y-8">
+          <div className="space-y-5">
 
         <div className={BRANDING_PANEL_CLASS}>
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -368,7 +368,7 @@ export function StorefrontSettingsPage() {
             </span>
           </div>
 
-          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+          <div className="mt-5 grid gap-3 lg:grid-cols-3">
             <StorefrontDomainItem
               label={t("customDomainDefaultStorefront")}
               value={generatedStorefrontUrl}
@@ -400,7 +400,7 @@ export function StorefrontSettingsPage() {
           <h3 className={BRANDING_SECTION_TITLE_CLASS}>
             {t("homepageSections")}
           </h3>
-          <div className="mt-6 flex items-center justify-between gap-6 rounded-[14px] border border-gray-200 bg-gray-50/70 p-4">
+          <div className="mt-4 flex items-center justify-between gap-6 rounded-[var(--ui-radius-control)] bg-[var(--ui-surface-subtle)] p-4">
             <div>
               <label
                 htmlFor="show-app-promotion"
@@ -432,30 +432,30 @@ export function StorefrontSettingsPage() {
           <h3 className={BRANDING_SECTION_TITLE_CLASS}>
             {t("restaurantProfile")}
           </h3>
-          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             {profileFields.map(renderTextField)}
             {profileTextAreas.map(renderTextAreaField)}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <div className={BRANDING_PANEL_CLASS}>
             <h3 className={BRANDING_SECTION_TITLE_CLASS}>
               {t("supportContact")}
             </h3>
-            <div className="mt-6 space-y-6">
+            <div className="mt-4 space-y-4">
               {supportFields.map(renderTextField)}
             </div>
           </div>
           <div className={BRANDING_PANEL_CLASS}>
             <h3 className={BRANDING_SECTION_TITLE_CLASS}>{t("socialMedia")}</h3>
-            <div className="mt-6 space-y-6">
+            <div className="mt-4 space-y-4">
               {socialFields.map(renderTextField)}
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className="space-y-5">
           <BrandAssetsSection
             register={register}
             setValue={setValue}
@@ -498,7 +498,7 @@ function StorefrontDomainItem({
   activeLabel?: string;
 }) {
   return (
-    <div className="rounded-[14px] border border-gray-200 bg-gray-50/70 p-4">
+    <div className="rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-4">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
           {label}

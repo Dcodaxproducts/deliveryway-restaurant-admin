@@ -103,8 +103,11 @@ const EmployeesSettingsPage = () => {
         />}
 
         {!isBranchAdmin ? (
-          <div className="flex flex-col gap-2 sm:max-w-sm">
-            <label className="text-sm font-medium text-dark" htmlFor="employee-branch-filter">
+          <div className="flex max-w-xs flex-col gap-1.5">
+            <label
+              className="text-sm font-medium text-[var(--ui-text)]"
+              htmlFor="employee-branch-filter"
+            >
               {t("branchFilter")}
             </label>
             <FormSelect
@@ -112,7 +115,7 @@ const EmployeesSettingsPage = () => {
               value={selectedBranchId}
               onChange={(event) => setSelectedBranchId(event.target.value)}
               disabled={branchesLoading}
-              className="h-11 rounded-lg border border-[#E5E7EB] bg-white px-3 text-sm text-dark outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full"
             >
               <option value="">{t("allBranches")}</option>
               {branchOptions.map((branch) => (

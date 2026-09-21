@@ -304,14 +304,7 @@ export default function LoyaltyProgramSettings({
 
   return (
     <section className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4 sm:p-5">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h2 className="text-base font-semibold text-[var(--ui-text)]">
-            {t("programSettingsTitle")}
-          </h2>
-        </div>
-
-        <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="outline"
@@ -340,7 +333,6 @@ export default function LoyaltyProgramSettings({
             )}
             {readOnly ? t("readOnly") : t("saveSettings")}
           </Button>
-        </div>
       </div>
 
       {readOnly ? (

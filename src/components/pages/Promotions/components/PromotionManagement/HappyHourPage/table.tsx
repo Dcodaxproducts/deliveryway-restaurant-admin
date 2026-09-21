@@ -11,11 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import SortableHeader from "@/components/common/sortable-head";
 import EmptyState from "@/components/common/EmptyState";
-import PromotionCreateLink from "../PromotionOverview/PromotionCreateLink";
+import { StatusBadge } from "@/components/common/status-badge";
 import { Edit, MoreHorizontal, Trash2 } from "lucide-react";
 import PaginationSection from "@/components/common/PaginationSection";
 import { toast } from "sonner";
@@ -118,16 +118,16 @@ const getScopeText = (
   return labels.allItems;
 };
 
-const getStatusClass = (status?: string) => {
+const getStatusTone = (status?: string) => {
   switch (status) {
     case "ACTIVE":
-      return "bg-green-50 text-green-700";
+      return "success" as const;
     case "SCHEDULED":
-      return "bg-yellow-50 text-yellow-700";
+      return "warning" as const;
     case "EXPIRED":
-      return "bg-red-50 text-red-700";
+      return "danger" as const;
     default:
-      return "bg-gray-50 text-gray-600";
+      return "neutral" as const;
   }
 };
 
@@ -161,10 +161,10 @@ const HappyHoursTable = ({
 
   const deleteMutation = useDeleteAdminHappyHour();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-const [menuPosition, setMenuPosition] = useState<{
-  top: number;
-  left: number;
-} | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const hasData = happyHours && happyHours.length > 0;
   const dayMap: Record<number, string> = {
     0: t("days.shortSunday"),
@@ -194,23 +194,18 @@ const [menuPosition, setMenuPosition] = useState<{
 
   if (!loading && !hasData) {
     return (
-      <>
+      <div className="p-5">
         <EmptyState
           title={t("emptyHappyHoursTitle")}
           description={t("emptyHappyHoursDescription")}
         />
-
-        <PromotionCreateLink
-          label={t("createHappyHour")}
-          href="/promotion-management/happy-hour/add"
-        />
-      </>
+      </div>
     );
   }
 
   return (
     <>
-      <div className="hidden md:block relative">
+      <div className="relative hidden overflow-x-auto md:block">
         <Table className="relative">
           <TableHeader>
             <TableRow className="border-none">
@@ -232,7 +227,7 @@ const [menuPosition, setMenuPosition] = useState<{
               <TableSkeleton />
             ) : (
               happyHours.map((item, index) => (
-                <TableRow key={item.id} className="border-none h-[72px]">
+                <TableRow key={item.id} className="h-[72px] border-b border-[var(--ui-border)] last:border-b-0">
                   <TableCell className="px-4">
                     {(meta.page - 1) * meta.limit + index + 1}
                   </TableCell>
@@ -284,75 +279,39 @@ const [menuPosition, setMenuPosition] = useState<{
                   </TableCell>
 
                   <TableCell className="px-4">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClass(
-                        item.status
-                      )}`}
-                    >
+                    <StatusBadge tone={getStatusTone(item.status)}>
                       {item.status ?? t("labels.notAvailable")}
-                    </span>
+                    </StatusBadge>
                   </TableCell>
 
-               <TableCell>
-  <div className="flex items-center justify-center">
-    <button
-      type="button"
-      onClick={(e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
+                  <TableCell>
+                    <div className="flex items-center justify-center">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={t("columns.actions")}
+                        onClick={(event) => {
+                          const rect = event.currentTarget.getBoundingClientRect();
 
-        setOpenMenuId((prev) => {
-          const next = prev === item.id ? null : item.id;
-
-          if (next) {
-            setMenuPosition({
-              top: rect.bottom + 8,
-              left: rect.right - 150,
-            });
-          } else {
-            setMenuPosition(null);
-          }
-
-          return next;
-        });
-      }}
-      className="p-2 text-gray-400 hover:text-black"
-    >
-      <MoreHorizontal size={18} />
-    </button>
-  </div>
-</TableCell>
-{openMenuId && menuPosition && (
-  <div
-    className="fixed z-[99999] w-[150px] rounded-xl border bg-white p-2 shadow-lg"
-    style={{
-      top: menuPosition.top,
-      left: menuPosition.left,
-    }}
-  >
-    <button
-      type="button"
-      onClick={() =>
-        router.push(
-          `/promotion-management/happy-hour/add?id=${openMenuId}`
-        )
-      }
-      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-gray-100"
-    >
-      <Edit size={15} />
-      {t("actions.edit")}
-    </button>
-
-    <button
-      type="button"
-      disabled={deleteMutation.isPending}
-      onClick={() => handleDelete(openMenuId)}
-      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-60"
-    >
-      <Trash2 size={15} />
-      {t("actions.delete")}
-    </button>
-  </div>
-)}
+                          setOpenMenuId((previousId) => {
+                            const nextId = previousId === item.id ? null : item.id;
+                            setMenuPosition(
+                              nextId
+                                ? {
+                                    top: rect.bottom + 8,
+                                    left: Math.max(12, rect.right - 150),
+                                  }
+                                : null,
+                            );
+                            return nextId;
+                          });
+                        }}
+                      >
+                        <MoreHorizontal aria-hidden="true" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -360,7 +319,36 @@ const [menuPosition, setMenuPosition] = useState<{
         </Table>
       </div>
 
-      <div className="md:hidden flex flex-col gap-4">
+      {openMenuId && menuPosition ? (
+        <div
+          className="fixed z-[var(--ui-layer-popover)] w-[150px] rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-2 shadow-[var(--ui-shadow-sm)]"
+          style={{ top: menuPosition.top, left: menuPosition.left }}
+        >
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full justify-start"
+            onClick={() =>
+              router.push(`/promotion-management/happy-hour/add?id=${openMenuId}`)
+            }
+          >
+            <Edit aria-hidden="true" />
+            {t("actions.edit")}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={deleteMutation.isPending}
+            onClick={() => handleDelete(openMenuId)}
+            className="w-full justify-start text-[var(--ui-danger)] hover:bg-[var(--ui-danger-soft)] hover:text-[var(--ui-danger)]"
+          >
+            <Trash2 aria-hidden="true" />
+            {t("actions.delete")}
+          </Button>
+        </div>
+      ) : null}
+
+      <div className="flex flex-col gap-3 p-3 md:hidden">
         {loading
           ? Array.from({ length: 4 }).map((_, index) => (
               <div
@@ -375,11 +363,10 @@ const [menuPosition, setMenuPosition] = useState<{
           : happyHours.map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-[14px] shadow-sm p-4 border border-[#EDEFF2] flex flex-col gap-3"
+                className="flex flex-col gap-3 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4"
               >
                 <div className="flex items-center justify-between">
                   <p className="font-semibold text-gray-900">{item.title}</p>
-                  <Checkbox />
                 </div>
 
                 <p className="text-gray-500 text-sm">{t("labels.code")}: {item.code}</p>
@@ -408,13 +395,9 @@ const [menuPosition, setMenuPosition] = useState<{
                 </div>
 
                 <div className="flex justify-between items-center mt-2">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClass(
-                      item.status
-                    )}`}
-                  >
+                  <StatusBadge tone={getStatusTone(item.status)}>
                     {item.status ?? t("labels.notAvailable")}
-                  </span>
+                  </StatusBadge>
 
                   <div className="flex items-center gap-2">
                     <Switch checked={Boolean(item.isActive)} disabled />
@@ -445,7 +428,7 @@ const [menuPosition, setMenuPosition] = useState<{
             ))}
       </div>
 
-      <div className="mt-6">
+      <div className="border-t border-[var(--ui-border)] p-4">
         <PaginationSection
           page={meta.page}
           totalPages={meta.totalPages}

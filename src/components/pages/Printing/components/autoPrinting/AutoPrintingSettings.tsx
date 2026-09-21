@@ -645,7 +645,6 @@ export default function AutoPrintingSettings({
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
                     onClick={handleTestPrint}
                     disabled={testing || discovering || !form.printerName}
                   >
@@ -661,7 +660,6 @@ export default function AutoPrintingSettings({
               primary={
                 <Button
                   type="button"
-                  size="sm"
                   onClick={handleSave}
                   disabled={updating || discovering || testing}
                 >
@@ -755,7 +753,6 @@ export default function AutoPrintingSettings({
               primary={
                 <Button
                   type="button"
-                  size="sm"
                   onClick={handleSave}
                   disabled={updating}
                 >

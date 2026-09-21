@@ -21,9 +21,9 @@ type ColorPickerProps = {
   error?: string;
 };
 
-const descriptionClassName = "text-sm text-gray";
-const textInputClassName = "h-11 rounded-[12px] border-gray-200 font-mono text-sm uppercase";
-const colorInputClassName = "h-11 w-14 cursor-pointer rounded-[12px] border border-gray-200 bg-white p-1";
+const descriptionClassName = "mt-1 text-xs leading-5 text-[var(--ui-text-muted)]";
+const textInputClassName = "h-10 min-w-0 rounded-[var(--ui-radius-control)] border-[var(--ui-border)] font-mono text-sm uppercase";
+const colorInputClassName = "h-10 w-12 cursor-pointer rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-1";
 
 export default function ColorPicker({
   id,
@@ -38,15 +38,15 @@ export default function ColorPicker({
   const colorValue = value && /^#[0-9a-fA-F]{6}$/.test(value) ? value : "#000000";
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+    <div className="space-y-2 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-3">
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_200px] xl:items-center">
+        <div className="min-w-0">
           <label htmlFor={`${id}-text`} className={BRANDING_LABEL_COMPACT_CLASS}>
             {label}
           </label>
           {description ? <p className={descriptionClassName}>{description}</p> : null}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <input
             id={`${id}-color`}
             type="color"
