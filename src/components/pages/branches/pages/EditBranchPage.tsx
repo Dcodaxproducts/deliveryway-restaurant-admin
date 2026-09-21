@@ -54,7 +54,7 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
   const [branchData, setBranchData] = useState<BranchFormData | null>(null);
 
   const router = useRouter();
-  const { user, isBranchAdmin, branchId: authBranchId } = useAuth();
+  const { isBranchAdmin, branchId: authBranchId } = useAuth();
   const updateBranchMutation = useUpdateBranchForEdit();
   const updateDeliveryTimeMutation = useUpdateBranchDeliveryTime();
   const branchId = isBranchAdmin
@@ -77,10 +77,7 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
     }
 
     if (branchQuery.data) {
-      const hydratedBranch = hydrateBranchForEdit(
-        branchQuery.data,
-        isBranchAdmin ? undefined : user,
-      );
+      const hydratedBranch = hydrateBranchForEdit(branchQuery.data);
       const deliveryTimeSettings = deliveryTimeQuery.data
         ? {
             deliveryTime: deliveryTimeQuery.data.deliveryTime,
@@ -106,7 +103,6 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
     requestedBranchId,
     router,
     t,
-    user,
   ]);
 
   useEffect(() => {
