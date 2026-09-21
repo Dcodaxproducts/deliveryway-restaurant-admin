@@ -71,6 +71,8 @@ describe("Partner shadcn sidebar", () => {
     expect(markup).toContain('data-slot="sidebar-menu-button"');
     expect(markup).toContain("[scrollbar-width:none]");
     expect(markup).toContain("group-data-[collapsible=icon]:hidden");
+    expect(markup).toContain("group-data-[collapsible=icon]:justify-center!");
+    expect(markup).toContain("group-data-[collapsible=icon]:p-0!");
   });
 
   it.each([

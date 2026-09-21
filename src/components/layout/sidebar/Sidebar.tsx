@@ -42,10 +42,10 @@ import {
 } from "@/lib/auth";
 
 const primaryNavigationClassName =
-  "h-9 text-gray transition-colors hover:bg-primary/10 hover:text-primary data-[active=true]:bg-primary/10 data-[active=true]:font-medium data-[active=true]:text-primary [&>svg]:size-[20px] [&>svg]:text-primary";
+  "h-9 text-gray transition-colors hover:bg-primary/10 hover:text-primary data-[active=true]:bg-primary/10 data-[active=true]:font-medium data-[active=true]:text-primary group-data-[collapsible=icon]:justify-center! group-data-[collapsible=icon]:p-0! [&>svg]:size-[20px] [&>svg]:text-primary";
 
 const secondaryNavigationClassName =
-  "h-8 text-gray transition-colors hover:bg-primary/10 hover:text-primary data-[active=true]:bg-primary/10 data-[active=true]:font-medium data-[active=true]:text-primary [&>svg]:size-[20px] [&>svg]:text-primary";
+  "h-8 text-gray transition-colors hover:bg-primary/10 hover:text-primary data-[active=true]:bg-primary/10 data-[active=true]:font-medium data-[active=true]:text-primary group-data-[collapsible=icon]:justify-center! group-data-[collapsible=icon]:p-0! [&>svg]:size-[20px] [&>svg]:text-primary";
 
 type PartnerSidebarItemProps = {
   item: MenuItem;
@@ -97,7 +97,7 @@ function PartnerSidebarItem({
         >
           <Link href={item.href ?? "#"} onClick={onNavigate}>
             <Icon />
-            <span>{label}</span>
+            <span className="group-data-[collapsible=icon]:hidden">{label}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -122,8 +122,8 @@ function PartnerSidebarItem({
             className={primaryNavigationClassName}
           >
             <Icon />
-            <span>{label}</span>
-            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+            <span className="group-data-[collapsible=icon]:hidden">{label}</span>
+            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent>
@@ -147,7 +147,9 @@ function PartnerSidebarItem({
                   >
                     <Link href={child.href ?? "#"} onClick={onNavigate}>
                       {ChildIcon ? <ChildIcon /> : null}
-                      <span>{childLabel}</span>
+                      <span className="group-data-[collapsible=icon]:hidden">
+                        {childLabel}
+                      </span>
                     </Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
@@ -402,10 +404,12 @@ function PartnerSidebarContent(): ReactElement {
             <SidebarMenuButton
               tooltip={t("logout")}
               onClick={handleLogout}
-              className="h-9 font-semibold text-primary hover:bg-primary/10 hover:text-primary [&>svg]:size-[20px] [&>svg]:text-primary"
+              className="h-9 font-semibold text-primary hover:bg-primary/10 hover:text-primary group-data-[collapsible=icon]:justify-center! group-data-[collapsible=icon]:p-0! [&>svg]:size-[20px] [&>svg]:text-primary"
             >
               <LogOut />
-              <span>{t("logout")}</span>
+              <span className="group-data-[collapsible=icon]:hidden">
+                {t("logout")}
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
