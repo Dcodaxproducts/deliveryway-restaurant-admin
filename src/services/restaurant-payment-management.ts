@@ -46,6 +46,10 @@ export type RestaurantWallet = {
   vatPercentage: number | null;
   vatAmount: number | null;
   billingMonth: string | null;
+  billingPeriod: {
+    from: string | null;
+    to: string | null;
+  } | null;
   monthlyFeeAmount: number | null;
   monthlyFeeScheduledToDate: number | null;
   monthlyFeeDeductedBefore: number | null;
@@ -204,6 +208,7 @@ const normalizeWallet = (response: unknown): RestaurantWallet => {
   const data = getRecord(unwrapData(response));
   const wallet = firstRecord(data.wallet, data.account, data);
   const activePlan = getRecord(wallet.activePlan);
+  const billingPeriod = getRecord(wallet.billingPeriod);
 
   return {
     type: getString(wallet.type, "RESTAURANT_WALLET"),
@@ -223,6 +228,12 @@ const normalizeWallet = (response: unknown): RestaurantWallet => {
     vatPercentage: getNumber(wallet.vatPercentage),
     vatAmount: getNumber(wallet.vatAmount),
     billingMonth: getString(wallet.billingMonth),
+    billingPeriod: Object.keys(billingPeriod).length
+      ? {
+          from: getString(billingPeriod.from),
+          to: getString(billingPeriod.to),
+        }
+      : null,
     monthlyFeeAmount: getNumber(wallet.monthlyFeeAmount),
     monthlyFeeScheduledToDate: getNumber(wallet.monthlyFeeScheduledToDate),
     monthlyFeeDeductedBefore: getNumber(wallet.monthlyFeeDeductedBefore),
