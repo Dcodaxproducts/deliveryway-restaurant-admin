@@ -300,9 +300,14 @@
       "faqs": "FAQs"
     },
     "resultsTitle": "Search Results",
+    "resultsDescription": "Search across the current restaurant workspace.",
     "showingResults": "Showing results for \"{query}\"",
+    "minimumTitle": "Enter a search term",
     "minimumCharacters": "Enter at least 2 characters to search.",
-    "temporaryUnavailableWithPeriod": "Search is temporarily unavailable."
+    "searchingDescription": "Checking orders, menus, customers, branches, staff, and promotions.",
+    "temporaryUnavailableWithPeriod": "Search is temporarily unavailable.",
+    "retry": "Retry search",
+    "noResultsDescription": "No workspace records match \"{query}\"."
   },
   "auth": {
     "welcomeTitle": "Welcome to FeastFlow",
@@ -2834,6 +2839,10 @@
     }
   },
   "settings": {
+    "globalSettingsTitle": "Global Settings",
+    "globalSettingsDescription": "Configure platform-wide default settings.",
+    "unsavedChanges": "Unsaved storefront changes",
+    "brandingSynced": "Storefront settings are synced",
     "storefrontTitle": "Storefront Settings",
     "storefrontDescription": "Manage restaurant profile, branding, assets, support contact, and customer-facing appearance.",
     "homepageSections": "Homepage Sections",
@@ -3316,13 +3325,56 @@
   },
   "restaurants": {
     "title": "Restaurants",
-    "description": "View and manage all Restaurants from here"
+    "description": "View and manage all Restaurants from here",
+    "addTitle": "Add Restaurant",
+    "addDescription": "Restaurant creation is handled outside the branch-admin dashboard."
   },
   "faqs": {
     "question": "Question",
     "answer": "Answer",
     "category": "Category",
-    "visibility": "Visibility"
+    "visibility": "Visibility",
+    "managerTitle": "FAQ Manager",
+    "managerDescription": "Manage frequently asked questions for ordering, payments, delivery, and restaurant policies.",
+    "addTitle": "Add FAQ",
+    "editTitle": "Edit FAQ",
+    "loadingDetail": "Loading FAQ details...",
+    "contentTitle": "FAQ content",
+    "contentDescription": "Write a concise customer question and a clear, helpful answer.",
+    "questionPlaceholder": "e.g. How do I track my order in real time?",
+    "selectCategory": "Select a category",
+    "answerPlaceholder": "Provide a detailed answer here...",
+    "previewTitle": "Live preview",
+    "previewDescription": "Review how the FAQ content will read to customers.",
+    "previewPlaceholder": "Your question will appear here.",
+    "publishingTitle": "Publishing",
+    "published": "Published",
+    "draft": "Draft",
+    "statusToggle": "Toggle FAQ publishing status",
+    "visibleToAll": "Visible to all",
+    "visibleToAllDescription": "Publicly accessible to every customer.",
+    "loggedInOnly": "Logged-in only",
+    "loggedInOnlyDescription": "Restricted to authenticated customers.",
+    "editorialTipTitle": "Editorial tip",
+    "editorialTipDescription": "Keep questions concise and use direct language so customers can scan answers quickly.",
+    "saveChanges": "Save changes",
+    "saveDraft": "Save as draft",
+    "updateFaq": "Update FAQ",
+    "publishFaq": "Publish FAQ",
+    "editorToolbar": "Answer formatting tools",
+    "editorTools": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "list": "List",
+      "link": "Link",
+      "image": "Image"
+    },
+    "categories": {
+      "orders": "Orders",
+      "delivery": "Delivery",
+      "payments": "Payments",
+      "policy": "Policy"
+    }
   },
   "notifications": {
     "title": "Notifications",

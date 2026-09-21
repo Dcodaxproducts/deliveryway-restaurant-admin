@@ -1,20 +1,36 @@
 "use client";
 
-import { FormSelect } from "@/components/ui/form-select";
-
 import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import {
   Bold,
-  Italic,
-  List,
-  Link as LinkIcon,
   Image as ImageIcon,
+  Italic,
   Lightbulb,
-  RotateCcw,
+  Link as LinkIcon,
+  List,
+  Loader2,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Header from "@/components/common/PageHeader";
+import { useTranslations } from "next-intl";
+
+import Container from "@/components/common/Container";
+import { StatePanel } from "@/components/common/EmptyState";
+import { FormField } from "@/components/common/FormField";
+import {
+  FormActions,
+  FormLayout,
+  FormSection,
+} from "@/components/common/FormLayout";
+import PageHeader from "@/components/common/PageHeader";
+import { StatusBadge } from "@/components/common/status-badge";
+import { Button } from "@/components/ui/button";
+import { FormSelect } from "@/components/ui/form-select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateFaq, useGetFaq, useUpdateFaq } from "@/hooks/useFaqs";
 
@@ -37,45 +53,34 @@ const defaultFaqFormValues: FAQFormValues = {
 };
 
 const editorTools = [
-  { icon: Bold, label: "Bold" },
-  { icon: Italic, label: "Italic" },
-  { icon: List, label: "List" },
-  { icon: LinkIcon, label: "Link" },
-  { icon: ImageIcon, label: "Image" },
+  { icon: Bold, label: "bold" },
+  { icon: Italic, label: "italic" },
+  { icon: List, label: "list" },
+  { icon: LinkIcon, label: "link" },
+  { icon: ImageIcon, label: "image" },
 ] as const;
-
-const activeVisibilityClass = "border-[#F1D6D8] bg-white";
-const inactiveVisibilityClass = "border-transparent bg-white hover:border-[#EAECF0]";
 
 export default function CreateFAQPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("faqs");
+  const commonT = useTranslations("common");
+  const feedback = useTranslations("common.feedback");
   const { user } = useAuth();
-
   const faqId = searchParams.get("id");
-  const isEditMode = !!faqId;
-
-  const restaurantId = useMemo(() => {
-    return (
-      user?.restaurantId ||
-      ""
-    );
-  }, [user]);
-
+  const isEditMode = Boolean(faqId);
+  const restaurantId = useMemo(() => user?.restaurantId || "", [user]);
   const { data: faqData, isLoading: isFaqLoading } = useGetFaq(
     restaurantId,
-    faqId || ""
+    faqId || "",
   );
-
   const createFaqMutation = useCreateFaq();
   const updateFaqMutation = useUpdateFaq();
-
   const { control, register, reset, setValue } = useForm<FAQFormValues>({
     defaultValues: defaultFaqFormValues,
     mode: "onChange",
   });
   const [initialized, setInitialized] = useState(false);
-
   const {
     question = "",
     category = "",
@@ -93,33 +98,32 @@ export default function CreateFAQPage() {
     if (!faqData || initialized) return;
 
     reset({
-      question: faqData?.question || "",
-      category: faqData?.category || "",
-      answer: faqData?.answer || "",
-      status: faqData?.status === "PUBLISHED",
-      visibility: faqData?.visibility === "PRIVATE" ? "logged-in" : "all",
+      question: faqData.question || "",
+      category: faqData.category || "",
+      answer: faqData.answer || "",
+      status: faqData.status === "PUBLISHED",
+      visibility: faqData.visibility === "PRIVATE" ? "logged-in" : "all",
     });
     setInitialized(true);
   }, [faqData, initialized, isEditMode, reset]);
 
   const isSubmitting =
     createFaqMutation.isPending || updateFaqMutation.isPending;
-
   const payload = {
     question: question.trim(),
     category: category.trim(),
     answer: answer.trim(),
     status: status ? ("PUBLISHED" as const) : ("DRAFT" as const),
-    visibility: visibility === "logged-in" ? ("PRIVATE" as const) : ("PUBLIC" as const),
+    visibility:
+      visibility === "logged-in" ? ("PRIVATE" as const) : ("PUBLIC" as const),
   };
-
   const isFormValid =
-    !!restaurantId &&
+    Boolean(restaurantId) &&
     payload.question.length >= 3 &&
-    !!payload.category &&
+    Boolean(payload.category) &&
     payload.answer.length >= 3;
 
-  const handleSubmit = async (publishOverride?: boolean) => {
+  const saveFaq = async (publishOverride: boolean) => {
     if (!restaurantId) return;
 
     const finalPayload = {
@@ -143,339 +147,212 @@ export default function CreateFAQPage() {
 
       router.push("/faqs");
     } catch {
-      // toast already handled in hooks
+      // Mutation hooks own translated error feedback.
     }
-  };
-
-  const handlePrimaryAction = () => {
-    handleSubmit(true);
-  };
-
-  const selectVisibility = (nextVisibility: VisibilityUI) => {
-    setValue("visibility", nextVisibility, { shouldDirty: true, shouldValidate: true });
   };
 
   if (isEditMode && isFaqLoading && !initialized) {
     return (
-      <div className="min-h-screen bg-[#F8F9FB] px-4 py-5 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-[1400px]">
-          <Header
-            title="FAQ Manager"
-            description="Loading FAQ details..."
-            titleClassName="text-[24px] sm:text-[28px] font-semibold text-[#101828] leading-tight"
-            descriptionClassName="mt-1 max-w-[760px] text-sm text-[#667085] leading-6"
-          />
-        </div>
-      </div>
+      <Container>
+        <PageHeader title={t("managerTitle")} description={t("loadingDetail")} />
+        <StatePanel
+          state="loading"
+          title={t("loadingDetail")}
+          description={feedback("loadingDescription")}
+        />
+      </Container>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1400px]">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <Header
-            title="FAQ Manager"
-            description="Manage your restaurant's frequently asked questions to help customers navigate ordering, payments, and policy information."
-            titleClassName="text-[24px] sm:text-[28px] font-semibold text-[#101828] leading-tight"
-            descriptionClassName="mt-1 max-w-[760px] text-sm text-[#667085] leading-6"
-          />
+    <Container>
+      <PageHeader
+        title={isEditMode ? t("editTitle") : t("addTitle")}
+        description={t("managerDescription")}
+      />
 
-          <button
-            type="button"
-            onClick={handlePrimaryAction}
-            disabled={!isFormValid || isSubmitting}
-            className="inline-flex h-10 items-center justify-center rounded-full bg-[#C1121F] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#a50f1a] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting
-              ? isEditMode
-                ? "Updating..."
-                : "Publishing..."
-              : isEditMode
-              ? "+ Update FAQ"
-              : "+ Publish FAQ"}
-          </button>
-        </div>
+      <FormLayout
+        aside={
+          <div className="space-y-5">
+            <FormSection
+              title={t("previewTitle")}
+              description={t("previewDescription")}
+            >
+              <div className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-4">
+                <p className="text-sm font-semibold text-[var(--ui-text)]">
+                  {question.trim() || t("previewPlaceholder")}
+                </p>
+                {answer.trim() ? (
+                  <p className="mt-2 line-clamp-4 text-sm leading-5 text-[var(--ui-text-muted)]">
+                    {answer}
+                  </p>
+                ) : null}
+              </div>
+            </FormSection>
 
-        {/* Main Card */}
-        <div className="mt-6 rounded-3xl border border-[#ECEEF2] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] sm:p-5 lg:p-6">
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.8fr_0.9fr]">
-            {/* Left Form */}
-            <div>
-              {/* Question */}
-              <div>
-                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-[#344054]">
-                  Question
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. How do I track my order in real-time?"
-                  {...register("question")}
-                  className="h-12 w-full rounded-xl border border-[#E4E7EC] bg-[#F9FAFB] px-4 text-sm text-[#101828] outline-none placeholder:text-[#98A2B3] focus:border-[#D0D5DD] focus:bg-white"
+            <FormSection title={t("publishingTitle")}>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <Label htmlFor="faq-status">{commonT("status")}</Label>
+                  <div className="mt-2">
+                    <StatusBadge tone={status ? "success" : "neutral"}>
+                      {status ? t("published") : t("draft")}
+                    </StatusBadge>
+                  </div>
+                </div>
+                <Switch
+                  id="faq-status"
+                  checked={status}
+                  onCheckedChange={(checked) =>
+                    setValue("status", checked, { shouldDirty: true })
+                  }
+                  aria-label={t("statusToggle")}
                 />
               </div>
 
-              {/* Category */}
-              <div className="mt-5">
-                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-[#344054]">
-                  Category
-                </label>
-                <div className="relative">
-                  <FormSelect
-                    {...register("category")}
-                    className="h-12 w-full appearance-none rounded-xl border border-[#E4E7EC] bg-[#F9FAFB] px-4 pr-10 text-sm text-[#101828] outline-none focus:border-[#D0D5DD] focus:bg-white"
-                  >
-                    <option value="">Select a category</option>
-                    <option value="Orders">Orders</option>
-                    <option value="Delivery">Delivery</option>
-                    <option value="Payments">Payments</option>
-                    <option value="Policy">Policy</option>
-                  </FormSelect>
-
-                  <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[#667085]">
-                    ▾
-                  </span>
-                </div>
-              </div>
-
-              {/* Answer */}
-              <div className="mt-5">
-                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-[#344054]">
-                  Answer
-                </label>
-
-                <div className="overflow-hidden rounded-xl border border-[#E4E7EC] bg-[#F9FAFB]">
-                  {/* Toolbar */}
-                  <div className="flex items-center gap-1 border-b border-[#E4E7EC] px-3 py-2">
-                    {editorTools.map(({ icon: Icon, label }) => {
-                      return (
-                        <button
-                          key={label}
-                          type="button"
-                          title={label}
-                          className="inline-flex size-8 items-center justify-center rounded-lg text-[#667085] transition hover:bg-white hover:text-[#344054]"
-                        >
-                          <Icon size={15} />
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <textarea
-                    placeholder="Provide a detailed answer here..."
-                    {...register("answer")}
-                    className="min-h-[220px] w-full resize-none bg-[#F9FAFB] px-4 py-3 text-sm leading-6 text-[#101828] outline-none placeholder:text-[#98A2B3]"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Right Sidebar */}
-            <div className="rounded-2xl bg-[#FAFAFB] p-4">
-              {/* Live Preview */}
-              <div className="rounded-2xl border border-[#F1D6D8] bg-white p-4 shadow-[0_1px_3px_rgba(16,24,40,0.05)]">
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#C1121F]">
-                  Live Preview
-                </p>
-                <p className="mt-2 text-sm font-semibold leading-5 text-[#101828]">
-                  {question?.trim()
-                    ? question
-                    : "User View: Your question will appear as a toggleable accordion here."}
-                </p>
-              </div>
-
-              {/* Publishing Status */}
-              <div className="mt-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#667085]">
-                  Publishing Status
-                </p>
-
-                <div className="mt-3 rounded-xl border border-[#EAECF0] bg-white px-4 py-3">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-semibold text-[#101828]">Status</p>
-                      <p className="mt-1 text-xs text-[#98A2B3]">
-                        {status ? "Published" : "Currently Draft"}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setValue("status", !status, { shouldDirty: true })}
-                      className={`relative h-6 w-11 rounded-full transition ${
-                        status ? "bg-[#C1121F]" : "bg-[#D0D5DD]"
-                      }`}
+              <FormField id="faq-visibility" label={t("visibility")}>
+                <RadioGroup
+                  id="faq-visibility"
+                  value={visibility}
+                  onValueChange={(value) =>
+                    setValue("visibility", value as VisibilityUI, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }
+                  className="gap-3"
+                >
+                  {(["all", "logged-in"] as const).map((option) => (
+                    <Label
+                      key={option}
+                      htmlFor={`faq-visibility-${option}`}
+                      className="flex cursor-pointer items-start gap-3 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] p-3"
                     >
-                      <span
-                        className={`absolute top-0.5 size-5 rounded-full bg-white shadow-sm transition ${
-                          status ? "left-[22px]" : "left-0.5"
-                        }`}
+                      <RadioGroupItem
+                        id={`faq-visibility-${option}`}
+                        value={option}
+                        className="size-5"
                       />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Visibility */}
-              <div className="mt-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#667085]">
-                  Visibility
-                </p>
-
-                <div className="mt-3 space-y-3">
-                  <button
-                    type="button"
-                    onClick={() => selectVisibility("all")}
-                    className={`w-full rounded-xl border px-4 py-3 text-left transition ${
-                      visibility === "all" ? activeVisibilityClass : inactiveVisibilityClass
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span
-                        className={`mt-1 flex size-4 items-center justify-center rounded-full border ${
-                          visibility === "all"
-                            ? "border-[#D92D20]"
-                            : "border-[#D0D5DD]"
-                        }`}
-                      >
-                        {visibility === "all" && (
-                          <span className="size-2 rounded-full bg-[#D92D20]" />
-                        )}
+                      <span>
+                        <span className="block text-sm font-medium text-[var(--ui-text)]">
+                          {option === "all"
+                            ? t("visibleToAll")
+                            : t("loggedInOnly")}
+                        </span>
+                        <span className="mt-1 block text-xs font-normal text-[var(--ui-text-muted)]">
+                          {option === "all"
+                            ? t("visibleToAllDescription")
+                            : t("loggedInOnlyDescription")}
+                        </span>
                       </span>
+                    </Label>
+                  ))}
+                </RadioGroup>
+              </FormField>
+            </FormSection>
 
-                      <div>
-                        <p className="text-sm font-semibold text-[#101828]">
-                          Visible to all
-                        </p>
-                        <p className="text-xs text-[#98A2B3]">
-                          Publicly accessible on the web
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => selectVisibility("logged-in")}
-                    className={`w-full rounded-xl border px-4 py-3 text-left transition ${
-                      visibility === "logged-in" ? activeVisibilityClass : inactiveVisibilityClass
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span
-                        className={`mt-1 flex size-4 items-center justify-center rounded-full border ${
-                          visibility === "logged-in"
-                            ? "border-[#D92D20]"
-                            : "border-[#D0D5DD]"
-                        }`}
-                      >
-                        {visibility === "logged-in" && (
-                          <span className="size-2 rounded-full bg-[#D92D20]" />
-                        )}
-                      </span>
-
-                      <div>
-                        <p className="text-sm font-semibold text-[#101828]">
-                          Logged-in only
-                        </p>
-                        <p className="text-xs text-[#98A2B3]">
-                          Restricted to registered customers
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-                </div>
+            <FormSection title={t("editorialTipTitle")}>
+              <div className="flex items-start gap-3 text-sm leading-6 text-[var(--ui-text-muted)]">
+                <Lightbulb aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
+                <p>{t("editorialTipDescription")}</p>
               </div>
-
-              {/* Meta */}
-              <div className="mt-6 border-t border-[#EAECF0] pt-5">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#98A2B3]">
-                      Mode
-                    </p>
-                    <p className="text-xs font-semibold uppercase text-[#344054]">
-                      {isEditMode ? "Editing" : "Creating"}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#98A2B3]">
-                      Last Sync
-                    </p>
-                    <p className="text-xs font-semibold uppercase text-[#344054]">
-                      {isEditMode ? "Loaded" : "New Draft"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Secondary Actions */}
-              <div className="mt-6 space-y-3">
-                <button
+            </FormSection>
+          </div>
+        }
+        actions={
+          <FormActions
+            sticky
+            secondary={
+              <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                <Button
                   type="button"
-                  onClick={() => handleSubmit(false)}
-                  disabled={!isFormValid || isSubmitting}
-                  className="w-full rounded-xl border border-[#EAECF0] bg-white px-4 py-3 text-sm font-semibold text-[#344054] transition hover:bg-[#F9FAFB] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSubmitting
-                    ? "Please wait..."
-                    : isEditMode
-                    ? "Save Changes"
-                    : "Save as Draft"}
-                </button>
-
-                <button
-                  type="button"
+                  variant="outline"
+                  disabled={isSubmitting}
                   onClick={() => router.push("/faqs")}
-                  className="w-full rounded-xl border border-transparent bg-transparent px-4 py-3 text-sm font-semibold text-[#667085] transition hover:bg-white"
                 >
-                  Cancel
-                </button>
+                  {commonT("cancel")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!isFormValid || isSubmitting}
+                  onClick={() => saveFaq(false)}
+                >
+                  {isEditMode ? t("saveChanges") : t("saveDraft")}
+                </Button>
               </div>
+            }
+            primary={
+              <Button
+                type="button"
+                disabled={!isFormValid || isSubmitting}
+                onClick={() => saveFaq(true)}
+              >
+                {isSubmitting ? (
+                  <Loader2 aria-hidden="true" className="animate-spin" />
+                ) : null}
+                {isSubmitting
+                  ? commonT("saving")
+                  : isEditMode
+                    ? t("updateFaq")
+                    : t("publishFaq")}
+              </Button>
+            }
+          />
+        }
+      >
+        <FormSection
+          title={t("contentTitle")}
+          description={t("contentDescription")}
+        >
+          <FormField id="faq-question" label={t("question")} required>
+            <Input
+              id="faq-question"
+              placeholder={t("questionPlaceholder")}
+              {...register("question")}
+            />
+          </FormField>
+
+          <FormField id="faq-category" label={t("category")} required>
+            <FormSelect id="faq-category" {...register("category")}>
+              <option value="">{t("selectCategory")}</option>
+              <option value="Orders">{t("categories.orders")}</option>
+              <option value="Delivery">{t("categories.delivery")}</option>
+              <option value="Payments">{t("categories.payments")}</option>
+              <option value="Policy">{t("categories.policy")}</option>
+            </FormSelect>
+          </FormField>
+
+          <FormField id="faq-answer" label={t("answer")} required>
+            <div className="overflow-hidden rounded-[var(--ui-radius-control)] border border-[var(--ui-border)]">
+              <div
+                className="flex items-center gap-1 border-b border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] px-2 py-1.5"
+                role="toolbar"
+                aria-label={t("editorToolbar")}
+              >
+                {editorTools.map(({ icon: Icon, label }) => (
+                  <Button
+                    key={label}
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    title={t(`editorTools.${label}`)}
+                    aria-label={t(`editorTools.${label}`)}
+                  >
+                    <Icon aria-hidden="true" />
+                  </Button>
+                ))}
+              </div>
+              <Textarea
+                id="faq-answer"
+                placeholder={t("answerPlaceholder")}
+                className="min-h-56 resize-y rounded-none border-0 shadow-none focus-visible:ring-0"
+                {...register("answer")}
+              />
             </div>
-          </div>
-        </div>
-
-        {/* Bottom Tips */}
-        <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <div className="rounded-2xl border border-[#D9EAF2] bg-[#EAF5FB] px-5 py-4">
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex size-8 items-center justify-center rounded-full bg-white text-[#2E90FA]">
-                <Lightbulb size={16} />
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-[#344054]">Editorial Tip</p>
-                <p className="mt-1 text-sm leading-6 text-[#667085]">
-                  Keep questions concise. Use active voice to help customers find
-                  solutions faster. Asymmetric layouts for your answers can improve
-                  scanability.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-[#F3E0E0] bg-[#FFF4F4] px-5 py-4">
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex size-8 items-center justify-center rounded-full bg-white text-[#D92D20]">
-                <RotateCcw size={16} />
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-[#344054]">
-                  Draft Handling
-                </p>
-                <p className="mt-1 text-sm leading-6 text-[#667085]">
-                  Use draft mode while preparing content, then publish once the FAQ
-                  is reviewed. Edit mode is automatically enabled when the page URL
-                  contains an FAQ id.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          </FormField>
+        </FormSection>
+      </FormLayout>
+    </Container>
   );
 }

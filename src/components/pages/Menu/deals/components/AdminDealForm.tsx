@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import { FIELD_ERROR_CLASS, INPUT_BASE_CLASS, MUTED_TEXT_SM_CLASS } from "@/components/common/common-classes";
 import { DateTimePickerInput } from "@/components/common/DateTimeInputs";
+import { FormActions } from "@/components/common/FormLayout";
 import FormInput from "@/components/forms/common/FormInput";
 import { ImageUploadField } from "@/components/forms/common/ImageUploadField";
 import AdminDealCategorySelector from "@/components/pages/Menu/deals/components/AdminDealCategorySelector";
@@ -623,25 +624,27 @@ export default function AdminDealForm({
           ) : null}
         </Section>
 
-        <div className="flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={submitting}
-            className="h-[44px] rounded-lg px-6"
-          >
-            {commonT("cancel")}
-          </Button>
-          <Button
-            type="submit"
-            disabled={submitting}
-            className="inline-flex h-[44px] items-center gap-2 rounded-lg bg-primary px-6 text-sm font-medium text-white disabled:opacity-60"
-          >
-            {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
-            {submitLabel}
-          </Button>
-        </div>
+        <FormActions
+          sticky
+          secondary={
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={submitting}
+            >
+              {commonT("cancel")}
+            </Button>
+          }
+          primary={
+            <Button type="submit" disabled={submitting}>
+              {submitting ? (
+                <Loader2 aria-hidden="true" className="animate-spin" />
+              ) : null}
+              {submitLabel}
+            </Button>
+          }
+        />
       </form>
     </PageWrapper>
   );

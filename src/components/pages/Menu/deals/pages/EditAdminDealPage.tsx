@@ -2,9 +2,10 @@
 
 import { useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 
 import Container from "@/components/common/Container";
+import { StatePanel } from "@/components/common/EmptyState";
+import PageHeader from "@/components/common/PageHeader";
 import AdminDealForm, {
   type AdminDealFormBranchOption,
 } from "@/components/pages/Menu/deals/components/AdminDealForm";
@@ -84,29 +85,41 @@ export default function EditAdminDealPage() {
   if (dealQuery.isLoading) {
     return (
       <Container>
-        <div className="flex min-h-[360px] items-center justify-center rounded-lg bg-white shadow-sm">
-          <Loader2 className="h-7 w-7 animate-spin text-primary" />
-        </div>
+        <PageHeader title={t("editTitle")} description={t("description")} />
+        <StatePanel
+          state="loading"
+          title={t("editTitle")}
+          description={t("description")}
+        />
+      </Container>
+    );
+  }
+
+  if (dealQuery.error || !dealQuery.data) {
+    return (
+      <Container>
+        <PageHeader title={t("editTitle")} description={t("description")} />
+        <StatePanel
+          state="error"
+          title={t("unableToLoad")}
+          description={t("description")}
+        />
       </Container>
     );
   }
 
   return (
-    <Container>
-      <div className="rounded-lg bg-white shadow-sm">
-        <AdminDealForm
-          title={t("editTitle")}
-          initialDeal={dealQuery.data}
-          restaurantId={restaurantId}
-          branchId={branchId}
-          isBranchAdmin={isBranchAdmin}
-          branchOptions={branchOptions}
-          submitting={updateMutation.isPending}
-          submitLabel={t("updateDeal")}
-          onCancel={() => router.push("/menu/deals")}
-          onSubmit={handleSubmit}
-        />
-      </div>
-    </Container>
+    <AdminDealForm
+      title={t("editTitle")}
+      initialDeal={dealQuery.data}
+      restaurantId={restaurantId}
+      branchId={branchId}
+      isBranchAdmin={isBranchAdmin}
+      branchOptions={branchOptions}
+      submitting={updateMutation.isPending}
+      submitLabel={t("updateDeal")}
+      onCancel={() => router.push("/menu/deals")}
+      onSubmit={handleSubmit}
+    />
   );
 }

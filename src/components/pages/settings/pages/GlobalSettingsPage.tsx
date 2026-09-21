@@ -1,17 +1,25 @@
-import Container from '@/components/common/Container';
-import SettingsForm from '@/components/pages/Settings/forms/SettingsForm'
-import Header from '@/components/common/PageHeader'
+"use client";
+
+import Container from "@/components/common/Container";
+import PageHeader from "@/components/common/PageHeader";
+import { SettingsLayout } from "@/components/common/SettingsLayout";
+import SettingsForm from "@/components/pages/Settings/forms/SettingsForm";
+import { useTranslations } from "next-intl";
 
 const SettingsPage = () => {
-    return (
-        <Container>
-            <Header
-                title="Global Settings"
-                description="Configure platform-wide default settings"
-            />
-            <SettingsForm />
-        </Container>
-    )
-}
+  const t = useTranslations("settings");
 
-export default SettingsPage
+  return (
+    <Container>
+      <PageHeader
+        title={t("globalSettingsTitle")}
+        description={t("globalSettingsDescription")}
+      />
+      <SettingsLayout>
+        <SettingsForm />
+      </SettingsLayout>
+    </Container>
+  );
+};
+
+export default SettingsPage;

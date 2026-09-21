@@ -1,15 +1,18 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import Container from "@/components/common/Container";
+import { FormActions, FormLayout } from "@/components/common/FormLayout";
+import PageHeader from "@/components/common/PageHeader";
 import DeliveryManForm, {
   type BranchOption,
 } from "@/components/pages/Deliverymen/forms/DeliverymanForm";
-import AddDeliveryManHeader from "@/components/pages/Deliverymen/components/deliveryman/add/AddDeliveryManHeader";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetBranches } from "@/hooks/useBranches";
 import {
@@ -17,7 +20,7 @@ import {
   useDeliveryman,
   useUpdateDeliveryman,
 } from "@/hooks/useDeliverymen";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   deliverymanSchema,
@@ -44,8 +47,10 @@ type BranchListResponse = {
 const AddDeliveryMan = () => {
   const { restaurantId, branchId: authBranchId, isBranchAdmin } = useAuth();
   const t = useTranslations("deliverymen");
+  const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId");
+  const formId = "deliveryman-form";
 
   const { data: deliveryman, isLoading: isFetching } = useDeliveryman(
     editId || undefined,
@@ -188,23 +193,53 @@ const AddDeliveryMan = () => {
 
   return (
     <Container>
-      <AddDeliveryManHeader
+      <PageHeader
         title={editId ? t("editTitle") : t("createTitle")}
         description={t("manageDetails")}
-        loading={isSaving || isFetching}
-        formId="deliveryman-form"
       />
 
-      <form id="deliveryman-form" noValidate onSubmit={handleSubmit(onSubmit)}>
-        <DeliveryManForm
-          control={control}
-          errors={errors}
-          selectedBranch={selectedBranch}
-          setSelectedBranch={setSelectedBranch}
-          fetchBranches={fetchBranches}
-          branchLocked={isBranchAdmin}
-          assignedBranchLabel={t("assignedBranch")}
-        />
+      <form id={formId} noValidate onSubmit={handleSubmit(onSubmit)}>
+        <FormLayout
+          actions={
+            <FormActions
+              sticky
+              secondary={
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isSaving}
+                  onClick={() => router.back()}
+                >
+                  {t("actions.cancel")}
+                </Button>
+              }
+              primary={
+                <Button
+                  type="submit"
+                  form={formId}
+                  disabled={isSaving || isFetching}
+                >
+                  {isSaving || isFetching ? (
+                    <Loader2 aria-hidden="true" className="animate-spin" />
+                  ) : null}
+                  {isSaving || isFetching
+                    ? t("actions.saving")
+                    : t("actions.confirm")}
+                </Button>
+              }
+            />
+          }
+        >
+          <DeliveryManForm
+            control={control}
+            errors={errors}
+            selectedBranch={selectedBranch}
+            setSelectedBranch={setSelectedBranch}
+            fetchBranches={fetchBranches}
+            branchLocked={isBranchAdmin}
+            assignedBranchLabel={t("assignedBranch")}
+          />
+        </FormLayout>
       </form>
     </Container>
   );

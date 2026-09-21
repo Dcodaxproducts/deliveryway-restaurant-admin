@@ -1,9 +1,6 @@
 "use client";
 
-import Container from "@/components/common/Container";
-import Header from "@/components/common/PageHeader";
-import { Button } from "@/components/ui/button";
-import { useGetMenuCategoryById } from "@/hooks/useMenuCategories";
+import type { ReactNode } from "react";
 import {
   ArrowLeft,
   CalendarDays,
@@ -16,10 +13,78 @@ import {
   Tags,
   Utensils,
 } from "lucide-react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+
+import Container from "@/components/common/Container";
+import {
+  DetailLayout,
+  DetailPanel,
+  InfoList,
+} from "@/components/common/DetailLayout";
+import { StatePanel } from "@/components/common/EmptyState";
+import PageHeader from "@/components/common/PageHeader";
+import { StatusBadge } from "@/components/common/status-badge";
+import PromotionStatCard from "@/components/cards/PromotionStatCard";
+import { Button } from "@/components/ui/button";
+import { useGetMenuCategoryById } from "@/hooks/useMenuCategories";
 import { formatDateTime24 } from "@/lib/date-time-format";
+
+type CategoryItem = {
+  id: string;
+  name?: string | null;
+  slug?: string | null;
+  imageUrl?: string | null;
+  basePrice?: unknown;
+  isActive?: boolean;
+};
+
+type CategoryVariation = {
+  id: string;
+  name?: string | null;
+  description?: string | null;
+  price?: unknown;
+  sortOrder?: unknown;
+  isActive?: boolean;
+  isDefault?: boolean;
+  sku?: string | null;
+  itemPriceOverrides?: unknown[];
+};
+
+type CategoryModifier = {
+  id: string;
+  name?: string | null;
+  priceDelta?: unknown;
+};
+
+type CategoryModifierGroup = {
+  id: string;
+  name?: string | null;
+  description?: string | null;
+  minSelect?: unknown;
+  maxSelect?: unknown;
+  selectionType?: string | null;
+  modifiers?: CategoryModifier[];
+};
+
+type CategoryDetails = {
+  id: string;
+  name?: string | null;
+  description?: string | null;
+  slug?: string | null;
+  imageUrl?: string | null;
+  isActive?: boolean;
+  sortOrder?: unknown;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  parent?: { name?: string | null } | null;
+  items?: CategoryItem[];
+  variations?: CategoryVariation[];
+  modifierGroups?: CategoryModifierGroup[];
+  children?: { id?: string }[];
+  _count?: { items?: number; children?: number };
+};
 
 export default function CategoryDetailsPage() {
   const router = useRouter();
@@ -27,11 +92,8 @@ export default function CategoryDetailsPage() {
   const t = useTranslations("menu.categoryDetails");
   const commonT = useTranslations("common");
   const id = String(params?.id || "");
-
   const { data: response, isLoading } = useGetMenuCategoryById(id);
-
-  const category = response?.data || response;
-
+  const category = (response?.data || response) as CategoryDetails | undefined;
   const items = Array.isArray(category?.items) ? category.items : [];
   const variations = Array.isArray(category?.variations)
     ? category.variations
@@ -40,14 +102,18 @@ export default function CategoryDetailsPage() {
     ? category.modifierGroups
     : [];
   const children = Array.isArray(category?.children) ? category.children : [];
-
-  const itemCount = category?._count?.items ?? items.length ?? 0;
-  const childrenCount = category?._count?.children ?? children.length ?? 0;
+  const itemCount = category?._count?.items ?? items.length;
+  const childrenCount = category?._count?.children ?? children.length;
 
   if (isLoading) {
     return (
       <Container>
-        <CategoryDetailsSkeleton />
+        <PageHeader title={t("title")} description={t("description")} />
+        <StatePanel
+          state="loading"
+          title={commonT("feedback.loading", { subject: t("title") })}
+          description={commonT("feedback.loadingDescription")}
+        />
       </Container>
     );
   }
@@ -55,526 +121,351 @@ export default function CategoryDetailsPage() {
   if (!category?.id) {
     return (
       <Container>
-        <div className="rounded-[20px] bg-white p-8 text-center shadow-sm">
-          <p className="text-gray-500">{t("notFound")}</p>
-
-          <Button
-            variant="outline"
-            onClick={() => router.back()}
-            className="mt-5 rounded-[12px]"
-          >
-            <ArrowLeft size={18} />
-            {commonT("back")}
-          </Button>
-        </div>
+        <PageHeader title={t("title")} description={t("description")} />
+        <StatePanel
+          state="empty"
+          title={t("notFound")}
+          description={t("description")}
+          action={
+            <Button type="button" variant="outline" onClick={() => router.back()}>
+              <ArrowLeft aria-hidden="true" />
+              {commonT("back")}
+            </Button>
+          }
+        />
       </Container>
     );
   }
 
+  const overviewItems = [
+    {
+      id: "slug",
+      icon: <Tags aria-hidden="true" />,
+      label: t("categorySlug"),
+      value: category.slug || t("notConfigured"),
+    },
+    {
+      id: "hierarchy",
+      icon: <ListTree aria-hidden="true" />,
+      label: t("hierarchy"),
+      value: category.parent?.name
+        ? t("childOf", { name: category.parent.name })
+        : childrenCount > 0
+          ? t("childCategories", { count: childrenCount })
+          : t("topLevelCategory"),
+    },
+    {
+      id: "priority",
+      icon: <SlidersHorizontal aria-hidden="true" />,
+      label: t("displayPriority"),
+      value: getPriorityLabel(category.sortOrder, t),
+    },
+    {
+      id: "availability",
+      icon: <CheckCircle2 aria-hidden="true" />,
+      label: t("availability"),
+      value: category.isActive ? t("visibleToCustomers") : t("hidden"),
+    },
+    {
+      id: "created",
+      icon: <CalendarDays aria-hidden="true" />,
+      label: commonT("createdAt"),
+      value: formatDate(category.createdAt),
+    },
+    {
+      id: "updated",
+      icon: <Clock aria-hidden="true" />,
+      label: commonT("updatedAt"),
+      value: formatDate(category.updatedAt),
+    },
+  ];
+
   return (
     <Container>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Header
-          title={t("title")}
-          description={t("description")}
-        />
+      <PageHeader
+        title={t("title")}
+        description={t("description")}
+        actions={
+          <Button type="button" variant="outline" onClick={() => router.back()}>
+            <ArrowLeft aria-hidden="true" />
+            {commonT("back")}
+          </Button>
+        }
+      />
 
-        <Button
-          variant="outline"
-          onClick={() => router.back()}
-          className="h-[44px] rounded-[14px]"
-        >
-          <ArrowLeft size={18} />
-          {commonT("back")}
-        </Button>
-      </div>
+      <DetailLayout
+        summary={
+          <DetailPanel padding="none" className="overflow-hidden">
+            <div className="relative min-h-64 bg-[var(--ui-surface-subtle)]">
+              {category.imageUrl ? (
+                <Image
+                  src={category.imageUrl}
+                  alt={category.name || t("imageAlt")}
+                  fill
+                  unoptimized
+                  sizes="(max-width: 1280px) 100vw, 1200px"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-64 items-center justify-center">
+                  <Package aria-hidden="true" className="size-14 text-[var(--ui-text-subtle)]" />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-6">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <StatusBadge tone={category.isActive ? "success" : "neutral"}>
+                    {category.isActive ? commonT("active") : commonT("inactive")}
+                  </StatusBadge>
+                  <StatusBadge className="border-white/25 bg-white/15 text-white">
+                    /{category.slug || t("noSlug")}
+                  </StatusBadge>
+                </div>
+                <h2 className="text-2xl font-semibold sm:text-3xl">
+                  {category.name || t("unnamedCategory")}
+                </h2>
+                <p className="mt-2 max-w-[760px] text-sm text-white/90">
+                  {category.description || t("noDescriptionAvailable")}
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4 sm:p-5">
+              <PromotionStatCard
+                icon={<Package aria-hidden="true" />}
+                label={t("menuItems")}
+                value={itemCount}
+              />
+              <PromotionStatCard
+                icon={<SlidersHorizontal aria-hidden="true" />}
+                label={t("variations")}
+                value={variations.length}
+              />
+              <PromotionStatCard
+                icon={<Layers aria-hidden="true" />}
+                label={t("modifierGroups")}
+                value={modifierGroups.length}
+              />
+              <PromotionStatCard
+                icon={<ListTree aria-hidden="true" />}
+                label={t("subCategories")}
+                value={childrenCount}
+              />
+            </div>
+          </DetailPanel>
+        }
+        aside={
+          <>
+            <DetailPanel title={t("overview")}>
+              <InfoList items={overviewItems} columns={1} />
+            </DetailPanel>
 
-      <div className="mt-6 overflow-hidden rounded-[24px] bg-white shadow-sm">
-        <div className="relative h-[280px] bg-gray-100">
-          {category.imageUrl ? (
-            <img
-              src={category.imageUrl}
-              alt={category.name || t("imageAlt")}
-              className="h-full w-full object-cover"
-            />
+            <DetailPanel title={t("menuItems")}>
+              {items.length === 0 ? (
+                <StatePanel
+                  compact
+                  state="empty"
+                  title={t("emptyMenuItems")}
+                  description=""
+                />
+              ) : (
+                <div className="space-y-3">
+                  {items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex min-w-0 items-center gap-3 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] p-3"
+                    >
+                      <div className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-[var(--ui-radius-control)] bg-[var(--ui-surface-subtle)]">
+                        {item.imageUrl ? (
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.name || t("unnamedItem")}
+                            fill
+                            unoptimized
+                            sizes="44px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <Utensils aria-hidden="true" className="size-4 text-[var(--ui-text-subtle)]" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-[var(--ui-text)]">
+                          {item.name || t("unnamedItem")}
+                        </p>
+                        <p className="truncate text-xs text-[var(--ui-text-muted)]">
+                          /{item.slug || t("noSlug")}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-sm font-semibold text-[var(--ui-text)]">
+                          {formatPrice(item.basePrice)}
+                        </p>
+                        <StatusBadge
+                          size="sm"
+                          tone={item.isActive ? "success" : "neutral"}
+                        >
+                          {item.isActive ? commonT("active") : commonT("inactive")}
+                        </StatusBadge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </DetailPanel>
+          </>
+        }
+      >
+        <DetailPanel title={t("variations")}>
+          {variations.length === 0 ? (
+            <StatePanel compact state="empty" title={t("emptyVariations")} description="" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-[#F9FAFB]">
-              <Package size={54} className="text-gray-300" />
+            <div className="grid gap-4 md:grid-cols-2">
+              {variations.map((variation) => (
+                <div
+                  key={variation.id}
+                  className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="truncate text-base font-semibold text-[var(--ui-text)]">
+                        {variation.name || t("unnamedVariation")}
+                      </h3>
+                      <p className="mt-1 line-clamp-2 text-sm text-[var(--ui-text-muted)]">
+                        {variation.description || commonT("noData")}
+                      </p>
+                    </div>
+                    <StatusBadge
+                      size="sm"
+                      tone={variation.isActive ? "success" : "neutral"}
+                    >
+                      {variation.isActive ? commonT("active") : commonT("inactive")}
+                    </StatusBadge>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <MiniMetric label={t("basePrice")} value={formatPrice(variation.price)} />
+                    <MiniMetric
+                      label={t("priority")}
+                      value={getPriorityLabel(variation.sortOrder, t)}
+                    />
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {variation.isDefault ? (
+                      <StatusBadge tone="info" size="sm">
+                        {t("defaultVariation")}
+                      </StatusBadge>
+                    ) : null}
+                    <StatusBadge size="sm">
+                      {t("sku")}: {variation.sku || t("notAvailable")}
+                    </StatusBadge>
+                    <StatusBadge size="sm">
+                      {t("itemOverrides")}: {variation.itemPriceOverrides?.length ?? 0}
+                    </StatusBadge>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
+        </DetailPanel>
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10" />
-
-          <div className="absolute bottom-6 left-6 right-6 text-white">
-            <div className="mb-3 flex flex-wrap gap-2">
-              <StatusBadge active={category.isActive} />
-
-              <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur">
-                /{category.slug || t("noSlug")}
-              </span>
-
-              <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur">
-                {t("priority")}: {getPriorityLabel(category.sortOrder, t)}
-              </span>
-            </div>
-
-            <h1 className="text-3xl font-semibold">
-              {category.name || t("unnamedCategory")}
-            </h1>
-
-            <p className="mt-2 max-w-[760px] text-sm text-white/90">
-              {category.description || t("noDescriptionAvailable")}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid gap-4 p-6 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            icon={<Package size={20} />}
-            label={t("menuItems")}
-            value={itemCount}
-          />
-          <StatCard
-            icon={<SlidersHorizontal size={20} />}
-            label={t("variations")}
-            value={variations.length}
-          />
-          <StatCard
-            icon={<Layers size={20} />}
-            label={t("modifierGroups")}
-            value={modifierGroups.length}
-          />
-          <StatCard
-            icon={<ListTree size={20} />}
-            label={t("subCategories")}
-            value={childrenCount}
-          />
-        </div>
-      </div>
-
-      <div className="mt-6 grid gap-6 xl:grid-cols-[0.9fr,1.4fr]">
-        <div className="space-y-6">
-          <SectionCard title={t("overview")}>
+        <DetailPanel title={t("modifierGroups")}>
+          {modifierGroups.length === 0 ? (
+            <StatePanel compact state="empty" title={t("emptyModifierGroups")} description="" />
+          ) : (
             <div className="space-y-4">
-              <InfoTile
-                icon={<Tags size={18} />}
-                label={t("categorySlug")}
-                value={category.slug || t("notConfigured")}
-              />
-
-              <InfoTile
-                icon={<ListTree size={18} />}
-                label={t("hierarchy")}
-                value={
-                  category.parent?.name
-                    ? t("childOf", { name: category.parent.name })
-                    : childrenCount > 0
-                    ? t("childCategories", { count: childrenCount })
-                    : t("topLevelCategory")
-                }
-              />
-
-              <InfoTile
-                icon={<SlidersHorizontal size={18} />}
-                label={t("displayPriority")}
-                value={getPriorityLabel(category.sortOrder, t)}
-              />
-
-              <InfoTile
-                icon={<CheckCircle2 size={18} />}
-                label={t("availability")}
-                value={category.isActive ? t("visibleToCustomers") : t("hidden")}
-              />
-
-              <InfoTile
-                icon={<CalendarDays size={18} />}
-                label={commonT("createdAt")}
-                value={formatDate(category.createdAt)}
-              />
-
-              <InfoTile
-                icon={<Clock size={18} />}
-                label={commonT("updatedAt")}
-                value={formatDate(category.updatedAt)}
-              />
-            </div>
-          </SectionCard>
-
-          <SectionCard title={t("menuItems")}>
-            {items.length === 0 ? (
-              <EmptyState message={t("emptyMenuItems")} />
-            ) : (
-              <div className="space-y-3">
-                {items.map((item: any) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-3 rounded-[14px] border border-gray-100 bg-[#F9FAFB] p-3"
-                  >
-                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-[12px] bg-white">
-                      {item.imageUrl ? (
-                        <img
-                          src={item.imageUrl}
-                          alt={item.name}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <Utensils size={18} className="text-gray-300" />
+              {modifierGroups.map((group) => (
+                <div
+                  key={group.id}
+                  className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] p-4"
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h3 className="font-semibold text-[var(--ui-text)]">
+                        {group.name || t("unnamedGroup")}
+                      </h3>
+                      <p className="mt-1 text-sm text-[var(--ui-text-muted)]">
+                        {group.description || commonT("noData")}
+                      </p>
+                    </div>
+                    <StatusBadge
+                      size="sm"
+                      tone={Number(group.minSelect ?? 0) > 0 ? "info" : "neutral"}
+                    >
+                      {Number(group.minSelect ?? 0) > 0
+                        ? t("required")
+                        : commonT("optional")}
+                    </StatusBadge>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <MiniMetric label={t("minSelect")} value={Number(group.minSelect ?? 0)} />
+                    <MiniMetric label={t("maxSelect")} value={Number(group.maxSelect ?? 0)} />
+                    <MiniMetric label={t("selectionType")} value={group.selectionType || "MULTIPLE"} />
+                    <MiniMetric label={t("modifiers")} value={group.modifiers?.length ?? 0} />
+                  </div>
+                  {group.modifiers?.length ? (
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                      {group.modifiers.map((modifier) => (
+                        <div
+                          key={modifier.id}
+                          className="rounded-[var(--ui-radius-control)] bg-[var(--ui-surface-subtle)] px-3 py-2"
+                        >
+                          <p className="text-sm font-medium text-[var(--ui-text)]">
+                            {modifier.name || t("unnamedModifier")}
+                          </p>
+                          <p className="text-xs text-[var(--ui-text-muted)]">
+                            {t("priceDelta")}: {formatPrice(modifier.priceDelta)}
+                          </p>
                         </div>
-                      )}
+                      ))}
                     </div>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-gray-900">
-                        {item.name || t("unnamedItem")}
-                      </p>
-                      <p className="truncate text-xs text-gray-500">
-                        /{item.slug || t("noSlug")}
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-gray-900">
-                        {formatPrice(item.basePrice)}
-                      </p>
-                      <StatusDot active={item.isActive} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionCard>
-        </div>
-
-        <div className="space-y-6">
-          <SectionCard title={t("variations")}>
-            {variations.length === 0 ? (
-              <EmptyState message={t("emptyVariations")} />
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {variations.map((variation: any) => (
-                  <div
-                    key={variation.id}
-                    className="rounded-[16px] border border-gray-200 bg-white p-4 shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="truncate text-base font-semibold text-gray-900">
-                          {variation.name || t("unnamedVariation")}
-                        </h3>
-                        <p className="mt-1 line-clamp-2 text-sm text-gray-500">
-                          {variation.description || commonT("noData")}
-                        </p>
-                      </div>
-
-                      <StatusBadge active={variation.isActive} compact />
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                      <MiniMetric
-                        label={t("basePrice")}
-                        value={formatPrice(variation.price)}
-                      />
-                      <MiniMetric
-                        label={t("priority")}
-                        value={getPriorityLabel(variation.sortOrder, t)}
-                      />
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {variation.isDefault ? (
-                        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                          {t("defaultVariation")}
-                        </span>
-                      ) : null}
-
-                      <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
-                        {t("sku")}: {variation.sku || t("notAvailable")}
-                      </span>
-
-                      <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
-                        {t("itemOverrides")}:{" "}
-                        {Array.isArray(variation.itemPriceOverrides)
-                          ? variation.itemPriceOverrides.length
-                          : 0}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionCard>
-
-          <SectionCard title={t("modifierGroups")}>
-            {modifierGroups.length === 0 ? (
-              <EmptyState message={t("emptyModifierGroups")} />
-            ) : (
-              <div className="space-y-4">
-                {modifierGroups.map((group: any) => (
-                  <div
-                    key={group.id}
-                    className="rounded-[18px] border border-gray-200 p-4"
-                  >
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
-                          {group.name || t("unnamedGroup")}
-                        </h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                          {group.description || commonT("noData")}
-                        </p>
-                      </div>
-
-                      <span
-                        className={`w-fit rounded-full px-3 py-1 text-xs font-medium ${
-                          Number(group.minSelect ?? 0) > 0
-                            ? "bg-primary/10 text-primary"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {Number(group.minSelect ?? 0) > 0
-                          ? t("required")
-                          : commonT("optional")}
-                      </span>
-                    </div>
-
-                    <div className="mt-4 grid gap-3 sm:grid-cols-4">
-                      <MiniMetric label={t("minSelect")} value={group.minSelect ?? 0} />
-                      <MiniMetric label={t("maxSelect")} value={group.maxSelect ?? 0} />
-                      <MiniMetric
-                        label={t("selectionType")}
-                        value={group.selectionType || "MULTIPLE"}
-                      />
-                      <MiniMetric
-                        label={t("modifiers")}
-                        value={group.modifiers?.length ?? 0}
-                      />
-                    </div>
-
-                    {group.modifiers?.length ? (
-                      <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                        {group.modifiers.map((modifier: any) => (
-                          <div
-                            key={modifier.id}
-                            className="rounded-[12px] bg-[#F9FAFB] px-3 py-2"
-                          >
-                            <p className="text-sm font-medium text-gray-900">
-                              {modifier.name || t("unnamedModifier")}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {t("priceDelta")}: {formatPrice(modifier.priceDelta)}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="mt-4 rounded-[12px] border border-dashed border-gray-200 p-4 text-sm text-gray-500">
-                        {t("noModifiersInsideGroup")}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionCard>
-        </div>
-      </div>
+                  ) : (
+                    <StatePanel
+                      compact
+                      state="empty"
+                      title={t("noModifiersInsideGroup")}
+                      description=""
+                      className="mt-4"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </DetailPanel>
+      </DetailLayout>
     </Container>
   );
 }
 
-function CategoryDetailsSkeleton() {
+function MiniMetric({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-3">
-          <div className="h-8 w-[240px] animate-pulse rounded bg-gray-200" />
-          <div className="h-4 w-[340px] animate-pulse rounded bg-gray-100" />
-        </div>
-        <div className="h-11 w-[100px] animate-pulse rounded-[14px] bg-gray-200" />
-      </div>
-
-      <div className="overflow-hidden rounded-[24px] bg-white shadow-sm">
-        <div className="h-[280px] animate-pulse bg-gray-200" />
-
-        <div className="grid gap-4 p-6 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div
-              key={index}
-              className="rounded-[18px] border border-gray-100 bg-[#F9FAFB] p-5"
-            >
-              <div className="mb-4 h-10 w-10 animate-pulse rounded-[12px] bg-gray-200" />
-              <div className="h-7 w-16 animate-pulse rounded bg-gray-200" />
-              <div className="mt-3 h-4 w-24 animate-pulse rounded bg-gray-100" />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[0.9fr,1.4fr]">
-        {Array.from({ length: 2 }).map((_, index) => (
-          <div
-            key={index}
-            className="rounded-[20px] bg-white p-6 shadow-sm"
-          >
-            <div className="h-6 w-40 animate-pulse rounded bg-gray-200" />
-            <div className="mt-6 space-y-4">
-              {Array.from({ length: 5 }).map((_, rowIndex) => (
-                <div
-                  key={rowIndex}
-                  className="h-16 animate-pulse rounded-[14px] bg-gray-100"
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+    <div className="rounded-[var(--ui-radius-control)] bg-[var(--ui-surface-subtle)] p-3">
+      <p className="text-xs text-[var(--ui-text-subtle)]">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-[var(--ui-text)]">{value}</p>
     </div>
   );
 }
 
-function SectionCard({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="rounded-[20px] bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-      <div className="mt-5">{children}</div>
-    </div>
-  );
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string | number;
-}) {
-  return (
-    <div className="rounded-[18px] border border-gray-100 bg-[#F9FAFB] p-5">
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[12px] bg-primary/10 text-primary">
-        {icon}
-      </div>
-      <p className="text-2xl font-semibold text-gray-900">{value}</p>
-      <p className="mt-1 text-sm text-gray-500">{label}</p>
-    </div>
-  );
-}
-
-function InfoTile({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: ReactNode;
-}) {
-  return (
-    <div className="flex gap-3 rounded-[14px] border border-gray-100 bg-[#F9FAFB] p-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-white text-primary">
-        {icon}
-      </div>
-
-      <div className="min-w-0">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-          {label}
-        </p>
-        <p className="mt-1 truncate text-sm font-semibold text-gray-900">
-          {value || "-"}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function MiniMetric({
-  label,
-  value,
-}: {
-  label: string;
-  value: ReactNode;
-}) {
-  return (
-    <div className="rounded-[12px] bg-[#F9FAFB] p-3">
-      <p className="text-xs text-gray-400">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-gray-900">{value}</p>
-    </div>
-  );
-}
-
-function EmptyState({ message }: { message: string }) {
-  return (
-    <div className="rounded-[16px] border border-dashed border-gray-200 bg-[#F9FAFB] p-6 text-center text-sm text-gray-500">
-      {message}
-    </div>
-  );
-}
-
-function StatusBadge({
-  active,
-  compact = false,
-}: {
-  active?: boolean;
-  compact?: boolean;
-}) {
-  const commonT = useTranslations("common");
-
-  return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-medium ${
-        active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
-      } ${compact ? "shrink-0" : ""}`}
-    >
-      {active ? commonT("active") : commonT("inactive")}
-    </span>
-  );
-}
-
-function StatusDot({ active }: { active?: boolean }) {
-  const commonT = useTranslations("common");
-
-  return (
-    <p
-      className={`mt-1 text-xs font-medium ${
-        active ? "text-green-600" : "text-gray-400"
-      }`}
-    >
-      {active ? commonT("active") : commonT("inactive")}
-    </p>
-  );
-}
-
-function formatDate(value?: string) {
-  if (!value) return "-";
-
+function formatDate(value?: string | null) {
+  if (!value) return "—";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-
+  if (Number.isNaN(date.getTime())) return "—";
   return formatDateTime24({ value: date });
 }
 
-function formatPrice(value: any) {
+function formatPrice(value: unknown) {
   const amount = Number(value ?? 0);
-
   if (Number.isNaN(amount)) return "0";
-
   return amount.toLocaleString(undefined, {
     minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
     maximumFractionDigits: 2,
   });
 }
 
-function getPriorityLabel(value: any, t: ReturnType<typeof useTranslations>) {
+function getPriorityLabel(
+  value: unknown,
+  t: ReturnType<typeof useTranslations>,
+) {
   const order = Number(value ?? 0);
-
   if (order === 0) return t("topPriority");
   if (order <= 10) return t("highPriority");
   if (order <= 50) return t("mediumPriority");

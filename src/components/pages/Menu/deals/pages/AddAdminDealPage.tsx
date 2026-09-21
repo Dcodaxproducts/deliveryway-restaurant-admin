@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 
-import Container from "@/components/common/Container";
 import AdminDealForm, {
   type AdminDealFormBranchOption,
 } from "@/components/pages/Menu/deals/components/AdminDealForm";
@@ -67,20 +66,16 @@ export default function AddAdminDealPage() {
   };
 
   return (
-    <Container>
-      <div className="rounded-lg bg-white shadow-sm">
-        <AdminDealForm
-          title={t("addTitle")}
-          restaurantId={restaurantId}
-          branchId={branchId}
-          isBranchAdmin={isBranchAdmin}
-          branchOptions={branchOptions}
-          submitting={createMutation.isPending}
-          submitLabel={t("createDeal")}
-          onCancel={() => router.push("/menu/deals")}
-          onSubmit={handleSubmit}
-        />
-      </div>
-    </Container>
+    <AdminDealForm
+      title={t("addTitle")}
+      restaurantId={restaurantId}
+      branchId={branchId}
+      isBranchAdmin={isBranchAdmin}
+      branchOptions={branchOptions}
+      submitting={createMutation.isPending}
+      submitLabel={t("createDeal")}
+      onCancel={() => router.push("/menu/deals")}
+      onSubmit={handleSubmit}
+    />
   );
 }

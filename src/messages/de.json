@@ -300,9 +300,14 @@
       "faqs": "FAQs"
     },
     "resultsTitle": "Suchergebnisse",
+    "resultsDescription": "Durchsuchen Sie den aktuellen Restaurant-Arbeitsbereich.",
     "showingResults": "Ergebnisse für „{query}“ werden angezeigt",
+    "minimumTitle": "Suchbegriff eingeben",
     "minimumCharacters": "Geben Sie mindestens 2 Zeichen ein, um zu suchen.",
-    "temporaryUnavailableWithPeriod": "Die Suche ist vorübergehend nicht verfügbar."
+    "searchingDescription": "Bestellungen, Menüs, Kunden, Filialen, Mitarbeiter und Aktionen werden durchsucht.",
+    "temporaryUnavailableWithPeriod": "Die Suche ist vorübergehend nicht verfügbar.",
+    "retry": "Suche wiederholen",
+    "noResultsDescription": "Keine Einträge im Arbeitsbereich stimmen mit „{query}“ überein."
   },
   "auth": {
     "welcomeTitle": "Willkommen bei FeastFlow",
@@ -2834,6 +2839,10 @@
     }
   },
   "settings": {
+    "globalSettingsTitle": "Globale Einstellungen",
+    "globalSettingsDescription": "Plattformweite Standardeinstellungen konfigurieren.",
+    "unsavedChanges": "Nicht gespeicherte Storefront-Änderungen",
+    "brandingSynced": "Storefront-Einstellungen sind synchronisiert",
     "storefrontTitle": "Storefront-Einstellungen",
     "storefrontDescription": "Restaurantprofil, Branding, Assets, Supportkontakt und kundenorientiertes Erscheinungsbild verwalten.",
     "homepageSections": "Startseitenbereiche",
@@ -3316,13 +3325,56 @@
   },
   "restaurants": {
     "title": "Restaurants",
-    "description": "Alle Restaurants hier anzeigen und verwalten"
+    "description": "Alle Restaurants hier anzeigen und verwalten",
+    "addTitle": "Restaurant hinzufügen",
+    "addDescription": "Restaurants werden außerhalb des Filial-Admin-Dashboards angelegt."
   },
   "faqs": {
     "question": "Frage",
     "answer": "Antwort",
     "category": "Kategorie",
-    "visibility": "Sichtbarkeit"
+    "visibility": "Sichtbarkeit",
+    "managerTitle": "FAQ-Verwaltung",
+    "managerDescription": "Verwalten Sie häufig gestellte Fragen zu Bestellungen, Zahlungen, Lieferung und Restaurant-Richtlinien.",
+    "addTitle": "FAQ hinzufügen",
+    "editTitle": "FAQ bearbeiten",
+    "loadingDetail": "FAQ-Details werden geladen...",
+    "contentTitle": "FAQ-Inhalt",
+    "contentDescription": "Formulieren Sie eine kurze Kundenfrage und eine klare, hilfreiche Antwort.",
+    "questionPlaceholder": "z. B. Wie kann ich meine Bestellung in Echtzeit verfolgen?",
+    "selectCategory": "Kategorie auswählen",
+    "answerPlaceholder": "Geben Sie hier eine ausführliche Antwort ein...",
+    "previewTitle": "Live-Vorschau",
+    "previewDescription": "Prüfen Sie, wie der FAQ-Inhalt für Kunden dargestellt wird.",
+    "previewPlaceholder": "Ihre Frage wird hier angezeigt.",
+    "publishingTitle": "Veröffentlichung",
+    "published": "Veröffentlicht",
+    "draft": "Entwurf",
+    "statusToggle": "FAQ-Veröffentlichungsstatus umschalten",
+    "visibleToAll": "Für alle sichtbar",
+    "visibleToAllDescription": "Für alle Kunden öffentlich zugänglich.",
+    "loggedInOnly": "Nur angemeldete Benutzer",
+    "loggedInOnlyDescription": "Auf authentifizierte Kunden beschränkt.",
+    "editorialTipTitle": "Redaktioneller Tipp",
+    "editorialTipDescription": "Halten Sie Fragen kurz und verwenden Sie direkte Sprache, damit Kunden Antworten schnell erfassen können.",
+    "saveChanges": "Änderungen speichern",
+    "saveDraft": "Als Entwurf speichern",
+    "updateFaq": "FAQ aktualisieren",
+    "publishFaq": "FAQ veröffentlichen",
+    "editorToolbar": "Formatierungswerkzeuge für Antworten",
+    "editorTools": {
+      "bold": "Fett",
+      "italic": "Kursiv",
+      "list": "Liste",
+      "link": "Link",
+      "image": "Bild"
+    },
+    "categories": {
+      "orders": "Bestellungen",
+      "delivery": "Lieferung",
+      "payments": "Zahlungen",
+      "policy": "Richtlinie"
+    }
   },
   "notifications": {
     "title": "Benachrichtigungen",

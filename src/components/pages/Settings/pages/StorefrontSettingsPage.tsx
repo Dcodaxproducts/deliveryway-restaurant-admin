@@ -8,22 +8,23 @@ import { toast } from "sonner";
 import { BadgeCheck, Clock3, Globe2, LockKeyhole } from "lucide-react";
 
 import Container from "@/components/common/Container";
-import Header from "@/components/common/PageHeader";
+import { StatePanel } from "@/components/common/EmptyState";
+import { FormActions } from "@/components/common/FormLayout";
+import PageHeader from "@/components/common/PageHeader";
 import RestaurantPicker from "@/components/common/RestaurantPicker";
+import { SettingsLayout } from "@/components/common/SettingsLayout";
 import BrandAssetsSection from "@/components/pages/Settings/theme/components/theme-settings/brand-assets-section";
 import {
-  BRANDING_DESTRUCTIVE_BUTTON_CLASS,
   BRANDING_ERROR_CLASS,
   BRANDING_INPUT_CLASS,
   BRANDING_LABEL_CLASS,
   BRANDING_PANEL_CLASS,
-  BRANDING_PRIMARY_BUTTON_CLASS,
-  BRANDING_SECONDARY_BUTTON_CLASS,
   BRANDING_SECTION_TITLE_CLASS,
 } from "@/components/pages/Settings/theme/components/theme-settings/branding-form-classes";
 import ColorSchemeSection from "@/components/pages/Settings/theme/components/theme-settings/color-scheme-section";
 import PreviewSection from "@/components/pages/Settings/theme/components/theme-settings/preview-section";
 import TypographySection from "@/components/pages/Settings/theme/components/theme-settings/typography-section";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -282,52 +283,69 @@ export function StorefrontSettingsPage() {
 
   return (
     <Container>
-      <Header
+      <PageHeader
         title={t("storefrontTitle")}
         description={t("storefrontDescription")}
       />
       <RestaurantPicker />
       {brandingError ? (
-        <p className="rounded-[12px] border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {brandingError}
-        </p>
+        <StatePanel
+          compact
+          state="error"
+          title={t("brandingSaveFailed")}
+          description={brandingError}
+        />
       ) : null}
-      <form className="space-y-8" noValidate onSubmit={handleSubmit(onSubmit)}>
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <button
-            type="button"
-            className={BRANDING_SECONDARY_BUTTON_CLASS}
-            disabled={!isBrandingReady || isBrandingBusy}
-            onClick={handleApplyPreview}
-          >
-            {t("applyPreview")}
-          </button>
-          {hasUnsavedChanges ? (
-            <button
-              type="button"
-              className={BRANDING_SECONDARY_BUTTON_CLASS}
-              disabled={!isBrandingReady || isBrandingBusy}
-              onClick={handleDiscardChanges}
-            >
-              {t("discardChanges")}
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className={BRANDING_DESTRUCTIVE_BUTTON_CLASS}
-            disabled={!isBrandingReady || isBrandingBusy}
-            onClick={handleResetBranding}
-          >
-            {common("reset")}
-          </button>
-          <button
-            type="submit"
-            className={BRANDING_PRIMARY_BUTTON_CLASS}
-            disabled={!isBrandingReady || isBrandingBusy}
-          >
-            {isBrandingSaving ? common("saving") : t("saveBranding")}
-          </button>
-        </div>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
+        <SettingsLayout
+          status={hasUnsavedChanges ? t("unsavedChanges") : t("brandingSynced")}
+          actions={
+            <FormActions
+              sticky
+              destructive={
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={!isBrandingReady || isBrandingBusy}
+                  onClick={handleResetBranding}
+                >
+                  {common("reset")}
+                </Button>
+              }
+              secondary={
+                <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!isBrandingReady || isBrandingBusy}
+                    onClick={handleApplyPreview}
+                  >
+                    {t("applyPreview")}
+                  </Button>
+                  {hasUnsavedChanges ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={!isBrandingReady || isBrandingBusy}
+                      onClick={handleDiscardChanges}
+                    >
+                      {t("discardChanges")}
+                    </Button>
+                  ) : null}
+                </div>
+              }
+              primary={
+                <Button
+                  type="submit"
+                  disabled={!isBrandingReady || isBrandingBusy}
+                >
+                  {isBrandingSaving ? common("saving") : t("saveBranding")}
+                </Button>
+              }
+            />
+          }
+        >
+          <div className="space-y-8">
 
         <div className={BRANDING_PANEL_CLASS}>
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -456,7 +474,9 @@ export function StorefrontSettingsPage() {
           values={watchedValues}
           getError={getError}
         />
-        <PreviewSection values={watchedValues} />
+            <PreviewSection values={watchedValues} />
+          </div>
+        </SettingsLayout>
       </form>
     </Container>
   );

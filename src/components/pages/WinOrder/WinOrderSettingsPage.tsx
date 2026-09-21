@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import Container from "@/components/common/Container";
 import PageHeader from "@/components/common/PageHeader";
+import { PageTabs } from "@/components/common/PageTabs";
+import { SettingsLayout } from "@/components/common/SettingsLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileUploadControl } from "@/components/ui/file-upload-control";
@@ -36,6 +38,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentScope } from "@/hooks/useCurrentScope";
 import { useGetBranches } from "@/hooks/useBranches";
+import { API_BASE_URL } from "@/lib/constants";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
   isInvalidWinOrderStoreId,
@@ -64,6 +67,9 @@ import {
 
 type Tab = "connection" | "mappings" | "health";
 type BranchOption = { id: string; name: string };
+
+class WinOrderValidationError extends Error {}
+
 type CatalogDraft = Record<
   string,
   {
@@ -276,9 +282,11 @@ export default function WinOrderSettingsPage() {
     mutationFn: async (
       action: "save" | "create" | "rotate" | "toggle" | "retry",
     ) => {
-      if (!selectedBranchId) throw new Error(t("selectBranch"));
+      if (!selectedBranchId) throw new WinOrderValidationError(t("selectBranch"));
       if (action === "create") {
-        if (invalidStoreId) throw new Error(t("storeIdInvalid"));
+        if (invalidStoreId) {
+          throw new WinOrderValidationError(t("storeIdInvalid"));
+        }
         return createWinOrderConnection({
           branchId: selectedBranchId,
           ...(parsedStoreId === null ? {} : { storeId: parsedStoreId }),
@@ -294,7 +302,9 @@ export default function WinOrderSettingsPage() {
       }
       if (action === "retry")
         return retryFailedWinOrderExports(selectedBranchId);
-      if (invalidStoreId) throw new Error(t("storeIdInvalid"));
+      if (invalidStoreId) {
+        throw new WinOrderValidationError(t("storeIdInvalid"));
+      }
       await updateWinOrderConnection(selectedBranchId, {
         storeId: parsedStoreId,
         storeName: storeName || undefined,
@@ -341,10 +351,7 @@ export default function WinOrderSettingsPage() {
       toast.error(getApiErrorMessage(error, t("failed"))),
   });
 
-  const endpointBase = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(
-    /\/$/,
-    "",
-  );
+  const endpointBase = API_BASE_URL.replace(/\/$/, "");
   const endpoint = `${endpointBase}${connection?.endpointPath ?? "/winorder"}`;
   const oneTimeEndpoint = `${endpointBase}${oneTimeCredentials?.endpointPath ?? "/winorder"}`;
   const missingCount = catalogComparison?.missingNames.length ?? 0;
@@ -353,29 +360,34 @@ export default function WinOrderSettingsPage() {
 
   return (
     <Container className="max-w-[1440px]">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <PageHeader title={t("title")} description={t("description")} />
-        <div className="min-w-0 lg:w-[360px]">
-          <Label htmlFor="winorder-branch">{t("branch")}</Label>
-          <FormSelect
-            id="winorder-branch"
-            value={selectedBranchId}
-            onChange={(event) => {
-              setSelectedBranchId(event.target.value);
-              setOneTimeCredentials(null);
-            }}
-            disabled={scope.isBranchAdmin}
-            className="mt-2 h-[52px] w-full rounded-[var(--brand-radius)] border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring/30"
-          >
-            <option value="">{t("selectBranch")}</option>
-            {branches.map((branch) => (
-              <option key={branch.id} value={branch.id}>
-                {branch.name}
-              </option>
-            ))}
-          </FormSelect>
-        </div>
-      </div>
+      <PageHeader
+        title={t("title")}
+        description={t("description")}
+        actions={
+          <div className="min-w-0 sm:w-[320px]">
+            <Label htmlFor="winorder-branch">{t("branch")}</Label>
+            <FormSelect
+              id="winorder-branch"
+              value={selectedBranchId}
+              onChange={(event) => {
+                setSelectedBranchId(event.target.value);
+                setOneTimeCredentials(null);
+              }}
+              disabled={scope.isBranchAdmin}
+              className="mt-2 w-full"
+            >
+              <option value="">{t("selectBranch")}</option>
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
+            </FormSelect>
+          </div>
+        }
+      />
+
+      <SettingsLayout>
 
       <section
         className="grid gap-3 md:grid-cols-3"
@@ -426,17 +438,14 @@ export default function WinOrderSettingsPage() {
         </Card>
       ) : null}
 
-      <div className="flex w-full gap-1 overflow-x-auto rounded-xl border bg-muted/40 p-1">
-        {(["connection", "mappings", "health"] as Tab[]).map((item) => (
-          <button
-            key={item}
-            onClick={() => setTab(item)}
-            className={`min-h-11 flex-1 rounded-lg px-4 text-sm font-medium transition-colors ${tab === item ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            {t(item)}
-          </button>
-        ))}
-      </div>
+      <PageTabs
+        value={tab}
+        options={(["connection", "mappings", "health"] as const).map(
+          (item) => ({ value: item, label: t(item) }),
+        )}
+        onValueChange={setTab}
+        ariaLabel={t("title")}
+      />
 
       {!selectedBranchId ? <EmptyNotice text={t("selectBranchHelp")} /> : null}
       {selectedBranchId && tab === "connection" ? (
@@ -766,6 +775,7 @@ export default function WinOrderSettingsPage() {
       <p className="text-xs text-muted-foreground">
         {t("signedInAs", { email: user?.email ?? "—" })}
       </p>
+      </SettingsLayout>
     </Container>
   );
 }

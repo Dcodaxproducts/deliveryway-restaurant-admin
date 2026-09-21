@@ -1,12 +1,21 @@
+"use client";
+
 import Container from "@/components/common/Container";
-import Header from "@/components/common/PageHeader";
+import { StatePanel } from "@/components/common/EmptyState";
+import PageHeader from "@/components/common/PageHeader";
+import { useTranslations } from "next-intl";
 
 const AddRestaurant = () => {
+  const feedback = useTranslations("common.feedback");
+  const t = useTranslations("restaurants");
+
   return (
     <Container>
-      <Header
-        title="Add Restaurant"
-        description="Restaurant creation is handled outside the branch-admin dashboard."
+      <PageHeader title={t("addTitle")} description={t("addDescription")} />
+      <StatePanel
+        state="unavailable"
+        title={feedback("unavailable", { subject: t("title") })}
+        description={feedback("restaurantUnavailableDescription")}
       />
     </Container>
   );
