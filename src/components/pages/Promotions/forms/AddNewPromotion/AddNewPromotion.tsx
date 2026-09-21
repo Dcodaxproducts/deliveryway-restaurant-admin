@@ -56,6 +56,7 @@ const defaultValues: PromotionFormValues = {
   title: "",
   description: "",
   audience: "BOTH",
+  allowedOrderTypes: ["DELIVERY", "TAKEAWAY", "DINE_IN"],
   thumbnailUrl: "",
   discountType: "FLAT",
   discountValue: "",
@@ -185,6 +186,14 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
         detail.audience === "GUEST" || detail.audience === "REGISTERED"
           ? detail.audience
           : "BOTH",
+      allowedOrderTypes: Array.isArray(detail.allowedOrderTypes)
+        ? detail.allowedOrderTypes.filter(
+            (orderType): orderType is "DELIVERY" | "TAKEAWAY" | "DINE_IN" =>
+              orderType === "DELIVERY" ||
+              orderType === "TAKEAWAY" ||
+              orderType === "DINE_IN",
+          )
+        : ["DELIVERY", "TAKEAWAY", "DINE_IN"],
       thumbnailUrl: getString(detail, "thumbnailUrl") ?? "",
       discountType:
         detail.discountType === "PERCENTAGE" ? "PERCENTAGE" : "FLAT",
@@ -283,6 +292,7 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
       title: values.title.trim(),
       description: values.description.trim(),
       audience: values.audience,
+      allowedOrderTypes: values.allowedOrderTypes,
       ...(thumbnailUrl ? { thumbnailUrl } : {}),
       restaurantId,
       branchId: selectedBranchId || undefined,
@@ -438,6 +448,53 @@ export function AddNewPromotion({ promotionId }: AddNewPromotionProps) {
                   <option value="GUEST">{t("forms.audienceGuests")}</option>
                 </select>
                 <p className={MUTED_TEXT_SM_CLASS}>{t("forms.audienceHelp")}</p>
+              </div>
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="allowedOrderTypes"
+            render={({ field, fieldState }) => (
+              <div className="space-y-3">
+                <div>
+                  <Label>{t("forms.eligibleOrderTypes")}</Label>
+                  <p className={MUTED_TEXT_SM_CLASS}>
+                    {t("forms.eligibleOrderTypesHelp")}
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {(
+                    [
+                      ["DELIVERY", t("forms.orderTypeDelivery")],
+                      ["TAKEAWAY", t("forms.orderTypePickup")],
+                      ["DINE_IN", t("forms.orderTypeDineIn")],
+                    ] as const
+                  ).map(([orderType, label]) => (
+                    <label
+                      key={orderType}
+                      className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-800 transition hover:border-primary/40"
+                    >
+                      <Checkbox
+                        checked={field.value.includes(orderType)}
+                        onCheckedChange={(checked) => {
+                          const nextValue = checked
+                            ? [...field.value, orderType]
+                            : field.value.filter(
+                                (value) => value !== orderType,
+                              );
+                          field.onChange(nextValue);
+                        }}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+                {fieldState.error?.message ? (
+                  <p className={FIELD_ERROR_CLASS}>
+                    {t("validation.orderTypeRequired")}
+                  </p>
+                ) : null}
               </div>
             )}
           />

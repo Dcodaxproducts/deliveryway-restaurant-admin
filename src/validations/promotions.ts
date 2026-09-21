@@ -5,6 +5,7 @@ import { thumbnailUrlSchema } from "@/validations/thumbnail-url";
 
 const discountTypeSchema = z.enum(["FLAT", "PERCENTAGE"]);
 const applyModeSchema = z.enum(["ORDER_TOTAL", "SCOPED_ITEMS"]);
+const orderTypeSchema = z.enum(["DELIVERY", "TAKEAWAY", "DINE_IN"]);
 
 const optionalStringSchema = z.string();
 const positiveNumberStringSchema = (message: string) =>
@@ -37,6 +38,10 @@ export const promotionSchema = z
     title: z.string().trim().min(1, "Offer title is required."),
     description: optionalStringSchema,
     audience: z.enum(["GUEST", "REGISTERED", "BOTH"]).default("BOTH"),
+    allowedOrderTypes: z
+      .array(orderTypeSchema)
+      .min(1, "Please select at least one order type.")
+      .default(["DELIVERY", "TAKEAWAY", "DINE_IN"]),
     thumbnailUrl: thumbnailUrlSchema.optional().default(""),
     discountType: discountTypeSchema,
     discountValue: positiveNumberStringSchema("Discount value is required."),
