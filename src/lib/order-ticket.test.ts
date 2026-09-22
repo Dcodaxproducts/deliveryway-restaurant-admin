@@ -115,6 +115,30 @@ describe("order ticket", () => {
     expect(html).not.toContain("PRE-ORDER / VORBESTELLUNG");
   });
 
+  it("prints grouped deal items as deal components", () => {
+    const ticket = normalizeOrderTicket({
+      id: "deal-order",
+      items: [{ menuItemName: "Ignored raw item", quantity: 1 }],
+      displayItems: [
+        {
+          type: "DEAL",
+          dealId: "deal-1",
+          items: [
+            { menuItemName: "Pizza", quantity: 1 },
+            { menuItemName: "Cola", quantity: 2 },
+          ],
+        },
+      ],
+    });
+
+    expect(ticket.items).toEqual([
+      expect.objectContaining({ name: "Pizza", dealLabel: "Deal" }),
+      expect.objectContaining({ name: "Cola", dealLabel: undefined }),
+    ]);
+    expect(buildOrderTicketHtml(ticket, "80MM")).toContain("DEAL: Deal");
+    expect(buildOrderTicketEscPos(ticket, "80MM")).toContain("DEAL: Deal");
+  });
+
   it.each([
     ["A4", "190mm"],
     ["A5", "132mm"],

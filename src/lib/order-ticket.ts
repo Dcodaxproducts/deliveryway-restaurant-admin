@@ -7,6 +7,7 @@ type TicketModifier = {
 
 type TicketItem = {
   name: string;
+  dealLabel?: string;
   variationName?: string;
   quantity: number;
   lineTotal?: number;
@@ -113,16 +114,43 @@ const normalizeModifiers = (value: unknown): TicketModifier[] => {
   });
 };
 
-const normalizeItems = (value: unknown): TicketItem[] =>
+const normalizeItems = (
+  value: unknown,
+  fallbackDealLabel = "Deal",
+): TicketItem[] =>
   Array.isArray(value)
     ? value.flatMap((entry) => {
         const item = asRecord(entry);
+        const itemType = readString(item, "type")?.toUpperCase();
+        const includedItems = Array.isArray(item?.items)
+          ? item.items
+          : item?.includedItems;
+        if (itemType === "DEAL" || Array.isArray(includedItems)) {
+          const dealLabel =
+            readString(item, "name") ??
+            readString(item, "menuItemName") ??
+            fallbackDealLabel;
+          const normalizedIncludedItems = normalizeItems(
+            includedItems,
+            fallbackDealLabel,
+          );
+
+          return normalizedIncludedItems.map((includedItem, index) => ({
+            ...includedItem,
+            dealLabel: index === 0 ? dealLabel : undefined,
+          }));
+        }
         const name =
           readString(item, "name") ?? readString(item, "menuItemName");
+        const selections = asRecord(item?.snapshotModifiers);
+        const dealLabel = readString(selections, "dealId")
+          ? fallbackDealLabel
+          : undefined;
         return name
           ? [
               {
                 name,
+                dealLabel,
                 variationName: readString(item, "variationName"),
                 quantity: readNumber(item, "quantity", 1) ?? 1,
                 lineTotal: readNumber(item, "lineTotal"),
@@ -197,11 +225,14 @@ export const normalizeOrderTicket = (value: unknown): OrderTicket => {
     totalAmount: readNumber(order, "totalAmount"),
     currency: readString(order, "currency"),
     items: normalizeItems(
-      Array.isArray(order.items) && order.items.length > 0
-        ? order.items
-        : Array.isArray(order.itemsPreview) && order.itemsPreview.length > 0
-          ? order.itemsPreview
-          : order.displayItems,
+      Array.isArray(order.displayItems) && order.displayItems.length > 0
+        ? order.displayItems
+        : Array.isArray(order.items) && order.items.length > 0
+          ? order.items
+          : Array.isArray(order.itemsPreview) && order.itemsPreview.length > 0
+            ? order.itemsPreview
+            : [],
+      "Deal",
     ),
   };
 };
@@ -227,6 +258,9 @@ export const buildOrderTicketHtml = (
     }).format(value)} ${escapeHtml(ticket.currency ?? "")}`.trim();
   const itemRows = ticket.items
     .map((item) => {
+      const dealBanner = item.dealLabel
+        ? `<div style="border:1px solid #000;padding:4px 6px;margin:0 0 6px;font-weight:700">DEAL: ${escapeHtml(item.dealLabel)}</div>`
+        : "";
       const variation = item.variationName
         ? ` <span style="font-weight:400">(${escapeHtml(item.variationName)})</span>`
         : "";
@@ -245,7 +279,7 @@ export const buildOrderTicketHtml = (
       const note = item.note
         ? `<div style="padding-left:12px;font-weight:700">Special instructions: ${escapeHtml(item.note)}</div>`
         : "";
-      return `<div style="margin:0 0 8px">${lineTotal}<strong>${item.quantity} × ${escapeHtml(item.name)}</strong>${variation}${modifiers}${note}</div>`;
+      return `${dealBanner}<div style="margin:0 0 8px">${lineTotal}<strong>${item.quantity} × ${escapeHtml(item.name)}</strong>${variation}${modifiers}${note}</div>`;
     })
     .join("");
   const total =
@@ -407,6 +441,11 @@ export const buildOrderTicketEscPos = (
   }
 
   for (const item of ticket.items) {
+    if (item.dealLabel) {
+      for (const line of wrapText(`DEAL: ${item.dealLabel}`, columns)) {
+        lines.push(`${ESC}E\x01${line}${ESC}E\x00\n`);
+      }
+    }
     const itemLabel = `${item.quantity} x ${item.name}${item.variationName ? ` (${item.variationName})` : ""}`;
     for (const line of wrapText(itemLabel, columns)) {
       lines.push(`${ESC}E\x01${line}${ESC}E\x00\n`);
