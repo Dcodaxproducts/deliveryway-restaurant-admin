@@ -1,6 +1,36 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+.auth-viewport-card {
+  transform-origin: center;
+}
+
+@media (max-height: 950px) {
+  .auth-viewport-card--tall {
+    transform: scale(0.9);
+  }
+}
+
+@media (max-height: 800px) {
+  .auth-viewport-card {
+    transform: scale(0.9);
+  }
+
+  .auth-viewport-card--tall {
+    transform: scale(0.8);
+  }
+}
+
+@media (max-height: 680px) {
+  .auth-viewport-card {
+    transform: scale(0.74);
+  }
+
+  .auth-viewport-card--tall {
+    transform: scale(0.68);
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {

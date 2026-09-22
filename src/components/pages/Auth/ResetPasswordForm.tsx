@@ -99,7 +99,7 @@ const ResetPasswordForm = () => {
 
   return (
     <AuthPageShell>
-      <AuthCard>
+      <AuthCard className="auth-viewport-card--tall">
         <AuthBrand />
         <div className="mb-5 mt-7 flex justify-center">
           <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/[0.09] text-primary">
