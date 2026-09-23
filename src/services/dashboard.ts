@@ -11,6 +11,10 @@ export type DashboardFilterParams = {
   branchId?: string;
 };
 
+export type DashboardOrdersStatsParams = DashboardFilterParams & {
+  kind?: "order" | "group-orders";
+};
+
 export type DashboardTrendParams = DashboardFilterParams & {
   range?: string;
   from?: string;
@@ -33,12 +37,11 @@ export type DashboardTopRestaurantsParams = DashboardFilterParams & {
 
 // Restaurant / branch admin overview cards
 export const getRestaurantDashboardOverview = async (
-  params?: DashboardFilterParams
+  params?: DashboardFilterParams,
 ) => {
-  const { data } = await api.get(
-    "/admin/dashboard/restaurant/overview",
-    { params }
-  );
+  const { data } = await api.get("/admin/dashboard/restaurant/overview", {
+    params,
+  });
   return data;
 };
 
@@ -50,10 +53,9 @@ export const getSuperAdminDashboardOverview = async () => {
 
 // Super-admin restaurant trend graph
 export const getRestaurantsTrend = async (params?: DashboardTrendParams) => {
-  const { data } = await api.get(
-    "/admin/dashboard/restaurants/trend",
-    { params }
-  );
+  const { data } = await api.get("/admin/dashboard/restaurants/trend", {
+    params,
+  });
   return data;
 };
 
@@ -74,7 +76,7 @@ export const getRevenueTrend = async (params?: DashboardTrendParams) => {
 };
 
 // Order stats summary cards
-export const getOrdersStats = async (params?: DashboardFilterParams) => {
+export const getOrdersStats = async (params?: DashboardOrdersStatsParams) => {
   const { data } = await api.get("/admin/dashboard/orders/stats", {
     params,
   });
@@ -107,7 +109,7 @@ export const getEmployeesStats = async (params?: DashboardFilterParams) => {
 
 // System alerts
 export const getDashboardSystemAlerts = async (
-  params?: DashboardFilterParams
+  params?: DashboardFilterParams,
 ) => {
   const { data } = await api.get("/admin/dashboard/system-alerts", {
     params,
@@ -117,7 +119,7 @@ export const getDashboardSystemAlerts = async (
 
 // Recent activity
 export const getDashboardRecentActivity = async (
-  params?: DashboardRecentActivityParams
+  params?: DashboardRecentActivityParams,
 ) => {
   const { data } = await api.get("/admin/dashboard/recent-activity", {
     params,
@@ -127,11 +129,11 @@ export const getDashboardRecentActivity = async (
 
 // Top-performing restaurants
 export const getTopPerformingRestaurants = async (
-  params?: DashboardTopRestaurantsParams
+  params?: DashboardTopRestaurantsParams,
 ) => {
   const { data } = await api.get(
     "/admin/dashboard/restaurants/top-performing",
-    { params }
+    { params },
   );
   return data;
 };

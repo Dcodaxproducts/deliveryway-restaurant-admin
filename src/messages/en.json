@@ -481,6 +481,8 @@
     "statusLabel": "Status",
     "actions": "Actions",
     "loading": "Loading orders...",
+    "statsLoadError": "Order statistics could not be loaded. The order list is still available.",
+    "retryStats": "Retry statistics",
     "emptyTitle": "Looks like there are no orders yet!",
     "emptyDescription": "You haven’t received any orders yet.",
     "updateStatusTitle": "Update Order Status",

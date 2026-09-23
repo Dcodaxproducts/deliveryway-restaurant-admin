@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   DashboardFilterParams,
+  DashboardOrdersStatsParams,
   DashboardRecentActivityParams,
   DashboardTopRestaurantsParams,
   DashboardTrendParams,
@@ -25,7 +26,7 @@ import {
  */
 
 export const useGetRestaurantDashboardOverview = (
-  params?: DashboardFilterParams
+  params?: DashboardFilterParams,
 ) => {
   return useQuery({
     queryKey: [
@@ -90,15 +91,20 @@ export const useGetRevenueTrend = (params?: DashboardTrendParams) => {
   });
 };
 
-export const useGetOrdersStats = (params?: DashboardFilterParams) => {
+export const useGetOrdersStats = (
+  params?: DashboardOrdersStatsParams,
+  options?: { enabled?: boolean },
+) => {
   return useQuery({
     queryKey: [
       "dashboard",
       "orders-stats",
       params?.restaurantId,
       params?.branchId,
+      params?.kind,
     ],
     queryFn: () => getOrdersStats(params),
+    enabled: options?.enabled ?? true,
   });
 };
 
@@ -138,9 +144,7 @@ export const useGetEmployeesStats = (params?: DashboardFilterParams) => {
   });
 };
 
-export const useGetDashboardSystemAlerts = (
-  params?: DashboardFilterParams
-) => {
+export const useGetDashboardSystemAlerts = (params?: DashboardFilterParams) => {
   return useQuery({
     queryKey: [
       "dashboard",
@@ -153,7 +157,7 @@ export const useGetDashboardSystemAlerts = (
 };
 
 export const useGetDashboardRecentActivity = (
-  params?: DashboardRecentActivityParams
+  params?: DashboardRecentActivityParams,
 ) => {
   return useQuery({
     queryKey: [
@@ -168,7 +172,7 @@ export const useGetDashboardRecentActivity = (
 };
 
 export const useGetTopPerformingRestaurants = (
-  params?: DashboardTopRestaurantsParams
+  params?: DashboardTopRestaurantsParams,
 ) => {
   return useQuery({
     queryKey: [
