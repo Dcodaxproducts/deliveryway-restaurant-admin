@@ -437,6 +437,8 @@
     "statusLabel": "Status",
     "actions": "Aktionen",
     "loading": "Bestellungen werden geladen...",
+    "statsLoadError": "Die Bestellstatistiken konnten nicht geladen werden. Die Bestellliste ist weiterhin verfügbar.",
+    "retryStats": "Statistiken erneut laden",
     "emptyTitle": "Es sind noch keine Bestellungen vorhanden.",
     "emptyDescription": "Sie haben noch keine Bestellungen erhalten.",
     "updateStatusTitle": "Bestellstatus aktualisieren",

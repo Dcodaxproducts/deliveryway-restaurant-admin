@@ -16,11 +16,13 @@ import PaginationSection from "@/components/common/pagination";
 import { sortData } from "@/lib/sort-data";
 import { useOrders } from "@/hooks/useOrders";
 import { useGetOrdersReport } from "@/hooks/useReports";
+import { useGetOrdersStats } from "@/hooks/useDashboard";
 import { useCurrency } from "@/hooks/useCurrency";
 import {
   buildOrderStats,
   canRequestOrdersReport,
   getOrdersHeaderContent,
+  shouldUseOrderManagementStats,
   type OrderTab,
 } from "@/components/pages/orders/utils/orders-page.helpers";
 import {
@@ -115,6 +117,11 @@ export function OrdersPage() {
     isStaff: isStaffRole(user?.role, user?.actorType),
     restaurantId: scopedRestaurantId,
   });
+  const useOrderManagementStats = shouldUseOrderManagementStats({
+    activeTab,
+    status,
+    scheduleFilter,
+  });
   const orderReportQuery = useGetOrdersReport(
     {
       restaurantId: scopedRestaurantId,
@@ -125,9 +132,20 @@ export function OrdersPage() {
       excludeStatus,
       ...reportDateRange,
     },
-    { enabled: canRequestOrderReport },
+    { enabled: canRequestOrderReport && !useOrderManagementStats },
   );
-  const orderStats = orderReportQuery.data?.data;
+  const orderManagementStatsQuery = useGetOrdersStats(
+    {
+      restaurantId: scopedRestaurantId,
+      branchId: scopedBranchId,
+      kind: "order",
+    },
+    { enabled: canRequestOrderReport && useOrderManagementStats },
+  );
+  const activeStatsQuery = useOrderManagementStats
+    ? orderManagementStatsQuery
+    : orderReportQuery;
+  const orderStats = activeStatsQuery.data?.data;
   const dynamicStats = buildOrderStats(orderStats, t, currency);
 
   const ordersQuery = useOrders({
@@ -214,9 +232,26 @@ export function OrdersPage() {
       <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6">
         <StatsSection
           stats={dynamicStats}
-          loading={orderReportQuery.isLoading || orderReportQuery.isFetching}
+          loading={activeStatsQuery.isLoading || activeStatsQuery.isFetching}
           className="xl:grid-cols-3 2xl:grid-cols-6"
         />
+
+        {activeStatsQuery.isError ? (
+          <div
+            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            role="alert"
+          >
+            <span>{t("statsLoadError")}</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void activeStatsQuery.refetch()}
+            >
+              {t("retryStats")}
+            </Button>
+          </div>
+        ) : null}
 
         <div className="flex items-center gap-0 flex-wrap text-sm lg:text-base">
           <TabButton

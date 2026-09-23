@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { buildOrderStats, canRequestOrdersReport } from "./orders-page.helpers";
+import {
+  buildOrderStats,
+  canRequestOrdersReport,
+  shouldUseOrderManagementStats,
+} from "./orders-page.helpers";
 
 describe("buildOrderStats", () => {
   it("renders confirmed full-order COD and digital totals in configured currency", () => {
@@ -56,6 +60,28 @@ describe("canRequestOrdersReport", () => {
       canRequestOrdersReport({
         isStaff: false,
         restaurantId: undefined,
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("shouldUseOrderManagementStats", () => {
+  it("uses the order-management endpoint for the unfiltered all-orders view", () => {
+    expect(
+      shouldUseOrderManagementStats({
+        activeTab: "all",
+        status: "ALL",
+        scheduleFilter: "ALL",
+      }),
+    ).toBe(true);
+  });
+
+  it("keeps filtered views on the report endpoint", () => {
+    expect(
+      shouldUseOrderManagementStats({
+        activeTab: "all",
+        status: "CONFIRMED",
+        scheduleFilter: "ALL",
       }),
     ).toBe(false);
   });

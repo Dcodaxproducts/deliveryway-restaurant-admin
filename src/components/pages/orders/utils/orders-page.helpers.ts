@@ -32,6 +32,16 @@ export const canRequestOrdersReport = ({
   restaurantId?: string;
 }) => Boolean(restaurantId || isStaff);
 
+export const shouldUseOrderManagementStats = ({
+  activeTab,
+  status,
+  scheduleFilter,
+}: {
+  activeTab: OrderTab;
+  status: string;
+  scheduleFilter: string;
+}) => activeTab === "all" && status === "ALL" && scheduleFilter === "ALL";
+
 type StatusCount = {
   key?: string;
   status?: string;
@@ -39,9 +49,8 @@ type StatusCount = {
 };
 
 const countByStatus = (list: StatusCount[] | undefined, status: string) =>
-  list?.find(
-    (item) => (item.status ?? item.key)?.toUpperCase() === status,
-  )?.count ?? 0;
+  list?.find((item) => (item.status ?? item.key)?.toUpperCase() === status)
+    ?.count ?? 0;
 
 type Translate = (
   key: string,
