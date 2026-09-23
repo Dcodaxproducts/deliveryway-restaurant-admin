@@ -119,44 +119,44 @@ export function AppShell({ children }: AppShellProps) {
 
   if (loading || !user || !token) {
     return (
-      <div
+      <SidebarProvider
         role="status"
         aria-label="Loading workspace"
-        className="min-h-[100dvh] bg-[var(--ui-canvas)]"
+        className="bg-[var(--ui-canvas)]"
       >
-        <div className="flex h-[76px] items-center gap-4 border-b border-[var(--ui-border)] bg-[var(--ui-surface)] px-5 md:pl-[19rem]">
-          <Skeleton className="h-10 min-w-0 flex-1 rounded-[var(--ui-radius-control)] sm:max-w-lg" />
-          <Skeleton className="hidden h-10 w-48 rounded-[var(--ui-radius-control)] md:block" />
-          <Skeleton className="h-10 w-10 rounded-full" />
-        </div>
-        <div className="flex min-h-[calc(100dvh-76px)]">
-          <aside
-            data-slot="sidebar-loading-skeleton"
-            className="hidden w-72 shrink-0 border-r border-[var(--ui-border)] bg-[var(--ui-surface)] p-4 md:block"
-          >
-            <div className="mb-8 flex items-center gap-3">
-              <Skeleton className="size-10 rounded-[var(--ui-radius-control)]" />
-              <div className="min-w-0 flex-1 space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-16" />
+        <aside
+          data-slot="sidebar-loading-skeleton"
+          className="hidden h-svh w-(--sidebar-width) shrink-0 border-r border-[var(--ui-border)] bg-[var(--ui-surface)] p-4 md:block"
+        >
+          <div className="mb-8 flex items-center gap-3">
+            <Skeleton className="size-10 rounded-[var(--ui-radius-control)]" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
+          <Skeleton className="mb-3 h-3 w-20" />
+          <div className="space-y-2">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="flex h-10 items-center gap-3 px-2">
+                <Skeleton className="size-5 rounded-md" />
+                <Skeleton
+                  className={index % 3 === 0 ? "h-4 w-36" : "h-4 w-28"}
+                />
               </div>
-            </div>
-            <Skeleton className="mb-3 h-3 w-20" />
-            <div className="space-y-2">
-              {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="flex h-10 items-center gap-3 px-2">
-                  <Skeleton className="size-5 rounded-md" />
-                  <Skeleton
-                    className={index % 3 === 0 ? "h-4 w-36" : "h-4 w-28"}
-                  />
-                </div>
-              ))}
-            </div>
-          </aside>
+            ))}
+          </div>
+        </aside>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex h-[67px] shrink-0 items-center gap-4 border-b border-[var(--ui-border)] bg-[var(--ui-surface)] px-5">
+            <Skeleton className="h-10 min-w-0 flex-1 rounded-[var(--ui-radius-control)] sm:max-w-lg" />
+            <Skeleton className="hidden h-10 w-48 rounded-[var(--ui-radius-control)] md:block" />
+            <Skeleton className="h-10 w-10 rounded-full" />
+          </div>
           <WorkspaceLoadingContent pathname={pathname} />
         </div>
         <span className="sr-only">Loading workspace</span>
-      </div>
+      </SidebarProvider>
     );
   }
 

@@ -67,10 +67,18 @@ describe("AppShell authentication boundary", () => {
     });
 
     const markup = renderShell();
+    const loadingSidebar = markup.match(
+      /<aside[^>]*data-slot="sidebar-loading-skeleton"[^>]*>/,
+    )?.[0];
 
     expect(markup).not.toContain("protected-dashboard");
     expect(markup).toContain('aria-label="Loading workspace"');
     expect(markup).toContain('data-slot="sidebar-loading-skeleton"');
+    expect(markup).toContain("--sidebar-width:16rem");
+    expect(markup).toContain("w-(--sidebar-width)");
+    expect(markup).toContain("h-[67px]");
+    expect(loadingSidebar).not.toContain("w-72");
+    expect(markup).not.toContain("md:pl-[19rem]");
     expect(markup).toContain('data-layout="dashboard"');
     expect(markup.match(/h-\[88px\]/g)).toHaveLength(5);
     expect(markup).toContain("animate-pulse");
