@@ -184,15 +184,15 @@ export default function Home() {
       ) : null}
       {overview ? (
         <StatsSection stats={statsData} />
+      ) : statsLoading ? (
+        <StatsSection stats={statsData} loading />
       ) : !isError ? (
         <StatePanel
-          state={statsLoading ? "loading" : "unavailable"}
-          title={feedbackT(statsLoading ? "loading" : "unavailable", {
+          state="unavailable"
+          title={feedbackT("unavailable", {
             subject: feedbackT("subjects.overview"),
           })}
-          description={feedbackT(
-            statsLoading ? "loadingDescription" : "unavailableDescription",
-          )}
+          description={feedbackT("unavailableDescription")}
           compact
         />
       ) : null}

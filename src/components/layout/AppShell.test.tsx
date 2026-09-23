@@ -71,6 +71,8 @@ describe("AppShell authentication boundary", () => {
     expect(markup).not.toContain("protected-dashboard");
     expect(markup).toContain('aria-label="Loading workspace"');
     expect(markup).toContain('data-slot="sidebar-loading-skeleton"');
+    expect(markup).toContain('data-layout="dashboard"');
+    expect(markup.match(/h-\[88px\]/g)).toHaveLength(5);
     expect(markup).toContain("animate-pulse");
   });
 
@@ -107,6 +109,33 @@ describe("AppShell authentication boundary", () => {
     expect(markup).toContain("protected-dashboard");
     expect(markup).toContain('data-slot="sidebar-wrapper"');
     expect(markup).toContain('data-slot="sidebar-inset"');
+  });
+
+  it("uses table-shaped loading geometry for collection routes", () => {
+    vi.mocked(usePathname).mockReturnValue("/orders");
+    vi.mocked(useAuth).mockReturnValue({
+      ...authenticatedState,
+      loading: true,
+    });
+
+    const markup = renderShell();
+
+    expect(markup).toContain('data-layout="list"');
+    expect(markup).toContain("min-h-16");
+    expect(markup).not.toContain('data-layout="dashboard"');
+  });
+
+  it("uses form-shaped loading geometry for edit routes", () => {
+    vi.mocked(usePathname).mockReturnValue("/branches/branch-1/edit");
+    vi.mocked(useAuth).mockReturnValue({
+      ...authenticatedState,
+      loading: true,
+    });
+
+    const markup = renderShell();
+
+    expect(markup).toContain('data-layout="detail"');
+    expect(markup).toContain("xl:grid-cols-[minmax(0,1fr)_20rem]");
   });
 
   it("keeps public authentication pages visible without a session", () => {

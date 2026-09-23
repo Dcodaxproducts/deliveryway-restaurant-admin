@@ -241,7 +241,7 @@ describe.each(lists)("$name feedback", ({ name, render, row, text, retry }) => {
   });
 });
 
-describe.each(metrics)("$name metrics", ({ render, component, retry, data }) => {
+describe.each(metrics)("$name metrics", ({ name, render, component, retry, data }) => {
   it("does not render fabricated zero cards on a failed initial request", () => {
     harness.stats.isError = true;
     const tree = run(render);
@@ -255,8 +255,15 @@ describe.each(metrics)("$name metrics", ({ render, component, retry, data }) => 
   it.each(["loading", "unavailable"])("uses canonical %s for missing metrics", (state) => {
     harness.stats.isLoading = state === "loading";
     const tree = run(render);
-    expect(nodes(tree).some((node) => node.type === component)).toBe(false);
-    expect(feedback(tree)).toContain(`data-state="${state}"`);
+    if (name === "overview" && state === "loading") {
+      const cards = element<{ loading?: boolean }>(tree, component);
+      expect(cards.props.loading).toBe(true);
+      expect(renderToStaticMarkup(cards).match(/data-slot="stat-card"/g)).toHaveLength(5);
+      expect(feedback(tree)).not.toContain('data-state="loading"');
+    } else {
+      expect(nodes(tree).some((node) => node.type === component)).toBe(false);
+      expect(feedback(tree)).toContain(`data-state="${state}"`);
+    }
   });
 
   it("renders valid zero metrics as data", () => {
@@ -455,7 +462,7 @@ describe.each(["en", "de"] as const)("%s introduced feedback translations", (loc
     if (locale === "de") expect(markup).not.toMatch(/Unable to|Showing the last|Please try again|Retry /);
   });
 
-  it.each(metrics)("localizes $name metric failure, cached, loading and unavailable states", ({ name, render, data }) => {
+  it.each(metrics)("localizes $name metric failure, cached, loading and unavailable states", ({ name, render, data, component }) => {
     const subject = t(`subjects.${name === "customers" ? "customerMetrics" : name === "deliverymen" ? "deliverymanMetrics" : "overview"}`);
     harness.stats.isError = true;
     let tree = run(render);
@@ -472,8 +479,14 @@ describe.each(["en", "de"] as const)("%s introduced feedback translations", (loc
       harness.stats.isLoading = loading;
       tree = run(render);
       const markup = feedback(tree);
-      expect(markup).toContain(t(loading ? "loading" : "unavailable", { subject }));
-      expect(markup).toContain(t(loading && name === "overview" ? "loadingDescription" : "unavailableDescription"));
+      if (loading && name === "overview") {
+        const cards = element<{ loading?: boolean }>(tree, component);
+        expect(cards.props.loading).toBe(true);
+        expect(markup).not.toContain('data-state="loading"');
+      } else {
+        expect(markup).toContain(t(loading ? "loading" : "unavailable", { subject }));
+        expect(markup).toContain(t("unavailableDescription"));
+      }
       if (locale === "de") expect(markup).not.toMatch(/Loading |Unavailable:|Data will appear/);
     }
   });

@@ -15,6 +15,94 @@ type AppShellProps = {
   children: ReactNode;
 };
 
+const DETAIL_ROUTE_PATTERN =
+  /\/(?:add|create|edit|settings|profile)(?:\/|$)|\/(?:branches|orders|customers|deliverymen)\/[^/]+$/;
+
+export function WorkspaceLoadingContent({ pathname }: { pathname: string }) {
+  const isDashboard = pathname === "/";
+  const isDetail = DETAIL_ROUTE_PATTERN.test(pathname);
+
+  return (
+    <main
+      data-slot="workspace-loading-content"
+      data-layout={isDashboard ? "dashboard" : isDetail ? "detail" : "list"}
+      className="mx-auto w-full max-w-[var(--ui-content-admin)] space-y-6 p-[var(--ui-page-gutter)] lg:py-6"
+    >
+      <div className="space-y-2">
+        <Skeleton className="h-7 w-56 max-w-[70vw]" />
+        <Skeleton className="h-4 w-[32rem] max-w-full" />
+      </div>
+
+      {isDashboard ? (
+        <>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 lg:gap-4">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                className="h-[88px] rounded-[var(--ui-radius-card)]"
+              />
+            ))}
+          </div>
+          <section className="space-y-4">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-52" />
+              <Skeleton className="h-4 w-72 max-w-full" />
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="space-y-3 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-5"
+                >
+                  <Skeleton className="h-5 w-44 max-w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-4/5" />
+                  <Skeleton className="mt-4 h-9 w-32 rounded-[var(--ui-radius-control)]" />
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      ) : isDetail ? (
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="space-y-5 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-5">
+            <Skeleton className="h-6 w-44" />
+            <Skeleton className="h-11 w-full rounded-[var(--ui-radius-control)]" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Skeleton className="h-11 rounded-[var(--ui-radius-control)]" />
+              <Skeleton className="h-11 rounded-[var(--ui-radius-control)]" />
+            </div>
+            <Skeleton className="h-28 w-full rounded-[var(--ui-radius-control)]" />
+          </div>
+          <Skeleton className="h-64 rounded-[var(--ui-radius-card)]" />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Skeleton className="h-10 min-w-0 flex-1 rounded-[var(--ui-radius-control)]" />
+            <Skeleton className="h-10 w-full rounded-[var(--ui-radius-control)] sm:w-36" />
+          </div>
+          <div className="overflow-hidden rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-surface)]">
+            <Skeleton className="h-11 w-full rounded-none" />
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="grid min-h-16 grid-cols-[minmax(0,1fr)_6rem] items-center gap-4 border-t border-[var(--ui-border)] px-4"
+              >
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-48 max-w-[70%]" />
+                  <Skeleton className="h-3 w-32 max-w-[55%]" />
+                </div>
+                <Skeleton className="ml-auto h-7 w-20 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}
+
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const hideLayout = isPublicRoute(pathname);
@@ -65,17 +153,7 @@ export function AppShell({ children }: AppShellProps) {
               ))}
             </div>
           </aside>
-          <div className="mx-auto w-full max-w-[var(--ui-content-admin)] space-y-6 p-[var(--ui-page-gutter)] lg:py-6">
-            <Skeleton className="h-20 max-w-xl rounded-[var(--ui-radius-card)]" />
-            <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  className="h-32 rounded-[var(--ui-radius-card)]"
-                />
-              ))}
-            </div>
-          </div>
+          <WorkspaceLoadingContent pathname={pathname} />
         </div>
         <span className="sr-only">Loading workspace</span>
       </div>
