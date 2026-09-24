@@ -32,6 +32,10 @@ import {
 } from "@/services/legal-profile";
 import { getDisplayName } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import {
+  reconcileLegalProfileDraft,
+  type LegalProfileDraftState,
+} from "./legal-profile-draft";
 
 const toPayload = (profile: LegalProfile): LegalProfilePayload => ({
   legalBusinessName: profile.legalBusinessName.trim(),
@@ -62,15 +66,14 @@ export function LegalProfilePage() {
   const t = useTranslations("legalProfile");
   const commonT = useTranslations("common");
   const { user, restaurantId, isBranchAdmin, loading: authLoading } = useAuth();
-  const [draftProfile, setDraftProfile] = useState<LegalProfile>(
-    createEmptyLegalProfile()
-  );
-  const [loadedRestaurantId, setLoadedRestaurantId] = useState<string>();
+  const [draftState, setDraftState] = useState<LegalProfileDraftState>({});
+  const { draftProfile, loadedRestaurantId } = draftState;
 
   const {
     data: savedProfile,
     isLoading,
     isFetching,
+    isError,
     refetch,
   } = useLegalProfile(restaurantId);
   const { mutateAsync: saveLegalProfile, isPending: isSaving } =
@@ -78,14 +81,22 @@ export function LegalProfilePage() {
 
   const loading = authLoading || isLoading;
   const canEdit = Boolean(restaurantId) && !isBranchAdmin;
+  const activeDraftProfile =
+    loadedRestaurantId === restaurantId ? draftProfile : undefined;
+  const displayedProfile =
+    activeDraftProfile ?? createEmptyLegalProfile(restaurantId);
+  const formDisabled = !canEdit || loading || !activeDraftProfile;
   const savedPayload = useMemo(
     () => toPayload(savedProfile ?? createEmptyLegalProfile(restaurantId)),
     [restaurantId, savedProfile]
   );
-  const draftPayload = useMemo(() => toPayload(draftProfile), [draftProfile]);
-  const isDirty =
+  const draftPayload = useMemo(
+    () => toPayload(displayedProfile),
+    [displayedProfile]
+  );
+  const isDirty = Boolean(activeDraftProfile) &&
     JSON.stringify(draftPayload) !== JSON.stringify(savedPayload);
-  const addressPreview = formatAddressPreview(draftProfile);
+  const addressPreview = formatAddressPreview(displayedProfile);
   const ownerName = user ? getDisplayName(user) : "-";
   const completionItems = [
     Boolean(draftPayload.legalBusinessName),
@@ -96,31 +107,50 @@ export function LegalProfilePage() {
   const completionCount = completionItems.filter(Boolean).length;
 
   useEffect(() => {
-    if (!restaurantId || loadedRestaurantId === restaurantId || isLoading) return;
-
-    setDraftProfile(savedProfile ?? createEmptyLegalProfile(restaurantId));
-    setLoadedRestaurantId(restaurantId);
-  }, [isLoading, loadedRestaurantId, restaurantId, savedProfile]);
+    setDraftState((state) =>
+      reconcileLegalProfileDraft({
+        state,
+        restaurantId,
+        savedProfile,
+        isLoading,
+        isError,
+      })
+    );
+  }, [isError, isLoading, restaurantId, savedProfile]);
 
   const updateField = (key: keyof LegalProfilePayload, value: string) => {
-    setDraftProfile((profile) => ({ ...profile, [key]: value }));
+    setDraftState((state) => ({
+      ...state,
+      draftProfile: state.draftProfile
+        ? { ...state.draftProfile, [key]: value }
+        : state.draftProfile,
+    }));
   };
 
   const updateAddressField = (
     key: keyof LegalProfilePayload["businessAddress"],
     value: string
   ) => {
-    setDraftProfile((profile) => ({
-      ...profile,
-      businessAddress: {
-        ...profile.businessAddress,
-        [key]: value,
-      },
+    setDraftState((state) => ({
+      ...state,
+      draftProfile: state.draftProfile
+        ? {
+            ...state.draftProfile,
+            businessAddress: {
+              ...state.draftProfile.businessAddress,
+              [key]: value,
+            },
+          }
+        : state.draftProfile,
     }));
   };
 
   const handleReset = () => {
-    setDraftProfile(savedProfile ?? createEmptyLegalProfile(restaurantId));
+    if (!savedProfile || !restaurantId) return;
+    setDraftState({
+      draftProfile: savedProfile,
+      loadedRestaurantId: restaurantId,
+    });
   };
 
   const handleSave = async () => {
@@ -138,8 +168,10 @@ export function LegalProfilePage() {
       restaurantId,
       payload: draftPayload,
     });
-    setDraftProfile(nextProfile);
-    setLoadedRestaurantId(restaurantId);
+    setDraftState({
+      draftProfile: nextProfile,
+      loadedRestaurantId: restaurantId,
+    });
   };
 
   return (
@@ -184,6 +216,25 @@ export function LegalProfilePage() {
             </Button>
           </div>
         </div>
+
+        {isError ? (
+          <div
+            role="alert"
+            className="flex flex-col gap-3 rounded-2xl border border-[#FDA29B] bg-[#FFFBFA] px-4 py-3 text-sm text-[#B42318] sm:flex-row sm:items-center sm:justify-between"
+          >
+            <span>{t("loadError")}</span>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="h-9 border-[#FDA29B] bg-white text-[#B42318]"
+            >
+              {isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+              {t("retry")}
+            </Button>
+          </div>
+        ) : null}
 
         <div className="grid gap-4 md:grid-cols-3">
           <SummaryCard
@@ -246,17 +297,17 @@ export function LegalProfilePage() {
               <Field
                 id="legal-business-name"
                 label={t("legalBusinessName")}
-                value={draftProfile.legalBusinessName}
+                value={displayedProfile.legalBusinessName}
                 placeholder={t("legalBusinessNamePlaceholder")}
-                disabled={!canEdit || loading}
+                disabled={formDisabled}
                 onChange={(value) => updateField("legalBusinessName", value)}
               />
               <Field
                 id="tax-number"
                 label={t("taxNumber")}
-                value={draftProfile.taxNumber}
+                value={displayedProfile.taxNumber}
                 placeholder={t("taxNumberPlaceholder")}
-                disabled={!canEdit || loading}
+                disabled={formDisabled}
                 onChange={(value) => updateField("taxNumber", value)}
               />
             </div>
@@ -272,41 +323,41 @@ export function LegalProfilePage() {
                 <Field
                   id="business-street"
                   label={t("street")}
-                  value={draftProfile.businessAddress.street}
+                  value={displayedProfile.businessAddress.street}
                   placeholder={t("streetPlaceholder")}
-                  disabled={!canEdit || loading}
+                  disabled={formDisabled}
                   onChange={(value) => updateAddressField("street", value)}
                 />
                 <Field
                   id="business-shop-number"
                   label={t("shopNumber")}
-                  value={draftProfile.businessAddress.shopNumber}
+                  value={displayedProfile.businessAddress.shopNumber}
                   placeholder={t("shopNumberPlaceholder")}
-                  disabled={!canEdit || loading}
+                  disabled={formDisabled}
                   onChange={(value) => updateAddressField("shopNumber", value)}
                 />
                 <Field
                   id="business-state"
                   label={t("state")}
-                  value={draftProfile.businessAddress.state}
+                  value={displayedProfile.businessAddress.state}
                   placeholder={t("statePlaceholder")}
-                  disabled={!canEdit || loading}
+                  disabled={formDisabled}
                   onChange={(value) => updateAddressField("state", value)}
                 />
                 <Field
                   id="business-city"
                   label={t("city")}
-                  value={draftProfile.businessAddress.city}
+                  value={displayedProfile.businessAddress.city}
                   placeholder={t("cityPlaceholder")}
-                  disabled={!canEdit || loading}
+                  disabled={formDisabled}
                   onChange={(value) => updateAddressField("city", value)}
                 />
                 <Field
                   id="business-country"
                   label={t("country")}
-                  value={draftProfile.businessAddress.country}
+                  value={displayedProfile.businessAddress.country}
                   placeholder={t("countryPlaceholder")}
-                  disabled={!canEdit || loading}
+                  disabled={formDisabled}
                   onChange={(value) => updateAddressField("country", value)}
                 />
               </div>
@@ -318,9 +369,9 @@ export function LegalProfilePage() {
               </Label>
               <Textarea
                 id="contract-text"
-                value={draftProfile.contractText}
+                value={displayedProfile.contractText}
                 placeholder={t("contractTextPlaceholder")}
-                disabled={!canEdit || loading}
+                disabled={formDisabled}
                 onChange={(event) => updateField("contractText", event.target.value)}
                 className="min-h-[360px] resize-y rounded-2xl border-[#D0D5DD] bg-white px-5 py-4 text-sm leading-7 text-[#344054] shadow-none focus-visible:ring-[#C1121F]/20 disabled:cursor-not-allowed disabled:bg-[#F9FAFB]"
               />
@@ -333,21 +384,21 @@ export function LegalProfilePage() {
                 {t("customerPreview")}
               </p>
               <h2 className="mt-3 text-xl font-semibold text-[#101828]">
-                {draftProfile.legalBusinessName || t("emptyBusinessName")}
+                {displayedProfile.legalBusinessName || t("emptyBusinessName")}
               </h2>
               <div className="mt-4 space-y-3 text-sm">
                 <PreviewRow label={t("ownerName")} value={ownerName} />
-                <PreviewRow label={t("taxNumber")} value={draftProfile.taxNumber || "-"} />
+                <PreviewRow label={t("taxNumber")} value={displayedProfile.taxNumber || "-"} />
                 <PreviewRow label={t("address")} value={addressPreview || "-"} />
               </div>
               <div className="mt-5 rounded-2xl bg-[#F8F9FB] p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#98A2B3]">
                   {t("contractText")}
                 </p>
-                {draftProfile.contractText.trim() ? (
+                {displayedProfile.contractText.trim() ? (
                   <div
                     className="mt-3 max-h-[360px] overflow-auto text-sm leading-6 text-[#475467] [&_a]:font-semibold [&_a]:text-[#C1121F] [&_h1]:mb-3 [&_h1]:mt-5 [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:leading-tight [&_h1]:text-[#101828] [&_h2]:mb-2 [&_h2]:mt-5 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:text-[#101828] [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-[#101828] [&_li]:my-1 [&_ol]:my-3 [&_ol]:pl-5 [&_p]:mb-3 [&_strong]:text-[#101828] [&_ul]:my-3 [&_ul]:pl-5"
-                    dangerouslySetInnerHTML={{ __html: draftProfile.contractText }}
+                    dangerouslySetInnerHTML={{ __html: displayedProfile.contractText }}
                   />
                 ) : (
                   <p className="mt-2 text-sm leading-6 text-[#475467]">

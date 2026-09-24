@@ -54,7 +54,6 @@ describe("report date range", () => {
         ...summaryPeriod,
         restaurantId: "restaurant-1",
         range,
-        kind: "order",
       });
     },
   );
@@ -77,7 +76,27 @@ describe("report date range", () => {
       branchId: "branch-7",
       ...summaryPeriod,
       range: "monthly",
-      kind: "order",
     });
+  });
+
+  it("keeps mixed standard and group orders in both summary and trend requests", () => {
+    const summaryParams = {
+      restaurantId: "restaurant-1",
+      branchId: "branch-7",
+      ...resolveReportDateRange(
+        "weekly",
+        { from: "2026-09-01", to: "2026-09-14" },
+      ),
+    };
+
+    const trendParams = buildReportTrendParams(
+      summaryParams,
+      summaryParams,
+      "weekly",
+    );
+
+    expect(summaryParams).not.toHaveProperty("kind");
+    expect(trendParams).not.toHaveProperty("kind");
+    expect(trendParams).toMatchObject(summaryParams);
   });
 });
