@@ -22,6 +22,7 @@ import {
   BRANDING_SECTION_TITLE_CLASS,
 } from "@/components/pages/Settings/theme/components/theme-settings/branding-form-classes";
 import ColorSchemeSection from "@/components/pages/Settings/theme/components/theme-settings/color-scheme-section";
+import OrderingOptionsPanel from "@/components/pages/Settings/theme/components/theme-settings/ordering-options-panel";
 import PreviewSection from "@/components/pages/Settings/theme/components/theme-settings/preview-section";
 import TypographySection from "@/components/pages/Settings/theme/components/theme-settings/typography-section";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ import { useBranding } from "@/hooks/useBranding";
 import { buildGeneratedStorefrontUrl } from "@/lib/branding";
 import { API_BASE_URL } from "@/lib/constants";
 import { getApiErrorMessage } from "@/lib/errors";
+import { useAuth } from "@/hooks/useAuth";
 import {
   type BrandingFormValues,
   restaurantBrandingPayloadSchema,
@@ -144,6 +146,7 @@ const socialFields: TextFieldConfig[] = [
 export function StorefrontSettingsPage() {
   const common = useTranslations("common");
   const t = useTranslations("settings");
+  const { restaurantId } = useAuth();
   const {
     savedBranding,
     updateBrandingDraft,
@@ -287,6 +290,7 @@ export function StorefrontSettingsPage() {
         description={t("storefrontDescription")}
       />
       <RestaurantPicker />
+      <OrderingOptionsPanel restaurantId={restaurantId} />
       {brandingError ? (
         <p className="rounded-[12px] border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
           {brandingError}
