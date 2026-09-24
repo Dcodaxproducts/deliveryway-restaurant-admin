@@ -60,6 +60,7 @@ import {
 } from "@/hooks/useOrders";
 import { formatDateTime24 } from "@/lib/date-time-format";
 import { reprintOrder } from "@/lib/accepted-order-printing";
+import { resolveAppliedOrderCoupon } from "@/lib/order-discount";
 import { getOrderById } from "@/services/orders/orders.api";
 import {
   canDirectlyUpdateOrderStatus,
@@ -500,6 +501,7 @@ export function OrdersTable({
                 sendInvoiceEmailMutation.isPending &&
                 sendInvoiceEmailMutation.variables?.orderId === id;
               const isReprinting = reprintingOrderId === id;
+              const appliedCoupon = resolveAppliedOrderCoupon(order);
 
               return (
                 <TableRow
@@ -616,6 +618,15 @@ export function OrdersTable({
                         <span className="block truncate">
                           {formatMoney(totalAmount)}
                         </span>
+                        {appliedCoupon ? (
+                          <span
+                            className="mt-1 block truncate text-xs font-semibold text-primary"
+                            title={`${appliedCoupon.code} · -${formatMoney(appliedCoupon.discountAmount)}`}
+                          >
+                            {appliedCoupon.code} · -
+                            {formatMoney(appliedCoupon.discountAmount)}
+                          </span>
+                        ) : null}
                       </TableCell>
 
                       <TableCell className="px-4">

@@ -95,6 +95,31 @@ describe("order ticket", () => {
     expect(html).not.toContain("Not scheduled");
   });
 
+  it("prints the applied coupon code next to its discount", () => {
+    const ticket = normalizeOrderTicket({
+      id: "coupon-order",
+      coupon: { id: "coupon-1", code: " SAVE10 ", title: "Ten off" },
+      discountAmount: 10,
+      items: [],
+    });
+
+    expect(ticket.couponCode).toBe("SAVE10");
+    expect(buildOrderTicketHtml(ticket, "80MM")).toContain("Coupon SAVE10:");
+    expect(buildOrderTicketEscPos(ticket, "80MM")).toContain("Coupon SAVE10:");
+  });
+
+  it("does not print a coupon code without a positive discount", () => {
+    const ticket = normalizeOrderTicket({
+      id: "invalid-coupon-order",
+      coupon: { code: "STALE" },
+      discountAmount: 0,
+      items: [],
+    });
+
+    expect(ticket.couponCode).toBeUndefined();
+    expect(buildOrderTicketHtml(ticket, "80MM")).not.toContain("STALE");
+  });
+
   it("removes the synthetic Customer surname", () => {
     const ticket = normalizeOrderTicket({
       id: "guest-order",
