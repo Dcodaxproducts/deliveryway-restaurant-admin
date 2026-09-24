@@ -1,3 +1,4 @@
+import { resolveAppliedOrderCoupon } from "@/lib/order-discount";
 import type { PrintingPaperSize } from "@/services/printing";
 
 type TicketModifier = {
@@ -34,6 +35,7 @@ export type OrderTicket = {
   serviceChargeAmount?: number;
   tipAmount?: number;
   discountAmount?: number;
+  couponCode?: string;
   loyaltyDiscountAmount?: number;
   walletAppliedAmount?: number;
   totalAmount?: number;
@@ -183,6 +185,10 @@ export const normalizeOrderTicket = (value: unknown): OrderTicket => {
   const normalizedCustomerName = customerName
     ?.replace(/\s+Customer$/i, "")
     .trim();
+  const appliedCoupon = resolveAppliedOrderCoupon({
+    coupon: asRecord(order.coupon),
+    discountAmount: readNumber(order, "discountAmount"),
+  });
   const deliveryAddress = asRecord(order.deliveryAddress);
   const formattedAddress = deliveryAddress
     ? [
@@ -220,6 +226,7 @@ export const normalizeOrderTicket = (value: unknown): OrderTicket => {
     serviceChargeAmount: readNumber(order, "serviceChargeAmount"),
     tipAmount: readNumber(order, "tipAmount"),
     discountAmount: readNumber(order, "discountAmount"),
+    couponCode: appliedCoupon?.code,
     loyaltyDiscountAmount: readNumber(order, "loyaltyDiscountAmount"),
     walletAppliedAmount: readNumber(order, "walletAppliedAmount"),
     totalAmount: readNumber(order, "totalAmount"),
@@ -291,7 +298,11 @@ export const buildOrderTicketHtml = (
     ["Delivery fee", ticket.deliveryFee],
     ["Service charge", ticket.serviceChargeAmount],
     ["Tip", ticket.tipAmount],
-    ["Discount", ticket.discountAmount, true],
+    [
+      ticket.couponCode ? `Coupon ${ticket.couponCode}` : "Discount",
+      ticket.discountAmount,
+      true,
+    ],
     ["Loyalty discount", ticket.loyaltyDiscountAmount, true],
     ["Wallet applied", ticket.walletAppliedAmount, true],
   ]
@@ -481,7 +492,11 @@ export const buildOrderTicketEscPos = (
     ["Delivery fee", ticket.deliveryFee],
     ["Service charge", ticket.serviceChargeAmount],
     ["Tip", ticket.tipAmount],
-    ["Discount", ticket.discountAmount, true],
+    [
+      ticket.couponCode ? `Coupon ${ticket.couponCode}` : "Discount",
+      ticket.discountAmount,
+      true,
+    ],
     ["Loyalty discount", ticket.loyaltyDiscountAmount, true],
     ["Wallet applied", ticket.walletAppliedAmount, true],
   ];

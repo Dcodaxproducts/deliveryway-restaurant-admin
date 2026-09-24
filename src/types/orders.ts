@@ -21,6 +21,12 @@ export type Order = {
   paymentMethod?: string;
   paymentStatus?: string;
   totalAmount?: number;
+  discountAmount?: number | null;
+  coupon?: {
+    id?: string | null;
+    code?: string | null;
+    title?: string | null;
+  } | null;
   currency?: string | null;
   createdAt: string;
   orderTime?: string;

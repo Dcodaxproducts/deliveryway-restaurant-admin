@@ -47,6 +47,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime24 } from "@/lib/date-time-format";
 import { formatMoney as formatCurrencyAmount } from "@/lib/currency";
 import { formatPaymentStatusLabel } from "@/lib/payment-status-label";
+import { resolveAppliedOrderCoupon } from "@/lib/order-discount";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -318,6 +319,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   const items = order.items || [];
   const couponCode = order.coupon?.code?.trim() || "";
   const couponTitle = order.coupon?.title?.trim() || "";
+  const appliedCoupon = resolveAppliedOrderCoupon(order);
   const displayItems = order.displayItems?.length ? order.displayItems : items;
   const hasBackendDealRows = displayItems.some(isDealItem);
   const shouldShowInferredDeal =
@@ -951,7 +953,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
             </div>
           </DetailCard>
 
-          {order.coupon ? (
+          {appliedCoupon ? (
             <DetailCard>
               <SectionTitle
                 icon={<TicketPercent size={19} />}
@@ -959,11 +961,18 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
               />
               <InfoRow
                 label={t("couponCode")}
-                value={order.coupon.code || "-"}
+                value={appliedCoupon.code}
               />
               <InfoRow
                 label={t("couponTitle")}
-                value={order.coupon.title || "-"}
+                value={appliedCoupon.title || "-"}
+              />
+              <InfoRow
+                label={t("discountAmount")}
+                value={formatMoney(
+                  appliedCoupon.discountAmount,
+                  primaryCurrency,
+                )}
               />
             </DetailCard>
           ) : null}
