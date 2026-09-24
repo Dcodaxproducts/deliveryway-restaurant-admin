@@ -65,7 +65,7 @@ export function LegalProfilePage() {
   const [draftProfile, setDraftProfile] = useState<LegalProfile>(
     createEmptyLegalProfile()
   );
-  const [hasLoadedInitialProfile, setHasLoadedInitialProfile] = useState(false);
+  const [loadedRestaurantId, setLoadedRestaurantId] = useState<string>();
 
   const {
     data: savedProfile,
@@ -96,11 +96,11 @@ export function LegalProfilePage() {
   const completionCount = completionItems.filter(Boolean).length;
 
   useEffect(() => {
-    if (hasLoadedInitialProfile || isLoading) return;
+    if (!restaurantId || loadedRestaurantId === restaurantId || isLoading) return;
 
     setDraftProfile(savedProfile ?? createEmptyLegalProfile(restaurantId));
-    setHasLoadedInitialProfile(true);
-  }, [hasLoadedInitialProfile, isLoading, restaurantId, savedProfile]);
+    setLoadedRestaurantId(restaurantId);
+  }, [isLoading, loadedRestaurantId, restaurantId, savedProfile]);
 
   const updateField = (key: keyof LegalProfilePayload, value: string) => {
     setDraftProfile((profile) => ({ ...profile, [key]: value }));
@@ -139,7 +139,7 @@ export function LegalProfilePage() {
       payload: draftPayload,
     });
     setDraftProfile(nextProfile);
-    setHasLoadedInitialProfile(true);
+    setLoadedRestaurantId(restaurantId);
   };
 
   return (

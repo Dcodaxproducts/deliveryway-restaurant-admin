@@ -15,42 +15,42 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetOrdersTrend } from "@/hooks/useDashboard";
 import { useTranslations } from "next-intl";
+import type { DashboardTrendParams } from "@/services/dashboard/dashboard.api";
 
 export type TrendRange = "daily" | "weekly" | "monthly";
 
 const OrdersGraph = ({
   range: controlledRange,
   onRangeChange,
+  params,
 }: {
   range?: TrendRange;
   onRangeChange?: (range: TrendRange) => void;
+  params?: DashboardTrendParams;
 } = {}) => {
   const common = useTranslations("common");
   const t = useTranslations("reports");
   const {
     restaurantId,
-    branchId,
-    isBranchAdmin,
+    scopedParams,
     loading: authLoading,
   } = useAuth();
   const [localRange, setLocalRange] = useState<TrendRange>("daily");
   const range = controlledRange ?? localRange;
   const setRange = onRangeChange ?? setLocalRange;
+  const trendParams = params
+    ? { ...params, range }
+    : restaurantId
+      ? { ...scopedParams, range }
+      : undefined;
 
   const {
     data: ordersTrendResponse,
     isLoading,
     isFetching,
+    isError,
     refetch,
-  } = useGetOrdersTrend(
-    restaurantId
-      ? {
-          restaurantId,
-          ...(isBranchAdmin && branchId ? { branchId } : {}),
-          range,
-        }
-      : undefined,
-  );
+  } = useGetOrdersTrend(trendParams);
 
   const trendData = ordersTrendResponse?.data;
 
@@ -65,7 +65,7 @@ const OrdersGraph = ({
     );
   }, [trendData]);
 
-  const totalOrdersInRange = trendData?.totalOrdersInRange ?? 0;
+  const totalOrdersInRange = trendData?.totalOrdersInRange;
   const currentRange = trendData?.range ?? range;
 
   const loading = authLoading || isLoading || isFetching;
@@ -81,13 +81,14 @@ const OrdersGraph = ({
             <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               {loading
                 ? common("loading")
-                : t("ordersCount", { count: totalOrdersInRange })}
+                : isError
+                  ? t("unavailable")
+                  : t("ordersCount", { count: totalOrdersInRange ?? 0 })}
             </div>
           </div>
 
           <p className="mt-1 text-sm text-gray-400">
-            {t("trackOrderVolumePrefix")}{" "}
-            <span className="capitalize">{currentRange}</span> {t("range")}
+            {t("chartGranularity", { range: currentRange })}
           </p>
         </div>
 
@@ -129,6 +130,15 @@ const OrdersGraph = ({
       <div className="h-[260px] w-full min-w-0">
         {loading ? (
           <div className="h-full w-full animate-pulse rounded-[16px] bg-gray-100" />
+        ) : isError ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 rounded-[16px] border border-dashed border-red-200 text-center">
+            <p className="text-sm font-medium text-red-500">
+              {t("trendLoadFailed")}
+            </p>
+            <Button type="button" onClick={() => refetch()} className="h-9">
+              {t("retry")}
+            </Button>
+          </div>
         ) : chartData.length === 0 ? (
           <div className="flex h-full items-center justify-center rounded-[16px] border border-dashed border-gray-200 text-sm text-gray-400">
             No order trend data available.

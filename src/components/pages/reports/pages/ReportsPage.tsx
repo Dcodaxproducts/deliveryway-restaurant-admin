@@ -16,6 +16,7 @@ import type { TrendRange } from "@/components/pages/Reports/components/graphs/or
 import { GeneratedInvoiceHistoryTable } from "@/components/pages/Orders/components/orders/GeneratedInvoiceHistoryTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ReportSummaryError } from "@/components/pages/reports/components/report-summary-error";
 import { useAuth } from "@/hooks/useAuth";
 import { useBranding } from "@/hooks/useBranding";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -34,6 +35,7 @@ import {
   type ReportTab,
 } from "@/components/pages/reports/utils/reports-page.helpers";
 import {
+  buildReportTrendParams,
   getPreviousCalendarMonthPeriod,
   isValidCustomReportPeriod,
   resolveReportDateRange,
@@ -72,6 +74,9 @@ export default function Orders() {
     () => resolveReportDateRange(range, customPeriod),
     [customPeriod, range],
   );
+  const trendParams = scopedReportParams
+    ? buildReportTrendParams(scopedReportParams, reportDateRange, range)
+    : undefined;
   useEffect(() => {
     const requestedTab = searchParams.get("tab");
     if (
@@ -86,6 +91,8 @@ export default function Orders() {
     data: financialReportResponse,
     isLoading: financialLoading,
     isFetching: financialFetching,
+    isError: financialError,
+    refetch: refetchFinancialReport,
   } = useGetFinancialReport(
     scopedReportParams
       ? { ...scopedReportParams, ...reportDateRange }
@@ -96,6 +103,8 @@ export default function Orders() {
     data: ordersReportResponse,
     isLoading: ordersLoading,
     isFetching: ordersFetching,
+    isError: ordersError,
+    refetch: refetchOrdersReport,
   } = useGetOrdersReport(
     scopedReportParams
       ? { ...scopedReportParams, ...reportDateRange }
@@ -147,6 +156,13 @@ export default function Orders() {
 
   const activeReportData =
     activeTab === "financial" ? financialData : ordersData;
+
+  const activeReportError =
+    activeTab === "financial" ? financialError : ordersError;
+  const refetchActiveReport =
+    activeTab === "financial"
+      ? refetchFinancialReport
+      : refetchOrdersReport;
 
   const activeLoading =
     authLoading ||
@@ -208,7 +224,6 @@ export default function Orders() {
 
   const handleRangeChange = (nextRange: TrendRange) => {
     setRange(nextRange);
-    setCustomPeriod(null);
   };
 
   const handleTabChange = (tab: ReportTab) => {
@@ -226,7 +241,7 @@ export default function Orders() {
             <Button
               type="button"
               variant="outline"
-              disabled={activeLoading || !restaurantId}
+              disabled={activeLoading || activeReportError || !restaurantId}
               onClick={handleDownloadActiveReportPdf}
               className="h-[44px] rounded-[12px] border-gray-200 px-5 text-gray-700"
             >
@@ -341,23 +356,47 @@ export default function Orders() {
           />
         ) : activeTab === "financial" ? (
           <>
-            <StatsSection
-              stats={activeStats}
-              loading={activeLoading}
-              className="xl:grid-cols-4"
-            />
+            {activeReportError ? (
+              <ReportSummaryError
+                message={t("summaryLoadFailed")}
+                retryLabel={t("retry")}
+                onRetry={() => refetchActiveReport()}
+              />
+            ) : (
+              <StatsSection
+                stats={activeStats}
+                loading={activeLoading}
+                className="xl:grid-cols-4"
+              />
+            )}
 
-            <RevenueAnalytics range={range} onRangeChange={handleRangeChange} />
+            <RevenueAnalytics
+              range={range}
+              onRangeChange={handleRangeChange}
+              params={trendParams}
+            />
           </>
         ) : (
           <>
-            <StatsSection
-              stats={activeStats}
-              loading={activeLoading}
-              className="xl:grid-cols-4"
-            />
+            {activeReportError ? (
+              <ReportSummaryError
+                message={t("summaryLoadFailed")}
+                retryLabel={t("retry")}
+                onRetry={() => refetchActiveReport()}
+              />
+            ) : (
+              <StatsSection
+                stats={activeStats}
+                loading={activeLoading}
+                className="xl:grid-cols-4"
+              />
+            )}
 
-            <OrdersGraph range={range} onRangeChange={handleRangeChange} />
+            <OrdersGraph
+              range={range}
+              onRangeChange={handleRangeChange}
+              params={trendParams}
+            />
           </>
         )}
       </div>

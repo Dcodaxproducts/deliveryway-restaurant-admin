@@ -17,7 +17,12 @@ export type DashboardOrdersStatsParams = DashboardFilterParams & {
 
 export type DashboardTrendParams = DashboardFilterParams & {
   range?: string;
+  fromDate?: string;
+  toDate?: string;
+  kind?: "order" | "group-orders";
+  /** @deprecated Legacy date alias retained for backward compatibility. */
   from?: string;
+  /** @deprecated Legacy date alias retained for backward compatibility. */
   to?: string;
 };
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildFinancialStats,
+  buildOrderReportStats,
   getReportHeaderContent,
   mergeRestaurantBillingInvoices,
 } from "./reports-page.helpers";
@@ -66,5 +67,18 @@ describe("mergeRestaurantBillingInvoices", () => {
       stats.find((item) => item._id === "financial-paypal-received")?.value,
     ).toContain("75");
     expect(stats).toHaveLength(6);
+  });
+
+  it("labels total orders as the selected-period total", () => {
+    const stats = buildOrderReportStats(
+      { totalOrders: 12 },
+      "EUR",
+      (key) => `translated:${key}`,
+    );
+
+    expect(stats.find((item) => item._id === "orders-total")).toMatchObject({
+      title: "translated:stats.totalOrdersSelectedPeriod",
+      value: "12",
+    });
   });
 });

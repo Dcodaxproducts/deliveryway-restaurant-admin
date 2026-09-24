@@ -18,6 +18,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useGetRevenueTrend } from "@/hooks/useDashboard";
 import { formatMoney } from "@/lib/currency";
+import { useTranslations } from "next-intl";
+import type { DashboardTrendParams } from "@/services/dashboard/dashboard.api";
 
 export type TrendRange = "daily" | "weekly" | "monthly";
 
@@ -31,20 +33,27 @@ type RevenuePoint = {
 const RevenueGraph = ({
   range: controlledRange,
   onRangeChange,
+  params,
 }: {
   range?: TrendRange;
   onRangeChange?: (range: TrendRange) => void;
+  params?: DashboardTrendParams;
 } = {}) => {
+  const t = useTranslations("reports");
   const {
     restaurantId,
-    branchId,
-    isBranchAdmin,
+    scopedParams,
     loading: authLoading,
   } = useAuth();
   const { currency: fallbackCurrency } = useCurrency(restaurantId);
   const [localRange, setLocalRange] = useState<TrendRange>("daily");
   const range = controlledRange ?? localRange;
   const setRange = onRangeChange ?? setLocalRange;
+  const trendParams = params
+    ? { ...params, range }
+    : restaurantId
+      ? { ...scopedParams, range }
+      : undefined;
 
   const {
     data: revenueTrendResponse,
@@ -52,20 +61,12 @@ const RevenueGraph = ({
     isFetching,
     isError,
     refetch,
-  } = useGetRevenueTrend(
-    restaurantId
-      ? {
-          restaurantId,
-          ...(isBranchAdmin && branchId ? { branchId } : {}),
-          range,
-        }
-      : undefined,
-  );
+  } = useGetRevenueTrend(trendParams);
 
   const trendData = revenueTrendResponse?.data;
 
   const currency = trendData?.currency || fallbackCurrency;
-  const totalRevenueInRange = Number(trendData?.totalRevenueInRange || 0);
+  const totalRevenueInRange = trendData?.totalRevenueInRange;
   const currentRange = trendData?.range || range;
 
   const chartData = useMemo<
@@ -105,13 +106,15 @@ const RevenueGraph = ({
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
             <h3 className="text-[18px] font-semibold text-dark">
-              Revenue Trend
+              {t("revenueTrend")}
             </h3>
 
             <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               {loading
                 ? "Loading..."
-                : formatMoney(totalRevenueInRange, currency)}
+                : isError
+                  ? t("unavailable")
+                  : formatMoney(Number(totalRevenueInRange ?? 0), currency)}
             </div>
 
             {hasOnlyOneRevenuePoint ? (
@@ -122,8 +125,7 @@ const RevenueGraph = ({
           </div>
 
           <p className="mt-1 text-sm text-gray-400">
-            Track revenue across the selected{" "}
-            <span className="capitalize">{currentRange}</span> range
+            {t("chartGranularity", { range: currentRange })}
           </p>
         </div>
 
@@ -169,7 +171,7 @@ const RevenueGraph = ({
         ) : isError ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 rounded-[16px] border border-dashed border-red-200 text-center">
             <p className="text-sm font-medium text-red-500">
-              Failed to load revenue trend.
+              {t("trendLoadFailed")}
             </p>
 
             <Button
@@ -177,7 +179,7 @@ const RevenueGraph = ({
               onClick={() => refetch()}
               className="h-9 rounded-[10px] bg-primary px-4 text-sm text-white hover:bg-primary/90"
             >
-              Retry
+              {t("retry")}
             </Button>
           </div>
         ) : chartData.length === 0 ? (

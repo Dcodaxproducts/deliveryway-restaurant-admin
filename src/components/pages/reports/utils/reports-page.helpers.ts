@@ -185,7 +185,7 @@ export const buildOrderReportStats = (
     [
       {
         _id: "orders-total",
-        title: t("stats.totalOrders"),
+        title: t("stats.totalOrdersSelectedPeriod"),
         value: String(ordersData?.totalOrders ?? 0),
         icon: "orders",
       },

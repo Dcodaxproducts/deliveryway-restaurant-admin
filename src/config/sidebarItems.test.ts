@@ -36,3 +36,25 @@ describe("sidebar WinOrder access", () => {
     });
   });
 });
+
+describe("legal profile navigation", () => {
+  it("exposes the restaurant-scoped legal and tax profile only to owner admins", () => {
+    const contentManagement = menuItems.find(
+      (item) => item.labelKey === "contentManagement",
+    );
+    const legalProfile = contentManagement?.children?.find(
+      (item) => item.href === "/legal-profile",
+    );
+
+    expect(legalProfile).toMatchObject({
+      labelKey: "legalProfile",
+      roles: ["BUSINESS_ADMIN", "RESTAURANT_ADMIN"],
+    });
+    expect(legalProfile?.permissionAccesses).toBeUndefined();
+    expect(
+      contentManagement?.children?.filter(
+        (item) => item.href === "/legal-profile",
+      ),
+    ).toHaveLength(1);
+  });
+});

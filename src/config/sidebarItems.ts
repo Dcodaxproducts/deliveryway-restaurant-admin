@@ -24,6 +24,7 @@ import {
   CreditCard,
   Inbox,
   PlugZap,
+  ReceiptText,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { IconType } from "react-icons";
@@ -370,6 +371,14 @@ export const menuItems: MenuItem[] = [
         section: "main",
         roles: restaurantAdminRoles,
         permissionAccesses: ["content-management"],
+      },
+      {
+        title: "Legal & Tax Profile",
+        labelKey: "legalProfile",
+        href: "/legal-profile",
+        icon: ReceiptText,
+        section: "main",
+        roles: restaurantAdminRoles,
       },
       {
         title: "About Us",
