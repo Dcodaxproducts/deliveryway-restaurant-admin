@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getAccountIdentity,
   getStaffDefaultRedirectPath,
   getStaffRoutePermissionAccesses,
   hasStaffMenuAccess,
@@ -15,6 +16,17 @@ import {
 } from "@/lib/auth";
 
 describe("auth helpers", () => {
+  it.each([
+    ["super-admin staff", { role: "STAFF", actorType: "STAFF", panelType: "SUPER_ADMIN" }, "superAdminStaff"],
+    ["business staff", { role: "STAFF", actorType: "STAFF", panelType: "BUSINESS_ADMIN" }, "restaurantAdminStaff"],
+    ["branch staff", { role: "STAFF", actorType: "STAFF", panelType: "BRANCH_ADMIN" }, "branchAdminStaff"],
+    ["business owner", { role: "BUSINESS_ADMIN" }, "businessAdmin"],
+    ["branch owner", { role: "BRANCH_ADMIN" }, "branchAdmin"],
+    ["missing optional fields", { role: "STAFF", actorType: "STAFF" }, "staff"],
+  ])("labels %s without permission inference", (_name, raw, expected) => {
+    expect(getAccountIdentity(normalizeUser({ id: "actor", ...raw }))).toMatchObject({ labelKey: expected });
+  });
+
   it("requires a fresh restaurant choice for multi-restaurant business admins", () => {
     const user = normalizeUser({
       id: "owner-1",

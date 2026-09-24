@@ -19,17 +19,19 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { getAvatarUrl, getDisplayName, getInitials, isStaffRole } from "@/lib/auth";
+import { getAccountIdentity, getAvatarUrl, getDisplayName, getInitials, isStaffRole } from "@/lib/auth";
 
 export default function ProfileSection() {
   const router = useRouter();
   const navbar = useTranslations("navbar");
   const navigation = useTranslations("navigation");
+  const identity = useTranslations("identity");
   const { user, logout } = useAuth();
   const displayName = getDisplayName(user);
   const initials = getInitials(user);
   const avatarUrl = getAvatarUrl(user);
   const isStaff = isStaffRole(user?.role, user?.actorType);
+  const accountIdentity = getAccountIdentity(user);
 
   const navigate = (path: string) => {
     router.push(path);
@@ -55,6 +57,9 @@ export default function ProfileSection() {
             <span className="lg:text-base text-muted-foreground hidden lg:block">{navbar("hello")}</span>
             <span className="lg:text-base font-semibold text-foreground hidden lg:block">
               {displayName}
+            </span>
+            <span className="hidden text-xs text-muted-foreground lg:block">
+              {identity(accountIdentity.labelKey)}
             </span>
           </div>
 
@@ -85,6 +90,10 @@ export default function ProfileSection() {
               </span>
               <span className="text-xs text-gray-500">
                 {user?.email}
+              </span>
+              <span className="text-xs font-medium text-primary">
+                {identity(accountIdentity.labelKey)}
+                {accountIdentity.staffRoleName ? ` · ${accountIdentity.staffRoleName}` : ""}
               </span>
             </div>
           </div>

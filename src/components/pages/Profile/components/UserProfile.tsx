@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import {
+  getAccountIdentity,
   getAvatarUrl,
   getDisplayName,
   getInitials,
@@ -19,6 +20,7 @@ export default function UserProfile() {
   const { user, token, setUser } = useAuth();
   const t = useTranslations("profile");
   const common = useTranslations("common");
+  const identity = useTranslations("identity");
   const [refreshing, setRefreshing] = useState(false);
 
   const formatDate = (date?: string | null) => {
@@ -55,14 +57,12 @@ export default function UserProfile() {
   const fullName = getDisplayName(user);
   const avatarUrl = getAvatarUrl(user);
   const initials = getInitials(user);
+  const accountIdentity = getAccountIdentity(user);
 
   const rows = [
-    [t("userId"), user?.id],
     [t("email"), user?.email],
-    [t("role"), user?.role],
-    [t("tenantId"), user?.tenantId],
-    [t("restaurantId"), user?.restaurantId],
-    [t("branchId"), user?.branchId],
+    [identity("accountType"), identity(accountIdentity.labelKey)],
+    ...(accountIdentity.staffRoleName ? [[identity("staffRole"), accountIdentity.staffRoleName]] : []),
     [t("phone"), profile?.phone],
     // ["Profile ID", profile?.id],
     // ["Profile User ID", profile?.userId],
