@@ -1,4 +1,4 @@
-"use client";
+disabled={activeLoading || activeReportError || !restaurantId}"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -19,6 +19,7 @@ import type { TrendRange } from "@/components/pages/Reports/components/graphs/or
 import { GeneratedInvoiceHistoryTable } from "@/components/pages/Orders/components/orders/GeneratedInvoiceHistoryTable";
 import { Button } from "@/components/ui/button";
 import { DatePickerInput } from "@/components/common/DateTimeInputs";
+import { ReportSummaryError } from "@/components/pages/reports/components/report-summary-error";
 import { useAuth } from "@/hooks/useAuth";
 import { useBranding } from "@/hooks/useBranding";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -37,6 +38,7 @@ import {
   type ReportTab,
 } from "@/components/pages/reports/utils/reports-page.helpers";
 import {
+buildReportTrendParams,
   getPreviousCalendarMonthPeriod,
   isValidCustomReportPeriod,
   resolveReportDateRange,
@@ -90,6 +92,7 @@ export default function Orders() {
     isLoading: financialLoading,
     isFetching: financialFetching,
     isError: financialError,
+    refetch: refetchFinancialReport,
   } = useGetFinancialReport(
     scopedReportParams
       ? { ...scopedReportParams, ...reportDateRange }
@@ -101,6 +104,7 @@ export default function Orders() {
     isLoading: ordersLoading,
     isFetching: ordersFetching,
     isError: ordersError,
+    refetch: refetchOrdersReport,
   } = useGetOrdersReport(
     scopedReportParams
       ? { ...scopedReportParams, ...reportDateRange }
@@ -336,15 +340,17 @@ export default function Orders() {
           />
         ) : activeTab === "financial" ? (
           <>
-            <StatsSection stats={activeStats} loading={activeLoading} />
+            <ReportSummaryError message={t("summaryLoadFailed")} retryLabel={t("retry")} onRetry={() => refetchActiveReport()} className={activeReportError ? undefined : "hidden"} />
+            {!activeReportError ? <StatsSection stats={activeStats} loading={activeLoading} /> : null}
 
-            <RevenueAnalytics range={range} onRangeChange={handleRangeChange} />
+            <RevenueAnalytics range={range} onRangeChange={handleRangeChange} params={trendParams} />
           </>
         ) : (
           <>
-            <StatsSection stats={activeStats} loading={activeLoading} />
+            <ReportSummaryError message={t("summaryLoadFailed")} retryLabel={t("retry")} onRetry={() => refetchActiveReport()} className={activeReportError ? undefined : "hidden"} />
+            {!activeReportError ? <StatsSection stats={activeStats} loading={activeLoading} /> : null}
 
-            <OrdersGraph range={range} onRangeChange={handleRangeChange} />
+            <OrdersGraph range={range} onRangeChange={handleRangeChange} params={trendParams} />
           </>
         )}
       </SectionCard>

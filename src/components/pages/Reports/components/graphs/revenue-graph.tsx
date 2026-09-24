@@ -21,6 +21,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useGetRevenueTrend } from "@/hooks/useDashboard";
 import { formatMoney } from "@/lib/currency";
 import { useTranslations } from "next-intl";
+import type { DashboardTrendParams } from "@/services/dashboard/dashboard.api";
 
 export type TrendRange = "daily" | "weekly" | "monthly";
 
@@ -34,6 +35,7 @@ type RevenuePoint = {
 const RevenueGraph = ({
   range: controlledRange,
   onRangeChange,
+  params,
 }: {
   range?: TrendRange;
   onRangeChange?: (range: TrendRange) => void;
@@ -42,8 +44,7 @@ const RevenueGraph = ({
   const t = useTranslations("reports");
   const {
     restaurantId,
-    branchId,
-    isBranchAdmin,
+    scopedParams,
     loading: authLoading,
   } = useAuth();
   const { currency: fallbackCurrency } = useCurrency(restaurantId);

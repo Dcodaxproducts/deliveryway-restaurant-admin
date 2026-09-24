@@ -17,12 +17,14 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetOrdersTrend } from "@/hooks/useDashboard";
 import { useTranslations } from "next-intl";
+import type { DashboardTrendParams } from "@/services/dashboard/dashboard.api";
 
 export type TrendRange = "daily" | "weekly" | "monthly";
 
 const OrdersGraph = ({
   range: controlledRange,
   onRangeChange,
+  params,
 }: {
   range?: TrendRange;
   onRangeChange?: (range: TrendRange) => void;
@@ -31,8 +33,7 @@ const OrdersGraph = ({
   const t = useTranslations("reports");
   const {
     restaurantId,
-    branchId,
-    isBranchAdmin,
+    scopedParams,
     loading: authLoading,
   } = useAuth();
   const [localRange, setLocalRange] = useState<TrendRange>("daily");

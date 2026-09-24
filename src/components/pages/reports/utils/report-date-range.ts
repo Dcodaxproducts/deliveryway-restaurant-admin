@@ -1,8 +1,14 @@
 import type { TrendRange } from "@/components/pages/Reports/components/graphs/orders-graph";
+import type { DashboardTrendParams } from "@/services/dashboard/dashboard.api";
 
 export type CustomReportPeriod = {
   from: string;
   to: string;
+};
+
+export type ReportDateRange = {
+  fromDate: string;
+  toDate: string;
 };
 
 const parseLocalDate = (value: string, endOfDay: boolean) => {
@@ -64,3 +70,14 @@ export const resolveReportDateRange = (
     toDate: now.toISOString(),
   };
 };
+
+export const buildReportTrendParams = (
+  scope: Pick<DashboardTrendParams, "restaurantId" | "branchId">,
+  period: ReportDateRange,
+  range: TrendRange,
+): DashboardTrendParams => ({
+  ...scope,
+  ...period,
+  range,
+  kind: "order",
+});

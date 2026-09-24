@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildReportTrendParams,
   getPreviousCalendarMonthPeriod,
   isValidCustomReportPeriod,
   resolveReportDateRange,
@@ -32,5 +33,51 @@ describe("report date range", () => {
     expect(
       isValidCustomReportPeriod({ from: "2026-09-02", to: "2026-09-01" }),
     ).toBe(false);
+  });
+
+  it.each(["daily", "weekly", "monthly"] as const)(
+    "passes the same %s period to summary and trend requests",
+    (range) => {
+      const summaryPeriod = resolveReportDateRange(
+        range,
+        null,
+        new Date(2026, 8, 24, 12, 0, 0),
+      );
+
+      expect(
+        buildReportTrendParams(
+          { restaurantId: "restaurant-1" },
+          summaryPeriod,
+          range,
+        ),
+      ).toMatchObject({
+        ...summaryPeriod,
+        restaurantId: "restaurant-1",
+        range,
+        kind: "order",
+      });
+    },
+  );
+
+  it("keeps custom dates and delegated staff branch scope on trend requests", () => {
+    const summaryPeriod = resolveReportDateRange(
+      "daily",
+      { from: "2026-09-01", to: "2026-09-14" },
+      new Date(2026, 8, 24, 12, 0, 0),
+    );
+
+    expect(
+      buildReportTrendParams(
+        { restaurantId: "restaurant-1", branchId: "branch-7" },
+        summaryPeriod,
+        "monthly",
+      ),
+    ).toEqual({
+      restaurantId: "restaurant-1",
+      branchId: "branch-7",
+      ...summaryPeriod,
+      range: "monthly",
+      kind: "order",
+    });
   });
 });

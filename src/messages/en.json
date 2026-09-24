@@ -1,38 +1,5 @@
 {
   "common": {
-    "feedback": {
-      "loadFailed": "Unable to load {subject}",
-      "loadFailedDescription": "The requested data could not be loaded. Please try again.",
-      "refreshFailed": "Unable to refresh {subject}",
-      "cachedDescription": "Showing the last loaded data. Please try again.",
-      "retry": "Retry {subject}",
-      "loading": "Loading {subject}",
-      "loadingDescription": "Loading the requested data.",
-      "unavailable": "Unavailable: {subject}",
-      "unavailableDescription": "Data will appear here when available.",
-      "trashUnavailableDescription": "Deleted records cannot be viewed or managed here. Restore and permanent deletion are not available.",
-      "restaurantUnavailableDescription": "Restaurant records are not available in this view. Listing and management are not connected here.",
-      "restaurantContextLoading": "Loading your restaurant context.",
-      "restaurantContextRequired": "Restaurant context is required to load notifications.",
-      "inventoryContextLoading": "Loading your inventory context.",
-      "inventoryContextRequired": "Sign in with a branch-admin account or select a branch before recording inventory movements.",
-      "backTo": "Back to {subject}",
-      "restaurantList": "Restaurants List",
-      "subjects": {
-        "overview": "dashboard overview",
-        "branches": "branches",
-        "customers": "customers",
-        "customerMetrics": "customer metrics",
-        "deliverymen": "deliverymen",
-        "deliverymanMetrics": "deliveryman metrics",
-        "employees": "employees",
-        "menus": "menus",
-        "notifications": "notifications",
-        "inventory": "inventory",
-        "inventoryContext": "inventory context",
-        "cuisines": "cuisines"
-      }
-    },
     "accountSettings": "Account Settings",
     "language": "Language",
     "english": "English",
@@ -65,7 +32,6 @@
     "commission": "Commission",
     "subscription": "Subscription",
     "paginationSummary": "Showing {from} to {to} of {total} data",
-    "paginationSummaryEmpty": "Showing 0 of {total} results",
     "emptyDefaultTitle": "Looks like there is no data yet!",
     "emptyDefaultDescription": "You haven’t added anything yet. Start by creating a new one.",
     "emptyMenuTitle": "Looks like there are no menus yet!",
@@ -188,7 +154,41 @@
     "editModifierCategory": "Edit modifier category",
     "deleteModifierCategory": "Delete modifier category",
     "deleteModifierCategoryFailed": "Unable to delete modifier category.",
-    "sortValue": "Sort {value}"
+    "sortValue": "Sort {value}",
+    "feedback": {
+      "loadFailed": "Unable to load {subject}",
+      "loadFailedDescription": "The requested data could not be loaded. Please try again.",
+      "refreshFailed": "Unable to refresh {subject}",
+      "cachedDescription": "Showing the last loaded data. Please try again.",
+      "retry": "Retry {subject}",
+      "loading": "Loading {subject}",
+      "loadingDescription": "Loading the requested data.",
+      "unavailable": "Unavailable: {subject}",
+      "unavailableDescription": "Data will appear here when available.",
+      "trashUnavailableDescription": "Deleted records cannot be viewed or managed here. Restore and permanent deletion are not available.",
+      "restaurantUnavailableDescription": "Restaurant records are not available in this view. Listing and management are not connected here.",
+      "restaurantContextLoading": "Loading your restaurant context.",
+      "restaurantContextRequired": "Restaurant context is required to load notifications.",
+      "inventoryContextLoading": "Loading your inventory context.",
+      "inventoryContextRequired": "Sign in with a branch-admin account or select a branch before recording inventory movements.",
+      "backTo": "Back to {subject}",
+      "restaurantList": "Restaurants List",
+      "subjects": {
+        "overview": "dashboard overview",
+        "branches": "branches",
+        "customers": "customers",
+        "customerMetrics": "customer metrics",
+        "deliverymen": "deliverymen",
+        "deliverymanMetrics": "deliveryman metrics",
+        "employees": "employees",
+        "menus": "menus",
+        "notifications": "notifications",
+        "inventory": "inventory",
+        "inventoryContext": "inventory context",
+        "cuisines": "cuisines"
+      }
+    },
+    "paginationSummaryEmpty": "Showing 0 of {total} results"
   },
   "navigation": {
     "changeLanguage": "Change language",
@@ -257,11 +257,8 @@
     "accountSettingsCta": "ACCOUNT SETTINGS",
     "logout": "Logout",
     "logoutSuccess": "Logged out successfully",
-    "collapseSidebar": "Collapse sidebar",
-    "expandSidebar": "Expand sidebar",
     "allergen": "Allergen",
     "deliveryman": "Deliveryman",
-    "platform": "Platform",
     "accountSettings": "Account Settings",
     "allOrders": "All Orders",
     "notificationSoundOn": "Order sound on",
@@ -270,7 +267,10 @@
     "deliveryOrders": "Delivery Orders",
     "pickupOrders": "Pickup Orders",
     "groupOrders": "Group Orders",
-    "invoiceHistory": "Invoice History"
+    "invoiceHistory": "Invoice History",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "platform": "Platform"
   },
   "navbar": {
     "openSidebar": "Open sidebar",
@@ -300,12 +300,12 @@
       "faqs": "FAQs"
     },
     "resultsTitle": "Search Results",
-    "resultsDescription": "Search across the current restaurant workspace.",
     "showingResults": "Showing results for \"{query}\"",
-    "minimumTitle": "Enter a search term",
     "minimumCharacters": "Enter at least 2 characters to search.",
-    "searchingDescription": "Checking orders, menus, customers, branches, staff, and promotions.",
     "temporaryUnavailableWithPeriod": "Search is temporarily unavailable.",
+    "resultsDescription": "Search across the current restaurant workspace.",
+    "minimumTitle": "Enter a search term",
+    "searchingDescription": "Checking orders, menus, customers, branches, staff, and promotions.",
     "retry": "Retry search",
     "noResultsDescription": "No workspace records match \"{query}\"."
   },
@@ -420,12 +420,12 @@
       "promotionsAction": "Manage Promotions"
     },
     "pieChart": "Pie Chart",
-    "percentagesUnavailable": "Percentage metrics unavailable",
-    "percentagesUnavailableDescription": "Order, customer growth and revenue percentages are not provided by the current data source. Available totals are shown in the dashboard overview.",
     "chart": "Chart",
     "showValue": "Show Value",
     "totalOrder": "Total Order",
-    "customerGrowth": "Customer Growth"
+    "customerGrowth": "Customer Growth",
+    "percentagesUnavailable": "Percentage metrics unavailable",
+    "percentagesUnavailableDescription": "Order, customer growth and revenue percentages are not provided by the current data source. Available totals are shown in the dashboard overview."
   },
   "orders": {
     "title": "Orders",
@@ -615,7 +615,6 @@
     "loadingDetails": "Loading order details...",
     "loadingOrder": "Loading order...",
     "groupOrder": "Group Order",
-    "participants": "Participants",
     "groupOrderDescription": "Organizing {totalItems} items across {participants} participants.",
     "printLabel": "Print Label",
     "payment": "Payment",
@@ -786,7 +785,8 @@
     "sentDownloaded": "Sent / downloads",
     "sentDownloadedValue": "{sent} sent / {downloaded} downloads",
     "lastSent": "Last sent",
-    "documentType": "Document type"
+    "documentType": "Document type",
+    "participants": "Participants"
   },
   "tableReservations": {
     "title": "Table Reservations",
@@ -971,14 +971,14 @@
       "emptyDescription": "Add menu items to this menu to start building the listing."
     },
     "header": {
-      "overview": "Overview",
       "modifiers": "Modifiers",
       "categories": "Categories",
       "items": "Items",
       "addMenu": "Add menu",
-      "menuNavigation": "Menu management sections",
       "importTitle": "Import menu",
-      "importSubtitle": "Upload or import menu data"
+      "importSubtitle": "Upload or import menu data",
+      "overview": "Overview",
+      "menuNavigation": "Menu management sections"
     },
     "categoryDetails": {
       "notFound": "Category not found.",
@@ -1140,12 +1140,6 @@
       "description": "Create or update a modifier option.",
       "category": "Modifier category",
       "categoryPlaceholder": "Select modifier category",
-      "categoryHelp": "Used only to organize and filter modifiers in the admin panel (for example Sauces, Sizes, or Extras). Customer selection rules belong to modifier groups.",
-      "modifierGroups": "Modifier groups",
-      "modifierGroupsHelp": "Link this modifier to every customer-facing group where it should appear.",
-      "loadingGroups": "Loading modifier groups...",
-      "noGroups": "No modifier groups found. Create a group first, then return here to link it.",
-      "groupRules": "Group limits: {min}–{max}",
       "name": "Name",
       "namePlaceholder": "eg. Extra cheese",
       "basePrice": "Base price",
@@ -1160,7 +1154,13 @@
       "restaurantMissing": "Restaurant context is missing.",
       "saveFailed": "Unable to save modifier.",
       "update": "Update modifier",
-      "create": "Create modifier"
+      "create": "Create modifier",
+      "categoryHelp": "Used only to organize and filter modifiers in the admin panel (for example Sauces, Sizes, or Extras). Customer selection rules belong to modifier groups.",
+      "modifierGroups": "Modifier groups",
+      "modifierGroupsHelp": "Link this modifier to every customer-facing group where it should appear.",
+      "loadingGroups": "Loading modifier groups...",
+      "noGroups": "No modifier groups found. Create a group first, then return here to link it.",
+      "groupRules": "Group limits: {min}–{max}"
     },
     "modifierGroupModal": {
       "addTitle": "Add modifier group",
@@ -1558,10 +1558,6 @@
         "description": "Assign modifier groups and configure prices.",
         "assignTitle": "Assign modifier groups",
         "assignDescription": "Choose modifier groups available for this menu item.",
-        "groupRulesInherited": "Choose existing modifier groups. Required status and selection limits are inherited from each group.",
-        "selectionRange": "Choose {min}–{max}",
-        "optional": "Optional",
-        "removeGroup": "Remove modifier group",
         "legacyAssignTitle": "Legacy direct modifiers",
         "legacyAssignDescription": "Keep direct modifier selections only for existing backend compatibility.",
         "searchPlaceholder": "Search modifier groups...",
@@ -1586,7 +1582,11 @@
         "specifyVariationModifierPrices": "Specify variation modifier prices",
         "restaurantMissing": "Restaurant context is missing.",
         "modifierPriceInvalid": "Modifier prices must be valid non-negative numbers.",
-        "modifierVariationPriceInvalid": "Modifier variation prices must be valid non-negative numbers."
+        "modifierVariationPriceInvalid": "Modifier variation prices must be valid non-negative numbers.",
+        "groupRulesInherited": "Choose existing modifier groups. Required status and selection limits are inherited from each group.",
+        "selectionRange": "Choose {min}–{max}",
+        "optional": "Optional",
+        "removeGroup": "Remove modifier group"
       }
     }
   },
@@ -1790,8 +1790,6 @@
     "verifyOtp": "Verify OTP",
     "verifying": "Verifying...",
     "table": {
-      "selectAll": "Select all customers",
-      "selectCustomer": "Select customer {name}",
       "serial": "SL",
       "customerName": "Customer Name",
       "customerType": "Customer Type",
@@ -1804,7 +1802,9 @@
       "phone": "Phone",
       "email": "Email",
       "totalOrders": "Total Orders",
-      "joined": "Joined"
+      "joined": "Joined",
+      "selectAll": "Select all customers",
+      "selectCustomer": "Select customer {name}"
     },
     "stats": {
       "totalCustomers": "Total Customers",
@@ -2507,7 +2507,6 @@
       "unableLoadRestaurants": "Unable to load restaurants",
       "unableSaveRole": "Unable to save role",
       "staffCreated": "Staff created successfully!",
-      "staffCreatedNoInvitation": "Staff created, but the invitation email was not sent.",
       "failedCreateStaff": "Failed to create staff",
       "staffUpdated": "Staff updated successfully!",
       "failedUpdateStaff": "Failed to update staff",
@@ -2523,7 +2522,8 @@
       "roleDeletedShort": "Role deleted",
       "failedDeleteRole": "Failed to delete role",
       "deleteFailed": "Delete failed",
-      "statusUpdated": "Status updated"
+      "statusUpdated": "Status updated",
+      "staffCreatedNoInvitation": "Staff created, but the invitation email was not sent."
     },
     "validation": {
       "invalidEmail": "Invalid email",
@@ -2691,26 +2691,19 @@
       "everyDay": "Every Day"
     },
     "actions": {
-      "view": "View",
       "edit": "Edit",
       "delete": "Delete",
       "close": "Close",
       "reset": "Reset",
       "save": "Save",
       "saving": "Saving...",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "view": "View"
     },
     "forms": {
       "setupBasicInfo": "Setup Basic Info",
       "discountSetup": "Discount Setup",
       "promotionScope": "Promotion Scope",
-      "orderTypeScope": "Order Type",
-      "validForOrderType": "Valid for order type",
-      "allOrderTypes": "All order types",
-      "deliveryOnly": "Delivery only",
-      "pickupOnly": "Pickup only",
-      "dineInOnly": "Dine-in only",
-      "orderTypeScopeHelp": "Choose Pickup only to make this coupon available only for collection orders.",
       "happyHourScope": "Happy Hour Scope",
       "branch": "Branch",
       "applyToOptional": "Apply To (Optional)",
@@ -2757,8 +2750,6 @@
       "maximumUsesPerCustomerPlaceholder": "eg. 1",
       "startsAt": "Starts At *",
       "expiresAt": "Expires At *",
-      "startsAtOptional": "Starts At (optional)",
-      "expiresAtOptional": "Expires At (optional)",
       "assignPermanently": "Assign this offer permanently",
       "activePromotion": "Active promotion",
       "applyMode": "Apply Mode *",
@@ -2792,7 +2783,16 @@
       "selectFoodCategory": "Select Food Category",
       "selectFoodCategoryPlaceholder": "Search category",
       "clearSelectedCategory": "Clear selected category",
-      "happyHourScopeHelp": "Leave both fields empty if happy hour applies to all items."
+      "happyHourScopeHelp": "Leave both fields empty if happy hour applies to all items.",
+      "orderTypeScope": "Order Type",
+      "validForOrderType": "Valid for order type",
+      "allOrderTypes": "All order types",
+      "deliveryOnly": "Delivery only",
+      "pickupOnly": "Pickup only",
+      "dineInOnly": "Dine-in only",
+      "orderTypeScopeHelp": "Choose Pickup only to make this coupon available only for collection orders.",
+      "startsAtOptional": "Starts At (optional)",
+      "expiresAtOptional": "Expires At (optional)"
     },
     "days": {
       "sunday": "Sunday",
@@ -2847,10 +2847,6 @@
     }
   },
   "settings": {
-    "globalSettingsTitle": "Global Settings",
-    "globalSettingsDescription": "Configure platform-wide default settings.",
-    "unsavedChanges": "Unsaved storefront changes",
-    "brandingSynced": "Storefront settings are synced",
     "storefrontTitle": "Storefront Settings",
     "storefrontDescription": "Manage restaurant profile, branding, assets, support contact, and customer-facing appearance.",
     "homepageSections": "Homepage Sections",
@@ -2926,7 +2922,11 @@
     "viewAllHistory": "View All History",
     "applyPreview": "Apply preview",
     "discardChanges": "Discard changes",
-    "saveBranding": "Save branding"
+    "saveBranding": "Save branding",
+    "globalSettingsTitle": "Global Settings",
+    "globalSettingsDescription": "Configure platform-wide default settings.",
+    "unsavedChanges": "Unsaved storefront changes",
+    "brandingSynced": "Storefront settings are synced"
   },
   "profile": {
     "managementTitle": "Profile Management",
@@ -2959,9 +2959,9 @@
     "bio": "Bio",
     "bioPlaceholder": "Tell customers a little about you",
     "saveProfile": "Save Profile",
-    "profileDetails": "Profile details",
     "profileUpdated": "Profile updated successfully",
-    "updateProfileError": "Unable to update profile"
+    "updateProfileError": "Unable to update profile",
+    "profileDetails": "Profile details"
   },
   "validation": {},
   "reports": {
@@ -2989,6 +2989,7 @@
       "onlineAmount": "Total Online Amount",
       "availablePayout": "Available Payout",
       "totalOrders": "Total Orders",
+      "totalOrdersSelectedPeriod": "Total Orders (Selected Period)",
       "grossRevenue": "Gross Revenue",
       "paidRevenue": "Paid Revenue",
       "netRevenue": "Net Revenue",
@@ -3015,10 +3016,25 @@
     "resetPeriod": "Reset",
     "invalidCustomPeriod": "Select a valid start and end date",
     "selectedPeriod": "Selected: {from} to {to}",
+    "summaryLoadFailed": "Failed to load the selected-period summary. Values are unavailable until the report loads successfully.",
+    "trendLoadFailed": "Failed to load trend data for the selected period.",
+    "unavailable": "Unavailable",
+    "retry": "Retry",
     "restaurantUnavailable": "Restaurant is not available",
     "pdfDownloaded": "{title} PDF downloaded successfully",
     "live": "Live",
     "orderTrend": "Order Trend",
+    "revenueTrend": "Revenue Trend",
+    "chartGranularity": "Chart bucket: {range}",
+    "emptyOrdersTitle": "Looks like there are no orders yet!",
+    "emptyOrdersDescription": "You haven’t received any orders yet.",
+    "orderAmount": "Order Amount",
+    "discount": "Discount",
+    "sl": "SL",
+    "ordersCount": "{count} orders",
+    "trackOrderVolume": "Track order volume across the selected {range} range",
+    "trackOrderVolumePrefix": "Track order volume across the selected",
+    "range": "range",
     "orderTrendRange": "Order trend range",
     "refreshOrderTrend": "Refresh order trend",
     "retryOrderTrend": "Retry order trend",
@@ -3027,7 +3043,6 @@
     "orderTrendCached": "Showing previously loaded order data. Please try again for the latest figures.",
     "orderTrendUnavailable": "Order trend unavailable",
     "noOrderTrendData": "No order trend data for the selected range.",
-    "revenueTrend": "Revenue Trend",
     "revenueTrendRange": "Revenue trend range",
     "refreshRevenueTrend": "Refresh revenue trend",
     "retryRevenueTrend": "Retry revenue trend",
@@ -3040,16 +3055,7 @@
       "daily": "Daily",
       "weekly": "Weekly",
       "monthly": "Monthly"
-    },
-    "emptyOrdersTitle": "Looks like there are no orders yet!",
-    "emptyOrdersDescription": "You haven’t received any orders yet.",
-    "orderAmount": "Order Amount",
-    "discount": "Discount",
-    "sl": "SL",
-    "ordersCount": "{count} orders",
-    "trackOrderVolume": "Track order volume across the selected {range} range",
-    "trackOrderVolumePrefix": "Track order volume across the selected",
-    "range": "range"
+    }
   },
   "pos": {
     "title": "Create New Order",
@@ -3544,7 +3550,6 @@
     "catalogHelp": "WinOrder matches main items and modifiers by name. FeastFlow sends the base item name plus ArticleSize for variations; saved names or article numbers are optional overrides. Matched WinOrder articles provide the authoritative VAT. Unknown/comment items should remain exceptions. Generic service charges still require an explicit article mapping.",
     "nameMatching": "Exact-name mode",
     "catalogFile": "WinOrder article export",
-    "chooseCatalogFile": "Choose file",
     "catalogFileHelp": "Choose a WinOrder CSV or XML export to compare article names locally. The file is not uploaded.",
     "catalogFileTooLarge": "The WinOrder catalog file must be 5 MB or smaller.",
     "catalogFileInvalid": "This is not a supported WinOrder CSV or XML article export.",
@@ -3572,7 +3577,8 @@
     "retryFailed": "Retry failed exports",
     "saved": "WinOrder configuration saved.",
     "failed": "WinOrder configuration could not be saved.",
-    "signedInAs": "Signed in as {email}"
+    "signedInAs": "Signed in as {email}",
+    "chooseCatalogFile": "Choose file"
   },
   "printing": {
     "title": "Auto Printing",

@@ -66,6 +66,22 @@ describe("legal profile service", () => {
     );
   });
 
+  it("scopes reads to the currently selected restaurant", async () => {
+    mockedHttpClient.get.mockResolvedValue({ data: {} });
+
+    await getLegalProfile("restaurant-a");
+    await getLegalProfile("restaurant-b");
+
+    expect(mockedHttpClient.get).toHaveBeenNthCalledWith(
+      1,
+      "/restaurants/restaurant-a/legal-profile",
+    );
+    expect(mockedHttpClient.get).toHaveBeenNthCalledWith(
+      2,
+      "/restaurants/restaurant-b/legal-profile",
+    );
+  });
+
   it("patches legal profile payload", async () => {
     const payload = {
       legalBusinessName: "FeastFlow Kitchen LLC",

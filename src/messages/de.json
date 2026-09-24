@@ -1,38 +1,5 @@
 {
   "common": {
-    "feedback": {
-      "loadFailed": "Laden fehlgeschlagen: {subject}",
-      "loadFailedDescription": "Die angeforderten Daten konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
-      "refreshFailed": "Aktualisierung fehlgeschlagen: {subject}",
-      "cachedDescription": "Die zuletzt geladenen Daten werden angezeigt. Bitte versuchen Sie es erneut.",
-      "retry": "Erneut laden: {subject}",
-      "loading": "Wird geladen: {subject}",
-      "loadingDescription": "Die angeforderten Daten werden geladen.",
-      "unavailable": "Nicht verfügbar: {subject}",
-      "unavailableDescription": "Daten werden hier angezeigt, sobald sie verfügbar sind.",
-      "trashUnavailableDescription": "Gelöschte Datensätze können hier nicht angezeigt oder verwaltet werden. Wiederherstellung und endgültiges Löschen sind nicht verfügbar.",
-      "restaurantUnavailableDescription": "Restaurantdaten sind in dieser Ansicht nicht verfügbar. Die Auflistung und Verwaltung sind hier nicht angebunden.",
-      "restaurantContextLoading": "Ihr Restaurantkontext wird geladen.",
-      "restaurantContextRequired": "Zum Laden von Benachrichtigungen ist ein Restaurantkontext erforderlich.",
-      "inventoryContextLoading": "Ihr Bestandskontext wird geladen.",
-      "inventoryContextRequired": "Melden Sie sich mit einem Filialadministratorkonto an oder wählen Sie eine Filiale aus, bevor Sie Bestandsbewegungen erfassen.",
-      "backTo": "Zurück zu: {subject}",
-      "restaurantList": "Restaurantliste",
-      "subjects": {
-        "overview": "Dashboard-Übersicht",
-        "branches": "Filialen",
-        "customers": "Kunden",
-        "customerMetrics": "Kundenkennzahlen",
-        "deliverymen": "Lieferpersonal",
-        "deliverymanMetrics": "Lieferpersonalkennzahlen",
-        "employees": "Mitarbeiter",
-        "menus": "Menüs",
-        "notifications": "Benachrichtigungen",
-        "inventory": "Bestand",
-        "inventoryContext": "Bestandskontext",
-        "cuisines": "Küchenrichtungen"
-      }
-    },
     "accountSettings": "Kontoeinstellungen",
     "language": "Sprache",
     "english": "Englisch",
@@ -66,7 +33,6 @@
     "commission": "Provision",
     "subscription": "Abonnement",
     "paginationSummary": "Zeige {from} bis {to} von {total} Datensätzen",
-    "paginationSummaryEmpty": "Zeige 0 von {total} Ergebnissen",
     "paginationSummarySimple": "Zeige {showing} von {total} Datensätzen",
     "emptyDefaultTitle": "Es sind noch keine Daten vorhanden.",
     "emptyDefaultDescription": "Sie haben noch nichts hinzugefügt. Erstellen Sie den ersten Eintrag.",
@@ -188,7 +154,41 @@
     "editModifierCategory": "Modifier-Kategorie bearbeiten",
     "deleteModifierCategory": "Modifier-Kategorie löschen",
     "deleteModifierCategoryFailed": "Modifier-Kategorie konnte nicht gelöscht werden.",
-    "sortValue": "Sortierung {value}"
+    "sortValue": "Sortierung {value}",
+    "feedback": {
+      "loadFailed": "Laden fehlgeschlagen: {subject}",
+      "loadFailedDescription": "Die angeforderten Daten konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+      "refreshFailed": "Aktualisierung fehlgeschlagen: {subject}",
+      "cachedDescription": "Die zuletzt geladenen Daten werden angezeigt. Bitte versuchen Sie es erneut.",
+      "retry": "Erneut laden: {subject}",
+      "loading": "Wird geladen: {subject}",
+      "loadingDescription": "Die angeforderten Daten werden geladen.",
+      "unavailable": "Nicht verfügbar: {subject}",
+      "unavailableDescription": "Daten werden hier angezeigt, sobald sie verfügbar sind.",
+      "trashUnavailableDescription": "Gelöschte Datensätze können hier nicht angezeigt oder verwaltet werden. Wiederherstellung und endgültiges Löschen sind nicht verfügbar.",
+      "restaurantUnavailableDescription": "Restaurantdaten sind in dieser Ansicht nicht verfügbar. Die Auflistung und Verwaltung sind hier nicht angebunden.",
+      "restaurantContextLoading": "Ihr Restaurantkontext wird geladen.",
+      "restaurantContextRequired": "Zum Laden von Benachrichtigungen ist ein Restaurantkontext erforderlich.",
+      "inventoryContextLoading": "Ihr Bestandskontext wird geladen.",
+      "inventoryContextRequired": "Melden Sie sich mit einem Filialadministratorkonto an oder wählen Sie eine Filiale aus, bevor Sie Bestandsbewegungen erfassen.",
+      "backTo": "Zurück zu: {subject}",
+      "restaurantList": "Restaurantliste",
+      "subjects": {
+        "overview": "Dashboard-Übersicht",
+        "branches": "Filialen",
+        "customers": "Kunden",
+        "customerMetrics": "Kundenkennzahlen",
+        "deliverymen": "Lieferpersonal",
+        "deliverymanMetrics": "Lieferpersonalkennzahlen",
+        "employees": "Mitarbeiter",
+        "menus": "Menüs",
+        "notifications": "Benachrichtigungen",
+        "inventory": "Bestand",
+        "inventoryContext": "Bestandskontext",
+        "cuisines": "Küchenrichtungen"
+      }
+    },
+    "paginationSummaryEmpty": "Zeige 0 von {total} Ergebnissen"
   },
   "navigation": {
     "changeLanguage": "Sprache ändern",
@@ -259,9 +259,6 @@
     "accountSettingsCta": "KONTOEINSTELLUNGEN",
     "logout": "Abmelden",
     "logoutSuccess": "Erfolgreich abgemeldet",
-    "collapseSidebar": "Seitenleiste einklappen",
-    "expandSidebar": "Seitenleiste ausklappen",
-    "platform": "Plattform",
     "accountSettings": "Kontoeinstellungen",
     "allOrders": "Alle Bestellungen",
     "notificationSoundOn": "Bestellton an",
@@ -270,7 +267,10 @@
     "deliveryOrders": "Lieferbestellungen",
     "pickupOrders": "Abholbestellungen",
     "groupOrders": "Gruppenbestellungen",
-    "invoiceHistory": "Rechnungshistorie"
+    "invoiceHistory": "Rechnungshistorie",
+    "collapseSidebar": "Seitenleiste einklappen",
+    "expandSidebar": "Seitenleiste ausklappen",
+    "platform": "Plattform"
   },
   "navbar": {
     "openSidebar": "Seitenleiste öffnen",
@@ -300,12 +300,12 @@
       "faqs": "FAQs"
     },
     "resultsTitle": "Suchergebnisse",
-    "resultsDescription": "Durchsuchen Sie den aktuellen Restaurant-Arbeitsbereich.",
     "showingResults": "Ergebnisse für „{query}“ werden angezeigt",
-    "minimumTitle": "Suchbegriff eingeben",
     "minimumCharacters": "Geben Sie mindestens 2 Zeichen ein, um zu suchen.",
-    "searchingDescription": "Bestellungen, Menüs, Kunden, Filialen, Mitarbeiter und Aktionen werden durchsucht.",
     "temporaryUnavailableWithPeriod": "Die Suche ist vorübergehend nicht verfügbar.",
+    "resultsDescription": "Durchsuchen Sie den aktuellen Restaurant-Arbeitsbereich.",
+    "minimumTitle": "Suchbegriff eingeben",
+    "searchingDescription": "Bestellungen, Menüs, Kunden, Filialen, Mitarbeiter und Aktionen werden durchsucht.",
     "retry": "Suche wiederholen",
     "noResultsDescription": "Keine Einträge im Arbeitsbereich stimmen mit „{query}“ überein."
   },
@@ -420,12 +420,12 @@
       "promotionsAction": "Aktionen verwalten"
     },
     "pieChart": "Kreisdiagramm",
-    "percentagesUnavailable": "Prozentkennzahlen nicht verfügbar",
-    "percentagesUnavailableDescription": "Die aktuelle Datenquelle liefert keine Prozentwerte für Bestellungen, Kundenwachstum und Umsatz. Verfügbare Gesamtwerte finden Sie in der Dashboard-Übersicht.",
     "chart": "Diagramm",
     "showValue": "Wert anzeigen",
     "totalOrder": "Gesamtbestellungen",
-    "customerGrowth": "Kundenwachstum"
+    "customerGrowth": "Kundenwachstum",
+    "percentagesUnavailable": "Prozentkennzahlen nicht verfügbar",
+    "percentagesUnavailableDescription": "Die aktuelle Datenquelle liefert keine Prozentwerte für Bestellungen, Kundenwachstum und Umsatz. Verfügbare Gesamtwerte finden Sie in der Dashboard-Übersicht."
   },
   "orders": {
     "title": "Bestellungen",
@@ -615,7 +615,6 @@
     "loadingDetails": "Bestelldetails werden geladen...",
     "loadingOrder": "Bestellung wird geladen...",
     "groupOrder": "Gruppenbestellung",
-    "participants": "Teilnehmer",
     "groupOrderDescription": "Organisiert {totalItems} Artikel über {participants} Teilnehmer.",
     "printLabel": "Label drucken",
     "payment": "Zahlung",
@@ -786,7 +785,8 @@
     "sentDownloaded": "Gesendet / Downloads",
     "sentDownloadedValue": "{sent} gesendet / {downloaded} Downloads",
     "lastSent": "Zuletzt gesendet",
-    "documentType": "Dokumenttyp"
+    "documentType": "Dokumenttyp",
+    "participants": "Teilnehmer"
   },
   "tableReservations": {
     "title": "Tischreservierungen",
@@ -971,14 +971,14 @@
       "emptyDescription": "Fuegen Sie Menueartikel hinzu, um diese Liste aufzubauen."
     },
     "header": {
-      "overview": "Uebersicht",
       "modifiers": "Modifier",
       "categories": "Kategorien",
       "items": "Artikel",
       "addMenu": "Menue hinzufuegen",
-      "menuNavigation": "Bereiche der Menueverwaltung",
       "importTitle": "Menue importieren",
-      "importSubtitle": "Menue-Daten hochladen oder importieren"
+      "importSubtitle": "Menue-Daten hochladen oder importieren",
+      "overview": "Uebersicht",
+      "menuNavigation": "Bereiche der Menueverwaltung"
     },
     "categoryDetails": {
       "notFound": "Kategorie nicht gefunden.",
@@ -1140,12 +1140,6 @@
       "description": "Modifier-Option erstellen oder aktualisieren.",
       "category": "Modifier-Kategorie",
       "categoryPlaceholder": "Modifier-Kategorie auswaehlen",
-      "categoryHelp": "Wird nur verwendet, um Modifier im Admin-Bereich zu organisieren und zu filtern (zum Beispiel Saucen, Groessen oder Extras). Kundenauswahlregeln gehoeren zu Modifier-Gruppen.",
-      "modifierGroups": "Modifier-Gruppen",
-      "modifierGroupsHelp": "Verknuepfen Sie diesen Modifier mit jeder kundenseitigen Gruppe, in der er erscheinen soll.",
-      "loadingGroups": "Modifier-Gruppen werden geladen...",
-      "noGroups": "Keine Modifier-Gruppen gefunden. Erstellen Sie zuerst eine Gruppe und kehren Sie dann hierher zurueck.",
-      "groupRules": "Gruppenlimits: {min}–{max}",
       "name": "Name",
       "namePlaceholder": "z. B. Extra Kaese",
       "basePrice": "Basispreis",
@@ -1160,7 +1154,13 @@
       "restaurantMissing": "Restaurantkontext fehlt.",
       "saveFailed": "Modifier konnte nicht gespeichert werden.",
       "update": "Modifier aktualisieren",
-      "create": "Modifier erstellen"
+      "create": "Modifier erstellen",
+      "categoryHelp": "Wird nur verwendet, um Modifier im Admin-Bereich zu organisieren und zu filtern (zum Beispiel Saucen, Groessen oder Extras). Kundenauswahlregeln gehoeren zu Modifier-Gruppen.",
+      "modifierGroups": "Modifier-Gruppen",
+      "modifierGroupsHelp": "Verknuepfen Sie diesen Modifier mit jeder kundenseitigen Gruppe, in der er erscheinen soll.",
+      "loadingGroups": "Modifier-Gruppen werden geladen...",
+      "noGroups": "Keine Modifier-Gruppen gefunden. Erstellen Sie zuerst eine Gruppe und kehren Sie dann hierher zurueck.",
+      "groupRules": "Gruppenlimits: {min}–{max}"
     },
     "modifierGroupModal": {
       "addTitle": "Modifier-Gruppe hinzufuegen",
@@ -1558,10 +1558,6 @@
         "description": "Modifier-Gruppen zuweisen und Preise konfigurieren.",
         "assignTitle": "Modifier-Gruppen zuweisen",
         "assignDescription": "Waehlen Sie Modifier-Gruppen fuer diesen Menueartikel.",
-        "groupRulesInherited": "Waehlen Sie vorhandene Modifier-Gruppen. Pflichtstatus und Auswahllimits werden aus jeder Gruppe uebernommen.",
-        "selectionRange": "Waehlen {min}–{max}",
-        "optional": "Optional",
-        "removeGroup": "Modifier-Gruppe entfernen",
         "legacyAssignTitle": "Legacy-direkte Modifier",
         "legacyAssignDescription": "Direkte Modifier-Auswahlen nur fuer bestehende Backend-Kompatibilitaet beibehalten.",
         "searchPlaceholder": "Modifier-Gruppen suchen...",
@@ -1586,7 +1582,11 @@
         "specifyVariationModifierPrices": "Variationsbezogene Modifier-Preise angeben",
         "restaurantMissing": "Restaurantkontext fehlt.",
         "modifierPriceInvalid": "Modifier-Preise muessen gueltige nicht-negative Zahlen sein.",
-        "modifierVariationPriceInvalid": "Variationsbezogene Modifier-Preise muessen gueltige nicht-negative Zahlen sein."
+        "modifierVariationPriceInvalid": "Variationsbezogene Modifier-Preise muessen gueltige nicht-negative Zahlen sein.",
+        "groupRulesInherited": "Waehlen Sie vorhandene Modifier-Gruppen. Pflichtstatus und Auswahllimits werden aus jeder Gruppe uebernommen.",
+        "selectionRange": "Waehlen {min}–{max}",
+        "optional": "Optional",
+        "removeGroup": "Modifier-Gruppe entfernen"
       }
     }
   },
@@ -1790,8 +1790,6 @@
     "verifyOtp": "OTP verifizieren",
     "verifying": "Wird verifiziert...",
     "table": {
-      "selectAll": "Alle Kunden auswählen",
-      "selectCustomer": "Kunde {name} auswählen",
       "serial": "Nr.",
       "customerName": "Kundenname",
       "customerType": "Kundentyp",
@@ -1804,7 +1802,9 @@
       "phone": "Telefon",
       "email": "E-Mail",
       "totalOrders": "Bestellungen insgesamt",
-      "joined": "Beigetreten"
+      "joined": "Beigetreten",
+      "selectAll": "Alle Kunden auswählen",
+      "selectCustomer": "Kunde {name} auswählen"
     },
     "stats": {
       "totalCustomers": "Kunden insgesamt",
@@ -2507,7 +2507,6 @@
       "unableLoadRestaurants": "Restaurants konnten nicht geladen werden",
       "unableSaveRole": "Rolle konnte nicht gespeichert werden",
       "staffCreated": "Mitarbeiter erfolgreich erstellt!",
-      "staffCreatedNoInvitation": "Mitarbeiter erstellt, aber die Einladungs-E-Mail wurde nicht gesendet.",
       "failedCreateStaff": "Mitarbeiter konnte nicht erstellt werden",
       "staffUpdated": "Mitarbeiter erfolgreich aktualisiert!",
       "failedUpdateStaff": "Mitarbeiter konnte nicht aktualisiert werden",
@@ -2523,7 +2522,8 @@
       "roleDeletedShort": "Rolle gelöscht",
       "failedDeleteRole": "Rolle konnte nicht gelöscht werden",
       "deleteFailed": "Löschen fehlgeschlagen",
-      "statusUpdated": "Status aktualisiert"
+      "statusUpdated": "Status aktualisiert",
+      "staffCreatedNoInvitation": "Mitarbeiter erstellt, aber die Einladungs-E-Mail wurde nicht gesendet."
     },
     "validation": {
       "invalidEmail": "Ungültige E-Mail",
@@ -2691,26 +2691,19 @@
       "everyDay": "Jeden Tag"
     },
     "actions": {
-      "view": "Ansehen",
       "edit": "Bearbeiten",
       "delete": "Löschen",
       "close": "Schließen",
       "reset": "Zurücksetzen",
       "save": "Speichern",
       "saving": "Speichern...",
-      "cancel": "Abbrechen"
+      "cancel": "Abbrechen",
+      "view": "Ansehen"
     },
     "forms": {
       "setupBasicInfo": "Basisinformationen einrichten",
       "discountSetup": "Rabatt einrichten",
       "promotionScope": "Aktionsbereich",
-      "orderTypeScope": "Bestellart",
-      "validForOrderType": "Gültig für Bestellart",
-      "allOrderTypes": "Alle Bestellarten",
-      "deliveryOnly": "Nur Lieferung",
-      "pickupOnly": "Nur Abholung",
-      "dineInOnly": "Nur Verzehr vor Ort",
-      "orderTypeScopeHelp": "Wählen Sie Nur Abholung, damit dieser Coupon nur für Abholbestellungen gilt.",
       "happyHourScope": "Happy-Hour-Bereich",
       "branch": "Filiale",
       "applyToOptional": "Anwenden auf (optional)",
@@ -2757,8 +2750,6 @@
       "maximumUsesPerCustomerPlaceholder": "z. B. 1",
       "startsAt": "Beginnt am *",
       "expiresAt": "Läuft ab am *",
-      "startsAtOptional": "Beginnt am (optional)",
-      "expiresAtOptional": "Läuft ab am (optional)",
       "assignPermanently": "Dieses Angebot dauerhaft zuweisen",
       "activePromotion": "Aktive Aktion",
       "applyMode": "Anwendungsmodus *",
@@ -2792,7 +2783,16 @@
       "selectFoodCategory": "Speisekategorie auswählen",
       "selectFoodCategoryPlaceholder": "Kategorie suchen",
       "clearSelectedCategory": "Ausgewählte Kategorie löschen",
-      "happyHourScopeHelp": "Lassen Sie beide Felder leer, wenn die Happy Hour für alle Artikel gilt."
+      "happyHourScopeHelp": "Lassen Sie beide Felder leer, wenn die Happy Hour für alle Artikel gilt.",
+      "orderTypeScope": "Bestellart",
+      "validForOrderType": "Gültig für Bestellart",
+      "allOrderTypes": "Alle Bestellarten",
+      "deliveryOnly": "Nur Lieferung",
+      "pickupOnly": "Nur Abholung",
+      "dineInOnly": "Nur Verzehr vor Ort",
+      "orderTypeScopeHelp": "Wählen Sie Nur Abholung, damit dieser Coupon nur für Abholbestellungen gilt.",
+      "startsAtOptional": "Beginnt am (optional)",
+      "expiresAtOptional": "Läuft ab am (optional)"
     },
     "days": {
       "sunday": "Sonntag",
@@ -2847,10 +2847,6 @@
     }
   },
   "settings": {
-    "globalSettingsTitle": "Globale Einstellungen",
-    "globalSettingsDescription": "Plattformweite Standardeinstellungen konfigurieren.",
-    "unsavedChanges": "Nicht gespeicherte Storefront-Änderungen",
-    "brandingSynced": "Storefront-Einstellungen sind synchronisiert",
     "storefrontTitle": "Storefront-Einstellungen",
     "storefrontDescription": "Restaurantprofil, Branding, Assets, Supportkontakt und kundenorientiertes Erscheinungsbild verwalten.",
     "homepageSections": "Startseitenbereiche",
@@ -2926,7 +2922,11 @@
     "viewAllHistory": "Gesamten Verlauf anzeigen",
     "applyPreview": "Vorschau anwenden",
     "discardChanges": "Änderungen verwerfen",
-    "saveBranding": "Branding speichern"
+    "saveBranding": "Branding speichern",
+    "globalSettingsTitle": "Globale Einstellungen",
+    "globalSettingsDescription": "Plattformweite Standardeinstellungen konfigurieren.",
+    "unsavedChanges": "Nicht gespeicherte Storefront-Änderungen",
+    "brandingSynced": "Storefront-Einstellungen sind synchronisiert"
   },
   "profile": {
     "managementTitle": "Profilverwaltung",
@@ -2959,9 +2959,9 @@
     "bio": "Bio",
     "bioPlaceholder": "Erzählen Sie Kunden kurz etwas über sich",
     "saveProfile": "Profil speichern",
-    "profileDetails": "Profildetails",
     "profileUpdated": "Profil erfolgreich aktualisiert",
-    "updateProfileError": "Profil konnte nicht aktualisiert werden"
+    "updateProfileError": "Profil konnte nicht aktualisiert werden",
+    "profileDetails": "Profildetails"
   },
   "validation": {},
   "reports": {
@@ -2989,6 +2989,7 @@
       "onlineAmount": "Online-Zahlungen gesamt",
       "availablePayout": "Verfügbare Auszahlung",
       "totalOrders": "Bestellungen gesamt",
+      "totalOrdersSelectedPeriod": "Bestellungen gesamt (ausgewählter Zeitraum)",
       "grossRevenue": "Bruttoumsatz",
       "paidRevenue": "Bezahlter Umsatz",
       "netRevenue": "Nettoumsatz",
@@ -3015,10 +3016,25 @@
     "resetPeriod": "Zurücksetzen",
     "invalidCustomPeriod": "Bitte wählen Sie ein gültiges Start- und Enddatum",
     "selectedPeriod": "Ausgewählt: {from} bis {to}",
+    "summaryLoadFailed": "Die Zusammenfassung für den ausgewählten Zeitraum konnte nicht geladen werden. Werte sind erst nach erfolgreichem Laden verfügbar.",
+    "trendLoadFailed": "Die Trenddaten für den ausgewählten Zeitraum konnten nicht geladen werden.",
+    "unavailable": "Nicht verfügbar",
+    "retry": "Erneut versuchen",
     "restaurantUnavailable": "Restaurant ist nicht verfügbar",
     "pdfDownloaded": "{title} wurde als PDF heruntergeladen",
     "live": "Live",
     "orderTrend": "Bestelltrend",
+    "revenueTrend": "Umsatztrend",
+    "chartGranularity": "Diagrammintervall: {range}",
+    "emptyOrdersTitle": "Es sind noch keine Bestellungen vorhanden.",
+    "emptyOrdersDescription": "Sie haben noch keine Bestellungen erhalten.",
+    "orderAmount": "Bestellbetrag",
+    "discount": "Rabatt",
+    "sl": "Nr.",
+    "ordersCount": "{count} Bestellungen",
+    "trackOrderVolume": "Bestellvolumen im ausgewählten Zeitraum {range} verfolgen",
+    "trackOrderVolumePrefix": "Bestellvolumen im ausgewählten Zeitraum",
+    "range": "verfolgen",
     "orderTrendRange": "Zeitraum des Bestelltrends",
     "refreshOrderTrend": "Bestelltrend aktualisieren",
     "retryOrderTrend": "Bestelltrend erneut laden",
@@ -3027,7 +3043,6 @@
     "orderTrendCached": "Zuvor geladene Bestelldaten werden angezeigt. Bitte versuchen Sie es erneut, um aktuelle Werte zu erhalten.",
     "orderTrendUnavailable": "Bestelltrend nicht verfügbar",
     "noOrderTrendData": "Keine Bestelltrenddaten für den ausgewählten Zeitraum.",
-    "revenueTrend": "Umsatztrend",
     "revenueTrendRange": "Zeitraum des Umsatztrends",
     "refreshRevenueTrend": "Umsatztrend aktualisieren",
     "retryRevenueTrend": "Umsatztrend erneut laden",
@@ -3040,16 +3055,7 @@
       "daily": "Täglich",
       "weekly": "Wöchentlich",
       "monthly": "Monatlich"
-    },
-    "emptyOrdersTitle": "Es sind noch keine Bestellungen vorhanden.",
-    "emptyOrdersDescription": "Sie haben noch keine Bestellungen erhalten.",
-    "orderAmount": "Bestellbetrag",
-    "discount": "Rabatt",
-    "sl": "Nr.",
-    "ordersCount": "{count} Bestellungen",
-    "trackOrderVolume": "Bestellvolumen im ausgewählten Zeitraum {range} verfolgen",
-    "trackOrderVolumePrefix": "Bestellvolumen im ausgewählten Zeitraum",
-    "range": "verfolgen"
+    }
   },
   "pos": {
     "title": "Neue Bestellung erstellen",
@@ -3544,7 +3550,6 @@
     "catalogHelp": "WinOrder gleicht Hauptartikel und Extras anhand des Namens ab. FeastFlow überträgt bei Varianten den Namen des Basisartikels zusammen mit ArticleSize; gespeicherte Namen oder Artikelnummern sind optionale Abweichungen. Für zugeordnete Artikel ist die in WinOrder konfigurierte MwSt. maßgeblich. Unbekannte Kommentarartikel dürfen nur Ausnahmen sein. Allgemeine Servicegebühren benötigen weiterhin eine explizite Artikelzuordnung.",
     "nameMatching": "Exakter Namensabgleich",
     "catalogFile": "WinOrder-Artikelexport",
-    "chooseCatalogFile": "Datei auswählen",
     "catalogFileHelp": "Wählen Sie einen WinOrder-CSV- oder XML-Export, um Artikelnamen lokal zu vergleichen. Die Datei wird nicht hochgeladen.",
     "catalogFileTooLarge": "Die WinOrder-Katalogdatei darf höchstens 5 MB groß sein.",
     "catalogFileInvalid": "Dies ist kein unterstützter WinOrder-CSV- oder XML-Artikelexport.",
@@ -3572,7 +3577,8 @@
     "retryFailed": "Fehlgeschlagene Exporte wiederholen",
     "saved": "WinOrder-Konfiguration gespeichert.",
     "failed": "WinOrder-Konfiguration konnte nicht gespeichert werden.",
-    "signedInAs": "Angemeldet als {email}"
+    "signedInAs": "Angemeldet als {email}",
+    "chooseCatalogFile": "Datei auswählen"
   },
   "printing": {
     "title": "Automatischer Druck",
