@@ -3457,7 +3457,9 @@
     "emptyContract": "Es wurde noch kein Vertrags-/Rechtstext veroeffentlicht.",
     "address": "Geschaeftsadresse",
     "missingRestaurant": "Restaurant-ID fehlt.",
-    "readOnlyToast": "Nur Business-Admins koennen das Rechtsprofil aktualisieren."
+    "readOnlyToast": "Nur Business-Admins koennen das Rechtsprofil aktualisieren.",
+    "loadError": "Das Rechtsprofil konnte nicht geladen werden. Ihre ungespeicherten Aenderungen wurden beibehalten.",
+    "retry": "Erneut versuchen"
   },
   "aboutUs": {
     "title": "Ueber uns",

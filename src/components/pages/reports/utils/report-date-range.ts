@@ -79,5 +79,4 @@ export const buildReportTrendParams = (
   ...scope,
   ...period,
   range,
-  kind: "order",
 });

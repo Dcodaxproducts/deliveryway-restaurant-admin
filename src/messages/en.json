@@ -3457,7 +3457,9 @@
     "emptyContract": "No contract/legal text has been published yet.",
     "address": "Business address",
     "missingRestaurant": "Restaurant ID is missing.",
-    "readOnlyToast": "Only business admins can update the legal profile."
+    "readOnlyToast": "Only business admins can update the legal profile.",
+    "loadError": "The legal profile could not be loaded. Your unsaved edits have been preserved.",
+    "retry": "Retry"
   },
   "aboutUs": {
     "title": "About Us",
