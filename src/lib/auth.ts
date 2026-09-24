@@ -717,6 +717,34 @@ export const getRoleLabel = (role?: string | null) => {
   return role || "Admin";
 };
 
+export type AccountIdentityKey =
+  | "superAdminStaff"
+  | "restaurantAdminStaff"
+  | "branchAdminStaff"
+  | "staff"
+  | "businessAdmin"
+  | "restaurantAdmin"
+  | "branchAdmin"
+  | "admin";
+
+export const getAccountIdentity = (user?: AuthUser | null) => {
+  const role = normalizeRoleName(user?.role);
+  const staff = isStaffRole(user?.role, user?.actorType);
+  const panelType = normalizeRoleName(user?.panelType ?? user?.staffRole?.panelType);
+  let labelKey: AccountIdentityKey = "admin";
+
+  if (staff) {
+    if (panelType === "SUPER_ADMIN") labelKey = "superAdminStaff";
+    else if (panelType === ADMIN_ROLES.BRANCH_ADMIN) labelKey = "branchAdminStaff";
+    else if (panelType === ADMIN_ROLES.BUSINESS_ADMIN || panelType === ADMIN_ROLES.RESTAURANT_ADMIN) labelKey = "restaurantAdminStaff";
+    else labelKey = "staff";
+  } else if (role === ADMIN_ROLES.BUSINESS_ADMIN) labelKey = "businessAdmin";
+  else if (role === ADMIN_ROLES.RESTAURANT_ADMIN) labelKey = "restaurantAdmin";
+  else if (role === ADMIN_ROLES.BRANCH_ADMIN) labelKey = "branchAdmin";
+
+  return { labelKey, staffRoleName: staff ? user?.staffRole?.name?.trim() || null : null };
+};
+
 export const getScopedQueryParams = (user?: AuthUser | null) => {
   const params: Record<string, string> = {};
 

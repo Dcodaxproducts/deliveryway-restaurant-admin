@@ -1,4 +1,16 @@
 {
+  "identity": {
+    "superAdminStaff": "Super Admin Staff",
+    "restaurantAdminStaff": "Restaurant Admin Staff",
+    "branchAdminStaff": "Branch Admin Staff",
+    "staff": "Staff",
+    "businessAdmin": "Business Admin",
+    "restaurantAdmin": "Restaurant Admin",
+    "branchAdmin": "Branch Admin",
+    "admin": "Admin",
+    "accountType": "Account type",
+    "staffRole": "Staff role"
+  },
   "common": {
     "accountSettings": "Account Settings",
     "language": "Language",

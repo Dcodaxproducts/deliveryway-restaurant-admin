@@ -1,4 +1,16 @@
 {
+  "identity": {
+    "superAdminStaff": "Superadmin-Mitarbeiter",
+    "restaurantAdminStaff": "Restaurantadmin-Mitarbeiter",
+    "branchAdminStaff": "Filialadmin-Mitarbeiter",
+    "staff": "Mitarbeiter",
+    "businessAdmin": "Unternehmensadministrator",
+    "restaurantAdmin": "Restaurantadministrator",
+    "branchAdmin": "Filialadministrator",
+    "admin": "Administrator",
+    "accountType": "Kontotyp",
+    "staffRole": "Mitarbeiterrolle"
+  },
   "common": {
     "accountSettings": "Kontoeinstellungen",
     "language": "Sprache",

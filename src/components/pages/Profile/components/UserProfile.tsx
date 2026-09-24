@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/common/status-badge";
 import { ProfileIdentityCard } from "@/components/pages/Profile/components/ProfileIdentityCard";
 import { useAuth } from "@/hooks/useAuth";
 import {
+getAccountIdentity,
   getAvatarUrl,
   getDisplayName,
   getInitials,
@@ -56,6 +57,7 @@ export default function UserProfile() {
   const fullName = getDisplayName(user);
   const avatarUrl = getAvatarUrl(user);
   const initials = getInitials(user);
+const accountIdentity = getAccountIdentity(user);
 
   const accountRows = [
     [t("userId"), user?.id],
