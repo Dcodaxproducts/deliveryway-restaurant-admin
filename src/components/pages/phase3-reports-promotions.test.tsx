@@ -14,7 +14,7 @@ describe("Phase 3 reports and promotions screen family", () => {
     expect(reports).toContain("<PageTabs");
     expect(reports).toContain("<FilterBar");
     expect(reports).toContain("<SectionCard");
-    expect(reports).toContain("<StatePanel state=\"error\"");
+    expect(reports).toContain("<ReportSummaryError");
     expect(reports).toContain("<StatsSection");
   });
 
@@ -33,7 +33,7 @@ describe("Phase 3 reports and promotions screen family", () => {
     );
 
     expect(management).toContain("<SectionCard");
-    expect(management).toContain("<StatePanel state=\"loading\"");
+    expect(management).toContain('<StatePanel state="loading"');
     expect(tabs).toContain("<PageTabs");
     expect(wrapper).toContain("<Container>");
     expect(wrapper).toContain("<PageHeader");

@@ -1,4 +1,4 @@
-disabled={activeLoading || activeReportError || !restaurantId}"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -38,7 +38,7 @@ import {
   type ReportTab,
 } from "@/components/pages/reports/utils/reports-page.helpers";
 import {
-buildReportTrendParams,
+  buildReportTrendParams,
   getPreviousCalendarMonthPeriod,
   isValidCustomReportPeriod,
   resolveReportDateRange,
@@ -77,6 +77,9 @@ export default function Orders() {
     () => resolveReportDateRange(range, customPeriod),
     [customPeriod, range],
   );
+  const trendParams = scopedReportParams
+    ? buildReportTrendParams(scopedReportParams, reportDateRange, range)
+    : undefined;
   useEffect(() => {
     const requestedTab = searchParams.get("tab");
     if (
@@ -157,6 +160,11 @@ export default function Orders() {
   const activeReportData =
     activeTab === "financial" ? financialData : ordersData;
 
+  const activeReportError =
+    activeTab === "financial" ? financialError : ordersError;
+  const refetchActiveReport =
+    activeTab === "financial" ? refetchFinancialReport : refetchOrdersReport;
+
   const activeLoading =
     authLoading ||
     (activeTab === "invoice-history"
@@ -166,11 +174,7 @@ export default function Orders() {
         ? financialLoading || financialFetching
         : ordersLoading || ordersFetching);
   const activeError =
-    activeTab === "invoice-history"
-      ? subscriptionInvoicesQuery.isError
-      : activeTab === "financial"
-        ? financialError
-        : ordersError;
+    activeTab === "invoice-history" && subscriptionInvoicesQuery.isError;
 
   const handleDownloadActiveReportPdf = () => {
     if (!restaurantId) {
@@ -305,33 +309,44 @@ export default function Orders() {
             }
             actions={
               <>
-                <Button type="button" variant="outline" onClick={handleLastMonth}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleLastMonth}
+                >
                   {t("lastMonth")}
                 </Button>
                 <Button type="button" onClick={handleApplyCustomPeriod}>
                   {t("applyPeriod")}
                 </Button>
                 {customPeriod ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleResetCustomPeriod}
-              >
-                {t("resetPeriod")}
-              </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleResetCustomPeriod}
+                  >
+                    {t("resetPeriod")}
+                  </Button>
                 ) : null}
               </>
             }
             resultCount={
               customPeriod
-                ? t("selectedPeriod", { from: customPeriod.from, to: customPeriod.to })
+                ? t("selectedPeriod", {
+                    from: customPeriod.from,
+                    to: customPeriod.to,
+                  })
                 : undefined
             }
           />
         ) : null}
 
         {activeError ? (
-          <StatePanel state="error" title={t("restaurantUnavailable")} description="" />
+          <StatePanel
+            state="error"
+            title={t("restaurantUnavailable")}
+            description=""
+          />
         ) : activeTab === "invoice-history" ? (
           <GeneratedInvoiceHistoryTable
             invoices={billingInvoices}
@@ -340,17 +355,39 @@ export default function Orders() {
           />
         ) : activeTab === "financial" ? (
           <>
-            <ReportSummaryError message={t("summaryLoadFailed")} retryLabel={t("retry")} onRetry={() => refetchActiveReport()} className={activeReportError ? undefined : "hidden"} />
-            {!activeReportError ? <StatsSection stats={activeStats} loading={activeLoading} /> : null}
+            {activeReportError ? (
+              <ReportSummaryError
+                message={t("summaryLoadFailed")}
+                retryLabel={t("retry")}
+                onRetry={() => refetchActiveReport()}
+              />
+            ) : (
+              <StatsSection stats={activeStats} loading={activeLoading} />
+            )}
 
-            <RevenueAnalytics range={range} onRangeChange={handleRangeChange} params={trendParams} />
+            <RevenueAnalytics
+              range={range}
+              onRangeChange={handleRangeChange}
+              params={trendParams}
+            />
           </>
         ) : (
           <>
-            <ReportSummaryError message={t("summaryLoadFailed")} retryLabel={t("retry")} onRetry={() => refetchActiveReport()} className={activeReportError ? undefined : "hidden"} />
-            {!activeReportError ? <StatsSection stats={activeStats} loading={activeLoading} /> : null}
+            {activeReportError ? (
+              <ReportSummaryError
+                message={t("summaryLoadFailed")}
+                retryLabel={t("retry")}
+                onRetry={() => refetchActiveReport()}
+              />
+            ) : (
+              <StatsSection stats={activeStats} loading={activeLoading} />
+            )}
 
-            <OrdersGraph range={range} onRangeChange={handleRangeChange} params={trendParams} />
+            <OrdersGraph
+              range={range}
+              onRangeChange={handleRangeChange}
+              params={trendParams}
+            />
           </>
         )}
       </SectionCard>

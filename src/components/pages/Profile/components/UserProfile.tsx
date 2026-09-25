@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/common/status-badge";
 import { ProfileIdentityCard } from "@/components/pages/Profile/components/ProfileIdentityCard";
 import { useAuth } from "@/hooks/useAuth";
 import {
-getAccountIdentity,
+  getAccountIdentity,
   getAvatarUrl,
   getDisplayName,
   getInitials,
@@ -21,6 +21,7 @@ export default function UserProfile() {
   const { user, token, setUser } = useAuth();
   const t = useTranslations("profile");
   const common = useTranslations("common");
+  const identity = useTranslations("identity");
   const [refreshing, setRefreshing] = useState(false);
 
   const formatDate = (date?: string | null) => {
@@ -57,17 +58,19 @@ export default function UserProfile() {
   const fullName = getDisplayName(user);
   const avatarUrl = getAvatarUrl(user);
   const initials = getInitials(user);
-const accountIdentity = getAccountIdentity(user);
+  const accountIdentity = getAccountIdentity(user);
 
   const accountRows = [
-    [t("userId"), user?.id],
     [t("email"), user?.email],
-    [t("role"), user?.role],
-    [t("tenantId"), user?.tenantId],
-    [t("restaurantId"), user?.restaurantId],
-    [t("branchId"), user?.branchId],
+    [identity("accountType"), identity(accountIdentity.labelKey)],
+    ...(accountIdentity.staffRoleName
+      ? [[identity("staffRole"), accountIdentity.staffRoleName]]
+      : []),
     [t("phone"), profile?.phone],
-    [t("status"), user?.isActive === false ? common("inactive") : common("active")],
+    [
+      t("status"),
+      user?.isActive === false ? common("inactive") : common("active"),
+    ],
     [common("createdAt"), formatDate(profile?.createdAt)],
     [common("updatedAt"), formatDate(profile?.updatedAt)],
   ];
@@ -81,7 +84,10 @@ const accountIdentity = getAccountIdentity(user);
         email={user?.email}
         description={profile?.bio || t("noDescription")}
         status={
-          <StatusBadge tone={user?.isActive === false ? "neutral" : "success"} size="sm">
+          <StatusBadge
+            tone={user?.isActive === false ? "neutral" : "success"}
+            size="sm"
+          >
             {user?.isActive === false ? common("inactive") : common("active")}
           </StatusBadge>
         }
@@ -91,7 +97,10 @@ const accountIdentity = getAccountIdentity(user);
       <SectionCard padding="md" title={t("profileDetails")}>
         <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
           {accountRows.map(([label, value]) => (
-            <div key={label} className="min-w-0 border-b border-[var(--ui-border)] pb-3 last:border-b-0 sm:[&:nth-last-child(-n+2)]:border-b-0">
+            <div
+              key={label}
+              className="min-w-0 border-b border-[var(--ui-border)] pb-3 last:border-b-0 sm:[&:nth-last-child(-n+2)]:border-b-0"
+            >
               <dt className="text-xs font-medium text-[var(--ui-text-subtle)]">
                 {label}
               </dt>

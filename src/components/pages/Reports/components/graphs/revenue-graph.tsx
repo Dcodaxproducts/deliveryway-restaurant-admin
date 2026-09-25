@@ -39,18 +39,29 @@ const RevenueGraph = ({
 }: {
   range?: TrendRange;
   onRangeChange?: (range: TrendRange) => void;
+  params?: DashboardTrendParams;
 } = {}) => {
   const common = useTranslations("common");
   const t = useTranslations("reports");
   const {
     restaurantId,
-    scopedParams,
+    branchId,
+    isBranchAdmin,
     loading: authLoading,
   } = useAuth();
   const { currency: fallbackCurrency } = useCurrency(restaurantId);
   const [localRange, setLocalRange] = useState<TrendRange>("daily");
   const range = controlledRange ?? localRange;
   const setRange = onRangeChange ?? setLocalRange;
+  const trendParams = params
+    ? { ...params, range }
+    : restaurantId
+      ? {
+          restaurantId,
+          ...(isBranchAdmin && branchId ? { branchId } : {}),
+          range,
+        }
+      : undefined;
 
   const {
     data: revenueTrendResponse,
@@ -58,15 +69,7 @@ const RevenueGraph = ({
     isFetching,
     isError,
     refetch,
-  } = useGetRevenueTrend(
-    restaurantId
-      ? {
-          restaurantId,
-          ...(isBranchAdmin && branchId ? { branchId } : {}),
-          range,
-        }
-      : undefined,
-  );
+  } = useGetRevenueTrend(trendParams);
 
   const trendData = revenueTrendResponse?.data;
   const hasData = trendData != null;
@@ -103,7 +106,8 @@ const RevenueGraph = ({
     ? "revenueRedShadow"
     : "revenuePurpleShadow";
 
-  const loading = !hasData && !isError && (authLoading || isLoading || isFetching);
+  const loading =
+    !hasData && !isError && (authLoading || isLoading || isFetching);
 
   return (
     <ChartPanel title={null}>
@@ -165,10 +169,19 @@ const RevenueGraph = ({
           state="error"
           compact
           className="mb-4"
-          title={t(hasData ? "revenueTrendRefreshFailed" : "revenueTrendFailed")}
-          description={hasData ? t("revenueTrendCached") : common("refreshAndTry")}
+          title={t(
+            hasData ? "revenueTrendRefreshFailed" : "revenueTrendFailed",
+          )}
+          description={
+            hasData ? t("revenueTrendCached") : common("refreshAndTry")
+          }
           action={
-            <Button type="button" variant="outline" disabled={authLoading || isFetching} onClick={() => refetch()}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={authLoading || isFetching}
+              onClick={() => refetch()}
+            >
               {t("retryRevenueTrend")}
             </Button>
           }
@@ -176,124 +189,132 @@ const RevenueGraph = ({
       )}
 
       {(!isError || hasData) && (
-      <div className="h-[220px] w-full min-w-0">
-        {loading ? (
-          <div role="status" aria-label={common("loading")} className="h-full w-full animate-pulse rounded-[16px] bg-gray-100" />
-        ) : !hasData ? (
-          <StatePanel state="unavailable" title={t("revenueTrendUnavailable")} description={common("refreshAndTry")} />
-        ) : chartData.length === 0 ? (
-          <div className="flex h-full items-center justify-center rounded-[16px] border border-dashed border-gray-200 text-sm text-gray-400">
-            {t("noRevenueTrendData")}
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <defs>
-                <linearGradient
-                  id="revenuePurpleGradient"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="0%" stopColor="#6366F1" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="#6366F1" stopOpacity={0} />
-                </linearGradient>
+        <div className="h-[220px] w-full min-w-0">
+          {loading ? (
+            <div
+              role="status"
+              aria-label={common("loading")}
+              className="h-full w-full animate-pulse rounded-[16px] bg-gray-100"
+            />
+          ) : !hasData ? (
+            <StatePanel
+              state="unavailable"
+              title={t("revenueTrendUnavailable")}
+              description={common("refreshAndTry")}
+            />
+          ) : chartData.length === 0 ? (
+            <div className="flex h-full items-center justify-center rounded-[16px] border border-dashed border-gray-200 text-sm text-gray-400">
+              {t("noRevenueTrendData")}
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <defs>
+                  <linearGradient
+                    id="revenuePurpleGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="0%" stopColor="#6366F1" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="#6366F1" stopOpacity={0} />
+                  </linearGradient>
 
-                <linearGradient
-                  id="revenueRedGradient"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="0%" stopColor="#D41414" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="#D41414" stopOpacity={0} />
-                </linearGradient>
+                  <linearGradient
+                    id="revenueRedGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="0%" stopColor="#D41414" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#D41414" stopOpacity={0} />
+                  </linearGradient>
 
-                <filter id="revenuePurpleShadow" height="200%">
-                  <feDropShadow
-                    dx="0"
-                    dy="6"
-                    stdDeviation="8"
-                    floodColor="#6366F1"
-                    floodOpacity="0.25"
-                  />
-                </filter>
+                  <filter id="revenuePurpleShadow" height="200%">
+                    <feDropShadow
+                      dx="0"
+                      dy="6"
+                      stdDeviation="8"
+                      floodColor="#6366F1"
+                      floodOpacity="0.25"
+                    />
+                  </filter>
 
-                <filter id="revenueRedShadow" height="200%">
-                  <feDropShadow
-                    dx="0"
-                    dy="6"
-                    stdDeviation="8"
-                    floodColor="#D41414"
-                    floodOpacity="0.22"
-                  />
-                </filter>
-              </defs>
+                  <filter id="revenueRedShadow" height="200%">
+                    <feDropShadow
+                      dx="0"
+                      dy="6"
+                      stdDeviation="8"
+                      floodColor="#D41414"
+                      floodOpacity="0.22"
+                    />
+                  </filter>
+                </defs>
 
-              <CartesianGrid stroke="#EEF0F4" vertical={false} />
+                <CartesianGrid stroke="#EEF0F4" vertical={false} />
 
-              <XAxis
-                dataKey="day"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "#6B7280", fontSize: 12 }}
-              />
+                <XAxis
+                  dataKey="day"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#6B7280", fontSize: 12 }}
+                />
 
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "#6B7280", fontSize: 12 }}
-                tickFormatter={(value) => {
-                  return formatMoney(Number(value), currency);
-                }}
-              />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#6B7280", fontSize: 12 }}
+                  tickFormatter={(value) => {
+                    return formatMoney(Number(value), currency);
+                  }}
+                />
 
-              <Tooltip
-                formatter={(value: number, name: string) => {
-                  if (name === "revenue") {
-                    return [formatMoney(value, currency), "Revenue"];
-                  }
+                <Tooltip
+                  formatter={(value: number, name: string) => {
+                    if (name === "revenue") {
+                      return [formatMoney(value, currency), "Revenue"];
+                    }
 
-                  return [value, name];
-                }}
-                labelFormatter={(label, payload) => {
-                  const item = payload?.[0]?.payload;
-                  return item?.key ? `Date: ${item.key}` : `Day: ${label}`;
-                }}
-                contentStyle={{
-                  borderRadius: "12px",
-                  border: "none",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-                }}
-              />
+                    return [value, name];
+                  }}
+                  labelFormatter={(label, payload) => {
+                    const item = payload?.[0]?.payload;
+                    return item?.key ? `Date: ${item.key}` : `Day: ${label}`;
+                  }}
+                  contentStyle={{
+                    borderRadius: "12px",
+                    border: "none",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                  }}
+                />
 
-              <Area
-                type="monotone"
-                dataKey="revenue"
-                stroke="none"
-                fill={`url(#${gradientId})`}
-              />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="none"
+                  fill={`url(#${gradientId})`}
+                />
 
-              <Line
-                type="monotone"
-                dataKey="revenue"
-                stroke={lineColor}
-                strokeWidth={3}
-                dot={{
-                  r: 5,
-                  fill: lineColor,
-                  stroke: "#fff",
-                  strokeWidth: 2,
-                }}
-                activeDot={{ r: 7 }}
-                style={{ filter: `url(#${shadowId})` }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </div>
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke={lineColor}
+                  strokeWidth={3}
+                  dot={{
+                    r: 5,
+                    fill: lineColor,
+                    stroke: "#fff",
+                    strokeWidth: 2,
+                  }}
+                  activeDot={{ r: 7 }}
+                  style={{ filter: `url(#${shadowId})` }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       )}
     </ChartPanel>
   );

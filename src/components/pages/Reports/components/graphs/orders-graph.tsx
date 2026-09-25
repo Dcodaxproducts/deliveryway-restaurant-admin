@@ -28,17 +28,28 @@ const OrdersGraph = ({
 }: {
   range?: TrendRange;
   onRangeChange?: (range: TrendRange) => void;
+  params?: DashboardTrendParams;
 } = {}) => {
   const common = useTranslations("common");
   const t = useTranslations("reports");
   const {
     restaurantId,
-    scopedParams,
+    branchId,
+    isBranchAdmin,
     loading: authLoading,
   } = useAuth();
   const [localRange, setLocalRange] = useState<TrendRange>("daily");
   const range = controlledRange ?? localRange;
   const setRange = onRangeChange ?? setLocalRange;
+  const trendParams = params
+    ? { ...params, range }
+    : restaurantId
+      ? {
+          restaurantId,
+          ...(isBranchAdmin && branchId ? { branchId } : {}),
+          range,
+        }
+      : undefined;
 
   const {
     data: ordersTrendResponse,
@@ -46,21 +57,20 @@ const OrdersGraph = ({
     isFetching,
     isError,
     refetch,
-  } = useGetOrdersTrend(
-    restaurantId
-      ? {
-          restaurantId,
-          ...(isBranchAdmin && branchId ? { branchId } : {}),
-          range,
-        }
-      : undefined,
-  );
+  } = useGetOrdersTrend(trendParams);
 
-  const trendData: {
-    range: TrendRange;
-    totalOrdersInRange: number;
-    points: { key: string; label: string; value: number; cumulativeTotal: number }[];
-  } | undefined = ordersTrendResponse?.data;
+  const trendData:
+    | {
+        range: TrendRange;
+        totalOrdersInRange: number;
+        points: {
+          key: string;
+          label: string;
+          value: number;
+          cumulativeTotal: number;
+        }[];
+      }
+    | undefined = ordersTrendResponse?.data;
   const hasData = trendData != null;
 
   const chartData = useMemo(() => {
@@ -76,7 +86,8 @@ const OrdersGraph = ({
 
   const currentRange = trendData?.range ?? range;
 
-  const loading = !hasData && !isError && (authLoading || isLoading || isFetching);
+  const loading =
+    !hasData && !isError && (authLoading || isLoading || isFetching);
   return (
     <ChartPanel title={null} className="h-full">
       <div className="mb-5 flex min-w-0 flex-col gap-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
@@ -131,9 +142,16 @@ const OrdersGraph = ({
           compact
           className="mb-4"
           title={t(hasData ? "orderTrendRefreshFailed" : "orderTrendFailed")}
-          description={hasData ? t("orderTrendCached") : common("refreshAndTry")}
+          description={
+            hasData ? t("orderTrendCached") : common("refreshAndTry")
+          }
           action={
-            <Button type="button" variant="outline" disabled={authLoading || isFetching} onClick={() => refetch()}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={authLoading || isFetching}
+              onClick={() => refetch()}
+            >
               {t("retryOrderTrend")}
             </Button>
           }
@@ -141,72 +159,87 @@ const OrdersGraph = ({
       )}
 
       {(!isError || hasData) && (
-      <div className="h-[220px] w-full min-w-0">
-        {loading ? (
-          <div role="status" aria-label={common("loading")} className="h-full w-full animate-pulse rounded-[16px] bg-gray-100" />
-        ) : !hasData ? (
-          <StatePanel state="unavailable" title={t("orderTrendUnavailable")} description={common("refreshAndTry")} />
-        ) : chartData.length === 0 ? (
-          <div className="flex h-full items-center justify-center rounded-[16px] border border-dashed border-gray-200 text-sm text-gray-400">
-            {t("noOrderTrendData")}
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <defs>
-                <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366F1" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="#6366F1" stopOpacity={0} />
-                </linearGradient>
+        <div className="h-[220px] w-full min-w-0">
+          {loading ? (
+            <div
+              role="status"
+              aria-label={common("loading")}
+              className="h-full w-full animate-pulse rounded-[16px] bg-gray-100"
+            />
+          ) : !hasData ? (
+            <StatePanel
+              state="unavailable"
+              title={t("orderTrendUnavailable")}
+              description={common("refreshAndTry")}
+            />
+          ) : chartData.length === 0 ? (
+            <div className="flex h-full items-center justify-center rounded-[16px] border border-dashed border-gray-200 text-sm text-gray-400">
+              {t("noOrderTrendData")}
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <defs>
+                  <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366F1" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="#6366F1" stopOpacity={0} />
+                  </linearGradient>
 
-                <filter id="lineShadow" height="200%">
-                  <feDropShadow
-                    dx="0"
-                    dy="6"
-                    stdDeviation="8"
-                    floodColor="#6366F1"
-                    floodOpacity="0.25"
-                  />
-                </filter>
-              </defs>
+                  <filter id="lineShadow" height="200%">
+                    <feDropShadow
+                      dx="0"
+                      dy="6"
+                      stdDeviation="8"
+                      floodColor="#6366F1"
+                      floodOpacity="0.25"
+                    />
+                  </filter>
+                </defs>
 
-              <XAxis
-                dataKey="day"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "#6B7280", fontSize: 12 }}
-              />
+                <XAxis
+                  dataKey="day"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#6B7280", fontSize: 12 }}
+                />
 
-              <Tooltip
-                formatter={(value: number) => [t("ordersCount", { count: value })]}
-                labelFormatter={(label) => label}
-                contentStyle={{
-                  borderRadius: "12px",
-                  border: "none",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-                }}
-              />
+                <Tooltip
+                  formatter={(value: number) => [
+                    t("ordersCount", { count: value }),
+                  ]}
+                  labelFormatter={(label) => label}
+                  contentStyle={{
+                    borderRadius: "12px",
+                    border: "none",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                  }}
+                />
 
-              <Area
-                type="monotone"
-                dataKey="orders"
-                stroke="none"
-                fill="url(#lineGradient)"
-              />
+                <Area
+                  type="monotone"
+                  dataKey="orders"
+                  stroke="none"
+                  fill="url(#lineGradient)"
+                />
 
-              <Line
-                type="monotone"
-                dataKey="orders"
-                stroke="#6366F1"
-                strokeWidth={3}
-                dot={{ r: 5, fill: "#6366F1", stroke: "#fff", strokeWidth: 2 }}
-                activeDot={{ r: 7 }}
-                style={{ filter: "url(#lineShadow)" }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </div>
+                <Line
+                  type="monotone"
+                  dataKey="orders"
+                  stroke="#6366F1"
+                  strokeWidth={3}
+                  dot={{
+                    r: 5,
+                    fill: "#6366F1",
+                    stroke: "#fff",
+                    strokeWidth: 2,
+                  }}
+                  activeDot={{ r: 7 }}
+                  style={{ filter: "url(#lineShadow)" }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       )}
     </ChartPanel>
   );
