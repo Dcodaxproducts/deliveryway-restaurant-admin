@@ -4,7 +4,7 @@ import { parseLocalizedDecimal } from "@/lib/decimal";
 
 const decimal = z.preprocess(
   (value) => parseLocalizedDecimal(value, Number.NaN),
-  z.number().min(0)
+  z.number().min(0),
 );
 
 /**
@@ -13,11 +13,7 @@ const decimal = z.preprocess(
  * ==============================
  */
 
-export const OrderTypeEnum = z.enum([
-  "DINE_IN",
-  "TAKEAWAY",
-  "DELIVERY",
-]);
+export const OrderTypeEnum = z.enum(["DINE_IN", "TAKEAWAY", "DELIVERY"]);
 
 export const PaymentMethodEnum = z.enum(PAYMENT_METHOD_CODES);
 
@@ -41,61 +37,63 @@ export const DayOfWeekEnum = z.enum([
 
 export const BranchAdminSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(8).optional(),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   phone: z.string().min(8),
 });
 
-export const DeliveryConfigSchema = z.object({
-  mode: z.string().optional().default("RADIUS"),
-  radiusKm: decimal.optional().default(0),
-  minOrderAmount: decimal.optional().default(0),
-  deliveryFee: decimal.optional().default(0),
-  isFreeDelivery: z.boolean().optional().default(false),
-  freeDeliveryThreshold: decimal.optional().default(0),
-  zones: z.array(z.unknown()).optional().default([]),
-  zoneBands: z.array(z.unknown()).optional().default([]),
-  postalCodeRules: z
-    .array(
-      z.object({
-        postalCode: z.string().trim().min(1, "Postal code is required"),
-        deliveryFee: decimal,
-        minOrderAmount: decimal,
-        freeDeliveryThreshold: decimal,
-      })
-    )
-    .optional()
-    .default([]),
-}).superRefine((deliveryConfig, ctx) => {
-  if (deliveryConfig.mode !== "POSTAL_CODE") return;
+export const DeliveryConfigSchema = z
+  .object({
+    mode: z.string().optional().default("RADIUS"),
+    radiusKm: decimal.optional().default(0),
+    minOrderAmount: decimal.optional().default(0),
+    deliveryFee: decimal.optional().default(0),
+    isFreeDelivery: z.boolean().optional().default(false),
+    freeDeliveryThreshold: decimal.optional().default(0),
+    zones: z.array(z.unknown()).optional().default([]),
+    zoneBands: z.array(z.unknown()).optional().default([]),
+    postalCodeRules: z
+      .array(
+        z.object({
+          postalCode: z.string().trim().min(1, "Postal code is required"),
+          deliveryFee: decimal,
+          minOrderAmount: decimal,
+          freeDeliveryThreshold: decimal,
+        }),
+      )
+      .optional()
+      .default([]),
+  })
+  .superRefine((deliveryConfig, ctx) => {
+    if (deliveryConfig.mode !== "POSTAL_CODE") return;
 
-  if (!deliveryConfig.postalCodeRules.length) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "At least one postal code rule is required",
-      path: ["postalCodeRules"],
-    });
-    return;
-  }
-
-  const seenPostalCodes = new Set<string>();
-
-  deliveryConfig.postalCodeRules.forEach((rule, index) => {
-    const postalCode = rule.postalCode.trim().toLowerCase();
-
-    if (seenPostalCodes.has(postalCode)) {
+    if (!deliveryConfig.postalCodeRules.length) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Duplicate postal codes are not allowed",
-        path: ["postalCodeRules", index, "postalCode"],
+        message: "At least one postal code rule is required",
+        path: ["postalCodeRules"],
       });
       return;
     }
 
-    seenPostalCodes.add(postalCode);
+    const seenPostalCodes = new Set<string>();
+
+    deliveryConfig.postalCodeRules.forEach((rule, index) => {
+      const postalCode = rule.postalCode.trim().toLowerCase();
+
+      if (seenPostalCodes.has(postalCode)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Duplicate postal codes are not allowed",
+          path: ["postalCodeRules", index, "postalCode"],
+        });
+        return;
+      }
+
+      seenPostalCodes.add(postalCode);
+    });
   });
-});
 
 export const AutomationSchema = z.object({
   autoAcceptOrders: z.boolean(),
@@ -153,15 +151,18 @@ const BranchSettingsBaseSchema = z.object({
   contact: ContactSchema,
 });
 
-export const BranchSettingsSchema = BranchSettingsBaseSchema.superRefine((settings, ctx) => {
-  if (!settings.tableReservationsEnabled || settings.tableCount >= 1) return;
+export const BranchSettingsSchema = BranchSettingsBaseSchema.superRefine(
+  (settings, ctx) => {
+    if (!settings.tableReservationsEnabled || settings.tableCount >= 1) return;
 
-  ctx.addIssue({
-    code: z.ZodIssueCode.custom,
-    message: "Table count must be at least 1 when table reservations are enabled",
-    path: ["tableCount"],
-  });
-});
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message:
+        "Table count must be at least 1 when table reservations are enabled",
+      path: ["tableCount"],
+    });
+  },
+);
 
 /**
  * ==============================
@@ -188,38 +189,75 @@ export const BranchSchema = z.object({
   settings: BranchSettingsSchema.optional(),
 });
 
-export const createBranchSchema = z.object({
-  restaurantId: z.string().optional(),
-  name: z.string().trim().min(1, "Branch name is required"),
-  street: z.string().optional(),
-  shopNumber: z.string().optional(),
-  postalCode: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  country: z.string().optional(),
-  area: z.string().optional(),
-  lat: z.string().optional(),
-  lng: z.string().optional(),
-  branchAdmin: z.object({
-    email: z.string().optional(),
-    password: z.string().optional(),
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    phone: z.string().optional(),
-  }),
-  settings: BranchSettingsBaseSchema.partial().superRefine((settings, ctx) => {
-    if (!settings.tableReservationsEnabled) return;
+export const createBranchSchema = z
+  .object({
+    restaurantId: z.string().optional(),
+    name: z.string().trim().min(1, "Branch name is required"),
+    street: z.string().trim().min(1, "Street is required"),
+    shopNumber: z.string().optional(),
+    postalCode: z.string().optional(),
+    city: z.string().trim().min(1, "City is required"),
+    state: z.string().trim().min(1, "State is required"),
+    country: z.string().trim().min(1, "Country is required"),
+    area: z.string().optional(),
+    lat: z.string().trim().min(1, "Choose a branch location"),
+    lng: z.string().trim().min(1, "Choose a branch location"),
+    branchAdmin: z.object({
+      email: z.string().optional(),
+      password: z.union([z.literal(""), z.string().min(8)]).optional(),
+      firstName: z.string().optional(),
+      lastName: z.string().optional(),
+      phone: z.string().optional(),
+    }),
+    settings: BranchSettingsBaseSchema.partial()
+      .superRefine((settings, ctx) => {
+        if (!settings.tableReservationsEnabled) return;
 
-    const tableCount = Number(settings.tableCount ?? 0);
-    if (Number.isInteger(tableCount) && tableCount >= 1) return;
+        const tableCount = Number(settings.tableCount ?? 0);
+        if (Number.isInteger(tableCount) && tableCount >= 1) return;
 
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Table count must be at least 1 when table reservations are enabled",
-      path: ["tableCount"],
-    });
-  }).optional(),
-});
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "Table count must be at least 1 when table reservations are enabled",
+          path: ["tableCount"],
+        });
+      })
+      .optional(),
+  })
+  .superRefine((values, ctx) => {
+    const admin = values.branchAdmin;
+    const hasAdmin = Boolean(
+      admin.email ||
+      admin.firstName ||
+      admin.lastName ||
+      admin.phone ||
+      admin.password,
+    );
+    if (!hasAdmin) return;
+
+    if (!admin.email || !z.string().email().safeParse(admin.email).success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Enter a valid branch admin email",
+        path: ["branchAdmin", "email"],
+      });
+    }
+    if (!admin.firstName?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "First name is required",
+        path: ["branchAdmin", "firstName"],
+      });
+    }
+    if (!admin.lastName?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Last name is required",
+        path: ["branchAdmin", "lastName"],
+      });
+    }
+  });
 
 /**
  * ==============================
@@ -228,9 +266,7 @@ export const createBranchSchema = z.object({
  */
 export const BulkBranchSchema = z.object({
   restaurantId: z.string(),
-  branches: z.array(
-    BranchSchema.omit({ restaurantId: true })
-  ),
+  branches: z.array(BranchSchema.omit({ restaurantId: true })),
 });
 
 /**
@@ -250,7 +286,7 @@ export const OpeningHoursSchema = z.object({
         startTime: z.string(),
         endTime: z.string(),
         note: z.string().optional(),
-      })
+      }),
     )
     .optional(),
   note: z.string().optional(),

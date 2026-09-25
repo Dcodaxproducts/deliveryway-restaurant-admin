@@ -339,6 +339,7 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
           showName={false}
           logoUrl={selectedRestaurant?.logoUrl}
           name={selectedRestaurant?.name}
+          allowBrandingFallback={false}
         />
         <span className="truncate font-medium text-gray-800">
           {renderLabel()}
@@ -400,6 +401,7 @@ export default function RestaurantPicker({ className }: RestaurantPickerProps) {
                 showName={false}
                 logoUrl={restaurant.logoUrl}
                 name={restaurant.name}
+                allowBrandingFallback={false}
               />
               <span className="min-w-0 text-left">
                 <span className="block truncate">{restaurant.name}</span>

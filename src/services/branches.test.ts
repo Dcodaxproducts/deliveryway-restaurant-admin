@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/axios";
 import {
   getBranchDeliveryTime,
+  getBranchMenuAssignment,
+  replaceBranchMenuAssignment,
   getDeliveryHours,
   normalizeBranchDeliveryTime,
   updateBranch,
@@ -26,6 +28,48 @@ describe("branches service", () => {
     mockedApi.get.mockReset();
     mockedApi.patch.mockReset();
     mockedApi.put.mockReset();
+  });
+
+  it("reads and replaces whole-menu branch assignments", async () => {
+    mockedApi.get.mockResolvedValueOnce({
+      data: {
+        data: {
+          branchId: "branch-1",
+          menus: [{ id: "menu-1" }],
+          defaultMenuId: "menu-1",
+        },
+      },
+    });
+    mockedApi.put.mockResolvedValueOnce({
+      data: {
+        data: {
+          branchId: "branch-1",
+          menuIds: ["menu-1", "menu-2"],
+          defaultMenuId: "menu-2",
+        },
+      },
+    });
+
+    await expect(getBranchMenuAssignment("branch-1")).resolves.toEqual({
+      branchId: "branch-1",
+      menuIds: ["menu-1"],
+      defaultMenuId: "menu-1",
+    });
+    await expect(
+      replaceBranchMenuAssignment("branch-1", {
+        menuIds: ["menu-1", "menu-2"],
+        defaultMenuId: "menu-2",
+      }),
+    ).resolves.toEqual({
+      branchId: "branch-1",
+      menuIds: ["menu-1", "menu-2"],
+      defaultMenuId: "menu-2",
+    });
+    expect(mockedApi.get).toHaveBeenCalledWith("/branches/branch-1/menus");
+    expect(mockedApi.put).toHaveBeenCalledWith("/branches/branch-1/menus", {
+      menuIds: ["menu-1", "menu-2"],
+      defaultMenuId: "menu-2",
+    });
   });
 
   it("does not re-add opening hours fields when merging service charge settings", async () => {
@@ -85,7 +129,7 @@ describe("branches service", () => {
     expect(mockedApi.patch).toHaveBeenCalledWith("/branches/branch-1", payload);
     expect(mockedApi.patch).not.toHaveBeenCalledWith(
       "/api/v1/branches/branch-1",
-      payload
+      payload,
     );
   });
 
@@ -166,11 +210,11 @@ describe("branches service", () => {
 
     expect(mockedApi.put).toHaveBeenCalledWith(
       "/branches/branch-1/holiday-opening-hours",
-      payload
+      payload,
     );
     expect(mockedApi.put).not.toHaveBeenCalledWith(
       "/api/v1/branches/branch-1/holiday-opening-hours",
-      payload
+      payload,
     );
   });
 
@@ -194,15 +238,15 @@ describe("branches service", () => {
     await updateDeliveryHours("branch-1", payload);
 
     expect(mockedApi.get).toHaveBeenCalledWith(
-      "/branches/branch-1/delivery-hours"
+      "/branches/branch-1/delivery-hours",
     );
     expect(mockedApi.put).toHaveBeenCalledWith(
       "/branches/branch-1/delivery-hours",
-      payload
+      payload,
     );
     expect(mockedApi.put).not.toHaveBeenCalledWith(
       "/api/v1/branches/branch-1/delivery-hours",
-      payload
+      payload,
     );
   });
 
@@ -217,20 +261,20 @@ describe("branches service", () => {
     mockedApi.put.mockResolvedValueOnce({ data: { data: payload } });
 
     await expect(getBranchDeliveryTime("branch-1")).resolves.toEqual(payload);
-    await expect(updateBranchDeliveryTime("branch-1", payload)).resolves.toEqual(
-      payload
-    );
+    await expect(
+      updateBranchDeliveryTime("branch-1", payload),
+    ).resolves.toEqual(payload);
 
     expect(mockedApi.get).toHaveBeenCalledWith(
-      "/branches/branch-1/delivery-time"
+      "/branches/branch-1/delivery-time",
     );
     expect(mockedApi.put).toHaveBeenCalledWith(
       "/branches/branch-1/delivery-time",
-      payload
+      payload,
     );
     expect(mockedApi.put).not.toHaveBeenCalledWith(
       "/api/v1/branches/branch-1/delivery-time",
-      payload
+      payload,
     );
   });
 
@@ -242,7 +286,7 @@ describe("branches service", () => {
           deliveryIntervalMinutes: -1,
           pickupIntervalMinutes: "abc",
         },
-      })
+      }),
     ).toEqual({
       deliveryTime: 50,
       deliveryIntervalMinutes: 0,

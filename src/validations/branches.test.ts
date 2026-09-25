@@ -7,6 +7,12 @@ const createBranchPayload = {
   name: "Blue Area",
   isMain: false,
   branchAdmin: {},
+  street: "Street 12",
+  city: "Lahore",
+  state: "Punjab",
+  country: "Pakistan",
+  lat: "31.5204",
+  lng: "74.3587",
 };
 
 describe("branch service charge validation", () => {
@@ -125,5 +131,25 @@ describe("branch service charge validation", () => {
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it("requires a complete branch location", () => {
+    const result = createBranchSchema.safeParse({
+      ...createBranchPayload,
+      street: "",
+      lat: "",
+      lng: "",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("requires identity fields when an optional branch admin is started", () => {
+    const result = createBranchSchema.safeParse({
+      ...createBranchPayload,
+      branchAdmin: { email: "manager@example.com" },
+    });
+
+    expect(result.success).toBe(false);
   });
 });

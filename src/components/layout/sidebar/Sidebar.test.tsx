@@ -21,9 +21,25 @@ vi.mock("@/components/common/BrandLogo", () => ({
   default: () => <span>brand-logo</span>,
 }));
 
+vi.mock("@/hooks/useBranding", () => ({
+  useBranding: () => ({
+    restaurant: {
+      name: "Cedar Kitchen",
+      logoUrl: "https://cdn.example.com/cedar.png",
+      branding: { logo: { light: "", dark: "" }, assets: { logoUrl: "" } },
+    },
+    isBrandingReady: true,
+    brandingError: null,
+  }),
+}));
+
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({
-    user: { role: "BUSINESS_ADMIN", actorType: "BUSINESS_ADMIN" },
+    user: {
+      role: "BUSINESS_ADMIN",
+      actorType: "BUSINESS_ADMIN",
+      restaurantId: "restaurant-1",
+    },
     role: "BUSINESS_ADMIN",
     isBranchAdmin: false,
     logout: vi.fn(),
@@ -48,6 +64,9 @@ describe("Partner shadcn sidebar", () => {
       'class="group/menu-item relative group/collapsible"',
     );
     expect(markup).toContain(">dashboard<");
+    expect(markup).toContain("Cedar Kitchen");
+    expect(markup).toContain(">partnerWorkspace<");
+    expect(markup).not.toContain(">FeastFlow<");
     expect(markup).toContain("user_logo.png");
     expect(markup).toContain(">needHelp<");
     expect(markup).toContain("data-[active=true]:bg-primary/10");

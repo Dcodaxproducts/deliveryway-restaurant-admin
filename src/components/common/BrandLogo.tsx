@@ -15,6 +15,7 @@ type BrandLogoProps = {
   priority?: boolean;
   logoUrl?: string | null;
   name?: string | null;
+  allowBrandingFallback?: boolean;
 };
 
 const getInitials = (name: string) =>
@@ -35,6 +36,7 @@ export default function BrandLogo({
   priority = false,
   logoUrl,
   name,
+  allowBrandingFallback = true,
 }: BrandLogoProps) {
   const { restaurant } = useBranding();
   const { resolvedTheme, theme } = useTheme();
@@ -47,23 +49,45 @@ export default function BrandLogo({
       return explicitLogo;
     }
 
-    const themedLogo = currentTheme === "dark" ? restaurant.branding.logo.dark : restaurant.branding.logo.light;
-    return normalizeLogoUrl(themedLogo) || normalizeLogoUrl(restaurant.logoUrl) || normalizeLogoUrl(restaurant.branding.assets.logoUrl) || "/feastflow-logo.png";
-  }, [currentTheme, logoUrl, restaurant.branding.assets.logoUrl, restaurant.branding.logo.dark, restaurant.branding.logo.light, restaurant.logoUrl]);
+    if (!allowBrandingFallback) {
+      return "";
+    }
+
+    const themedLogo =
+      currentTheme === "dark"
+        ? restaurant.branding.logo.dark
+        : restaurant.branding.logo.light;
+    return (
+      normalizeLogoUrl(themedLogo) ||
+      normalizeLogoUrl(restaurant.logoUrl) ||
+      normalizeLogoUrl(restaurant.branding.assets.logoUrl) ||
+      "/feastflow-logo.png"
+    );
+  }, [
+    allowBrandingFallback,
+    currentTheme,
+    logoUrl,
+    restaurant.branding.assets.logoUrl,
+    restaurant.branding.logo.dark,
+    restaurant.branding.logo.light,
+    restaurant.logoUrl,
+  ]);
 
   useEffect(() => {
     setFailedSrc(null);
   }, [logoSrc]);
 
   const showFallback = !logoSrc || failedSrc === logoSrc;
-  const restaurantName = name?.trim() || restaurant.name || "FeastFlow";
+  const restaurantName =
+    name?.trim() ||
+    (allowBrandingFallback ? restaurant.name || "FeastFlow" : "Restaurant");
 
   return (
     <div className={cn("flex min-w-0 items-center gap-3", className)}>
       <div
         className={cn(
           "relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-[var(--brand-radius)] bg-primary/10 text-sm font-bold text-primary",
-          imageClassName
+          imageClassName,
         )}
       >
         {showFallback ? (
@@ -81,7 +105,12 @@ export default function BrandLogo({
         )}
       </div>
       {showName ? (
-        <span className={cn("truncate text-sm font-semibold text-foreground", textClassName)}>
+        <span
+          className={cn(
+            "truncate text-sm font-semibold text-foreground",
+            textClassName,
+          )}
+        >
           {restaurantName}
         </span>
       ) : null}

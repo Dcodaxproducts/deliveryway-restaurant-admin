@@ -40,6 +40,60 @@ export const getBranch = async (id: string) => {
   return data.data;
 };
 
+export type BranchMenuAssignment = {
+  branchId: string;
+  menuIds: string[];
+  defaultMenuId: string | null;
+};
+
+export type ReplaceBranchMenuAssignmentPayload = {
+  menuIds: string[];
+  defaultMenuId: string | null;
+};
+
+const normalizeBranchMenuAssignment = (
+  response: unknown,
+  branchId: string,
+): BranchMenuAssignment => {
+  const envelope =
+    response && typeof response === "object" && "data" in response
+      ? (response as { data?: unknown }).data
+      : response;
+  const data =
+    envelope && typeof envelope === "object"
+      ? (envelope as Record<string, unknown>)
+      : {};
+  const menuIds = Array.isArray(data.menuIds)
+    ? data.menuIds.filter((id): id is string => typeof id === "string")
+    : Array.isArray(data.menus)
+      ? data.menus.flatMap((menu) => {
+          if (!menu || typeof menu !== "object") return [];
+          const id = (menu as { id?: unknown }).id;
+          return typeof id === "string" ? [id] : [];
+        })
+      : [];
+
+  return {
+    branchId: typeof data.branchId === "string" ? data.branchId : branchId,
+    menuIds,
+    defaultMenuId:
+      typeof data.defaultMenuId === "string" ? data.defaultMenuId : null,
+  };
+};
+
+export const getBranchMenuAssignment = async (branchId: string) => {
+  const { data } = await api.get(`/branches/${branchId}/menus`);
+  return normalizeBranchMenuAssignment(data, branchId);
+};
+
+export const replaceBranchMenuAssignment = async (
+  branchId: string,
+  payload: ReplaceBranchMenuAssignmentPayload,
+) => {
+  const { data } = await api.put(`/branches/${branchId}/menus`, payload);
+  return normalizeBranchMenuAssignment(data, branchId);
+};
+
 export type BranchAdminUpdateInput = {
   email?: string;
   password?: string;
@@ -93,7 +147,7 @@ const branchSettingsPatchBlocklist = [
 ] as const;
 
 const sanitizeBranchSettingsForPatch = (
-  settings: BranchSettings | undefined
+  settings: BranchSettings | undefined,
 ): BranchSettings => {
   const safeSettings: BranchSettings = { ...(settings ?? {}) };
 
@@ -106,12 +160,14 @@ const sanitizeBranchSettingsForPatch = (
 
 export const updateBranch = async (
   id: string,
-  payload: BranchUpdatePayload
+  payload: BranchUpdatePayload,
 ) => {
   const nextPayload = { ...payload };
 
   if (hasServiceChargeSetting(payload.settings)) {
-    const existingBranch = (await getBranch(id)) as { settings?: BranchSettings };
+    const existingBranch = (await getBranch(id)) as {
+      settings?: BranchSettings;
+    };
 
     nextPayload.settings = {
       ...sanitizeBranchSettingsForPatch(existingBranch.settings),
@@ -175,11 +231,11 @@ export const getOpeningHours = async (branchId: string) => {
 
 export const updateOpeningHours = async (
   branchId: string,
-  payload: OpeningHoursValues
+  payload: OpeningHoursValues,
 ) => {
   const { data } = await api.put(
     `/branches/${branchId}/opening-hours`,
-    payload
+    payload,
   );
   return data;
 };
@@ -213,7 +269,7 @@ const toNonNegativeNumber = (value: unknown, fallback = 0) => {
 };
 
 export const normalizeBranchDeliveryTime = (
-  response: unknown
+  response: unknown,
 ): BranchDeliveryTimePayload => {
   const data = unwrapDataRecord(response);
 
@@ -232,11 +288,11 @@ export const getBranchDeliveryTime = async (branchId: string) => {
 
 export const updateBranchDeliveryTime = async (
   branchId: string,
-  payload: BranchDeliveryTimePayload
+  payload: BranchDeliveryTimePayload,
 ) => {
   const { data } = await api.put(
     `/branches/${branchId}/delivery-time`,
-    payload
+    payload,
   );
 
   return normalizeBranchDeliveryTime(data);
@@ -249,11 +305,11 @@ export const getDeliveryHours = async (branchId: string) => {
 
 export const updateDeliveryHours = async (
   branchId: string,
-  payload: DeliveryHoursValues
+  payload: DeliveryHoursValues,
 ) => {
   const { data } = await api.put(
     `/branches/${branchId}/delivery-hours`,
-    payload
+    payload,
   );
   return data;
 };
@@ -281,22 +337,20 @@ export const activateBranch = async (id: string) => {
  */
 export const updateBranchImages = async (
   id: string,
-  payload: {
-    logoUrl?: string;
-    coverImage?: string;
-  } | FormData
+  payload:
+    | {
+        logoUrl?: string;
+        coverImage?: string;
+      }
+    | FormData,
 ) => {
   const isFormData = payload instanceof FormData;
 
-  const { data } = await api.patch(
-    `/branches/${id}/images`,
-    payload,
-    {
-      headers: isFormData
-        ? { "Content-Type": "multipart/form-data" }
-        : { "Content-Type": "application/json" },
-    }
-  );
+  const { data } = await api.patch(`/branches/${id}/images`, payload, {
+    headers: isFormData
+      ? { "Content-Type": "multipart/form-data" }
+      : { "Content-Type": "application/json" },
+  });
 
   return data;
 };
@@ -310,8 +364,6 @@ export const forceDeleteBranch = async (id: string) => {
   const { data } = await api.delete(`/branches/${id}/force`);
   return data;
 };
-
-
 
 // services/branches.ts
 
@@ -328,20 +380,19 @@ export type TemporaryClosurePayload =
 
 export const updateBranchTemporaryClosure = async (
   id: string,
-  payload: TemporaryClosurePayload
+  payload: TemporaryClosurePayload,
 ) => {
-  const { data } = await api.patch(`/branches/${id}/temporary-closure`, payload);
+  const { data } = await api.patch(
+    `/branches/${id}/temporary-closure`,
+    payload,
+  );
   return data;
 };
-
-
 
 export type UpdateBranchHolidayOpeningHoursPayload = HolidayOpeningHoursPayload;
 
 export const getBranchHolidayOpeningHours = async (branchId: string) => {
-  const { data } = await api.get(
-    `/branches/${branchId}/holiday-opening-hours`
-  );
+  const { data } = await api.get(`/branches/${branchId}/holiday-opening-hours`);
 
   return data;
 };
@@ -355,7 +406,7 @@ export const updateBranchHolidayOpeningHours = async ({
 }) => {
   const { data } = await api.put(
     `/branches/${branchId}/holiday-opening-hours`,
-    payload
+    payload,
   );
 
   return data;

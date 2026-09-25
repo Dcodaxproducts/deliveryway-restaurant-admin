@@ -464,14 +464,17 @@ export const useCreateRestaurantMenu = () => {
   });
 };
 
-export const useGetRestaurantMenus = (params?: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  restaurantId?: string;
-  isActive?: boolean;
-  isDefault?: boolean;
-}) => {
+export const useGetRestaurantMenus = (
+  params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    restaurantId?: string;
+    isActive?: boolean;
+    isDefault?: boolean;
+  },
+  enabled = true,
+) => {
   return useQuery({
     queryKey: [
       "menus",
@@ -483,6 +486,7 @@ export const useGetRestaurantMenus = (params?: {
       params?.isDefault,
     ],
     queryFn: () => getRestaurantMenus(params),
+    enabled,
   });
 };
 

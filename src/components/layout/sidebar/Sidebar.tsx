@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/sidebar";
 import { menuItems, MenuItem, type SidebarRole } from "@/config/sidebarItems";
 import { useAuth } from "@/hooks/useAuth";
+import { useBranding } from "@/hooks/useBranding";
 import {
   getStaffDefaultRedirectPath,
   hasStaffPermission,
@@ -97,7 +98,9 @@ function PartnerSidebarItem({
         >
           <Link href={item.href ?? "#"} onClick={onNavigate}>
             <Icon />
-            <span className="group-data-[collapsible=icon]:hidden">{label}</span>
+            <span className="group-data-[collapsible=icon]:hidden">
+              {label}
+            </span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -122,7 +125,9 @@ function PartnerSidebarItem({
             className={primaryNavigationClassName}
           >
             <Icon />
-            <span className="group-data-[collapsible=icon]:hidden">{label}</span>
+            <span className="group-data-[collapsible=icon]:hidden">
+              {label}
+            </span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
@@ -202,6 +207,7 @@ function PartnerSidebarContent(): ReactElement {
   const router = useRouter();
   const t = useTranslations("navigation");
   const { user, role, isBranchAdmin, logout } = useAuth();
+  const { restaurant, isBrandingReady, brandingError } = useBranding();
   const { setOpenMobile } = useSidebar();
   const routeKey = `${pathname}?${searchParams.toString()}`;
   const [menuState, setMenuState] = useState<{
@@ -303,6 +309,17 @@ function PartnerSidebarContent(): ReactElement {
   };
 
   const sidebarCta = getSidebarCta(user, role, isBranchAdmin);
+  const hasSelectedRestaurantBrand = Boolean(
+    user?.restaurantId && isBrandingReady && !brandingError,
+  );
+  const selectedRestaurantName = hasSelectedRestaurantBrand
+    ? restaurant.name.trim() || t("restaurantWorkspace")
+    : t("restaurantWorkspace");
+  const selectedRestaurantLogo = hasSelectedRestaurantBrand
+    ? restaurant.branding.logo.light ||
+      restaurant.logoUrl ||
+      restaurant.branding.assets.logoUrl
+    : null;
 
   const renderGroup = (items: MenuItem[]) => (
     <SidebarMenu className="gap-1.5">
@@ -334,17 +351,26 @@ function PartnerSidebarContent(): ReactElement {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg" tooltip="FeastFlow">
+            <SidebarMenuButton
+              asChild
+              size="lg"
+              tooltip={selectedRestaurantName}
+            >
               <Link href="/" onClick={handleNavigate}>
                 <BrandLogo
                   showName={false}
                   className="contents"
                   imageClassName="size-8 rounded-md"
+                  logoUrl={selectedRestaurantLogo}
+                  name={selectedRestaurantName}
+                  allowBrandingFallback={false}
                 />
                 <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">FeastFlow</span>
+                  <span className="truncate font-semibold">
+                    {selectedRestaurantName}
+                  </span>
                   <span className="truncate text-xs text-sidebar-foreground/70">
-                    Partner
+                    {t("partnerWorkspace")}
                   </span>
                 </div>
               </Link>
