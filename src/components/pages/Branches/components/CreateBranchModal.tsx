@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Controller,
   useForm,
@@ -26,6 +27,8 @@ import {
   MUTED_TEXT_SM_CLASS,
 } from "@/components/common/common-classes";
 import {
+  assignMenusBeforeOptionalSuspend,
+  BranchSetupWorkflowError,
   extractCreatedBranch,
   extractRestaurantMenus,
   type CreatedBranch,
@@ -246,12 +249,19 @@ export function CreateBranchModal({
   );
   const [selectedMenuIds, setSelectedMenuIds] = useState<string[]>([]);
   const [defaultMenuId, setDefaultMenuId] = useState<string | null>(null);
-  const [assignmentLoading, setAssignmentLoading] = useState(false);
+  const [assignmentSaving, setAssignmentSaving] = useState(false);
+  const [assignmentSaved, setAssignmentSaved] = useState(false);
   const [assignmentError, setAssignmentError] = useState<string | null>(null);
+  const [statusFinalizing, setStatusFinalizing] = useState(false);
+  const [statusFinalizationError, setStatusFinalizationError] = useState<
+    string | null
+  >(null);
   const {
     data: menuResponse,
     isLoading: menusLoading,
+    isFetching: menusFetching,
     isError: menusError,
+    refetch: refetchMenus,
   } = useGetRestaurantMenus(
     {
       restaurantId: user?.restaurantId ?? undefined,
@@ -264,6 +274,17 @@ export function CreateBranchModal({
     () => extractRestaurantMenus(menuResponse),
     [menuResponse],
   );
+  const {
+    data: currentAssignment,
+    isFetching: assignmentFetching,
+    isError: assignmentLoadError,
+    refetch: refetchAssignment,
+  } = useQuery({
+    queryKey: ["branch-menu-assignment", createdBranch?.id],
+    queryFn: () => getBranchMenuAssignment(createdBranch?.id ?? ""),
+    enabled: open && step === 3 && Boolean(createdBranch?.id),
+    retry: false,
+  });
 
   const {
     control,
@@ -288,7 +309,10 @@ export function CreateBranchModal({
     setCreatedBranch(null);
     setSelectedMenuIds([]);
     setDefaultMenuId(null);
+    setAssignmentSaved(false);
     setAssignmentError(null);
+    setStatusFinalizing(false);
+    setStatusFinalizationError(null);
   };
 
   useEffect(() => {
@@ -296,30 +320,14 @@ export function CreateBranchModal({
   }, [open]);
 
   useEffect(() => {
-    if (step !== 3 || !createdBranch) return;
-    let cancelled = false;
-    setAssignmentLoading(true);
-    getBranchMenuAssignment(createdBranch.id)
-      .then((assignment) => {
-        if (cancelled) return;
-        setSelectedMenuIds(assignment.menuIds);
-        setDefaultMenuId(assignment.defaultMenuId);
-        setAssignmentError(null);
-      })
-      .catch(() => {
-        if (!cancelled) setAssignmentError(t("menuAssignmentLoadUnavailable"));
-      })
-      .finally(() => {
-        if (!cancelled) setAssignmentLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [createdBranch, step, t]);
+    if (!currentAssignment) return;
+    setSelectedMenuIds(currentAssignment.menuIds);
+    setDefaultMenuId(currentAssignment.defaultMenuId);
+  }, [currentAssignment]);
 
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) resetWorkflow();
-    onOpenChange(nextOpen);
+  const closeWorkflow = () => {
+    resetWorkflow();
+    onOpenChange(false);
   };
 
   const handleLocationFieldsChange = (fields: BranchLocationAddressFields) => {
@@ -375,13 +383,6 @@ export function CreateBranchModal({
       });
       const branch = extractCreatedBranch(response);
       if (!branch) throw new Error(t("createdBranchMissing"));
-      if (!isActive) {
-        try {
-          await suspendBranch(branch.id);
-        } catch (error) {
-          toast.warning(getApiErrorMessage(error, t("statusUpdateFailed")));
-        }
-      }
       setCreatedBranch({ ...branch, name: branch.name || formValues.name });
       setStep(3);
       onSuccess?.();
@@ -403,28 +404,101 @@ export function CreateBranchModal({
     });
   };
 
+  const finalizeRequestedStatus = async () => {
+    if (!createdBranch) return false;
+    setStatusFinalizing(true);
+    setStatusFinalizationError(null);
+
+    if (isActive) {
+      setStatusFinalizing(false);
+      closeWorkflow();
+      return true;
+    }
+
+    try {
+      await suspendBranch(createdBranch.id);
+      toast.success(t("inactiveStatusApplied"));
+      onSuccess?.();
+      setStatusFinalizing(false);
+      closeWorkflow();
+      return true;
+    } catch (error) {
+      setStatusFinalizationError(
+        getApiErrorMessage(error, t("finalSuspendFailed")),
+      );
+      setStatusFinalizing(false);
+      return false;
+    }
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
+      onOpenChange(true);
+      return;
+    }
+    if (step === 3 && createdBranch) {
+      void finalizeRequestedStatus();
+      return;
+    }
+    closeWorkflow();
+  };
+
+  const finishWithoutAssignment = async () => {
+    await finalizeRequestedStatus();
+  };
+
   const saveMenuAssignment = async () => {
-    if (!createdBranch) return;
-    setAssignmentLoading(true);
+    if (!createdBranch || !selectedMenuIds.length || !defaultMenuId) return;
+    const menuIds: [string, ...string[]] = [
+      selectedMenuIds[0],
+      ...selectedMenuIds.slice(1),
+    ];
+    setAssignmentSaving(true);
     setAssignmentError(null);
     try {
-      await replaceBranchMenuAssignment(createdBranch.id, {
-        menuIds: selectedMenuIds,
-        defaultMenuId: selectedMenuIds.length ? defaultMenuId : null,
+      await assignMenusBeforeOptionalSuspend({
+        assignMenus: () =>
+          replaceBranchMenuAssignment(createdBranch.id, {
+            menuIds,
+            defaultMenuId,
+          }),
+        suspendBranch: () => suspendBranch(createdBranch.id),
+        shouldSuspend: !isActive,
+        onAssignmentSaved: () => {
+          setAssignmentSaved(true);
+          toast.success(t("menuAssignmentSaved"));
+        },
       });
-      toast.success(t("menuAssignmentSaved"));
-      handleOpenChange(false);
+      if (!isActive) {
+        toast.success(t("inactiveStatusApplied"));
+        onSuccess?.();
+      }
+      closeWorkflow();
     } catch (error) {
-      setAssignmentError(
-        getApiErrorMessage(error, t("menuAssignmentSaveFailed")),
-      );
+      if (
+        error instanceof BranchSetupWorkflowError &&
+        error.stage === "status"
+      ) {
+        setStatusFinalizationError(
+          getApiErrorMessage(error.cause, t("finalSuspendFailed")),
+        );
+      } else {
+        const cause =
+          error instanceof BranchSetupWorkflowError ? error.cause : error;
+        setAssignmentError(
+          getApiErrorMessage(cause, t("menuAssignmentSaveFailed")),
+        );
+      }
     } finally {
-      setAssignmentLoading(false);
+      setAssignmentSaving(false);
     }
   };
 
   const renderField = (config: FieldConfig) => {
-    const message = getErrorMessage(errors, config.name);
+    const rawMessage = getErrorMessage(errors, config.name);
+    const message = rawMessage?.startsWith("validation.")
+      ? t(rawMessage)
+      : rawMessage;
     const id = `create-branch-${config.name.replace(/\./g, "-")}`;
     const fieldProps = {
       id,
@@ -733,20 +807,64 @@ export function CreateBranchModal({
                     </div>
                   </div>
 
-                  {menusLoading ? (
-                    <p role="status" className="text-sm text-slate-500">
+                  {assignmentFetching ? (
+                    <p
+                      role="status"
+                      aria-live="polite"
+                      className="mb-3 text-sm text-slate-500"
+                    >
+                      {t("loadingMenuAssignment")}
+                    </p>
+                  ) : null}
+                  {assignmentLoadError ? (
+                    <div
+                      role="alert"
+                      className="mb-3 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <span>{t("menuAssignmentLoadUnavailable")}</span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        aria-label={t("retryMenuAssignmentLoad")}
+                        disabled={assignmentFetching}
+                        onClick={() => void refetchAssignment()}
+                      >
+                        {t("retry")}
+                      </Button>
+                    </div>
+                  ) : null}
+                  {menusLoading || menusFetching ? (
+                    <p
+                      role="status"
+                      aria-live="polite"
+                      className="text-sm text-slate-500"
+                    >
                       {t("loadingMenus")}
                     </p>
                   ) : null}
                   {menusError ? (
-                    <p
+                    <div
                       role="alert"
-                      className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800"
+                      className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      {t("menusLoadFailed")}
-                    </p>
+                      <span>{t("menusLoadFailed")}</span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        aria-label={t("retryMenusLoad")}
+                        disabled={menusFetching}
+                        onClick={() => void refetchMenus()}
+                      >
+                        {t("retry")}
+                      </Button>
+                    </div>
                   ) : null}
-                  {!menusLoading && !menusError && menus.length === 0 ? (
+                  {!menusLoading &&
+                  !menusFetching &&
+                  !menusError &&
+                  menus.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-slate-300 p-5 text-center">
                       <p className="font-medium text-slate-800">
                         {t("noMenusAvailable")}
@@ -759,8 +877,9 @@ export function CreateBranchModal({
                         variant="outline"
                         className="mt-4"
                         onClick={() => {
-                          handleOpenChange(false);
-                          router.push("/menu");
+                          void finalizeRequestedStatus().then((finalized) => {
+                            if (finalized) router.push("/menu");
+                          });
                         }}
                       >
                         {t("openMenuManagement")}
@@ -832,6 +951,26 @@ export function CreateBranchModal({
                       {assignmentError}
                     </p>
                   ) : null}
+                  {statusFinalizationError ? (
+                    <div
+                      role="alert"
+                      className="mt-4 flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <span>
+                        {statusFinalizationError} {t("branchRemainsActive")}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        aria-label={t("retryInactiveStatus")}
+                        disabled={statusFinalizing}
+                        onClick={() => void finalizeRequestedStatus()}
+                      >
+                        {statusFinalizing ? t("applyingStatus") : t("retry")}
+                      </Button>
+                    </div>
+                  ) : null}
                   {!selectedMenuIds.length && menus.length ? (
                     <p className="mt-4 text-xs text-slate-500">
                       {t("skipMenuAssignmentDescription")}
@@ -847,9 +986,18 @@ export function CreateBranchModal({
               type="button"
               variant="outline"
               className="h-11 rounded-xl px-6"
-              onClick={() =>
-                step === 1 || step === 3 ? handleOpenChange(false) : setStep(1)
-              }
+              disabled={step === 3 && statusFinalizing}
+              onClick={() => {
+                if (step === 3) {
+                  void finishWithoutAssignment();
+                  return;
+                }
+                if (step === 1) {
+                  handleOpenChange(false);
+                  return;
+                }
+                setStep(1);
+              }}
             >
               {step === 2 ? <ChevronLeft className="size-4" /> : null}
               {step === 3
@@ -884,12 +1032,18 @@ export function CreateBranchModal({
                 type="button"
                 className="h-11 rounded-xl px-8"
                 disabled={
-                  assignmentLoading || !selectedMenuIds.length || !defaultMenuId
+                  assignmentSaving ||
+                  statusFinalizing ||
+                  assignmentSaved ||
+                  !selectedMenuIds.length ||
+                  !defaultMenuId
                 }
                 onClick={() => void saveMenuAssignment()}
               >
-                {assignmentLoading
-                  ? t("savingMenuAssignment")
+                {assignmentSaving || statusFinalizing
+                  ? assignmentSaving
+                    ? t("savingMenuAssignment")
+                    : t("applyingStatus")
                   : t("saveMenuAssignment")}
               </Button>
             ) : null}

@@ -47,9 +47,12 @@ export type BranchMenuAssignment = {
 };
 
 export type ReplaceBranchMenuAssignmentPayload = {
-  menuIds: string[];
-  defaultMenuId: string | null;
+  menuIds: [string, ...string[]];
+  defaultMenuId: string;
 };
+
+const toCanonicalMenuId = (value: unknown) =>
+  typeof value === "string" && value.trim() ? value.trim() : null;
 
 const normalizeBranchMenuAssignment = (
   response: unknown,
@@ -63,21 +66,44 @@ const normalizeBranchMenuAssignment = (
     envelope && typeof envelope === "object"
       ? (envelope as Record<string, unknown>)
       : {};
-  const menuIds = Array.isArray(data.menuIds)
-    ? data.menuIds.filter((id): id is string => typeof id === "string")
-    : Array.isArray(data.menus)
-      ? data.menus.flatMap((menu) => {
-          if (!menu || typeof menu !== "object") return [];
-          const id = (menu as { id?: unknown }).id;
-          return typeof id === "string" ? [id] : [];
-        })
-      : [];
+  const canonicalMenuIds = Array.isArray(data.menuIds)
+    ? data.menuIds.flatMap((id) => {
+        const canonicalId = toCanonicalMenuId(id);
+        return canonicalId ? [canonicalId] : [];
+      })
+    : [];
+  const assignmentMenuIds = Array.isArray(data.assignments)
+    ? data.assignments.flatMap((assignment) => {
+        if (!assignment || typeof assignment !== "object") return [];
+        const restaurantMenuId = (assignment as { restaurantMenuId?: unknown })
+          .restaurantMenuId;
+        const canonicalId = toCanonicalMenuId(restaurantMenuId);
+        return canonicalId ? [canonicalId] : [];
+      })
+    : [];
+  const legacyMenuIds = Array.isArray(data.menus)
+    ? data.menus.flatMap((menu) => {
+        if (!menu || typeof menu !== "object") return [];
+        const canonicalId = toCanonicalMenuId(
+          (menu as { id?: unknown }).id,
+        );
+        return canonicalId ? [canonicalId] : [];
+      })
+    : [];
+  const menuIds = Array.from(
+    new Set(
+      canonicalMenuIds.length
+        ? canonicalMenuIds
+        : assignmentMenuIds.length
+          ? assignmentMenuIds
+          : legacyMenuIds,
+    ),
+  );
 
   return {
     branchId: typeof data.branchId === "string" ? data.branchId : branchId,
     menuIds,
-    defaultMenuId:
-      typeof data.defaultMenuId === "string" ? data.defaultMenuId : null,
+    defaultMenuId: toCanonicalMenuId(data.defaultMenuId),
   };
 };
 
@@ -90,7 +116,21 @@ export const replaceBranchMenuAssignment = async (
   branchId: string,
   payload: ReplaceBranchMenuAssignmentPayload,
 ) => {
-  const { data } = await api.put(`/branches/${branchId}/menus`, payload);
+  const menuIds = Array.from(
+    new Set(payload.menuIds.map(toCanonicalMenuId).filter(Boolean)),
+  ) as string[];
+  const defaultMenuId = toCanonicalMenuId(payload.defaultMenuId);
+
+  if (!menuIds.length || !defaultMenuId || !menuIds.includes(defaultMenuId)) {
+    throw new Error(
+      "Branch menu assignment requires menuIds and a matching defaultMenuId",
+    );
+  }
+
+  const { data } = await api.put(`/branches/${branchId}/menus`, {
+    menuIds,
+    defaultMenuId,
+  });
   return normalizeBranchMenuAssignment(data, branchId);
 };
 

@@ -2292,7 +2292,29 @@
     "skipMenuAssignmentDescription": "Finishing later leaves the branch with the API inherited/no-menu state until an assignment is saved.",
     "finishLater": "Finish later",
     "saveMenuAssignment": "Save menu assignment",
-    "savingMenuAssignment": "Saving assignment…"
+    "savingMenuAssignment": "Saving assignment…",
+    "retry": "Retry",
+    "loadingMenuAssignment": "Loading current menu assignment…",
+    "retryMenuAssignmentLoad": "Retry loading the branch menu assignment",
+    "retryMenusLoad": "Retry loading restaurant menus",
+    "inactiveStatusApplied": "Branch set to inactive.",
+    "finalSuspendFailed": "The final inactive status could not be applied.",
+    "branchRemainsActive": "The branch is still active. Retry to apply the requested inactive status.",
+    "retryInactiveStatus": "Retry applying inactive branch status",
+    "applyingStatus": "Applying status…",
+    "validation": {
+      "branchNameRequired": "Branch name is required.",
+      "streetRequired": "Street is required.",
+      "cityRequired": "City is required.",
+      "stateRequired": "State is required.",
+      "countryRequired": "Country is required.",
+      "locationRequired": "Choose a branch location.",
+      "passwordMin": "Password must contain at least 8 characters.",
+      "tableCountMin": "Table count must be at least 1 when table reservations are enabled.",
+      "branchAdminEmail": "Enter a valid branch administrator email.",
+      "firstNameRequired": "First name is required.",
+      "lastNameRequired": "Last name is required."
+    }
   },
   "deliverymen": {
     "title": "Deliverymen",

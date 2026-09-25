@@ -54,3 +54,45 @@ export const extractRestaurantMenus = (
       : [];
   });
 };
+
+export type BranchSetupWorkflowStage = "assignment" | "status";
+
+export class BranchSetupWorkflowError extends Error {
+  constructor(
+    readonly stage: BranchSetupWorkflowStage,
+    readonly cause: unknown,
+  ) {
+    super(
+      stage === "assignment"
+        ? "Menu assignment failed"
+        : "Branch status update failed",
+    );
+  }
+}
+
+export const assignMenusBeforeOptionalSuspend = async ({
+  assignMenus,
+  suspendBranch,
+  shouldSuspend,
+  onAssignmentSaved,
+}: {
+  assignMenus: () => Promise<unknown>;
+  suspendBranch: () => Promise<unknown>;
+  shouldSuspend: boolean;
+  onAssignmentSaved: () => void;
+}) => {
+  try {
+    await assignMenus();
+    onAssignmentSaved();
+  } catch (error) {
+    throw new BranchSetupWorkflowError("assignment", error);
+  }
+
+  if (!shouldSuspend) return;
+
+  try {
+    await suspendBranch();
+  } catch (error) {
+    throw new BranchSetupWorkflowError("status", error);
+  }
+};

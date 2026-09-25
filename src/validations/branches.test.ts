@@ -133,6 +133,33 @@ describe("branch service charge validation", () => {
     expect(result.success).toBe(true);
   });
 
+  it("emits localized message keys for required creation fields", () => {
+    const result = createBranchSchema.safeParse({
+      ...createBranchPayload,
+      name: "",
+      street: "",
+      city: "",
+      state: "",
+      country: "",
+      lat: "",
+      lng: "",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.map((issue) => issue.message)).toEqual(
+        expect.arrayContaining([
+          "validation.branchNameRequired",
+          "validation.streetRequired",
+          "validation.cityRequired",
+          "validation.stateRequired",
+          "validation.countryRequired",
+          "validation.locationRequired",
+        ]),
+      );
+    }
+  });
+
   it("requires a complete branch location", () => {
     const result = createBranchSchema.safeParse({
       ...createBranchPayload,
@@ -142,6 +169,43 @@ describe("branch service charge validation", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("returns localizable validation keys for the branch workflow", () => {
+    const result = createBranchSchema.safeParse({
+      ...createBranchPayload,
+      name: "",
+      street: "",
+      city: "",
+      state: "",
+      country: "",
+      lat: "",
+      lng: "",
+      branchAdmin: {
+        email: "invalid",
+        firstName: "",
+        lastName: "",
+        password: "short",
+      },
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+
+    expect(result.error.issues.map((issue) => issue.message)).toEqual(
+      expect.arrayContaining([
+        "validation.branchNameRequired",
+        "validation.streetRequired",
+        "validation.cityRequired",
+        "validation.stateRequired",
+        "validation.countryRequired",
+        "validation.locationRequired",
+        "validation.passwordMin",
+        "validation.branchAdminEmail",
+        "validation.firstNameRequired",
+        "validation.lastNameRequired",
+      ]),
+    );
   });
 
   it("requires identity fields when an optional branch admin is started", () => {

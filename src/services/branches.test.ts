@@ -35,7 +35,7 @@ describe("branches service", () => {
       data: {
         data: {
           branchId: "branch-1",
-          menus: [{ id: "menu-1" }],
+          assignments: [{ restaurantMenuId: "menu-1", isDefault: true }],
           defaultMenuId: "menu-1",
         },
       },
@@ -45,6 +45,7 @@ describe("branches service", () => {
         data: {
           branchId: "branch-1",
           menuIds: ["menu-1", "menu-2"],
+          assignments: [{ restaurantMenuId: "ignored-legacy-menu" }],
           defaultMenuId: "menu-2",
         },
       },
@@ -70,6 +71,60 @@ describe("branches service", () => {
       menuIds: ["menu-1", "menu-2"],
       defaultMenuId: "menu-2",
     });
+  });
+
+  it("normalizes assignment restaurant menu IDs and prefers canonical menu IDs", async () => {
+    mockedApi.get
+      .mockResolvedValueOnce({
+        data: {
+          data: {
+            branchId: "branch-1",
+            assignments: [
+              { restaurantMenuId: " menu-1 " },
+              { restaurantMenuId: "menu-1" },
+              { restaurantMenuId: "menu-2" },
+            ],
+            defaultMenuId: " menu-2 ",
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          data: {
+            branchId: "branch-1",
+            menuIds: ["menu-canonical"],
+            assignments: [{ restaurantMenuId: "menu-legacy" }],
+            defaultMenuId: "menu-canonical",
+          },
+        },
+      });
+
+    await expect(getBranchMenuAssignment("branch-1")).resolves.toEqual({
+      branchId: "branch-1",
+      menuIds: ["menu-1", "menu-2"],
+      defaultMenuId: "menu-2",
+    });
+    await expect(getBranchMenuAssignment("branch-1")).resolves.toEqual({
+      branchId: "branch-1",
+      menuIds: ["menu-canonical"],
+      defaultMenuId: "menu-canonical",
+    });
+  });
+
+  it("rejects empty or mismatched branch menu replacement payloads", async () => {
+    await expect(
+      replaceBranchMenuAssignment("branch-1", {
+        menuIds: ["   "],
+        defaultMenuId: "menu-1",
+      }),
+    ).rejects.toThrow("requires menuIds");
+    await expect(
+      replaceBranchMenuAssignment("branch-1", {
+        menuIds: ["menu-1"],
+        defaultMenuId: "menu-2",
+      }),
+    ).rejects.toThrow("matching defaultMenuId");
+    expect(mockedApi.put).not.toHaveBeenCalled();
   });
 
   it("does not re-add opening hours fields when merging service charge settings", async () => {

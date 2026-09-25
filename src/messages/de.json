@@ -2292,7 +2292,29 @@
     "skipMenuAssignmentDescription": "Wenn Sie später fortfahren, behält die Filiale den geerbten/ohne-Menü-Status der API, bis eine Zuweisung gespeichert wird.",
     "finishLater": "Später abschließen",
     "saveMenuAssignment": "Menüzuweisung speichern",
-    "savingMenuAssignment": "Zuweisung wird gespeichert…"
+    "savingMenuAssignment": "Zuweisung wird gespeichert…",
+    "retry": "Erneut versuchen",
+    "loadingMenuAssignment": "Aktuelle Menüzuweisung wird geladen…",
+    "retryMenuAssignmentLoad": "Laden der Filial-Menüzuweisung erneut versuchen",
+    "retryMenusLoad": "Laden der Restaurant-Menüs erneut versuchen",
+    "inactiveStatusApplied": "Filiale wurde auf inaktiv gesetzt.",
+    "finalSuspendFailed": "Der abschließende inaktive Status konnte nicht angewendet werden.",
+    "branchRemainsActive": "Die Filiale ist weiterhin aktiv. Versuchen Sie erneut, den gewünschten inaktiven Status anzuwenden.",
+    "retryInactiveStatus": "Inaktiven Filialstatus erneut anwenden",
+    "applyingStatus": "Status wird angewendet…",
+    "validation": {
+      "branchNameRequired": "Der Filialname ist erforderlich.",
+      "streetRequired": "Die Straße ist erforderlich.",
+      "cityRequired": "Die Stadt ist erforderlich.",
+      "stateRequired": "Das Bundesland ist erforderlich.",
+      "countryRequired": "Das Land ist erforderlich.",
+      "locationRequired": "Wählen Sie einen Filialstandort aus.",
+      "passwordMin": "Das Passwort muss mindestens 8 Zeichen enthalten.",
+      "tableCountMin": "Bei aktivierten Tischreservierungen muss mindestens ein Tisch angegeben werden.",
+      "branchAdminEmail": "Geben Sie eine gültige E-Mail-Adresse für die Filialadministration ein.",
+      "firstNameRequired": "Der Vorname ist erforderlich.",
+      "lastNameRequired": "Der Nachname ist erforderlich."
+    }
   },
   "deliverymen": {
     "title": "Lieferfahrer",

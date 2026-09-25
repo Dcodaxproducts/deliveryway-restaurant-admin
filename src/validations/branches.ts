@@ -192,19 +192,21 @@ export const BranchSchema = z.object({
 export const createBranchSchema = z
   .object({
     restaurantId: z.string().optional(),
-    name: z.string().trim().min(1, "Branch name is required"),
-    street: z.string().trim().min(1, "Street is required"),
+    name: z.string().trim().min(1, "validation.branchNameRequired"),
+    street: z.string().trim().min(1, "validation.streetRequired"),
     shopNumber: z.string().optional(),
     postalCode: z.string().optional(),
-    city: z.string().trim().min(1, "City is required"),
-    state: z.string().trim().min(1, "State is required"),
-    country: z.string().trim().min(1, "Country is required"),
+    city: z.string().trim().min(1, "validation.cityRequired"),
+    state: z.string().trim().min(1, "validation.stateRequired"),
+    country: z.string().trim().min(1, "validation.countryRequired"),
     area: z.string().optional(),
-    lat: z.string().trim().min(1, "Choose a branch location"),
-    lng: z.string().trim().min(1, "Choose a branch location"),
+    lat: z.string().trim().min(1, "validation.locationRequired"),
+    lng: z.string().trim().min(1, "validation.locationRequired"),
     branchAdmin: z.object({
       email: z.string().optional(),
-      password: z.union([z.literal(""), z.string().min(8)]).optional(),
+      password: z
+        .union([z.literal(""), z.string().min(8, "validation.passwordMin")])
+        .optional(),
       firstName: z.string().optional(),
       lastName: z.string().optional(),
       phone: z.string().optional(),
@@ -218,8 +220,7 @@ export const createBranchSchema = z
 
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            "Table count must be at least 1 when table reservations are enabled",
+          message: "validation.tableCountMin",
           path: ["tableCount"],
         });
       })
@@ -239,21 +240,21 @@ export const createBranchSchema = z
     if (!admin.email || !z.string().email().safeParse(admin.email).success) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Enter a valid branch admin email",
+        message: "validation.branchAdminEmail",
         path: ["branchAdmin", "email"],
       });
     }
     if (!admin.firstName?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "First name is required",
+        message: "validation.firstNameRequired",
         path: ["branchAdmin", "firstName"],
       });
     }
     if (!admin.lastName?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Last name is required",
+        message: "validation.lastNameRequired",
         path: ["branchAdmin", "lastName"],
       });
     }

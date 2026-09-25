@@ -10,11 +10,11 @@ The Partner branch creator uses a three-stage flow without changing the sidebar 
 
 The Partner client expects these tenant-scoped endpoints:
 
-- `GET /branches/:branchId/menus` → `{ data: { branchId, menuIds, defaultMenuId } }`. For transition tolerance, `data.menus: Array<{ id }>` is also accepted.
-- `PUT /branches/:branchId/menus` with `{ menuIds: string[], defaultMenuId: string | null }` → the same response shape.
-- `PATCH /branches/:branchId/suspend` is used immediately after creation when the requested initial status is inactive.
+- `GET /branches/:branchId/menus` → `{ data: { branchId, defaultMenuId: string | null, assignments: Array<{ restaurantMenuId, isDefault, menu }> } }`. The normalizer also accepts canonical `menuIds` when supplied, preferring it over assignments.
+- `PUT /branches/:branchId/menus` requires a non-empty `{ menuIds: string[], defaultMenuId: string }`; the default must be included in `menuIds`.
+- `PATCH /branches/:branchId/suspend` is called only after menu assignment or an explicit skip when inactive status was requested. The newly created branch remains active while assignment is performed because PUT requires an active branch.
 
-Restaurant menus remain restaurant-scoped. The UI does not invent branch fields, duplicate menus, or infer assignment from item overrides. If assignment endpoints are temporarily unavailable, the branch remains created, an accessible retry message is shown, and the user can finish later.
+Restaurant menus remain restaurant-scoped. The UI does not invent branch fields, duplicate menus, or infer assignment from item overrides. Menu-list and current-assignment load failures expose accessible retry actions. If final suspension fails after assignment or skip, the branch remains active and the workflow stays open with an explicit retry action; an already-saved assignment is not repeated.
 
 ## Shell branding
 
