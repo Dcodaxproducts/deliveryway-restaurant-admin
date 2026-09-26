@@ -16,7 +16,6 @@ import AuthPageShell, {
   AuthCard,
 } from "@/components/pages/Auth/components/AuthPageShell";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useAuthContext } from "@/components/providers/auth-provider";
 import {
   getRoleLabel,
@@ -366,15 +365,10 @@ function LoginFormContent() {
             )}
           />
 
-          <div className="flex items-center justify-between text-sm">
-            <label className="flex cursor-pointer items-center gap-2 text-gray-500">
-              <Checkbox checked />
-              {t("rememberMe")}
-            </label>
-
+          <div className="flex justify-end text-sm">
             <Link
               href="/forgot-password"
-              className="rounded-sm text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              className="min-h-11 rounded-sm px-1 py-3 font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               {t("forgotPasswordLink")}
             </Link>

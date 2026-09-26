@@ -352,13 +352,25 @@ export default function ContextGate() {
   if (!open || !user || !token || pathname === "/login") return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex animate-in items-center justify-center bg-black/70 backdrop-blur-md duration-300 fade-in">
-      <div className="w-full max-w-[560px] animate-in rounded-3xl border border-gray-100 bg-white p-8 shadow-2xl duration-300 zoom-in-95">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm sm:p-6">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="workspace-selector-title"
+        aria-describedby="workspace-selector-description"
+        className="my-auto w-full max-w-[560px] rounded-[var(--ui-radius-card)] bg-white p-5 shadow-[var(--ui-shadow-overlay)] sm:p-8"
+      >
         <div className="mb-6 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">
+          <h2
+            id="workspace-selector-title"
+            className="text-2xl font-semibold tracking-tight"
+          >
             {t("setupWorkspace")}
           </h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <p
+            id="workspace-selector-description"
+            className="mt-1 text-sm text-gray-600"
+          >
             {t("selectRestaurantToContinue")}
           </p>
         </div>
@@ -368,7 +380,12 @@ export default function ContextGate() {
         </div>
 
         <div className="mb-4">
+          <label htmlFor="workspace-restaurant-search" className="sr-only">
+            {t("searchRestaurants")}
+          </label>
           <input
+            id="workspace-restaurant-search"
+            autoFocus
             type="search"
             value={restaurantSearch}
             onChange={(event) => setRestaurantSearch(event.target.value)}
@@ -378,7 +395,8 @@ export default function ContextGate() {
         </div>
 
         <div
-          className="max-h-[300px] space-y-3 overflow-auto pr-1"
+          aria-live="polite"
+          className="max-h-[min(300px,42dvh)] space-y-3 overflow-auto pr-1"
           onScroll={handleRestaurantScroll}
         >
           {isFetching && restaurants.length === 0
@@ -393,6 +411,8 @@ export default function ContextGate() {
           {restaurants.map((restaurant) => (
             <button
               key={restaurant.id}
+              type="button"
+              aria-pressed={selectedRestaurant?.id === restaurant.id}
               onClick={() => setSelectedRestaurant(restaurant)}
               className={cn(
                 "w-full rounded-xl border p-4 text-left transition-all duration-200",
@@ -402,11 +422,10 @@ export default function ContextGate() {
               )}
             >
               <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-gray-900">
+                <div className="min-w-0">
+                  <div className="truncate font-medium text-gray-900">
                     {restaurant.name}
                   </div>
-                  <div className="text-xs text-gray-400">{restaurant.id}</div>
                 </div>
 
                 {selectedRestaurant?.id === restaurant.id ? (
@@ -433,6 +452,7 @@ export default function ContextGate() {
 
         <div className="mt-6">
           <button
+            type="button"
             onClick={handleConfirm}
             disabled={!selectedRestaurant}
             className={cn(

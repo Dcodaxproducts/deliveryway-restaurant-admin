@@ -1,36 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-.auth-viewport-card {
-  transform-origin: center;
-}
-
-@media (max-height: 950px) {
-  .auth-viewport-card--tall {
-    transform: scale(0.9);
-  }
-}
-
-@media (max-height: 800px) {
-  .auth-viewport-card {
-    transform: scale(0.9);
-  }
-
-  .auth-viewport-card--tall {
-    transform: scale(0.8);
-  }
-}
-
-@media (max-height: 680px) {
-  .auth-viewport-card {
-    transform: scale(0.74);
-  }
-
-  .auth-viewport-card--tall {
-    transform: scale(0.68);
-  }
-}
-
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -230,6 +200,11 @@
     font-family: var(--brand-font-family);
   }
 
+  ::selection {
+    background: color-mix(in srgb, var(--brand-primary) 24%, transparent);
+    color: var(--ui-text);
+  }
+
   :where(button, a, input, select, textarea, [role="button"]):focus-visible {
     outline: 2px solid var(--ui-focus-ring);
     outline-offset: 2px;
@@ -256,6 +231,17 @@
   select,
   textarea {
     font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

@@ -51,7 +51,7 @@ export default function AuthPageShell({
   titleId = "auth-page-title",
 }: AuthPageShellProps) {
   return (
-    <main className="grid h-[100dvh] max-h-[100dvh] grid-cols-1 overflow-hidden bg-[#f7f5f2] lg:grid-cols-[minmax(0,1.04fr)_minmax(520px,0.96fr)]">
+    <main className="grid min-h-[100dvh] grid-cols-1 bg-[#f7f5f2] lg:h-[100dvh] lg:grid-cols-[minmax(0,1.04fr)_minmax(520px,0.96fr)] lg:overflow-hidden">
       <div
         className="relative hidden overflow-hidden lg:block"
         aria-hidden="true"
@@ -69,7 +69,7 @@ export default function AuthPageShell({
 
       <section
         aria-labelledby={titleId}
-        className="relative flex min-h-0 items-center justify-center overflow-hidden px-5 py-3 sm:px-10 lg:bg-white lg:px-14"
+        className="relative flex min-h-[100dvh] items-start justify-center overflow-x-hidden px-4 py-6 sm:px-10 sm:py-10 lg:min-h-0 lg:items-center lg:overflow-y-auto lg:bg-white lg:px-14"
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top_right,color-mix(in_oklch,var(--primary)_8%,transparent),transparent_64%)] lg:hidden" />
         {children}

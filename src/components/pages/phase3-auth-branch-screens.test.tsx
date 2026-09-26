@@ -22,9 +22,9 @@ describe("Phase 3 authentication screen family", () => {
       </AuthPageShell>,
     );
 
-    expect(markup).toContain("h-[100dvh]");
-    expect(markup).toContain("max-h-[100dvh]");
-    expect(markup).toContain("overflow-hidden");
+    expect(markup).toContain("min-h-[100dvh]");
+    expect(markup).toContain("lg:h-[100dvh]");
+    expect(markup).toContain("lg:overflow-y-auto");
     expect(markup).toContain('aria-labelledby="test-auth-title"');
     expect(markup).toContain('data-slot="auth-card"');
     expect(markup).toContain("auth-viewport-card");
@@ -61,7 +61,9 @@ describe("Phase 3 authentication screen family", () => {
     expect(forgot).toContain("/reset-password?email=");
     expect(reset).toContain("authApi.resetPassword(values)");
     expect(reset).toContain("authApi.resendOtp");
-    expect(reset).toContain("auth-viewport-card--tall");
+    expect(projectFile("src/app/globals.css")).not.toContain(
+      "transform: scale",
+    );
   });
 });
 
