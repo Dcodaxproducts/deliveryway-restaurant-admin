@@ -67,6 +67,21 @@ describe("Phase 3 authentication screen family", () => {
   });
 });
 
+describe("Required workspace selection", () => {
+  it("uses the canonical modal primitive and prevents accidental dismissal", () => {
+    const source = projectFile("src/components/layout/ContextGate.tsx");
+
+    expect(source).toContain("<Dialog open>");
+    expect(source).toContain("<DialogContent");
+    expect(source).toContain("showCloseButton={false}");
+    expect(source).toContain('overlayClassName="z-[9998]');
+    expect(source).toContain("onEscapeKeyDown");
+    expect(source).toContain("onInteractOutside");
+    expect(source).toContain("<DialogTitle");
+    expect(source).toContain("<DialogDescription");
+  });
+});
+
 describe("Phase 3 branch-management screen family", () => {
   it("uses canonical workflow, detail, and form presentation owners", () => {
     const workspace = projectFile(

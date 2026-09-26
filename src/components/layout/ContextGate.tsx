@@ -11,6 +11,12 @@ import { getRestaurant } from "@/services/restaurants";
 
 import { useAuthContext } from "@/components/providers/auth-provider";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   getRecordValue,
   getStoredAuth,
   getStringValue,
@@ -352,27 +358,21 @@ export default function ContextGate() {
   if (!open || !user || !token || pathname === "/login") return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm sm:p-6">
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="workspace-selector-title"
-        aria-describedby="workspace-selector-description"
-        className="my-auto w-full max-w-[560px] rounded-[var(--ui-radius-card)] bg-white p-5 shadow-[var(--ui-shadow-overlay)] sm:p-8"
+    <Dialog open>
+      <DialogContent
+        showCloseButton={false}
+        overlayClassName="z-[9998] bg-black/70 backdrop-blur-sm"
+        onEscapeKeyDown={(event) => event.preventDefault()}
+        onInteractOutside={(event) => event.preventDefault()}
+        className="z-[9999] block max-h-[calc(100dvh-2rem)] max-w-[560px] overflow-y-auto rounded-[var(--ui-radius-card)] border-0 bg-white p-5 shadow-[var(--ui-shadow-overlay)] sm:p-8"
       >
         <div className="mb-6 text-center">
-          <h2
-            id="workspace-selector-title"
-            className="text-2xl font-semibold tracking-tight"
-          >
+          <DialogTitle className="text-center text-2xl font-semibold tracking-tight">
             {t("setupWorkspace")}
-          </h2>
-          <p
-            id="workspace-selector-description"
-            className="mt-1 text-sm text-gray-600"
-          >
+          </DialogTitle>
+          <DialogDescription className="mt-1 text-center text-sm text-gray-600">
             {t("selectRestaurantToContinue")}
-          </p>
+          </DialogDescription>
         </div>
 
         <div className="mb-6 flex items-center justify-center">
@@ -465,7 +465,7 @@ export default function ContextGate() {
             {t("continue")}
           </button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
