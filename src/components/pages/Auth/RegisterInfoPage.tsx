@@ -34,13 +34,10 @@ const RegisterInfoPage = () => {
 
   return (
     <AuthPageShell>
-      <AuthCard className="auth-viewport-card--tall max-w-[560px]">
+      <AuthCard className="max-w-[560px]">
         <AuthBrand />
-        <p className="mb-3 mt-7 text-center text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-          {t("adminPanel")}
-        </p>
 
-        <h1 id="auth-page-title" className={AUTH_TITLE_CLASS}>
+        <h1 id="auth-page-title" className={`${AUTH_TITLE_CLASS} mt-7`}>
           {t("registerInfoTitle")}
         </h1>
 
