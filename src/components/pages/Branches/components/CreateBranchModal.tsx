@@ -266,7 +266,7 @@ export function CreateBranchModal({
     {
       restaurantId: user?.restaurantId ?? undefined,
       limit: 100,
-      isActive: true,
+      includeInactive: false,
     },
     open && step === 3 && Boolean(user?.restaurantId),
   );

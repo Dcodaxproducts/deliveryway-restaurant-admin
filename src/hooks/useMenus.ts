@@ -470,8 +470,9 @@ export const useGetRestaurantMenus = (
     limit?: number;
     search?: string;
     restaurantId?: string;
-    isActive?: boolean;
-    isDefault?: boolean;
+    includeInactive?: boolean;
+    all?: boolean;
+    inactive?: boolean;
   },
   enabled = true,
 ) => {
@@ -482,8 +483,9 @@ export const useGetRestaurantMenus = (
       params?.limit,
       params?.search,
       params?.restaurantId,
-      params?.isActive,
-      params?.isDefault,
+      params?.includeInactive,
+      params?.all,
+      params?.inactive,
     ],
     queryFn: () => getRestaurantMenus(params),
     enabled,

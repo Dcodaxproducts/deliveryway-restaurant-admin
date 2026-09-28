@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "@/lib/axios";
-import { getMenuItems } from "@/services/menus";
+import { getMenuItems, getRestaurantMenus } from "@/services/menus";
 
 vi.mock("@/lib/axios", () => ({
   api: {
@@ -34,6 +34,24 @@ describe("menu items service", () => {
         search: "pizza",
         restaurantId: "restaurant-1",
         categoryId: "category-1",
+      },
+    });
+  });
+
+  it("sends only API-supported restaurant menu filters", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { data: [] } });
+
+    await getRestaurantMenus({
+      restaurantId: "restaurant-1",
+      limit: 100,
+      includeInactive: false,
+    });
+
+    expect(mockedGet).toHaveBeenCalledWith("/menus", {
+      params: {
+        restaurantId: "restaurant-1",
+        limit: 100,
+        includeInactive: false,
       },
     });
   });

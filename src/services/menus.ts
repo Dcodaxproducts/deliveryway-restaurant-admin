@@ -195,8 +195,9 @@ export const getRestaurantMenus = async (params?: {
   limit?: number;
   search?: string;
   restaurantId?: string;
-  isActive?: boolean;
-  isDefault?: boolean;
+  includeInactive?: boolean;
+  all?: boolean;
+  inactive?: boolean;
 }) => {
   const allowedParams: QueryParams = { ...params };
   delete allowedParams.branchId;
