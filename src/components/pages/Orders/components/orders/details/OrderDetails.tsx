@@ -757,7 +757,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
 
           <DetailCard>
             <SectionTitle icon={<Timer size={19} />} title={t("timeline")} />
-            <ol className="mb-5 grid gap-2 sm:grid-cols-5" aria-label={t("timeline")}>
+            <ol className="mb-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-5" aria-label={t("timeline")}>
               {statusSteps.map((step, index) => {
                 const isCurrent = index === currentStatusIndex;
                 const isComplete = currentStatusIndex >= 0 && index < currentStatusIndex;

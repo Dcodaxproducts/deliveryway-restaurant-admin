@@ -628,6 +628,7 @@
     "groupOrders": "Gruppenbestellungen",
     "loadingDetails": "Bestelldetails werden geladen...",
     "orderDetails": "Bestelldetails",
+    "branch": "Filiale",
     "backToOrders": "Zurück zu Bestellungen",
     "loadingOrder": "Bestellung wird geladen...",
     "orderLoadError": "Die Bestellung konnte nicht geladen werden",

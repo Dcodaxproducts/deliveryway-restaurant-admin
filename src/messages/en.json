@@ -628,6 +628,7 @@
     "groupOrders": "Group Orders",
     "loadingDetails": "Loading order details...",
     "orderDetails": "Order details",
+    "branch": "Branch",
     "backToOrders": "Back to orders",
     "loadingOrder": "Loading order...",
     "orderLoadError": "We couldn’t load this order",
