@@ -24,6 +24,11 @@ describe("branch creation workflow response parsing", () => {
         data: { items: [{ id: "menu-1", name: "Dinner", isDefault: true }] },
       }),
     ).toEqual([{ id: "menu-1", name: "Dinner", isDefault: true }]);
+    expect(
+      extractRestaurantMenus({
+        data: [{ id: "menu-2", name: "Lunch", isDefault: false }],
+      }),
+    ).toEqual([{ id: "menu-2", name: "Lunch", isDefault: false }]);
     expect(extractRestaurantMenus({ data: { menus: [] } })).toEqual([]);
   });
 });

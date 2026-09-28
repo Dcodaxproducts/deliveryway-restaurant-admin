@@ -32,13 +32,19 @@ export const extractRestaurantMenus = (
 ): RestaurantMenuOption[] => {
   if (!response || typeof response !== "object") return [];
   const root = response as Record<string, unknown>;
+  const envelopeRows = Array.isArray(root.data) ? root.data : undefined;
   const data =
-    root.data && typeof root.data === "object"
+    root.data && typeof root.data === "object" && !Array.isArray(root.data)
       ? (root.data as Record<string, unknown>)
       : root;
-  const rows = [data.items, data.menus, data.data, root.items, root.menus].find(
-    Array.isArray,
-  );
+  const rows = [
+    envelopeRows,
+    data.items,
+    data.menus,
+    data.data,
+    root.items,
+    root.menus,
+  ].find(Array.isArray);
   if (!Array.isArray(rows)) return [];
   return rows.flatMap((row) => {
     if (!row || typeof row !== "object") return [];
