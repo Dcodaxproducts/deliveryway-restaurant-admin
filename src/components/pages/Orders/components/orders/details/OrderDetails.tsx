@@ -404,6 +404,12 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
     [t("createdAt"), formatDate(order.createdAt)],
     [t("updatedAt"), formatDate(order.updatedAt)],
   ];
+  const statusSteps = order.orderType === "DELIVERY"
+    ? ["PLACED", "CONFIRMED", "PREPARING", "OUT_FOR_DELIVERY", "DELIVERED"]
+    : order.orderType === "DINE_IN"
+      ? ["PLACED", "CONFIRMED", "PREPARING", "READY_TO_SERVE", "SERVED"]
+      : ["PLACED", "CONFIRMED", "PREPARING", "READY_FOR_PICKUP", "PICKED_UP"];
+  const currentStatusIndex = statusSteps.indexOf(order.status || "");
   const timeline = [
     [t("orderCreated"), order.createdAt],
     [t("assignedAt"), order.assignedAt],
@@ -612,53 +618,9 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
   };
 
   return (
-    <div className="mt-6 w-full space-y-6">
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_360px]">
-        <div className="space-y-6">
-          <DetailCard className="overflow-hidden p-0">
-            <div className="relative min-h-[170px] bg-gradient-to-br from-gray-950 via-gray-900 to-primary/80 p-5 text-white sm:p-6">
-              {order.restaurant?.coverImage ? (
-                <Image
-                  src={order.restaurant.coverImage}
-                  alt={order.restaurant.name || t("restaurant")}
-                  width={960}
-                  height={280}
-                  className="absolute inset-0 h-full w-full object-cover opacity-25"
-                  unoptimized
-                />
-              ) : null}
-              <div className="relative flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-                <div className="flex items-center gap-4">
-                  <Image
-                    src={order.restaurant?.logoUrl || "/branch_logo.jpg"}
-                    alt={order.restaurant?.name || t("restaurant")}
-                    width={64}
-                    height={64}
-                    className="size-16 rounded-2xl border border-white/20 object-cover shadow-xl"
-                    unoptimized
-                  />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
-                      {t("restaurant")}
-                    </p>
-                    <h2 className="mt-1 text-2xl font-bold">
-                      {order.restaurant?.name || "-"}
-                    </h2>
-                    <p className="mt-1 text-sm text-white/75">
-                      {order.branch?.name || t("noBranch")}
-                    </p>
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-white/10 px-4 py-3 backdrop-blur">
-                  <p className="text-xs text-white/70">{t("deliveryTime")}</p>
-                  <p className="mt-1 text-lg font-bold">
-                    {formatDate(order.orderTime)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </DetailCard>
-
+    <div data-testid="order-operations-workspace" className="w-full min-w-0">
+      <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-start">
+        <div className="min-w-0 space-y-5">
           <DetailCard>
             <SectionTitle
               icon={<ReceiptText size={19} />}
@@ -666,7 +628,11 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
               description={t("itemsOverviewDescription")}
             />
             <div className="space-y-3">
-              {shouldShowInferredDeal
+              {displayItems.length === 0 ? (
+                <div className="rounded-[var(--ui-radius-card)] bg-[var(--ui-surface-subtle)] px-4 py-8 text-center text-sm text-[var(--ui-text-muted)]">
+                  {t("noItems")}
+                </div>
+              ) : shouldShowInferredDeal
                 ? renderDealCard({
                     keyValue: "inferred-deal",
                     title: couponTitle || "Deal",
@@ -745,7 +711,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                                   {item.menuItem?.category?.name ||
                                     t("itemFallback")}
                                 </p>
-                                <h4 className="mt-1 font-semibold text-gray-950">
+                                <h4 className="mt-1 break-words font-semibold text-gray-950 [overflow-wrap:anywhere]">
                                   {item.menuItemName || t("itemFallback")}
                                 </h4>
                                 <p className="text-xs text-gray-500">
@@ -791,6 +757,19 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
 
           <DetailCard>
             <SectionTitle icon={<Timer size={19} />} title={t("timeline")} />
+            <ol className="mb-5 grid gap-2 sm:grid-cols-5" aria-label={t("timeline")}>
+              {statusSteps.map((step, index) => {
+                const isCurrent = index === currentStatusIndex;
+                const isComplete = currentStatusIndex >= 0 && index < currentStatusIndex;
+                const labelKey = ORDER_STATUS_LABEL_KEYS[step];
+                return (
+                  <li key={step} aria-current={isCurrent ? "step" : undefined} className={`rounded-[var(--ui-radius-control)] border px-3 py-2 text-xs font-semibold ${isCurrent ? "border-primary bg-[var(--ui-brand-soft)] text-primary" : isComplete ? "border-transparent bg-[var(--ui-success-soft)] text-[var(--ui-success)]" : "border-[var(--ui-border)] text-[var(--ui-text-muted)]"}`}>
+                    <span className="mr-1" aria-hidden="true">{isComplete ? "✓" : index + 1}.</span>
+                    {labelKey ? t(labelKey) : formatStatus(step)}
+                  </li>
+                );
+              })}
+            </ol>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {timeline.map(([label, date]) => (
                 <div key={label} className="rounded-2xl bg-gray-50 p-4">
@@ -806,12 +785,30 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
           </DetailCard>
         </div>
 
-        <div className="space-y-6">
+        <aside className="min-w-0 space-y-5 lg:sticky lg:top-24">
+          <DetailCard>
+            <SectionTitle
+              icon={<Banknote size={19} />}
+              title={t("orderSummary")}
+            />
+            {totals
+              .filter(([label, amount]) => typeof amount === "number" || label === t("total"))
+              .map(([label, amount]) => (
+              <InfoRow
+                key={label}
+                label={label}
+                value={formatMoney(amount, primaryCurrency)}
+              />
+            ))}
+          </DetailCard>
+
           <DetailCard>
             <SectionTitle
               icon={<CalendarClock size={19} />}
               title={t("orderOverview")}
             />
+            <InfoRow label={t("restaurant")} value={order.restaurant?.name || "-"} />
+            <InfoRow label={t("branch")} value={order.branch?.name || t("noBranch")} />
             {metadata.map(([label, value]) => (
               <InfoRow key={label} label={label} value={value} />
             ))}
@@ -820,23 +817,15 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
           <DetailCard>
             <SectionTitle
               icon={<Truck size={19} />}
-              title={t("deliveryDetails")}
+              title={order.orderType === "DELIVERY" ? t("deliveryDetails") : t("orderType")}
             />
-            <InfoRow
-              label={t("deliveryOtp")}
-              value={order.deliveryOtp || "-"}
-            />
-            <InfoRow
-              label={t("deliveryman")}
-              value={order.deliveryman?.name || order.deliverymanId || "-"}
-            />
-            <div className="pt-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                {t("deliveryAddress")}
-              </p>
-              <p className="mt-2 whitespace-pre-line text-sm font-semibold leading-6 text-gray-900">
-                {deliveryAddress || t("takeawayOrder")}
-              </p>
+            {order.orderType === "DELIVERY" ? (
+              <>
+                <InfoRow label={t("deliveryOtp")} value={order.deliveryOtp || "-"} />
+                <InfoRow label={t("deliveryman")} value={order.deliveryman?.name || order.deliverymanId || "-"} />
+                <div className="pt-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("deliveryAddress")}</p>
+                  <p className="mt-2 whitespace-pre-line break-words text-sm font-semibold leading-6 text-gray-900 [overflow-wrap:anywhere]">{deliveryAddress || t("addressPending")}</p>
               {order.deliveryAddress?.lat && order.deliveryAddress?.lng ? (
                 <p className="mt-2 text-xs text-gray-500">
                   {order.deliveryAddress.lat}, {order.deliveryAddress.lng}
@@ -853,7 +842,14 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                   {t("openInMaps")}
                 </a>
               ) : null}
-            </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <InfoRow label={t("orderType")} value={t("takeawayOrder")} />
+                <InfoRow label={t("branch")} value={order.branch?.name || t("noBranch")} />
+              </>
+            )}
           </DetailCard>
 
           <DetailCard>
@@ -977,19 +973,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
             </DetailCard>
           ) : null}
 
-          <DetailCard>
-            <SectionTitle
-              icon={<Banknote size={19} />}
-              title={t("orderSummary")}
-            />
-            {totals.map(([label, amount]) => (
-              <InfoRow
-                key={label}
-                label={label}
-                value={formatMoney(amount, primaryCurrency)}
-              />
-            ))}
-          </DetailCard>
+
 
           <DetailCard>
             <SectionTitle
@@ -1020,7 +1004,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                       </span>
                     </div>
                     <div className="mt-3 flex items-center justify-between gap-3">
-                      <span className="text-xs text-gray-500">
+                      <span className="min-w-0 break-all text-xs text-gray-500">
                         {transaction.providerRef ||
                           transaction.note ||
                           t("notAvailable")}
@@ -1039,7 +1023,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
               )}
             </div>
           </DetailCard>
-        </div>
+        </aside>
       </div>
 
       <Dialog open={isRefundDialogOpen} onOpenChange={setIsRefundDialogOpen}>

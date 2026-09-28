@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  ArrowLeft,
   Ban,
   CalendarClock,
   Printer,
@@ -14,6 +15,8 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import ActionDropdown from "@/components/common/ActionDropdown";
+import { StatusBadge } from "@/components/common/status-badge";
 import PageHeader from "@/components/common/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -36,10 +39,14 @@ import { OrderStatusUpdateDialog } from "@/components/pages/Orders/components/or
 import { OrderStatusProgressDialog } from "@/components/pages/Orders/components/orders/OrderStatusProgressDialog";
 import { isFutureOrder } from "@/components/pages/Orders/utils/orders-schedule-filters";
 import { formatDateTime24 } from "@/lib/date-time-format";
+import { formatPaymentStatusLabel } from "@/lib/payment-status-label";
 
 type OrderDetailsHeaderProps = {
   order: {
     id: string;
+    orderNumber?: string | null;
+    createdAt?: string | null;
+    paymentStatus?: string | null;
     restaurantId?: string | null;
     branchId?: string | null;
     orderType?: string | null;
@@ -103,8 +110,6 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
       setStatusDialogOpen(true);
     }
   }, [nextStatus, order, router, searchParams]);
-
-  const breadcrumbParts = t("breadcrumbDetails").split(" / ");
 
   const handleStatusAction = async () => {
     if (!nextStatus) {
@@ -204,109 +209,69 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
         </div>
       ) : null}
       <PageHeader
-        className="mb-6"
-        title={t("detailsTitle", { id: order.id })}
+        className="mb-5 border-b border-[var(--ui-border)] pb-5"
+        eyebrow={t("orderDetails")}
+        title={order.orderNumber ? `#${order.orderNumber}` : `#${order.id}`}
+        description={order.createdAt ? formatDateTime24({ value: order.createdAt }) : undefined}
+        backAction={
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/orders")}
+            aria-label={t("backToOrders")}
+            className="rounded-[var(--ui-radius-control)]"
+          >
+            <ArrowLeft aria-hidden="true" className="size-4" />
+          </Button>
+        }
         breadcrumbs={
-          <p className="text-sm text-[var(--ui-text-muted)]">
-            <span className="text-primary">{breadcrumbParts[0]}</span>
-            <span aria-hidden="true"> / </span>
-            {breadcrumbParts[1]}
-          </p>
+          <div className="flex flex-wrap items-center gap-2" aria-label={t("orderSummary")}>
+            <StatusBadge tone={order.status === "CANCELLED" || order.status === "REJECTED" ? "danger" : order.status === "DELIVERED" || order.status === "SERVED" ? "success" : "warning"}>
+              {statusLabel}
+            </StatusBadge>
+            <StatusBadge tone={order.paymentStatus === "PAID" ? "success" : order.paymentStatus === "FAILED" || order.paymentStatus === "CANCELLED" ? "danger" : "warning"}>
+              {formatPaymentStatusLabel(order.paymentStatus)}
+            </StatusBadge>
+            <StatusBadge tone="neutral">{order.orderType ? order.orderType.replaceAll("_", " ") : t("notAvailable")}</StatusBadge>
+          </div>
         }
         actions={
           <>
-            <span className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-[var(--ui-radius-control)] bg-emerald-500 px-4 text-sm font-medium text-white sm:w-auto">
-              <Truck size={16} className="sm:w-[18px] sm:h-[18px]" />
-              {statusLabel}
-            </span>
-
-            <Button
-              type="button"
-              variant="outline"
-              disabled={
-                isReprinting || !(order.restaurantId ?? user?.restaurantId)
-              }
-              onClick={() => {
-                void handleReprintAction();
-              }}
-              className="w-full gap-2 sm:w-auto"
-            >
-              <Printer size={16} />
-              {isReprinting ? t("reprintingOrder") : t("reprintOrder")}
-            </Button>
-
             {canUpdateStatus ? (
               <Button
                 type="button"
-                variant="outline"
                 disabled={updateStatusMutation.isPending}
-                onClick={() => {
-                  void handleStatusAction();
-                }}
+                onClick={() => void handleStatusAction()}
                 className="w-full gap-2 sm:w-auto"
               >
-                <RefreshCw size={16} />
+                <RefreshCw aria-hidden="true" className="size-4" />
                 {actionLabel}
               </Button>
             ) : null}
-
             {canSendOutForDelivery ? (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={sendOutForDeliveryMutation.isPending}
-                onClick={() => {
-                  void handleSendOutForDeliveryAction();
-                }}
-                className="w-full border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary sm:w-auto"
-              >
-                <Truck size={16} />
+              <Button type="button" disabled={sendOutForDeliveryMutation.isPending} onClick={() => void handleSendOutForDeliveryAction()} className="w-full gap-2 sm:w-auto">
+                <Truck aria-hidden="true" className="size-4" />
                 {t("sendOutForDeliveryDirect")}
               </Button>
             ) : null}
-
             {canUseExternalDriver ? (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={externalDriverMutation.isPending}
-                onClick={() => {
-                  void handleExternalDriverAction();
-                }}
-                className="w-full border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary sm:w-auto"
-              >
-                <Truck size={16} />
+              <Button type="button" disabled={externalDriverMutation.isPending} onClick={() => void handleExternalDriverAction()} className="w-full gap-2 sm:w-auto">
+                <Truck aria-hidden="true" className="size-4" />
                 {t("externalDriver")}
               </Button>
             ) : null}
-
+            <Button type="button" variant="outline" disabled={isReprinting || !(order.restaurantId ?? user?.restaurantId)} onClick={() => void handleReprintAction()} className="w-full gap-2 sm:w-auto">
+              <Printer aria-hidden="true" className="size-4" />
+              {isReprinting ? t("reprintingOrder") : t("reprintOrder")}
+            </Button>
             {canUseTerminalActions ? (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={updateStatusMutation.isPending}
-                  onClick={() => {
-                    void handleTerminalStatusAction("CANCELLED");
-                  }}
-                  className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto"
-                >
-                  <XCircle size={16} />
-                  {t(ORDER_TERMINAL_ACTION_LABEL_KEYS.CANCELLED)}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={updateStatusMutation.isPending}
-                  onClick={() => {
-                    void handleTerminalStatusAction("REJECTED");
-                  }}
-                  className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto"
-                >
-                  <Ban size={16} />
-                  {t(ORDER_TERMINAL_ACTION_LABEL_KEYS.REJECTED)}
-                </Button>
-              </>
+              <ActionDropdown
+                items={[
+                  { label: t(ORDER_TERMINAL_ACTION_LABEL_KEYS.CANCELLED), icon: <XCircle className="size-4" />, onClick: () => void handleTerminalStatusAction("CANCELLED"), className: "text-red-600" },
+                  { label: t(ORDER_TERMINAL_ACTION_LABEL_KEYS.REJECTED), icon: <Ban className="size-4" />, onClick: () => void handleTerminalStatusAction("REJECTED"), className: "text-red-600" },
+                ]}
+              />
             ) : null}
           </>
         }
