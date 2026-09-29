@@ -1106,7 +1106,14 @@
       "deleteTitle": "Delete menu item",
       "deleteDescription": "Are you sure you want to delete this menu item?",
       "drag": "Drag to reorder",
-      "prep": "Prep"
+      "prep": "Prep",
+      "activateAriaLabel": "Set {name} active",
+      "deactivateAriaLabel": "Set {name} inactive",
+      "statusUpdating": "Updating status for {name}",
+      "statusActivatedSuccess": "{name} is now active.",
+      "statusDeactivatedSuccess": "{name} is now inactive.",
+      "statusUpdateFailed": "Unable to update the item status. Please try again.",
+      "statusBranchAdminDisabled": "Use Branch override in Actions to change availability for your branch."
     },
     "variationsTable": {
       "all": "All variations",
