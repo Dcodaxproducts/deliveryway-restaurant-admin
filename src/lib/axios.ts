@@ -7,6 +7,7 @@ import {
   getStoredAuth,
   normalizeAuthPayload,
   saveStoredAuth,
+  isPosPrinterAccount,
 } from "@/lib/auth";
 import { cleanParams, type QueryParams } from "./params";
 
@@ -20,6 +21,7 @@ let refreshPromise: Promise<string | null> | null = null;
 const authenticationEndpoints = [
   "/auth/login",
   "/auth/staff/login",
+  "/auth/pos-printer/login",
   "/auth/google-login",
 ] as const;
 
@@ -97,6 +99,7 @@ api.interceptors.response.use(
       !isLoginRequest
     ) {
       originalRequest._retry = true;
+      const usePosPrinterLogin = isPosPrinterAccount(getStoredAuth()?.user);
       const accessToken = await refreshStoredAccessToken();
 
       if (accessToken) {
@@ -106,7 +109,9 @@ api.interceptors.response.use(
 
       if (typeof window !== "undefined") {
         const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-        window.location.href = buildLoginRoute(currentPath);
+        window.location.href = usePosPrinterLogin
+          ? "/pos-printer/login"
+          : buildLoginRoute(currentPath);
       }
     }
 

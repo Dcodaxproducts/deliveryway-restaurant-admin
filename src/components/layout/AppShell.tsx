@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import ContextGate from "@/components/layout/ContextGate";
 import { Navbar } from "@/components/layout/navbar/navbar";
+import { PosPrinterNavbar } from "@/components/layout/navbar/PosPrinterNavbar";
 import { Sidebar } from "@/components/layout/sidebar/Sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -106,7 +107,7 @@ export function WorkspaceLoadingContent({ pathname }: { pathname: string }) {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const hideLayout = isPublicRoute(pathname);
-  const { loading, user, token } = useAuth();
+  const { loading, user, token, isPosPrinter } = useAuth();
 
   if (hideLayout) {
     return (
@@ -157,6 +158,25 @@ export function AppShell({ children }: AppShellProps) {
         </div>
         <span className="sr-only">Loading workspace</span>
       </SidebarProvider>
+    );
+  }
+
+  if (isPosPrinter) {
+    return (
+      <div className="flex min-h-[100dvh] flex-col bg-[var(--ui-canvas)]">
+        <a
+          href="#main-content"
+          className="fixed left-4 top-4 z-[var(--ui-layer-toast)] -translate-y-24 rounded-[var(--ui-radius-control)] bg-primary px-4 py-2 text-sm font-medium text-white transition-transform focus:translate-y-0"
+        >
+          Skip to content
+        </a>
+        <div className="sticky top-0 z-[var(--ui-layer-dropdown)] bg-background">
+          <PosPrinterNavbar />
+        </div>
+        <main id="main-content" tabIndex={-1} className="flex min-w-0 flex-1 flex-col">
+          {children}
+        </main>
+      </div>
     );
   }
 

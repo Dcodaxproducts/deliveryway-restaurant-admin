@@ -7,6 +7,8 @@ import {
   getScopedQueryParams,
   getStaffDefaultRedirectPath,
   isBranchAdminRole,
+  isPosPrinterAccount,
+  isPosPrinterRouteAllowed,
   isRestaurantAdminRole,
   isStaffRole,
   isStaffRouteAllowed,
@@ -29,8 +31,14 @@ export const useAuth = () => {
       return;
     }
 
+    if (isPosPrinterAccount(user) && !isPosPrinterRouteAllowed(pathname)) {
+      router.replace("/orders?tab=today");
+      return;
+    }
+
     if (
       isStaffRole(user.role, user.actorType) &&
+      !isPosPrinterAccount(user) &&
       !isStaffRouteAllowed(user, pathname)
     ) {
       router.replace(getStaffDefaultRedirectPath(user));
@@ -44,6 +52,7 @@ export const useAuth = () => {
   const branchId = user?.branchId ?? undefined;
   const tenantId = user?.tenantId ?? undefined;
   const scopedParams = getScopedQueryParams(user);
+  const isPosPrinter = isPosPrinterAccount(user);
 
   return {
     user,
@@ -54,6 +63,7 @@ export const useAuth = () => {
     role,
     isBranchAdmin,
     isRestaurantAdmin,
+    isPosPrinter,
     scopedParams,
     loading,
     setUser,

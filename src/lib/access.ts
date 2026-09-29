@@ -3,6 +3,7 @@ export const PUBLIC_ROUTES = [
   "/register",
   "/forgot-password",
   "/reset-password",
+  "/pos-printer/login",
 ] as const;
 
 export const isPublicRoute = (pathname: string) =>

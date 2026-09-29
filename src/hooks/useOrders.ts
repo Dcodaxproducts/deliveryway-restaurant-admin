@@ -201,7 +201,7 @@ export const useSendOrderInvoiceEmail = (messages?: {
 
 export const useUpdateOrderStatus = () => {
   const queryClient = useQueryClient();
-  const { restaurantId, branchId, isBranchAdmin } = useAuth();
+  const { restaurantId, branchId, isBranchAdmin, isPosPrinter } = useAuth();
 
   return useMutation({
     mutationFn: ({
@@ -218,7 +218,11 @@ export const useUpdateOrderStatus = () => {
       });
       toast.success("Order status updated");
 
-      if (variables.payload.status === "CONFIRMED" && restaurantId) {
+      if (
+        variables.payload.status === "CONFIRMED" &&
+        restaurantId &&
+        !isPosPrinter
+      ) {
         void printAcceptedOrderIfConfigured({
           orderId: order.id,
           restaurantId,

@@ -12,12 +12,12 @@ export const currencyQueryKeys = {
 };
 
 export const useGlobalSettingsCurrency = () => {
-  const { user } = useAuth();
+  const { user, isPosPrinter } = useAuth();
 
   return useQuery({
     queryKey: currencyQueryKeys.globalSettings,
     queryFn: getAdminGlobalSettings,
-    enabled: Boolean(user),
+    enabled: Boolean(user) && !isPosPrinter,
     staleTime: 5 * 60 * 1000,
   });
 };

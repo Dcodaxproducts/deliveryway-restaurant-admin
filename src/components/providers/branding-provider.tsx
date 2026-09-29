@@ -13,7 +13,7 @@ import { useTheme } from "next-themes";
 
 import { useAuthContext } from "@/components/providers/auth-provider";
 import { DEFAULT_RESTAURANT_BRANDING_PAYLOAD } from "@/config/default-branding";
-import { isBranchAdminRole } from "@/lib/auth";
+import { isBranchAdminRole, isPosPrinterAccount } from "@/lib/auth";
 import { applyBrandingCssVariables, normalizeBrandingPayload } from "@/lib/branding";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
@@ -49,6 +49,7 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
   const { user } = useAuthContext();
   const { setTheme } = useTheme();
   const restaurantId = user?.restaurantId?.trim() || null;
+  const isPosPrinter = isPosPrinterAccount(user);
   const brandingReadSource = isBranchAdminRole(user?.role) ? "customer-home" : "restaurant";
   const requestIdRef = useRef(0);
   const [branding, setBranding] = useState<RestaurantBrandingPayload>(defaultBranding);
@@ -63,7 +64,7 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
     requestIdRef.current = requestId;
     setBrandingError(null);
 
-    if (!restaurantId) {
+    if (!restaurantId || isPosPrinter) {
       setIsBrandingLoading(false);
       setIsBrandingReady(true);
       setBranding(defaultBranding);
@@ -100,7 +101,7 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
         setIsBrandingReady(true);
       }
     }
-  }, [brandingReadSource, restaurantId]);
+  }, [brandingReadSource, isPosPrinter, restaurantId]);
 
   useEffect(() => {
     void reloadBranding();

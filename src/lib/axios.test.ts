@@ -7,6 +7,7 @@ describe("isAuthenticationRequest", () => {
     "/auth/login",
     "/auth/login?role=BUSINESS_ADMIN",
     "/auth/staff/login",
+    "/auth/pos-printer/login",
     "https://api.example.com/auth/google-login",
   ])("identifies login endpoint %s", (requestUrl) => {
     expect(isAuthenticationRequest(requestUrl)).toBe(true);

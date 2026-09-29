@@ -74,8 +74,9 @@ export function OrdersPage() {
 
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  const { user, restaurantId, branchId, isBranchAdmin, scopedParams } =
-    useAuth();
+  const {
+    user, restaurantId, branchId, isBranchAdmin, isPosPrinter, scopedParams,
+  } = useAuth();
   const scopedRestaurantId = scopedParams.restaurantId || restaurantId;
   const scopedBranchId =
     scopedParams.branchId ||
@@ -115,10 +116,12 @@ export function OrdersPage() {
   const reportDateRange = useMemo(() => {
     return { ...todayRange, ...scheduleQuery };
   }, [scheduleQuery, todayRange]);
-  const canRequestOrderReport = canRequestOrdersReport({
-    isStaff: isStaffRole(user?.role, user?.actorType),
-    restaurantId: scopedRestaurantId,
-  });
+  const canRequestOrderReport =
+    !isPosPrinter &&
+    canRequestOrdersReport({
+      isStaff: isStaffRole(user?.role, user?.actorType),
+      restaurantId: scopedRestaurantId,
+    });
   const useOrderManagementStats = shouldUseOrderManagementStats({
     activeTab,
     status,
