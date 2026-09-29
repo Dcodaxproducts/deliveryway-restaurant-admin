@@ -29,6 +29,13 @@ const unwrapEnvelope = (response: unknown) => {
 };
 
 export const authApi = {
+  posPrinterLogin: async (payload: { email: string; password: string }) => {
+    const response = await httpClient.post("/auth/pos-printer/login", payload);
+    return normalizeAuthPayload(response);
+  },
+  logout: () => httpClient.post("/auth/logout"),
+  changePassword: (payload: { currentPassword: string; newPassword: string }) =>
+    httpClient.patch("/auth/change-password", payload),
   loginWithFallback: async (payload: LoginPayload) => {
     const { role, ...credentials } = payload;
 

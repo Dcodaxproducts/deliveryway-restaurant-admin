@@ -15,6 +15,7 @@ import {
   getStoredAuth,
   getStringValue,
   isBranchAdminRole,
+  isPosPrinterAccount,
   isRecord,
   isStaffRole,
   saveStoredAuth,
@@ -124,7 +125,12 @@ export default function ContextGate() {
       search: debouncedRestaurantSearch || undefined,
       includeInactive: true,
     },
-    Boolean(token && user?.id && !isBranchAdminRole(user.role)),
+    Boolean(
+      token &&
+        user?.id &&
+        !isBranchAdminRole(user.role) &&
+        !isPosPrinterAccount(user),
+    ),
   );
 
   useEffect(() => {
@@ -156,6 +162,11 @@ export default function ContextGate() {
     if (loading) return;
 
     if (!user || !token) {
+      setOpen(false);
+      return;
+    }
+
+    if (isPosPrinterAccount(user)) {
       setOpen(false);
       return;
     }

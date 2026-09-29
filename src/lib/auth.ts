@@ -51,6 +51,7 @@ export type AuthUser = {
   branchName?: string | null;
   panelType?: string | null;
   actorType?: "USER" | "STAFF" | "DELIVERYMAN" | string;
+  accountType?: "POS_PRINTER" | "STANDARD" | string | null;
   restaurantAccess?: RestaurantAccessScope | null;
   staffRoleId?: string | null;
   staffRole?: AuthStaffRole | null;
@@ -235,6 +236,18 @@ export const isStaffRole = (
   return (
     normalizeRoleName(actorType) === ADMIN_ROLES.STAFF ||
     normalizeRoleName(role) === ADMIN_ROLES.STAFF
+  );
+};
+
+export const isPosPrinterAccount = (user?: AuthUser | null) =>
+  normalizeRoleName(user?.accountType) === "POS_PRINTER";
+
+export const POS_PRINTER_ROUTES = ["/orders", "/table-reservations"] as const;
+
+export const isPosPrinterRouteAllowed = (pathname?: string | null) => {
+  const path = pathname?.split(/[?#]/)[0] || "/";
+  return POS_PRINTER_ROUTES.some(
+    (route) => path === route || path.startsWith(`${route}/`),
   );
 };
 
@@ -578,6 +591,8 @@ export const normalizeUser = (
     panelType:
       getStringValue(source, "panelType") ?? fallback?.panelType ?? null,
     actorType: getStringValue(source, "actorType") ?? fallback?.actorType,
+    accountType:
+      getStringValue(source, "accountType") ?? fallback?.accountType ?? null,
     restaurantAccess,
     staffRoleId:
       getStringValue(source, "staffRoleId") ?? fallback?.staffRoleId ?? null,

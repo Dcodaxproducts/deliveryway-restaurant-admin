@@ -71,7 +71,7 @@ export const useGetBranches = (params?: {
   restaurantId?: string;
   lat?: string;
   lng?: string;
-}) => {
+}, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: [
       "branches",
@@ -86,6 +86,7 @@ export const useGetBranches = (params?: {
       params?.lng,
     ],
     queryFn: () => getBranches(params),
+    enabled: options?.enabled ?? true,
   });
 };
 

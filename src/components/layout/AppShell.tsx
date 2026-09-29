@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import ContextGate from "@/components/layout/ContextGate";
 import { Navbar } from "@/components/layout/navbar/navbar";
+import { PosPrinterNavbar } from "@/components/layout/navbar/PosPrinterNavbar";
 import { Sidebar } from "@/components/layout/sidebar/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { isPublicRoute } from "@/lib/access";
@@ -17,7 +18,7 @@ type AppShellProps = {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const hideLayout = isPublicRoute(pathname);
-  const { loading } = useAuth();
+  const { loading, isPosPrinter } = useAuth();
 
   if (loading && !hideLayout) {
     return (
@@ -31,7 +32,7 @@ export function AppShell({ children }: AppShellProps) {
     <>
       {!hideLayout && (
         <div className="fixed inset-x-0 top-0 z-40">
-          <Navbar />
+          {isPosPrinter ? <PosPrinterNavbar /> : <Navbar />}
         </div>
       )}
       <div
@@ -55,7 +56,7 @@ export function AppShell({ children }: AppShellProps) {
           {children}
         </div>
       </div>
-      <ContextGate />
+      {!isPosPrinter ? <ContextGate /> : null}
     </>
   );
 }

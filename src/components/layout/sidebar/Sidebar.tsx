@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import {
   getStaffDefaultRedirectPath,
   hasStaffPermission,
+  isPosPrinterAccount,
   isStaffRole,
 } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -181,6 +182,7 @@ function SidebarContent({
   const router = useRouter();
   const t = useTranslations("navigation");
   const { user, role, isBranchAdmin, logout } = useAuth();
+  const isPosPrinter = isPosPrinterAccount(user);
   const routeKey = `${pathname}?${searchParams.toString()}`;
   const [menuState, setMenuState] = useState<{
     routeKey: string;
@@ -195,6 +197,12 @@ function SidebarContent({
     value === "STAFF";
 
   const isItemAllowed = (item: MenuItem): boolean => {
+    if (isPosPrinter) {
+      return (
+        item.permissionAccesses?.includes("order-management") === true ||
+        item.permissionAccesses?.includes("table-reservations") === true
+      );
+    }
     if (!item.roles?.length) return true;
     if (isStaffRole(role, user?.actorType)) {
       if (item.href === "/branch-workspace") return false;
@@ -292,13 +300,15 @@ function SidebarContent({
           />
         ))}
 
-        <div className="mt-5 px-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-foreground">
-            {t("accountSettings")}
-          </p>
-        </div>
+        {!isPosPrinter ? (
+          <div className="mt-5 px-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-foreground">
+              {t("accountSettings")}
+            </p>
+          </div>
+        ) : null}
 
-        <div className="mt-5">
+        {!isPosPrinter ? <div className="mt-5">
           {accountItems.map((item) => (
             <SidebarItem
               key={item.title}
@@ -315,9 +325,9 @@ function SidebarContent({
               isActiveRoute={isActiveRoute}
             />
           ))}
-        </div>
+        </div> : null}
 
-        <div className="px-5 pb-5 mt-28">
+        {!isPosPrinter ? <div className="px-5 pb-5 mt-28">
           <div
             className="relative rounded-2xl px-4 pt-14 pb-4 text-white"
             style={{
@@ -362,7 +372,7 @@ function SidebarContent({
             </div>
             <span className="text-sm font-semibold">{t("logout")}</span>
           </Button>
-        </div>
+        </div> : null}
       </nav>
     </aside>
   );

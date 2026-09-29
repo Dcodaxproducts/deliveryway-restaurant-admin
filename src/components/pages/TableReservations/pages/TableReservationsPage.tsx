@@ -45,7 +45,8 @@ const getBranchOptions = (payload: unknown): TableReservationBranchOption[] => {
 };
 
 export function TableReservationsPage() {
-  const { user, restaurantId, branchId, isBranchAdmin } = useAuth();
+  const { user, restaurantId, branchId, isBranchAdmin, isPosPrinter } = useAuth();
+  const isBranchScoped = isBranchAdmin || isPosPrinter;
   const [filters, setFilters] = useState(defaultFilters);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -57,7 +58,8 @@ export function TableReservationsPage() {
           includeInactive: false,
           sortOrder: "ASC",
         }
-      : undefined
+      : undefined,
+    { enabled: !isPosPrinter },
   );
 
   const branchOptions = useMemo(
@@ -65,7 +67,9 @@ export function TableReservationsPage() {
     [branchesQuery.data]
   );
 
-  const scopedBranchId = isBranchAdmin ? branchId || undefined : filters.branchId || undefined;
+  const scopedBranchId = isBranchScoped
+    ? branchId || undefined
+    : filters.branchId || undefined;
 
   const params = useMemo<TableReservationsParams>(
     () => ({
@@ -135,7 +139,7 @@ export function TableReservationsPage() {
         <TableReservationsFilters
           filters={filters}
           branchOptions={branchOptions}
-          isBranchAdmin={isBranchAdmin}
+          isBranchAdmin={isBranchScoped}
           branchName={user?.branchName ?? undefined}
           visibleCount={reservations.length}
           totalCount={meta.total}
