@@ -172,9 +172,6 @@ export default function MenuItemsTable({ refetchKey }: any) {
   const [categoryId, setCategoryId] = useState<string | undefined>();
 
   const [allItems, setAllItems] = useState<any[]>([]);
-  const [pendingStatusItemIds, setPendingStatusItemIds] = useState<Set<string>>(
-    () => new Set(),
-  );
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
@@ -189,6 +186,9 @@ export default function MenuItemsTable({ refetchKey }: any) {
     price: "",
     reason: "",
   });
+  const [pendingStatusItemIds, setPendingStatusItemIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const isMobile = useIsMobile();
 
   const canFetchItems = Boolean(restaurantId);

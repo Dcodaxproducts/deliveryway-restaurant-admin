@@ -23,6 +23,10 @@ vi.mock("@/components/layout/navbar/navbar", () => ({
   Navbar: () => <div>navbar</div>,
 }));
 
+vi.mock("@/components/layout/navbar/PosPrinterNavbar", () => ({
+  PosPrinterNavbar: () => <div>pos-printer-navbar</div>,
+}));
+
 vi.mock("@/components/layout/sidebar/Sidebar", () => ({
   Sidebar: () => <div>sidebar</div>,
 }));
@@ -41,6 +45,7 @@ const authenticatedState = {
   role: "BUSINESS_ADMIN",
   isBranchAdmin: false,
   isRestaurantAdmin: true,
+  isPosPrinter: false,
   scopedParams: {},
   loading: false,
   setUser: vi.fn(),
@@ -117,6 +122,35 @@ describe("AppShell authentication boundary", () => {
     expect(markup).toContain("protected-dashboard");
     expect(markup).toContain('data-slot="sidebar-wrapper"');
     expect(markup).toContain('data-slot="sidebar-inset"');
+  });
+
+  it("renders the restricted shell without standard bootstrap chrome on an allowed POS route", () => {
+    vi.mocked(usePathname).mockReturnValue("/orders");
+    vi.mocked(useAuth).mockReturnValue({
+      ...authenticatedState,
+      isPosPrinter: true,
+    });
+
+    const markup = renderShell();
+
+    expect(markup).toContain("protected-dashboard");
+    expect(markup).toContain("pos-printer-navbar");
+    expect(markup).not.toContain(">navbar<");
+    expect(markup).not.toContain("sidebar");
+    expect(markup).not.toContain("context-gate");
+  });
+
+  it("does not mount unrelated page content for a blocked POS direct route", () => {
+    vi.mocked(usePathname).mockReturnValue("/menu");
+    vi.mocked(useAuth).mockReturnValue({
+      ...authenticatedState,
+      isPosPrinter: true,
+    });
+
+    const markup = renderShell();
+
+    expect(markup).not.toContain("protected-dashboard");
+    expect(markup).toContain('aria-label="Redirecting to POS printer orders"');
   });
 
   it("uses table-shaped loading geometry for collection routes", () => {

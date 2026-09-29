@@ -11,6 +11,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { isPublicRoute } from "@/lib/access";
+import { isPosPrinterRouteAllowed } from "@/lib/auth";
 
 type AppShellProps = {
   children: ReactNode;
@@ -158,6 +159,16 @@ export function AppShell({ children }: AppShellProps) {
         </div>
         <span className="sr-only">Loading workspace</span>
       </SidebarProvider>
+    );
+  }
+
+  if (isPosPrinter && !isPosPrinterRouteAllowed(pathname)) {
+    return (
+      <div
+        role="status"
+        aria-label="Redirecting to POS printer orders"
+        className="min-h-[100dvh] bg-[var(--ui-canvas)]"
+      />
     );
   }
 
