@@ -1049,7 +1049,14 @@
       "deleteTitle": "Menueartikel loeschen",
       "deleteDescription": "Moechten Sie diesen Menueartikel wirklich loeschen?",
       "drag": "Zum Sortieren ziehen",
-      "prep": "Vorbereitung"
+      "prep": "Vorbereitung",
+      "activateAriaLabel": "{name} aktivieren",
+      "deactivateAriaLabel": "{name} deaktivieren",
+      "statusUpdating": "Status von {name} wird aktualisiert",
+      "statusActivatedSuccess": "{name} ist jetzt aktiv.",
+      "statusDeactivatedSuccess": "{name} ist jetzt inaktiv.",
+      "statusUpdateFailed": "Der Artikelstatus konnte nicht aktualisiert werden. Bitte erneut versuchen.",
+      "statusBranchAdminDisabled": "Verwenden Sie die Filialueberschreibung unter Aktionen, um die Verfuegbarkeit fuer Ihre Filiale zu aendern."
     },
     "variationsTable": {
       "all": "Alle Variationen",

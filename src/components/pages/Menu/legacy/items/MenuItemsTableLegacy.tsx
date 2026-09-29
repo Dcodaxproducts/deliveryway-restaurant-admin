@@ -33,6 +33,14 @@ import { useClickOutside } from "@/hooks/useClickOutside";
 import { formatMoney } from "@/lib/currency";
 import { extractResponseItems, extractResponseMeta } from "@/lib/response";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
+import { updateMenuItem } from "@/services/menus";
+import { getApiErrorMessage } from "@/lib/errors";
+import MenuItemStatusControl from "@/components/pages/Menu/items/components/MenuItemsTable/MenuItemStatusControl";
+import {
+  getMenuItemActive,
+  updateMenuItemStatus,
+} from "@/components/pages/Menu/items/components/MenuItemsTable/menu-item-status";
 
 const PAGE_LIMIT = 10;
 
@@ -150,6 +158,7 @@ export default function MenuItemsTable({ refetchKey }: any) {
 
   const reorderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const querySignatureRef = useRef<string>("");
+  const pendingStatusItemIdsRef = useRef<Set<string>>(new Set());
 
   const [page, setPage] = useState(1);
   const [limit] = useState(PAGE_LIMIT);
@@ -161,6 +170,9 @@ export default function MenuItemsTable({ refetchKey }: any) {
   const [categoryId, setCategoryId] = useState<string | undefined>();
 
   const [allItems, setAllItems] = useState<any[]>([]);
+  const [pendingStatusItemIds, setPendingStatusItemIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
@@ -576,6 +588,61 @@ export default function MenuItemsTable({ refetchKey }: any) {
     setPage(1);
   };
 
+  const handleItemStatusChange = async (item: any, isActive: boolean) => {
+    const itemId = String(item?.id || "");
+    if (
+      !itemId ||
+      isBranchAdmin ||
+      pendingStatusItemIdsRef.current.has(itemId)
+    ) {
+      return;
+    }
+
+    pendingStatusItemIdsRef.current.add(itemId);
+    setPendingStatusItemIds((previous) => {
+      const next = new Set(previous);
+      next.add(itemId);
+      return next;
+    });
+
+    try {
+      await updateMenuItemStatus({
+        item,
+        restaurantId: restaurantId || undefined,
+        isActive,
+        update: updateMenuItem,
+      });
+
+      setAllItems((previous) =>
+        previous
+          .map((currentItem) =>
+            String(currentItem.id) === itemId
+              ? { ...currentItem, isActive }
+              : currentItem,
+          )
+          .filter((currentItem) => {
+            if (String(currentItem.id) !== itemId) return true;
+            return statusFilter === "active" ? isActive : !isActive;
+          }),
+      );
+      toast.success(
+        t(isActive ? "statusActivatedSuccess" : "statusDeactivatedSuccess", {
+          name: item.name || t("thisItem"),
+        }),
+      );
+      void refetch();
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, t("statusUpdateFailed")));
+    } finally {
+      pendingStatusItemIdsRef.current.delete(itemId);
+      setPendingStatusItemIds((previous) => {
+        const next = new Set(previous);
+        next.delete(itemId);
+        return next;
+      });
+    }
+  };
+
   const handleCategoryChange = (nextCategoryId: string | undefined) => {
     setCategoryId(nextCategoryId);
     setPage(1);
@@ -862,23 +929,28 @@ export default function MenuItemsTable({ refetchKey }: any) {
                   </td>
 
                   <td className="px-2 text-center">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                        (item.branchOverride?.isAvailable ??
-                        item.branchOverrides?.[0]?.isAvailable ??
-                        item.isAvailable ??
-                        item.isActive)
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {(item.branchOverride?.isAvailable ??
-                      item.branchOverrides?.[0]?.isAvailable ??
-                      item.isAvailable ??
-                      item.isActive)
-                        ? commonT("active")
-                        : commonT("inactive")}
-                    </span>
+                    <MenuItemStatusControl
+                      active={getMenuItemActive(item)}
+                      pending={pendingStatusItemIds.has(String(item.id))}
+                      disabled={isBranchAdmin}
+                      activeLabel={commonT("active")}
+                      inactiveLabel={commonT("inactive")}
+                      ariaLabel={t(
+                        getMenuItemActive(item)
+                          ? "deactivateAriaLabel"
+                          : "activateAriaLabel",
+                        { name: item.name || t("thisItem") },
+                      )}
+                      pendingLabel={t("statusUpdating", {
+                        name: item.name || t("thisItem"),
+                      })}
+                      disabledReason={
+                        isBranchAdmin ? t("statusBranchAdminDisabled") : undefined
+                      }
+                      onCheckedChange={(checked) =>
+                        void handleItemStatusChange(item, checked)
+                      }
+                    />
                   </td>
 
                   <td className="px-2 text-center">
@@ -1022,23 +1094,28 @@ export default function MenuItemsTable({ refetchKey }: any) {
                   </div>
 
                   <div className="mt-3 flex items-center justify-between">
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs ${
-                        (item.branchOverride?.isAvailable ??
-                        item.branchOverrides?.[0]?.isAvailable ??
-                        item.isAvailable ??
-                        item.isActive)
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {(item.branchOverride?.isAvailable ??
-                      item.branchOverrides?.[0]?.isAvailable ??
-                      item.isAvailable ??
-                      item.isActive)
-                        ? commonT("active")
-                        : commonT("inactive")}
-                    </span>
+                    <MenuItemStatusControl
+                      active={getMenuItemActive(item)}
+                      pending={pendingStatusItemIds.has(String(item.id))}
+                      disabled={isBranchAdmin}
+                      activeLabel={commonT("active")}
+                      inactiveLabel={commonT("inactive")}
+                      ariaLabel={t(
+                        getMenuItemActive(item)
+                          ? "deactivateAriaLabel"
+                          : "activateAriaLabel",
+                        { name: item.name || t("thisItem") },
+                      )}
+                      pendingLabel={t("statusUpdating", {
+                        name: item.name || t("thisItem"),
+                      })}
+                      disabledReason={
+                        isBranchAdmin ? t("statusBranchAdminDisabled") : undefined
+                      }
+                      onCheckedChange={(checked) =>
+                        void handleItemStatusChange(item, checked)
+                      }
+                    />
                   </div>
                 </div>
               </div>
