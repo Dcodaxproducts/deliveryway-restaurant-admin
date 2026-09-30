@@ -199,6 +199,15 @@ export const useSendOrderInvoiceEmail = (messages?: {
   });
 };
 
+export const shouldPrintAcceptedOrder = ({
+  status,
+  restaurantId,
+}: {
+  status: string;
+  restaurantId?: string | null;
+  isPosPrinter: boolean;
+}) => status === "CONFIRMED" && Boolean(restaurantId);
+
 export const useUpdateOrderStatus = () => {
   const queryClient = useQueryClient();
   const { restaurantId, branchId, isBranchAdmin, isPosPrinter } = useAuth();
@@ -219,15 +228,19 @@ export const useUpdateOrderStatus = () => {
       toast.success("Order status updated");
 
       if (
-        variables.payload.status === "CONFIRMED" &&
-        restaurantId &&
-        !isPosPrinter
+        shouldPrintAcceptedOrder({
+          status: variables.payload.status,
+          restaurantId,
+          isPosPrinter,
+        }) &&
+        restaurantId
       ) {
         void printAcceptedOrderIfConfigured({
           orderId: order.id,
           restaurantId,
           branchId:
-            order.branchId ?? (isBranchAdmin ? branchId ?? undefined : undefined),
+            order.branchId ??
+            (isBranchAdmin ? (branchId ?? undefined) : undefined),
         }).catch(() => {
           toast.error("Order accepted, but automatic printing failed.");
         });
