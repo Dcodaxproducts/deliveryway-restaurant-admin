@@ -28,6 +28,16 @@ describe("authApi POS printer authentication", () => {
     expect(result.user?.accountType).toBe("POS_PRINTER");
   });
 
+  it("maps a username identifier to the API login alias and keeps legacy emails unchanged", async () => {
+    postMock.mockResolvedValue({ data: { accessToken: "pos-token", user: { id: "p1", email: "x", accountType: "POS_PRINTER" } } });
+    await authApi.posPrinterLogin({ identifier: " Kitchen-1 ", password: "Password@123" });
+    expect(postMock).toHaveBeenLastCalledWith("/auth/pos-printer/login", { email: "kitchen-1@pos-printer.feastflow.local", password: "Password@123" });
+
+    await authApi.posPrinterLogin({ identifier: "Legacy@Example.com", password: "Password@123" });
+    expect(postMock).toHaveBeenLastCalledWith("/auth/pos-printer/login", { email: "legacy@example.com", password: "Password@123" });
+    expect(postMock.mock.calls.every(([, body]) => !("identifier" in (body as object)) && !("role" in (body as object)))).toBe(true);
+  });
+
   it("passes login failures through for the UI to render a generic error", async () => {
     const error = makeHttpError(401, "backend detail");
     postMock.mockRejectedValueOnce(error);

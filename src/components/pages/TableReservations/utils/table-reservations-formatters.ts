@@ -7,6 +7,13 @@ import { formatDateTime24 } from "@/lib/date-time-format";
 
 export const EMPTY_TEXT = "—";
 
+/**
+ * Guest customers created by `POST /pos/orders/walk-in-reservations` receive an internal
+ * `pos-guest-<restaurant>-<branch>-<time>-<token>@feastflow.local` address.
+ */
+export const WALK_IN_GUEST_EMAIL_PATTERN = /^pos-guest-.*@feastflow\.local$/i;
+export const WALK_IN_SEARCH_TOKEN = "pos-guest-";
+
 export function formatDateTime(value?: string | null) {
   if (!value) return EMPTY_TEXT;
 
@@ -49,6 +56,22 @@ export function getCustomerInitials(customer?: TableReservationCustomer | null) 
   const initials = parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : fullName.slice(0, 2);
 
   return initials.toUpperCase();
+}
+
+export function isWalkInCustomer(customer?: TableReservationCustomer | null) {
+  return Boolean(customer?.email && WALK_IN_GUEST_EMAIL_PATTERN.test(customer.email.trim()));
+}
+
+export function isWalkInReservation(reservation: Pick<TableReservation, "customer">) {
+  return isWalkInCustomer(reservation.customer);
+}
+
+/**
+ * Internal walk-in addresses are not real contact details; never show them to staff.
+ */
+export function getCustomerDisplayEmail(customer?: TableReservationCustomer | null) {
+  if (!customer?.email || isWalkInCustomer(customer)) return "";
+  return customer.email;
 }
 
 export function formatStatusLabel(status?: TableReservationStatus | null) {

@@ -11,6 +11,10 @@ import de from "@/messages/de.json";
 import type { TableReservation } from "@/types/table-reservations";
 
 vi.mock("@/lib/fonts", () => ({ poppins: { className: "" } }));
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/table-reservations",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+}));
 vi.mock("@/hooks/useTableReservations", () => ({
   useUpdateTableReservationStatus: () => ({ isPending: false }),
 }));
@@ -75,7 +79,9 @@ describe.each([
         expect(view).toContain(formatDateTime(reservation.cancelledAt));
         expect(view).toContain(formatDateTime(reservation.createdAt));
         expect(view).toContain("Window seat");
-        expect(view).toContain('aria-label="Open actions"');
+        expect(view).toContain(
+          `aria-label="${messages.tableReservations.openActions}"`,
+        );
       }
     },
   );

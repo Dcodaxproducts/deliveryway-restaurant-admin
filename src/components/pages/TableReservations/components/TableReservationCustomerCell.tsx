@@ -1,11 +1,17 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
 import {
+  getCustomerDisplayEmail,
   getCustomerFullName,
   getCustomerInitials,
+  isWalkInCustomer,
 } from "@/components/pages/TableReservations/utils/table-reservations-formatters";
 import type { TableReservationCustomer } from "@/types/table-reservations";
 
@@ -16,7 +22,10 @@ type TableReservationCustomerCellProps = {
 export default function TableReservationCustomerCell({
   customer,
 }: TableReservationCustomerCellProps) {
+  const t = useTranslations("tableReservations");
   const fullName = getCustomerFullName(customer);
+  const email = getCustomerDisplayEmail(customer);
+  const walkIn = isWalkInCustomer(customer);
 
   return (
     <div className="flex min-w-0 items-center gap-3">
@@ -32,10 +41,10 @@ export default function TableReservationCustomerCell({
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-gray-900">{fullName}</p>
         <p className="truncate text-xs text-gray-500">
-          {customer?.email || "No email"}
+          {email || (walkIn ? t("walkInGuest") : t("noEmail"))}
         </p>
         <p className="truncate text-xs text-gray-400">
-          {customer?.phone || "No phone"}
+          {customer?.phone || t("noPhone")}
         </p>
       </div>
     </div>

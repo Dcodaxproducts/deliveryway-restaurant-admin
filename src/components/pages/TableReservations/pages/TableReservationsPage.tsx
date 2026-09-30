@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import Container from "@/components/common/Container";
+import { SectionCard } from "@/components/common/SectionCard";
 import TableReservationsFilters, {
   type TableReservationBranchOption,
   type TableReservationsFilterState,
@@ -11,19 +13,18 @@ import TableReservationsHeader from "@/components/pages/TableReservations/compon
 import TableReservationsPagination from "@/components/pages/TableReservations/components/TableReservationsPagination";
 import TableReservationsStats from "@/components/pages/TableReservations/components/TableReservationsStats";
 import { TableReservationsTable } from "@/components/pages/TableReservations/components/TableReservationsTable";
+import { WalkInQueuePanel } from "@/components/pages/TableReservations/components/WalkInQueuePanel";
+import {
+  buildTableReservationsQueryString,
+  parseTableReservationsLimit,
+  parseTableReservationsListState,
+  preserveTableReservationsListQuery,
+  TABLE_RESERVATIONS_ROUTE,
+} from "@/components/pages/TableReservations/utils/table-reservations-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetBranches } from "@/hooks/useBranches";
 import { useTableReservations } from "@/hooks/useTableReservations";
 import type { TableReservationsParams } from "@/types/table-reservations";
-import { SectionCard } from "@/components/common/SectionCard";
-
-const defaultFilters: TableReservationsFilterState = {
-  search: "",
-  status: "ALL",
-  sortBy: "reservationDate",
-  sortOrder: "DESC",
-  branchId: "",
-};
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -47,10 +48,19 @@ const getBranchOptions = (payload: unknown): TableReservationBranchOption[] => {
 
 export function TableReservationsPage() {
   const { user, restaurantId, branchId, isBranchAdmin, isPosPrinter } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const isBranchScoped = isBranchAdmin || isPosPrinter;
-  const [filters, setFilters] = useState(defaultFilters);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
+  // The URL is the source of truth on first render so page/limit/filters survive
+  // detail navigation, reloads, and shared links.
+  const [initialState] = useState(() => {
+    const state = parseTableReservationsListState(searchParams);
+    // Branch-scoped accounts always see their own branch; a URL branch filter is meaningless.
+    return isBranchScoped ? { ...state, filters: { ...state.filters, branchId: "" } } : state;
+  });
+  const [filters, setFilters] = useState(initialState.filters);
+  const [page, setPage] = useState(initialState.page);
+  const [limit, setLimit] = useState(initialState.limit);
 
   const branchesQuery = useGetBranches(
     restaurantId
@@ -95,6 +105,16 @@ export function TableReservationsPage() {
     ]
   );
 
+  const listQuery = useMemo(
+    () => buildTableReservationsQueryString({ filters, page, limit }),
+    [filters, limit, page]
+  );
+
+  useEffect(() => {
+    if (preserveTableReservationsListQuery(searchParams) === listQuery) return;
+    router.replace(`${TABLE_RESERVATIONS_ROUTE}${listQuery}`, { scroll: false });
+  }, [listQuery, router, searchParams]);
+
   const reservationsQuery = useTableReservations(params);
   const reservations = reservationsQuery.data?.reservations ?? [];
   const meta = reservationsQuery.data?.meta ?? {
@@ -106,19 +126,33 @@ export function TableReservationsPage() {
     hasPrevious: false,
   };
 
+  // A stale deep link can point past the last page; snap back to the last real page.
+  useEffect(() => {
+    const currentMeta = reservationsQuery.data?.meta;
+    if (!currentMeta || reservationsQuery.isPlaceholderData) return;
+    if (currentMeta.total > 0 && page > currentMeta.totalPages) {
+      setPage(Math.max(currentMeta.totalPages, 1));
+    }
+  }, [page, reservationsQuery.data, reservationsQuery.isPlaceholderData]);
+
   const handleFiltersChange = useCallback(
     (updatedFilters: Partial<TableReservationsFilterState>) => {
-      setFilters((currentFilters) => ({
-        ...currentFilters,
-        ...updatedFilters,
-      }));
-      setPage(1);
+      setFilters((currentFilters) => {
+        const nextFilters = { ...currentFilters, ...updatedFilters };
+        const changed = (Object.keys(updatedFilters) as Array<keyof TableReservationsFilterState>).some(
+          (key) => currentFilters[key] !== nextFilters[key]
+        );
+        if (changed) setPage(1);
+        return changed ? nextFilters : currentFilters;
+      });
     },
     []
   );
 
   const handleLimitChange = (nextLimit: number) => {
-    setLimit(nextLimit);
+    const supportedLimit = parseTableReservationsLimit(nextLimit);
+    if (supportedLimit === limit) return;
+    setLimit(supportedLimit);
     setPage(1);
   };
 
@@ -128,6 +162,16 @@ export function TableReservationsPage() {
         total={meta.total}
         isRefreshing={reservationsQuery.isFetching}
         onRefresh={() => reservationsQuery.refetch()}
+      />
+
+      <WalkInQueuePanel
+        restaurantId={restaurantId || undefined}
+        branchId={scopedBranchId}
+        isBranchScoped={isBranchScoped}
+        branchName={user?.branchName ?? undefined}
+        branchOptions={branchOptions}
+        canCreate={!isPosPrinter}
+        listQuery={listQuery}
       />
 
       <SectionCard padding="md" className="space-y-6">
@@ -154,6 +198,7 @@ export function TableReservationsPage() {
           error={reservationsQuery.error}
           restaurantId={restaurantId || undefined}
           branchId={branchId || undefined}
+          listQuery={listQuery}
         />
 
         <TableReservationsPagination

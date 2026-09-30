@@ -56,11 +56,12 @@ const statusOptions = [
   { labelKey: "seated", value: "SEATED", helperKey: "seatedReservations" },
 ];
 
+// Only fields the admin list endpoint actually sorts by; anything else silently falls
+// back to createdAt on the API, which would misrepresent the selected order.
 const sortByOptions = [
   { labelKey: "reservationDate", value: "reservationDate" },
   { labelKey: "createdAt", value: "createdAt" },
   { labelKey: "guestCount", value: "guestCount" },
-  { labelKey: "statusLabel", value: "status" },
 ];
 
 export default function TableReservationsFilters({

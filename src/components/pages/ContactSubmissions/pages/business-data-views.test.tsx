@@ -810,7 +810,6 @@ describe("reservation FilterBar contracts", () => {
       "reservationDate",
       "createdAt",
       "guestCount",
-      "status",
       "DESC",
       "ASC",
       "ALL",

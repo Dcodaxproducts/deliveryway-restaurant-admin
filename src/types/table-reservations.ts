@@ -4,14 +4,20 @@ export type TableReservationStatus =
   | "CANCELLED"
   | "COMPLETED"
   | "SEATED"
+  | "NO_SHOW"
   | string;
 
+export const TABLE_RESERVATION_STATUS_VALUES = [
+  "REQUESTED",
+  "CONFIRMED",
+  "SEATED",
+  "COMPLETED",
+  "CANCELLED",
+  "NO_SHOW",
+] as const;
+
 export type TableReservationStatusUpdateValue =
-  | "REQUESTED"
-  | "CONFIRMED"
-  | "SEATED"
-  | "COMPLETED"
-  | "CANCELLED";
+  (typeof TABLE_RESERVATION_STATUS_VALUES)[number];
 
 export type TableReservationStatusUpdatePayload = {
   status: TableReservationStatusUpdateValue;
@@ -29,7 +35,21 @@ export const TABLE_RESERVATION_STATUS_OPTIONS: Array<{
   { value: "SEATED", label: "Seated" },
   { value: "COMPLETED", label: "Completed" },
   { value: "CANCELLED", label: "Cancelled" },
+  { value: "NO_SHOW", label: "No Show" },
 ];
+
+export const isTableReservationStatusUpdateValue = (
+  value: unknown
+): value is TableReservationStatusUpdateValue =>
+  typeof value === "string" &&
+  (TABLE_RESERVATION_STATUS_VALUES as readonly string[]).includes(value);
+
+/**
+ * Page sizes supported by the admin list endpoint. The API caps `limit` at 50.
+ */
+export const TABLE_RESERVATIONS_LIMIT_OPTIONS = [10, 20, 50] as const;
+export const TABLE_RESERVATIONS_DEFAULT_LIMIT = 20;
+export const TABLE_RESERVATIONS_MAX_LIMIT = 50;
 
 export type TableReservationCustomer = {
   id: string;
@@ -80,9 +100,33 @@ export type TableReservationsParams = {
   status?: string;
 };
 
+export type TableReservationScopeParams = Pick<
+  TableReservationsParams,
+  "restaurantId" | "branchId" | "customerId"
+>;
+
 export type TableReservationsResponse = {
   reservations: TableReservation[];
   meta: TableReservationsMeta;
+  message?: string;
+};
+
+/**
+ * Payload for `POST /pos/orders/walk-in-reservations`. Branch-scoped actors may omit
+ * `branchId`; the API uses the token scope. `reservationDate` must be in the future.
+ */
+export type WalkInReservationCreatePayload = {
+  branchId?: string;
+  guestName?: string;
+  guestPhone?: string;
+  reservationDate: string;
+  guestCount: number;
+  note?: string;
+};
+
+export type WalkInReservationCreateResult = {
+  reservation: TableReservation;
+  customerId: string | null;
   message?: string;
 };
 
@@ -114,7 +158,7 @@ export const getDefaultTableReservationsMeta = (
   params: TableReservationsParams = {}
 ): TableReservationsMeta => ({
   page: params.page ?? 1,
-  limit: params.limit ?? 20,
+  limit: params.limit ?? TABLE_RESERVATIONS_DEFAULT_LIMIT,
   total: 0,
   totalPages: 1,
   hasNext: false,
@@ -165,6 +209,35 @@ export const normalizeTableReservation = (value: unknown): TableReservation | nu
   };
 };
 
+/**
+ * Accepts either a bare reservation or an `{ data: reservation }` envelope and returns
+ * `null` when the payload does not carry a reservation with an id.
+ */
+export const normalizeTableReservationDetail = (payload: unknown): TableReservation | null => {
+  const source = isRecord(payload) && "data" in payload ? payload.data : payload;
+  const reservation = normalizeTableReservation(source);
+
+  return reservation && reservation.id ? reservation : null;
+};
+
+export const normalizeWalkInReservationResult = (
+  payload: unknown
+): WalkInReservationCreateResult | null => {
+  const envelope = isRecord(payload) ? payload : {};
+  const source = "data" in envelope ? envelope.data : payload;
+  const reservation = normalizeTableReservation(source);
+
+  if (!reservation || !reservation.id) return null;
+
+  const message = typeof envelope.message === "string" ? envelope.message : undefined;
+
+  return {
+    reservation,
+    customerId: isRecord(source) ? getNullableString(source, "customerId") : null,
+    ...(message ? { message } : {}),
+  };
+};
+
 export const normalizeTableReservationsMeta = (
   value: unknown,
   params: TableReservationsParams = {}
@@ -173,7 +246,7 @@ export const normalizeTableReservationsMeta = (
 
   return {
     page: getNumber(value, "page", params.page ?? 1),
-    limit: getNumber(value, "limit", params.limit ?? 20),
+    limit: getNumber(value, "limit", params.limit ?? TABLE_RESERVATIONS_DEFAULT_LIMIT),
     total: getNumber(value, "total"),
     totalPages: getNumber(value, "totalPages", 1),
     hasNext: getBoolean(value, "hasNext"),

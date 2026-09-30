@@ -14,6 +14,7 @@ import type {
   ResendOtpPayload,
   ResetPasswordPayload,
 } from "@/types/auth";
+import { resolvePosPrinterLoginEmail } from "@/validations/pos-printer";
 
 export type UpdateProfilePayload = {
   firstName: string;
@@ -28,9 +29,26 @@ const unwrapEnvelope = (response: unknown) => {
   return getRecordValue(response, "data") ?? response;
 };
 
+/**
+ * The POS printer login form collects one identifier. The API endpoint only knows `email`,
+ * so usernames are mapped to the synthetic alias assigned at account creation while real
+ * emails (legacy accounts) pass through unchanged.
+ */
+export type PosPrinterLoginPayload =
+  | { identifier: string; password: string }
+  | { email: string; password: string };
+
+export const buildPosPrinterLoginRequest = (payload: PosPrinterLoginPayload) => ({
+  email: resolvePosPrinterLoginEmail("identifier" in payload ? payload.identifier : payload.email),
+  password: payload.password,
+});
+
 export const authApi = {
-  posPrinterLogin: async (payload: { email: string; password: string }) => {
-    const response = await httpClient.post("/auth/pos-printer/login", payload);
+  posPrinterLogin: async (payload: PosPrinterLoginPayload) => {
+    const response = await httpClient.post(
+      "/auth/pos-printer/login",
+      buildPosPrinterLoginRequest(payload),
+    );
     return normalizeAuthPayload(response);
   },
   logout: () => httpClient.post("/auth/logout"),
