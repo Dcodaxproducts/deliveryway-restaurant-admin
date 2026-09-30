@@ -19,19 +19,36 @@ const configureQzSecurity = (qz: typeof import("qz-tray")) => {
   qz.security.setSignaturePromise(signQzChallenge);
 };
 
-const connectToQzTray = async () => {
-  const qz = await import("qz-tray");
-  configureQzSecurity(qz);
+let qzConnectionPromise: Promise<typeof import("qz-tray")> | null = null;
 
-  if (!qz.websocket.isActive()) {
-    try {
-      await qz.websocket.connect({ retries: 1, delay: 0 });
-    } catch {
-      throw new Error(QZ_UNAVAILABLE_MESSAGE);
-    }
+const connectToQzTray = async () => {
+  if (qzConnectionPromise) {
+    return qzConnectionPromise;
   }
 
-  return qz;
+  const connectionPromise = (async () => {
+    const qz = await import("qz-tray");
+    configureQzSecurity(qz);
+
+    if (!qz.websocket.isActive()) {
+      try {
+        await qz.websocket.connect({ retries: 1, delay: 0 });
+      } catch {
+        throw new Error(QZ_UNAVAILABLE_MESSAGE);
+      }
+    }
+
+    return qz;
+  })();
+  qzConnectionPromise = connectionPromise;
+
+  try {
+    return await connectionPromise;
+  } finally {
+    if (qzConnectionPromise === connectionPromise) {
+      qzConnectionPromise = null;
+    }
+  }
 };
 
 const paperOptions: Record<PrintingPaperSize, { width: number; height?: number }> = {

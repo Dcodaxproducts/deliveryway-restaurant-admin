@@ -69,6 +69,33 @@ describe("local printer bridge", () => {
     ).toBeLessThan(qzMocks.connect.mock.invocationCallOrder[0]);
   });
 
+  it("shares one in-flight QZ connection across concurrent printer calls", async () => {
+    qzMocks.isActive.mockReturnValue(false);
+    qzMocks.find.mockResolvedValue(["Kitchen USB"]);
+
+    let resolveConnection: (() => void) | undefined;
+    qzMocks.connect.mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveConnection = resolve;
+      }),
+    );
+
+    const firstDiscovery = discoverLocalPrinters();
+    const secondDiscovery = discoverLocalPrinters();
+
+    await vi.waitFor(() => {
+      expect(qzMocks.connect).toHaveBeenCalledTimes(1);
+    });
+    expect(qzMocks.find).not.toHaveBeenCalled();
+
+    resolveConnection?.();
+
+    await expect(
+      Promise.all([firstDiscovery, secondDiscovery]),
+    ).resolves.toEqual([["Kitchen USB"], ["Kitchen USB"]]);
+    expect(qzMocks.find).toHaveBeenCalledTimes(2);
+  });
+
   it("returns unique installed printer queues", async () => {
     qzMocks.find.mockResolvedValue(["Kitchen USB", "Kitchen USB", "Receipt"]);
 
