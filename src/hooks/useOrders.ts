@@ -201,7 +201,7 @@ export const useSendOrderInvoiceEmail = (messages?: {
 
 export const useUpdateOrderStatus = () => {
   const queryClient = useQueryClient();
-  const { restaurantId, branchId, isBranchAdmin, isPosPrinter } = useAuth();
+  const { restaurantId, branchId, isBranchAdmin } = useAuth();
 
   return useMutation({
     mutationFn: ({
@@ -218,16 +218,13 @@ export const useUpdateOrderStatus = () => {
       });
       toast.success("Order status updated");
 
-      if (
-        variables.payload.status === "CONFIRMED" &&
-        restaurantId &&
-        !isPosPrinter
-      ) {
+      if (variables.payload.status === "CONFIRMED" && restaurantId) {
         void printAcceptedOrderIfConfigured({
           orderId: order.id,
           restaurantId,
           branchId:
-            order.branchId ?? (isBranchAdmin ? branchId ?? undefined : undefined),
+            order.branchId ??
+            (isBranchAdmin ? (branchId ?? undefined) : undefined),
         }).catch(() => {
           toast.error("Order accepted, but automatic printing failed.");
         });
