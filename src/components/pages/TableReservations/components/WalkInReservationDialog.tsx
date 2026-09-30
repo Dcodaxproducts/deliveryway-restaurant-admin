@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
+import { useDeferredValue, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { FormField } from "@/components/common/FormField";
@@ -11,16 +12,15 @@ import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/form-select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateWalkInReservation } from "@/hooks/useTableReservations";
+import { useCreateWalkInReservation, useWalkInCustomerSearch } from "@/hooks/useTableReservations";
+import type { WalkInCustomerOption } from "@/services/walk-in-customers";
 import {
-  buildWalkInReservationDate,
   isTableReservationErrorCode,
+  TABLE_LABEL_MAX_LENGTH,
   WALK_IN_DEFAULT_GUEST_COUNT,
-  WALK_IN_DEFAULT_WAIT_MINUTES,
   WALK_IN_GUEST_COUNT_MAX,
   WALK_IN_GUEST_COUNT_MIN,
-  WALK_IN_WAIT_MINUTES_MAX,
-  WALK_IN_WAIT_MINUTES_MIN,
+  WALK_IN_NOTE_MAX_LENGTH,
   walkInReservationSchema,
   type WalkInReservationFormValues,
 } from "@/validations/table-reservations";
@@ -32,6 +32,8 @@ type WalkInReservationDialogProps = {
   /** Branch-scoped accounts cannot choose a branch; the token scope is used. */
   scopedBranchId?: string;
   branchName?: string;
+  /** Sent as `restaurantId` for tokens without restaurant scope and used for customer lookup. */
+  restaurantId?: string;
 };
 
 const FORM_ID = "walk-in-reservation-form";
@@ -40,13 +42,26 @@ export const getWalkInReservationDefaults = (
   scopedBranchId: string | undefined,
   branchOptions: TableReservationBranchOption[]
 ): WalkInReservationFormValues => ({
+  customerId: "",
   branchId: scopedBranchId ?? (branchOptions.length === 1 ? branchOptions[0].id : ""),
-  guestName: "",
-  guestPhone: "",
   guestCount: WALK_IN_DEFAULT_GUEST_COUNT,
-  waitMinutes: WALK_IN_DEFAULT_WAIT_MINUTES,
+  tableLabel: "",
   note: "",
 });
+
+export const formatWalkInCustomerOption = (customer: WalkInCustomerOption) => {
+  const contact = customer.phone || customer.email;
+  return contact && contact !== customer.name ? `${customer.name} · ${contact}` : customer.name;
+};
+
+/** Keeps the chosen customer selectable even after the search results change. */
+export const mergeWalkInCustomerOptions = (
+  results: readonly WalkInCustomerOption[],
+  selected: WalkInCustomerOption | null
+): WalkInCustomerOption[] =>
+  selected && !results.some((customer) => customer.id === selected.id)
+    ? [selected, ...results]
+    : [...results];
 
 export function WalkInReservationDialog({
   open,
@@ -54,10 +69,22 @@ export function WalkInReservationDialog({
   branchOptions,
   scopedBranchId,
   branchName,
+  restaurantId,
 }: WalkInReservationDialogProps) {
   const t = useTranslations("tableReservations");
   const common = useTranslations("common");
   const createWalkIn = useCreateWalkInReservation();
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState<WalkInCustomerOption | null>(null);
+  const deferredSearch = useDeferredValue(customerSearch);
+  const customersQuery = useWalkInCustomerSearch(
+    { restaurantId, search: deferredSearch },
+    { enabled: open }
+  );
+  const customerOptions = useMemo(
+    () => mergeWalkInCustomerOptions(customersQuery.data ?? [], selectedCustomer),
+    [customersQuery.data, selectedCustomer]
+  );
   const {
     control,
     register,
@@ -75,21 +102,33 @@ export function WalkInReservationDialog({
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) reset(getWalkInReservationDefaults(scopedBranchId, branchOptions));
+    if (!nextOpen) {
+      reset(getWalkInReservationDefaults(scopedBranchId, branchOptions));
+      setCustomerSearch("");
+      setSelectedCustomer(null);
+    }
     onOpenChange(nextOpen);
   };
 
   const onSubmit = async (values: WalkInReservationFormValues) => {
     await createWalkIn.mutateAsync({
+      customerId: values.customerId,
       branchId: values.branchId,
-      guestName: values.guestName || undefined,
-      guestPhone: values.guestPhone || undefined,
-      reservationDate: buildWalkInReservationDate(values.waitMinutes),
       guestCount: values.guestCount,
+      tableLabel: values.tableLabel || undefined,
       note: values.note || undefined,
+      restaurantId,
     });
     handleOpenChange(false);
   };
+
+  const customerStatus = customersQuery.isError
+    ? t("customersLoadError")
+    : customersQuery.isPending && open
+      ? t("searchingCustomers")
+      : customerOptions.length === 0
+        ? t("noCustomersFound")
+        : undefined;
 
   return (
     <ResponsiveDialog
@@ -121,6 +160,67 @@ export function WalkInReservationDialog({
         noValidate
         onSubmit={(event) => void handleSubmit(onSubmit)(event)}
       >
+        <FormField
+          id="walk-in-customer-search"
+          label={t("customerSearch")}
+          help={t("customerSearchHelp")}
+          className="sm:col-span-2"
+        >
+          {(controlProps) => (
+            <Input
+              {...controlProps}
+              type="search"
+              autoComplete="off"
+              value={customerSearch}
+              onChange={(event) => setCustomerSearch(event.target.value)}
+              placeholder={t("customerSearchPlaceholder")}
+              className="h-11"
+            />
+          )}
+        </FormField>
+
+        <FormField
+          id="walk-in-customer"
+          label={t("customer")}
+          error={errorMessage(errors.customerId?.message)}
+          help={customerStatus}
+          required
+          className="sm:col-span-2"
+        >
+          {(controlProps) => (
+            <Controller
+              control={control}
+              name="customerId"
+              render={({ field }) => (
+                <FormSelect
+                  {...controlProps}
+                  name={field.name}
+                  value={field.value}
+                  onChange={(event) => {
+                    const nextId = event.target.value;
+                    field.onChange(nextId);
+                    setSelectedCustomer(
+                      customerOptions.find((customer) => customer.id === nextId) ?? null
+                    );
+                  }}
+                  onBlur={field.onBlur}
+                  disabled={customerOptions.length === 0}
+                  className="h-11 w-full"
+                >
+                  <option value="" disabled>
+                    {t("selectCustomer")}
+                  </option>
+                  {customerOptions.map((customer) => (
+                    <option key={customer.id} value={customer.id}>
+                      {formatWalkInCustomerOption(customer)}
+                    </option>
+                  ))}
+                </FormSelect>
+              )}
+            />
+          )}
+        </FormField>
+
         {scopedBranchId ? (
           <div className="sm:col-span-2">
             <p className="text-xs font-medium text-[var(--ui-text-subtle)]">{common("branch")}</p>
@@ -164,31 +264,6 @@ export function WalkInReservationDialog({
           </FormField>
         )}
 
-        <FormField id="walk-in-guest-name" label={t("guestName")} error={errorMessage(errors.guestName?.message)}>
-          {(controlProps) => (
-            <Input
-              {...controlProps}
-              {...register("guestName")}
-              autoComplete="off"
-              placeholder={t("guestNamePlaceholder")}
-              className="h-11"
-            />
-          )}
-        </FormField>
-
-        <FormField id="walk-in-guest-phone" label={common("phone")} error={errorMessage(errors.guestPhone?.message)}>
-          {(controlProps) => (
-            <Input
-              {...controlProps}
-              {...register("guestPhone")}
-              type="tel"
-              autoComplete="off"
-              inputMode="tel"
-              className="h-11"
-            />
-          )}
-        </FormField>
-
         <FormField
           id="walk-in-guest-count"
           label={t("partySize")}
@@ -210,21 +285,18 @@ export function WalkInReservationDialog({
         </FormField>
 
         <FormField
-          id="walk-in-wait-minutes"
-          label={t("expectedWait")}
-          help={t("expectedWaitHelp")}
-          error={errorMessage(errors.waitMinutes?.message)}
-          required
+          id="walk-in-table-label"
+          label={t("tableLabel")}
+          help={t("walkInTableLabelHelp")}
+          error={errorMessage(errors.tableLabel?.message)}
         >
           {(controlProps) => (
             <Input
               {...controlProps}
-              {...register("waitMinutes", { valueAsNumber: true })}
-              type="number"
-              inputMode="numeric"
-              min={WALK_IN_WAIT_MINUTES_MIN}
-              max={WALK_IN_WAIT_MINUTES_MAX}
-              step={1}
+              {...register("tableLabel")}
+              autoComplete="off"
+              maxLength={TABLE_LABEL_MAX_LENGTH}
+              placeholder={t("tableLabelPlaceholder")}
               className="h-11"
             />
           )}
@@ -237,7 +309,13 @@ export function WalkInReservationDialog({
           className="sm:col-span-2"
         >
           {(controlProps) => (
-            <Textarea {...controlProps} {...register("note")} rows={2} className="min-h-20" />
+            <Textarea
+              {...controlProps}
+              {...register("note")}
+              rows={2}
+              maxLength={WALK_IN_NOTE_MAX_LENGTH}
+              className="min-h-20"
+            />
           )}
         </FormField>
       </form>

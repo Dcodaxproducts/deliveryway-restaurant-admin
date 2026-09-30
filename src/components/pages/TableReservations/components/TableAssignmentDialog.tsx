@@ -3,13 +3,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 import { FormField } from "@/components/common/FormField";
 import { ResponsiveDialog } from "@/components/common/ResponsiveDialog";
+import {
+  buildTableReservationAssignmentPayload,
+  type TableReservationScope,
+} from "@/components/pages/TableReservations/utils/table-reservation-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useTableAssignments } from "@/lib/table-reservation-assignments";
+import { useAssignTableReservation } from "@/hooks/useTableReservations";
 import type { TableReservation } from "@/types/table-reservations";
 import {
   isTableReservationErrorCode,
@@ -21,16 +24,28 @@ import {
 type TableAssignmentDialogProps = {
   open: boolean;
   reservation: TableReservation | null;
+  scope?: TableReservationScope;
   onOpenChange: (open: boolean) => void;
+  onAssigned?: (reservation: TableReservation) => void;
 };
 
 const FORM_ID = "table-reservation-assignment-form";
 
-export function TableAssignmentDialog({ open, reservation, onOpenChange }: TableAssignmentDialogProps) {
+/**
+ * Persists the table label through `PATCH …/:reservationId/assignment`. The dialog only
+ * edits; the reservation returned by the API is what the pages render afterwards.
+ */
+export function TableAssignmentDialog({
+  open,
+  reservation,
+  scope = {},
+  onOpenChange,
+  onAssigned,
+}: TableAssignmentDialogProps) {
   const t = useTranslations("tableReservations");
   const common = useTranslations("common");
-  const { getLabel, assign, clear } = useTableAssignments();
-  const currentLabel = reservation ? getLabel(reservation.id) ?? "" : "";
+  const assignMutation = useAssignTableReservation();
+  const currentLabel = reservation?.tableLabel ?? "";
   const {
     register,
     handleSubmit,
@@ -46,23 +61,14 @@ export function TableAssignmentDialog({ open, reservation, onOpenChange }: Table
     onOpenChange(nextOpen);
   };
 
-  const onSubmit = (values: TableLabelFormValues) => {
+  const onSubmit = async (values: TableLabelFormValues) => {
     if (!reservation) return;
 
-    if (values.tableLabel) {
-      assign(reservation.id, values.tableLabel);
-    } else {
-      clear(reservation.id);
-    }
-
-    toast.success(t("tableSaved"));
-    handleOpenChange(false);
-  };
-
-  const handleClear = () => {
-    if (!reservation) return;
-    clear(reservation.id);
-    toast.success(t("tableSaved"));
+    const updated = await assignMutation.mutateAsync({
+      reservationId: reservation.id,
+      payload: buildTableReservationAssignmentPayload(reservation, values.tableLabel, scope),
+    });
+    onAssigned?.(updated);
     handleOpenChange(false);
   };
 
@@ -73,20 +79,21 @@ export function TableAssignmentDialog({ open, reservation, onOpenChange }: Table
       open={open}
       onOpenChange={handleOpenChange}
       size="sm"
+      busy={assignMutation.isPending}
       title={currentLabel ? t("changeTable") : t("assignTable")}
       description={t("assignTableDescription")}
       actions={
         <>
-          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+            disabled={assignMutation.isPending}
+          >
             {common("cancel")}
           </Button>
-          {currentLabel ? (
-            <Button type="button" variant="outline" onClick={handleClear}>
-              {t("clearTable")}
-            </Button>
-          ) : null}
-          <Button type="submit" form={FORM_ID}>
-            {common("save")}
+          <Button type="submit" form={FORM_ID} disabled={assignMutation.isPending}>
+            {assignMutation.isPending ? common("saving") : common("save")}
           </Button>
         </>
       }
@@ -101,6 +108,7 @@ export function TableAssignmentDialog({ open, reservation, onOpenChange }: Table
           id="reservation-table-label"
           label={t("tableLabel")}
           help={t("tableLabelHelp")}
+          required
           error={error ? (isTableReservationErrorCode(error) ? t(`errors.${error}`) : error) : undefined}
         >
           {(controlProps) => (

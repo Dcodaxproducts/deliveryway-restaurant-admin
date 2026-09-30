@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildWalkInReservationDate,
   TABLE_RESERVATION_ERROR_CODES,
   tableLabelSchema,
   tableReservationStatusUpdateSchema,
   walkInReservationSchema,
 } from "@/validations/table-reservations";
+
+const issueCodes = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
+  result.success ? [] : (result.error?.issues ?? []).map((issue) => issue.message);
 
 describe("table reservation status validation", () => {
   it.each(["REQUESTED", "CONFIRMED", "SEATED", "COMPLETED", "CANCELLED", "NO_SHOW"])(
@@ -27,68 +29,80 @@ describe("table reservation status validation", () => {
 
 describe("walk-in reservation validation", () => {
   const valid = {
+    customerId: "customer-1",
     branchId: "branch-1",
-    guestName: "  Ada  ",
-    guestPhone: "",
     guestCount: 4,
-    waitMinutes: 15,
+    tableLabel: "  T4 ",
     note: "",
   };
 
-  it("accepts the POS walk-in contract and trims text", () => {
+  it("accepts the admin walk-in contract and trims text", () => {
     const result = walkInReservationSchema.safeParse(valid);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.guestName).toBe("Ada");
-      expect(result.data.guestCount).toBe(4);
+      expect(result.data).toEqual({
+        customerId: "customer-1",
+        branchId: "branch-1",
+        guestCount: 4,
+        tableLabel: "T4",
+        note: "",
+      });
     }
+  });
+
+  it("only knows the DTO fields", () => {
+    expect(Object.keys(walkInReservationSchema.shape).sort()).toEqual(
+      ["branchId", "customerId", "guestCount", "note", "tableLabel"].sort()
+    );
   });
 
   it.each([0, 51, 2.5, Number.NaN])("rejects guest count %s with a translatable code", (guestCount) => {
-    const result = walkInReservationSchema.safeParse({ ...valid, guestCount });
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.issues.map((issue) => issue.message)).toContain(
-        TABLE_RESERVATION_ERROR_CODES.guestCountRange
-      );
-    }
+    expect(issueCodes(walkInReservationSchema.safeParse({ ...valid, guestCount }))).toContain(
+      TABLE_RESERVATION_ERROR_CODES.guestCountRange
+    );
   });
 
-  it.each([0, 241, Number.NaN])("rejects wait minutes %s", (waitMinutes) => {
-    const result = walkInReservationSchema.safeParse({ ...valid, waitMinutes });
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.issues.map((issue) => issue.message)).toContain(
-        TABLE_RESERVATION_ERROR_CODES.waitMinutesRange
-      );
-    }
+  it("requires a customer and a branch", () => {
+    expect(issueCodes(walkInReservationSchema.safeParse({ ...valid, customerId: "  " }))).toEqual([
+      TABLE_RESERVATION_ERROR_CODES.customerRequired,
+    ]);
+    expect(issueCodes(walkInReservationSchema.safeParse({ ...valid, branchId: "  " }))).toEqual([
+      TABLE_RESERVATION_ERROR_CODES.branchRequired,
+    ]);
   });
 
-  it("requires a branch", () => {
-    const result = walkInReservationSchema.safeParse({ ...valid, branchId: "  " });
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.issues[0]?.message).toBe(TABLE_RESERVATION_ERROR_CODES.branchRequired);
-    }
+  it("allows an empty table label at creation but caps its length", () => {
+    expect(walkInReservationSchema.safeParse({ ...valid, tableLabel: "" }).success).toBe(true);
+    expect(issueCodes(walkInReservationSchema.safeParse({ ...valid, tableLabel: "x".repeat(25) }))).toContain(
+      TABLE_RESERVATION_ERROR_CODES.tableLabelTooLong
+    );
   });
 
-  it("builds a future ISO reservation date from the expected wait", () => {
-    const now = new Date("2026-09-30T12:00:00.000Z");
-    expect(buildWalkInReservationDate(15, now)).toBe("2026-09-30T12:15:00.000Z");
-    expect(buildWalkInReservationDate(0, now)).toBe("2026-09-30T12:01:00.000Z");
+  it("caps the note length", () => {
+    expect(issueCodes(walkInReservationSchema.safeParse({ ...valid, note: "x".repeat(501) }))).toContain(
+      TABLE_RESERVATION_ERROR_CODES.noteTooLong
+    );
   });
 });
 
 describe("table label validation", () => {
-  it("accepts an empty label so an assignment can be cleared", () => {
-    expect(tableLabelSchema.safeParse({ tableLabel: "" }).success).toBe(true);
+  it("requires a non-blank label because the assignment endpoint rejects empty labels", () => {
+    for (const tableLabel of ["", "   "]) {
+      expect(issueCodes(tableLabelSchema.safeParse({ tableLabel }))).toEqual([
+        TABLE_RESERVATION_ERROR_CODES.tableLabelRequired,
+      ]);
+    }
+  });
+
+  it("trims and accepts a label", () => {
+    const result = tableLabelSchema.safeParse({ tableLabel: " T4 " });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.tableLabel).toBe("T4");
   });
 
   it("caps the label length", () => {
-    const result = tableLabelSchema.safeParse({ tableLabel: "x".repeat(25) });
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.issues[0]?.message).toBe(TABLE_RESERVATION_ERROR_CODES.tableLabelTooLong);
-    }
+    expect(issueCodes(tableLabelSchema.safeParse({ tableLabel: "x".repeat(25) }))).toEqual([
+      TABLE_RESERVATION_ERROR_CODES.tableLabelTooLong,
+    ]);
   });
 });

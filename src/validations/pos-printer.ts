@@ -33,57 +33,22 @@ export const POS_PRINTER_USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
 export const POS_PRINTER_DISPLAY_NAME_MIN = 2;
 export const POS_PRINTER_DISPLAY_NAME_MAX = 100;
 export const POS_PRINTER_PASSWORD_MIN = 12;
-
-/**
- * The API stores a synthetic email alias for username-only accounts so the shared staff
- * email uniqueness and the email-based login DTO keep working. Keep in sync with
- * `PosPrinterService.create` in the platform API.
- */
-export const POS_PRINTER_LOGIN_EMAIL_DOMAIN = "pos-printer.feastflow.local";
+/** `PosPrinterLoginDto.identifier` bounds (username or legacy account email). */
+export const POS_PRINTER_IDENTIFIER_MIN = 3;
+export const POS_PRINTER_IDENTIFIER_MAX = 254;
 
 export const normalizePosPrinterUsername = (value: string) => value.trim().toLowerCase();
 
 export const normalizePosPrinterDisplayName = (value: string) =>
   value.trim().split(/\s+/).filter(Boolean).join(" ");
 
-export const buildPosPrinterLoginEmail = (username: string) =>
-  `${normalizePosPrinterUsername(username)}@${POS_PRINTER_LOGIN_EMAIL_DOMAIN}`;
-
-/** Returns the username encoded in a synthetic login email, or null for real emails. */
-export const getPosPrinterUsernameFromEmail = (email: string | null | undefined) => {
-  if (!email) return null;
-  const normalized = email.trim().toLowerCase();
-  const suffix = `@${POS_PRINTER_LOGIN_EMAIL_DOMAIN}`;
-  if (!normalized.endsWith(suffix)) return null;
-  const username = normalized.slice(0, -suffix.length);
-  return POS_PRINTER_USERNAME_PATTERN.test(username) ? username : null;
-};
+/**
+ * Login identifiers are compared case-insensitively by the API; normalizing here keeps the
+ * request byte-identical to what the API stores for both usernames and legacy emails.
+ */
+export const normalizePosPrinterIdentifier = (value: string) => value.trim().toLowerCase();
 
 export const isEmailLikeIdentifier = (identifier: string) => identifier.includes("@");
-
-/**
- * The dedicated `/auth/pos-printer/login` endpoint accepts an email. Usernames map to the
- * synthetic alias the API assigns at creation, so both legacy email accounts and
- * username accounts sign in through the same field.
- */
-export const resolvePosPrinterLoginEmail = (identifier: string) => {
-  const trimmed = identifier.trim();
-  return isEmailLikeIdentifier(trimmed)
-    ? trimmed.toLowerCase()
-    : buildPosPrinterLoginEmail(trimmed);
-};
-
-/**
- * Legacy `firstName`/`lastName` derivation identical to the API fallback so accounts created
- * against an older API version display the same way as accounts created against the new one.
- */
-export const splitPosPrinterDisplayName = (displayName: string) => {
-  const parts = normalizePosPrinterDisplayName(displayName).split(" ").filter(Boolean);
-  return {
-    firstName: parts[0] ?? displayName.trim(),
-    lastName: parts.slice(1).join(" ") || "Printer",
-  };
-};
 
 export const posPrinterDisplayNameSchema = z
   .string()
@@ -130,16 +95,27 @@ export type PosPrinterAccountCreateValues = z.infer<
   ReturnType<typeof buildPosPrinterAccountCreateSchema>
 >;
 
+/**
+ * Mirrors `PosPrinterLoginDto`: one `identifier` (username or legacy email) and a password.
+ * Emails are only validated for shape; the API decides which account they belong to.
+ */
 export const posPrinterLoginSchema = z.object({
   identifier: z
     .string()
-    .trim()
-    .min(1, { message: POS_PRINTER_ERROR_CODES.identifierRequired })
-    .refine(
-      (value) =>
-        !isEmailLikeIdentifier(value) || z.string().email().safeParse(value).success,
-      { message: POS_PRINTER_ERROR_CODES.identifierEmailInvalid }
-    ),
+    .transform(normalizePosPrinterIdentifier)
+    .superRefine((value, ctx) => {
+      if (!value) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: POS_PRINTER_ERROR_CODES.identifierRequired });
+        return;
+      }
+      if (isEmailLikeIdentifier(value) && !z.string().email().safeParse(value).success) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: POS_PRINTER_ERROR_CODES.identifierEmailInvalid });
+        return;
+      }
+      if (value.length < POS_PRINTER_IDENTIFIER_MIN || value.length > POS_PRINTER_IDENTIFIER_MAX) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: POS_PRINTER_ERROR_CODES.identifierRequired });
+      }
+    }),
   password: z.string().min(1, { message: POS_PRINTER_ERROR_CODES.passwordRequired }),
 });
 

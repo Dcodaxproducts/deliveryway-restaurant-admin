@@ -131,6 +131,9 @@ describe("global search service", () => {
           status: "CONFIRMED",
           createdAt: "2026-06-01T12:00:00.000Z",
           cancelledAt: null,
+          isWalkIn: false,
+          queueState: "WAITING",
+          tableLabel: null,
           customer: {
             id: "customer-1",
             email: "ada@example.com",

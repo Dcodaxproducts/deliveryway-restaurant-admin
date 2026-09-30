@@ -33,8 +33,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useTableReservation } from "@/hooks/useTableReservations";
 import { getApiErrorMessage } from "@/lib/errors";
-import { useTableAssignments } from "@/lib/table-reservation-assignments";
-import { isActiveTableReservationStatus } from "@/lib/table-reservation-transitions";
+import { canAssignTableReservation } from "@/lib/table-reservation-transitions";
 import type { TableReservation } from "@/types/table-reservations";
 
 function BackLink({ href, label }: { href: string; label: string }) {
@@ -86,7 +85,6 @@ export function TableReservationDetailsPage() {
   };
   const reservationQuery = useTableReservation(reservationId, scope);
   const quickActions = useTableReservationQuickActions(scope);
-  const { getLabel } = useTableAssignments();
   const [statusOpen, setStatusOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
 
@@ -145,8 +143,8 @@ export function TableReservationDetailsPage() {
 
   const shortId = formatShortId(reservation.id);
   const walkIn = isWalkInReservation(reservation);
-  const tableLabel = getLabel(reservation.id);
-  const isActive = isActiveTableReservationStatus(reservation.status);
+  const tableLabel = reservation.tableLabel;
+  const canAssign = canAssignTableReservation(reservation.status);
   const actions = getTableReservationQuickActions(reservation);
   const customerEmail = getCustomerDisplayEmail(reservation.customer);
 
@@ -231,7 +229,7 @@ export function TableReservationDetailsPage() {
               title={t("tableSection")}
               description={t("tableLabelHelp")}
               action={
-                isActive ? (
+                canAssign ? (
                   <Button
                     type="button"
                     variant="outline"
@@ -292,7 +290,12 @@ export function TableReservationDetailsPage() {
         branchId={scope.branchId}
         onOpenChange={setStatusOpen}
       />
-      <TableAssignmentDialog open={assignOpen} reservation={reservation} onOpenChange={setAssignOpen} />
+      <TableAssignmentDialog
+        open={assignOpen}
+        reservation={reservation}
+        scope={scope}
+        onOpenChange={setAssignOpen}
+      />
       {quickActions.confirmDialog}
     </Container>
   );

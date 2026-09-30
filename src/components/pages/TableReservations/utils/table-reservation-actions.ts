@@ -1,6 +1,7 @@
 import { getAllowedTableReservationTransitions } from "@/lib/table-reservation-transitions";
 import type {
   TableReservation,
+  TableReservationAssignmentPayload,
   TableReservationStatusUpdatePayload,
   TableReservationStatusUpdateValue,
 } from "@/types/table-reservations";
@@ -40,17 +41,34 @@ export type TableReservationScope = {
   branchId?: string;
 };
 
-export const buildTableReservationStatusPayload = (
+const buildScopeIds = (
   reservation: Pick<TableReservation, "branchId" | "customer">,
-  status: TableReservationStatusUpdateValue,
-  scope: TableReservationScope = {}
-): TableReservationStatusUpdatePayload => {
+  scope: TableReservationScope
+) => {
   const scopedBranchId = reservation.branchId || scope.branchId;
 
   return {
-    status,
     ...(scope.restaurantId ? { restaurantId: scope.restaurantId } : {}),
     ...(scopedBranchId ? { branchId: scopedBranchId } : {}),
     ...(reservation.customer?.id ? { customerId: reservation.customer.id } : {}),
   };
 };
+
+export const buildTableReservationStatusPayload = (
+  reservation: Pick<TableReservation, "branchId" | "customer">,
+  status: TableReservationStatusUpdateValue,
+  scope: TableReservationScope = {}
+): TableReservationStatusUpdatePayload => ({
+  status,
+  ...buildScopeIds(reservation, scope),
+});
+
+/** Same scoping rules as the status payload so the API finds the reservation the same way. */
+export const buildTableReservationAssignmentPayload = (
+  reservation: Pick<TableReservation, "branchId" | "customer">,
+  tableLabel: string,
+  scope: TableReservationScope = {}
+): TableReservationAssignmentPayload => ({
+  tableLabel,
+  ...buildScopeIds(reservation, scope),
+});

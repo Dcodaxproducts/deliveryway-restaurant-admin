@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { authApi } from "@/services/auth/auth.api";
+import { authApi, POS_PRINTER_LOGIN_ENDPOINT } from "@/services/auth/auth.api";
 import { httpClient } from "@/lib/axios";
 
 vi.mock("@/lib/axios", () => ({
@@ -20,28 +20,42 @@ const makeHttpError = (status: number, message = "Invalid credentials") => ({
 describe("authApi POS printer authentication", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("uses only the dedicated login endpoint and preserves accountType", async () => {
-    postMock.mockResolvedValueOnce({ data: { accessToken: "pos-token", user: { id: "p1", email: "p@example.com", role: "STAFF", actorType: "STAFF", accountType: "POS_PRINTER", branchId: "b1" } } });
-    const result = await authApi.posPrinterLogin({ email: "p@example.com", password: "Password@123" });
+  it("posts identifier and password directly to the dedicated login endpoint", async () => {
+    postMock.mockResolvedValueOnce({
+      data: {
+        accessToken: "pos-token",
+        user: {
+          id: "p1", email: "kitchen-1@pos-printer.feastflow.local", username: "kitchen-1",
+          displayName: "Kitchen Printer", role: "STAFF", actorType: "STAFF", accountType: "POS_PRINTER", branchId: "b1",
+        },
+      },
+    });
+    const result = await authApi.posPrinterLogin({ identifier: "kitchen-1", password: "Password@123" });
+    expect(POS_PRINTER_LOGIN_ENDPOINT).toBe("/auth/pos-printer/login");
     expect(postMock).toHaveBeenCalledTimes(1);
-    expect(postMock).toHaveBeenCalledWith("/auth/pos-printer/login", { email: "p@example.com", password: "Password@123" });
+    expect(postMock).toHaveBeenCalledWith("/auth/pos-printer/login", { identifier: "kitchen-1", password: "Password@123" });
     expect(result.user?.accountType).toBe("POS_PRINTER");
+    expect(result.user?.branchId).toBe("b1");
   });
 
-  it("maps a username identifier to the API login alias and keeps legacy emails unchanged", async () => {
+  it("normalizes the identifier and accepts a legacy email without remapping either", async () => {
     postMock.mockResolvedValue({ data: { accessToken: "pos-token", user: { id: "p1", email: "x", accountType: "POS_PRINTER" } } });
     await authApi.posPrinterLogin({ identifier: " Kitchen-1 ", password: "Password@123" });
-    expect(postMock).toHaveBeenLastCalledWith("/auth/pos-printer/login", { email: "kitchen-1@pos-printer.feastflow.local", password: "Password@123" });
+    expect(postMock).toHaveBeenLastCalledWith("/auth/pos-printer/login", { identifier: "kitchen-1", password: "Password@123" });
 
     await authApi.posPrinterLogin({ identifier: "Legacy@Example.com", password: "Password@123" });
-    expect(postMock).toHaveBeenLastCalledWith("/auth/pos-printer/login", { email: "legacy@example.com", password: "Password@123" });
-    expect(postMock.mock.calls.every(([, body]) => !("identifier" in (body as object)) && !("role" in (body as object)))).toBe(true);
+    expect(postMock).toHaveBeenLastCalledWith("/auth/pos-printer/login", { identifier: "legacy@example.com", password: "Password@123" });
+
+    for (const [, body] of postMock.mock.calls) {
+      expect(Object.keys(body as object).sort()).toEqual(["identifier", "password"]);
+      expect(String((body as { identifier: string }).identifier)).not.toContain("pos-printer.feastflow.local");
+    }
   });
 
   it("passes login failures through for the UI to render a generic error", async () => {
     const error = makeHttpError(401, "backend detail");
     postMock.mockRejectedValueOnce(error);
-    await expect(authApi.posPrinterLogin({ email: "p@example.com", password: "bad" })).rejects.toBe(error);
+    await expect(authApi.posPrinterLogin({ identifier: "kitchen-1", password: "bad" })).rejects.toBe(error);
     expect(postMock).toHaveBeenCalledTimes(1);
   });
 });

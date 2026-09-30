@@ -19,7 +19,6 @@ import {
   getBranchName,
   isWalkInReservation,
 } from "@/components/pages/TableReservations/utils/table-reservations-formatters";
-import { useTableAssignments } from "@/lib/table-reservation-assignments";
 import type { TableReservation } from "@/types/table-reservations";
 import TableReservationCustomerCell from "./TableReservationCustomerCell";
 import TableReservationStatusBadge from "./TableReservationStatusBadge";
@@ -45,7 +44,6 @@ export function TableReservationsTable({
   const common = useTranslations("common");
   const t = useTranslations("tableReservations");
   const router = useRouter();
-  const { getLabel } = useTableAssignments();
   const [statusReservation, setStatusReservation] = useState<TableReservation | null>(null);
 
   const detailHref = (reservation: TableReservation) =>
@@ -67,7 +65,7 @@ export function TableReservationsTable({
   ];
 
   const renderBadges = (reservation: TableReservation) => {
-    const tableLabel = getLabel(reservation.id);
+    const tableLabel = reservation.tableLabel;
     if (!isWalkInReservation(reservation) && !tableLabel) return null;
 
     return (
@@ -101,7 +99,7 @@ export function TableReservationsTable({
         </div>
       ),
     },
-    { id: "customer", header: t("customer"), cell: (reservation) => <TableReservationCustomerCell customer={reservation.customer} /> },
+    { id: "customer", header: t("customer"), cell: (reservation) => <TableReservationCustomerCell customer={reservation.customer} isWalkIn={reservation.isWalkIn} /> },
     { id: "date", header: t("dateTime"), cell: (reservation) => formatReservationDate(reservation.reservationDate) },
     { id: "guests", header: t("guests"), align: "center", cell: (reservation) => <span className="tabular-nums">{reservation.guestCount}</span> },
     { id: "branch", header: t("branchNote"), cell: (reservation) => <div className="max-w-52"><p className="truncate font-medium">{getBranchName(reservation)}</p><p className="mt-1 truncate text-xs text-[var(--ui-text-muted)]">{reservation.branch?.address || (reservation.branchId ? t("branchId", { id: reservation.branchId }) : t("noBranch"))}</p><p className="mt-1 line-clamp-1 text-xs text-[var(--ui-text-muted)]">{reservation.note || t("noNote")}</p></div> },
@@ -135,7 +133,7 @@ export function TableReservationsTable({
               </div>
               <TableReservationStatusBadge status={reservation.status} />
             </div>
-            <div className="mt-4"><TableReservationCustomerCell customer={reservation.customer} /></div>
+            <div className="mt-4"><TableReservationCustomerCell customer={reservation.customer} isWalkIn={reservation.isWalkIn} /></div>
             <dl className="mt-4 grid grid-cols-2 gap-2">
               <Info label={t("guests")} value={String(reservation.guestCount)} />
               <Info label={t("branch")} value={getBranchName(reservation)} />

@@ -22,13 +22,14 @@ import {
   formatShortId,
   getCustomerFullName,
   isWalkInReservation,
-  WALK_IN_SEARCH_TOKEN,
 } from "@/components/pages/TableReservations/utils/table-reservations-formatters";
 import { buildTableReservationDetailHref } from "@/components/pages/TableReservations/utils/table-reservations-query";
 import { Button } from "@/components/ui/button";
 import { useTableReservations } from "@/hooks/useTableReservations";
-import { useTableAssignments } from "@/lib/table-reservation-assignments";
-import { isActiveTableReservationStatus } from "@/lib/table-reservation-transitions";
+import {
+  canAssignTableReservation,
+  isActiveTableReservationStatus,
+} from "@/lib/table-reservation-transitions";
 import {
   TABLE_RESERVATIONS_MAX_LIMIT,
   type TableReservation,
@@ -41,34 +42,37 @@ export type WalkInQueuePanelProps = {
   isBranchScoped: boolean;
   branchName?: string;
   branchOptions: TableReservationBranchOption[];
-  /** POS printer accounts cannot call the POS walk-in endpoint. */
+  /**
+   * Walk-ins need an existing `customerId`, and the customer lookup
+   * (`GET /admin/users/customers`) is not open to POS printer accounts.
+   */
   canCreate: boolean;
   listQuery?: string;
 };
 
 /**
- * Builds the queue query. Walk-in guests are the API-generated `pos-guest-…` customers,
- * so the list endpoint's email search returns exactly that population.
+ * The list endpoint has no walk-in filter, so the queue reads the newest page and keeps
+ * the reservations the API flagged with `isWalkIn`.
  */
 export const buildWalkInQueueParams = (
   scope: Pick<WalkInQueuePanelProps, "restaurantId" | "branchId">
 ): TableReservationsParams => ({
   page: 1,
   limit: TABLE_RESERVATIONS_MAX_LIMIT,
-  search: WALK_IN_SEARCH_TOKEN,
   sortBy: "createdAt",
   sortOrder: "DESC",
   restaurantId: scope.restaurantId,
   branchId: scope.branchId,
 });
 
+/** Active walk-ins, first come first served. */
 export const selectWalkInQueue = (reservations: readonly TableReservation[]): TableReservation[] =>
   reservations
     .filter(
       (reservation) =>
         isWalkInReservation(reservation) && isActiveTableReservationStatus(reservation.status)
     )
-    .sort((left, right) => left.reservationDate.localeCompare(right.reservationDate));
+    .sort((left, right) => left.createdAt.localeCompare(right.createdAt));
 
 export function WalkInQueuePanel({
   restaurantId,
@@ -82,11 +86,11 @@ export function WalkInQueuePanel({
   const t = useTranslations("tableReservations");
   const common = useTranslations("common");
   const router = useRouter();
-  const { getLabel } = useTableAssignments();
-  const params = useMemo(() => buildWalkInQueueParams({ restaurantId, branchId }), [branchId, restaurantId]);
+  const scope = useMemo(() => ({ restaurantId, branchId }), [branchId, restaurantId]);
+  const params = useMemo(() => buildWalkInQueueParams(scope), [scope]);
   const queueQuery = useTableReservations(params);
   const queue = useMemo(() => selectWalkInQueue(queueQuery.data?.reservations ?? []), [queueQuery.data]);
-  const quickActions = useTableReservationQuickActions({ restaurantId, branchId });
+  const quickActions = useTableReservationQuickActions(scope);
   const [createOpen, setCreateOpen] = useState(false);
   const [assignReservation, setAssignReservation] = useState<TableReservation | null>(null);
 
@@ -94,16 +98,19 @@ export function WalkInQueuePanel({
     buildTableReservationDetailHref(reservation.id, listQuery);
 
   const rowActions = (reservation: TableReservation): RowAction[] => {
-    const tableLabel = getLabel(reservation.id);
     const busy = quickActions.runningId === reservation.id;
 
     return [
-      {
-        id: "assign-table",
-        label: tableLabel ? t("changeTable") : t("assignTable"),
-        icon: <Armchair className="size-4" />,
-        onSelect: () => setAssignReservation(reservation),
-      },
+      ...(canAssignTableReservation(reservation.status)
+        ? [
+            {
+              id: "assign-table",
+              label: reservation.tableLabel ? t("changeTable") : t("assignTable"),
+              icon: <Armchair className="size-4" />,
+              onSelect: () => setAssignReservation(reservation),
+            } satisfies RowAction,
+          ]
+        : []),
       ...getTableReservationQuickActions(reservation).map<RowAction>((action) => ({
         id: action.id,
         label: t(action.labelKey),
@@ -120,14 +127,12 @@ export function WalkInQueuePanel({
     ];
   };
 
-  const renderTable = (reservation: TableReservation) => {
-    const tableLabel = getLabel(reservation.id);
-    return tableLabel ? (
-      <StatusBadge tone="neutral">{t("tableAssigned", { label: tableLabel })}</StatusBadge>
+  const renderTable = (reservation: TableReservation) =>
+    reservation.tableLabel ? (
+      <StatusBadge tone="neutral">{t("tableAssigned", { label: reservation.tableLabel })}</StatusBadge>
     ) : (
       <span className="text-sm text-[var(--ui-text-muted)]">{t("noTable")}</span>
     );
-  };
 
   const columns: readonly DataTableColumn<TableReservation>[] = [
     {
@@ -160,9 +165,9 @@ export function WalkInQueuePanel({
       cell: (reservation) => (
         <div className="min-w-0 text-sm">
           <p className="tabular-nums">{formatDateTime(reservation.createdAt)}</p>
-          <p className="mt-1 text-xs text-[var(--ui-text-muted)]">
-            {t("expectedAt")}: {formatDateTime(reservation.reservationDate)}
-          </p>
+          {reservation.note ? (
+            <p className="mt-1 line-clamp-1 text-xs text-[var(--ui-text-muted)]">{reservation.note}</p>
+          ) : null}
         </div>
       ),
     },
@@ -237,8 +242,8 @@ export function WalkInQueuePanel({
                 <dd className="mt-1 truncate font-semibold tabular-nums text-[var(--ui-text)]">{formatDateTime(reservation.createdAt)}</dd>
               </div>
               <div className="min-w-0 rounded-[var(--ui-radius-compact)] bg-[var(--ui-surface-subtle)] p-3">
-                <dt className="text-xs text-[var(--ui-text-subtle)]">{t("expectedAt")}</dt>
-                <dd className="mt-1 truncate font-semibold tabular-nums text-[var(--ui-text)]">{formatDateTime(reservation.reservationDate)}</dd>
+                <dt className="text-xs text-[var(--ui-text-subtle)]">{common("note")}</dt>
+                <dd className="mt-1 truncate font-semibold text-[var(--ui-text)]">{reservation.note || t("noNote")}</dd>
               </div>
             </dl>
             <div className="mt-3 flex items-center justify-between gap-3">
@@ -256,11 +261,13 @@ export function WalkInQueuePanel({
           branchOptions={branchOptions}
           scopedBranchId={isBranchScoped ? branchId : undefined}
           branchName={branchName}
+          restaurantId={restaurantId}
         />
       ) : null}
       <TableAssignmentDialog
         open={assignReservation !== null}
         reservation={assignReservation}
+        scope={scope}
         onOpenChange={(open) => {
           if (!open) setAssignReservation(null);
         }}

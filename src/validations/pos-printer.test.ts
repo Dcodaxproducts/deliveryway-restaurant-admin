@@ -2,12 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildPosPrinterAccountCreateSchema,
-  buildPosPrinterLoginEmail,
-  getPosPrinterUsernameFromEmail,
+  normalizePosPrinterIdentifier,
   POS_PRINTER_ERROR_CODES,
   posPrinterLoginSchema,
-  resolvePosPrinterLoginEmail,
-  splitPosPrinterDisplayName,
 } from "@/validations/pos-printer";
 
 const issueCodes = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
@@ -26,9 +23,17 @@ describe("POS printer account creation validation", () => {
     const result = schema.safeParse(valid);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.displayName).toBe("Kitchen Printer");
-      expect(result.data.username).toBe("kitchen-printer.01");
+      expect(result.data).toEqual({
+        displayName: "Kitchen Printer",
+        username: "kitchen-printer.01",
+        password: "CorrectHorseBattery1",
+        branchId: "branch-1",
+      });
     }
+  });
+
+  it("only knows the CreatePosPrinterAccountDto fields", () => {
+    expect(Object.keys(schema.shape).sort()).toEqual(["branchId", "displayName", "password", "username"]);
   });
 
   it.each(["ab", "a".repeat(33)])("rejects username length %s", (username) => {
@@ -68,11 +73,18 @@ describe("POS printer account creation validation", () => {
 });
 
 describe("POS printer login identifier validation", () => {
-  it("accepts a username or an email in the same field", () => {
-    expect(posPrinterLoginSchema.safeParse({ identifier: "kitchen-1", password: "x" }).success).toBe(true);
-    expect(
-      posPrinterLoginSchema.safeParse({ identifier: "printer@restaurant.com", password: "x" }).success
-    ).toBe(true);
+  it("accepts a username or an email in the same field and normalizes it", () => {
+    const username = posPrinterLoginSchema.safeParse({ identifier: " Kitchen-1 ", password: "x" });
+    expect(username.success).toBe(true);
+    if (username.success) expect(username.data).toEqual({ identifier: "kitchen-1", password: "x" });
+
+    const email = posPrinterLoginSchema.safeParse({ identifier: "Printer@Restaurant.com", password: "x" });
+    expect(email.success).toBe(true);
+    if (email.success) expect(email.data.identifier).toBe("printer@restaurant.com");
+  });
+
+  it("only knows the PosPrinterLoginDto fields", () => {
+    expect(Object.keys(posPrinterLoginSchema.shape).sort()).toEqual(["identifier", "password"]);
   });
 
   it("flags malformed emails but does not require an email", () => {
@@ -82,30 +94,17 @@ describe("POS printer login identifier validation", () => {
     expect(issueCodes(posPrinterLoginSchema.safeParse({ identifier: "  ", password: "x" }))).toContain(
       POS_PRINTER_ERROR_CODES.identifierRequired
     );
+    expect(issueCodes(posPrinterLoginSchema.safeParse({ identifier: "ab", password: "x" }))).toContain(
+      POS_PRINTER_ERROR_CODES.identifierRequired
+    );
     expect(issueCodes(posPrinterLoginSchema.safeParse({ identifier: "kitchen-1", password: "" }))).toContain(
       POS_PRINTER_ERROR_CODES.passwordRequired
     );
   });
-});
 
-describe("POS printer identifier mapping", () => {
-  it("maps usernames to the API synthetic login alias and passes emails through", () => {
-    expect(resolvePosPrinterLoginEmail(" Kitchen-1 ")).toBe("kitchen-1@pos-printer.feastflow.local");
-    expect(resolvePosPrinterLoginEmail("Printer@Restaurant.com ")).toBe("printer@restaurant.com");
-    expect(buildPosPrinterLoginEmail("bar")).toBe("bar@pos-printer.feastflow.local");
-  });
-
-  it("recovers the username from a synthetic alias only", () => {
-    expect(getPosPrinterUsernameFromEmail("kitchen-1@pos-printer.feastflow.local")).toBe("kitchen-1");
-    expect(getPosPrinterUsernameFromEmail("printer@restaurant.com")).toBeNull();
-    expect(getPosPrinterUsernameFromEmail(undefined)).toBeNull();
-  });
-
-  it("derives legacy name fields the same way as the API fallback", () => {
-    expect(splitPosPrinterDisplayName("Kitchen Printer Two")).toEqual({
-      firstName: "Kitchen",
-      lastName: "Printer Two",
-    });
-    expect(splitPosPrinterDisplayName("Bar")).toEqual({ firstName: "Bar", lastName: "Printer" });
+  it("never rewrites identifiers into synthetic email aliases", () => {
+    expect(normalizePosPrinterIdentifier(" Kitchen-1 ")).toBe("kitchen-1");
+    expect(normalizePosPrinterIdentifier("Legacy@Example.com")).toBe("legacy@example.com");
+    expect(normalizePosPrinterIdentifier("kitchen-1")).not.toContain("@");
   });
 });

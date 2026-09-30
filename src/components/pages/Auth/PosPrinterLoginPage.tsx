@@ -23,8 +23,9 @@ import {
 const TITLE_ID = "pos-printer-login-title";
 
 /**
- * Dedicated device sign-in: one identifier field (username or legacy email) plus password.
- * There is intentionally no role selector; the endpoint only accepts POS printer accounts.
+ * Dedicated device sign-in: one identifier field (username or legacy email) plus password,
+ * sent as-is to `POST /auth/pos-printer/login`. There is intentionally no role selector;
+ * the endpoint only accepts POS printer accounts.
  */
 export default function PosPrinterLoginPage() {
   const t = useTranslations("posPrinter");

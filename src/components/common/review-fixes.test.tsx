@@ -29,6 +29,9 @@ const reservation: TableReservation = {
   guestCount: 4,
   note: "Window seat",
   status: "CANCELLED",
+  isWalkIn: false,
+  queueState: "CANCELLED",
+  tableLabel: null,
   customer: null,
 };
 

@@ -19,6 +19,20 @@ export const TABLE_RESERVATION_STATUS_VALUES = [
 export type TableReservationStatusUpdateValue =
   (typeof TABLE_RESERVATION_STATUS_VALUES)[number];
 
+/**
+ * Queue state persisted by the platform API next to the status
+ * (`TableReservationRecord.queueState` in `customer-app.service.ts`).
+ */
+export const TABLE_RESERVATION_QUEUE_STATES = [
+  "WAITING",
+  "SEATED",
+  "COMPLETED",
+  "CANCELLED",
+  "NO_SHOW",
+] as const;
+
+export type TableReservationQueueState = (typeof TABLE_RESERVATION_QUEUE_STATES)[number];
+
 export type TableReservationStatusUpdatePayload = {
   status: TableReservationStatusUpdateValue;
   restaurantId?: string;
@@ -43,6 +57,12 @@ export const isTableReservationStatusUpdateValue = (
 ): value is TableReservationStatusUpdateValue =>
   typeof value === "string" &&
   (TABLE_RESERVATION_STATUS_VALUES as readonly string[]).includes(value);
+
+export const isTableReservationQueueState = (
+  value: unknown
+): value is TableReservationQueueState =>
+  typeof value === "string" &&
+  (TABLE_RESERVATION_QUEUE_STATES as readonly string[]).includes(value);
 
 /**
  * Page sizes supported by the admin list endpoint. The API caps `limit` at 50.
@@ -75,6 +95,11 @@ export type TableReservation = {
   status: TableReservationStatus;
   createdAt: string;
   cancelledAt: string | null;
+  /** Set by the API for reservations created through the admin walk-in endpoint. */
+  isWalkIn: boolean;
+  queueState: TableReservationQueueState;
+  /** Persisted through `PATCH …/:reservationId/assignment`; the server response is the truth. */
+  tableLabel: string | null;
   customer: TableReservationCustomer | null;
   branch: TableReservationBranch;
 };
@@ -112,22 +137,28 @@ export type TableReservationsResponse = {
 };
 
 /**
- * Payload for `POST /pos/orders/walk-in-reservations`. Branch-scoped actors may omit
- * `branchId`; the API uses the token scope. `reservationDate` must be in the future.
+ * Body of `POST /customer-app/admin/table-reservations/walk-ins`
+ * (`CreateAdminWalkInReservationDto`). The customer must already exist in the restaurant;
+ * the API creates a CONFIRMED reservation for "now" with `isWalkIn: true`.
  */
 export type WalkInReservationCreatePayload = {
-  branchId?: string;
-  guestName?: string;
-  guestPhone?: string;
-  reservationDate: string;
+  customerId: string;
+  branchId: string;
   guestCount: number;
+  tableLabel?: string;
   note?: string;
+  restaurantId?: string;
 };
 
-export type WalkInReservationCreateResult = {
-  reservation: TableReservation;
-  customerId: string | null;
-  message?: string;
+/**
+ * Body of `PATCH /customer-app/admin/table-reservations/:reservationId/assignment`
+ * (`AssignAdminTableReservationDto`). `tableLabel` is required and must not be blank.
+ */
+export type TableReservationAssignmentPayload = {
+  tableLabel: string;
+  restaurantId?: string;
+  branchId?: string;
+  customerId?: string;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
@@ -192,8 +223,25 @@ export const normalizeTableReservationBranch = (
   };
 };
 
+/**
+ * Mirrors `CustomerAppService.toTableReservationQueueState` for payloads that predate the
+ * persisted queue state.
+ */
+export const deriveTableReservationQueueState = (
+  status: string
+): TableReservationQueueState => {
+  if (status === "SEATED") return "SEATED";
+  if (status === "COMPLETED") return "COMPLETED";
+  if (status === "CANCELLED") return "CANCELLED";
+  if (status === "NO_SHOW") return "NO_SHOW";
+  return "WAITING";
+};
+
 export const normalizeTableReservation = (value: unknown): TableReservation | null => {
   if (!isRecord(value)) return null;
+
+  const status = getString(value, "status", "REQUESTED");
+  const tableLabel = getNullableString(value, "tableLabel")?.trim() || null;
 
   return {
     id: getString(value, "id"),
@@ -201,9 +249,14 @@ export const normalizeTableReservation = (value: unknown): TableReservation | nu
     reservationDate: getString(value, "reservationDate"),
     guestCount: getNumber(value, "guestCount"),
     note: getNullableString(value, "note"),
-    status: getString(value, "status", "REQUESTED"),
+    status,
     createdAt: getString(value, "createdAt"),
     cancelledAt: getNullableString(value, "cancelledAt"),
+    isWalkIn: getBoolean(value, "isWalkIn"),
+    queueState: isTableReservationQueueState(value.queueState)
+      ? value.queueState
+      : deriveTableReservationQueueState(status),
+    tableLabel,
     customer: normalizeTableReservationCustomer(value.customer),
     branch: normalizeTableReservationBranch(value.branch),
   };
@@ -218,24 +271,6 @@ export const normalizeTableReservationDetail = (payload: unknown): TableReservat
   const reservation = normalizeTableReservation(source);
 
   return reservation && reservation.id ? reservation : null;
-};
-
-export const normalizeWalkInReservationResult = (
-  payload: unknown
-): WalkInReservationCreateResult | null => {
-  const envelope = isRecord(payload) ? payload : {};
-  const source = "data" in envelope ? envelope.data : payload;
-  const reservation = normalizeTableReservation(source);
-
-  if (!reservation || !reservation.id) return null;
-
-  const message = typeof envelope.message === "string" ? envelope.message : undefined;
-
-  return {
-    reservation,
-    customerId: isRecord(source) ? getNullableString(source, "customerId") : null,
-    ...(message ? { message } : {}),
-  };
 };
 
 export const normalizeTableReservationsMeta = (

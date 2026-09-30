@@ -55,6 +55,9 @@ const harness = vi.hoisted(() => ({
   push: vi.fn(),
   mutate: vi.fn(),
   createWalkIn: vi.fn(),
+  assign: vi.fn(),
+  customerSearch: vi.fn(),
+  customers: { data: [] as unknown[], isPending: false, isError: false },
 }));
 
 vi.mock("react", async (importOriginal) => {
@@ -129,6 +132,11 @@ vi.mock("@/hooks/useTableReservations", () => ({
   useTableReservation: () => harness.detail,
   useUpdateTableReservationStatus: () => ({ mutateAsync: harness.mutate, isPending: false }),
   useCreateWalkInReservation: () => ({ mutateAsync: harness.createWalkIn, isPending: false }),
+  useAssignTableReservation: () => ({ mutateAsync: harness.assign, isPending: false }),
+  useWalkInCustomerSearch: (params: unknown, options: unknown) => {
+    harness.customerSearch(params, options);
+    return harness.customers;
+  },
 }));
 // Render dropdown action text so both layout call sites are checked, not only the trigger.
 vi.mock("@/components/common/RowActions", () => ({
@@ -156,6 +164,14 @@ const customer = {
   avatarUrl: null,
 };
 const walkInCustomer = {
+  id: "customer-2",
+  email: "grace@example.com",
+  firstName: "Grace",
+  lastName: "Hopper",
+  phone: null,
+  avatarUrl: null,
+};
+const legacyGuestCustomer = {
   id: "guest-1",
   email: "pos-guest-restaurant-1-branch-1-1700000000-abc123@feastflow.local",
   firstName: "Walk-in",
@@ -173,27 +189,41 @@ const reservation: TableReservation = {
   guestCount: 4,
   note: "Window seat",
   status: "CONFIRMED",
+  isWalkIn: false,
+  queueState: "WAITING",
+  tableLabel: null,
   customer,
 };
+// Walk-ins are created CONFIRMED by the API with `isWalkIn: true` and a real customer.
 const walkInQueued: TableReservation = {
   ...reservation,
   id: "walk-in-queued",
-  status: "REQUESTED",
+  status: "CONFIRMED",
   createdAt: "2026-09-30T11:00:00Z",
-  reservationDate: "2026-09-30T11:20:00Z",
+  reservationDate: "2026-09-30T11:00:00Z",
   guestCount: 2,
+  isWalkIn: true,
   customer: walkInCustomer,
 };
 const walkInSeated: TableReservation = {
   ...walkInQueued,
   id: "walk-in-seated",
   status: "SEATED",
-  reservationDate: "2026-09-30T11:05:00Z",
+  queueState: "SEATED",
+  tableLabel: "T4",
+  createdAt: "2026-09-30T10:45:00Z",
+  reservationDate: "2026-09-30T10:45:00Z",
 };
 const walkInDone: TableReservation = {
   ...walkInQueued,
   id: "walk-in-done",
   status: "COMPLETED",
+  queueState: "COMPLETED",
+};
+const legacyGuestReservation: TableReservation = {
+  ...reservation,
+  id: "legacy-guest",
+  customer: legacyGuestCustomer,
 };
 const meta = { page: 2, limit: 20, total: 42, totalPages: 3, hasNext: true, hasPrevious: true };
 
@@ -376,10 +406,10 @@ describe.each(["en", "de"] as const)("table reservations table (%s)", (locale) =
     harness.locale = locale;
   });
 
-  it("links every row to its detail page with the list query and marks walk-ins", () => {
+  it("links every row to its detail page with the list query and marks walk-ins from the API flag", () => {
     const markup = render(
       <TableReservationsTable
-        reservations={[reservation, walkInQueued]}
+        reservations={[reservation, walkInSeated, legacyGuestReservation]}
         loading={false}
         listQuery="?status=CONFIRMED&page=2"
       />
@@ -387,13 +417,17 @@ describe.each(["en", "de"] as const)("table reservations table (%s)", (locale) =
     const t = messages();
 
     expect(markup.match(/href="\/table-reservations\/reservation-1234\?status=CONFIRMED&amp;page=2"/g)).toHaveLength(2);
-    expect(markup.match(/href="\/table-reservations\/walk-in-queued\?status=CONFIRMED&amp;page=2"/g)).toHaveLength(2);
+    expect(markup.match(/href="\/table-reservations\/walk-in-seated\?status=CONFIRMED&amp;page=2"/g)).toHaveLength(2);
     expect(markup).toContain(`aria-label="${t.openDetails.replace("{id}", formatShortId(reservation.id))}"`);
+    // Only the reservation flagged `isWalkIn` gets the badge (desktop + mobile), even though
+    // the legacy guest account carries an internal address.
     expect(markup.match(new RegExp(`>${t.walkIn}<`, "g"))).toHaveLength(2);
+    expect(markup.match(new RegExp(`>${t.tableAssigned.replace("{label}", "T4")}<`, "g"))).toHaveLength(2);
     expect(markup).not.toContain("@feastflow.local");
     expect(markup.match(new RegExp(t.walkInGuest, "g"))).toHaveLength(2);
     expect(markup).toContain("ada@example.com");
-    expect(markup.match(new RegExp(`>${(harness.locale === "en" ? en : de).common.viewDetails}<`, "g"))).toHaveLength(4);
+    expect(markup).toContain("grace@example.com");
+    expect(markup.match(new RegExp(`>${(harness.locale === "en" ? en : de).common.viewDetails}<`, "g"))).toHaveLength(6);
   });
 });
 
@@ -414,34 +448,48 @@ describe.each(["en", "de"] as const)("walk-in queue (%s)", (locale) => {
     />
   );
 
-  it("queries walk-in guests through the supported search contract", () => {
+  it("reads the newest list page without a search filter and keeps the API walk-in flag", () => {
     render(panel());
     expect(harness.listParams).toHaveBeenCalledWith({
       page: 1,
       limit: 50,
-      search: "pos-guest-",
       sortBy: "createdAt",
       sortOrder: "DESC",
       restaurantId: "restaurant-1",
       branchId: "branch-1",
     });
+    // Customer lookup only runs while the dialog is open.
+    expect(harness.customerSearch).toHaveBeenCalledWith(
+      { restaurantId: "restaurant-1", search: "" },
+      { enabled: false }
+    );
   });
 
-  it("lists only active walk-ins ordered by expected time with valid actions", () => {
+  it("lists only active walk-ins first come first served with the exact API transitions", () => {
+    harness.list.data = {
+      reservations: [reservation, walkInQueued, walkInSeated, walkInDone, legacyGuestReservation],
+      meta,
+    };
     const markup = render(panel());
     const t = messages();
 
     expect(markup).toContain(t.walkInQueueCount.replace("{count}", "2"));
     expect(markup).not.toContain("walk-in-done");
     expect(markup).not.toContain("reservation-1234");
+    expect(markup).not.toContain("legacy-guest");
     expect(markup.indexOf("walk-in-seated")).toBeLessThan(markup.indexOf("walk-in-queued"));
 
     const desktop = markup.match(/<tbody[^>]*>([\s\S]*?)<\/tbody>/)?.[1] ?? "";
     const rows = desktop.split("<tr").slice(1);
     expect(rows).toHaveLength(2);
     const actions = (row: string) => [...row.matchAll(/data-action="([^"]+)"/g)].map((match) => match[1]);
-    expect(actions(rows[0])).toEqual(["assign-table", "complete", "cancel", "view"]);
-    expect(actions(rows[1])).toEqual(["assign-table", "confirm", "seat", "noShow", "cancel", "view"]);
+    // SEATED -> COMPLETED only; CONFIRMED -> SEATED | NO_SHOW | CANCELLED.
+    expect(actions(rows[0])).toEqual(["assign-table", "complete", "view"]);
+    expect(actions(rows[1])).toEqual(["assign-table", "seat", "noShow", "cancel", "view"]);
+    expect(rows[0]).toContain(`>${t.changeTable}<`);
+    expect(rows[0]).toContain(`>${t.tableAssigned.replace("{label}", "T4")}<`);
+    expect(rows[1]).toContain(`>${t.assignTable}<`);
+    expect(rows[1]).toContain(`>${t.noTable}<`);
     expect(markup).toContain(`>${t.markNoShow}<`);
     expect(markup).toContain(`>${t.addWalkIn}<`);
     expect(markup).toContain(`href="/table-reservations/walk-in-queued?page=2"`);
@@ -454,6 +502,7 @@ describe.each(["en", "de"] as const)("walk-in queue (%s)", (locale) => {
     const t = messages();
 
     expect(markup).not.toContain(`>${t.addWalkIn}<`);
+    expect(harness.customerSearch).not.toHaveBeenCalled();
     expect(markup.match(/data-state="empty"/g)).toHaveLength(2);
     expect(markup).toContain(t.walkInQueueEmptyTitle);
     expect(markup).toContain(t.walkInQueueCount.replace("{count}", "0"));
@@ -549,8 +598,27 @@ describe.each(["en", "de"] as const)("reservation detail page (%s)", (locale) =>
     expect(markup).toContain(t.tableLabelHelp);
   });
 
-  it("hides internal walk-in emails and table controls once the visit is over", () => {
-    harness.detail = { ...harness.detail, data: { ...walkInQueued, status: "NO_SHOW" } };
+  it("shows the persisted table label from the API and offers to change it", () => {
+    harness.detail = { ...harness.detail, data: walkInSeated };
+    const markup = render(<TableReservationDetailsPage />);
+    const t = messages();
+
+    expect(markup).toContain(`>${t.walkIn}<`);
+    expect(markup.match(new RegExp(t.tableAssigned.replace("{label}", "T4"), "g"))).toHaveLength(2);
+    expect(markup).toContain(`>${t.changeTable}<`);
+    expect(markup).not.toContain(`>${t.assignTable}<`);
+    expect(markup).toContain("grace@example.com");
+    // SEATED can only complete.
+    expect(markup).toContain(`>${t.complete}<`);
+    expect(markup).not.toContain(`>${t.cancelReservation}<`);
+    expect(markup).not.toContain(`>${t.markNoShow}<`);
+  });
+
+  it("hides table controls once the visit is over and never shows internal guest emails", () => {
+    harness.detail = {
+      ...harness.detail,
+      data: { ...walkInQueued, status: "NO_SHOW", queueState: "NO_SHOW", customer: legacyGuestCustomer },
+    };
     const markup = render(<TableReservationDetailsPage />);
     const t = messages();
 
@@ -558,6 +626,7 @@ describe.each(["en", "de"] as const)("reservation detail page (%s)", (locale) =>
     expect(markup).toContain(t.walkInGuest);
     expect(markup).toContain(`>${t.walkIn}<`);
     expect(markup).not.toContain(`>${t.assignTable}<`);
+    expect(markup).not.toContain(`>${t.changeTable}<`);
     expect(markup).not.toContain(`>${t.seat}<`);
     expect(markup).not.toContain(`>${t.cancelReservation}<`);
     expect(markup).toContain(t.status.NO_SHOW);

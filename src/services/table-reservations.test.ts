@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  assignTableReservation,
   createWalkInReservation,
   getTableReservation,
+  getTableReservationAssignmentEndpoint,
   getTableReservationDetailEndpoint,
   getTableReservations,
   TABLE_RESERVATIONS_ENDPOINT,
@@ -70,7 +72,7 @@ describe("table reservations service", () => {
     });
   });
 
-  it("normalizes response data and meta", async () => {
+  it("normalizes response data and meta including the persisted walk-in fields", async () => {
     mockedGet.mockResolvedValue({
       success: true,
       data: [
@@ -81,6 +83,9 @@ describe("table reservations service", () => {
           guestCount: 4,
           status: "CONFIRMED",
           createdAt: "2026-06-01T10:00:00.000Z",
+          isWalkIn: true,
+          queueState: "WAITING",
+          tableLabel: " T4 ",
           customer: {
             id: "customer-1",
             email: "customer@example.com",
@@ -91,11 +96,18 @@ describe("table reservations service", () => {
           },
           branch: { id: "branch-1", name: "Downtown" },
         },
+        {
+          id: "reservation-2",
+          reservationDate: "2026-06-02T10:00:00.000Z",
+          guestCount: 2,
+          status: "SEATED",
+          createdAt: "2026-06-01T10:00:00.000Z",
+        },
       ],
       meta: {
         page: 1,
         limit: 20,
-        total: 1,
+        total: 2,
         totalPages: 1,
         hasNext: false,
         hasPrevious: false,
@@ -105,7 +117,7 @@ describe("table reservations service", () => {
 
     const result = await getTableReservations({ page: 1, limit: 20 });
 
-    expect(result.reservations).toHaveLength(1);
+    expect(result.reservations).toHaveLength(2);
     expect(result.reservations[0]).toMatchObject({
       id: "reservation-1",
       branchId: "branch-1",
@@ -113,8 +125,17 @@ describe("table reservations service", () => {
       status: "CONFIRMED",
       note: null,
       cancelledAt: null,
+      isWalkIn: true,
+      queueState: "WAITING",
+      tableLabel: "T4",
     });
-    expect(result.meta.total).toBe(1);
+    // Older payloads without the new fields derive the queue state from the status.
+    expect(result.reservations[1]).toMatchObject({
+      isWalkIn: false,
+      queueState: "SEATED",
+      tableLabel: null,
+    });
+    expect(result.meta.total).toBe(2);
     expect(result.message).toBe("ok");
   });
 
@@ -224,6 +245,7 @@ describe("table reservations service", () => {
       { status: "NO_SHOW" }
     );
     expect(reservation.status).toBe("NO_SHOW");
+    expect(reservation.queueState).toBe("NO_SHOW");
   });
 
   it("omits empty optional reservation status ids", async () => {
@@ -261,48 +283,123 @@ describe("table reservations service", () => {
     ).rejects.toThrow("Invalid table reservation response");
   });
 
-  it("creates walk-in reservations through POST /pos/orders/walk-in-reservations", async () => {
+  it("creates walk-ins through POST /customer-app/admin/table-reservations/walk-ins", async () => {
     mockedPost.mockResolvedValue({
       data: {
         id: "walk-in-1",
         branchId: "branch-1",
-        reservationDate: "2026-09-30T12:15:00.000Z",
+        reservationDate: "2026-09-30T12:00:00.000Z",
         guestCount: 3,
         note: null,
-        status: "REQUESTED",
+        status: "CONFIRMED",
         createdAt: "2026-09-30T12:00:00.000Z",
         cancelledAt: null,
-        customerId: "guest-1",
+        isWalkIn: true,
+        queueState: "WAITING",
+        tableLabel: "T2",
       },
-      message: "Walk-in table reservation created successfully",
+      message: "Walk-in reservation created successfully",
     });
 
-    const result = await createWalkInReservation({
+    const reservation = await createWalkInReservation({
+      customerId: "customer-1",
       branchId: "branch-1",
-      guestName: "Ada",
-      guestPhone: undefined,
-      reservationDate: "2026-09-30T12:15:00.000Z",
       guestCount: 3,
+      tableLabel: " T2 ",
       note: "",
+      restaurantId: "restaurant-1",
     });
 
-    expect(WALK_IN_RESERVATIONS_ENDPOINT).toBe("/pos/orders/walk-in-reservations");
+    expect(WALK_IN_RESERVATIONS_ENDPOINT).toBe("/customer-app/admin/table-reservations/walk-ins");
     expect(mockedPost).toHaveBeenCalledWith(WALK_IN_RESERVATIONS_ENDPOINT, {
+      customerId: "customer-1",
       branchId: "branch-1",
-      guestName: "Ada",
-      reservationDate: "2026-09-30T12:15:00.000Z",
       guestCount: 3,
+      tableLabel: "T2",
+      restaurantId: "restaurant-1",
     });
-    expect(result.reservation).toMatchObject({ id: "walk-in-1", status: "REQUESTED", guestCount: 3 });
-    expect(result.customerId).toBe("guest-1");
-    expect(result.message).toBe("Walk-in table reservation created successfully");
+    expect(reservation).toMatchObject({
+      id: "walk-in-1",
+      status: "CONFIRMED",
+      guestCount: 3,
+      isWalkIn: true,
+      queueState: "WAITING",
+      tableLabel: "T2",
+      customer: null,
+    });
+  });
+
+  it("sends only the required walk-in fields when the optional ones are empty", async () => {
+    mockedPost.mockResolvedValue({ data: { id: "walk-in-2", status: "CONFIRMED", guestCount: 2 } });
+
+    await createWalkInReservation({ customerId: "customer-1", branchId: "branch-1", guestCount: 2 });
+
+    expect(mockedPost).toHaveBeenCalledWith(WALK_IN_RESERVATIONS_ENDPOINT, {
+      customerId: "customer-1",
+      branchId: "branch-1",
+      guestCount: 2,
+    });
   });
 
   it("rejects a walk-in response without a reservation", async () => {
     mockedPost.mockResolvedValue({ success: true });
 
     await expect(
-      createWalkInReservation({ reservationDate: "2026-09-30T12:15:00.000Z", guestCount: 2 })
-    ).rejects.toThrow("Invalid walk-in reservation response");
+      createWalkInReservation({ customerId: "customer-1", branchId: "branch-1", guestCount: 2 })
+    ).rejects.toThrow("Invalid table reservation response");
+  });
+
+  it("persists table assignments through PATCH …/:reservationId/assignment and returns the server record", async () => {
+    mockedPatch.mockResolvedValue({
+      data: {
+        id: "reservation-1",
+        branchId: "branch-1",
+        status: "CONFIRMED",
+        guestCount: 4,
+        isWalkIn: false,
+        queueState: "WAITING",
+        tableLabel: "T9",
+        customer: { id: "customer-1", email: "customer@example.com" },
+        branch: { id: "branch-1", name: "Downtown" },
+      },
+      message: "Table reservation assigned successfully",
+    });
+
+    const reservation = await assignTableReservation("reservation-1", {
+      tableLabel: " T4 ",
+      restaurantId: "restaurant-1",
+      branchId: "branch-1",
+      customerId: "customer-1",
+    });
+
+    expect(getTableReservationAssignmentEndpoint("res/1")).toBe(
+      "/customer-app/admin/table-reservations/res%2F1/assignment"
+    );
+    expect(mockedPatch).toHaveBeenCalledWith(
+      "/customer-app/admin/table-reservations/reservation-1/assignment",
+      { tableLabel: "T4", restaurantId: "restaurant-1", branchId: "branch-1", customerId: "customer-1" }
+    );
+    // The label shown afterwards is whatever the API persisted, not what was typed.
+    expect(reservation.tableLabel).toBe("T9");
+    expect(reservation.customer?.id).toBe("customer-1");
+  });
+
+  it("always sends tableLabel and omits empty scope ids on assignment", async () => {
+    mockedPatch.mockResolvedValue({ data: { id: "reservation-1", status: "SEATED", tableLabel: "T1" } });
+
+    await assignTableReservation("reservation-1", { tableLabel: "T1", restaurantId: "", branchId: "" });
+
+    expect(mockedPatch).toHaveBeenCalledWith(
+      "/customer-app/admin/table-reservations/reservation-1/assignment",
+      { tableLabel: "T1" }
+    );
+  });
+
+  it("rejects an assignment response without a reservation", async () => {
+    mockedPatch.mockResolvedValue({ success: true, data: null });
+
+    await expect(assignTableReservation("reservation-1", { tableLabel: "T1" })).rejects.toThrow(
+      "Invalid table reservation response"
+    );
   });
 });

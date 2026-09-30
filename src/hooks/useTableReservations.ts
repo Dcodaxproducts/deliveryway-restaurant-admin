@@ -1,20 +1,21 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { getApiErrorMessage } from "@/lib/errors";
-import { clearTableAssignment } from "@/lib/table-reservation-assignments";
-import { isTerminalTableReservationStatus } from "@/lib/table-reservation-transitions";
 import {
+  assignTableReservation,
   createWalkInReservation,
   getTableReservation,
   getTableReservations,
   updateTableReservationStatus,
 } from "@/services/table-reservations";
+import { searchWalkInCustomers } from "@/services/walk-in-customers";
 import type {
   TableReservation,
+  TableReservationAssignmentPayload,
   TableReservationScopeParams,
   TableReservationsParams,
   TableReservationsResponse,
@@ -40,6 +41,8 @@ export const tableReservationsQueryKeys = {
       params.status,
     ] as const,
   detail: (reservationId: string) => ["table-reservations", "detail", reservationId] as const,
+  walkInCustomers: (restaurantId: string | undefined, search: string) =>
+    ["table-reservations", "walk-in-customers", restaurantId, search] as const,
 };
 
 export function useTableReservations(
@@ -112,10 +115,6 @@ export const useUpdateTableReservationStatus = () => {
       payload: TableReservationStatusUpdatePayload;
     }) => updateTableReservationStatus(reservationId, payload),
     onSuccess: (reservation) => {
-      if (isTerminalTableReservationStatus(reservation.status)) {
-        clearTableAssignment(reservation.id);
-      }
-
       queryClient.setQueryData(tableReservationsQueryKeys.detail(reservation.id), reservation);
       queryClient.invalidateQueries({ queryKey: tableReservationsQueryKeys.all });
       toast.success(t("statusUpdated"));
@@ -126,13 +125,41 @@ export const useUpdateTableReservationStatus = () => {
   });
 };
 
+/**
+ * Persists the table label through the assignment endpoint. The reservation returned by
+ * the API replaces the cached detail so every device sees the same assignment.
+ */
+export const useAssignTableReservation = () => {
+  const queryClient = useQueryClient();
+  const t = useTranslations("tableReservations");
+
+  return useMutation({
+    mutationFn: ({
+      reservationId,
+      payload,
+    }: {
+      reservationId: string;
+      payload: TableReservationAssignmentPayload;
+    }) => assignTableReservation(reservationId, payload),
+    onSuccess: (reservation) => {
+      queryClient.setQueryData(tableReservationsQueryKeys.detail(reservation.id), reservation);
+      queryClient.invalidateQueries({ queryKey: tableReservationsQueryKeys.all });
+      toast.success(t("tableSaved"));
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, t("tableAssignFailed")));
+    },
+  });
+};
+
 export const useCreateWalkInReservation = () => {
   const queryClient = useQueryClient();
   const t = useTranslations("tableReservations");
 
   return useMutation({
     mutationFn: (payload: WalkInReservationCreatePayload) => createWalkInReservation(payload),
-    onSuccess: () => {
+    onSuccess: (reservation) => {
+      queryClient.setQueryData(tableReservationsQueryKeys.detail(reservation.id), reservation);
       queryClient.invalidateQueries({ queryKey: tableReservationsQueryKeys.all });
       toast.success(t("walkInCreated"));
     },
@@ -141,3 +168,19 @@ export const useCreateWalkInReservation = () => {
     },
   });
 };
+
+/** Customer lookup for the walk-in dialog; only runs while the dialog is open. */
+export function useWalkInCustomerSearch(
+  params: { restaurantId?: string; search: string },
+  options: { enabled?: boolean } = {}
+) {
+  const search = params.search.trim();
+
+  return useQuery({
+    queryKey: tableReservationsQueryKeys.walkInCustomers(params.restaurantId, search),
+    queryFn: () => searchWalkInCustomers({ restaurantId: params.restaurantId, search }),
+    enabled: options.enabled ?? true,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
+  });
+}

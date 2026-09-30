@@ -8,12 +8,11 @@ import { TABLE_RESERVATION_STATUS_VALUES } from "@/types/table-reservations";
  */
 export const TABLE_RESERVATION_ERROR_CODES = {
   statusRequired: "statusRequired",
+  customerRequired: "customerRequired",
   branchRequired: "branchRequired",
   guestCountRange: "guestCountRange",
-  waitMinutesRange: "waitMinutesRange",
-  guestNameTooLong: "guestNameTooLong",
-  guestPhoneTooLong: "guestPhoneTooLong",
   noteTooLong: "noteTooLong",
+  tableLabelRequired: "tableLabelRequired",
   tableLabelTooLong: "tableLabelTooLong",
 } as const;
 
@@ -36,13 +35,13 @@ export type TableReservationStatusUpdateValues = z.infer<
   typeof tableReservationStatusUpdateSchema
 >;
 
+/** `CreateAdminWalkInReservationDto` bounds: `guestCount` 1..50. */
 export const WALK_IN_GUEST_COUNT_MIN = 1;
 export const WALK_IN_GUEST_COUNT_MAX = 50;
-export const WALK_IN_WAIT_MINUTES_MIN = 1;
-export const WALK_IN_WAIT_MINUTES_MAX = 240;
-export const WALK_IN_DEFAULT_WAIT_MINUTES = 15;
 export const WALK_IN_DEFAULT_GUEST_COUNT = 2;
+/** Presentation cap; the API accepts any non-empty string. */
 export const TABLE_LABEL_MAX_LENGTH = 24;
+export const WALK_IN_NOTE_MAX_LENGTH = 500;
 
 const boundedInteger = (min: number, max: number, message: string) =>
   z
@@ -51,39 +50,40 @@ const boundedInteger = (min: number, max: number, message: string) =>
     .min(min, { message })
     .max(max, { message });
 
+const tableLabelField = z
+  .string()
+  .trim()
+  .max(TABLE_LABEL_MAX_LENGTH, { message: TABLE_RESERVATION_ERROR_CODES.tableLabelTooLong });
+
 /**
- * Mirrors `CreatePosWalkInReservationDto`: guest count 1..50 plus optional guest details
- * and note. The expected wait is converted to a future `reservationDate` on submit.
+ * Mirrors `CreateAdminWalkInReservationDto`: an existing customer, a branch, guest count
+ * 1..50, plus an optional table label and note.
  */
 export const walkInReservationSchema = z.object({
+  customerId: z
+    .string()
+    .trim()
+    .min(1, { message: TABLE_RESERVATION_ERROR_CODES.customerRequired }),
   branchId: z.string().trim().min(1, { message: TABLE_RESERVATION_ERROR_CODES.branchRequired }),
-  guestName: z.string().trim().max(80, { message: TABLE_RESERVATION_ERROR_CODES.guestNameTooLong }),
-  guestPhone: z.string().trim().max(40, { message: TABLE_RESERVATION_ERROR_CODES.guestPhoneTooLong }),
   guestCount: boundedInteger(
     WALK_IN_GUEST_COUNT_MIN,
     WALK_IN_GUEST_COUNT_MAX,
     TABLE_RESERVATION_ERROR_CODES.guestCountRange
   ),
-  waitMinutes: boundedInteger(
-    WALK_IN_WAIT_MINUTES_MIN,
-    WALK_IN_WAIT_MINUTES_MAX,
-    TABLE_RESERVATION_ERROR_CODES.waitMinutesRange
-  ),
-  note: z.string().trim().max(500, { message: TABLE_RESERVATION_ERROR_CODES.noteTooLong }),
+  tableLabel: tableLabelField,
+  note: z
+    .string()
+    .trim()
+    .max(WALK_IN_NOTE_MAX_LENGTH, { message: TABLE_RESERVATION_ERROR_CODES.noteTooLong }),
 });
 
 export type WalkInReservationFormValues = z.infer<typeof walkInReservationSchema>;
 
+/** Mirrors `AssignAdminTableReservationDto`: `tableLabel` is required and non-blank. */
 export const tableLabelSchema = z.object({
-  tableLabel: z
-    .string()
-    .trim()
-    .max(TABLE_LABEL_MAX_LENGTH, { message: TABLE_RESERVATION_ERROR_CODES.tableLabelTooLong }),
+  tableLabel: tableLabelField.refine((value) => value.length > 0, {
+    message: TABLE_RESERVATION_ERROR_CODES.tableLabelRequired,
+  }),
 });
 
 export type TableLabelFormValues = z.infer<typeof tableLabelSchema>;
-
-export const buildWalkInReservationDate = (waitMinutes: number, now = new Date()) =>
-  new Date(
-    now.getTime() + Math.max(waitMinutes, WALK_IN_WAIT_MINUTES_MIN) * 60_000
-  ).toISOString();

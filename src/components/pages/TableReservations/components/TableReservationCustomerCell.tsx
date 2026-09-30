@@ -11,21 +11,24 @@ import {
   getCustomerDisplayEmail,
   getCustomerFullName,
   getCustomerInitials,
-  isWalkInCustomer,
+  hasInternalGuestEmail,
 } from "@/components/pages/TableReservations/utils/table-reservations-formatters";
 import type { TableReservationCustomer } from "@/types/table-reservations";
 
 type TableReservationCustomerCellProps = {
   customer: TableReservationCustomer | null;
+  /** From the reservation's persisted `isWalkIn` flag. */
+  isWalkIn?: boolean;
 };
 
 export default function TableReservationCustomerCell({
   customer,
+  isWalkIn = false,
 }: TableReservationCustomerCellProps) {
   const t = useTranslations("tableReservations");
   const fullName = getCustomerFullName(customer);
   const email = getCustomerDisplayEmail(customer);
-  const walkIn = isWalkInCustomer(customer);
+  const walkIn = isWalkIn || hasInternalGuestEmail(customer);
 
   return (
     <div className="flex min-w-0 items-center gap-3">

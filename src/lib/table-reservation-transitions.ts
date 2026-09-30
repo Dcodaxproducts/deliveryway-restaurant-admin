@@ -4,19 +4,22 @@ import {
 } from "@/types/table-reservations";
 
 /**
- * Allowed status transitions for a table reservation.
+ * Allowed status transitions for a table reservation. Mirrors
+ * `CustomerAppService.assertTableReservationTransition` in the platform API exactly:
  *
- * - `NO_SHOW` is only valid while a guest is still expected (REQUESTED or CONFIRMED).
- *   A seated, completed, cancelled, or already no-show reservation can never become a no-show.
- * - `COMPLETED` is only valid after the guest has been seated.
- * - `COMPLETED`, `CANCELLED`, and `NO_SHOW` are terminal.
+ * - `REQUESTED` -> `CONFIRMED` | `CANCELLED` | `NO_SHOW`
+ * - `CONFIRMED` -> `SEATED` | `CANCELLED` | `NO_SHOW`
+ * - `SEATED` -> `COMPLETED`
+ * - `COMPLETED`, `CANCELLED`, and `NO_SHOW` are terminal and reject every transition.
+ *
+ * A guest must be confirmed before being seated, and a seated guest can only complete.
  */
 export const TABLE_RESERVATION_TRANSITIONS: Readonly<
   Record<TableReservationStatusUpdateValue, readonly TableReservationStatusUpdateValue[]>
 > = {
-  REQUESTED: ["CONFIRMED", "SEATED", "NO_SHOW", "CANCELLED"],
-  CONFIRMED: ["SEATED", "NO_SHOW", "CANCELLED"],
-  SEATED: ["COMPLETED", "CANCELLED"],
+  REQUESTED: ["CONFIRMED", "CANCELLED", "NO_SHOW"],
+  CONFIRMED: ["SEATED", "CANCELLED", "NO_SHOW"],
+  SEATED: ["COMPLETED"],
   COMPLETED: [],
   CANCELLED: [],
   NO_SHOW: [],
@@ -66,3 +69,7 @@ export const isActiveTableReservationStatus = (status: string | null | undefined
   const current = normalizeTableReservationStatus(status);
   return current !== null && ACTIVE_TABLE_RESERVATION_STATUSES.includes(current);
 };
+
+/** Only non-terminal reservations accept a table assignment (API returns 400 otherwise). */
+export const canAssignTableReservation = (status: string | null | undefined): boolean =>
+  isActiveTableReservationStatus(status);
