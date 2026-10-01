@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { MediaImage as Image } from "@/components/common/MediaImage";
 import { Layers3 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";

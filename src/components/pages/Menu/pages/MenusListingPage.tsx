@@ -19,7 +19,7 @@ import {
   Utensils,
   XCircle,
 } from "lucide-react";
-import Image from "next/image";
+import { MediaImage as Image } from "@/components/common/MediaImage";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { getApiErrorMessage } from "@/lib/errors";
 import { prepareUploadFile } from "@/lib/prepare-upload-file";
-import { createPresignedUpload } from "@/services/storage";
+import { createPresignedUpload, finalizeImageUpload } from "@/services/storage";
 
 interface UploadResult {
   key: string;
@@ -46,6 +46,10 @@ export const useFileUpload = () => {
 
       if (!uploadResponse.ok) {
         throw new Error("Failed to upload file to storage");
+      }
+
+      if (prepared.file.type.startsWith("image/")) {
+        await finalizeImageUpload({ key: uploadData.key });
       }
 
       toast.success("File uploaded");

@@ -8,7 +8,7 @@ import { Suspense, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { Building2, Store, UserCog } from "lucide-react";
+import { AlertCircle, Building2, Store, UserCog } from "lucide-react";
 
 import FormInput from "@/components/forms/common/FormInput";
 import AuthPageShell, {
@@ -28,6 +28,7 @@ import { getSafeRedirectPath } from "@/lib/auth-routes";
 import { authApi } from "@/services/auth/auth.api";
 import { loginSchema, type LoginFormValues } from "@/validations/auth";
 import { cn } from "@/lib/utils";
+import { getLoginErrorKey } from "@/lib/login-error";
 
 const loginRoles: Array<{
   value: NonNullable<LoginFormValues["role"]>;
@@ -120,6 +121,7 @@ function LoginFormContent() {
     },
   });
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   useEffect(() => {
     const email = searchParams.get("email");
@@ -127,6 +129,8 @@ function LoginFormContent() {
   }, [searchParams, setValue]);
 
   const onSubmit = async (values: LoginFormValues) => {
+    setLoginError(null);
+
     try {
       const authPayload = await authApi.loginWithFallback(values);
       const user = authPayload.user;
@@ -167,7 +171,9 @@ function LoginFormContent() {
 
       router.push(redirectPath);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("genericError"));
+      const message = t(getLoginErrorKey(error));
+      setLoginError(message);
+      toast.error(message);
     }
   };
 
@@ -260,7 +266,7 @@ function LoginFormContent() {
 
         <h1
           id="partner-login-title"
-          className="mt-5 text-center text-[26px] font-semibold tracking-[-0.03em] text-gray-950 sm:mt-8 sm:text-[30px]"
+          className="mt-4 text-center text-[26px] font-semibold tracking-[-0.03em] text-gray-950 sm:mt-6 sm:text-[30px]"
         >
           {t("welcomeTitle")}
         </h1>
@@ -270,10 +276,21 @@ function LoginFormContent() {
         </p>
 
         <form
-          className="mt-5 space-y-4 sm:mt-7 sm:space-y-5"
+          className="mt-5 space-y-4 sm:mt-6 sm:space-y-4"
           noValidate
           onSubmit={submitLogin}
         >
+          {loginError ? (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-sm leading-5 text-red-800"
+            >
+              <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <span>{loginError}</span>
+            </div>
+          ) : null}
+
           <Controller
             control={control}
             name="email"

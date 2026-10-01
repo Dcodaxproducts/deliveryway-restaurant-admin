@@ -2,7 +2,7 @@
 
 import { BarChart3, Edit, GripVertical, Trash2 } from "lucide-react";
 import { useState } from "react";
-import Image from "next/image";
+import { MediaImage as Image } from "@/components/common/MediaImage";
 import { useRouter } from "next/navigation";
 
 import AdminDealLifecycleBadge from "@/components/pages/Menu/deals/components/AdminDealLifecycleBadge";

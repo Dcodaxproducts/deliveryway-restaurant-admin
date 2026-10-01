@@ -13,7 +13,7 @@ import {
   Tags,
   Utensils,
 } from "lucide-react";
-import Image from "next/image";
+import { MediaImage as Image } from "@/components/common/MediaImage";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 

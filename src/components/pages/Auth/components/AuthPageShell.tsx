@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export const AUTH_CARD_CLASS =
-  "auth-viewport-card relative w-full max-w-[440px] rounded-[28px] border border-black/[0.06] bg-white px-5 py-6 shadow-[0_24px_70px_rgba(42,27,20,0.08)] sm:px-9 sm:py-8 lg:border-0 lg:px-0 lg:shadow-none";
+  "auth-viewport-card relative my-auto w-full max-w-[440px] rounded-[28px] border border-black/[0.06] bg-white px-5 py-6 shadow-[0_24px_70px_rgba(42,27,20,0.08)] sm:px-9 sm:py-8 lg:border-0 lg:px-0 lg:shadow-none";
 export const AUTH_TITLE_CLASS =
   "text-balance text-center text-[26px] font-semibold tracking-[-0.03em] text-gray-950 sm:text-[30px]";
 export const AUTH_DESCRIPTION_CLASS =
@@ -69,7 +69,7 @@ export default function AuthPageShell({
 
       <section
         aria-labelledby={titleId}
-        className="relative flex min-h-[100dvh] items-start justify-center overflow-x-hidden px-4 py-6 sm:px-10 sm:py-10 lg:min-h-0 lg:items-center lg:overflow-y-auto lg:bg-white lg:px-14"
+        className="relative flex min-h-[100dvh] items-start justify-center overflow-x-hidden px-4 py-6 sm:px-10 sm:py-8 lg:min-h-0 lg:items-start lg:overflow-y-auto lg:overscroll-contain lg:bg-white lg:px-14 lg:py-6 xl:py-10"
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top_right,color-mix(in_oklch,var(--primary)_8%,transparent),transparent_64%)] lg:hidden" />
         {children}

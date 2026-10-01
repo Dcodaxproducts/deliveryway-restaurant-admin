@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { MediaImage as Image } from "@/components/common/MediaImage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FilterActions } from "@/components/common/FilterActions";
