@@ -5,11 +5,13 @@ import {
   useContext,
   useState,
   useEffect,
+  useRef,
   type Dispatch,
   type ReactNode,
   type SetStateAction,
 } from "react";
 import { API_BASE_URL } from "@/lib/constants";
+import { isAuthInitializationCurrent } from "@/lib/auth-initialization";
 import { getRequestLocale } from "@/config/i18n";
 import {
   AuthStorage,
@@ -37,8 +39,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const authRevision = useRef(0);
 
-  const refreshToken = async () => {
+  const refreshToken = async (initializationRevision: number) => {
     const stored = getStoredAuth();
     if (!stored?.refreshToken) return false;
 
@@ -58,6 +61,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const data = await res.json();
       const mergedData = normalizeAuthPayload(data, stored);
+
+      if (
+        !isAuthInitializationCurrent(authRevision.current, initializationRevision)
+      ) {
+        return false;
+      }
 
       saveStoredAuth(mergedData);
 
@@ -90,6 +99,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const initAuth = async () => {
+      const initializationRevision = authRevision.current;
+
       try {
         const stored = getStoredAuth();
 
@@ -104,10 +115,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           );
           const normalizedStored = normalizeAuthPayload({ ...stored, user: me }, stored);
 
+          if (
+            !isAuthInitializationCurrent(authRevision.current, initializationRevision)
+          ) {
+            return;
+          }
+
           saveStoredAuth(normalizedStored);
           setUser(me);
           setToken(stored.accessToken);
         } catch (error: unknown) {
+          if (!isAuthInitializationCurrent(authRevision.current, initializationRevision)) {
+            return;
+          }
+
           const isUnauthorized =
             error instanceof Error && error.message === "UNAUTHORIZED";
 
@@ -123,7 +144,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return;
           }
 
-          const newAccessToken = await refreshToken();
+          const newAccessToken = await refreshToken(initializationRevision);
+
+          if (
+            !isAuthInitializationCurrent(authRevision.current, initializationRevision)
+          ) {
+            return;
+          }
 
           if (!newAccessToken) {
             clearStoredAuth();
@@ -142,6 +169,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             updatedStored
           );
 
+          if (!isAuthInitializationCurrent(authRevision.current, initializationRevision)) {
+            return;
+          }
+
           saveStoredAuth(normalizedStored);
           setUser(me);
           setToken(newAccessToken);
@@ -157,6 +188,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = (data: unknown) => {
+    authRevision.current += 1;
     const normalizedData = normalizeAuthPayload(data);
     const user = clearTransientWorkspaceSelection(normalizedData.user);
     const sanitizedData = { ...normalizedData, user };
@@ -167,6 +199,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    authRevision.current += 1;
     clearStoredAuth();
     setUser(null);
     setToken(null);
