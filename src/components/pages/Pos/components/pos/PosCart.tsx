@@ -66,8 +66,14 @@ import {
   type PosOrderType,
 } from "@/components/pages/Pos/components/pos/pos-checkout-payload";
 import { GuestAddressLocationPicker } from "@/components/pages/Pos/components/pos/GuestAddressLocationPicker";
+import { PosCustomerSelector } from "@/components/pages/Pos/components/pos/PosCustomerSelector";
+import {
+  parsePosCustomerSelection,
+  serializePosCustomerSelection,
+} from "@/components/pages/Pos/components/pos/pos-customer-selection";
 import { POS_CART_UPDATED_EVENT } from "@/components/pages/Pos/legacy/cart/pos-selection";
 import {
+  getManualPrintErrorKey,
   printNewOrderIfConfigured,
   reprintOrder,
 } from "@/lib/accepted-order-printing";
@@ -157,24 +163,23 @@ export default function PosCart() {
   } | null>(null);
 
   useEffect(() => {
-    const id = getClientStorageItem("activeCustomerId");
-    setCustomerId(id);
+    if (!restaurantId) return;
 
     const rawSelection = getClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
-    if (rawSelection) {
-      try {
-        const parsedSelection = JSON.parse(rawSelection);
-        const normalizedCustomer = normalizePosCustomer(
-          parsedSelection?.customer,
-        );
+    const persistedCustomer = parsePosCustomerSelection({
+      raw: rawSelection,
+      restaurantId,
+    });
 
-        if (normalizedCustomer) {
-          setSelectedCustomer(normalizedCustomer);
-          setCustomerId(normalizedCustomer.id);
-        }
-      } catch {
-        removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
-      }
+    if (persistedCustomer) {
+      setSelectedCustomer(persistedCustomer);
+      setCustomerId(persistedCustomer.id);
+      setClientStorageItem("activeCustomerId", persistedCustomer.id);
+    } else {
+      setSelectedCustomer(null);
+      setCustomerId(null);
+      removeClientStorageItem("activeCustomerId");
+      if (rawSelection) removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
     }
 
     const rawLastOrder = getClientStorageItem(POS_LAST_ORDER_STORAGE_KEY);
@@ -196,7 +201,7 @@ export default function PosCart() {
     } catch {
       removeClientStorageItem(POS_LAST_ORDER_STORAGE_KEY);
     }
-  }, []);
+  }, [restaurantId]);
   const cartQuery = useGetCart(customerId);
   const branchQuery = useGetBranchForEdit(branchId);
   const paymentManagementQuery = useRestaurantPaymentManagement(restaurantId);
@@ -309,6 +314,28 @@ export default function PosCart() {
   }, [customerDetailQuery.data]);
 
   const isGuestCustomer = selectedCustomer?.isGuest === true;
+  const handleCustomerSelect = (customer: PosCustomer) => {
+    if (!restaurantId) return;
+
+    setSelectedCustomer(customer);
+    setCustomerId(customer.id);
+    setAddresses([]);
+    setSelectedAddress(null);
+    setClientStorageItem("activeCustomerId", customer.id);
+    setClientStorageItem(
+      POS_LAST_SELECTION_STORAGE_KEY,
+      serializePosCustomerSelection({ customer, restaurantId, branchId }),
+    );
+  };
+  const handleCustomerClear = () => {
+    setSelectedCustomer(null);
+    setCustomerId(null);
+    setCartItems([]);
+    setAddresses([]);
+    setSelectedAddress(null);
+    removeClientStorageItem("activeCustomerId");
+    removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
+  };
   const updateGuestContact = (field: "email" | "phone", value: string) => {
     setSelectedCustomer((current) =>
       current ? { ...current, [field]: value } : current,
@@ -859,6 +886,15 @@ export default function PosCart() {
         <Separator className="my-3" />
 
         <CollapsibleContent className="space-y-4">
+          {restaurantId ? (
+            <PosCustomerSelector
+              restaurantId={restaurantId}
+              selectedCustomer={selectedCustomer}
+              onSelect={handleCustomerSelect}
+              onClear={handleCustomerClear}
+            />
+          ) : null}
+
           <div className="rounded-md border bg-gray-50 p-3 text-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -1379,7 +1415,7 @@ export default function PosCart() {
             })
               .then((result) => {
                 if (result === "printed") toast.success(t("orderReprinted"));
-                else toast.error(t("toast.orderPrintUnavailable"));
+                else toast.error(t(`toast.${getManualPrintErrorKey(result)}`));
               })
               .catch(() => toast.error(t("toast.orderPrintFailed")))
           }

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "@/lib/axios";
 import {
+  checkoutCart,
   createCustomerAddress,
   deleteCartDeal,
   updateCartDealQuantity,
@@ -49,6 +50,22 @@ describe("pos cart service", () => {
 
     expect(mockedApi.delete).toHaveBeenCalledWith(
       "/cart/deals/deal%3Adeal-1%3A0%3A1?customerId=customer-1",
+    );
+  });
+
+  it("sends the selected customer id with POS checkout", async () => {
+    mockedApi.post.mockResolvedValueOnce({
+      data: { data: { id: "order-1" } },
+    });
+
+    await checkoutCart({
+      customerId: "customer-1",
+      payload: { paymentMethod: "COD" },
+    });
+
+    expect(mockedApi.post).toHaveBeenCalledWith(
+      "/cart/checkout?customerId=customer-1",
+      { paymentMethod: "COD" },
     );
   });
 

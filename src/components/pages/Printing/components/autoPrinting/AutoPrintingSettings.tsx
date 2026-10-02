@@ -19,6 +19,7 @@ import {
   printLocalTestTicket,
 } from "@/lib/local-printer";
 import { validatePrinterConnection } from "@/lib/printing-settings-validation";
+import { buildPrintingSettingsPayload } from "@/lib/printer-configuration";
 import type {
   PrintingConnectionType,
   PrintingMode,
@@ -330,12 +331,21 @@ export default function AutoPrintingSettings({
     form.connectionType === "LAN" ||
     form.connectionType === "BLUETOOTH";
 
-  const handleSave = async () => {
+  const persistCurrentSettings = async () => {
     if (!restaurantId) {
-      toast.error(t("toast.restaurantMissing"));
-      return;
+      throw new Error(t("toast.restaurantMissing"));
     }
 
+    await updateSettings(
+      buildPrintingSettingsPayload({
+        restaurantId,
+        branchId: effectiveBranchId || undefined,
+        settings: form,
+      }),
+    );
+  };
+
+  const handleSave = async () => {
     const validationError = validatePrinterConnection(form);
     if (validationError) {
       toast.error(t(`toast.${validationError}`));
@@ -343,24 +353,7 @@ export default function AutoPrintingSettings({
     }
 
     try {
-      await updateSettings({
-        restaurantId,
-        branchId: effectiveBranchId || undefined,
-
-        enabled: form.enabled,
-        autoPrintOnNewOrder: form.autoPrintOnNewOrder,
-        autoPrintOnStatusChange: form.autoPrintOnStatusChange,
-        printCustomerReceipt: form.printCustomerReceipt,
-        printKitchenTicket: form.printKitchenTicket,
-        connectionType: form.connectionType || null,
-        paperSize: form.paperSize,
-        printMode: form.printMode,
-        printerName: form.printerName.trim() || null,
-        printerTarget: form.printerTarget.trim() || null,
-        deviceId: form.deviceId.trim() || null,
-        ipAddress: form.ipAddress.trim() || null,
-        queueName: form.queueName.trim() || null,
-      });
+      await persistCurrentSettings();
 
       if (isLocalConnection) {
         await reportLocalEvent(
@@ -378,8 +371,9 @@ export default function AutoPrintingSettings({
   };
 
   const handleTestPrint = async () => {
-    if (!form.printerName.trim()) {
-      toast.error(t("toast.printerRequired"));
+    const validationError = validatePrinterConnection(form);
+    if (validationError) {
+      toast.error(t(`toast.${validationError}`));
       return;
     }
 
@@ -396,7 +390,14 @@ export default function AutoPrintingSettings({
         "Test print completed successfully.",
         form.printerName,
       );
-      toast.success(t("toast.testPrintSent"));
+      try {
+        await persistCurrentSettings();
+        toast.success(t("toast.testPrintSaved"));
+      } catch (saveError: unknown) {
+        toast.error(
+          getApiErrorMessage(saveError, t("toast.testPrintSaveFailed")),
+        );
+      }
     } catch (error: unknown) {
       const message = getApiErrorMessage(error, t("toast.testPrintFailed"));
       await reportLocalEvent("test_print", "failed", message, form.printerName);

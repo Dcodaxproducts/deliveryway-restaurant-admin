@@ -112,7 +112,7 @@ describe("order tracking connection recovery", () => {
     expect(onAuthenticationFailure).not.toHaveBeenCalled();
   });
 
-  it("polls pending orders whenever the page is visible", () => {
+  it("polls pending orders only while visible and disconnected", () => {
     expect(
       shouldPollPendingOrderNotifications({
         socketConnected: false,
@@ -124,7 +124,7 @@ describe("order tracking connection recovery", () => {
         socketConnected: true,
         visibilityState: "visible",
       }),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       shouldPollPendingOrderNotifications({
         socketConnected: false,

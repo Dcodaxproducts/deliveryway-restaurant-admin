@@ -22,6 +22,10 @@ import {
   flattenPosAddToCartModifierSelections,
 } from "@/components/pages/Pos/legacy/cart/add-to-cart-payload";
 import {
+  parsePosCustomerSelection,
+  serializePosCustomerSelection,
+} from "@/components/pages/Pos/components/pos/pos-customer-selection";
+import {
   buildPosCustomerSearchParams,
   filterRegisteredPosCustomers,
   getPosCustomerDisplayId,
@@ -1090,27 +1094,24 @@ export default function AddToCartModal({
       );
       if (!rawSelection) return;
 
-      const parsedSelection = JSON.parse(rawSelection);
-      if (parsedSelection?.branch?.id) {
+      const parsedSelection = JSON.parse(rawSelection) as {
+        branch?: { id?: string };
+      };
+      if (parsedSelection.branch?.id) {
         setSelectedBranch(parsedSelection.branch);
       }
-      if (
-        parsedSelection?.customer?.id &&
-        parsedSelection.customer.isGuest !== true
-      ) {
-        setSelectedCustomer(parsedSelection.customer);
-        setUseWalkIn(false);
-      } else if (
-        parsedSelection?.customer?.id &&
-        parsedSelection.customer.isGuest === true
-      ) {
-        setSelectedCustomer(parsedSelection.customer);
-        setUseWalkIn(true);
+      const persistedCustomer = parsePosCustomerSelection({
+        raw: rawSelection,
+        restaurantId: String(restaurantId ?? ""),
+      });
+      if (persistedCustomer) {
+        setSelectedCustomer(persistedCustomer);
+        setUseWalkIn(persistedCustomer.isGuest === true);
       }
     } catch {
       window.localStorage.removeItem(POS_LAST_SELECTION_STORAGE_KEY);
     }
-  }, [open, item?.id, options]);
+  }, [open, item?.id, options, restaurantId]);
 
   useEffect(() => {
     if (!open || branches.length === 0) return;
@@ -1456,9 +1457,10 @@ export default function AddToCartModal({
       localStorage.setItem("activeCustomerId", activeCustomer.id);
       localStorage.setItem(
         POS_LAST_SELECTION_STORAGE_KEY,
-        JSON.stringify({
-          branch: selectedBranch,
+        serializePosCustomerSelection({
           customer: activeCustomer,
+          restaurantId: String(restaurantId),
+          branchId: String(selectedBranch.id),
         }),
       );
 

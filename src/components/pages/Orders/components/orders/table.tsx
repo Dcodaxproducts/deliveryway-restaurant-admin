@@ -58,7 +58,10 @@ import {
   useUpdateOrderStatus,
 } from "@/hooks/useOrders";
 import { formatDateTime24 } from "@/lib/date-time-format";
-import { reprintOrder } from "@/lib/accepted-order-printing";
+import {
+  getManualPrintErrorKey,
+  reprintOrder,
+} from "@/lib/accepted-order-printing";
 import { resolveAppliedOrderCoupon } from "@/lib/order-discount";
 import { getOrderById } from "@/services/orders/orders.api";
 import {
@@ -302,7 +305,7 @@ export function OrdersTable({
         branchId: order.branchId ?? undefined,
       });
       if (result === "printed") toast.success(t("orderReprinted"));
-      else toast.error(t("orderPrintUnavailable"));
+      else toast.error(t(getManualPrintErrorKey(result)));
     } catch {
       toast.error(t("orderPrintFailed"));
     } finally {

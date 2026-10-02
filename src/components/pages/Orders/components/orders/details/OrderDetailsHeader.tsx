@@ -9,7 +9,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useSendOrderOutForDelivery, useSendOrderWithExternalDriver, useUpdateOrderStatus } from "@/hooks/useOrders";
-import { reprintOrder } from "@/lib/accepted-order-printing";
+import {
+  getManualPrintErrorKey,
+  reprintOrder,
+} from "@/lib/accepted-order-printing";
 import {
   canDirectlyUpdateOrderStatus,
   canSendDeliveryOrderOutDirectly,
@@ -164,7 +167,7 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
         branchId: order.branchId ?? undefined,
       });
       if (result === "printed") toast.success(t("orderReprinted"));
-      else toast.error(t("orderPrintUnavailable"));
+      else toast.error(t(getManualPrintErrorKey(result)));
     } catch {
       toast.error(t("orderPrintFailed"));
     } finally {

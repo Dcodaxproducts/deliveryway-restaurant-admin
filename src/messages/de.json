@@ -412,6 +412,10 @@
     "reprintingOrder": "Bestellung wird erneut gedruckt...",
     "orderReprinted": "Bestellung erneut gedruckt",
     "orderPrintUnavailable": "Konfigurieren und aktivieren Sie einen lokalen Drucker, bevor Sie erneut drucken.",
+    "orderPrinterDisabled": "Der gespeicherte lokale Drucker ist deaktiviert. Aktivieren Sie den Druck in den Druckeinstellungen und speichern Sie erneut.",
+    "orderPrinterNotConfigured": "Für diese Filiale ist kein lokaler Drucker gespeichert. Wählen und aktivieren Sie einen Drucker und speichern Sie oder führen Sie einen Testdruck aus.",
+    "orderPrinterUnsupported": "Diese Konfiguration verwendet Cloud-Druck. Der erneute Druck benötigt einen lokalen USB-, Netzwerk- oder Bluetooth-Drucker über QZ Tray.",
+    "orderPrinterScopeStale": "Der gespeicherte Drucker gehört zu einem anderen Restaurant oder einer anderen Filiale. Speichern Sie ihn für die aktuelle Filiale erneut.",
     "orderPrintFailed": "Bestellung konnte nicht gedruckt werden. Prüfen Sie QZ Tray und den ausgewählten Drucker.",
     "deliveryDescription": "Lieferbestellungen für Ihre zugewiesene Filiale anzeigen",
     "pickupDescription": "Abholbestellungen für Ihre zugewiesene Filiale anzeigen",
@@ -3009,6 +3013,12 @@
     "dineIn": "Vor Ort",
     "guestCustomer": "Gast",
     "customerNotSelected": "Kein Kunde ausgewaehlt",
+    "customerSelectorLabel": "Kunde",
+    "customerSearchPlaceholder": "Restaurantkunden suchen",
+    "customerSearchLoading": "Kunden werden geladen…",
+    "customerSearchEmpty": "Keine berechtigten Kunden gefunden",
+    "customerSearchError": "Kunden konnten nicht geladen werden.",
+    "customerClear": "Kundenauswahl löschen",
     "customerContactMissing": "Telefon/E-Mail fehlt",
     "guestEmail": "Gast-E-Mail",
     "guestEmailPlaceholder": "Gast-E-Mail eingeben",
@@ -3168,6 +3178,10 @@
       "orderPlaced": "Bestellung aufgegeben",
       "orderPrintFailed": "Die Bestellung wurde aufgegeben, aber der Druck ist fehlgeschlagen.",
       "orderPrintUnavailable": "Konfigurieren und aktivieren Sie einen lokalen Drucker, bevor Sie erneut drucken.",
+      "orderPrinterDisabled": "Der gespeicherte lokale Drucker ist deaktiviert. Aktivieren Sie ihn in den Druckeinstellungen.",
+      "orderPrinterNotConfigured": "Für diese Filiale ist kein lokaler Drucker gespeichert. Wählen und aktivieren Sie einen Drucker und speichern Sie oder führen Sie einen Testdruck aus.",
+      "orderPrinterUnsupported": "Der erneute Druck benötigt einen lokalen Drucker über QZ Tray; Cloud-Warteschlangen werden hier nicht unterstützt.",
+      "orderPrinterScopeStale": "Der gespeicherte Drucker gehört zu einem anderen Restaurant oder einer anderen Filiale. Speichern Sie ihn für die aktuelle Filiale erneut.",
       "orderFailed": "Bestellung fehlgeschlagen"
     }
   },
@@ -3539,6 +3553,8 @@
       "discoveryFailed": "Drucker konnten nicht gefunden werden. Installieren oder starten Sie QZ Tray und versuchen Sie es erneut.",
       "printersFound": "{count} installierte(r) Drucker gefunden.",
       "testPrintSent": "Testdruck wurde erfolgreich gesendet.",
+      "testPrintSaved": "Testdruck erfolgreich; diese Druckereinstellungen wurden gespeichert.",
+      "testPrintSaveFailed": "Der Testdruck war erfolgreich, aber die Einstellungen konnten nicht gespeichert werden. Speichern Sie sie vor dem erneuten Drucken von Bestellungen.",
       "testPrintFailed": "Testdruck fehlgeschlagen."
     }
   },

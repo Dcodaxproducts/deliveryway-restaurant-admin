@@ -18,6 +18,10 @@ import {
 } from "@/hooks/realtime-order-state";
 import { claimPendingOrderNotifications } from "@/services/notifications";
 import {
+  createPendingOrderRecovery,
+  shouldRunPendingOrderRecovery,
+} from "@/hooks/pending-order-recovery";
+import {
   printAcceptedOrderIfConfigured,
   printNewOrderIfConfigured,
 } from "@/lib/accepted-order-printing";
@@ -138,11 +142,13 @@ export const isOrderTrackingAuthenticationError = (
 };
 
 export const shouldPollPendingOrderNotifications = ({
+  socketConnected = false,
   visibilityState,
 }: {
   socketConnected?: boolean;
   visibilityState: DocumentVisibilityState;
-}) => visibilityState === "visible";
+}) =>
+  shouldRunPendingOrderRecovery({ socketConnected, visibilityState });
 
 export const isOrderNotificationScopeReady = ({
   token,
@@ -531,44 +537,32 @@ export function useRealtimeOrderNotifications() {
       }
     };
 
-    let pendingOrderRecoveryPromise: Promise<void> | null = null;
-    const recoverPendingOrders = () => {
-      if (!active) return Promise.resolve();
-      if (pendingOrderRecoveryPromise) return pendingOrderRecoveryPromise;
+    const recoverPendingOrders = createPendingOrderRecovery({
+      request: () =>
+        claimPendingOrderNotifications({
+          channel: "IN_APP",
+          ...(restaurantId ? { restaurantId } : {}),
+          ...((isBranchAdmin || isStaff) && branchId ? { branchId } : {}),
+        }),
+      isActive: () => active,
+      onSuccess: (response) => {
+        response.data.forEach((notification) => {
+          const order = notification.order;
+          if (!order?.id) return;
 
-      pendingOrderRecoveryPromise = claimPendingOrderNotifications({
-        channel: "IN_APP",
-        ...(restaurantId ? { restaurantId } : {}),
-        ...((isBranchAdmin || isStaff) && branchId ? { branchId } : {}),
-      })
-        .then((response) => {
-          if (!active) return;
-
-          response.data.forEach((notification) => {
-            const order = notification.order;
-            if (!order?.id) return;
-
-            handleOrderCreated(
-              {
-                id: order.id,
-                tenantId: order.tenantId ?? tenantId ?? "",
-                restaurantId: order.restaurantId ?? restaurantId ?? "",
-                branchId: order.branchId ?? branchId ?? "",
-                source: "STOREFRONT",
-              },
-              { autoOpen: false },
-            );
-          });
-        })
-        .catch(() => {
-          // The next bounded recovery attempt can retry transient HTTP failures.
-        })
-        .finally(() => {
-          pendingOrderRecoveryPromise = null;
+          handleOrderCreated(
+            {
+              id: order.id,
+              tenantId: order.tenantId ?? tenantId ?? "",
+              restaurantId: order.restaurantId ?? restaurantId ?? "",
+              branchId: order.branchId ?? branchId ?? "",
+              source: "STOREFRONT",
+            },
+            { autoOpen: false },
+          );
         });
-
-      return pendingOrderRecoveryPromise;
-    };
+      },
+    });
 
     const recoverSocketAuthentication = createOrderTrackingSocketRecovery({
       refreshAccessToken: refreshStoredAccessToken,
@@ -620,6 +614,7 @@ export function useRealtimeOrderNotifications() {
     const recoverWhileVisible = () => {
       if (
         shouldPollPendingOrderNotifications({
+          socketConnected: socket.connected,
           visibilityState: document.visibilityState,
         })
       ) {

@@ -412,6 +412,10 @@
     "reprintingOrder": "Reprinting order...",
     "orderReprinted": "Order reprinted",
     "orderPrintUnavailable": "Configure and enable a local printer before reprinting.",
+    "orderPrinterDisabled": "The saved local printer is disabled. Enable printing in Printing Settings and save again.",
+    "orderPrinterNotConfigured": "No saved local printer is available for this branch. Select a printer, enable it, then save or run Test Print.",
+    "orderPrinterUnsupported": "This configuration uses cloud printing. Reprint requires a local USB, network, or Bluetooth printer through QZ Tray.",
+    "orderPrinterScopeStale": "The saved printer belongs to another restaurant or branch. Open Printing Settings for the current branch and save the printer again.",
     "orderPrintFailed": "Order printing failed. Check QZ Tray and the selected printer.",
     "deliveryDescription": "View delivery orders for your assigned branch",
     "pickupDescription": "View pick up orders for your assigned branch",
@@ -3009,6 +3013,12 @@
     "dineIn": "Dine in",
     "guestCustomer": "Guest",
     "customerNotSelected": "No customer selected",
+    "customerSelectorLabel": "Customer",
+    "customerSearchPlaceholder": "Search restaurant customers",
+    "customerSearchLoading": "Loading customers…",
+    "customerSearchEmpty": "No eligible customers found",
+    "customerSearchError": "Customers could not be loaded.",
+    "customerClear": "Clear customer",
     "customerContactMissing": "Phone/email missing",
     "guestEmail": "Guest email",
     "guestEmailPlaceholder": "Enter guest email",
@@ -3168,6 +3178,10 @@
       "orderPlaced": "Order placed",
       "orderPrintFailed": "The order was placed, but printing failed.",
       "orderPrintUnavailable": "Configure and enable a local printer before reprinting.",
+      "orderPrinterDisabled": "The saved local printer is disabled. Enable printing in Printing Settings and save again.",
+      "orderPrinterNotConfigured": "No saved local printer is available for this branch. Select a printer, enable it, then save or run Test Print.",
+      "orderPrinterUnsupported": "Reprint requires a local printer through QZ Tray; cloud queues are not supported here.",
+      "orderPrinterScopeStale": "The saved printer belongs to another restaurant or branch. Save it again for the current branch.",
       "orderFailed": "Order failed"
     }
   },
@@ -3539,6 +3553,8 @@
       "discoveryFailed": "Could not discover printers. Install or start QZ Tray and try again.",
       "printersFound": "Found {count} installed printer(s).",
       "testPrintSent": "Test print sent successfully.",
+      "testPrintSaved": "Test print succeeded and these printer settings were saved.",
+      "testPrintSaveFailed": "The test print succeeded, but the settings could not be saved. Save them before reprinting orders.",
       "testPrintFailed": "Test print failed."
     }
   },
