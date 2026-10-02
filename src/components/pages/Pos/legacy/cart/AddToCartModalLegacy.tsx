@@ -18,6 +18,12 @@ import { useGetBranches } from "@/hooks/useBranches";
 import AsyncSelect from "@/components/ui/AsyncSelect";
 import { useTranslations } from "next-intl";
 import {
+  POS_CUSTOMER_MODE_STORAGE_KEY,
+  POS_WALK_IN_DRAFT_STORAGE_KEY,
+  parsePosCustomerMode,
+  parsePosWalkInDraft,
+} from "@/components/pages/Pos/components/pos/pos-customer-mode";
+import {
   buildPosAddToCartModifierSelections,
   flattenPosAddToCartModifierSelections,
 } from "@/components/pages/Pos/legacy/cart/add-to-cart-payload";
@@ -976,7 +982,7 @@ export default function AddToCartModal({
   const [quantity, setQuantity] = useState(1);
   const [selectedBranch, setSelectedBranch] = useState<any>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
-  const [useWalkIn, setUseWalkIn] = useState(false);
+  const [useWalkIn, setUseWalkIn] = useState(true);
   const [selectedOptionId, setSelectedOptionId] = useState<string>("base");
   const [selectedModifiers, setSelectedModifiers] =
     useState<SelectedModifiersMap>({});
@@ -1086,7 +1092,12 @@ export default function AddToCartModal({
     setSelectedOptionId(options[0]?.id || "base");
     setSelectedModifiers({});
     setSelectedCustomer(null);
-    setUseWalkIn(false);
+    setUseWalkIn(
+      parsePosCustomerMode(
+        window.localStorage.getItem(POS_CUSTOMER_MODE_STORAGE_KEY),
+        restaurantId,
+      ) === "walk-in",
+    );
 
     try {
       const rawSelection = window.localStorage.getItem(
@@ -1383,9 +1394,14 @@ export default function AddToCartModal({
   };
 
   const createWalkInCustomer = async () => {
+    const draft = parsePosWalkInDraft(
+      window.localStorage.getItem(POS_WALK_IN_DRAFT_STORAGE_KEY),
+      restaurantId,
+    );
     const response: any = await post("/v1/pos/orders/walk-in-customers", {
       branchId: selectedBranch?.id,
-      guestName: "Walk-in Customer",
+      guestName: draft.name.trim() || "Walk-in Customer",
+      ...(draft.phone.trim() ? { guestPhone: draft.phone.trim() } : {}),
     });
     const customer = response?.data;
 
@@ -1393,10 +1409,15 @@ export default function AddToCartModal({
       return null;
     }
 
+    const nameParts = draft.name.trim().split(/\s+/).filter(Boolean);
     return {
       ...customer,
-      email: "",
-      fullName: t("walkInCustomer"),
+      email: draft.email.trim(),
+      phone: draft.phone.trim() || customer.profile?.phone || "",
+      firstName: nameParts[0] || customer.profile?.firstName,
+      lastName:
+        nameParts.slice(1).join(" ") || customer.profile?.lastName,
+      fullName: draft.name.trim() || t("walkInCustomer"),
     };
   };
 

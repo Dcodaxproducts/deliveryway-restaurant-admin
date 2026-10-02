@@ -10,21 +10,29 @@ import {
   getPosCustomerName,
   type PosCustomer,
 } from "@/components/pages/Pos/components/pos/pos-checkout-payload";
+import type { PosCustomerMode } from "@/components/pages/Pos/components/pos/pos-customer-mode";
 import { getEligiblePosCustomers } from "@/components/pages/Pos/components/pos/pos-customer-selection";
 
 type PosCustomerSelectorProps = {
   restaurantId: string;
+  mode: PosCustomerMode;
   selectedCustomer: PosCustomer | null;
+  onModeChange: (mode: PosCustomerMode) => void;
   onSelect: (customer: PosCustomer) => void;
   onClear: () => void;
 };
 
-export function PosCustomerSelector({
+type ExistingCustomerSearchProps = Omit<
+  PosCustomerSelectorProps,
+  "mode" | "onModeChange"
+>;
+
+function ExistingCustomerSearch({
   restaurantId,
   selectedCustomer,
   onSelect,
   onClear,
-}: PosCustomerSelectorProps) {
+}: ExistingCustomerSearchProps) {
   const t = useTranslations("pos");
   const commonT = useTranslations("common");
   const [search, setSearch] = useState("");
@@ -98,7 +106,9 @@ export function PosCustomerSelector({
             </div>
           ) : customers.length === 0 ? (
             <p className="p-3 text-center text-sm text-gray-500">
-              {t("customerSearchEmpty")}
+              {debouncedSearch
+                ? t("customerSearchEmpty")
+                : t("customerSearchStart")}
             </p>
           ) : (
             customers.map((customer) => (
@@ -140,5 +150,62 @@ export function PosCustomerSelector({
         </Button>
       ) : null}
     </div>
+  );
+}
+
+export function PosCustomerSelector({
+  restaurantId,
+  mode,
+  selectedCustomer,
+  onModeChange,
+  onSelect,
+  onClear,
+}: PosCustomerSelectorProps) {
+  const t = useTranslations("pos");
+
+  return (
+    <fieldset className="space-y-3">
+      <legend className="text-xs font-medium text-gray-600">
+        {t("customerModeLabel")}
+      </legend>
+      <div className="grid grid-cols-2 rounded-lg border bg-gray-50 p-1" role="radiogroup">
+        {(["walk-in", "existing"] as const).map((option) => (
+          <label
+            key={option}
+            className={
+              "flex min-h-9 cursor-pointer items-center justify-center rounded-md px-2 text-center text-xs font-medium transition " +
+              (mode === option
+                ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-200"
+                : "text-gray-600 hover:text-gray-900")
+            }
+          >
+            <input
+              type="radio"
+              name="pos-customer-mode"
+              value={option}
+              checked={mode === option}
+              onChange={() => onModeChange(option)}
+              className="sr-only"
+            />
+            {option === "walk-in"
+              ? t("customerModeWalkIn")
+              : t("customerModeExisting")}
+          </label>
+        ))}
+      </div>
+
+      {mode === "existing" ? (
+        <ExistingCustomerSearch
+          restaurantId={restaurantId}
+          selectedCustomer={selectedCustomer}
+          onSelect={onSelect}
+          onClear={onClear}
+        />
+      ) : (
+        <p className="text-xs leading-5 text-gray-500">
+          {t("walkInModeHint")}
+        </p>
+      )}
+    </fieldset>
   );
 }
