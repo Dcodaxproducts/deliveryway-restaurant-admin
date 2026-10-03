@@ -22,16 +22,16 @@ describe("authApi POS printer authentication", () => {
 
   it("uses only the dedicated login endpoint and preserves accountType", async () => {
     postMock.mockResolvedValueOnce({ data: { accessToken: "pos-token", user: { id: "p1", email: "p@example.com", role: "STAFF", actorType: "STAFF", accountType: "POS_PRINTER", branchId: "b1" } } });
-    const result = await authApi.posPrinterLogin({ email: "p@example.com", password: "Password@123" });
+    const result = await authApi.posPrinterLogin({ usernameOrEmail: "Front.Counter", password: "Password@123" });
     expect(postMock).toHaveBeenCalledTimes(1);
-    expect(postMock).toHaveBeenCalledWith("/auth/pos-printer/login", { email: "p@example.com", password: "Password@123" });
+    expect(postMock).toHaveBeenCalledWith("/auth/pos-printer/login", { usernameOrEmail: "Front.Counter", password: "Password@123" });
     expect(result.user?.accountType).toBe("POS_PRINTER");
   });
 
   it("passes login failures through for the UI to render a generic error", async () => {
     const error = makeHttpError(401, "backend detail");
     postMock.mockRejectedValueOnce(error);
-    await expect(authApi.posPrinterLogin({ email: "p@example.com", password: "bad" })).rejects.toBe(error);
+    await expect(authApi.posPrinterLogin({ usernameOrEmail: "Front.Counter", password: "bad" })).rejects.toBe(error);
     expect(postMock).toHaveBeenCalledTimes(1);
   });
 });

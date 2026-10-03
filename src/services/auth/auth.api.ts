@@ -29,7 +29,7 @@ const unwrapEnvelope = (response: unknown) => {
 };
 
 export const authApi = {
-  posPrinterLogin: async (payload: { email: string; password: string }) => {
+  posPrinterLogin: async (payload: { usernameOrEmail: string; password: string }) => {
     const response = await httpClient.post("/auth/pos-printer/login", payload);
     return normalizeAuthPayload(response);
   },

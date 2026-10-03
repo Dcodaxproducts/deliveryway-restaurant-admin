@@ -12,26 +12,32 @@ describe("POS printer account API", () => {
 
   it("normalizes scoped list responses without password fields", () => {
     const accounts = normalizePosPrinterAccounts({ data: [{
-      id: "p1", email: "p@example.com", firstName: "Kitchen", lastName: "Printer",
+      id: "p1", email: "p@example.com", username: "kitchen.printer", firstName: "Kitchen", lastName: "Printer",
       branchId: "b1", branch: { id: "b1", name: "Main" }, isActive: true,
       plainPassword: "must-not-be-used",
     }] });
-    expect(accounts).toEqual([expect.objectContaining({ id: "p1", branch: { id: "b1", name: "Main" }, isActive: true })]);
+    expect(accounts).toEqual([expect.objectContaining({ id: "p1", username: "kitchen.printer", branch: { id: "b1", name: "Main" }, isActive: true })]);
     expect(accounts[0]).not.toHaveProperty("password");
     expect(accounts[0]).not.toHaveProperty("plainPassword");
   });
 
   it("creates business-admin credentials with explicit branch scope", async () => {
     postMock.mockResolvedValueOnce({ data: {} });
-    await posPrinterApi.create({ email: "p@example.com", password: "Password@123", firstName: "POS", lastName: "Printer", branchId: "b1" });
-    expect(postMock).toHaveBeenCalledWith("/pos-printer/accounts", expect.objectContaining({ branchId: "b1" }));
+    await posPrinterApi.create({ username: "front.counter", email: "p@example.com", password: "Password@123", firstName: "POS", lastName: "Printer", branchId: "b1" });
+    expect(postMock).toHaveBeenCalledWith("/pos-printer/accounts", expect.objectContaining({ username: "front.counter", branchId: "b1" }));
   });
 
   it("allows branch-admin payloads to omit branchId for backend inference", async () => {
     postMock.mockResolvedValueOnce({ data: {} });
-    const payload = { email: "p@example.com", password: "Password@123", firstName: "POS", lastName: "Printer" };
+    const payload = { username: "front.counter", password: "Password@123", firstName: "POS", lastName: "Printer" };
     await posPrinterApi.create(payload);
     expect(postMock).toHaveBeenCalledWith("/pos-printer/accounts", payload);
+  });
+
+  it("lists branch choices through the scoped POS printer endpoint", async () => {
+    getMock.mockResolvedValueOnce({ data: [{ id: "b1", name: "Main" }] });
+    await expect(posPrinterApi.listBranches()).resolves.toEqual([{ id: "b1", name: "Main" }]);
+    expect(getMock).toHaveBeenCalledWith("/pos-printer/accounts/branches");
   });
 
   it("uses dedicated status and reset endpoints", async () => {

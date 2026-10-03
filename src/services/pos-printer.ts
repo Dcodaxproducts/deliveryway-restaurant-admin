@@ -3,7 +3,8 @@ import { getRecordValue, getStringValue, isRecord } from "@/lib/auth";
 
 export type PosPrinterAccount = {
   id: string;
-  email: string;
+  email: string | null;
+  username: string | null;
   firstName: string;
   lastName: string;
   branchId: string;
@@ -13,7 +14,8 @@ export type PosPrinterAccount = {
 };
 
 export type CreatePosPrinterAccountPayload = {
-  email: string;
+  username: string;
+  email?: string;
   password: string;
   firstName: string;
   lastName: string;
@@ -23,13 +25,15 @@ export type CreatePosPrinterAccountPayload = {
 const normalizeAccount = (value: unknown): PosPrinterAccount | null => {
   if (!isRecord(value)) return null;
   const id = getStringValue(value, "id");
-  const email = getStringValue(value, "email");
-  if (!id || !email) return null;
+  const email = getStringValue(value, "email") ?? null;
+  const username = getStringValue(value, "username") ?? null;
+  if (!id || (!email && !username)) return null;
   const branchRecord = getRecordValue(value, "branch");
   const branchId = getStringValue(value, "branchId") ?? getStringValue(branchRecord, "id") ?? "";
   return {
     id,
     email,
+    username,
     firstName: getStringValue(value, "firstName") ?? "",
     lastName: getStringValue(value, "lastName") ?? "",
     branchId,
@@ -51,6 +55,16 @@ export const normalizePosPrinterAccounts = (response: unknown) => {
 
 export const posPrinterApi = {
   list: async () => normalizePosPrinterAccounts(await httpClient.get("/pos-printer/accounts")),
+  listBranches: async () => {
+    const response = await httpClient.get("/pos-printer/accounts/branches");
+    const root = isRecord(response) ? response : {};
+    const rows = Array.isArray(root.data) ? root.data : [];
+    return rows.flatMap((row) => {
+      if (!isRecord(row)) return [];
+      const id = getStringValue(row, "id");
+      return id ? [{ id, name: getStringValue(row, "name") ?? id }] : [];
+    });
+  },
   create: (payload: CreatePosPrinterAccountPayload) => httpClient.post("/pos-printer/accounts", payload),
   updateStatus: (id: string, isActive: boolean) => httpClient.patch(`/pos-printer/accounts/${id}/status`, { isActive }),
   resetPassword: (id: string, newPassword: string) => httpClient.patch(`/pos-printer/accounts/${id}/password`, { newPassword }),

@@ -17,7 +17,7 @@ import { isPosPrinterAccount } from "@/lib/auth";
 import { authApi } from "@/services/auth/auth.api";
 
 const schema = z.object({
-  email: z.string().email(),
+  usernameOrEmail: z.string().trim().min(1),
   password: z.string().min(1),
 });
 type Values = z.infer<typeof schema>;
@@ -28,7 +28,7 @@ export default function PosPrinterLoginPage() {
   const { login } = useAuthContext();
   const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { usernameOrEmail: "", password: "" },
   });
 
   const submit = handleSubmit(async (values) => {
@@ -49,7 +49,7 @@ export default function PosPrinterLoginPage() {
         <h1 className="mt-5 text-center text-2xl font-semibold text-gray-950">{t("loginTitle")}</h1>
         <p className="mx-auto mt-2 max-w-sm text-center text-sm leading-6 text-gray-500">{t("loginDescription")}</p>
         <form className="mt-8 space-y-5" noValidate onSubmit={submit}>
-          <Controller control={control} name="email" render={({ field }) => <FormInput {...field} label={t("email")} type="email" autoComplete="username" placeholder={t("emailPlaceholder")} error={Boolean(errors.email)} errorText={errors.email ? t("emailError") : undefined} />} />
+          <Controller control={control} name="usernameOrEmail" render={({ field }) => <FormInput {...field} label={t("usernameOrEmail")} type="text" autoComplete="username" placeholder={t("usernameOrEmailPlaceholder")} error={Boolean(errors.usernameOrEmail)} errorText={errors.usernameOrEmail ? t("usernameOrEmailError") : undefined} />} />
           <Controller control={control} name="password" render={({ field }) => <FormInput {...field} label={t("password")} type="password" autoComplete="current-password" showPasswordToggle placeholder={t("passwordPlaceholder")} error={Boolean(errors.password)} errorText={errors.password ? t("passwordRequired") : undefined} />} />
           <Button className="h-12 w-full rounded-xl text-base" type="submit" disabled={isSubmitting}><LockKeyhole size={18} />{isSubmitting ? t("signingIn") : t("signIn")}</Button>
         </form>
