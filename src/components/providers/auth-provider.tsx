@@ -12,6 +12,7 @@ import {
 import { API_BASE_URL } from "@/lib/constants";
 import { getRequestLocale } from "@/config/i18n";
 import {
+  AUTH_STORAGE_EVENT,
   AuthStorage,
   AuthUser,
   clearStoredAuth,
@@ -20,6 +21,7 @@ import {
   normalizeUser,
   saveStoredAuth,
 } from "@/lib/auth";
+import { refreshStoredAccessToken } from "@/lib/axios";
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -36,36 +38,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const refreshToken = async () => {
-    const stored = getStoredAuth();
-    if (!stored?.refreshToken) return false;
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-        method: "POST",
-        headers: {
-          "Accept-Language": getRequestLocale(),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          refreshToken: stored.refreshToken,
-        }),
-      });
-
-      if (!res.ok) return false;
-
-      const data = await res.json();
-      const mergedData = normalizeAuthPayload(data, stored);
-
-      saveStoredAuth(mergedData);
-
-      return mergedData.accessToken || false;
-    } catch (err) {
-      void err;
-      return false;
-    }
-  };
 
   const fetchMe = async (accessToken: string, fallback?: AuthStorage | null) => {
     const res = await fetch(`${API_BASE_URL}/auth/me`, {
@@ -116,7 +88,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return;
           }
 
-          const newAccessToken = await refreshToken();
+          let newAccessToken: string | null;
+
+          try {
+            newAccessToken = await refreshStoredAccessToken();
+          } catch {
+            setUser(normalizeUser(stored.user, null));
+            setToken(stored.accessToken);
+            return;
+          }
 
           if (!newAccessToken) {
             clearStoredAuth();
@@ -145,6 +125,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     initAuth();
+  }, []);
+
+  useEffect(() => {
+    const syncStoredAuth = () => {
+      const stored = getStoredAuth();
+      setToken(stored?.accessToken || null);
+      setUser(stored?.user ? normalizeUser(stored.user, null) : null);
+    };
+
+    window.addEventListener(AUTH_STORAGE_EVENT, syncStoredAuth);
+    window.addEventListener("storage", syncStoredAuth);
+
+    return () => {
+      window.removeEventListener(AUTH_STORAGE_EVENT, syncStoredAuth);
+      window.removeEventListener("storage", syncStoredAuth);
+    };
   }, []);
 
   const login = (data: unknown) => {

@@ -42,7 +42,7 @@ import {
   updateMenuItemStatus,
 } from "@/components/pages/Menu/items/components/MenuItemsTable/menu-item-status";
 
-const PAGE_LIMIT = 10;
+const PAGE_LIMIT = 25;
 
 type MenuItemStatusFilter = "active" | "inactive";
 

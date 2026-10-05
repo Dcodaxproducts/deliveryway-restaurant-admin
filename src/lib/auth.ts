@@ -68,6 +68,7 @@ export type AuthStorage = {
 };
 
 const AUTH_STORAGE_KEY = "auth";
+export const AUTH_STORAGE_EVENT = "deliveryway:auth-storage";
 
 export const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -641,14 +642,20 @@ export const getStoredAuth = (): AuthStorage | null => {
   }
 };
 
+const notifyAuthStorageChanged = () => {
+  window.dispatchEvent(new Event(AUTH_STORAGE_EVENT));
+};
+
 export const saveStoredAuth = (data: AuthStorage) => {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
+  notifyAuthStorageChanged();
 };
 
 export const clearStoredAuth = () => {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(AUTH_STORAGE_KEY);
+  notifyAuthStorageChanged();
 };
 
 export const getDisplayName = (user?: AuthUser | null) => {
