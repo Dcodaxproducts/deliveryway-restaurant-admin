@@ -130,6 +130,22 @@ describe("order ticket", () => {
     expect(ticket.customerName).toBe("Bilal");
   });
 
+  it("prints supplied walk-in name and phone on the receipt", () => {
+    const ticket = normalizeOrderTicket({
+      id: "walk-in-order",
+      customer: { fullName: "Bilal Shah", phone: "+49 123456789" },
+      items: [],
+    });
+    const html = buildOrderTicketHtml(ticket, "80MM");
+
+    expect(ticket).toMatchObject({
+      customerName: "Bilal Shah",
+      customerPhone: "+49 123456789",
+    });
+    expect(html).toContain("Bilal Shah");
+    expect(html).toContain("+49 123456789");
+  });
+
   it("marks immediate tickets as ASAP", () => {
     const html = buildOrderTicketHtml(
       { id: "order-immediate", isScheduled: false, items: [] },

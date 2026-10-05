@@ -24,7 +24,10 @@ import {
   useSendOrderWithExternalDriver,
   useUpdateOrderStatus,
 } from "@/hooks/useOrders";
-import { reprintOrder } from "@/lib/accepted-order-printing";
+import {
+  getManualPrintErrorKey,
+  reprintOrder,
+} from "@/lib/accepted-order-printing";
 import {
   canDirectlyUpdateOrderStatus,
   canSendDeliveryOrderOutDirectly,
@@ -182,7 +185,7 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
         branchId: order.branchId ?? undefined,
       });
       if (result === "printed") toast.success(t("orderReprinted"));
-      else toast.error(t("orderPrintUnavailable"));
+      else toast.error(t(getManualPrintErrorKey(result)));
     } catch {
       toast.error(t("orderPrintFailed"));
     } finally {
@@ -212,7 +215,11 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
         className="mb-5 border-b border-[var(--ui-border)] pb-5"
         eyebrow={t("orderDetails")}
         title={order.orderNumber ? `#${order.orderNumber}` : `#${order.id}`}
-        description={order.createdAt ? formatDateTime24({ value: order.createdAt }) : undefined}
+        description={
+          order.createdAt
+            ? formatDateTime24({ value: order.createdAt })
+            : undefined
+        }
         backAction={
           <Button
             type="button"
@@ -226,14 +233,38 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
           </Button>
         }
         breadcrumbs={
-          <div className="flex flex-wrap items-center gap-2" aria-label={t("orderSummary")}>
-            <StatusBadge tone={order.status === "CANCELLED" || order.status === "REJECTED" ? "danger" : order.status === "DELIVERED" || order.status === "SERVED" ? "success" : "warning"}>
+          <div
+            className="flex flex-wrap items-center gap-2"
+            aria-label={t("orderSummary")}
+          >
+            <StatusBadge
+              tone={
+                order.status === "CANCELLED" || order.status === "REJECTED"
+                  ? "danger"
+                  : order.status === "DELIVERED" || order.status === "SERVED"
+                    ? "success"
+                    : "warning"
+              }
+            >
               {statusLabel}
             </StatusBadge>
-            <StatusBadge tone={order.paymentStatus === "PAID" ? "success" : order.paymentStatus === "FAILED" || order.paymentStatus === "CANCELLED" ? "danger" : "warning"}>
+            <StatusBadge
+              tone={
+                order.paymentStatus === "PAID"
+                  ? "success"
+                  : order.paymentStatus === "FAILED" ||
+                      order.paymentStatus === "CANCELLED"
+                    ? "danger"
+                    : "warning"
+              }
+            >
               {formatPaymentStatusLabel(order.paymentStatus)}
             </StatusBadge>
-            <StatusBadge tone="neutral">{order.orderType ? order.orderType.replaceAll("_", " ") : t("notAvailable")}</StatusBadge>
+            <StatusBadge tone="neutral">
+              {order.orderType
+                ? order.orderType.replaceAll("_", " ")
+                : t("notAvailable")}
+            </StatusBadge>
           </div>
         }
         actions={
@@ -250,26 +281,54 @@ const OrderDetailsHeader = ({ order }: OrderDetailsHeaderProps) => {
               </Button>
             ) : null}
             {canSendOutForDelivery ? (
-              <Button type="button" disabled={sendOutForDeliveryMutation.isPending} onClick={() => void handleSendOutForDeliveryAction()} className="w-full gap-2 sm:w-auto">
+              <Button
+                type="button"
+                disabled={sendOutForDeliveryMutation.isPending}
+                onClick={() => void handleSendOutForDeliveryAction()}
+                className="w-full gap-2 sm:w-auto"
+              >
                 <Truck aria-hidden="true" className="size-4" />
                 {t("sendOutForDeliveryDirect")}
               </Button>
             ) : null}
             {canUseExternalDriver ? (
-              <Button type="button" disabled={externalDriverMutation.isPending} onClick={() => void handleExternalDriverAction()} className="w-full gap-2 sm:w-auto">
+              <Button
+                type="button"
+                disabled={externalDriverMutation.isPending}
+                onClick={() => void handleExternalDriverAction()}
+                className="w-full gap-2 sm:w-auto"
+              >
                 <Truck aria-hidden="true" className="size-4" />
                 {t("externalDriver")}
               </Button>
             ) : null}
-            <Button type="button" variant="outline" disabled={isReprinting || !(order.restaurantId ?? user?.restaurantId)} onClick={() => void handleReprintAction()} className="w-full gap-2 sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={
+                isReprinting || !(order.restaurantId ?? user?.restaurantId)
+              }
+              onClick={() => void handleReprintAction()}
+              className="w-full gap-2 sm:w-auto"
+            >
               <Printer aria-hidden="true" className="size-4" />
               {isReprinting ? t("reprintingOrder") : t("reprintOrder")}
             </Button>
             {canUseTerminalActions ? (
               <ActionDropdown
                 items={[
-                  { label: t(ORDER_TERMINAL_ACTION_LABEL_KEYS.CANCELLED), icon: <XCircle className="size-4" />, onClick: () => void handleTerminalStatusAction("CANCELLED"), className: "text-red-600" },
-                  { label: t(ORDER_TERMINAL_ACTION_LABEL_KEYS.REJECTED), icon: <Ban className="size-4" />, onClick: () => void handleTerminalStatusAction("REJECTED"), className: "text-red-600" },
+                  {
+                    label: t(ORDER_TERMINAL_ACTION_LABEL_KEYS.CANCELLED),
+                    icon: <XCircle className="size-4" />,
+                    onClick: () => void handleTerminalStatusAction("CANCELLED"),
+                    className: "text-red-600",
+                  },
+                  {
+                    label: t(ORDER_TERMINAL_ACTION_LABEL_KEYS.REJECTED),
+                    icon: <Ban className="size-4" />,
+                    onClick: () => void handleTerminalStatusAction("REJECTED"),
+                    className: "text-red-600",
+                  },
                 ]}
               />
             ) : null}

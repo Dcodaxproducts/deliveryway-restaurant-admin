@@ -115,7 +115,7 @@ describe("accepted-order printing", () => {
         orderId: "new-order-disabled",
         restaurantId: "restaurant-1",
       }),
-    ).resolves.toBe("skipped");
+    ).resolves.toBe("automatic_print_disabled");
     expect(mocks.getOrder).not.toHaveBeenCalled();
     expect(mocks.print).not.toHaveBeenCalled();
   });
@@ -128,12 +128,12 @@ describe("accepted-order printing", () => {
     };
 
     await expect(printNewOrderIfConfigured(input)).resolves.toBe("printed");
-    await expect(printNewOrderIfConfigured(input)).resolves.toBe("skipped");
+    await expect(printNewOrderIfConfigured(input)).resolves.toBe("duplicate");
     await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe(
       "printed",
     );
     await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe(
-      "skipped",
+      "duplicate",
     );
     expect(mocks.print).toHaveBeenCalledTimes(2);
   });
@@ -170,7 +170,7 @@ describe("accepted-order printing", () => {
       "printed",
     );
     await expect(printAcceptedOrderIfConfigured(input)).resolves.toBe(
-      "skipped",
+      "duplicate",
     );
     expect(mocks.print).toHaveBeenCalledTimes(1);
   });
@@ -190,7 +190,7 @@ describe("accepted-order printing", () => {
         orderId: "disabled-order",
         restaurantId: "restaurant-1",
       }),
-    ).resolves.toBe("skipped");
+    ).resolves.toBe("automatic_print_disabled");
     expect(mocks.getOrder).not.toHaveBeenCalled();
     expect(mocks.print).not.toHaveBeenCalled();
   });

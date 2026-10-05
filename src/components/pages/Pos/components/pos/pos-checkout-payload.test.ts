@@ -82,6 +82,27 @@ describe("pos checkout payload", () => {
     });
   });
 
+  it("sends a named walk-in with phone but without requiring email", () => {
+    const payload = buildPosCheckoutPayload({
+      customer: {
+        id: "guest-1",
+        firstName: "Bilal",
+        lastName: "Shah",
+        phone: " +49123456789 ",
+        isGuest: true,
+      },
+      orderType: "TAKEAWAY",
+      paymentMethod: "COD",
+    });
+
+    expect(payload.guestContact).toEqual({
+      firstName: "Bilal",
+      lastName: "Shah",
+      phone: "+49123456789",
+      privacyPolicyAccepted: true,
+    });
+  });
+
   it("uses a guest email without inventing a Customer surname or phone", () => {
     const payload = buildPosCheckoutPayload({
       customer: {

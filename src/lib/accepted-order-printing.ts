@@ -1,5 +1,6 @@
 import { normalizeOrderTicket } from "@/lib/order-ticket";
 import { printLocalOrderTicket } from "@/lib/local-printer";
+import { resolveLocalPrinterAvailability } from "@/lib/printer-configuration";
 import { getOrderById } from "@/services/orders/orders.api";
 import {
   getAdminPrintingSettings,
@@ -11,6 +12,27 @@ const printedOrderTriggers = new Set<string>();
 const printingOrderTriggers = new Set<string>();
 
 type OrderPrintTrigger = "NEW_ORDER" | "CONFIRMED" | "MANUAL";
+export type OrderPrintResult =
+  | "printed"
+  | "duplicate"
+  | "automatic_print_disabled"
+  | "printer_disabled"
+  | "printer_not_configured"
+  | "printer_unsupported"
+  | "printer_scope_stale";
+
+export const getManualPrintErrorKey = (result: OrderPrintResult) => {
+  switch (result) {
+    case "printer_disabled":
+      return "orderPrinterDisabled";
+    case "printer_unsupported":
+      return "orderPrinterUnsupported";
+    case "printer_scope_stale":
+      return "orderPrinterScopeStale";
+    default:
+      return "orderPrinterNotConfigured";
+  }
+};
 
 const rememberPrintedOrder = (key: string) => {
   printedOrderTriggers.add(key);
@@ -57,13 +79,13 @@ const printOrderIfConfigured = async ({
   restaurantId: string;
   branchId?: string;
   trigger: OrderPrintTrigger;
-}): Promise<"printed" | "skipped"> => {
+}): Promise<OrderPrintResult> => {
   const key = `${orderId}:${trigger}`;
   if (
     trigger !== "MANUAL" &&
     (printedOrderTriggers.has(key) || printingOrderTriggers.has(key))
   ) {
-    return "skipped";
+    return "duplicate";
   }
 
   printingOrderTriggers.add(key);
@@ -74,8 +96,26 @@ const printOrderIfConfigured = async ({
       restaurantId,
       branchId,
     });
+    const availability = resolveLocalPrinterAvailability({
+      response: settingsResponse,
+      restaurantId,
+      branchId,
+    });
     const settings = settingsResponse.data.settings;
     printerName = settings.printerName ?? undefined;
+
+    if (availability.status !== "ready") {
+      return availability.status === "disabled"
+        ? "printer_disabled"
+        : availability.status === "not_configured"
+          ? "printer_not_configured"
+          : availability.status === "unsupported"
+            ? "printer_unsupported"
+            : "printer_scope_stale";
+    }
+
+    const localPrinterName = settings.printerName;
+    if (!localPrinterName) return "printer_not_configured";
 
     const triggerEnabled =
       trigger === "MANUAL" ||
@@ -83,19 +123,12 @@ const printOrderIfConfigured = async ({
         ? settings.autoPrintOnNewOrder
         : settings.autoPrintOnStatusChange);
 
-    if (
-      !settings.enabled ||
-      !triggerEnabled ||
-      !settings.printerName ||
-      settings.connectionType === "CLOUD"
-    ) {
-      return "skipped";
-    }
+    if (!triggerEnabled) return "automatic_print_disabled";
 
     const order = await getOrderById(orderId);
     const ticket = normalizeOrderTicket(order);
     await printLocalOrderTicket({
-      printerName: settings.printerName,
+      printerName: localPrinterName,
       paperSize: settings.paperSize ?? "80MM",
       printMode: settings.printMode ?? "PIXEL_HTML",
       ticket,

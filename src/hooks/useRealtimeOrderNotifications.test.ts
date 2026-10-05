@@ -61,7 +61,7 @@ describe("order tracking connection recovery", () => {
     expect(onAuthenticationFailure).not.toHaveBeenCalled();
   });
 
-  it("recognizes auth failures and polls only while visible", () => {
+  it("recognizes auth failures and socket recovery reasons", () => {
     expect(shouldRecoverOrderTrackingSocket("io server disconnect")).toBe(true);
     expect(isOrderTrackingAuthenticationError({ code: "UNAUTHORIZED" })).toBe(
       true,
@@ -69,11 +69,53 @@ describe("order tracking connection recovery", () => {
     expect(isOrderTrackingAuthenticationError(new Error("timeout"))).toBe(
       false,
     );
+  });
+
+  it("returns to login when token refresh fails", async () => {
+    const reconnect = vi.fn();
+    const onAuthenticationFailure = vi.fn();
+    const recover = createOrderTrackingSocketRecovery({
+      refreshAccessToken: async () => null,
+      reconnect,
+      isActive: () => true,
+      onAuthenticationFailure,
+    });
+
+    await expect(recover()).resolves.toBe(false);
+    expect(reconnect).not.toHaveBeenCalled();
+    expect(onAuthenticationFailure).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not reconnect after the notification hook unmounts", async () => {
+    const reconnect = vi.fn();
+    const onAuthenticationFailure = vi.fn();
+    const recover = createOrderTrackingSocketRecovery({
+      refreshAccessToken: async () => "fresh-access-token",
+      reconnect,
+      isActive: () => false,
+      onAuthenticationFailure,
+    });
+
+    await expect(recover()).resolves.toBe(false);
+    expect(reconnect).not.toHaveBeenCalled();
+    expect(onAuthenticationFailure).not.toHaveBeenCalled();
+  });
+
+  it("polls pending orders only while visible and disconnected", () => {
     expect(
       shouldPollPendingOrderNotifications({ visibilityState: "visible" }),
     ).toBe(true);
     expect(
-      shouldPollPendingOrderNotifications({ visibilityState: "hidden" }),
+      shouldPollPendingOrderNotifications({
+        socketConnected: true,
+        visibilityState: "visible",
+      }),
+    ).toBe(false);
+    expect(
+      shouldPollPendingOrderNotifications({
+        socketConnected: false,
+        visibilityState: "hidden",
+      }),
     ).toBe(false);
   });
 

@@ -66,8 +66,27 @@ import {
   type PosOrderType,
 } from "@/components/pages/Pos/components/pos/pos-checkout-payload";
 import { GuestAddressLocationPicker } from "@/components/pages/Pos/components/pos/GuestAddressLocationPicker";
+import { PosCustomerSelector } from "@/components/pages/Pos/components/pos/PosCustomerSelector";
+import {
+  POS_CUSTOMER_MODE_STORAGE_KEY,
+  POS_WALK_IN_DRAFT_STORAGE_KEY,
+  emptyPosWalkInDraft,
+  isValidPosGuestPhone,
+  mergePosWalkInDraft,
+  parsePosCustomerMode,
+  parsePosWalkInDraft,
+  serializePosCustomerMode,
+  serializePosWalkInDraft,
+  type PosCustomerMode,
+  type PosWalkInDraft,
+} from "@/components/pages/Pos/components/pos/pos-customer-mode";
+import {
+  parsePosCustomerSelection,
+  serializePosCustomerSelection,
+} from "@/components/pages/Pos/components/pos/pos-customer-selection";
 import { POS_CART_UPDATED_EVENT } from "@/components/pages/Pos/legacy/cart/pos-selection";
 import {
+  getManualPrintErrorKey,
   printNewOrderIfConfigured,
   reprintOrder,
 } from "@/lib/accepted-order-printing";
@@ -138,6 +157,11 @@ export default function PosCart() {
   const [loyaltyPoints, setLoyaltyPoints] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [customerNote, setCustomerNote] = useState("");
+  const [customerMode, setCustomerMode] =
+    useState<PosCustomerMode>("walk-in");
+  const [walkInDraft, setWalkInDraft] = useState<PosWalkInDraft>(() =>
+    emptyPosWalkInDraft(),
+  );
   const [guestDeliveryAddress, setGuestDeliveryAddress] =
     useState<GuestDeliveryAddress>(() => emptyGuestDeliveryAddress());
   const [newCustomerAddress, setNewCustomerAddress] =
@@ -157,24 +181,42 @@ export default function PosCart() {
   } | null>(null);
 
   useEffect(() => {
-    const id = getClientStorageItem("activeCustomerId");
-    setCustomerId(id);
+    if (!restaurantId) return;
 
     const rawSelection = getClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
-    if (rawSelection) {
-      try {
-        const parsedSelection = JSON.parse(rawSelection);
-        const normalizedCustomer = normalizePosCustomer(
-          parsedSelection?.customer,
-        );
+    const persistedCustomer = parsePosCustomerSelection({
+      raw: rawSelection,
+      restaurantId,
+    });
+    const persistedMode = parsePosCustomerMode(
+      getClientStorageItem(POS_CUSTOMER_MODE_STORAGE_KEY),
+      restaurantId,
+    );
+    const persistedWalkInDraft = parsePosWalkInDraft(
+      getClientStorageItem(POS_WALK_IN_DRAFT_STORAGE_KEY),
+      restaurantId,
+    );
+    const nextMode = persistedCustomer
+      ? persistedCustomer.isGuest
+        ? "walk-in"
+        : "existing"
+      : persistedMode;
 
-        if (normalizedCustomer) {
-          setSelectedCustomer(normalizedCustomer);
-          setCustomerId(normalizedCustomer.id);
-        }
-      } catch {
-        removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
-      }
+    setCustomerMode(nextMode);
+    setWalkInDraft(persistedWalkInDraft);
+
+    if (persistedCustomer) {
+      const customer = persistedCustomer.isGuest
+        ? mergePosWalkInDraft(persistedCustomer, persistedWalkInDraft)
+        : persistedCustomer;
+      setSelectedCustomer(customer);
+      setCustomerId(customer.id);
+      setClientStorageItem("activeCustomerId", customer.id);
+    } else {
+      setSelectedCustomer(null);
+      setCustomerId(null);
+      removeClientStorageItem("activeCustomerId");
+      if (rawSelection) removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
     }
 
     const rawLastOrder = getClientStorageItem(POS_LAST_ORDER_STORAGE_KEY);
@@ -196,7 +238,7 @@ export default function PosCart() {
     } catch {
       removeClientStorageItem(POS_LAST_ORDER_STORAGE_KEY);
     }
-  }, []);
+  }, [restaurantId]);
   const cartQuery = useGetCart(customerId);
   const branchQuery = useGetBranchForEdit(branchId);
   const paymentManagementQuery = useRestaurantPaymentManagement(restaurantId);
@@ -229,8 +271,13 @@ export default function PosCart() {
       );
       if (!customer) return;
 
-      setSelectedCustomer(customer);
-      setCustomerId(customer.id);
+      const nextCustomer =
+        customer.isGuest === true
+          ? mergePosWalkInDraft(customer, walkInDraft)
+          : customer;
+      setCustomerMode(customer.isGuest === true ? "walk-in" : "existing");
+      setSelectedCustomer(nextCustomer);
+      setCustomerId(nextCustomer.id);
       if (customer.id === customerId) {
         void refetchCart();
       }
@@ -239,7 +286,7 @@ export default function PosCart() {
     window.addEventListener(POS_CART_UPDATED_EVENT, handleCartUpdated);
     return () =>
       window.removeEventListener(POS_CART_UPDATED_EVENT, handleCartUpdated);
-  }, [customerId, refetchCart]);
+  }, [customerId, refetchCart, walkInDraft]);
   const configuredPaymentMethods = useMemo(() => {
     const management = paymentManagementQuery.data;
     const branchMethods = branchQuery.data?.settings?.allowedPaymentMethods;
@@ -304,15 +351,90 @@ export default function PosCart() {
     const normalizedCustomer = normalizePosCustomer(customerDetailQuery.data);
 
     if (normalizedCustomer) {
-      setSelectedCustomer(normalizedCustomer);
+      setSelectedCustomer(
+        normalizedCustomer.isGuest
+          ? mergePosWalkInDraft(normalizedCustomer, walkInDraft)
+          : normalizedCustomer,
+      );
     }
-  }, [customerDetailQuery.data]);
+  }, [customerDetailQuery.data, walkInDraft]);
 
-  const isGuestCustomer = selectedCustomer?.isGuest === true;
-  const updateGuestContact = (field: "email" | "phone", value: string) => {
-    setSelectedCustomer((current) =>
-      current ? { ...current, [field]: value } : current,
+  const isGuestCustomer =
+    customerMode === "walk-in" && selectedCustomer?.isGuest === true;
+  const handleCustomerSelect = (customer: PosCustomer) => {
+    if (!restaurantId) return;
+
+    setCustomerMode("existing");
+    setWalkInDraft(emptyPosWalkInDraft());
+    removeClientStorageItem(POS_WALK_IN_DRAFT_STORAGE_KEY);
+    setClientStorageItem(
+      POS_CUSTOMER_MODE_STORAGE_KEY,
+      serializePosCustomerMode(restaurantId, "existing"),
     );
+    setSelectedCustomer(customer);
+    setCustomerId(customer.id);
+    setAddresses([]);
+    setSelectedAddress(null);
+    setClientStorageItem("activeCustomerId", customer.id);
+    setClientStorageItem(
+      POS_LAST_SELECTION_STORAGE_KEY,
+      serializePosCustomerSelection({ customer, restaurantId, branchId }),
+    );
+  };
+  const handleCustomerClear = () => {
+    setSelectedCustomer(null);
+    setCustomerId(null);
+    setCartItems([]);
+    setAddresses([]);
+    setSelectedAddress(null);
+    removeClientStorageItem("activeCustomerId");
+    removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
+  };
+  const handleCustomerModeChange = (mode: PosCustomerMode) => {
+    if (!restaurantId || mode === customerMode) return;
+
+    setCustomerMode(mode);
+    setSelectedCustomer(null);
+    setCustomerId(null);
+    setCartItems([]);
+    setAddresses([]);
+    setSelectedAddress(null);
+    removeClientStorageItem("activeCustomerId");
+    removeClientStorageItem(POS_LAST_SELECTION_STORAGE_KEY);
+    setClientStorageItem(
+      POS_CUSTOMER_MODE_STORAGE_KEY,
+      serializePosCustomerMode(restaurantId, mode),
+    );
+
+    setWalkInDraft(emptyPosWalkInDraft());
+    setGuestDeliveryAddress(emptyGuestDeliveryAddress());
+    removeClientStorageItem(POS_WALK_IN_DRAFT_STORAGE_KEY);
+  };
+
+  const updateWalkInDraft = (
+    field: keyof PosWalkInDraft,
+    value: string,
+  ) => {
+    if (!restaurantId) return;
+    const nextDraft = { ...walkInDraft, [field]: value };
+    setWalkInDraft(nextDraft);
+    setClientStorageItem(
+      POS_WALK_IN_DRAFT_STORAGE_KEY,
+      serializePosWalkInDraft(restaurantId, nextDraft),
+    );
+    setSelectedCustomer((current) => {
+      if (!current?.isGuest) return current;
+      const merged = mergePosWalkInDraft(current, nextDraft);
+      setClientStorageItem(
+        POS_LAST_SELECTION_STORAGE_KEY,
+        serializePosCustomerSelection({
+          customer: merged,
+          restaurantId,
+          branchId,
+        }),
+      );
+      return merged;
+    });
   };
 
   const updateNewCustomerAddress = (
@@ -471,6 +593,15 @@ export default function PosCart() {
       setSelectedAddress(null);
       setSelectedCustomer(null);
       setCustomerId(null);
+      setCustomerMode("walk-in");
+      setWalkInDraft(emptyPosWalkInDraft());
+      if (restaurantId) {
+        setClientStorageItem(
+          POS_CUSTOMER_MODE_STORAGE_KEY,
+          serializePosCustomerMode(restaurantId, "walk-in"),
+        );
+      }
+      removeClientStorageItem(POS_WALK_IN_DRAFT_STORAGE_KEY);
       setCustomerNote("");
       setCouponCode("");
       setTipAmount("");
@@ -643,6 +774,13 @@ export default function PosCart() {
     }
 
     if (
+      customerMode === "walk-in" &&
+      !isValidPosGuestPhone(walkInDraft.phone)
+    ) {
+      return toast.error(t("toast.guestPhoneInvalid"));
+    }
+
+    if (
       isGuestCustomer &&
       orderType === "DELIVERY" &&
       !hasGuestContact(selectedCustomer)
@@ -753,7 +891,10 @@ export default function PosCart() {
 
   return (
     <div className="flex w-full flex-col gap-3 p-3">
-      <Collapsible defaultOpen className="overflow-hidden rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)]">
+      <Collapsible
+        defaultOpen
+        className="overflow-hidden rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)]"
+      >
         <CollapsibleTrigger className="flex h-11 w-full items-center justify-between px-3 text-sm font-semibold text-[var(--ui-text)]">
           {t("cartList")}
           <ChevronDown size={18} />
@@ -865,7 +1006,10 @@ export default function PosCart() {
         </CollapsibleContent>
       </Collapsible>
 
-      <Collapsible defaultOpen className="overflow-hidden rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)]">
+      <Collapsible
+        defaultOpen
+        className="overflow-hidden rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)]"
+      >
         <CollapsibleTrigger className="flex h-11 w-full items-center justify-between px-3 text-sm font-semibold text-[var(--ui-text)]">
           {t("orderInformation")}
           <ChevronDown size={18} />
@@ -873,25 +1017,44 @@ export default function PosCart() {
 
         <Separator />
 
-        <CollapsibleContent className="space-y-4 p-3">
-          <div className="rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-3 text-sm">
+        <CollapsibleContent className="space-y-4">
+          {restaurantId ? (
+            <PosCustomerSelector
+              restaurantId={restaurantId}
+              mode={customerMode}
+              selectedCustomer={
+                customerMode === "existing" ? selectedCustomer : null
+              }
+              onModeChange={handleCustomerModeChange}
+              onSelect={handleCustomerSelect}
+              onClear={handleCustomerClear}
+            />
+          ) : null}
+
+          <div className="rounded-md border bg-gray-50 p-3 text-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-medium text-gray-900">
-                  {selectedCustomer
-                    ? getPosCustomerName(selectedCustomer)
-                    : t("customerNotSelected")}
+                  {customerMode === "walk-in"
+                    ? walkInDraft.name.trim() || t("walkInCustomer")
+                    : selectedCustomer
+                      ? getPosCustomerName(selectedCustomer)
+                      : t("existingCustomerNotSelected")}
                 </p>
-                {selectedCustomer ? (
-                  <p className="mt-1 text-xs text-gray-500">
-                    {[selectedCustomer.phone, selectedCustomer.email]
-                      .filter(Boolean)
-                      .join(" · ") || t("customerContactMissing")}
-                  </p>
-                ) : null}
+                <p className="mt-1 text-xs text-gray-500">
+                  {customerMode === "walk-in"
+                    ? [walkInDraft.phone, walkInDraft.email]
+                        .filter(Boolean)
+                        .join(" · ") || t("walkInAnonymousHint")
+                    : selectedCustomer
+                      ? [selectedCustomer.phone, selectedCustomer.email]
+                          .filter(Boolean)
+                          .join(" · ") || t("customerContactMissing")
+                      : t("existingCustomerSelectionHint")}
+                </p>
               </div>
 
-              {isGuestCustomer ? (
+              {customerMode === "walk-in" ? (
                 <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700 ring-1 ring-amber-100">
                   {t("guestCustomer")}
                 </span>
@@ -899,35 +1062,60 @@ export default function PosCart() {
             </div>
           </div>
 
-          {isGuestCustomer ? (
+          {customerMode === "walk-in" ? (
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="space-y-1 text-xs text-gray-500">
-                <span>{t("guestEmail")}</span>
+              <label className="space-y-1 text-xs text-gray-600 sm:col-span-2">
+                <span>{t("walkInName")}</span>
+                <input
+                  type="text"
+                  value={walkInDraft.name}
+                  onChange={(event) =>
+                    updateWalkInDraft("name", event.target.value)
+                  }
+                  placeholder={t("walkInNamePlaceholder")}
+                  autoComplete="name"
+                  className="h-10 w-full rounded-md border bg-white px-3 text-sm text-gray-900"
+                />
+              </label>
+
+              <label className="space-y-1 text-xs text-gray-600">
+                <span>{t("guestPhone")}</span>
+                <input
+                  type="tel"
+                  value={walkInDraft.phone}
+                  onChange={(event) =>
+                    updateWalkInDraft("phone", event.target.value)
+                  }
+                  aria-invalid={!isValidPosGuestPhone(walkInDraft.phone)}
+                  placeholder={t("guestPhonePlaceholder")}
+                  autoComplete="tel"
+                  className="h-10 w-full rounded-md border bg-white px-3 text-sm text-gray-900"
+                />
+                {!isValidPosGuestPhone(walkInDraft.phone) ? (
+                  <span className="block text-red-600">
+                    {t("guestPhoneInvalid")}
+                  </span>
+                ) : null}
+              </label>
+
+              <label className="space-y-1 text-xs text-gray-600">
+                <span>{t("guestEmailOptional")}</span>
                 <input
                   type="email"
-                  value={selectedCustomer?.email ?? ""}
+                  value={walkInDraft.email}
                   onChange={(event) =>
-                    updateGuestContact("email", event.target.value)
+                    updateWalkInDraft("email", event.target.value)
                   }
                   placeholder={t("guestEmailPlaceholder")}
                   autoComplete="email"
                   className="h-10 w-full rounded-md border bg-white px-3 text-sm text-gray-900"
                 />
               </label>
-
-              <label className="space-y-1 text-xs text-gray-500">
-                <span>{t("guestPhone")}</span>
-                <input
-                  type="tel"
-                  value={selectedCustomer?.phone ?? ""}
-                  onChange={(event) =>
-                    updateGuestContact("phone", event.target.value)
-                  }
-                  placeholder={t("guestPhonePlaceholder")}
-                  autoComplete="tel"
-                  className="h-10 w-full rounded-md border bg-white px-3 text-sm text-gray-900"
-                />
-              </label>
+              <p className="text-xs leading-5 text-gray-500 sm:col-span-2">
+                {orderType === "DELIVERY"
+                  ? t("walkInDeliveryContactHint")
+                  : t("walkInContactOptionalHint")}
+              </p>
             </div>
           ) : null}
 
@@ -971,7 +1159,7 @@ export default function PosCart() {
             <div>
               <p className="text-xs text-gray-400 mb-2">{t("selectAddress")}</p>
 
-              {isGuestCustomer ? (
+              {customerMode === "walk-in" ? (
                 <div className="space-y-2">
                   <input
                     value={guestDeliveryAddress.street}
@@ -1310,7 +1498,10 @@ export default function PosCart() {
         </CollapsibleContent>
       </Collapsible>
 
-      <Collapsible defaultOpen className="overflow-hidden rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)]">
+      <Collapsible
+        defaultOpen
+        className="overflow-hidden rounded-[var(--ui-radius-compact)] border border-[var(--ui-border)] bg-[var(--ui-surface)]"
+      >
         <CollapsibleTrigger className="flex h-11 w-full items-center justify-between px-3 text-sm font-semibold text-[var(--ui-text)]">
           {t("billing")}
           <ChevronDown size={18} />
@@ -1393,7 +1584,7 @@ export default function PosCart() {
             })
               .then((result) => {
                 if (result === "printed") toast.success(t("orderReprinted"));
-                else toast.error(t("toast.orderPrintUnavailable"));
+                else toast.error(t(`toast.${getManualPrintErrorKey(result)}`));
               })
               .catch(() => toast.error(t("toast.orderPrintFailed")))
           }
