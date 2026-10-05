@@ -119,6 +119,8 @@ describe("Phase 3 branch-management screen family", () => {
     expect(details).toContain("useGetBranch(branchId)");
     expect(details).toContain("useGetBranchHolidayOpeningHours");
     expect(edit).toContain("buildBranchPatchPayload");
+    expect(edit).toContain("buildChangedBranchSettingsPatch");
+    expect(edit).toContain("settingsPatch.deliveryConfig");
     expect(edit).toContain("updateBranchNotificationSettings");
     expect(edit).toContain("useUpdateBranchDeliveryTime");
     expect(edit).toContain("requestedBranchId !== authBranchId");

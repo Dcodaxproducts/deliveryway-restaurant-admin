@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildBranchPatchPayload,
+  buildChangedBranchSettingsPatch,
   buildServiceChargeSettingsPayload,
   buildSafeBranchSettings,
   getBranchSettingsValidationError,
@@ -111,6 +112,45 @@ describe("edit branch delivery and settings mapper", () => {
         tableCount: 0,
       }),
     ).toBeNull();
+  });
+
+  it("patches only changed order types while preserving untouched legacy delivery defaults", () => {
+    const existingSettings = buildSafeBranchSettings(
+      {
+        allowedOrderTypes: ["DELIVERY"],
+        customSetting: "keep-me",
+      },
+      normalizeDeliveryConfigForApi(undefined),
+    );
+    const nextSettings = buildSafeBranchSettings(
+      {
+        ...existingSettings,
+        allowedOrderTypes: ["DELIVERY", "DINE_IN"],
+      },
+      normalizeDeliveryConfigForApi(existingSettings.deliveryConfig),
+    );
+
+    expect(buildChangedBranchSettingsPatch(existingSettings, nextSettings)).toEqual({
+      allowedOrderTypes: ["DELIVERY", "DINE_IN"],
+    });
+  });
+
+  it("includes delivery configuration only when a delivery field changed", () => {
+    const existingSettings = buildSafeBranchSettings(
+      { allowedOrderTypes: ["DELIVERY"] },
+      normalizeDeliveryConfigForApi(undefined),
+    );
+    const nextSettings = buildSafeBranchSettings(
+      existingSettings,
+      {
+        ...normalizeDeliveryConfigForApi(existingSettings.deliveryConfig),
+        radiusKm: 5,
+      },
+    );
+
+    expect(buildChangedBranchSettingsPatch(existingSettings, nextSettings)).toEqual({
+      deliveryConfig: expect.objectContaining({ radiusKm: 5 }),
+    });
   });
 
   it("preserves existing settings and includes new table reservation fields in branch payload", () => {

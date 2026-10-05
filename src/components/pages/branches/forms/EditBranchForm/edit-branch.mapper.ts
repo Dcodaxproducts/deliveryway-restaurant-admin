@@ -310,6 +310,49 @@ export const buildServiceChargeSettingsPayload = (
   serviceCharge: normalizeServiceChargeForApi(serviceCharge),
 });
 
+const areSettingsValuesEqual = (left: unknown, right: unknown): boolean => {
+  if (Object.is(left, right)) return true;
+
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((value, index) =>
+        areSettingsValuesEqual(value, right[index]),
+      )
+    );
+  }
+
+  if (!isRecord(left) || !isRecord(right)) return false;
+
+  const leftKeys = Object.keys(left).sort();
+  const rightKeys = Object.keys(right).sort();
+
+  return (
+    leftKeys.length === rightKeys.length &&
+    leftKeys.every(
+      (key, index) =>
+        key === rightKeys[index] &&
+        areSettingsValuesEqual(left[key], right[key]),
+    )
+  );
+};
+
+export const buildChangedBranchSettingsPatch = (
+  existingSettings: unknown,
+  nextSettings: unknown,
+): BranchSettings => {
+  const existing = sanitizeBranchSettingsForPatch(existingSettings);
+  const next = sanitizeBranchSettingsForPatch(nextSettings);
+
+  return Object.fromEntries(
+    Object.entries(next).filter(
+      ([key, value]) => !areSettingsValuesEqual(existing[key], value),
+    ),
+  ) as BranchSettings;
+};
+
 export const sanitizeBranchSettingsForPatch = (
   settings: unknown,
 ): BranchSettings => {

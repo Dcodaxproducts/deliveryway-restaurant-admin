@@ -19,6 +19,7 @@ import {
 } from "@/hooks/useBranches";
 import {
   buildBranchPatchPayload,
+  buildChangedBranchSettingsPatch,
   buildSafeBranchSettings,
   editBranchSchema,
   EditBranchBasicInfoStep,
@@ -52,6 +53,7 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
   const commonT = useTranslations("common");
   const [activeTab, setActiveTab] = useState<EditTab>("basicInfo");
   const [branchData, setBranchData] = useState<BranchFormData | null>(null);
+  const [initialSettings, setInitialSettings] = useState<BranchSettings>({});
 
   const router = useRouter();
   const { isBranchAdmin, branchId: authBranchId } = useAuth();
@@ -87,13 +89,21 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
           }
         : {};
 
+      const mergedSettings = {
+        ...(hydratedBranch.settings || {}),
+        ...deliveryTimeSettings,
+      };
+      const normalizedDeliveryConfig = normalizeDeliveryConfigForApi(
+        mergedSettings.deliveryConfig,
+      );
+
       setBranchData({
         ...hydratedBranch,
-        settings: {
-          ...(hydratedBranch.settings || {}),
-          ...deliveryTimeSettings,
-        },
+        settings: mergedSettings,
       });
+      setInitialSettings(
+        buildSafeBranchSettings(mergedSettings, normalizedDeliveryConfig),
+      );
     }
   }, [
     authBranchId,
@@ -143,11 +153,13 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
     return true;
   };
 
-  const saveDeliveryConfig = async (fullSettings: BranchSettings) => {
-    await updateBranchMutation.mutateAsync({
-      id: branchId as string,
-      data: { settings: fullSettings },
-    });
+  const saveDeliveryConfig = async (settingsPatch: BranchSettings) => {
+    if (Object.keys(settingsPatch).length) {
+      await updateBranchMutation.mutateAsync({
+        id: branchId as string,
+        data: { settings: settingsPatch },
+      });
+    }
 
     toast.success(t("deliveryConfigUpdated"));
     return true;
@@ -186,9 +198,18 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
       const deliveryConfig = normalizeDeliveryConfigForApi(
         settings.deliveryConfig,
       );
+      const fullSettings = buildSafeBranchSettings(settings, deliveryConfig);
+      const settingsPatch = buildChangedBranchSettingsPatch(
+        initialSettings,
+        fullSettings,
+      );
       const validationError =
         activeTab === "delivery"
-          ? getDeliveryConfigValidationError(deliveryConfig)
+          ? settingsPatch.deliveryConfig
+            ? getDeliveryConfigValidationError(
+                normalizeDeliveryConfigForApi(settingsPatch.deliveryConfig),
+              )
+            : null
           : getBranchSettingsValidationError(settings);
 
       if (validationError) {
@@ -196,15 +217,16 @@ export function BranchesEditPage({ requestedBranchId }: BranchesEditPageProps) {
         return;
       }
 
-      const fullSettings = buildSafeBranchSettings(settings, deliveryConfig);
       const saveSucceeded =
         activeTab === "basicInfo"
           ? await saveBasicInfo(fullSettings)
           : activeTab === "delivery"
-            ? await saveDeliveryConfig(fullSettings)
+            ? await saveDeliveryConfig(settingsPatch)
             : await saveWorkingHours(fullSettings);
 
       if (!saveSucceeded) return;
+
+      setInitialSettings(fullSettings);
 
       if (activeTab === "workingHours") {
         router.push(isBranchAdmin ? "/branch-workspace" : "/branches");
