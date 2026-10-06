@@ -11,10 +11,16 @@ import {
   type SetStateAction,
 } from "react";
 import { API_BASE_URL } from "@/lib/constants";
-import { isAuthInitializationCurrent } from "@/lib/auth-initialization";
+import {
+  isAuthInitializationCurrent,
+  nextAuthRevisionForStorageSync,
+  syncAuthStorageEvent,
+  type AuthStorageSyncSource,
+} from "@/lib/auth-initialization";
 import { getRequestLocale } from "@/config/i18n";
 import {
   AUTH_STORAGE_EVENT,
+  AUTH_STORAGE_KEY,
   AuthStorage,
   AuthUser,
   clearTransientWorkspaceSelection,
@@ -169,8 +175,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    const syncStoredAuth = () => {
-      authRevision.current += 1;
+    const syncStoredAuth = (source: AuthStorageSyncSource) => {
+      authRevision.current = nextAuthRevisionForStorageSync(
+        authRevision.current,
+        source,
+      );
       const stored = getStoredAuth();
       setToken(stored?.accessToken || null);
       setUser(
@@ -180,12 +189,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       );
     };
 
-    window.addEventListener(AUTH_STORAGE_EVENT, syncStoredAuth);
-    window.addEventListener("storage", syncStoredAuth);
+    const syncSameTabAuth = () => syncStoredAuth("same-tab");
+    const syncCrossTabAuth = (event: StorageEvent) => {
+      syncAuthStorageEvent(event.key, AUTH_STORAGE_KEY, () => {
+        syncStoredAuth("cross-tab");
+      });
+    };
+
+    window.addEventListener(AUTH_STORAGE_EVENT, syncSameTabAuth);
+    window.addEventListener("storage", syncCrossTabAuth);
 
     return () => {
-      window.removeEventListener(AUTH_STORAGE_EVENT, syncStoredAuth);
-      window.removeEventListener("storage", syncStoredAuth);
+      window.removeEventListener(AUTH_STORAGE_EVENT, syncSameTabAuth);
+      window.removeEventListener("storage", syncCrossTabAuth);
     };
   }, []);
 

@@ -67,7 +67,7 @@ export type AuthStorage = {
   [key: string]: unknown;
 };
 
-const AUTH_STORAGE_KEY = "auth";
+export const AUTH_STORAGE_KEY = "auth";
 export const AUTH_STORAGE_EVENT = "feastflow:auth-storage";
 
 export const isRecord = (value: unknown): value is Record<string, unknown> => {
