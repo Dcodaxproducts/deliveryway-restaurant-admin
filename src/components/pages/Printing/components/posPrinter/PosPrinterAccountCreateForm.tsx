@@ -24,8 +24,8 @@ export type PosPrinterBranchOption = { id: string; name: string };
 
 export type PosPrinterAccountCreateFormProps = {
   formId: string;
-  /** Business admins pick the branch; branch admins are scoped to their own branch. */
-  isBusinessAdmin: boolean;
+  /** Business admins and capable staff pick a scoped branch; branch admins use their assigned branch. */
+  requiresBranchSelection: boolean;
   fixedBranchName?: string;
   branches: { options: PosPrinterBranchOption[]; isPending: boolean; isError: boolean };
   onSubmit: (values: PosPrinterAccountCreateValues) => Promise<void>;
@@ -44,7 +44,7 @@ export const POS_PRINTER_ACCOUNT_CREATE_DEFAULTS: PosPrinterAccountCreateValues 
 
 export function PosPrinterAccountCreateForm({
   formId,
-  isBusinessAdmin,
+  requiresBranchSelection,
   fixedBranchName,
   branches,
   onSubmit,
@@ -52,8 +52,8 @@ export function PosPrinterAccountCreateForm({
 }: PosPrinterAccountCreateFormProps) {
   const t = useTranslations("posPrinter");
   const schema = useMemo(
-    () => buildPosPrinterAccountCreateSchema({ requireBranch: isBusinessAdmin }),
-    [isBusinessAdmin]
+    () => buildPosPrinterAccountCreateSchema({ requireBranch: requiresBranchSelection }),
+    [requiresBranchSelection]
   );
   const {
     control,
@@ -178,7 +178,7 @@ export function PosPrinterAccountCreateForm({
       </div>
 
       <div className="sm:col-span-2">
-        {isBusinessAdmin ? (
+        {requiresBranchSelection ? (
           <Controller
             control={control}
             name="branchId"

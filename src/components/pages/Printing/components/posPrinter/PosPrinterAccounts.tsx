@@ -19,38 +19,34 @@ import {
   useCreatePosPrinterAccount, usePosPrinterAccounts,
   useResetPosPrinterPassword, useUpdatePosPrinterStatus,
 } from "@/hooks/usePosPrinterAccounts";
-import { getStringValue, isRecord } from "@/lib/auth";
-import { getBranches } from "@/services/branches";
-import type { PosPrinterAccount } from "@/services/pos-printer";
+import { hasStaffPermission, isStaffRole } from "@/lib/auth";
+import { posPrinterApi, type PosPrinterAccount } from "@/services/pos-printer";
 import { POS_PRINTER_PASSWORD_MIN, type PosPrinterAccountCreateValues } from "@/validations/pos-printer";
 
 import { formatPosPrinterAccountLabel, PosPrinterAccountCard } from "./PosPrinterAccountCard";
-import { PosPrinterAccountCreateForm, type PosPrinterBranchOption } from "./PosPrinterAccountCreateForm";
+import { PosPrinterAccountCreateForm } from "./PosPrinterAccountCreateForm";
 
 const CREATE_FORM_ID = "pos-printer-account-create";
 const RESET_FORM_ID = "pos-printer-account-reset";
 
-const branchOptions = (response: unknown): PosPrinterBranchOption[] => {
-  if (!isRecord(response)) return [];
-  const rows = Array.isArray(response.data) ? response.data : [];
-  return rows.flatMap((row) => {
-    if (!isRecord(row)) return [];
-    const id = getStringValue(row, "id");
-    return id ? [{ id, name: getStringValue(row, "name") ?? id }] : [];
-  });
-};
-
 export default function PosPrinterAccounts() {
   const t = useTranslations("posPrinter");
   const { user, role, branchId } = useAuth();
-  const allowed = role === "BUSINESS_ADMIN" || role === "BRANCH_ADMIN";
   const isBusinessAdmin = role === "BUSINESS_ADMIN";
-  const accounts = usePosPrinterAccounts(allowed);
+  const isBranchAdmin = role === "BRANCH_ADMIN";
+  const isStaff = isStaffRole(user?.role, user?.actorType);
+  const canRead = isBusinessAdmin || isBranchAdmin ||
+    hasStaffPermission(user, ["auto-printing-pos"], ["read", "create", "update", "write"]);
+  const canCreate = isBusinessAdmin || isBranchAdmin ||
+    hasStaffPermission(user, ["auto-printing-pos"], ["create", "write"]);
+  const canUpdate = isBusinessAdmin || isBranchAdmin ||
+    hasStaffPermission(user, ["auto-printing-pos"], ["update", "write"]);
+  const requiresBranchSelection = isBusinessAdmin || isStaff;
+  const accounts = usePosPrinterAccounts(canRead);
   const branches = useQuery({
     queryKey: ["pos-printer-account-branches"],
-    queryFn: () => getBranches({ limit: 100, includeInactive: false }),
-    enabled: allowed && isBusinessAdmin,
-    select: branchOptions,
+    queryFn: posPrinterApi.listBranches,
+    enabled: canRead && requiresBranchSelection,
   });
   const create = useCreatePosPrinterAccount();
   const status = useUpdatePosPrinterStatus();
@@ -62,14 +58,14 @@ export default function PosPrinterAccounts() {
   const branchList = useMemo(() => branches.data ?? [], [branches.data]);
   const fixedBranchName = user?.branchName || branchId || "—";
 
-  if (!allowed) return null;
+  if (!canRead) return null;
 
   const submitCreate = async (values: PosPrinterAccountCreateValues) => {
     await create.mutateAsync({
       displayName: values.displayName,
       username: values.username,
       password: values.password,
-      branchId: isBusinessAdmin ? values.branchId : undefined,
+      branchId: requiresBranchSelection ? values.branchId : undefined,
     });
     setCreateOpen(false);
     toast.success(t("accountCreated"));
@@ -107,10 +103,12 @@ export default function PosPrinterAccounts() {
           <h2 id="pos-printer-accounts-title" className="mt-2 text-xl font-semibold">{t("accountsTitle")}</h2>
           <p className="mt-1 max-w-2xl text-sm text-gray-500">{t("accountsDescription")}</p>
         </div>
-        <Button className="w-full sm:w-auto" onClick={() => setCreateOpen(true)}>
-          <Plus size={17} aria-hidden="true" />
-          {t("createAccount")}
-        </Button>
+        {canCreate ? (
+          <Button className="w-full sm:w-auto" onClick={() => setCreateOpen(true)}>
+            <Plus size={17} aria-hidden="true" />
+            {t("createAccount")}
+          </Button>
+        ) : null}
       </div>
 
       {role === "BRANCH_ADMIN" ? (
@@ -142,6 +140,7 @@ export default function PosPrinterAccounts() {
             <PosPrinterAccountCard
               key={account.id}
               account={account}
+              canUpdate={canUpdate}
               onResetPassword={(target) => { setNewPassword(""); setResetTarget(target); }}
               onToggleStatus={setStatusTarget}
             />
@@ -160,7 +159,7 @@ export default function PosPrinterAccounts() {
             <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} disabled={create.isPending}>
               {t("cancel")}
             </Button>
-            <Button type="submit" form={CREATE_FORM_ID} disabled={create.isPending || (isBusinessAdmin && branches.isPending)}>
+            <Button type="submit" form={CREATE_FORM_ID} disabled={create.isPending || (requiresBranchSelection && branches.isPending)}>
               {create.isPending ? t("creating") : t("create")}
             </Button>
           </>
@@ -169,7 +168,7 @@ export default function PosPrinterAccounts() {
         {createOpen ? (
           <PosPrinterAccountCreateForm
             formId={CREATE_FORM_ID}
-            isBusinessAdmin={isBusinessAdmin}
+            requiresBranchSelection={requiresBranchSelection}
             fixedBranchName={fixedBranchName}
             branches={{ options: branchList, isPending: branches.isPending, isError: branches.isError }}
             onSubmit={submitCreate}

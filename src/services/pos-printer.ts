@@ -6,6 +6,9 @@ import {
 } from "@/validations/pos-printer";
 
 export const POS_PRINTER_ACCOUNTS_ENDPOINT = "/pos-printer/accounts";
+export const POS_PRINTER_BRANCHES_ENDPOINT = "/pos-printer/accounts/branches";
+
+export type PosPrinterBranch = { id: string; name: string };
 
 /**
  * Account shape returned by `GET /pos-printer/accounts` (`PosPrinterService.toResponse`).
@@ -84,6 +87,17 @@ export const normalizePosPrinterAccounts = (response: unknown) => {
   return rows.map(normalizeAccount).filter((account): account is PosPrinterAccount => Boolean(account));
 };
 
+export const normalizePosPrinterBranches = (response: unknown): PosPrinterBranch[] => {
+  const root = isRecord(response) ? response : {};
+  const rows = Array.isArray(root.data) ? root.data : [];
+
+  return rows.flatMap((row) => {
+    if (!isRecord(row)) return [];
+    const id = getStringValue(row, "id");
+    return id ? [{ id, name: getStringValue(row, "name") ?? id }] : [];
+  });
+};
+
 /** Exact request body for `CreatePosPrinterAccountDto`; `branchId` only when provided. */
 export const buildPosPrinterCreateRequest = (payload: CreatePosPrinterAccountPayload) => ({
   username: normalizePosPrinterUsername(payload.username),
@@ -103,6 +117,8 @@ export const isPosPrinterIdentifierConflict = (error: unknown) => getErrorStatus
 
 export const posPrinterApi = {
   list: async () => normalizePosPrinterAccounts(await httpClient.get(POS_PRINTER_ACCOUNTS_ENDPOINT)),
+  listBranches: async () =>
+    normalizePosPrinterBranches(await httpClient.get(POS_PRINTER_BRANCHES_ENDPOINT)),
   create: (payload: CreatePosPrinterAccountPayload) =>
     httpClient.post(POS_PRINTER_ACCOUNTS_ENDPOINT, buildPosPrinterCreateRequest(payload)),
   updateStatus: (id: string, isActive: boolean) =>

@@ -33,6 +33,19 @@ export const isAuthenticationRequest = (requestUrl: string): boolean => {
   );
 };
 
+export const shouldClearAuthAfterRefreshFailure = (status?: number) =>
+  status === 400 || status === 401 || status === 403 || status === 422;
+
+export const getRotatedAccessToken = (
+  attemptedRefreshToken: string,
+  latest: ReturnType<typeof getStoredAuth>,
+) =>
+  latest?.refreshToken &&
+  latest.refreshToken !== attemptedRefreshToken &&
+  latest.accessToken
+    ? latest.accessToken
+    : null;
+
 export const refreshStoredAccessToken = async () => {
   if (refreshPromise) return refreshPromise;
 
@@ -52,9 +65,24 @@ export const refreshStoredAccessToken = async () => {
       saveStoredAuth(merged);
 
       return merged.accessToken || null;
-    } catch {
-      clearStoredAuth();
-      return null;
+    } catch (error: unknown) {
+      const status = axios.isAxiosError(error)
+        ? error.response?.status
+        : undefined;
+
+      if (shouldClearAuthAfterRefreshFailure(status)) {
+        const rotatedAccessToken = getRotatedAccessToken(
+          refreshToken,
+          getStoredAuth(),
+        );
+
+        if (rotatedAccessToken) return rotatedAccessToken;
+
+        clearStoredAuth();
+        return null;
+      }
+
+      throw error;
     } finally {
       refreshPromise = null;
     }

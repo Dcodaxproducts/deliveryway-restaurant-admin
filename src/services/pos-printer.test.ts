@@ -3,8 +3,10 @@ import { httpClient } from "@/lib/axios";
 import {
   getPosPrinterAccountIdentifier,
   isPosPrinterIdentifierConflict,
+  normalizePosPrinterBranches,
   normalizePosPrinterAccounts,
   POS_PRINTER_ACCOUNTS_ENDPOINT,
+  POS_PRINTER_BRANCHES_ENDPOINT,
   posPrinterApi,
 } from "@/services/pos-printer";
 
@@ -65,6 +67,18 @@ describe("POS printer account API", () => {
     await posPrinterApi.create(payload);
     const body = postMock.mock.calls[0][1] as Record<string, unknown>;
     expect(Object.keys(body).sort()).toEqual(["displayName", "password", "username"]);
+  });
+
+  it("loads branch choices through the scoped POS printer endpoint", async () => {
+    getMock.mockResolvedValueOnce({ data: [{ id: "b1", name: "Main" }, { id: "b2" }, null] });
+
+    await expect(posPrinterApi.listBranches()).resolves.toEqual([
+      { id: "b1", name: "Main" },
+      { id: "b2", name: "b2" },
+    ]);
+    expect(POS_PRINTER_BRANCHES_ENDPOINT).toBe("/pos-printer/accounts/branches");
+    expect(getMock).toHaveBeenCalledWith("/pos-printer/accounts/branches");
+    expect(normalizePosPrinterBranches({ data: "invalid" })).toEqual([]);
   });
 
   it("does not retry with a legacy payload when the API rejects the request", async () => {

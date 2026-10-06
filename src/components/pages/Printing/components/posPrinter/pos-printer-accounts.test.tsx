@@ -7,6 +7,7 @@ import PosPrinterAccounts from "@/components/pages/Printing/components/posPrinte
 import { PosPrinterAccountCreateForm } from "@/components/pages/Printing/components/posPrinter/PosPrinterAccountCreateForm";
 import de from "@/messages/de.json";
 import en from "@/messages/en.json";
+import type { AuthUser } from "@/lib/auth";
 import type { PosPrinterAccount } from "@/services/pos-printer";
 
 const harness = vi.hoisted(() => ({
@@ -14,7 +15,7 @@ const harness = vi.hoisted(() => ({
   auth: {
     role: "BUSINESS_ADMIN" as string,
     branchId: undefined as string | undefined,
-    user: { branchName: undefined as string | undefined },
+    user: { id: "admin", email: "admin@example.com", role: "BUSINESS_ADMIN", profile: {} } as AuthUser,
   },
   accounts: { data: undefined as PosPrinterAccount[] | undefined, isPending: false, isError: false, refetch: vi.fn() },
   branches: { data: [{ id: "b1", name: "Main branch" }], isPending: false, isError: false },
@@ -63,11 +64,11 @@ const countMatches = (markup: string, pattern: RegExp) => (markup.match(pattern)
 // React keeps camelCase attribute names in static markup; browsers treat them case-insensitively.
 const inputs = (markup: string) => (markup.match(/<input\b[^>]*>/g) ?? []).map((input) => input.toLowerCase());
 
-const renderCreateForm = (isBusinessAdmin: boolean) =>
+const renderCreateForm = (requiresBranchSelection: boolean) =>
   renderToStaticMarkup(
     <PosPrinterAccountCreateForm
       formId="create"
-      isBusinessAdmin={isBusinessAdmin}
+      requiresBranchSelection={requiresBranchSelection}
       fixedBranchName="Central"
       branches={{ options: [{ id: "b1", name: "Main branch" }], isPending: false, isError: false }}
       onSubmit={vi.fn()}
@@ -78,7 +79,11 @@ const renderCreateForm = (isBusinessAdmin: boolean) =>
 beforeEach(() => {
   vi.clearAllMocks();
   harness.locale = "en";
-  harness.auth = { role: "BUSINESS_ADMIN", branchId: undefined, user: { branchName: undefined } };
+  harness.auth = {
+    role: "BUSINESS_ADMIN",
+    branchId: undefined,
+    user: { id: "admin", email: "admin@example.com", role: "BUSINESS_ADMIN", profile: {} },
+  };
   harness.accounts = { data: [usernameAccount, legacyAccount], isPending: false, isError: false, refetch: vi.fn() };
 });
 
@@ -158,7 +163,11 @@ describe("POS printer account list", () => {
   });
 
   it("renders the branch-scoped banner for branch admins and stacks the header on small screens", () => {
-    harness.auth = { role: "BRANCH_ADMIN", branchId: "b1", user: { branchName: "Central" } };
+    harness.auth = {
+      role: "BRANCH_ADMIN",
+      branchId: "b1",
+      user: { id: "branch", email: "branch@example.com", role: "BRANCH_ADMIN", branchName: "Central", profile: {} },
+    };
     const markup = renderToStaticMarkup(<PosPrinterAccounts />);
 
     expect(markup).toContain("Accounts are restricted to your assigned branch: Central");
@@ -180,8 +189,50 @@ describe("POS printer account list", () => {
   });
 
   it("renders nothing for accounts without admin scope", () => {
-    harness.auth = { role: "STAFF", branchId: undefined, user: { branchName: undefined } };
+    harness.auth = {
+      role: "STAFF",
+      branchId: undefined,
+      user: { id: "staff", email: "staff@example.com", role: "STAFF", actorType: "STAFF", profile: {} },
+    };
     expect(renderToStaticMarkup(<PosPrinterAccounts />)).toBe("");
+  });
+
+  it("lets scoped staff read accounts without exposing create or update controls", () => {
+    harness.auth = {
+      role: "STAFF",
+      branchId: "b1",
+      user: {
+        id: "staff", email: "staff@example.com", role: "STAFF", actorType: "STAFF",
+        tenantId: "t1", restaurantId: "r1", branchId: "b1", profile: {},
+        staffRole: {
+          tenantId: "t1", restaurantId: "r1", branchId: "b1",
+          permissions: [{ access: "auto-printing-pos", operations: ["read"] }],
+        },
+      },
+    };
+
+    const markup = renderToStaticMarkup(<PosPrinterAccounts />);
+    expect(markup).toContain(">Kitchen Printer<");
+    expect(markup).not.toContain(">Create account<");
+    expect(markup).not.toContain(">Reset password<");
+    expect(markup).not.toContain(">Deactivate<");
+  });
+
+  it("shows account creation to scoped staff with create permission", () => {
+    harness.auth = {
+      role: "STAFF",
+      branchId: "b1",
+      user: {
+        id: "staff", email: "staff@example.com", role: "STAFF", actorType: "STAFF",
+        tenantId: "t1", restaurantId: "r1", branchId: "b1", profile: {},
+        staffRole: {
+          tenantId: "t1", restaurantId: "r1", branchId: "b1",
+          permissions: [{ access: "auto-printing-pos", operations: ["create"] }],
+        },
+      },
+    };
+
+    expect(renderToStaticMarkup(<PosPrinterAccounts />)).toContain(">Create account<");
   });
 });
 

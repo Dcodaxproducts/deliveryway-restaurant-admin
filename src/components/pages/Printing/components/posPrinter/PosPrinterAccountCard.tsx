@@ -9,6 +9,7 @@ import { getPosPrinterAccountIdentifier, type PosPrinterAccount } from "@/servic
 
 export type PosPrinterAccountCardProps = {
   account: PosPrinterAccount;
+  canUpdate: boolean;
   onResetPassword: (account: PosPrinterAccount) => void;
   onToggleStatus: (account: PosPrinterAccount) => void;
 };
@@ -21,7 +22,7 @@ export const formatPosPrinterAccountLabel = (account: PosPrinterAccount) => {
     : identifier;
 };
 
-export function PosPrinterAccountCard({ account, onResetPassword, onToggleStatus }: PosPrinterAccountCardProps) {
+export function PosPrinterAccountCard({ account, canUpdate, onResetPassword, onToggleStatus }: PosPrinterAccountCardProps) {
   const t = useTranslations("posPrinter");
   const titleId = `pos-printer-account-${account.id}-title`;
   const identifier = getPosPrinterAccountIdentifier(account);
@@ -50,20 +51,22 @@ export function PosPrinterAccountCard({ account, onResetPassword, onToggleStatus
             <dd className="truncate text-[var(--ui-text)]">{account.branch?.name || account.branchId || "—"}</dd>
           </dl>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" aria-describedby={titleId} onClick={() => onResetPassword(account)}>
-            <KeyRound size={15} aria-hidden="true" />
-            {t("resetPassword")}
-          </Button>
-          <Button
-            size="sm"
-            variant={account.isActive ? "destructive" : "default"}
-            aria-describedby={titleId}
-            onClick={() => onToggleStatus(account)}
-          >
-            {t(account.isActive ? "deactivate" : "activate")}
-          </Button>
-        </div>
+        {canUpdate ? (
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" aria-describedby={titleId} onClick={() => onResetPassword(account)}>
+              <KeyRound size={15} aria-hidden="true" />
+              {t("resetPassword")}
+            </Button>
+            <Button
+              size="sm"
+              variant={account.isActive ? "destructive" : "default"}
+              aria-describedby={titleId}
+              onClick={() => onToggleStatus(account)}
+            >
+              {t(account.isActive ? "deactivate" : "activate")}
+            </Button>
+          </div>
+        ) : null}
       </article>
     </li>
   );

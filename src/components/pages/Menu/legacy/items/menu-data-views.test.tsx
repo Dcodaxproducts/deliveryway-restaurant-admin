@@ -618,7 +618,7 @@ describe("catalog-specific parity", () => {
       harness.isMobile = mobile;
       harness.scroll.mockClear();
       run(family);
-      expect(harness.query).toHaveBeenLastCalledWith({ page: 1, limit: 10, restaurantId: "restaurant-1", search: "pizza", categoryId: "category-2", inactive: true, sortBy: "sortOrder", sortOrder: "ASC" });
+      expect(harness.query).toHaveBeenLastCalledWith({ page: 1, limit: 25, restaurantId: "restaurant-1", search: "pizza", categoryId: "category-2", inactive: true, sortBy: "sortOrder", sortOrder: "ASC" });
       expect(harness.scroll.mock.calls.map(([options]) => options.enabled)).toEqual([!mobile, mobile]);
     }
   });
