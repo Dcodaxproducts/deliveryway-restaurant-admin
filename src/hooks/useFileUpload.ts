@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { getApiErrorMessage } from "@/lib/errors";
 import { prepareUploadFile } from "@/lib/prepare-upload-file";
-import { createPresignedUpload } from "@/services/storage";
+import { createPresignedUpload, uploadOptimizedImage } from "@/services/storage";
 
 interface UploadResult {
   key: string;
@@ -22,8 +22,17 @@ export const useFileUpload = () => {
     try {
       setUploading(true);
 
-      const prepared = await prepareUploadFile(file);
+      if (file.type.startsWith("image/")) {
+        const uploaded = await uploadOptimizedImage(file);
+        const uploadData = uploaded?.data;
+        if (!uploadData?.fileUrl || !uploadData?.key) {
+          throw new Error("Invalid optimized image upload response");
+        }
+        toast.success("File uploaded");
+        return { key: uploadData.key, fileUrl: uploadData.fileUrl };
+      }
 
+      const prepared = await prepareUploadFile(file);
       const presigned = await createPresignedUpload({
         fileName: prepared.file.name,
         contentType: prepared.file.type,

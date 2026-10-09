@@ -3,6 +3,14 @@ import { api } from "@/lib/axios";
 export const MAX_UPLOAD_FILE_SIZE_MB = 20;
 export const MAX_UPLOAD_FILE_SIZE_BYTES = MAX_UPLOAD_FILE_SIZE_MB * 1024 * 1024;
 
+export const uploadOptimizedImage = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("assetType", "card");
+  const { data } = await api.post("/storage/upload-image", formData);
+  return data;
+};
+
 export const createPresignedUpload = async (payload: { fileName: string; contentType: string; fileSize: number }) => {
   const { data } = await api.post("/storage/presigned-upload", payload);
   return data;
