@@ -381,7 +381,7 @@
     "title": "Bestellungen",
     "description": "Alle Bestellungen hier anzeigen und verwalten",
     "newOrderReceived": "Neue Bestellung eingegangen: {order}",
-    "ordersUpdatedRealtime": "Die Bestellliste wurde in Echtzeit aktualisiert.",
+    "ordersUpdatedAutomatically": "Die Bestellliste wurde automatisch aktualisiert.",
     "deliveryDescription": "Lieferbestellungen für Ihre zugewiesene Filiale anzeigen",
     "pickupDescription": "Abholbestellungen für Ihre zugewiesene Filiale anzeigen",
     "reservationsTitle": "Reservierungen",

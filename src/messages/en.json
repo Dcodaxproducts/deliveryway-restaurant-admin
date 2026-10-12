@@ -381,7 +381,7 @@
     "title": "Orders",
     "description": "View and manage all orders here",
     "newOrderReceived": "New order received: {order}",
-    "ordersUpdatedRealtime": "The orders list was updated in real time.",
+    "ordersUpdatedAutomatically": "The orders list was updated automatically.",
     "deliveryDescription": "View delivery orders for your assigned branch",
     "pickupDescription": "View pick up orders for your assigned branch",
     "reservationsTitle": "Reservations",

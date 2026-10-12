@@ -5,7 +5,6 @@ if (!configuredApiBaseUrl) {
 }
 
 export const API_BASE_URL = configuredApiBaseUrl.replace(/\/+$/, "");
-export const CHAT_BASE_URL = new URL("/chat", API_BASE_URL).toString().replace(/\/$/, "");
 
 export const ROUTES = {
   HOME: "/",

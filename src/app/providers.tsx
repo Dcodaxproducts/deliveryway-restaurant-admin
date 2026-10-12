@@ -10,7 +10,7 @@ import { I18nProvider } from "@/components/providers/i18n-provider";
 import QueryProvider from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { useGlobalSettingsCurrency } from "@/hooks/useCurrency";
-import { useRealtimeOrderNotifications } from "@/hooks/useRealtimeOrderNotifications";
+import { useOrderNotificationPolling } from "@/hooks/useOrderNotificationPolling";
 
 type ProvidersProps = {
   children: ReactNode;
@@ -18,7 +18,7 @@ type ProvidersProps = {
 
 function GlobalAppHydrator() {
   useGlobalSettingsCurrency();
-  useRealtimeOrderNotifications();
+  useOrderNotificationPolling();
 
   return null;
 }
