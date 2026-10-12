@@ -13,7 +13,7 @@ import {
   ORDER_SOUND_STORAGE_KEY,
   type OrderSoundMode,
   unlockOrderNotificationSound,
-} from "@/hooks/useOrderNotificationPolling";
+} from "@/hooks/useRealtimeOrderNotifications";
 import Link from "next/link";
 
 interface HeaderProps {

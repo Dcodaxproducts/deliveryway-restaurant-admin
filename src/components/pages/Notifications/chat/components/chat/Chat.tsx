@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Send, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { io, type Socket } from "socket.io-client";
 import { useSearchParams } from "next/navigation";
 import {
   useCreateChatThread,
@@ -12,6 +13,11 @@ import {
 } from "@/hooks/useChat";
 import { useVisibilityPolling } from "@/hooks/useVisibilityPolling";
 import { formatTime24 } from "@/lib/date-time-format";
+import { CHAT_BASE_URL, REALTIME_ENABLED } from "@/lib/constants";
+import {
+  ExactEventIdDedupe,
+  ReconnectEventBuffer,
+} from "@/lib/realtime-event-buffer";
 
 export default function ChatUI() {
   const { token, user } = useAuth();
@@ -26,9 +32,17 @@ const [creatingThread, setCreatingThread] = useState(false);
   const [activeThread, setActiveThread] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [sending, setSending] = useState(false);
+  const [realtimeHealthy, setRealtimeHealthy] = useState(false);
+  const socketRef = useRef<Socket | null>(null);
+  const activeThreadRef = useRef<any>(null);
+  const joinedThreadRef = useRef<string | null>(null);
+  const threadsRefetchRef = useRef<() => Promise<unknown>>(async () => undefined);
+  const messagesRefetchRef = useRef<() => Promise<unknown>>(async () => undefined);
 
   const threadsQuery = useGetChatThreads(Boolean(token));
   const messagesQuery = useGetChatThread(activeThread?.id);
+  threadsRefetchRef.current = threadsQuery.refetch;
+  messagesRefetchRef.current = messagesQuery.refetch;
 
   useEffect(() => {
     if (threadsQuery.data?.success) {
@@ -45,6 +59,10 @@ const [creatingThread, setCreatingThread] = useState(false);
       setMessages(messagesQuery.data.data?.messages || []);
     }
   }, [messagesQuery.data]);
+
+  useEffect(() => {
+    activeThreadRef.current = activeThread;
+  }, [activeThread]);
 
   const ensureOrderThread = async (orderId: string) => {
   if (!orderId) return;
@@ -94,13 +112,161 @@ useEffect(() => {
       year: "numeric",
     });
 
+  useEffect(() => {
+    if (!token || !REALTIME_ENABLED) {
+      setRealtimeHealthy(false);
+      return;
+    }
+
+    let active = true;
+    type ChatMessage = { id?: string; body?: string };
+    type ChatThread = {
+      id?: string;
+      messages?: ChatMessage[];
+      [key: string]: unknown;
+    };
+    type ChatRealtimePayload = ChatThread & {
+      eventId?: string;
+      threadId?: string;
+      message?: ChatMessage;
+      thread?: ChatThread;
+    };
+    type ChatRealtimeEvent = {
+      event:
+        | "chat.thread.created"
+        | "chat.thread.updated"
+        | "chat.message.created"
+        | "chat.thread.read";
+      payload: ChatRealtimePayload;
+    };
+    const dedupe = new ExactEventIdDedupe();
+    const buffer = new ReconnectEventBuffer<ChatRealtimeEvent>();
+    const socket = io(CHAT_BASE_URL, {
+      autoConnect: false,
+      auth: { token },
+      transports: ["websocket", "polling"],
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: Number.POSITIVE_INFINITY,
+      reconnectionDelay: 1_000,
+      reconnectionDelayMax: 30_000,
+    });
+    socketRef.current = socket;
+
+    const applyEvent = ({ event, payload }: ChatRealtimeEvent) => {
+      const thread = payload.thread ?? payload;
+      const threadId = payload.threadId ?? thread?.id;
+      if (!threadId || !dedupe.accept(threadId, payload.eventId)) return;
+
+      if (event === "chat.message.created") {
+        const incomingMessage = payload.message;
+        if (threadId === activeThreadRef.current?.id && incomingMessage?.id) {
+          setMessages((current) =>
+            current.some((item) => item.id === incomingMessage.id)
+              ? current
+              : [...current, incomingMessage],
+          );
+        }
+        setThreads((current) =>
+          current.map((item) =>
+            item.id === threadId
+              ? {
+                  ...item,
+                  ...(thread ?? {}),
+                  lastMessagePreview: incomingMessage?.body,
+                }
+              : item,
+          ),
+        );
+        return;
+      }
+
+      setThreads((current) => {
+        const index = current.findIndex((item) => item.id === threadId);
+        if (index < 0) return thread?.id ? [thread, ...current] : current;
+        return current.map((item) =>
+          item.id === threadId ? { ...item, ...(thread ?? payload) } : item,
+        );
+      });
+      if (threadId === activeThreadRef.current?.id && thread?.messages) {
+        setMessages(thread.messages);
+      }
+    };
+
+    const register = (event: ChatRealtimeEvent["event"]) => {
+      socket.on(event, (payload) => buffer.push({ event, payload }, applyEvent));
+    };
+    register("chat.thread.created");
+    register("chat.thread.updated");
+    register("chat.message.created");
+    register("chat.thread.read");
+    socket.on("chat.inbox.summary", () => {
+      void threadsRefetchRef.current();
+    });
+    socket.on("connect", () => {
+      setRealtimeHealthy(false);
+      buffer.disconnect();
+      socket.emit("chat.inbox.subscribe");
+      const threadId = activeThreadRef.current?.id;
+      if (threadId) socket.emit("chat.thread.join", { threadId });
+      void (async () => {
+        try {
+          const requests: Promise<unknown>[] = [threadsRefetchRef.current()];
+          if (threadId) requests.push(messagesRefetchRef.current());
+          await Promise.all(requests);
+          if (!active || !socket.connected) return;
+          buffer.resynced(applyEvent);
+          setRealtimeHealthy(true);
+        } catch {
+          if (active) setRealtimeHealthy(false);
+        }
+      })();
+    });
+    socket.on("disconnect", () => {
+      buffer.disconnect();
+      setRealtimeHealthy(false);
+    });
+    socket.on("chat.error", () => setRealtimeHealthy(false));
+    socket.connect();
+
+    return () => {
+      active = false;
+      buffer.reset();
+      setRealtimeHealthy(false);
+      joinedThreadRef.current = null;
+      socketRef.current = null;
+      socket.removeAllListeners();
+      socket.disconnect();
+    };
+  }, [token]);
+
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!realtimeHealthy || !socket || !activeThread?.id) return;
+    const previousThreadId = joinedThreadRef.current;
+    if (previousThreadId && previousThreadId !== activeThread.id) {
+      socket.emit("chat.thread.leave", { threadId: previousThreadId });
+    }
+    joinedThreadRef.current = activeThread.id;
+    socket.emit("chat.thread.join", { threadId: activeThread.id });
+    socket.emit("chat.thread.markRead", { threadId: activeThread.id });
+  }, [activeThread?.id, realtimeHealthy]);
+
   // 🔹 Send Message
   const handleSend = async () => {
     if (!message.trim() || !activeThread) return;
 
     setSending(true);
 
-    await sendMessageMutation.mutateAsync({ id: activeThread.id, message });
+    const socket = socketRef.current;
+    if (realtimeHealthy && socket?.connected) {
+      await socket.timeout(10_000).emitWithAck("chat.message.send", {
+        threadId: activeThread.id,
+        message,
+      });
+    } else {
+      await sendMessageMutation.mutateAsync({ id: activeThread.id, message });
+    }
 
     setMessage("");
 
@@ -115,7 +281,7 @@ useEffect(() => {
   };
 
   useVisibilityPolling({
-    enabled: Boolean(token),
+    enabled: Boolean(token) && (!REALTIME_ENABLED || !realtimeHealthy),
     intervalMs: 10_000,
     poll: async () => {
       if (threadsQuery.isFetching || messagesQuery.isFetching) return;

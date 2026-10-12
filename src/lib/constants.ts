@@ -1,3 +1,5 @@
+import { isRealtimeTransportEnabled } from "@/lib/realtime-event-buffer";
+
 const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
 
 if (!configuredApiBaseUrl) {
@@ -5,6 +7,12 @@ if (!configuredApiBaseUrl) {
 }
 
 export const API_BASE_URL = configuredApiBaseUrl.replace(/\/+$/, "");
+export const CHAT_BASE_URL = new URL("/chat", API_BASE_URL)
+  .toString()
+  .replace(/\/$/, "");
+export const REALTIME_ENABLED = isRealtimeTransportEnabled(
+  process.env.NEXT_PUBLIC_REALTIME_ENABLED,
+);
 
 export const ROUTES = {
   HOME: "/",
