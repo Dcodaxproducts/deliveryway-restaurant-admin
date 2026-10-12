@@ -405,7 +405,7 @@
     "printingSettings": "Printing settings",
     "description": "View and manage all orders here",
     "newOrderReceived": "New order received: {order}",
-    "ordersUpdatedRealtime": "The orders list was updated in real time.",
+    "ordersUpdatedAutomatically": "The orders list was updated automatically.",
     "newOrderAutoPrintFailed": "New order received, but automatic printing failed.",
     "acceptedOrderAutoPrintFailed": "Order accepted, but automatic printing failed.",
     "reprintOrder": "Reprint order",

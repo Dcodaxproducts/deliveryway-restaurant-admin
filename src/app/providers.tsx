@@ -10,7 +10,7 @@ import { I18nProvider } from "@/components/providers/i18n-provider";
 import QueryProvider from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { useGlobalSettingsCurrency } from "@/hooks/useCurrency";
-import { useRealtimeOrderNotifications } from "@/hooks/useRealtimeOrderNotifications";
+import { useOrderNotificationPolling } from "@/hooks/useOrderNotificationPolling";
 import { isPosPrinterAccount } from "@/lib/auth";
 
 type ProvidersProps = {
@@ -27,7 +27,7 @@ function GlobalAppHydrator() {
 
 function StandardAppHydrator() {
   useGlobalSettingsCurrency();
-  useRealtimeOrderNotifications();
+  useOrderNotificationPolling();
 
   return null;
 }

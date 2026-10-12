@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Send, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { io, Socket } from "socket.io-client";
 import { useSearchParams } from "next/navigation";
 import {
   useCreateChatThread,
@@ -11,8 +10,8 @@ import {
   useGetChatThreads,
   useSendChatMessage,
 } from "@/hooks/useChat";
+import { useVisibilityPolling } from "@/hooks/useVisibilityPolling";
 import { formatTime24 } from "@/lib/date-time-format";
-import { CHAT_BASE_URL } from "@/lib/constants";
 
 export default function ChatUI() {
   const { token, user } = useAuth();
@@ -28,27 +27,24 @@ const [creatingThread, setCreatingThread] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const [sending, setSending] = useState(false);
 
-  const socketRef = useRef<Socket | null>(null);
-  const activeThreadRef = useRef<any>(null);
   const threadsQuery = useGetChatThreads(Boolean(token));
   const messagesQuery = useGetChatThread(activeThread?.id);
 
   useEffect(() => {
     if (threadsQuery.data?.success) {
-      setThreads(threadsQuery.data.data || []);
+      const nextThreads = threadsQuery.data.data || [];
+      setThreads(nextThreads);
+      setActiveThread((current: any) =>
+        current || orderId ? current : (nextThreads[0] ?? null),
+      );
     }
-  }, [threadsQuery.data]);
+  }, [orderId, threadsQuery.data]);
 
   useEffect(() => {
     if (messagesQuery.data?.success) {
       setMessages(messagesQuery.data.data?.messages || []);
     }
   }, [messagesQuery.data]);
-
-
-  useEffect(() => {
-    activeThreadRef.current = activeThread;
-  }, [activeThread]);
 
   const ensureOrderThread = async (orderId: string) => {
   if (!orderId) return;
@@ -98,23 +94,6 @@ useEffect(() => {
       year: "numeric",
     });
 
-  // 🔹 Fetch Threads
-  const fetchThreads = async () => {
-    const res = await threadsQuery.refetch();
-    if (res.data?.success) {
-      setThreads(res.data.data || []);
-      if (res.data.data.length > 0 && !activeThread && !orderId) {
-        setActiveThread(res.data.data[0]);
-      }
-    }
-  };
-
-const fetchMessages = async () => {
-  const res = await messagesQuery.refetch();
-  if (res.data?.success) {
-    setMessages(res.data.data?.messages || []);
-  }
-};
   // 🔹 Send Message
   const handleSend = async () => {
     if (!message.trim() || !activeThread) return;
@@ -125,7 +104,6 @@ const fetchMessages = async () => {
 
     setMessage("");
 
-    //  DO NOT FETCH AGAIN (socket handles it)
     setSending(false);
   };
 
@@ -136,60 +114,19 @@ const fetchMessages = async () => {
     }
   };
 
-  // initial load
-  useEffect(() => {
-    if (token) fetchThreads();
-  }, [token]);
+  useVisibilityPolling({
+    enabled: Boolean(token),
+    intervalMs: 10_000,
+    poll: async () => {
+      if (threadsQuery.isFetching || messagesQuery.isFetching) return;
 
-  useEffect(() => {
-    if (activeThread?.id) {
-      fetchMessages();
-    }
-  }, [activeThread]);
-
-  useEffect(() => {
-    if (!token) return;
-
-    const socket = io(CHAT_BASE_URL, {
-      transports: ["websocket"],
-      auth: { token },
-    });
-
-    socketRef.current = socket;
-
-    socket.on("chat.message.created", (data: any) => {
-      const incomingMessage = data.message;
-      const threadId = data.threadId;
-
-
-      //  only update if active thread
-      if (threadId === activeThreadRef.current?.id) {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === incomingMessage.id)) return prev;
-          return [...prev, incomingMessage];
-        });
+      const requests: Promise<unknown>[] = [threadsQuery.refetch()];
+      if (activeThread?.id) {
+        requests.push(messagesQuery.refetch());
       }
-
-      // update sidebar
-      setThreads((prev) =>
-        prev.map((t) =>
-          t.id === threadId
-            ? { ...t, lastMessagePreview: incomingMessage.body }
-            : t
-        )
-      );
-    });
-
-    socket.on("chat.thread.updated", (data: any) => {
-      setThreads((prev) =>
-        prev.map((t) => (t.id === data.id ? { ...t, ...data } : t))
-      );
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [token]);
+      await Promise.all(requests);
+    },
+  });
 
   return (
     <div className="flex min-h-0 flex-1 overflow-hidden bg-[#f7f6f5] text-[13px] text-[#1f1f1f]">

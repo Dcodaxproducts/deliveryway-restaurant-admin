@@ -405,7 +405,7 @@
     "printingSettings": "Druckeinstellungen",
     "description": "Alle Bestellungen hier anzeigen und verwalten",
     "newOrderReceived": "Neue Bestellung eingegangen: {order}",
-    "ordersUpdatedRealtime": "Die Bestellliste wurde in Echtzeit aktualisiert.",
+    "ordersUpdatedAutomatically": "Die Bestellliste wurde automatisch aktualisiert.",
     "newOrderAutoPrintFailed": "Neue Bestellung empfangen, aber der automatische Druck ist fehlgeschlagen.",
     "acceptedOrderAutoPrintFailed": "Bestellung angenommen, aber der automatische Druck ist fehlgeschlagen.",
     "reprintOrder": "Bestellung erneut drucken",

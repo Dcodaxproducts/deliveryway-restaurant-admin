@@ -9,7 +9,7 @@ import OrderDetailsHeader from "@/components/pages/Orders/components/orders/deta
 import OrderTrackingSection from "@/components/pages/Orders/components/orders/details/OrderTrackingSection";
 import UserProfile from "@/components/pages/Orders/components/orders/details/UserProfile";
 import { useGetOrderById } from "@/hooks/useOrders";
-import { silenceOrderAlert } from "@/hooks/useRealtimeOrderNotifications";
+import { silenceOrderAlert } from "@/hooks/useOrderNotificationPolling";
 import { shouldSilenceOrderAlertOnDetailsOpen } from "@/lib/new-order-navigation";
 
 export default function OrderDetails() {
