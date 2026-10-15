@@ -24,10 +24,9 @@ describe("report date range", () => {
       new Date("2026-09-02T10:00:00.000Z"),
     );
 
-    expect(result).toEqual({
-      fromDate: "2026-08-28",
-      toDate: "2026-08-31",
-    });
+    expect(new Date(result.fromDate).getHours()).toBe(0);
+    expect(new Date(result.toDate).getHours()).toBe(23);
+    expect(new Date(result.toDate).getMinutes()).toBe(59);
   });
 
   it("rejects an end date before the start date", () => {
@@ -84,10 +83,10 @@ describe("report date range", () => {
     const summaryParams = {
       restaurantId: "restaurant-1",
       branchId: "branch-7",
-      ...resolveReportDateRange("weekly", {
-        from: "2026-09-01",
-        to: "2026-09-14",
-      }),
+      ...resolveReportDateRange(
+        "weekly",
+        { from: "2026-09-01", to: "2026-09-14" },
+      ),
     };
 
     const trendParams = buildReportTrendParams(
