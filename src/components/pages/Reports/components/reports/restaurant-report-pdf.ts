@@ -177,8 +177,15 @@ type OrderReportRow = {
   totalAmount: number;
 };
 
+type PaymentMethodSummaryRow = {
+  paymentMethod: string;
+  count: number;
+  amount: number;
+};
+
 type OrderPeriodReportData = {
   orders?: OrderReportRow[];
+  paymentMethodSummary?: PaymentMethodSummaryRow[];
   offlineOrderCount?: number;
   offlineAmount?: number;
   onlineOrderCount?: number;
@@ -196,21 +203,36 @@ type OrderPeriodReportData = {
   }>;
 };
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  COD: "Barzahlung",
+  CARD_ON_DELIVERY: "Kartenzahlung",
+  PAYPAL: "PayPal",
+  STRIPE: "Online-Zahlung",
+  EASYPAISA: "Online-Zahlung",
+  JAZZCASH: "Online-Zahlung",
+  BANK_TRANSFER: "Online-Zahlung",
+  WALLET: "Online-Zahlung",
+};
+
+const formatPaymentMethod = (paymentMethod: string) =>
+  PAYMENT_METHOD_LABELS[paymentMethod.toUpperCase()] ??
+  prettyLabel(paymentMethod);
+
 export const buildOrderPaymentDetailsTable = (
   orders: OrderReportRow[],
   currency?: string,
 ) => ({
   head: [
-    "Order ID",
-    "Order Date & Time",
-    "Paid By",
-    `Total (${resolveCurrency(currency)})`,
+    "Bestellnummer",
+    "Bestelldatum und Uhrzeit",
+    "Bezahlt mit",
+    `Gesamt (${resolveCurrency(currency)})`,
   ],
   body: orders.map((order) => [
     order.id,
     formatDateTime(order.createdAt),
-    order.paymentMethod.toUpperCase(),
-    new Intl.NumberFormat("en-US", {
+    formatPaymentMethod(order.paymentMethod),
+    new Intl.NumberFormat("de-DE", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(order.totalAmount),
@@ -218,16 +240,93 @@ export const buildOrderPaymentDetailsTable = (
 });
 
 const formatReportMoney = (value: number, currency?: string | null) =>
-  `${new Intl.NumberFormat("en-US", {
+  new Intl.NumberFormat("de-DE", {
+    style: "currency",
+    currency: resolveCurrency(currency),
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value)} ${resolveCurrency(currency)}`;
+  }).format(value);
 
-const formatReportDate = (value?: string) => {
+export const formatReportDate = (value?: string) => {
   if (!value) return "-";
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+  if (dateOnlyMatch) {
+    return `${dateOnlyMatch[3]}.${dateOnlyMatch[2]}.${dateOnlyMatch[1]}`;
+  }
+
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return date.toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+};
+
+const getPaymentMethodSummary = (data: OrderPeriodReportData) => {
+  if (data.paymentMethodSummary?.length) {
+    return data.paymentMethodSummary;
+  }
+
+  const summary = new Map<string, PaymentMethodSummaryRow>();
+  for (const order of data.orders ?? []) {
+    const paymentMethod = order.paymentMethod.toUpperCase();
+    const current = summary.get(paymentMethod) ?? {
+      paymentMethod,
+      count: 0,
+      amount: 0,
+    };
+    current.count += 1;
+    current.amount += Number(order.totalAmount || 0);
+    summary.set(paymentMethod, current);
+  }
+  return [...summary.values()];
+};
+
+export const buildOrderReportSummaryRows = (
+  data: OrderPeriodReportData,
+  currency?: string,
+): ReportTableRow[] => {
+  const summaries = getPaymentMethodSummary(data);
+  const exact = (paymentMethod: string) =>
+    summaries.find(
+      (entry) => entry.paymentMethod.toUpperCase() === paymentMethod,
+    );
+  const online = summaries
+    .filter(
+      (entry) =>
+        !["COD", "CARD_ON_DELIVERY", "PAYPAL"].includes(
+          entry.paymentMethod.toUpperCase(),
+        ),
+    )
+    .reduce(
+      (total, entry) => ({
+        count: total.count + Number(entry.count || 0),
+        amount: total.amount + Number(entry.amount || 0),
+      }),
+      { count: 0, amount: 0 },
+    );
+  const rows = [
+    ["Barzahlung", exact("COD")],
+    ["Kartenzahlung", exact("CARD_ON_DELIVERY")],
+    ["PayPal", exact("PAYPAL")],
+    ["Online-Zahlung", online],
+  ] as const;
+
+  return [
+    ...rows.map(
+      ([label, summary]) =>
+        [
+          `${label} (${summary?.count ?? 0})`,
+          formatReportMoney(summary?.amount ?? 0, currency),
+        ] as ReportTableRow,
+    ),
+    [
+      `Gesamtbestellungen (${data.totalOrders ?? 0})`,
+      formatReportMoney(data.totalRevenue ?? 0, currency),
+    ],
+  ];
 };
 
 const drawOrderReportHeader = (
@@ -241,7 +340,7 @@ const drawOrderReportHeader = (
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(22);
-  doc.text("DeliveryWays", 40, 34);
+  doc.text("Bestellhistorie", 40, 34);
   doc.setFontSize(13);
   doc.text(restaurantName || "Restaurant", 40, 56);
   doc.setFont("helvetica", "normal");
@@ -265,10 +364,15 @@ const drawOrderReportFooter = (doc: jsPDF) => {
     doc.line(40, pageHeight - 34, pageWidth - 40, pageHeight - 34);
     doc.setTextColor(...PDF_GRAY_COLOR);
     doc.setFontSize(8);
-    doc.text("Generated by DeliveryWays", 40, pageHeight - 18);
-    doc.text(`Page ${page} of ${pageCount}`, pageWidth - 40, pageHeight - 18, {
-      align: "right",
-    });
+    doc.text("Erstellt von DeliveryWays", 40, pageHeight - 18);
+    doc.text(
+      `Seite ${page} von ${pageCount}`,
+      pageWidth - 40,
+      pageHeight - 18,
+      {
+        align: "right",
+      },
+    );
   }
 };
 
@@ -287,7 +391,7 @@ const renderOrderPeriodReport = ({
 }) => {
   drawOrderReportHeader(doc, restaurantName, period);
 
-  addSectionTitle(doc, "Order Payment Details", 98);
+  addSectionTitle(doc, "Bestellübersicht", 98);
   const paymentDetails = buildOrderPaymentDetailsTable(
     data.orders ?? [],
     currency,
@@ -324,23 +428,10 @@ const renderOrderPeriodReport = ({
   } as any);
 
   const summaryY = getFinalY(doc, 120) + 24;
-  addSectionTitle(doc, "Summary", summaryY);
+  addSectionTitle(doc, "Zusammenfassung", summaryY);
   autoTable(doc, {
     startY: summaryY + 10,
-    body: [
-      ["Offline/Cash Orders", String(data.offlineOrderCount ?? 0)],
-      [
-        "Offline/Cash Total",
-        formatReportMoney(data.offlineAmount ?? 0, currency),
-      ],
-      ["Online Payment Orders", String(data.onlineOrderCount ?? 0)],
-      [
-        "Online Payment Total",
-        formatReportMoney(data.onlineAmount ?? 0, currency),
-      ],
-      ["Total Orders", String(data.totalOrders ?? 0)],
-      ["Total Revenue", formatReportMoney(data.totalRevenue ?? 0, currency)],
-    ],
+    body: buildOrderReportSummaryRows(data, currency),
     margin: { left: 40, right: 40, bottom: 52 },
     theme: "plain",
     styles: { font: "helvetica", fontSize: 9, cellPadding: 5 },
@@ -359,20 +450,22 @@ const renderOrderPeriodReport = ({
     payoutY = 98;
   }
 
-  addSectionTitle(doc, "Payout Activity", payoutY);
+  addSectionTitle(doc, "Auszahlungsübersicht", payoutY);
   if (payoutActivity.length === 0) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(...PDF_GRAY_COLOR);
     doc.text(
-      "No payout request activity for this selected period.",
+      "Keine Auszahlungsaktivität im ausgewählten Zeitraum.",
       40,
       payoutY + 18,
     );
   } else {
     autoTable(doc, {
       startY: payoutY + 10,
-      head: [["Request", "Requested", "Status", "Paid", "Amount", "Reference"]],
+      head: [
+        ["Anfrage", "Beantragt", "Status", "Bezahlt", "Betrag", "Referenz"],
+      ],
       body: payoutActivity.map((request) => [
         request.id,
         formatReportDate(request.requestedAt),
