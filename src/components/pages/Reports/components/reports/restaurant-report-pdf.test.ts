@@ -33,9 +33,12 @@ describe("buildOrderPaymentDetailsTable", () => {
     expect(table.body[0][2]).toBe("PayPal");
   });
 
-  it("uses the selected calendar dates without UTC day rollover", () => {
-    expect(formatReportDate("2026-10-01")).toBe("01.10.2026");
-    expect(formatReportDate("2026-10-14")).toBe("14.10.2026");
+  it("uses the selected local calendar dates without UTC day rollover", () => {
+    const from = new Date(2026, 9, 1, 0, 0, 0, 0).toISOString();
+    const to = new Date(2026, 9, 14, 23, 59, 59, 999).toISOString();
+
+    expect(formatReportDate(from)).toBe("01.10.2026");
+    expect(formatReportDate(to)).toBe("14.10.2026");
   });
 
   it("combines count and amount per German payment category", () => {
