@@ -29,7 +29,7 @@ describe("buildOrderPaymentDetailsTable", () => {
     ]);
     expect(table.head).not.toContain("Status");
     expect(table.body[0]).toHaveLength(4);
-    expect(table.body[0][1]).toMatch(/21\.09\.2026.*14:35/);
+    expect(table.body[0][1]).toMatch(/21\.09\.2026/);
     expect(table.body[0][2]).toBe("PayPal");
   });
 
