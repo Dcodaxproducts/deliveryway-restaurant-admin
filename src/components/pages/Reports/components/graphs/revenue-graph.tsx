@@ -20,6 +20,7 @@ import { useGetRevenueTrend } from "@/hooks/useDashboard";
 import { formatMoney } from "@/lib/currency";
 import { useTranslations } from "next-intl";
 import type { DashboardTrendParams } from "@/services/dashboard/dashboard.api";
+import { getDailyTrendPointDate } from "@/components/pages/reports/utils/report-date-range";
 
 export type TrendRange = "daily" | "weekly" | "monthly";
 
@@ -40,11 +41,7 @@ const RevenueGraph = ({
   params?: DashboardTrendParams;
 } = {}) => {
   const t = useTranslations("reports");
-  const {
-    restaurantId,
-    scopedParams,
-    loading: authLoading,
-  } = useAuth();
+  const { restaurantId, scopedParams, loading: authLoading } = useAuth();
   const { currency: fallbackCurrency } = useCurrency(restaurantId);
   const [localRange, setLocalRange] = useState<TrendRange>("daily");
   const range = controlledRange ?? localRange;
@@ -78,14 +75,21 @@ const RevenueGraph = ({
     }>
   >(() => {
     return (
-      trendData?.points?.map((point: RevenuePoint) => ({
-        key: point.key,
-        day: point.label,
-        revenue: Number(point.value || 0),
-        cumulativeTotal: Number(point.cumulativeTotal || 0),
-      })) || []
+      trendData?.points?.map((point: RevenuePoint, index: number) => {
+        const localDate =
+          currentRange === "daily" && trendParams?.fromDate
+            ? getDailyTrendPointDate(trendParams.fromDate, index)
+            : null;
+
+        return {
+          key: localDate?.key ?? point.key,
+          day: localDate?.label ?? point.label,
+          revenue: Number(point.value || 0),
+          cumulativeTotal: Number(point.cumulativeTotal || 0),
+        };
+      }) || []
     );
-  }, [trendData]);
+  }, [currentRange, trendData, trendParams?.fromDate]);
 
   const hasOnlyOneRevenuePoint =
     chartData.filter((item) => item.revenue > 0).length === 1;

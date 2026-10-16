@@ -13,7 +13,7 @@ export type ReportDateRange = {
 
 const parseLocalDate = (value: string, endOfDay: boolean) => {
   const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(
+  return new Date(
     year,
     month - 1,
     day,
@@ -22,8 +22,6 @@ const parseLocalDate = (value: string, endOfDay: boolean) => {
     endOfDay ? 59 : 0,
     endOfDay ? 999 : 0,
   );
-
-  return date;
 };
 
 export const isValidCustomReportPeriod = (period: CustomReportPeriod) =>
@@ -68,6 +66,16 @@ export const resolveReportDateRange = (
   return {
     fromDate: from.toISOString(),
     toDate: now.toISOString(),
+  };
+};
+
+export const getDailyTrendPointDate = (fromDate: string, index: number) => {
+  const date = new Date(fromDate);
+  date.setDate(date.getDate() + index);
+
+  return {
+    key: formatDateInputValue(date),
+    label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
   };
 };
 

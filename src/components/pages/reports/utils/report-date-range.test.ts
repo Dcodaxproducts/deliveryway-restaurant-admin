@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildReportTrendParams,
+  getDailyTrendPointDate,
   getPreviousCalendarMonthPeriod,
   isValidCustomReportPeriod,
   resolveReportDateRange,
@@ -17,18 +18,25 @@ describe("report date range", () => {
     ).toEqual({ from: "2025-12-01", to: "2025-12-31" });
   });
 
-  it("uses the complete selected calendar days", () => {
+  it("keeps local selected-day boundaries while labeling the first chart bucket with the selected date", () => {
     const result = resolveReportDateRange(
       "daily",
-      { from: "2026-08-28", to: "2026-08-31" },
-      new Date("2026-09-02T10:00:00.000Z"),
+      { from: "2026-10-01", to: "2026-10-16" },
+      new Date("2026-10-16T10:00:00.000Z"),
     );
 
     expect(new Date(result.fromDate).getHours()).toBe(0);
     expect(new Date(result.toDate).getHours()).toBe(23);
     expect(new Date(result.toDate).getMinutes()).toBe(59);
+    expect(getDailyTrendPointDate(result.fromDate, 0)).toEqual({
+      key: "2026-10-01",
+      label: "Oct 1",
+    });
+    expect(getDailyTrendPointDate(result.fromDate, 15)).toEqual({
+      key: "2026-10-16",
+      label: "Oct 16",
+    });
   });
-
   it("rejects an end date before the start date", () => {
     expect(
       isValidCustomReportPeriod({ from: "2026-09-02", to: "2026-09-01" }),
