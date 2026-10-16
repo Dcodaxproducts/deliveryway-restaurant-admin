@@ -83,10 +83,10 @@ describe("report date range", () => {
     const summaryParams = {
       restaurantId: "restaurant-1",
       branchId: "branch-7",
-      ...resolveReportDateRange(
-        "weekly",
-        { from: "2026-09-01", to: "2026-09-14" },
-      ),
+      ...resolveReportDateRange("weekly", {
+        from: "2026-09-01",
+        to: "2026-09-14",
+      }),
     };
 
     const trendParams = buildReportTrendParams(

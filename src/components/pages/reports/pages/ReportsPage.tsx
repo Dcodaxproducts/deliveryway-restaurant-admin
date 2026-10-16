@@ -160,9 +160,7 @@ export default function Orders() {
   const activeReportError =
     activeTab === "financial" ? financialError : ordersError;
   const refetchActiveReport =
-    activeTab === "financial"
-      ? refetchFinancialReport
-      : refetchOrdersReport;
+    activeTab === "financial" ? refetchFinancialReport : refetchOrdersReport;
 
   const activeLoading =
     authLoading ||

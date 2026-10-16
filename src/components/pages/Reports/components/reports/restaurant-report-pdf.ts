@@ -203,6 +203,15 @@ type OrderPeriodReportData = {
   }>;
 };
 
+export const ORDER_REPORT_LABELS = {
+  history: "Bestellhistorie",
+  overview: "Bestellübersicht",
+  orderDateTime: "Bestelldatum und Uhrzeit",
+  paidWith: "Bezahlt mit",
+  summary: "Zusammenfassung",
+  payoutOverview: "Auszahlungsübersicht",
+} as const;
+
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   COD: "Barzahlung",
   CARD_ON_DELIVERY: "Kartenzahlung",
@@ -214,7 +223,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   WALLET: "Online-Zahlung",
 };
 
-const formatPaymentMethod = (paymentMethod: string) =>
+export const formatPaymentMethod = (paymentMethod: string) =>
   PAYMENT_METHOD_LABELS[paymentMethod.toUpperCase()] ??
   prettyLabel(paymentMethod);
 
@@ -224,8 +233,8 @@ export const buildOrderPaymentDetailsTable = (
 ) => ({
   head: [
     "Bestellnummer",
-    "Bestelldatum und Uhrzeit",
-    "Bezahlt mit",
+    ORDER_REPORT_LABELS.orderDateTime,
+    ORDER_REPORT_LABELS.paidWith,
     `Gesamt (${resolveCurrency(currency)})`,
   ],
   body: orders.map((order) => [
@@ -296,7 +305,7 @@ export const buildOrderReportSummaryRows = (
   const online = summaries
     .filter(
       (entry) =>
-        !["COD", "CARD_ON_DELIVERY", "PAYPAL"].includes(
+        !["COD", "CARD_ON_DELIVERY"].includes(
           entry.paymentMethod.toUpperCase(),
         ),
     )
@@ -310,7 +319,6 @@ export const buildOrderReportSummaryRows = (
   const rows = [
     ["Barzahlung", exact("COD")],
     ["Kartenzahlung", exact("CARD_ON_DELIVERY")],
-    ["PayPal", exact("PAYPAL")],
     ["Online-Zahlung", online],
   ] as const;
 
@@ -340,7 +348,7 @@ const drawOrderReportHeader = (
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(22);
-  doc.text("Bestellhistorie", 40, 34);
+  doc.text(ORDER_REPORT_LABELS.history, 40, 34);
   doc.setFontSize(13);
   doc.text(restaurantName || "Restaurant", 40, 56);
   doc.setFont("helvetica", "normal");
@@ -391,7 +399,7 @@ const renderOrderPeriodReport = ({
 }) => {
   drawOrderReportHeader(doc, restaurantName, period);
 
-  addSectionTitle(doc, "Bestellübersicht", 98);
+  addSectionTitle(doc, ORDER_REPORT_LABELS.overview, 98);
   const paymentDetails = buildOrderPaymentDetailsTable(
     data.orders ?? [],
     currency,
@@ -428,7 +436,7 @@ const renderOrderPeriodReport = ({
   } as any);
 
   const summaryY = getFinalY(doc, 120) + 24;
-  addSectionTitle(doc, "Zusammenfassung", summaryY);
+  addSectionTitle(doc, ORDER_REPORT_LABELS.summary, summaryY);
   autoTable(doc, {
     startY: summaryY + 10,
     body: buildOrderReportSummaryRows(data, currency),
@@ -450,7 +458,7 @@ const renderOrderPeriodReport = ({
     payoutY = 98;
   }
 
-  addSectionTitle(doc, "Auszahlungsübersicht", payoutY);
+  addSectionTitle(doc, ORDER_REPORT_LABELS.payoutOverview, payoutY);
   if (payoutActivity.length === 0) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
