@@ -26,7 +26,7 @@ type DownloadRestaurantDashboardReportPdfInput = {
   currency?: string;
   period?: { fromDate: string; toDate: string };
   stats: ReportPdfStat[];
-  data: any;
+  data: unknown;
 };
 
 const PDF_GREEN_COLOR: [number, number, number] = [16, 185, 129];
@@ -183,6 +183,17 @@ type PaymentMethodSummaryRow = {
   amount: number;
 };
 
+type ReportBreakdownRow = { key: string; count: number };
+
+type ReportTopItemRow = {
+  menuItemName?: string;
+  name?: string;
+  quantity?: number;
+  count?: number;
+  revenue?: number;
+  totalRevenue?: number;
+};
+
 type OrderPeriodReportData = {
   orders?: OrderReportRow[];
   paymentMethodSummary?: PaymentMethodSummaryRow[];
@@ -192,6 +203,10 @@ type OrderPeriodReportData = {
   onlineAmount?: number;
   totalOrders?: number;
   totalRevenue?: number;
+  statusBreakdown?: ReportBreakdownRow[];
+  paymentStatusBreakdown?: ReportBreakdownRow[];
+  orderTypeBreakdown?: ReportBreakdownRow[];
+  topItems?: ReportTopItemRow[];
   payoutActivity?: Array<{
     id: string;
     requestedAt: string;
@@ -201,6 +216,16 @@ type OrderPeriodReportData = {
     paidAt?: string | null;
     paymentReference?: string | null;
   }>;
+};
+
+type FinancialReportData = OrderPeriodReportData & {
+  grossRevenue?: number;
+  paidRevenue?: number;
+  netRevenue?: number;
+  averageOrderValue?: number;
+  totalTax?: number;
+  totalDeliveryFee?: number;
+  refundedAmount?: number;
 };
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
@@ -425,7 +450,7 @@ const renderOrderPeriodReport = ({
     didDrawPage: ({ pageNumber }: HookData) => {
       if (pageNumber > 1) drawOrderReportHeader(doc, restaurantName, period);
     },
-  } as any);
+  });
 
   const summaryY = getFinalY(doc, 120) + 24;
   addSectionTitle(doc, "Zusammenfassung", summaryY);
@@ -439,7 +464,7 @@ const renderOrderPeriodReport = ({
       0: { fontStyle: "bold", cellWidth: 250 },
       1: { halign: "right", cellWidth: 265 },
     },
-  } as any);
+  });
 
   const payoutActivity = data.payoutActivity ?? [];
   let payoutY = getFinalY(doc, summaryY + 150) + 24;
@@ -492,7 +517,7 @@ const renderOrderPeriodReport = ({
       didDrawPage: ({ pageNumber }: HookData) => {
         if (pageNumber > 1) drawOrderReportHeader(doc, restaurantName, period);
       },
-    } as any);
+    });
   }
 
   drawOrderReportFooter(doc);
@@ -506,7 +531,8 @@ const addSectionTitle = (doc: jsPDF, title: string, y: number) => {
 };
 
 const getFinalY = (doc: jsPDF, fallback: number) => {
-  return (doc as any).lastAutoTable?.finalY || fallback;
+  const tableDoc = doc as jsPDF & { lastAutoTable?: { finalY: number } };
+  return tableDoc.lastAutoTable?.finalY ?? fallback;
 };
 
 const buildBreakdownRows = (items?: Array<{ key: string; count: number }>) => {
@@ -515,7 +541,10 @@ const buildBreakdownRows = (items?: Array<{ key: string; count: number }>) => {
   return items.map((item) => [prettyLabel(item.key), String(item.count ?? 0)]);
 };
 
-const buildTopItemsRows = (items?: any[], currency?: string | null) => {
+const buildTopItemsRows = (
+  items?: ReportTopItemRow[],
+  currency?: string | null,
+) => {
   if (!items?.length) return [];
 
   return items.map((item) => [
@@ -553,7 +582,7 @@ const areRowsCoveredByStats = (
 };
 
 const buildFinancialDetailRows = (
-  data: any,
+  data: FinancialReportData,
   currency?: string | null,
 ): ReportTableRow[] => [
   ["Total Orders", String(data?.totalOrders ?? 0)],
@@ -580,6 +609,9 @@ export const downloadRestaurantDashboardReportPdf = ({
   stats,
   data,
 }: DownloadRestaurantDashboardReportPdfInput) => {
+  const reportData = (
+    data && typeof data === "object" ? data : {}
+  ) as FinancialReportData;
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "pt",
@@ -599,7 +631,7 @@ export const downloadRestaurantDashboardReportPdf = ({
       restaurantName: restaurantName || "Restaurant",
       currency,
       period,
-      data: (data ?? {}) as OrderPeriodReportData,
+      data: reportData,
     });
     doc.save(
       `${sanitizeFileName(title || "order-report")}-${new Date()
@@ -651,12 +683,12 @@ export const downloadRestaurantDashboardReportPdf = ({
       1: { cellWidth: 140 },
       2: { cellWidth: 200 },
     },
-  } as any);
+  });
 
   y = getFinalY(doc, y + 160) + 28;
 
   if (reportType === "financial") {
-    const rows = buildFinancialDetailRows(data, currency);
+    const rows = buildFinancialDetailRows(reportData, currency);
     const shouldRenderFinancialDetails = !areRowsCoveredByStats(rows, stats);
 
     if (shouldRenderFinancialDetails) {
@@ -688,13 +720,13 @@ export const downloadRestaurantDashboardReportPdf = ({
           0: { cellWidth: 240 },
           1: { cellWidth: 250, halign: "right" },
         },
-      } as any);
+      });
     }
   } else {
-    const statusRows = buildBreakdownRows(data?.statusBreakdown);
-    const paymentRows = buildBreakdownRows(data?.paymentStatusBreakdown);
-    const orderTypeRows = buildBreakdownRows(data?.orderTypeBreakdown);
-    const topItemsRows = buildTopItemsRows(data?.topItems, currency);
+    const statusRows = buildBreakdownRows(reportData.statusBreakdown);
+    const paymentRows = buildBreakdownRows(reportData.paymentStatusBreakdown);
+    const orderTypeRows = buildBreakdownRows(reportData.orderTypeBreakdown);
+    const topItemsRows = buildTopItemsRows(reportData.topItems, currency);
 
     if (statusRows.length) {
       addSectionTitle(doc, "Order Status Breakdown", y);
@@ -725,7 +757,7 @@ export const downloadRestaurantDashboardReportPdf = ({
           0: { cellWidth: 320 },
           1: { cellWidth: 160, halign: "right" },
         },
-      } as any);
+      });
 
       y = getFinalY(doc, y + 120) + 28;
     }
@@ -759,7 +791,7 @@ export const downloadRestaurantDashboardReportPdf = ({
           0: { cellWidth: 320 },
           1: { cellWidth: 160, halign: "right" },
         },
-      } as any);
+      });
 
       y = getFinalY(doc, y + 120) + 28;
     }
@@ -793,7 +825,7 @@ export const downloadRestaurantDashboardReportPdf = ({
           0: { cellWidth: 320 },
           1: { cellWidth: 160, halign: "right" },
         },
-      } as any);
+      });
 
       y = getFinalY(doc, y + 120) + 28;
     }
@@ -828,7 +860,7 @@ export const downloadRestaurantDashboardReportPdf = ({
           1: { cellWidth: 100, halign: "right" },
           2: { cellWidth: 140, halign: "right" },
         },
-      } as any);
+      });
     }
   }
 
@@ -902,7 +934,7 @@ export const downloadRestaurantInvoicePdf = (invoice: AdminInvoice) => {
       0: { cellWidth: 160, fontStyle: "bold", fillColor: PDF_LIGHT_GRAY_COLOR },
       1: { cellWidth: 350 },
     },
-  } as any);
+  });
 
   y = getFinalY(doc, y + 220) + 28;
 
@@ -944,7 +976,7 @@ export const downloadRestaurantInvoicePdf = (invoice: AdminInvoice) => {
       3: { cellWidth: 60, halign: "right" },
       4: { cellWidth: 90, halign: "right" },
     },
-  } as any);
+  });
 
   y = getFinalY(doc, y + 160) + 28;
 
@@ -990,7 +1022,7 @@ export const downloadRestaurantInvoicePdf = (invoice: AdminInvoice) => {
       0: { cellWidth: 130, fontStyle: "bold" },
       1: { cellWidth: 120, halign: "right", textColor: PDF_GREEN_COLOR },
     },
-  } as any);
+  });
 
   drawFooter(doc);
 
