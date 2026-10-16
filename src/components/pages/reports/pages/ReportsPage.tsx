@@ -20,6 +20,8 @@ import { GeneratedInvoiceHistoryTable } from "@/components/pages/Orders/componen
 import { Button } from "@/components/ui/button";
 import { DatePickerInput } from "@/components/common/DateTimeInputs";
 import { ReportSummaryError } from "@/components/pages/reports/components/report-summary-error";
+import { AnalyticsCopilot } from "@/components/pages/reports/components/AnalyticsCopilot";
+import { canAccessAnalyticsCopilot } from "@/components/pages/reports/utils/analytics-copilot-access";
 import { useAuth } from "@/hooks/useAuth";
 import { useBranding } from "@/hooks/useBranding";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -58,6 +60,7 @@ export default function Orders() {
     loading: authLoading,
   } = useAuth();
   const { currency: fallbackCurrency } = useCurrency(restaurantId);
+  const canUseAnalyticsCopilot = canAccessAnalyticsCopilot(user);
   const { restaurant } = useBranding();
   const scopedReportParams = user
     ? {
@@ -254,6 +257,10 @@ export default function Orders() {
           ) : null
         }
       />
+
+      {canUseAnalyticsCopilot && restaurantId ? (
+        <AnalyticsCopilot restaurantId={restaurantId} />
+      ) : null}
 
       <SectionCard className="space-y-5" padding="md">
         <PageTabs
