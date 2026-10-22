@@ -190,6 +190,7 @@ export default function Orders() {
       currency: reportCurrency,
       period: reportDateRange,
       stats: activeStats.map((stat) => ({
+        id: stat._id,
         title: stat.title,
         value: String(stat.value ?? "-"),
         description: stat.trend?.percentage,

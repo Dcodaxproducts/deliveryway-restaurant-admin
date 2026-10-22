@@ -21,7 +21,7 @@ import {
   useResetPosPrinterPassword, useUpdatePosPrinterStatus,
 } from "@/hooks/usePosPrinterAccounts";
 import { hasStaffPermission, isStaffRole } from "@/lib/auth";
-import { posPrinterApi, type PosPrinterAccount } from "@/services/pos-printer";
+import { getPosPrinterAccountErrorKey, posPrinterApi, type PosPrinterAccount } from "@/services/pos-printer";
 
 const USERNAME_PATTERN = /^[A-Za-z0-9._-]{3,64}$/;
 const emptyForm = { firstName: "", lastName: "", username: "", email: "", password: "", branchId: "" };
@@ -72,7 +72,7 @@ export default function PosPrinterAccounts() {
       });
       closeCreate();
       toast.success(t("accountCreated"));
-    } catch { toast.error(t("accountActionError")); }
+    } catch (error: unknown) { toast.error(t(getPosPrinterAccountErrorKey(error))); }
   };
   const confirmStatus = async () => {
     if (!statusTarget) return;

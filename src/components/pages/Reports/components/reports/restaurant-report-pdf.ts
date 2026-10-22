@@ -10,6 +10,7 @@ import type { AdminInvoice } from "@/services/reports/reports.api";
 type DashboardReportType = "financial" | "order";
 
 type ReportPdfStat = {
+  id?: string;
   title: string;
   value: string;
   description?: string;
@@ -560,22 +561,26 @@ const areRowsCoveredByStats = (
   );
 };
 
-const buildFinancialDetailRows = (
+export const buildFinancialDetailRows = (
   data: any,
   currency?: string | null,
 ): ReportTableRow[] => [
-  ["Total Orders", String(data?.totalOrders ?? 0)],
-  ["Gross Revenue", formatCurrency(data?.grossRevenue ?? 0, currency)],
-  ["Paid Revenue", formatCurrency(data?.paidRevenue ?? 0, currency)],
-  ["Net Revenue", formatCurrency(data?.netRevenue ?? 0, currency)],
   [
-    "Average Order Value",
-    formatCurrency(data?.averageOrderValue ?? 0, currency),
+    `Gesamtbestellungen (${data?.totalOrders ?? 0})`,
+    formatReportMoney(data?.grossRevenue ?? 0, currency),
   ],
-  ["Total Tax", formatCurrency(data?.totalTax ?? 0, currency)],
-  ["Total Delivery Fee", formatCurrency(data?.totalDeliveryFee ?? 0, currency)],
-  ["Refunded Amount", formatCurrency(data?.refundedAmount ?? 0, currency)],
 ];
+
+export const buildFinancialSummaryStats = (
+  stats: ReportPdfStat[],
+): ReportPdfStat[] =>
+  stats
+    .filter((stat) => stat.id !== "financial-refunded")
+    .map((stat) =>
+      stat.id === "financial-cod-amount"
+        ? { ...stat, title: "Barzahlung gesamt" }
+        : stat,
+    );
 
 export const downloadRestaurantDashboardReportPdf = ({
   reportType,
@@ -628,10 +633,13 @@ export const downloadRestaurantDashboardReportPdf = ({
 
   addSectionTitle(doc, "Summary", y);
 
+  const summaryStats =
+    reportType === "financial" ? buildFinancialSummaryStats(stats) : stats;
+
   autoTable(doc, {
     startY: y + 14,
     head: [["Metric", "Value", "Description"]],
-    body: stats.map((stat) => [
+    body: summaryStats.map((stat) => [
       stat.title,
       stat.value,
       stat.description || "-",

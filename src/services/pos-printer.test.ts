@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { httpClient } from "@/lib/axios";
-import { normalizePosPrinterAccounts, posPrinterApi } from "@/services/pos-printer";
+import { getPosPrinterAccountErrorKey, normalizePosPrinterAccounts, posPrinterApi } from "@/services/pos-printer";
 
 vi.mock("@/lib/axios", () => ({ httpClient: { get: vi.fn(), post: vi.fn(), patch: vi.fn() } }));
 const getMock = vi.mocked(httpClient.get);
@@ -26,6 +26,20 @@ describe("POS printer account API", () => {
     await posPrinterApi.create({ username: "front.counter", email: "p@example.com", password: "Password@123", firstName: "POS", lastName: "Printer", branchId: "b1" });
     expect(postMock).toHaveBeenCalledWith("/pos-printer/accounts", expect.objectContaining({ username: "front.counter", branchId: "b1" }));
   });
+
+  it("keeps optional email omitted for username-only credentials", async () => {
+    postMock.mockResolvedValueOnce({ data: {} });
+    const payload = { username: "Verona", password: "Password@123", firstName: "Haji", lastName: "Saad", branchId: "branch-verona" };
+    await posPrinterApi.create(payload);
+    expect(postMock).toHaveBeenCalledWith("/pos-printer/accounts", payload);
+    expect(postMock.mock.calls[0]?.[1]).not.toHaveProperty("email");
+  });
+
+  it.each([[409, "accountIdentifierUnavailable"], [400, "accountInvalid"], [422, "accountInvalid"], [403, "accountBranchForbidden"], [500, "accountActionError"]] as const)(
+    "maps API status %s to %s", (status, key) => {
+      expect(getPosPrinterAccountErrorKey({ response: { status, data: {} } })).toBe(key);
+    },
+  );
 
   it("allows branch-admin payloads to omit branchId for backend inference", async () => {
     postMock.mockResolvedValueOnce({ data: {} });

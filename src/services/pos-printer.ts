@@ -1,5 +1,6 @@
 import { httpClient } from "@/lib/axios";
 import { getRecordValue, getStringValue, isRecord } from "@/lib/auth";
+import { toApiError } from "@/lib/errors";
 
 export type PosPrinterAccount = {
   id: string;
@@ -20,6 +21,20 @@ export type CreatePosPrinterAccountPayload = {
   firstName: string;
   lastName: string;
   branchId?: string;
+};
+
+export type PosPrinterAccountErrorKey =
+  | "accountIdentifierUnavailable"
+  | "accountInvalid"
+  | "accountBranchForbidden"
+  | "accountActionError";
+
+export const getPosPrinterAccountErrorKey = (error: unknown): PosPrinterAccountErrorKey => {
+  const status = toApiError(error).status;
+  if (status === 409) return "accountIdentifierUnavailable";
+  if (status === 400 || status === 422) return "accountInvalid";
+  if (status === 403) return "accountBranchForbidden";
+  return "accountActionError";
 };
 
 const normalizeAccount = (value: unknown): PosPrinterAccount | null => {

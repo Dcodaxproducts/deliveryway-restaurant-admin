@@ -1,12 +1,64 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildFinancialDetailRows,
+  buildFinancialSummaryStats,
   buildOrderPaymentDetailsTable,
   buildOrderReportSummaryRows,
   formatPaymentMethod,
   formatReportDate,
   ORDER_REPORT_LABELS,
 } from "./restaurant-report-pdf";
+
+describe("restaurant financial report PDF", () => {
+  it("keeps only the combined localized orders and gross revenue detail row", () => {
+    expect(
+      buildFinancialDetailRows(
+        {
+          totalOrders: 9,
+          grossRevenue: 392.5,
+          paidRevenue: 330.4,
+          netRevenue: 330.4,
+          averageOrderValue: 43.61,
+          totalTax: 26.84,
+          totalDeliveryFee: 8,
+          refundedAmount: 0,
+        },
+        "EUR",
+      ).map(([label, value]) => [label, value.replace(/\s/g, " ")]),
+    ).toEqual([["Gesamtbestellungen (9)", "392,50 €"]]);
+  });
+
+  it("renames cash and removes refunded amount only from the PDF summary", () => {
+    const source = [
+      {
+        id: "financial-cod-amount",
+        title: "Nachnahme gesamt",
+        value: "79,90 €",
+      },
+      {
+        id: "financial-online-amount",
+        title: "Online-Zahlungen gesamt",
+        value: "312,60 €",
+      },
+      {
+        id: "financial-refunded",
+        title: "Erstatteter Betrag",
+        value: "0,00 €",
+      },
+    ];
+
+    expect(buildFinancialSummaryStats(source)).toEqual([
+      {
+        id: "financial-cod-amount",
+        title: "Barzahlung gesamt",
+        value: "79,90 €",
+      },
+      source[1],
+    ]);
+    expect(source[0]?.title).toBe("Nachnahme gesamt");
+  });
+});
 
 describe("restaurant order report PDF", () => {
   it("uses German order-history and section headings", () => {
