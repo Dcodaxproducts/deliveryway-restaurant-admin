@@ -36,8 +36,17 @@ describe("POS printer account API", () => {
   });
 
   it.each([[409, "accountIdentifierUnavailable"], [400, "accountInvalid"], [422, "accountInvalid"], [403, "accountBranchForbidden"], [500, "accountActionError"]] as const)(
-    "maps API status %s to %s", (status, key) => {
-      expect(getPosPrinterAccountErrorKey({ response: { status, data: {} } })).toBe(key);
+    "maps Nest API status %s to localized key %s without exposing details", (status, key) => {
+      expect(getPosPrinterAccountErrorKey({
+        response: {
+          status,
+          data: {
+            statusCode: status,
+            message: "sensitive server implementation detail",
+            error: { message: "sensitive nested detail" },
+          },
+        },
+      })).toBe(key);
     },
   );
 
