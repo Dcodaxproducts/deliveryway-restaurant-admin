@@ -14,13 +14,13 @@ import { TableReservationsTable } from "@/components/pages/TableReservations/com
 import { useAuth } from "@/hooks/useAuth";
 import { useGetBranches } from "@/hooks/useBranches";
 import { useTableReservations } from "@/hooks/useTableReservations";
+import { TABLE_RESERVATIONS_DEFAULT_SORT } from "@/components/pages/TableReservations/utils/table-reservations-defaults";
 import type { TableReservationsParams } from "@/types/table-reservations";
 
 const defaultFilters: TableReservationsFilterState = {
   search: "",
   status: "ALL",
-  sortBy: "reservationDate",
-  sortOrder: "DESC",
+  ...TABLE_RESERVATIONS_DEFAULT_SORT,
   branchId: "",
 };
 
@@ -57,15 +57,17 @@ export function TableReservationsPage() {
           includeInactive: false,
           sortOrder: "ASC",
         }
-      : undefined
+      : undefined,
   );
 
   const branchOptions = useMemo(
     () => getBranchOptions(branchesQuery.data),
-    [branchesQuery.data]
+    [branchesQuery.data],
   );
 
-  const scopedBranchId = isBranchAdmin ? branchId || undefined : filters.branchId || undefined;
+  const scopedBranchId = isBranchAdmin
+    ? branchId || undefined
+    : filters.branchId || undefined;
 
   const params = useMemo<TableReservationsParams>(
     () => ({
@@ -87,7 +89,7 @@ export function TableReservationsPage() {
       page,
       restaurantId,
       scopedBranchId,
-    ]
+    ],
   );
 
   const reservationsQuery = useTableReservations(params);
@@ -109,7 +111,7 @@ export function TableReservationsPage() {
       }));
       setPage(1);
     },
-    []
+    [],
   );
 
   const handleLimitChange = (nextLimit: number) => {

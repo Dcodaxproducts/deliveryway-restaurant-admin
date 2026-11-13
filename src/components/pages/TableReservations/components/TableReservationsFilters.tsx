@@ -3,6 +3,7 @@
 import { Filter, Loader2, RefreshCcw, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import { TABLE_RESERVATIONS_DEFAULT_SORT } from "@/components/pages/TableReservations/utils/table-reservations-defaults";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 
@@ -33,15 +34,27 @@ type TableReservationsFiltersProps = {
 const statusOptions = [
   { labelKey: "all", value: "ALL", helperKey: "allStatuses" },
   { labelKey: "requested", value: "REQUESTED", helperKey: "pendingRequests" },
-  { labelKey: "confirmed", value: "CONFIRMED", helperKey: "confirmedReservations" },
-  { labelKey: "cancelled", value: "CANCELLED", helperKey: "cancelledReservations" },
-  { labelKey: "completed", value: "COMPLETED", helperKey: "completedReservations" },
+  {
+    labelKey: "confirmed",
+    value: "CONFIRMED",
+    helperKey: "confirmedReservations",
+  },
+  {
+    labelKey: "cancelled",
+    value: "CANCELLED",
+    helperKey: "cancelledReservations",
+  },
+  {
+    labelKey: "completed",
+    value: "COMPLETED",
+    helperKey: "completedReservations",
+  },
   { labelKey: "seated", value: "SEATED", helperKey: "seatedReservations" },
 ];
 
 const sortByOptions = [
-  { labelKey: "reservationDate", value: "reservationDate" },
   { labelKey: "createdAt", value: "createdAt" },
+  { labelKey: "reservationDate", value: "reservationDate" },
   { labelKey: "guestCount", value: "guestCount" },
   { labelKey: "statusLabel", value: "status" },
 ];
@@ -69,11 +82,11 @@ export default function TableReservationsFilters({
 
   const hasActiveFilters = Boolean(
     searchValue.trim() ||
-      filters.search ||
-      filters.status !== "ALL" ||
-      filters.sortBy !== "reservationDate" ||
-      filters.sortOrder !== "DESC" ||
-      filters.branchId
+    filters.search ||
+    filters.status !== "ALL" ||
+    filters.sortBy !== TABLE_RESERVATIONS_DEFAULT_SORT.sortBy ||
+    filters.sortOrder !== TABLE_RESERVATIONS_DEFAULT_SORT.sortOrder ||
+    filters.branchId,
   );
 
   useEffect(() => {
@@ -93,8 +106,7 @@ export default function TableReservationsFilters({
     onFiltersChange({
       search: "",
       status: "ALL",
-      sortBy: "reservationDate",
-      sortOrder: "DESC",
+      ...TABLE_RESERVATIONS_DEFAULT_SORT,
       branchId: "",
     });
   };
@@ -169,7 +181,9 @@ export default function TableReservationsFilters({
 
           <select
             value={filters.status || "ALL"}
-            onChange={(event) => onFiltersChange({ status: event.target.value })}
+            onChange={(event) =>
+              onFiltersChange({ status: event.target.value })
+            }
             className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
           >
             {statusOptions.map((option) => (
@@ -187,7 +201,9 @@ export default function TableReservationsFilters({
 
           <select
             value={filters.sortBy}
-            onChange={(event) => onFiltersChange({ sortBy: event.target.value })}
+            onChange={(event) =>
+              onFiltersChange({ sortBy: event.target.value })
+            }
             className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
           >
             {sortByOptions.map((option) => (
@@ -212,8 +228,8 @@ export default function TableReservationsFilters({
             }
             className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-3 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
           >
-            <option value="DESC">DESC</option>
-            <option value="ASC">ASC</option>
+            <option value="DESC">{t("descending")}</option>
+            <option value="ASC">{t("ascending")}</option>
           </select>
         </div>
 
@@ -229,7 +245,9 @@ export default function TableReservationsFilters({
               disabled
               className="h-[44px] w-full justify-start rounded-[14px] border-gray-200 bg-[#FAFAFA] px-3 text-gray-500"
             >
-              <span className="truncate">{branchName || common("currentBranch")}</span>
+              <span className="truncate">
+                {branchName || common("currentBranch")}
+              </span>
             </Button>
           ) : (
             <select

@@ -36,17 +36,24 @@ export function formatShortId(id?: string | null) {
   return `${id.slice(0, 6)}...${id.slice(-4)}`;
 }
 
-export function getCustomerFullName(customer?: TableReservationCustomer | null) {
-  const fullName = `${customer?.firstName ?? ""} ${customer?.lastName ?? ""}`.trim();
-  return fullName || "Unknown customer";
+export function getCustomerFullName(
+  customer?: TableReservationCustomer | null,
+  fallback = "Unknown customer",
+) {
+  const fullName =
+    `${customer?.firstName ?? ""} ${customer?.lastName ?? ""}`.trim();
+  return fullName || fallback;
 }
 
-export function getCustomerInitials(customer?: TableReservationCustomer | null) {
+export function getCustomerInitials(
+  customer?: TableReservationCustomer | null,
+) {
   const fullName = getCustomerFullName(customer);
   if (fullName === "Unknown customer") return "UC";
 
   const parts = fullName.split(/\s+/).filter(Boolean);
-  const initials = parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : fullName.slice(0, 2);
+  const initials =
+    parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : fullName.slice(0, 2);
 
   return initials.toUpperCase();
 }

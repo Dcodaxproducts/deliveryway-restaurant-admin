@@ -1,17 +1,8 @@
 export type TableReservationStatus =
-  | "REQUESTED"
-  | "CONFIRMED"
-  | "CANCELLED"
-  | "COMPLETED"
-  | "SEATED"
-  | string;
+  "REQUESTED" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "SEATED" | string;
 
 export type TableReservationStatusUpdateValue =
-  | "REQUESTED"
-  | "CONFIRMED"
-  | "SEATED"
-  | "COMPLETED"
-  | "CANCELLED";
+  "REQUESTED" | "CONFIRMED" | "SEATED" | "COMPLETED" | "CANCELLED";
 
 export type TableReservationStatusUpdatePayload = {
   status: TableReservationStatusUpdateValue;
@@ -32,7 +23,7 @@ export const TABLE_RESERVATION_STATUS_OPTIONS: Array<{
 ];
 
 export type TableReservationCustomer = {
-  id: string;
+  id: string | null;
   email: string;
   firstName: string;
   lastName: string;
@@ -90,7 +81,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
-const getString = (source: Record<string, unknown>, key: string, fallback = "") => {
+const getString = (
+  source: Record<string, unknown>,
+  key: string,
+  fallback = "",
+) => {
   const value = source[key];
   return typeof value === "string" ? value : fallback;
 };
@@ -100,18 +95,26 @@ const getNullableString = (source: Record<string, unknown>, key: string) => {
   return typeof value === "string" ? value : null;
 };
 
-const getNumber = (source: Record<string, unknown>, key: string, fallback = 0) => {
+const getNumber = (
+  source: Record<string, unknown>,
+  key: string,
+  fallback = 0,
+) => {
   const value = source[key];
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 };
 
-const getBoolean = (source: Record<string, unknown>, key: string, fallback = false) => {
+const getBoolean = (
+  source: Record<string, unknown>,
+  key: string,
+  fallback = false,
+) => {
   const value = source[key];
   return typeof value === "boolean" ? value : fallback;
 };
 
 export const getDefaultTableReservationsMeta = (
-  params: TableReservationsParams = {}
+  params: TableReservationsParams = {},
 ): TableReservationsMeta => ({
   page: params.page ?? 1,
   limit: params.limit ?? 20,
@@ -122,12 +125,12 @@ export const getDefaultTableReservationsMeta = (
 });
 
 export const normalizeTableReservationCustomer = (
-  value: unknown
+  value: unknown,
 ): TableReservationCustomer | null => {
   if (!isRecord(value)) return null;
 
   return {
-    id: getString(value, "id"),
+    id: getNullableString(value, "id"),
     email: getString(value, "email"),
     firstName: getString(value, "firstName"),
     lastName: getString(value, "lastName"),
@@ -137,7 +140,7 @@ export const normalizeTableReservationCustomer = (
 };
 
 export const normalizeTableReservationBranch = (
-  value: unknown
+  value: unknown,
 ): TableReservationBranch => {
   if (!isRecord(value)) return null;
 
@@ -148,7 +151,9 @@ export const normalizeTableReservationBranch = (
   };
 };
 
-export const normalizeTableReservation = (value: unknown): TableReservation | null => {
+export const normalizeTableReservation = (
+  value: unknown,
+): TableReservation | null => {
   if (!isRecord(value)) return null;
 
   return {
@@ -167,7 +172,7 @@ export const normalizeTableReservation = (value: unknown): TableReservation | nu
 
 export const normalizeTableReservationsMeta = (
   value: unknown,
-  params: TableReservationsParams = {}
+  params: TableReservationsParams = {},
 ): TableReservationsMeta => {
   if (!isRecord(value)) return getDefaultTableReservationsMeta(params);
 
@@ -183,14 +188,15 @@ export const normalizeTableReservationsMeta = (
 
 export const normalizeTableReservationsResponse = (
   payload: unknown,
-  params: TableReservationsParams = {}
+  params: TableReservationsParams = {},
 ): TableReservationsResponse => {
   const source = isRecord(payload) ? payload : {};
   const data = Array.isArray(source.data) ? source.data : [];
   const reservations = data
     .map((item) => normalizeTableReservation(item))
     .filter((item): item is TableReservation => item !== null);
-  const message = typeof source.message === "string" ? source.message : undefined;
+  const message =
+    typeof source.message === "string" ? source.message : undefined;
 
   return {
     reservations,
