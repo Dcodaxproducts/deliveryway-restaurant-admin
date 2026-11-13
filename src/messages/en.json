@@ -764,8 +764,8 @@
     "description": "View and manage customer table reservation requests.",
     "found": "{total} reservations found",
     "filtersTitle": "Reservation Filters",
-    "filtersDescription": "Search by name, email, or identifier. Current view:",
-    "searchPlaceholder": "Search by name, email, or identifier...",
+    "filtersDescription": "Search by name, email, or phone. Current view:",
+    "searchPlaceholder": "Search by name, email, or phone...",
     "allStatuses": "All reservation statuses",
     "pendingRequests": "Pending customer requests",
     "confirmedReservations": "Confirmed reservations",
@@ -815,7 +815,15 @@
       "COMPLETED": "Completed",
       "CANCELLED": "Cancelled",
       "NO_SHOW": "No Show"
-    }
+    },
+    "ascending": "Oldest first",
+    "descending": "Newest first",
+    "customerName": "Name",
+    "customerEmail": "Email",
+    "customerPhone": "Phone",
+    "unknownCustomer": "Unknown customer",
+    "noEmail": "No email provided",
+    "noPhone": "No phone provided"
   },
   "menu": {
     "overviewTitle": "Menu Overview",

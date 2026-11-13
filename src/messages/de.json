@@ -764,8 +764,8 @@
     "description": "Kundenanfragen für Tischreservierungen anzeigen und verwalten.",
     "found": "{total} Reservierungen gefunden",
     "filtersTitle": "Reservierungsfilter",
-    "filtersDescription": "Nach Name, E-Mail oder Kennung suchen. Aktuelle Ansicht:",
-    "searchPlaceholder": "Nach Name, E-Mail oder Kennung suchen...",
+    "filtersDescription": "Nach Name, E-Mail oder Telefon suchen. Aktuelle Ansicht:",
+    "searchPlaceholder": "Nach Name, E-Mail oder Telefon suchen...",
     "allStatuses": "Alle Reservierungsstatus",
     "pendingRequests": "Ausstehende Kundenanfragen",
     "confirmedReservations": "Bestätigte Reservierungen",
@@ -815,7 +815,15 @@
       "COMPLETED": "Abgeschlossen",
       "CANCELLED": "Storniert",
       "NO_SHOW": "Nicht erschienen"
-    }
+    },
+    "ascending": "Älteste zuerst",
+    "descending": "Neueste zuerst",
+    "customerName": "Name",
+    "customerEmail": "E-Mail",
+    "customerPhone": "Telefon",
+    "unknownCustomer": "Unbekannter Kunde",
+    "noEmail": "Keine E-Mail angegeben",
+    "noPhone": "Keine Telefonnummer angegeben"
   },
   "menu": {
     "overviewTitle": "Menüübersicht",
