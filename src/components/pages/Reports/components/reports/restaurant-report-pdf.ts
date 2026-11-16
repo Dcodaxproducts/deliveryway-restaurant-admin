@@ -77,13 +77,42 @@ const prettyLabel = (value?: string) => {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 };
 
-const sanitizeFileName = (value: string) => {
+export const sanitizeFileName = (value: string) => {
   return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9-_]+/gi, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+};
+
+export const buildReportFileName = ({
+  restaurantName,
+  reportName,
+  period,
+  now = new Date(),
+}: {
+  restaurantName?: string | null;
+  reportName: string;
+  period?: { fromDate?: string; toDate?: string };
+  now?: Date;
+}) => {
+  const fromDate = period?.fromDate?.slice(0, 10);
+  const toDate = period?.toDate?.slice(0, 10);
+  const datePart =
+    fromDate && toDate
+      ? fromDate === toDate
+        ? fromDate
+        : `${fromDate}_to_${toDate}`
+      : fromDate ?? toDate ?? now.toISOString().slice(0, 10);
+  const baseName = [restaurantName || "restaurant", reportName, datePart]
+    .map(sanitizeFileName)
+    .filter(Boolean)
+    .join("-");
+
+  return `${baseName || "restaurant-report"}.pdf`;
 };
 
 const getInvoiceCurrency = (invoice?: AdminInvoice | null) => {
@@ -615,9 +644,11 @@ export const downloadRestaurantDashboardReportPdf = ({
       data: (data ?? {}) as OrderPeriodReportData,
     });
     doc.save(
-      `${sanitizeFileName(title || "order-report")}-${new Date()
-        .toISOString()
-        .slice(0, 10)}.pdf`,
+      buildReportFileName({
+        restaurantName,
+        reportName: title || "order-report",
+        period,
+      }),
     );
     return;
   }
@@ -851,9 +882,11 @@ export const downloadRestaurantDashboardReportPdf = ({
   drawFooter(doc);
 
   doc.save(
-    `${sanitizeFileName(title || "restaurant-report")}-${new Date()
-      .toISOString()
-      .slice(0, 10)}.pdf`,
+    buildReportFileName({
+      restaurantName,
+      reportName: title || "restaurant-report",
+      period,
+    }),
   );
 };
 
@@ -1011,6 +1044,12 @@ export const downloadRestaurantInvoicePdf = (invoice: AdminInvoice) => {
   drawFooter(doc);
 
   doc.save(
-    `${sanitizeFileName(invoice.invoiceNumber || invoice.orderId || "invoice")}.pdf`,
+    buildReportFileName({
+      restaurantName: invoice.restaurant?.name,
+      reportName: `invoice-${invoice.invoiceNumber || invoice.orderId || "invoice"}`,
+      period: invoice.issuedAt
+        ? { fromDate: invoice.issuedAt, toDate: invoice.issuedAt }
+        : undefined,
+    }),
   );
 };

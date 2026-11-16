@@ -134,6 +134,11 @@
     "guest": "Guest",
     "creationDate": "Creation Date",
     "modifiedDate": "Modified Date",
+    "verification": "Verification",
+    "verified": "Verified",
+    "unverified": "Unverified",
+    "fromDate": "From date",
+    "toDate": "To date",
     "options": "Options",
     "includeDeleted": "Include Deleted",
     "newestToOldest": "Newest to Oldest",
@@ -2053,6 +2058,9 @@
     "closedForHolidayDescription": "Customers will see this branch as unavailable on this date.",
     "openTime": "Open time",
     "closeTime": "Close time",
+    "nextDay": "next day",
+    "overnightScheduleHint": "The closing time is on the following day. Breaks may span midnight when they remain inside this opening window.",
+    "breaksOverlap": "break times cannot overlap",
     "holidayNotePlaceholder": "Example: Eid holiday, Christmas closure, New Year schedule...",
     "holidayAddOneEntry": "Please add at least one holiday entry",
     "holidayDateRequired": "Holiday date is required",
@@ -3582,6 +3590,11 @@
       "testPrintSaveFailed": "The test print succeeded, but the settings could not be saved. Save them before reprinting orders.",
       "testPrintFailed": "Test print failed."
     }
+  },
+  "aboutLegalSettings": {
+    "tabsLabel": "About and legal settings",
+    "about": "About content",
+    "legal": "Legal & Tax Profile"
   },
   "posPrinter": {
     "loginTitle": "POS printer sign in", "loginDescription": "Sign in with the dedicated credentials created by your restaurant administrator.", "email": "Email", "emailPlaceholder": "printer@restaurant.com", "emailError": "Enter a valid email address.", "usernameOrEmail": "Username or email", "usernameOrEmailPlaceholder": "kitchen.printer or printer@restaurant.com", "usernameOrEmailError": "Enter your username or email address.", "password": "Password", "passwordPlaceholder": "Enter your password", "passwordRequired": "Password is required.", "signIn": "Sign in", "signingIn": "Signing in…", "loginError": "Sign-in failed. Check your credentials and try again.", "adminPrompt": "Restaurant administrator?", "adminLogin": "Use admin sign in", "deviceConsole": "POS Printer Console", "changePassword": "Change password", "changePasswordDescription": "Update the password for this printer account.", "currentPassword": "Current password", "newPassword": "New password", "passwordHint": "Use at least 12 characters.", "passwordChanged": "Password changed successfully.", "logout": "Log out", "cancel": "Cancel", "save": "Save", "saving": "Saving…", "genericError": "Something went wrong. Try again.",

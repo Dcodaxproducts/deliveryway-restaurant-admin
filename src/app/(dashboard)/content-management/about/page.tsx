@@ -1,5 +1,5 @@
-import AboutUsRoutePage from "@/components/pages/Settings/pages/AboutUsPage";
+import { AboutLegalSettingsPage } from "@/components/pages/Settings/pages/AboutLegalSettingsPage";
 
 export default function Page() {
-  return <AboutUsRoutePage />;
+  return <AboutLegalSettingsPage />;
 }

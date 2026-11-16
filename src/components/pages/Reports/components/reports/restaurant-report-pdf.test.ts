@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildFinancialDetailRows,
+  buildReportFileName,
   buildFinancialSummaryStats,
   buildOrderPaymentDetailsTable,
   buildOrderReportSummaryRows,
@@ -187,5 +188,27 @@ describe("restaurant order report PDF", () => {
       "Online-Zahlung (1)",
       "Gesamtbestellungen (3)",
     ]);
+  });
+});
+
+describe("report filenames", () => {
+  it("includes a sanitized restaurant name and selected date range", () => {
+    expect(
+      buildReportFileName({
+        restaurantName: "Bäckerei / Mitte",
+        reportName: "Order Report",
+        period: { fromDate: "2026-11-01", toDate: "2026-11-15" },
+      }),
+    ).toBe("backerei-mitte-order-report-2026-11-01_to_2026-11-15.pdf");
+  });
+
+  it("uses the download date when a report has no explicit period", () => {
+    expect(
+      buildReportFileName({
+        restaurantName: "Restaurant One",
+        reportName: "Invoice 42",
+        now: new Date("2026-11-16T10:00:00.000Z"),
+      }),
+    ).toBe("restaurant-one-invoice-42-2026-11-16.pdf");
   });
 });

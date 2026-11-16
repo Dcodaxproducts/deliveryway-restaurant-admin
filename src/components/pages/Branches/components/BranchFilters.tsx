@@ -3,22 +3,38 @@
 import { Search, Download, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import FilterModal from "@/components/common/FilterModal";
+import FilterModal, { type FilterValues } from "@/components/common/FilterModal";
 import { Input } from "@/components/ui/input";
 import { useTranslations } from "next-intl";
 
+type ExportRow = {
+  name?: string;
+  city?: string;
+  address?: string;
+  phone?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  _count?: { items?: number };
+};
+
+type SharedFilters = Omit<FilterValues, "sortOrder"> & {
+  search?: string;
+  page?: number;
+  sortOrder?: "ASC" | "DESC";
+};
+
 interface Props {
-  branches?: any[];
-  filters: any;
-  onFilterChange: (filters: any) => void;
-  showCustomerType?: boolean;
+  branches?: ExportRow[];
+  filters: SharedFilters;
+  onFilterChange: (filters: Partial<SharedFilters>) => void;
+  showCustomerFilters?: boolean;
 }
 
 export default function BranchFilters({
   branches,
   filters,
   onFilterChange,
-  showCustomerType = false,
+  showCustomerFilters = false,
 }: Props) {
   const t = useTranslations("branches");
   const commonT = useTranslations("common");
@@ -79,7 +95,7 @@ export default function BranchFilters({
   return (
     <div className="w-full bg-white rounded-lg">
       <div className="w-full flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-3">
-        <div className="relative flex-1 min-w-[300px]">
+        <div className="relative min-w-0 flex-1">
           <Search
             size={22}
             className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
@@ -92,7 +108,7 @@ export default function BranchFilters({
             onChange={(e) => setSearch(e.target.value)}
             className="
               w-full h-[44px]
-              pl-10 pr-[160px]
+              pl-10 pr-24 sm:pr-[160px]
               bg-transparent
               border-0 border-b border-gray-200
               text-lg text-dark
@@ -109,7 +125,7 @@ export default function BranchFilters({
             className="
               absolute right-0 top-1/1 -translate-y-1/1
               h-[44px]
-              px-10
+              px-4 sm:px-10
               rounded-[14px]
               bg-primary
               text-white
@@ -148,9 +164,12 @@ export default function BranchFilters({
       <FilterModal
         open={open}
         onOpenChange={setOpen}
-        filters={filters}
-        onApply={(f: any) => onFilterChange({ ...f, page: 1 })}
-        showCustomerType={showCustomerType}
+        filters={{
+          ...filters,
+          sortOrder: filters.sortOrder === "ASC" ? "ASC" : "DESC",
+        }}
+        onApply={(nextFilters) => onFilterChange({ ...nextFilters, page: 1 })}
+        showCustomerFilters={showCustomerFilters}
       />
 
       {branches && (

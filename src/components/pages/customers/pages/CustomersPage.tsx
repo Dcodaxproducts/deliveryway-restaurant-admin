@@ -40,6 +40,10 @@ export default function CustomerSettingsPage() {
     withDeleted: false,
     includeInactive: true,
     isGuest: undefined as boolean | undefined,
+    isVerified: undefined as boolean | undefined,
+    isActive: undefined as boolean | undefined,
+    fromDate: "",
+    toDate: "",
   });
 
   const { data, isLoading, isFetching, refetch } = useGetCustomersList(
@@ -51,6 +55,10 @@ export default function CustomerSettingsPage() {
           withDeleted: filters.withDeleted,
           includeInactive: filters.includeInactive,
           isGuest: filters.isGuest,
+          isVerified: filters.isVerified,
+          isActive: filters.isActive,
+          fromDate: filters.fromDate || undefined,
+          toDate: filters.toDate || undefined,
           restaurantId,
           ...(scopedBranchId ? { branchId: scopedBranchId } : {}),
         }
@@ -85,7 +93,7 @@ export default function CustomerSettingsPage() {
       ...updatedFilters,
       page:
         updatedFilters.page ??
-        (updatedFilters.search !== undefined ? 1 : prev.page),
+        (Object.keys(updatedFilters).some((key) => key !== "page") ? 1 : prev.page),
     }));
   };
 
@@ -136,7 +144,7 @@ export default function CustomerSettingsPage() {
             branches={customerFilterData}
             filters={filters}
             onFilterChange={handleFilterChange}
-            showCustomerType
+            showCustomerFilters
           />
         ) : null}
 

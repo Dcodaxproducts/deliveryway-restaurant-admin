@@ -173,12 +173,12 @@ describe("order ticket", () => {
     });
 
     expect(ticket.items).toEqual([
-      expect.objectContaining({ name: "Pizza", dealLabel: "Deal" }),
+      expect.objectContaining({ name: "Pizza", dealLabel: "Pizza" }),
       expect.objectContaining({ name: "Cola", dealLabel: undefined }),
     ]);
-    expect(buildOrderTicketHtml(ticket, "80MM")).toContain("DEAL: Deal");
+    expect(buildOrderTicketHtml(ticket, "80MM")).toContain("DEAL: Pizza");
     expect(buildOrderTicketEscPos(ticket, "80MM")).toContain(
-      "DEAL: Deal",
+      "DEAL: Pizza",
     );
   });
 

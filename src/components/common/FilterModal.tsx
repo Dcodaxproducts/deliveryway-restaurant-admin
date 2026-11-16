@@ -14,12 +14,23 @@ import FormInput from "@/components/forms/common/FormInput";
 import { getLocalTodayInputValue } from "@/lib/date-input";
 import { useTranslations } from "next-intl";
 
+export type FilterValues = {
+  includeInactive?: boolean;
+  withDeleted?: boolean;
+  sortOrder?: "ASC" | "DESC";
+  isGuest?: boolean;
+  isVerified?: boolean;
+  isActive?: boolean;
+  fromDate?: string;
+  toDate?: string;
+};
+
 type FilterModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  filters?: any;
-  onApply?: (filters: any) => void;
-  showCustomerType?: boolean;
+  filters?: FilterValues;
+  onApply?: (filters: FilterValues) => void;
+  showCustomerFilters?: boolean;
 };
 
 export const customerTypeToIsGuest = (customerType: string) =>
@@ -29,28 +40,31 @@ export const customerTypeToIsGuest = (customerType: string) =>
       ? false
       : undefined;
 
+export const selectionToBoolean = (selection: string) =>
+  selection === "yes" ? true : selection === "no" ? false : undefined;
+
 export default function FilterModal({
   open,
   onOpenChange,
   filters,
   onApply,
-  showCustomerType = false,
+  showCustomerFilters = false,
 }: FilterModalProps) {
   const t = useTranslations("common");
   const [status, setStatus] = useState("all");
   const [sortBy, setSortBy] = useState("default");
   const [withDeleted, setWithDeleted] = useState(false);
   const [customerType, setCustomerType] = useState("all");
+  const [verification, setVerification] = useState("all");
 
-  const [creationDate, setCreationDate] = useState("");
-  const [modifiedDate, setModifiedDate] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const todayDate = useMemo(() => getLocalTodayInputValue(), []);
 
   useEffect(() => {
     if (!filters) return;
 
-    if (filters.includeInactive === false) setStatus("active");
-    else setStatus("all");
+    setStatus(filters.isActive === true ? "active" : filters.isActive === false ? "inactive" : "all");
 
     if (filters.sortOrder === "DESC") setSortBy("default");
     else if (filters.sortOrder === "ASC") setSortBy("oldest");
@@ -65,6 +79,11 @@ export default function FilterModal({
           ? "registered"
           : "all",
     );
+    setVerification(
+      filters.isVerified === true ? "yes" : filters.isVerified === false ? "no" : "all",
+    );
+    setFromDate(filters.fromDate ?? "");
+    setToDate(filters.toDate ?? "");
   }, [filters]);
 
   const handleReset = () => {
@@ -72,15 +91,20 @@ export default function FilterModal({
     setSortBy("default");
     setWithDeleted(false);
     setCustomerType("all");
-    setCreationDate("");
-    setModifiedDate("");
+    setVerification("all");
+    setFromDate("");
+    setToDate("");
 
     if (onApply) {
       onApply({
-        includeInactive: false,
+        includeInactive: true,
         withDeleted: false,
-        sortOrder: "ASC",
+        sortOrder: "DESC",
         isGuest: undefined,
+        isVerified: undefined,
+        isActive: undefined,
+        fromDate: undefined,
+        toDate: undefined,
       });
     }
 
@@ -94,18 +118,20 @@ export default function FilterModal({
       includeInactive = true;
     }
 
-    let sortOrder = "ASC";
+    let sortOrder: "ASC" | "DESC" = "ASC";
 
     if (sortBy === "default") sortOrder = "DESC";
     if (sortBy === "oldest") sortOrder = "ASC";
 
-    const payload = {
+    const payload: FilterValues = {
       includeInactive,
       withDeleted,
       sortOrder,
-      creationDate,
-      modifiedDate,
+      isActive: status === "active" ? true : status === "inactive" ? false : undefined,
+      fromDate: fromDate || undefined,
+      toDate: toDate || undefined,
       isGuest: customerTypeToIsGuest(customerType),
+      isVerified: selectionToBoolean(verification),
     };
 
     if (onApply) {
@@ -134,7 +160,7 @@ export default function FilterModal({
           <div className="space-y-3">
             <p className="text-sm font-medium">{t("status")}</p>
 
-            <div className="flex gap-6">
+            <div className="flex flex-wrap gap-3">
               <div onClick={() => setStatus("all")}>
                 <Radio label={t("all")} active={status === "all"} />
               </div>
@@ -149,7 +175,7 @@ export default function FilterModal({
             </div>
           </div>
 
-          {showCustomerType ? (
+          {showCustomerFilters ? (
             <div className="space-y-3">
               <p className="text-sm font-medium">{t("customerType")}</p>
               <div className="flex flex-wrap gap-6">
@@ -169,25 +195,37 @@ export default function FilterModal({
             </div>
           ) : null}
 
+          {showCustomerFilters ? (
+            <div className="space-y-3">
+              <p className="text-sm font-medium">{t("verification")}</p>
+              <div className="flex flex-wrap gap-3" role="radiogroup" aria-label={t("verification")}>
+                {[{ value: "all", label: t("all") }, { value: "yes", label: t("verified") }, { value: "no", label: t("unverified") }].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={verification === option.value}
+                    onClick={() => setVerification(option.value)}
+                    className="rounded-md px-1 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                  >
+                    <Radio label={option.label} active={verification === option.value} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           {/* CREATION DATE */}
 
-          <FormInput
-            label={t("creationDate")}
-            type="date"
-            min={todayDate}
-            value={creationDate}
-            onChange={setCreationDate}
-          />
+          {showCustomerFilters ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <FormInput label={t("fromDate")} type="date" max={toDate || todayDate} value={fromDate} onChange={setFromDate} />
+              <FormInput label={t("toDate")} type="date" min={fromDate || undefined} max={todayDate} value={toDate} onChange={setToDate} />
+            </div>
+          ) : null}
 
           {/* MODIFIED DATE */}
 
-          <FormInput
-            label={t("modifiedDate")}
-            type="date"
-            min={todayDate}
-            value={modifiedDate}
-            onChange={setModifiedDate}
-          />
 
           {/* OPTIONS */}
 
@@ -226,7 +264,7 @@ export default function FilterModal({
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-center gap-6">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-4 sm:gap-6">
           <button
             onClick={handleReset}
             className="text-sm font-medium text-gray-600 hover:text-black"

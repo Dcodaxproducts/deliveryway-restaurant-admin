@@ -9,6 +9,25 @@ export type WinOrderCatalogComparison = {
   duplicateNames: string[];
 };
 
+export type RetainedCatalogMapping = {
+  mappingType: "ITEM" | "MODIFIER" | "SERVICE_CHARGE";
+  localKey: string;
+  localName?: string | null;
+  externalArticleNo?: string | null;
+  externalArticleName?: string | null;
+};
+
+export const getUnlistedCatalogMappings = (
+  listedKeys: Iterable<string>,
+  mappings: RetainedCatalogMapping[],
+) => {
+  const listed = new Set(listedKeys);
+  return mappings.filter(
+    (mapping) =>
+      mapping.mappingType !== "SERVICE_CHARGE" && !listed.has(mapping.localKey),
+  );
+};
+
 const normalizeName = (value: string) => value.trim().toLocaleLowerCase("de-DE");
 
 const parseCsvRows = (content: string, delimiter: string): string[][] => {

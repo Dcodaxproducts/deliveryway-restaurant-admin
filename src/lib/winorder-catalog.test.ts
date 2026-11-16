@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   compareWinOrderCatalog,
+  getUnlistedCatalogMappings,
   parseWinOrderCatalog,
 } from "@/lib/winorder-catalog";
 
@@ -60,5 +61,30 @@ describe("compareWinOrderCatalog", () => {
       missingNames: ["Oliven"],
       duplicateNames: ["Extra Käse"],
     });
+  });
+});
+
+describe("getUnlistedCatalogMappings", () => {
+  it("retains configured package or deal mappings omitted by the live catalog", () => {
+    expect(
+      getUnlistedCatalogMappings(["item:pizza:base"], [
+        {
+          mappingType: "ITEM",
+          localKey: "item:pizza:base",
+          localName: "Pizza",
+        },
+        {
+          mappingType: "ITEM",
+          localKey: "deal:family-package",
+          localName: "Family Package",
+          externalArticleName: "Familienpaket",
+        },
+      ]),
+    ).toEqual([
+      expect.objectContaining({
+        localKey: "deal:family-package",
+        localName: "Family Package",
+      }),
+    ]);
   });
 });

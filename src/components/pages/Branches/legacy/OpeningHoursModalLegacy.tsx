@@ -13,6 +13,11 @@ import { useGetOpeningHours, useUpdateOpeningHours } from "@/hooks/useBranches";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { Time24Picker } from "@/components/ui/time-24-picker";
+import {
+  haveOverlappingBreaks,
+  isBreakWithinOpeningWindow,
+  isOvernightSchedule,
+} from "@/components/pages/Branches/components/opening-hours/opening-hours-validation";
 
 interface Props {
   open: boolean;
@@ -119,11 +124,6 @@ const formatDayLabel = (day: string) => {
   return day
     .toLowerCase()
     .replace(/^\w/, (char) => char.toUpperCase());
-};
-
-const isTimeRangeInvalid = (startTime?: string, endTime?: string) => {
-  if (!startTime || !endTime) return false;
-  return startTime >= endTime;
 };
 
 const hasOpeningWindow = (day: OpeningHour) =>
@@ -308,12 +308,8 @@ export function OpeningHoursModalLegacy({
         return false;
       }
 
-      if (!day.isClosed && isTimeRangeInvalid(day.openTime, day.closeTime)) {
-        toast.error(`${formatDayLabel(day.dayOfWeek)} close time must be after open time`);
-        return false;
-      }
-
       if (!day.isClosed) {
+        const configuredBreaks: BreakTime[] = [];
         for (const breakTime of day.breakTimes || []) {
           const hasAnyBreakValue =
             breakTime.startTime || breakTime.endTime || breakTime.note;
@@ -327,22 +323,25 @@ export function OpeningHoursModalLegacy({
             return false;
           }
 
-          if (isTimeRangeInvalid(breakTime.startTime, breakTime.endTime)) {
+          if (breakTime.startTime === breakTime.endTime) {
             toast.error(
               `${formatDayLabel(day.dayOfWeek)} break end time must be after start time`
             );
             return false;
           }
 
-          if (
-            breakTime.startTime < day.openTime ||
-            breakTime.endTime > day.closeTime
-          ) {
+          if (!isBreakWithinOpeningWindow(breakTime, day.openTime, day.closeTime)) {
             toast.error(
               `${formatDayLabel(day.dayOfWeek)} break must be within opening hours`
             );
             return false;
           }
+          configuredBreaks.push(breakTime);
+        }
+
+        if (haveOverlappingBreaks(configuredBreaks, day.openTime)) {
+          toast.error(`${formatDayLabel(day.dayOfWeek)} ${t("breaksOverlap")}`);
+          return false;
         }
       }
     }
@@ -542,7 +541,11 @@ export function OpeningHoursModalLegacy({
                         {day.isClosed
                           ? t("closedFullDay")
                           : hasOpeningWindow(day)
-                            ? `${day.openTime} - ${day.closeTime}`
+                            ? `${day.openTime} - ${day.closeTime}${
+                                isOvernightSchedule(day.openTime, day.closeTime)
+                                  ? ` (${t("nextDay")})`
+                                  : ""
+                              }`
                             : t("openingHoursNotConfigured")}
                       </p>
                     </div>
@@ -595,6 +598,15 @@ export function OpeningHoursModalLegacy({
                           />
                         </label>
                       </div>
+
+                      {isOvernightSchedule(day.openTime, day.closeTime) ? (
+                        <p
+                          className="rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-800"
+                          role="status"
+                        >
+                          {t("overnightScheduleHint")}
+                        </p>
+                      ) : null}
 
                       <div className="min-w-0 rounded-[14px] border border-dashed border-gray-200 bg-gray-50/70 p-3">
                         <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-3">

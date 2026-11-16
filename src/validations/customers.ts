@@ -54,6 +54,10 @@ export const customerListParamsSchema = z.object({
   withDeleted: z.boolean().optional(),
   includeInactive: z.boolean().optional(),
   isGuest: z.boolean().optional(),
+  isVerified: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+  fromDate: z.string().date().optional(),
+  toDate: z.string().date().optional(),
   restaurantId: z.string().optional(),
   branchId: z.string().optional(),
 });

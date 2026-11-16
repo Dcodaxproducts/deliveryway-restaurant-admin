@@ -11,6 +11,7 @@ import {
   approveBusinessAdmin,
   verifyCustomerEmail,
 } from "@/services/customers/customers.api";
+import type { CustomerListParams } from "@/validations/customers";
 
 type CustomerMutationMessages = {
   success?: string;
@@ -48,16 +49,7 @@ export const useCreateCustomer = (options?: CustomerMutationOptions) => {
   });
 };
 
-export const useGetCustomersList = (params?: {
-  page?: number;
-  search?: string;
-  sortOrder?: "ASC" | "DESC";
-  withDeleted?: boolean;
-  includeInactive?: boolean;
-  isGuest?: boolean;
-  restaurantId?: string;
-  branchId?: string;
-}) => {
+export const useGetCustomersList = (params?: CustomerListParams) => {
   return useQuery({
     queryKey: [
       "customers",
@@ -67,6 +59,10 @@ export const useGetCustomersList = (params?: {
       params?.withDeleted,
       params?.includeInactive,
       params?.isGuest,
+      params?.isVerified,
+      params?.isActive,
+      params?.fromDate,
+      params?.toDate,
       params?.restaurantId,
       params?.branchId,
     ],

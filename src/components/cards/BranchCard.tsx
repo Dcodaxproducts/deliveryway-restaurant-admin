@@ -36,6 +36,10 @@ import BranchCoverModal from "@/components/pages/Branches/components/BranchCover
 import { TemporaryBranchClosureModal } from "./TemporaryBranchClosureModal";
 import { useTranslations } from "next-intl";
 import { getApiErrorMessage } from "@/lib/errors";
+import {
+  canActivateBranch,
+  canDeleteOrSuspendBranch,
+} from "@/lib/branch-action-access";
 
 export function BranchCard({
   id,
@@ -72,7 +76,7 @@ export function BranchCard({
   const temporaryClosureMutation = useUpdateBranchTemporaryClosure();
   const deleteMenuMutation = useDeleteRestaurantMenu();
 
-  const { isBranchAdmin, loading: authLoading } = useAuth();
+  const { isBranchAdmin, role, loading: authLoading } = useAuth();
 
   const isTemporarilyClosed = Boolean(
     availability?.isTemporarilyClosed ||
@@ -89,8 +93,15 @@ export function BranchCard({
     Store;
 
   const isBranchEntity = Boolean(openDialog) || branchAdminMode;
-  const canDelete = allowDelete && !authLoading && !isBranchAdmin;
-  const canUseLifecycleActions = allowLifecycleActions && !authLoading && !isBranchAdmin;
+  const canDelete =
+    allowDelete &&
+    !authLoading &&
+    !isBranchAdmin &&
+    (!isBranchEntity || canDeleteOrSuspendBranch(role));
+  const canActivate =
+    allowLifecycleActions && !authLoading && canActivateBranch(role);
+  const canSuspend =
+    allowLifecycleActions && !authLoading && canDeleteOrSuspendBranch(role);
   const canUseMediaActions = isBranchEntity && showMediaActions;
 
   const handleDelete = async () => {
@@ -214,7 +225,7 @@ export function BranchCard({
               <Power size={16} />
             ),
           },
-          ...(canUseLifecycleActions
+          ...(canActivate
             ? [
                 {
                   label: t("activate"),
@@ -222,6 +233,10 @@ export function BranchCard({
                   className: isActive ? "opacity-50 pointer-events-none" : "",
                   icon: <Power size={16} />,
                 },
+              ]
+            : []),
+          ...(canSuspend
+            ? [
                 {
                   label: t("suspend"),
                   onClick: isActive ? handleSuspend : undefined,

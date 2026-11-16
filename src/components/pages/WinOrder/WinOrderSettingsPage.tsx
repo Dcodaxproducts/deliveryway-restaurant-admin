@@ -41,6 +41,7 @@ import {
 import { getStringValue, isRecord } from "@/lib/auth";
 import {
   compareWinOrderCatalog,
+  getUnlistedCatalogMappings,
   parseWinOrderCatalog,
   type WinOrderCatalogComparison,
 } from "@/lib/winorder-catalog";
@@ -209,6 +210,19 @@ export default function WinOrderSettingsPage() {
         no: current?.externalArticleNo ?? "",
       };
     }
+    for (const mapping of getUnlistedCatalogMappings(
+      Object.keys(next),
+      data.catalogMappings,
+    )) {
+      const localName =
+        mapping.localName ?? mapping.externalArticleName ?? mapping.localKey;
+      next[mapping.localKey] = {
+        mappingType: mapping.mappingType,
+        localName,
+        name: mapping.externalArticleName ?? localName,
+        no: mapping.externalArticleNo ?? "",
+      };
+    }
     const serviceCharge = existing.get("service_charge");
     next.service_charge = {
       mappingType: "SERVICE_CHARGE",
@@ -241,6 +255,9 @@ export default function WinOrderSettingsPage() {
         .flatMap((item) => (item.menuItemName ? [item.menuItemName] : [])),
       ...catalog.modifiers.flatMap((modifier) =>
         modifier.name ? [modifier.name] : [],
+      ),
+      ...(mappingsQuery.data?.data.catalogMappings ?? []).flatMap((mapping) =>
+        mapping.localName ? [mapping.localName] : [],
       ),
     ];
   }, [mappingsQuery.data]);

@@ -134,6 +134,11 @@
     "guest": "Gast",
     "creationDate": "Erstellungsdatum",
     "modifiedDate": "Änderungsdatum",
+    "verification": "Verifizierung",
+    "verified": "Verifiziert",
+    "unverified": "Nicht verifiziert",
+    "fromDate": "Von Datum",
+    "toDate": "Bis Datum",
     "options": "Optionen",
     "includeDeleted": "Gelöschte einbeziehen",
     "newestToOldest": "Neueste zuerst",
@@ -2053,6 +2058,9 @@
     "closedForHolidayDescription": "Kunden sehen diese Filiale an diesem Datum als nicht verfügbar.",
     "openTime": "Öffnungszeit",
     "closeTime": "Schließzeit",
+    "nextDay": "Folgetag",
+    "overnightScheduleHint": "Die Schließzeit liegt am Folgetag. Pausen dürfen Mitternacht überschreiten, wenn sie innerhalb dieses Zeitfensters liegen.",
+    "breaksOverlap": "Pausenzeiten dürfen sich nicht überschneiden",
     "holidayNotePlaceholder": "Beispiel: Eid-Feiertag, Weihnachtsschließung, Neujahrsplan...",
     "holidayAddOneEntry": "Bitte mindestens einen Feiertagseintrag hinzufügen",
     "holidayDateRequired": "Feiertagsdatum ist erforderlich",
@@ -3582,6 +3590,11 @@
       "testPrintSaveFailed": "Der Testdruck war erfolgreich, aber die Einstellungen konnten nicht gespeichert werden. Speichern Sie sie vor dem erneuten Drucken von Bestellungen.",
       "testPrintFailed": "Testdruck fehlgeschlagen."
     }
+  },
+  "aboutLegalSettings": {
+    "tabsLabel": "Über-uns- und Rechtseinstellungen",
+    "about": "Über-uns-Inhalt",
+    "legal": "Rechts- und Steuerprofil"
   },
   "posPrinter": {
     "loginTitle": "POS-Drucker-Anmeldung", "loginDescription": "Melden Sie sich mit den Zugangsdaten an, die Ihre Restaurantverwaltung erstellt hat.", "email": "E-Mail", "emailPlaceholder": "drucker@restaurant.de", "emailError": "Geben Sie eine gültige E-Mail-Adresse ein.", "usernameOrEmail": "Benutzername oder E-Mail", "usernameOrEmailPlaceholder": "kueche.drucker oder drucker@restaurant.de", "usernameOrEmailError": "Geben Sie Ihren Benutzernamen oder Ihre E-Mail-Adresse ein.", "password": "Passwort", "passwordPlaceholder": "Passwort eingeben", "passwordRequired": "Das Passwort ist erforderlich.", "signIn": "Anmelden", "signingIn": "Anmeldung…", "loginError": "Anmeldung fehlgeschlagen. Prüfen Sie Ihre Zugangsdaten und versuchen Sie es erneut.", "adminPrompt": "Restaurantverwaltung?", "adminLogin": "Admin-Anmeldung verwenden", "deviceConsole": "POS-Druckerkonsole", "changePassword": "Passwort ändern", "changePasswordDescription": "Aktualisieren Sie das Passwort dieses Druckerkontos.", "currentPassword": "Aktuelles Passwort", "newPassword": "Neues Passwort", "passwordHint": "Verwenden Sie mindestens 12 Zeichen.", "passwordChanged": "Passwort erfolgreich geändert.", "logout": "Abmelden", "cancel": "Abbrechen", "save": "Speichern", "saving": "Speichern…", "genericError": "Etwas ist schiefgelaufen. Versuchen Sie es erneut.",

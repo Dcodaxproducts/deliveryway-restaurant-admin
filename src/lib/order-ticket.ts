@@ -128,9 +128,14 @@ const normalizeItems = (
           ? item.items
           : item?.includedItems;
         if (itemType === "DEAL" || Array.isArray(includedItems)) {
+          const firstIncludedItem = Array.isArray(includedItems)
+            ? asRecord(includedItems[0])
+            : {};
           const dealLabel =
             readString(item, "name") ??
             readString(item, "menuItemName") ??
+            readString(firstIncludedItem, "name") ??
+            readString(firstIncludedItem, "menuItemName") ??
             fallbackDealLabel;
           const normalizedIncludedItems = normalizeItems(
             includedItems,

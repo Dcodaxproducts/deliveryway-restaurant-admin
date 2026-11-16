@@ -19,7 +19,7 @@ export default function BranchesClient({
 }: Props) {
   const [filters, setFilters] = useState({
     search: "",
-    sortOrder: "ASC",
+    sortOrder: "ASC" as "ASC" | "DESC",
     includeInactive: false,
     withDeleted: false,
     page: 1,
