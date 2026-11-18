@@ -7,6 +7,21 @@ export type ReportTranslate = (key: string) => string;
 
 const RESTAURANT_BILLING_INVOICE_KINDS = new Set(["SUBSCRIPTION"]);
 
+export const resolveReportRestaurantName = ({
+  name,
+  isBrandingReady,
+  brandingError,
+}: {
+  name?: string | null;
+  isBrandingReady: boolean;
+  brandingError?: string | null;
+}) => {
+  const normalizedName = name?.trim();
+  return isBrandingReady && !brandingError && normalizedName
+    ? normalizedName
+    : null;
+};
+
 export const mergeRestaurantBillingInvoices = (
   ...invoiceLists: GeneratedInvoice[][]
 ) => {

@@ -2,6 +2,7 @@
 
 import { useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { getApiErrorMessage } from "@/lib/errors";
 import { prepareUploadFile } from "@/lib/prepare-upload-file";
@@ -13,6 +14,7 @@ interface UploadResult {
 }
 
 export const useFileUpload = () => {
+  const t = useTranslations("uploads");
   const [uploading, setUploading] = useState(false);
 
   const uploadFile = async (event: ChangeEvent<HTMLInputElement>): Promise<UploadResult | null> => {
@@ -33,7 +35,7 @@ export const useFileUpload = () => {
       const uploadData = presigned?.data;
 
       if (!uploadData?.uploadUrl || !uploadData?.key) {
-        throw new Error("Invalid presigned upload response");
+        throw new Error(t("invalidResponse"));
       }
 
       const uploadResponse = await fetch(uploadData.uploadUrl, {
@@ -45,17 +47,17 @@ export const useFileUpload = () => {
       });
 
       if (!uploadResponse.ok) {
-        throw new Error("Failed to upload file to storage");
+        throw new Error(t("storageFailed"));
       }
 
-      toast.success("File uploaded");
+      toast.success(t("success"));
 
       return {
         key: uploadData.key,
         fileUrl: uploadData.fileUrl,
       };
     } catch (error: unknown) {
-      toast.error(getApiErrorMessage(error, "Upload failed"));
+      toast.error(getApiErrorMessage(error, t("failed")));
       return null;
     } finally {
       setUploading(false);

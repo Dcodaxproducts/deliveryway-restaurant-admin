@@ -7,7 +7,7 @@ export function Radio({
   active?: boolean;
 }) {
   return (
-    <label className="flex items-center gap-[8px] cursor-pointer">
+    <span className="flex items-center gap-[8px] cursor-pointer">
       <span
         className={`size-[18px] rounded-full border flex items-center justify-center
         ${active ? "border-primary" : "border-gray-500"}`}
@@ -17,6 +17,6 @@ export function Radio({
         )}
       </span>
       <span className="text-sm text-dark">{label}</span>
-    </label>
+    </span>
   );
 }

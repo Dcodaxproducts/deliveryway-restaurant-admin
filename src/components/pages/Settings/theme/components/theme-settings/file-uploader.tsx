@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import type { FieldPath, UseFormRegister, UseFormSetValue } from "react-hook-form";
 import { Image as ImageIcon, Upload, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { useFileUpload } from "@/hooks/useFileUpload";
 import type { BrandingFormValues } from "@/validations/branding";
@@ -40,6 +41,7 @@ export default function FileUploader({
   setValue,
   error,
 }: FileUploaderProps) {
+  const t = useTranslations("settings.assets");
   const { uploadFile, uploading } = useFileUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewObjectUrlRef = useRef<string | null>(null);
@@ -98,6 +100,7 @@ export default function FileUploader({
     event.target.value = "";
 
     if (!result?.fileUrl) {
+      revokeLocalPreview();
       return;
     }
 
@@ -130,7 +133,7 @@ export default function FileUploader({
         <div className="flex h-20 w-24 items-center justify-center overflow-hidden rounded-[12px] border border-gray-200 bg-gray-50">
           {isPreviewablePath(previewValue) ? (
             <div
-              aria-label={`${title} preview`}
+              aria-label={t("previewLabel", { title })}
               role="img"
               className="h-full w-full bg-cover bg-center"
               style={{ backgroundImage: `url(${previewValue})` }}
@@ -152,23 +155,23 @@ export default function FileUploader({
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              aria-label={`Upload ${title}`}
+              aria-label={t("uploadLabel", { title })}
               className={BRANDING_SMALL_ACTION_BUTTON_CLASS}
               disabled={uploading}
               onClick={handleUploadButtonClick}
             >
               <Upload size={16} aria-hidden="true" />
-              {uploading ? "Uploading..." : `Upload ${title}`}
+              {uploading ? t("uploading") : t("uploadLabel", { title })}
             </button>
             <button
               type="button"
-              aria-label={`Clear ${title}`}
+              aria-label={t("clearLabel", { title })}
               className={BRANDING_SMALL_ACTION_BUTTON_CLASS}
               disabled={uploading || !previewValue}
               onClick={handleClear}
             >
               <X size={16} aria-hidden="true" />
-              Clear
+              {t("clear")}
             </button>
           </div>
           {error ? <p className={BRANDING_ERROR_COMPACT_CLASS}>{error}</p> : null}

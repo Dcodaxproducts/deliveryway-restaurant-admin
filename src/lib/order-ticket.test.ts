@@ -173,12 +173,30 @@ describe("order ticket", () => {
     });
 
     expect(ticket.items).toEqual([
-      expect.objectContaining({ name: "Pizza", dealLabel: "Pizza" }),
+      expect.objectContaining({ name: "Pizza", dealLabel: "Deal deal-1" }),
       expect.objectContaining({ name: "Cola", dealLabel: undefined }),
     ]);
-    expect(buildOrderTicketHtml(ticket, "80MM")).toContain("DEAL: Pizza");
+    expect(buildOrderTicketHtml(ticket, "80MM")).toContain("DEAL: Deal deal-1");
     expect(buildOrderTicketEscPos(ticket, "80MM")).toContain(
-      "DEAL: Pizza",
+      "DEAL: Deal deal-1",
+    );
+  });
+
+  it("prefers an explicit package name over the deal identifier", () => {
+    const ticket = normalizeOrderTicket({
+      id: "named-deal-order",
+      displayItems: [
+        {
+          type: "DEAL",
+          dealId: "deal-1",
+          dealName: "Family Package",
+          items: [{ menuItemName: "Pizza", quantity: 1 }],
+        },
+      ],
+    });
+
+    expect(ticket.items[0]).toEqual(
+      expect.objectContaining({ name: "Pizza", dealLabel: "Family Package" }),
     );
   });
 

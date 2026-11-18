@@ -5,6 +5,7 @@ import {
   buildOrderReportStats,
   getReportHeaderContent,
   mergeRestaurantBillingInvoices,
+  resolveReportRestaurantName,
 } from "./reports-page.helpers";
 import type { GeneratedInvoice } from "@/services/reports";
 
@@ -80,5 +81,33 @@ describe("mergeRestaurantBillingInvoices", () => {
       title: "translated:stats.totalOrdersSelectedPeriod",
       value: "12",
     });
+  });
+});
+
+describe("resolveReportRestaurantName", () => {
+  it("uses only a successfully loaded tenant restaurant name", () => {
+    expect(
+      resolveReportRestaurantName({
+        name: "  Bäckerei Mitte  ",
+        isBrandingReady: true,
+        brandingError: null,
+      }),
+    ).toBe("Bäckerei Mitte");
+  });
+
+  it("blocks a generic filename while branding is loading or failed", () => {
+    expect(
+      resolveReportRestaurantName({
+        name: "Deliveryway Restaurant",
+        isBrandingReady: false,
+      }),
+    ).toBeNull();
+    expect(
+      resolveReportRestaurantName({
+        name: "Deliveryway Restaurant",
+        isBrandingReady: true,
+        brandingError: "failed",
+      }),
+    ).toBeNull();
   });
 });

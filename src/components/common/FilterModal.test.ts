@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { customerTypeToIsGuest, selectionToBoolean } from "./FilterModal";
@@ -19,4 +21,18 @@ describe("customer verification filtering", () => {
       expect(selectionToBoolean(selection)).toBe(expected);
     },
   );
+});
+
+describe("filter accessibility", () => {
+  it("exposes keyboard-operable radio controls and a labelled deleted option", () => {
+    const source = fs.readFileSync(
+      path.join(process.cwd(), "src/components/common/FilterModal.tsx"),
+      "utf8",
+    );
+    expect(source).toContain('role="radiogroup"');
+    expect(source).toContain('role="radio"');
+    expect(source).toContain("aria-checked");
+    expect(source).not.toContain('<div onClick={() => setStatus');
+    expect(source).toContain('<label className="flex items-center gap-2">');
+  });
 });

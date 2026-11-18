@@ -2815,6 +2815,12 @@
       "couponTitleRequired": "Coupon title is required."
     }
   },
+  "uploads": {
+    "success": "File uploaded.",
+    "failed": "Upload failed.",
+    "invalidResponse": "The upload service returned an invalid response.",
+    "storageFailed": "The file could not be uploaded to storage."
+  },
   "settings": {
     "storefrontTitle": "Storefront Settings",
     "storefrontDescription": "Manage restaurant profile, branding, assets, support contact, and customer-facing appearance.",
@@ -2887,6 +2893,25 @@
     "supportContact": "Support Contact",
     "socialMedia": "Social Media",
     "brandAssets": "Brand Assets",
+    "assets": {
+      "restaurantLogo": "Restaurant Logo",
+      "restaurantLogoRecommendation": "Primary restaurant logo used in storefront previews and headers.",
+      "coverImage": "Cover Image",
+      "coverImageRecommendation": "Recommended: wide JPG or PNG used as the restaurant hero image.",
+      "lightLogo": "Light Logo",
+      "lightLogoRecommendation": "Logo used on light backgrounds.",
+      "darkLogo": "Dark Logo",
+      "darkLogoRecommendation": "Logo used on dark backgrounds.",
+      "favicon": "Favicon",
+      "faviconRecommendation": "Recommended: 32x32px or 64x64px PNG/ICO.",
+      "placeholderImage": "Placeholder Image",
+      "placeholderImageRecommendation": "Fallback image for menu items and empty media states.",
+      "previewLabel": "{title} preview",
+      "uploadLabel": "Upload {title}",
+      "uploading": "Uploading...",
+      "clearLabel": "Clear {title}",
+      "clear": "Clear"
+    },
     "colorScheme": "Color Scheme",
     "lightThemeColors": "Light Theme Colors",
     "lightThemeDescription": "Used when storefront theme mode is Light.",

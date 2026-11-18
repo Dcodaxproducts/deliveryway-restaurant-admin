@@ -2815,6 +2815,12 @@
       "couponTitleRequired": "Coupon-Titel ist erforderlich."
     }
   },
+  "uploads": {
+    "success": "Datei wurde hochgeladen.",
+    "failed": "Upload fehlgeschlagen.",
+    "invalidResponse": "Der Upload-Dienst hat eine ungültige Antwort zurückgegeben.",
+    "storageFailed": "Die Datei konnte nicht in den Speicher hochgeladen werden."
+  },
   "settings": {
     "storefrontTitle": "Storefront-Einstellungen",
     "storefrontDescription": "Restaurantprofil, Branding, Assets, Supportkontakt und kundenorientiertes Erscheinungsbild verwalten.",
@@ -2887,6 +2893,25 @@
     "supportContact": "Supportkontakt",
     "socialMedia": "Soziale Medien",
     "brandAssets": "Markenassets",
+    "assets": {
+      "restaurantLogo": "Restaurantlogo",
+      "restaurantLogoRecommendation": "Primäres Restaurantlogo für Storefront-Vorschauen und Kopfzeilen.",
+      "coverImage": "Titelbild",
+      "coverImageRecommendation": "Empfohlen: breites JPG oder PNG als Restaurant-Titelbild.",
+      "lightLogo": "Logo für helle Hintergründe",
+      "lightLogoRecommendation": "Logo zur Verwendung auf hellen Hintergründen.",
+      "darkLogo": "Logo für dunkle Hintergründe",
+      "darkLogoRecommendation": "Logo zur Verwendung auf dunklen Hintergründen.",
+      "favicon": "Favicon",
+      "faviconRecommendation": "Empfohlen: PNG/ICO mit 32x32 oder 64x64 Pixeln.",
+      "placeholderImage": "Platzhalterbild",
+      "placeholderImageRecommendation": "Ersatzbild für Menüartikel und Medien ohne Bild.",
+      "previewLabel": "Vorschau für {title}",
+      "uploadLabel": "{title} hochladen",
+      "uploading": "Wird hochgeladen...",
+      "clearLabel": "{title} entfernen",
+      "clear": "Entfernen"
+    },
     "colorScheme": "Farbschema",
     "lightThemeColors": "Farben des hellen Themes",
     "lightThemeDescription": "Wird verwendet, wenn der Storefront-Theme-Modus hell ist.",

@@ -160,37 +160,49 @@ export default function FilterModal({
           <div className="space-y-3">
             <p className="text-sm font-medium">{t("status")}</p>
 
-            <div className="flex flex-wrap gap-3">
-              <div onClick={() => setStatus("all")}>
-                <Radio label={t("all")} active={status === "all"} />
-              </div>
-
-              <div onClick={() => setStatus("active")}>
-                <Radio label={t("active")} active={status === "active"} />
-              </div>
-
-              <div onClick={() => setStatus("inactive")}>
-                <Radio label={t("inactive")} active={status === "inactive"} />
-              </div>
+            <div
+              className="flex flex-wrap gap-3"
+              role="radiogroup"
+              aria-label={t("status")}
+            >
+              {["all", "active", "inactive"].map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  role="radio"
+                  aria-checked={status === option}
+                  onClick={() => setStatus(option)}
+                  className="rounded-md px-1 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                >
+                  <Radio label={t(option)} active={status === option} />
+                </button>
+              ))}
             </div>
           </div>
 
           {showCustomerFilters ? (
             <div className="space-y-3">
               <p className="text-sm font-medium">{t("customerType")}</p>
-              <div className="flex flex-wrap gap-6">
-                <div onClick={() => setCustomerType("all")}>
-                  <Radio label={t("all")} active={customerType === "all"} />
-                </div>
-                <div onClick={() => setCustomerType("registered")}>
-                  <Radio
-                    label={t("registered")}
-                    active={customerType === "registered"}
-                  />
-                </div>
-                <div onClick={() => setCustomerType("guest")}>
-                  <Radio label={t("guest")} active={customerType === "guest"} />
-                </div>
+              <div
+                className="flex flex-wrap gap-3"
+                role="radiogroup"
+                aria-label={t("customerType")}
+              >
+                {["all", "registered", "guest"].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    role="radio"
+                    aria-checked={customerType === option}
+                    onClick={() => setCustomerType(option)}
+                    className="rounded-md px-1 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                  >
+                    <Radio
+                      label={t(option)}
+                      active={customerType === option}
+                    />
+                  </button>
+                ))}
               </div>
             </div>
           ) : null}
@@ -232,13 +244,13 @@ export default function FilterModal({
           <div className="space-y-2">
             <p className="text-sm font-medium">{t("options")}</p>
 
-            <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2">
               <Checkbox
                 checked={withDeleted}
                 onCheckedChange={(v) => setWithDeleted(!!v)}
               />
               <span className="text-sm">{t("includeDeleted")}</span>
-            </div>
+            </label>
           </div>
 
           {/* SORT */}
@@ -246,20 +258,29 @@ export default function FilterModal({
           <div className="space-y-3">
             <p className="text-sm font-medium">{t("sortBy")}</p>
 
-            <div className="space-y-3">
-              <div onClick={() => setSortBy("default")}>
-                <Radio
-                  label={t("newestToOldest")}
-                  active={sortBy === "default"}
-                />
-              </div>
-
-              <div onClick={() => setSortBy("oldest")}>
-                <Radio
-                  label={t("oldestToNewest")}
-                  active={sortBy === "oldest"}
-                />
-              </div>
+            <div
+              className="space-y-3"
+              role="radiogroup"
+              aria-label={t("sortBy")}
+            >
+              {[
+                { value: "default", label: t("newestToOldest") },
+                { value: "oldest", label: t("oldestToNewest") },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={sortBy === option.value}
+                  onClick={() => setSortBy(option.value)}
+                  className="block rounded-md px-1 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                >
+                  <Radio
+                    label={option.label}
+                    active={sortBy === option.value}
+                  />
+                </button>
+              ))}
             </div>
           </div>
         </div>

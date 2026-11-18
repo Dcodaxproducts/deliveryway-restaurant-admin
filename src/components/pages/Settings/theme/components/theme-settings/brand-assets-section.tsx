@@ -1,5 +1,6 @@
 import type { FieldPath, UseFormRegister, UseFormSetValue } from "react-hook-form";
 import { Image as ImageIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { DEFAULT_RESTAURANT_BRANDING_PAYLOAD } from "@/config/default-branding";
 import type { BrandingFormValues } from "@/validations/branding";
@@ -32,14 +33,15 @@ const getLinkedNames = (
   linkedFields.flatMap(({ name, value, defaultValue }) => (!value || value === defaultValue || value === primaryValue ? [name] : []));
 
 export default function BrandAssetsSection({ register, setValue, values, getError }: BrandAssetsSectionProps) {
+  const t = useTranslations("settings");
   const { restaurant } = values;
   const { branding } = restaurant;
 
   const assetFields: AssetFieldConfig[] = [
     {
       id: "restaurant-logo-url",
-      title: "Restaurant Logo",
-      recommendation: "Primary restaurant logo used in storefront previews and headers.",
+      title: t("assets.restaurantLogo"),
+      recommendation: t("assets.restaurantLogoRecommendation"),
       name: "restaurant.logoUrl",
       linkedNames: getLinkedNames(restaurant.logoUrl, [
         {
@@ -57,8 +59,8 @@ export default function BrandAssetsSection({ register, setValue, values, getErro
     },
     {
       id: "restaurant-cover-image",
-      title: "Cover Image",
-      recommendation: "Recommended: wide JPG or PNG used as the restaurant hero image.",
+      title: t("assets.coverImage"),
+      recommendation: t("assets.coverImageRecommendation"),
       name: "restaurant.coverImage",
       linkedNames: getLinkedNames(restaurant.coverImage, [
         {
@@ -76,30 +78,30 @@ export default function BrandAssetsSection({ register, setValue, values, getErro
     },
     {
       id: "branding-logo-light",
-      title: "Light Logo",
-      recommendation: "Logo used on light backgrounds.",
+      title: t("assets.lightLogo"),
+      recommendation: t("assets.lightLogoRecommendation"),
       name: "restaurant.branding.logo.light",
       value: branding.logo.light,
     },
     {
       id: "branding-logo-dark",
-      title: "Dark Logo",
-      recommendation: "Logo used on dark backgrounds.",
+      title: t("assets.darkLogo"),
+      recommendation: t("assets.darkLogoRecommendation"),
       name: "restaurant.branding.logo.dark",
       value: branding.logo.dark,
     },
     {
       id: "branding-favicon",
-      title: "Favicon",
-      recommendation: "Recommended: 32x32px or 64x64px PNG/ICO.",
+      title: t("assets.favicon"),
+      recommendation: t("assets.faviconRecommendation"),
       name: "restaurant.branding.assets.faviconUrl",
       linkedNames: ["restaurant.branding.assets.logos.faviconUrl"],
       value: branding.assets.faviconUrl,
     },
     {
       id: "branding-placeholder-image",
-      title: "Placeholder Image",
-      recommendation: "Fallback image for menu items and empty media states.",
+      title: t("assets.placeholderImage"),
+      recommendation: t("assets.placeholderImageRecommendation"),
       name: "restaurant.branding.assets.placeholderImage",
       value: branding.assets.placeholderImage,
     },
@@ -109,7 +111,7 @@ export default function BrandAssetsSection({ register, setValue, values, getErro
     <div className={BRANDING_PANEL_SPACED_CLASS}>
       <div className="flex items-center gap-3">
         <ImageIcon className="text-gray-500" />
-        <h3 className={BRANDING_SECTION_TITLE_CLASS}>Brand Assets</h3>
+        <h3 className={BRANDING_SECTION_TITLE_CLASS}>{t("brandAssets")}</h3>
       </div>
       {assetFields.map(({ id, title, recommendation, name, linkedNames, value }) => (
         <FileUploader

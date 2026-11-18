@@ -32,6 +32,7 @@ import {
   getReportCurrency,
   getReportHeaderContent,
   mergeRestaurantBillingInvoices,
+  resolveReportRestaurantName,
   type ReportTab,
 } from "@/components/pages/reports/utils/reports-page.helpers";
 import {
@@ -55,7 +56,17 @@ export default function Orders() {
     loading: authLoading,
   } = useAuth();
   const { currency: fallbackCurrency } = useCurrency(restaurantId);
-  const { restaurant } = useBranding();
+  const {
+    restaurant,
+    isBrandingReady,
+    isBrandingLoading,
+    brandingError,
+  } = useBranding();
+  const reportRestaurantName = resolveReportRestaurantName({
+    name: restaurant.name,
+    isBrandingReady,
+    brandingError,
+  });
   const scopedReportParams = user
     ? {
         ...scopedParams,
@@ -164,6 +175,7 @@ export default function Orders() {
 
   const activeLoading =
     authLoading ||
+    isBrandingLoading ||
     (activeTab === "invoice-history"
       ? subscriptionInvoicesQuery.isLoading ||
         subscriptionInvoicesQuery.isFetching
@@ -172,7 +184,7 @@ export default function Orders() {
         : ordersLoading || ordersFetching);
 
   const handleDownloadActiveReportPdf = () => {
-    if (!restaurantId) {
+    if (!restaurantId || !reportRestaurantName) {
       toast.error(t("restaurantUnavailable"));
       return;
     }
@@ -186,7 +198,7 @@ export default function Orders() {
       title,
       description,
       restaurantId,
-      restaurantName: restaurant.name,
+      restaurantName: reportRestaurantName,
       currency: reportCurrency,
       period: reportDateRange,
       stats: activeStats.map((stat) => ({
@@ -240,7 +252,12 @@ export default function Orders() {
             <Button
               type="button"
               variant="outline"
-              disabled={activeLoading || activeReportError || !restaurantId}
+              disabled={
+                activeLoading ||
+                activeReportError ||
+                !restaurantId ||
+                !reportRestaurantName
+              }
               onClick={handleDownloadActiveReportPdf}
               className="h-[44px] rounded-[12px] border-gray-200 px-5 text-gray-700"
             >
