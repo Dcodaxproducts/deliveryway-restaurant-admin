@@ -28,6 +28,7 @@ import {
   useUpdateCustomerStatus,
 } from "@/hooks/useCustomers";
 import { useTranslations } from "next-intl";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Customer {
   id: string;
@@ -61,6 +62,7 @@ const CustomerTable = ({
 }: Props) => {
   const t = useTranslations("customers");
   const commonT = useTranslations("common");
+  const { isBranchAdmin } = useAuth();
   const [openDetails, setOpenDetails] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
@@ -219,12 +221,18 @@ const CustomerTable = ({
                   </TableCell>
 
                   <TableCell className="text-center pr-14">
-                    <Switch
-                      checked={!!c.isActive} //  ensure boolean
-                      onCheckedChange={() =>
-                        handleToggleStatus(c.id, !!c.isActive)
-                      }
-                    />
+                    {isBranchAdmin ? (
+                      <span className="text-sm text-gray-500">
+                        {c.isActive ? commonT("active") : t("blocked")}
+                      </span>
+                    ) : (
+                      <Switch
+                        checked={!!c.isActive}
+                        onCheckedChange={() =>
+                          handleToggleStatus(c.id, !!c.isActive)
+                        }
+                      />
+                    )}
                   </TableCell>
 
                   <TableCell className="px-4">
@@ -239,31 +247,33 @@ const CustomerTable = ({
                         <Eye size={18} />
                       </button>
 
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-2">
-                            <MoreHorizontal size={18} />
-                          </button>
-                        </DropdownMenuTrigger>
+                      {!isBranchAdmin && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-2">
+                              <MoreHorizontal size={18} />
+                            </button>
+                          </DropdownMenuTrigger>
 
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedCustomer(c);
-                              setOpenEdit(true);
-                            }}
-                          >
-                            {commonT("edit")}
-                          </DropdownMenuItem>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedCustomer(c);
+                                setOpenEdit(true);
+                              }}
+                            >
+                              {commonT("edit")}
+                            </DropdownMenuItem>
 
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => handleDelete(c.id)}
-                          >
-                            {commonT("delete")}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => handleDelete(c.id)}
+                            >
+                              {commonT("delete")}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -303,10 +313,18 @@ const CustomerTable = ({
                   </span>
                 </div>
 
-                <Switch
-                  checked={!!c.isActive}
-                  onCheckedChange={() => handleToggleStatus(c.id, !!c.isActive)}
-                />
+                {isBranchAdmin ? (
+                  <span className="text-sm text-gray-500">
+                    {c.isActive ? commonT("active") : t("blocked")}
+                  </span>
+                ) : (
+                  <Switch
+                    checked={!!c.isActive}
+                    onCheckedChange={() =>
+                      handleToggleStatus(c.id, !!c.isActive)
+                    }
+                  />
+                )}
               </div>
 
               <div className="text-sm text-gray mb-2">
@@ -341,31 +359,33 @@ const CustomerTable = ({
                   <Eye size={18} />
                 </button>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="p-2">
-                      <MoreHorizontal size={18} />
-                    </button>
-                  </DropdownMenuTrigger>
+                {!isBranchAdmin && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-2">
+                        <MoreHorizontal size={18} />
+                      </button>
+                    </DropdownMenuTrigger>
 
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setSelectedCustomer(c);
-                        setOpenEdit(true);
-                      }}
-                    >
-                      {commonT("edit")}
-                    </DropdownMenuItem>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedCustomer(c);
+                          setOpenEdit(true);
+                        }}
+                      >
+                        {commonT("edit")}
+                      </DropdownMenuItem>
 
-                    <DropdownMenuItem
-                      className="text-red-600"
-                      onClick={() => handleDelete(c.id)}
-                    >
-                      {commonT("delete")}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => handleDelete(c.id)}
+                      >
+                        {commonT("delete")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </div>
           );
@@ -378,12 +398,14 @@ const CustomerTable = ({
           onOpenChange={setOpenDetails}
           customer={selectedCustomer}
         />
-        <AddCustomerModal
-          open={openEdit}
-          onOpenChange={setOpenEdit}
-          initialData={selectedCustomer} // <-- IMPORTANT (you can handle inside modal)
-          onSuccess={onRefresh}
-        />
+        {!isBranchAdmin && (
+          <AddCustomerModal
+            open={openEdit}
+            onOpenChange={setOpenEdit}
+            initialData={selectedCustomer} // <-- IMPORTANT (you can handle inside modal)
+            onSuccess={onRefresh}
+          />
+        )}
       </div>
     </>
   );
