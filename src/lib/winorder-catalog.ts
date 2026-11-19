@@ -17,6 +17,23 @@ export type RetainedCatalogMapping = {
   externalArticleName?: string | null;
 };
 
+export type WinOrderLocalCatalogNameSource = {
+  key: string;
+  dealName?: string | null;
+  packageName?: string | null;
+  menuItemName?: string | null;
+  name?: string | null;
+};
+
+export const getWinOrderLocalCatalogName = (
+  option: WinOrderLocalCatalogNameSource,
+) =>
+  option.dealName?.trim() ||
+  option.packageName?.trim() ||
+  option.menuItemName?.trim() ||
+  option.name?.trim() ||
+  option.key;
+
 export const getUnlistedCatalogMappings = (
   listedKeys: Iterable<string>,
   mappings: RetainedCatalogMapping[],

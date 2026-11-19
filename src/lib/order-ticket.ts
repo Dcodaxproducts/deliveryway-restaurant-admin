@@ -1,4 +1,5 @@
 import { resolveAppliedOrderCoupon } from "@/lib/order-discount";
+import { resolveOrderDealDisplayName } from "@/lib/order-deal-name";
 import type { PrintingPaperSize } from "@/services/printing";
 
 type TicketModifier = {
@@ -128,13 +129,17 @@ const normalizeItems = (
           ? item.items
           : item?.includedItems;
         if (itemType === "DEAL" || Array.isArray(includedItems)) {
-          const dealId = readString(item, "dealId");
-          const dealLabel =
-            readString(item, "name") ??
-            readString(item, "dealName") ??
-            readString(item, "packageName") ??
-            readString(item, "menuItemName") ??
-            (dealId ? `Deal ${dealId}` : fallbackDealLabel);
+          const dealLabel = resolveOrderDealDisplayName(
+            {
+              dealId: readString(item, "dealId"),
+              dealName: readString(item, "dealName"),
+              packageId: readString(item, "packageId"),
+              packageName: readString(item, "packageName"),
+              name: readString(item, "name"),
+              menuItemName: readString(item, "menuItemName"),
+            },
+            fallbackDealLabel,
+          );
           const normalizedIncludedItems = normalizeItems(
             includedItems,
             fallbackDealLabel,

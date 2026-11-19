@@ -13,7 +13,7 @@ describe("customer list filters", () => {
     vi.mocked(api.get).mockResolvedValue({ data: { data: [], meta: {} } });
   });
 
-  it("forwards bounded server-side filters and leaves branch scope to the JWT", async () => {
+  it("forwards bounded server-side filters including the selected branch scope", async () => {
     await getCustomersList({
       page: 2,
       limit: 25,
@@ -33,6 +33,7 @@ describe("customer list filters", () => {
         page: 2,
         limit: 25,
         restaurantId: "restaurant-1",
+        branchId: "jwt-branch",
         isGuest: false,
         isVerified: true,
         isActive: false,

@@ -48,6 +48,7 @@ import { formatDateTime24 } from "@/lib/date-time-format";
 import { formatMoney as formatCurrencyAmount } from "@/lib/currency";
 import { formatPaymentStatusLabel } from "@/lib/payment-status-label";
 import { resolveAppliedOrderCoupon } from "@/lib/order-discount";
+import { resolveOrderDealDisplayName } from "@/lib/order-deal-name";
 import { ORDER_STATUS_LABEL_KEYS } from "@/lib/status-labels";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -91,6 +92,9 @@ type OrderItem = {
   type?: string | null;
   itemType?: string | null;
   dealId?: string | null;
+  dealName?: string | null;
+  packageId?: string | null;
+  packageName?: string | null;
   name?: string | null;
   menuItemName?: string | null;
   variationName?: string | null;
@@ -195,7 +199,12 @@ const getAmountNumber = (amount?: number | null) =>
 
 const isDealItem = (item: OrderItem) =>
   String(item.type || item.itemType || "").toUpperCase() === "DEAL" ||
-  Boolean(item.dealId || item.includedItems?.length || item.items?.length);
+  Boolean(
+    item.dealId ||
+      item.packageId ||
+      item.includedItems?.length ||
+      item.items?.length,
+  );
 
 const getIncludedDealItemName = (item: OrderItem, fallback: string) =>
   item.menuItemName || item.name || item.menuItem?.category?.name || fallback;
@@ -705,13 +714,12 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                         }, 0);
 
                       return renderDealCard({
-                        keyValue: `deal-${item.dealId || item.id || index}`,
-                        title:
-                          item.menuItemName ||
-                          item.name ||
-                          couponTitle ||
-                          "Deal",
-                        code: item.dealId,
+                        keyValue: `deal-${item.dealId || item.packageId || item.id || index}`,
+                        title: resolveOrderDealDisplayName(
+                          item,
+                          couponTitle || t("deal"),
+                        ),
+                        code: item.dealId || item.packageId,
                         total: dealTotal,
                         quantity: item.quantity,
                         imageUrl: item.imageUrl || item.menuItem?.imageUrl,

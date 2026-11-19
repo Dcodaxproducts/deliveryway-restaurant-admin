@@ -1,9 +1,31 @@
 import { describe, expect, it } from "vitest";
 import {
   compareWinOrderCatalog,
+  getWinOrderLocalCatalogName,
   getUnlistedCatalogMappings,
   parseWinOrderCatalog,
 } from "@/lib/winorder-catalog";
+
+describe("getWinOrderLocalCatalogName", () => {
+  it("uses resolved deal and package names with an id-safe legacy fallback", () => {
+    expect(
+      getWinOrderLocalCatalogName({
+        key: "deal:family",
+        dealName: "Family Feast",
+        menuItemName: "Generic item",
+      }),
+    ).toBe("Family Feast");
+    expect(
+      getWinOrderLocalCatalogName({
+        key: "package:lunch",
+        packageName: "Lunch Package",
+      }),
+    ).toBe("Lunch Package");
+    expect(getWinOrderLocalCatalogName({ key: "deal:legacy" })).toBe(
+      "deal:legacy",
+    );
+  });
+});
 
 describe("parseWinOrderCatalog", () => {
   it("parses the documented WinOrder CSV columns", () => {

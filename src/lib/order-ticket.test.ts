@@ -200,6 +200,33 @@ describe("order ticket", () => {
     );
   });
 
+  it("prints resolved package names and falls back safely for legacy package ids", () => {
+    const named = normalizeOrderTicket({
+      id: "named-package-order",
+      displayItems: [
+        {
+          type: "DEAL",
+          packageId: "package-1",
+          packageName: "Lunch Package",
+          items: [{ menuItemName: "Soup", quantity: 1 }],
+        },
+      ],
+    });
+    const legacy = normalizeOrderTicket({
+      id: "legacy-package-order",
+      displayItems: [
+        {
+          type: "DEAL",
+          packageId: "legacy-package",
+          items: [{ menuItemName: "Soup", quantity: 1 }],
+        },
+      ],
+    });
+
+    expect(named.items[0]?.dealLabel).toBe("Lunch Package");
+    expect(legacy.items[0]?.dealLabel).toBe("Deal legacy-package");
+  });
+
   it.each([
     ["A4", "190mm"],
     ["A5", "132mm"],

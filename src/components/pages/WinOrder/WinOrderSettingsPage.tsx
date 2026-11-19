@@ -41,6 +41,7 @@ import {
 import { getStringValue, isRecord } from "@/lib/auth";
 import {
   compareWinOrderCatalog,
+  getWinOrderLocalCatalogName,
   getUnlistedCatalogMappings,
   parseWinOrderCatalog,
   type WinOrderCatalogComparison,
@@ -192,7 +193,7 @@ export default function WinOrderSettingsPage() {
     const next: CatalogDraft = {};
     for (const item of data.catalog.items) {
       const current = existing.get(item.key);
-      const localName = item.menuItemName ?? item.key;
+      const localName = getWinOrderLocalCatalogName(item);
       next[item.key] = {
         mappingType: "ITEM",
         localName,
@@ -252,7 +253,7 @@ export default function WinOrderSettingsPage() {
     return [
       ...catalog.items
         .filter((item) => !item.variationId)
-        .flatMap((item) => (item.menuItemName ? [item.menuItemName] : [])),
+        .map(getWinOrderLocalCatalogName),
       ...catalog.modifiers.flatMap((modifier) =>
         modifier.name ? [modifier.name] : [],
       ),

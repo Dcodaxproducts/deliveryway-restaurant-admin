@@ -20,6 +20,8 @@ export type WinOrderConnection = {
 
 export type WinOrderCatalogOption = {
   key: string;
+  dealName?: string | null;
+  packageName?: string | null;
   menuItemId?: string;
   menuItemName?: string;
   variationId?: string | null;
