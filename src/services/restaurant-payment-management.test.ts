@@ -52,6 +52,8 @@ describe("restaurant payment management service", () => {
           type: "RESTAURANT_WALLET",
           balance: "900",
           ledgerBalance: "900",
+          currentPeriodNetContributionAmount: "650",
+          carryForwardAvailableAmount: "119.10",
           totalOrderAmount: "1400",
           platformCollectedAmount: "900",
           grossCollectedAmount: "900",
@@ -65,15 +67,25 @@ describe("restaurant payment management service", () => {
             to: "2026-10-01T00:00:00.000Z",
           },
           monthlyFeeAmount: "159",
+          configuredMonthlyFeeAmount: "159",
           monthlyFeeScheduledToDate: "79.50",
           monthlyFeeDeductedBefore: "39.75",
           monthlyFeeDeductedAmount: "39.75",
           monthlyFeeVatAmount: "7.55",
           monthlyFeeDeductedThisMonth: "79.50",
+          monthlyFeeDueNextPayoutAmount: "39.75",
           monthlyFeeOutstandingAmount: "79.50",
           previousPayoutAmount: "0",
           totalDeductionsAmount: "130.90",
           availablePayoutBalance: "769.10",
+          payoutCycle: "WEEKLY",
+          nextPayoutAt: "2026-09-15T08:00:00.000Z",
+          automaticPayout: {
+            enabled: true,
+            provider: "STRIPE",
+            status: "READY",
+            reason: null,
+          },
           activePlan: {
             subscriptionId: "subscription-1",
             id: "plan-1",
@@ -87,7 +99,7 @@ describe("restaurant payment management service", () => {
             payoutCycle: "WEEKLY",
           },
           currency: "PKR",
-          customerWalletExposure: { totalBalance: 250 },
+          customerWalletExposure: { accountCount: 4, totalBalance: 250 },
         },
       },
     });
@@ -101,6 +113,8 @@ describe("restaurant payment management service", () => {
       type: "RESTAURANT_WALLET",
       balance: 900,
       ledgerBalance: 900,
+      currentPeriodNetContributionAmount: 650,
+      carryForwardAvailableAmount: 119.1,
       totalOrderAmount: 1400,
       platformCollectedAmount: 900,
       grossCollectedAmount: 900,
@@ -114,15 +128,25 @@ describe("restaurant payment management service", () => {
         to: "2026-10-01T00:00:00.000Z",
       },
       monthlyFeeAmount: 159,
+      configuredMonthlyFeeAmount: 159,
       monthlyFeeScheduledToDate: 79.5,
       monthlyFeeDeductedBefore: 39.75,
       monthlyFeeDeductedAmount: 39.75,
       monthlyFeeVatAmount: 7.55,
       monthlyFeeDeductedThisMonth: 79.5,
+      monthlyFeeDueNextPayoutAmount: 39.75,
       monthlyFeeOutstandingAmount: 79.5,
       previousPayoutAmount: 0,
       totalDeductionsAmount: 130.9,
       availablePayoutBalance: 769.1,
+      payoutCycle: "WEEKLY",
+      nextPayoutAt: "2026-09-15T08:00:00.000Z",
+      automaticPayout: {
+        enabled: true,
+        provider: "STRIPE",
+        status: "READY",
+        reason: null,
+      },
       activePlan: {
         subscriptionId: "subscription-1",
         id: "plan-1",
@@ -136,7 +160,28 @@ describe("restaurant payment management service", () => {
         payoutCycle: "WEEKLY",
       },
       currency: "PKR",
-      customerWalletExposure: { totalBalance: 250 },
+      customerWalletExposure: { accountCount: 4, totalBalance: 250 },
+    });
+  });
+
+  it("keeps nullable wallet fields honest for an older API response", async () => {
+    mockedHttpClient.get.mockResolvedValueOnce({
+      data: { wallet: { balance: "25", monthlyFeeAmount: "10" } },
+    });
+
+    const result = await getRestaurantWallet("restaurant-1");
+
+    expect(result).toMatchObject({
+      availablePayoutBalance: 25,
+      ledgerBalance: 25,
+      currentPeriodNetContributionAmount: null,
+      carryForwardAvailableAmount: null,
+      configuredMonthlyFeeAmount: 10,
+      monthlyFeeDueNextPayoutAmount: null,
+      payoutCycle: null,
+      nextPayoutAt: null,
+      automaticPayout: null,
+      customerWalletExposure: null,
     });
   });
 

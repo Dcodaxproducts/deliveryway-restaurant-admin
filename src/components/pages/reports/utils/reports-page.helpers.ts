@@ -5,7 +5,10 @@ import type { GeneratedInvoice } from "@/services/reports";
 export type ReportTab = "financial" | "order" | "invoice-history";
 export type ReportTranslate = (key: string) => string;
 
-const RESTAURANT_BILLING_INVOICE_KINDS = new Set(["SUBSCRIPTION"]);
+const RESTAURANT_BILLING_INVOICE_KINDS = new Set([
+  "SUBSCRIPTION",
+  "WEEKLY_PAYOUT",
+]);
 
 export const resolveReportRestaurantName = ({
   name,

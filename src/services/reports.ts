@@ -27,11 +27,7 @@ export type ReportOrderStatus =
 export type ReportOrderType = "DELIVERY" | "TAKEAWAY" | "DINE_IN";
 
 export type ReportPaymentStatus =
-  | "PENDING"
-  | "PAID"
-  | "FAILED"
-  | "CANCELLED"
-  | "REFUNDED";
+  "PENDING" | "PAID" | "FAILED" | "CANCELLED" | "REFUNDED";
 
 export type ReportKind = "order" | "group-orders";
 
@@ -138,7 +134,15 @@ export type GeneratedInvoicePdfParams = BaseReportParams & {
   kind?: GeneratedInvoiceKind | string;
 };
 
-export type GeneratedInvoiceStatus = "ISSUED" | "SENT";
+export type GeneratedInvoiceStatus =
+  | "DRAFT"
+  | "GENERATED"
+  | "ISSUED"
+  | "SENT"
+  | "PAID"
+  | "FAILED"
+  | "CANCELLED"
+  | "VOID";
 
 export type GeneratedInvoicesParams = BaseReportParams & {
   kind?: GeneratedInvoiceKind | string;
@@ -212,14 +216,21 @@ export type GeneratedInvoice = {
   totalAmount: number;
   sentCount: number;
   downloadedCount: number;
+  downloadCount?: number | string | null;
+  downloadsCount?: number | string | null;
   lastSentAt?: string | null;
   lastSentTo?: string | null;
+  generatedAt?: string | null;
+  mimeType?: string | null;
   createdAt?: string;
   updatedAt?: string;
   documentType?: string | null;
   restaurant?: ReportRestaurant | null;
   branch?: ReportBranch | null;
   tenant?: { id: string; name: string } | null;
+  tenantSnapshot?: { id?: string | null; name?: string | null } | null;
+  restaurantSnapshot?: { id?: string | null; name?: string | null } | null;
+  branchSnapshot?: { id?: string | null; name?: string | null } | null;
 };
 
 export type GeneratedInvoicesResponse = {
@@ -287,7 +298,7 @@ const cleanParams = <T extends Record<string, any>>(params?: T) => {
   const cleaned = Object.fromEntries(
     Object.entries(params).filter(([, value]) => {
       return value !== undefined && value !== null && value !== "";
-    })
+    }),
   );
 
   return Object.keys(cleaned).length > 0 ? cleaned : undefined;
@@ -322,7 +333,7 @@ export const getFinancialReport = async (params?: FinancialReportParams) => {
  */
 
 export const getGeneratedInvoices = async (
-  params?: GeneratedInvoicesParams
+  params?: GeneratedInvoicesParams,
 ): Promise<GeneratedInvoicesResponse> => {
   const { data } = await api.get("/admin/reports/generated-invoices", {
     params: cleanParams(params),
@@ -347,7 +358,7 @@ export const downloadGeneratedInvoicePdf = async (
 };
 
 export const getAdminReportInvoices = async (
-  params?: AdminInvoicesParams
+  params?: AdminInvoicesParams,
 ): Promise<AdminInvoicesResponse> => {
   const { data } = await api.get("/admin/reports/invoices", {
     params: cleanParams(params),
@@ -378,7 +389,7 @@ export const getAdminReportInvoiceDetails = async ({
  */
 
 export const exportMenuReport = async (
-  params?: MenuExportReportParams
+  params?: MenuExportReportParams,
 ): Promise<CsvExportResponse> => {
   const { data } = await api.get("/admin/reports/menu/export", {
     params: cleanParams(params),
@@ -388,7 +399,7 @@ export const exportMenuReport = async (
 };
 
 export const exportOrdersReport = async (
-  params?: OrdersExportReportParams
+  params?: OrdersExportReportParams,
 ): Promise<CsvExportResponse> => {
   const { data } = await api.get("/admin/reports/orders/export", {
     params: cleanParams(params),
@@ -398,7 +409,7 @@ export const exportOrdersReport = async (
 };
 
 export const exportCustomersReport = async (
-  params?: CustomersExportReportParams
+  params?: CustomersExportReportParams,
 ): Promise<CsvExportResponse> => {
   const { data } = await api.get("/admin/reports/customers/export", {
     params: cleanParams(params),

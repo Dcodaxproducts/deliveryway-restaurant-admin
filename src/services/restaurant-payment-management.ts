@@ -38,6 +38,8 @@ export type RestaurantWallet = {
   type: string | null;
   balance: number | null;
   ledgerBalance: number | null;
+  currentPeriodNetContributionAmount: number | null;
+  carryForwardAvailableAmount: number | null;
   totalOrderAmount: number | null;
   platformCollectedAmount: number | null;
   grossCollectedAmount: number | null;
@@ -51,17 +53,30 @@ export type RestaurantWallet = {
     to: string | null;
   } | null;
   monthlyFeeAmount: number | null;
+  configuredMonthlyFeeAmount: number | null;
   monthlyFeeScheduledToDate: number | null;
   monthlyFeeDeductedBefore: number | null;
   monthlyFeeDeductedAmount: number | null;
   monthlyFeeVatAmount: number | null;
   monthlyFeeDeductedThisMonth: number | null;
+  monthlyFeeDueNextPayoutAmount: number | null;
   monthlyFeeOutstandingAmount: number | null;
   previousPayoutAmount: number | null;
   totalDeductionsAmount: number | null;
   availablePayoutBalance: number | null;
+  payoutCycle: string | null;
+  nextPayoutAt: string | null;
+  automaticPayout: {
+    enabled: boolean | null;
+    provider: string | null;
+    status: string | null;
+    reason: string | null;
+  } | null;
   currency: string | null;
-  customerWalletExposure: RecordValue;
+  customerWalletExposure: {
+    accountCount: number | null;
+    totalBalance: number | null;
+  } | null;
   activePlan: {
     subscriptionId: string | null;
     id: string | null;
@@ -209,6 +224,11 @@ const normalizeWallet = (response: unknown): RestaurantWallet => {
   const wallet = firstRecord(data.wallet, data.account, data);
   const activePlan = getRecord(wallet.activePlan);
   const billingPeriod = getRecord(wallet.billingPeriod);
+  const customerWalletExposure = firstRecord(
+    wallet.customerWalletExposure,
+    data.customerWalletExposure,
+  );
+  const automaticPayout = getRecord(wallet.automaticPayout);
 
   return {
     type: getString(wallet.type, "RESTAURANT_WALLET"),
@@ -216,6 +236,10 @@ const normalizeWallet = (response: unknown): RestaurantWallet => {
       wallet.balance ?? wallet.availableBalance ?? wallet.amount,
     ),
     ledgerBalance: getNumber(wallet.ledgerBalance ?? wallet.balance),
+    currentPeriodNetContributionAmount: getNumber(
+      wallet.currentPeriodNetContributionAmount,
+    ),
+    carryForwardAvailableAmount: getNumber(wallet.carryForwardAvailableAmount),
     totalOrderAmount: getNumber(wallet.totalOrderAmount),
     platformCollectedAmount: getNumber(
       wallet.platformCollectedAmount ?? wallet.grossCollectedAmount,
@@ -234,12 +258,20 @@ const normalizeWallet = (response: unknown): RestaurantWallet => {
           to: getString(billingPeriod.to),
         }
       : null,
-    monthlyFeeAmount: getNumber(wallet.monthlyFeeAmount),
+    monthlyFeeAmount: getNumber(
+      wallet.monthlyFeeAmount ?? wallet.configuredMonthlyFeeAmount,
+    ),
+    configuredMonthlyFeeAmount: getNumber(
+      wallet.configuredMonthlyFeeAmount ?? wallet.monthlyFeeAmount,
+    ),
     monthlyFeeScheduledToDate: getNumber(wallet.monthlyFeeScheduledToDate),
     monthlyFeeDeductedBefore: getNumber(wallet.monthlyFeeDeductedBefore),
     monthlyFeeDeductedAmount: getNumber(wallet.monthlyFeeDeductedAmount),
     monthlyFeeVatAmount: getNumber(wallet.monthlyFeeVatAmount),
     monthlyFeeDeductedThisMonth: getNumber(wallet.monthlyFeeDeductedThisMonth),
+    monthlyFeeDueNextPayoutAmount: getNumber(
+      wallet.monthlyFeeDueNextPayoutAmount,
+    ),
     monthlyFeeOutstandingAmount: getNumber(wallet.monthlyFeeOutstandingAmount),
     previousPayoutAmount: getNumber(wallet.previousPayoutAmount),
     totalDeductionsAmount: getNumber(wallet.totalDeductionsAmount),
@@ -248,11 +280,32 @@ const normalizeWallet = (response: unknown): RestaurantWallet => {
         wallet.availableBalance ??
         wallet.balance,
     ),
+    payoutCycle: getString(wallet.payoutCycle ?? activePlan.payoutCycle),
+    nextPayoutAt: getString(wallet.nextPayoutAt),
+    automaticPayout: Object.keys(automaticPayout).length
+      ? {
+          enabled:
+            typeof automaticPayout.enabled === "boolean"
+              ? automaticPayout.enabled
+              : null,
+          provider: getString(automaticPayout.provider),
+          status: getString(automaticPayout.status),
+          reason: getString(automaticPayout.reason),
+        }
+      : null,
     currency: getString(wallet.currency ?? data.currency),
-    customerWalletExposure: firstRecord(
-      wallet.customerWalletExposure,
-      data.customerWalletExposure,
-    ),
+    customerWalletExposure: Object.keys(customerWalletExposure).length
+      ? {
+          accountCount: getNumber(customerWalletExposure.accountCount),
+          totalBalance: getNumber(
+            customerWalletExposure.totalBalance ??
+              customerWalletExposure.balance ??
+              customerWalletExposure.totalExposure ??
+              customerWalletExposure.amount ??
+              customerWalletExposure.walletAmount,
+          ),
+        }
+      : null,
     activePlan: Object.keys(activePlan).length
       ? {
           subscriptionId: getString(activePlan.subscriptionId),

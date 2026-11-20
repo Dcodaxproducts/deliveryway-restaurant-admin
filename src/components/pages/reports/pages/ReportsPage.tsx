@@ -20,18 +20,13 @@ import { ReportSummaryError } from "@/components/pages/reports/components/report
 import { useAuth } from "@/hooks/useAuth";
 import { useBranding } from "@/hooks/useBranding";
 import { useCurrency } from "@/hooks/useCurrency";
-import {
-  useGetFinancialReport,
-  useGetGeneratedInvoices,
-  useGetOrdersReport,
-} from "@/hooks/useReports";
+import { useGetFinancialReport, useGetOrdersReport } from "@/hooks/useReports";
 import { downloadRestaurantDashboardReportPdf } from "@/components/pages/Reports/components/reports/restaurant-report-pdf";
 import {
   buildFinancialStats,
   buildOrderReportStats,
   getReportCurrency,
   getReportHeaderContent,
-  mergeRestaurantBillingInvoices,
   resolveReportRestaurantName,
   type ReportTab,
 } from "@/components/pages/reports/utils/reports-page.helpers";
@@ -56,12 +51,8 @@ export default function Orders() {
     loading: authLoading,
   } = useAuth();
   const { currency: fallbackCurrency } = useCurrency(restaurantId);
-  const {
-    restaurant,
-    isBrandingReady,
-    isBrandingLoading,
-    brandingError,
-  } = useBranding();
+  const { restaurant, isBrandingReady, isBrandingLoading, brandingError } =
+    useBranding();
   const reportRestaurantName = resolveReportRestaurantName({
     name: restaurant.name,
     isBrandingReady,
@@ -121,24 +112,6 @@ export default function Orders() {
       ? { ...scopedReportParams, ...reportDateRange }
       : undefined,
   );
-  const subscriptionInvoicesQuery = useGetGeneratedInvoices(
-    {
-      restaurantId: restaurantId || undefined,
-      branchId: isBranchAdmin ? branchId || undefined : undefined,
-      kind: "SUBSCRIPTION",
-    },
-    {
-      enabled: activeTab === "invoice-history" && Boolean(restaurantId),
-    },
-  );
-  const billingInvoices = useMemo(
-    () =>
-      mergeRestaurantBillingInvoices(
-        subscriptionInvoicesQuery.data?.data || [],
-      ),
-    [subscriptionInvoicesQuery.data?.data],
-  );
-
   const financialData = financialReportResponse?.data;
   const ordersData = ordersReportResponse?.data;
   const reportCurrency = getReportCurrency(
@@ -176,12 +149,11 @@ export default function Orders() {
   const activeLoading =
     authLoading ||
     isBrandingLoading ||
-    (activeTab === "invoice-history"
-      ? subscriptionInvoicesQuery.isLoading ||
-        subscriptionInvoicesQuery.isFetching
-      : activeTab === "financial"
-        ? financialLoading || financialFetching
-        : ordersLoading || ordersFetching);
+    (activeTab === "financial"
+      ? financialLoading || financialFetching
+      : activeTab === "order"
+        ? ordersLoading || ordersFetching
+        : false);
 
   const handleDownloadActiveReportPdf = () => {
     if (!restaurantId || !reportRestaurantName) {
@@ -366,9 +338,9 @@ export default function Orders() {
 
         {activeTab === "invoice-history" ? (
           <GeneratedInvoiceHistoryTable
-            invoices={billingInvoices}
-            loading={activeLoading}
             mode="billing"
+            restaurantId={restaurantId}
+            branchId={isBranchAdmin ? branchId : null}
           />
         ) : activeTab === "financial" ? (
           <>

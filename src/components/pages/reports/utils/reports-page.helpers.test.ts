@@ -25,7 +25,7 @@ const makeInvoice = (
 });
 
 describe("mergeRestaurantBillingInvoices", () => {
-  it("keeps unified subscription invoices while excluding legacy payout and order invoices", () => {
+  it("keeps current subscription and weekly payout invoices while excluding order invoices", () => {
     const result = mergeRestaurantBillingInvoices(
       [
         makeInvoice("subscription", "SUBSCRIPTION", "2026-07-01T00:00:00Z"),
@@ -34,7 +34,7 @@ describe("mergeRestaurantBillingInvoices", () => {
       [makeInvoice("payout", "WEEKLY_PAYOUT", "2026-07-02T00:00:00Z")],
     );
 
-    expect(result.map(({ id }) => id)).toEqual(["subscription"]);
+    expect(result.map(({ id }) => id)).toEqual(["payout", "subscription"]);
   });
 
   it("uses localized labels for report cards and headers", () => {
