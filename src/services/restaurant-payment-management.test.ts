@@ -73,6 +73,7 @@ describe("restaurant payment management service", () => {
           monthlyFeeDeductedAmount: "39.75",
           monthlyFeeVatAmount: "7.55",
           monthlyFeeDeductedThisMonth: "79.50",
+          monthlyFee: { dueNextPayoutAmount: "41.25" },
           monthlyFeeDueNextPayoutAmount: "39.75",
           monthlyFeeOutstandingAmount: "79.50",
           previousPayoutAmount: "0",
@@ -134,7 +135,7 @@ describe("restaurant payment management service", () => {
       monthlyFeeDeductedAmount: 39.75,
       monthlyFeeVatAmount: 7.55,
       monthlyFeeDeductedThisMonth: 79.5,
-      monthlyFeeDueNextPayoutAmount: 39.75,
+      monthlyFeeDueNextPayoutAmount: 41.25,
       monthlyFeeOutstandingAmount: 79.5,
       previousPayoutAmount: 0,
       totalDeductionsAmount: 130.9,
@@ -166,7 +167,13 @@ describe("restaurant payment management service", () => {
 
   it("keeps nullable wallet fields honest for an older API response", async () => {
     mockedHttpClient.get.mockResolvedValueOnce({
-      data: { wallet: { balance: "25", monthlyFeeAmount: "10" } },
+      data: {
+        wallet: {
+          balance: "25",
+          monthlyFeeAmount: "10",
+          monthlyFeeDueNextPayoutAmount: "12.50",
+        },
+      },
     });
 
     const result = await getRestaurantWallet("restaurant-1");
@@ -177,7 +184,7 @@ describe("restaurant payment management service", () => {
       currentPeriodNetContributionAmount: null,
       carryForwardAvailableAmount: null,
       configuredMonthlyFeeAmount: 10,
-      monthlyFeeDueNextPayoutAmount: null,
+      monthlyFeeDueNextPayoutAmount: 12.5,
       payoutCycle: null,
       nextPayoutAt: null,
       automaticPayout: null,

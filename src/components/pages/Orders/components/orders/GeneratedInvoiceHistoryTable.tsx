@@ -3,7 +3,7 @@
 import { Download, Eye, Loader2, Mail, Search } from "lucide-react";
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import EmptyState from "@/components/common/EmptyState";
@@ -28,19 +28,20 @@ import {
 } from "@/components/ui/table";
 import { useAuth } from "@/hooks/useAuth";
 import { useSendOrderInvoiceEmail } from "@/hooks/useOrders";
-import { useGetGeneratedInvoices } from "@/hooks/useReports";
 import {
   downloadGeneratedInvoicePdf,
+  getGeneratedInvoices,
   type GeneratedInvoice,
 } from "@/services/reports/reports.api";
 import {
-  buildBillingInvoiceParams,
+  BILLING_INVOICE_PAGE_LIMIT,
+  buildBillingInvoiceRequests,
   buildGeneratedInvoiceActionParams,
   getGeneratedInvoiceStatusTone,
   getInvoiceDownloads,
   getInvoiceLinkedRecord,
   getInvoiceSnapshotName,
-  isRestaurantBillingInvoice,
+  mergeBillingInvoices,
   numericInvoiceValue,
   type BillingInvoiceFilters,
 } from "./generated-invoice-history.helpers";
@@ -76,21 +77,35 @@ export function GeneratedInvoiceHistoryTable({
     string | null
   >(null);
   const [viewingInvoiceId, setViewingInvoiceId] = useState<string | null>(null);
-  const params = buildBillingInvoiceParams({
+  const requestParams = buildBillingInvoiceRequests({
     filters,
     restaurantId: restaurantId || user?.restaurantId,
     branchId: scopedBranchId || (isBranchAdmin ? branchId : null),
   });
-  const billingQuery = useGetGeneratedInvoices(params, {
-    enabled: mode === "billing" && Boolean(params.restaurantId),
+  const billingQueries = useQueries({
+    queries: requestParams.map((params) => ({
+      queryKey: [
+        "reports",
+        "generated-invoices",
+        params.restaurantId,
+        params.branchId,
+        params.kind,
+        params.status,
+        params.fromDate,
+        params.toDate,
+        params.limit,
+      ],
+      queryFn: () => getGeneratedInvoices(params),
+      enabled: mode === "billing" && Boolean(params.restaurantId),
+    })),
   });
   const invoices =
     mode === "billing"
-      ? (billingQuery.data?.data || []).filter(isRestaurantBillingInvoice)
+      ? mergeBillingInvoices(billingQueries.map((query) => query.data?.data))
       : providedInvoices;
   const isLoading =
     mode === "billing"
-      ? billingQuery.isLoading || billingQuery.isFetching
+      ? billingQueries.some((query) => query.isLoading || query.isFetching)
       : loading;
   const sendInvoiceEmailMutation = useSendOrderInvoiceEmail({
     success: t("invoiceEmailSent"),
@@ -366,6 +381,7 @@ export function GeneratedInvoiceHistoryTable({
             />
             <DateFilter
               label={t("generatedHistory.toDate")}
+              hint={t("generatedHistory.toDateHint")}
               value={filters.toDate}
               min={filters.fromDate || undefined}
               onChange={(value) =>
@@ -373,6 +389,11 @@ export function GeneratedInvoiceHistoryTable({
               }
             />
           </div>
+          <p className="mt-3 text-xs leading-5 text-gray-500">
+            {t("generatedHistory.boundedNotice", {
+              limit: BILLING_INVOICE_PAGE_LIMIT,
+            })}
+          </p>
           <div className="mt-4 flex justify-end">
             <Button
               type="button"
@@ -667,12 +688,14 @@ function FilterSelect({
 }
 function DateFilter({
   label,
+  hint,
   value,
   onChange,
   min,
   max,
 }: {
   label: string;
+  hint?: string;
   value: string;
   onChange: (value: string) => void;
   min?: string;
@@ -689,6 +712,9 @@ function DateFilter({
         onChange={(event) => onChange(event.target.value)}
         className="min-h-11 bg-white"
       />
+      {hint ? (
+        <span className="block text-xs font-normal text-gray-500">{hint}</span>
+      ) : null}
     </label>
   );
 }

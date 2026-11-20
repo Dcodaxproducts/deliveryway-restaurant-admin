@@ -787,7 +787,9 @@
       "branch": "Branch",
       "order": "Order",
       "subscription": "Subscription",
-      "lastSentValue": "Last sent: {date} · {email}"
+      "lastSentValue": "Last sent: {date} · {email}",
+      "toDateHint": "Includes the entire selected calendar day in the restaurant time zone.",
+      "boundedNotice": "Showing at most {limit} subscription invoices and {limit} payout invoices per filter. Narrow the dates to review older history."
     }
   },
   "tableReservations": {
@@ -2968,7 +2970,7 @@
       "automaticStatus": "Readiness: {status}",
       "automaticReadyTitle": "Automatic payout is ready",
       "automaticReadyDescription": "Eligible payouts can be transferred through {provider}; no manual bank request is needed.",
-      "reconciliation": "Carry-forward {carry} + current-period contribution {current} = available estimate {available}.",
+      "reconciliation": "Available estimate {available}. Current-period net contribution: {current}. Backend-reported prior/carry-forward contribution: {carry}. Fees, completed or pending payouts, and ledger availability limits can reduce the amount available; these components are not a client-calculated equation.",
       "groups": {
         "allPeriods": "Balance across all periods",
         "allPeriodsSubtitle": "Persistent wallet totals; these values do not reset when a subscription renews.",
@@ -2998,15 +3000,13 @@
       "hints": {
         "available": "Estimated amount currently available for payout across all periods.",
         "ledger": "Accounting ledger balance before availability rules and pending payout effects.",
-        "carryForward": "Amount brought forward from earlier periods.",
-        "carryForwardDerived": "Fallback: available payout minus the current-period net contribution.",
+        "carryForward": "Prior/carry-forward contribution reported by the backend. It is not derived from the available balance.",
         "orders": "Gross value of successful orders in this billing period.",
         "platformHeld": "Money collected by DeliveryWays or a connected platform and held toward restaurant payout.",
         "directCollected": "Orders paid directly to the restaurant, such as cash/COD. This is order revenue but is not platform-held payout money.",
         "commission": "Plan commission charged on eligible successful orders.",
         "vat": "VAT charged on platform fees/commission, not VAT on the restaurant’s full order revenue.",
         "netContribution": "API-calculated amount this billing period adds to the persistent payout balance.",
-        "netContributionDerived": "Fallback: platform-held minus commission, transaction fees, VAT, and monthly fee collected this month.",
         "payoutEstimate": "Current available balance; the final transfer can change before processing.",
         "cadence": "Configured payout cadence: {cadence}.",
         "configuredFee": "Monthly subscription fee configured for the active plan.",
@@ -3040,6 +3040,40 @@
         "empty": "No payout requests submitted yet.",
         "bankUnavailable": "Bank details unavailable",
         "reference": "Reference: {reference}"
+      },
+      "providers": {
+        "stripe": "Stripe",
+        "paypal": "PayPal",
+        "unknown": "Configured provider"
+      },
+      "statuses": {
+        "ready": "Ready",
+        "pending": "Pending setup",
+        "blocked": "Blocked",
+        "manual": "Manual",
+        "requested": "Requested",
+        "approved": "Approved",
+        "paid": "Paid",
+        "rejected": "Rejected",
+        "unknown": "Status unavailable"
+      },
+      "reasons": {
+        "none": "No blocking reason reported.",
+        "credentialsMissing": "Provider credentials still need attention.",
+        "configurationIncomplete": "Provider setup is incomplete.",
+        "providerDisabled": "The configured provider is disabled.",
+        "unknown": "Provider readiness requires review in payout settings."
+      },
+      "providerBlock": {
+        "title": "Manual payout requests are unavailable",
+        "single": "{providers} is approved for this restaurant, so manual bank requests are disabled.",
+        "paypal": "PayPal is approved for this restaurant, so manual bank requests are disabled.",
+        "multiple": "Multiple approved payout providers are configured ({providers}); manual bank requests are disabled to prevent duplicate transfers.",
+        "nextAction": "Review the approved provider setup or ask Superadmin to change it. Eligible payouts will use the configured provider.",
+        "checkingTitle": "Checking payout provider",
+        "checkingDescription": "Manual requests stay hidden until the approved provider status is known.",
+        "unavailableTitle": "Payout provider status unavailable",
+        "unavailableDescription": "Manual requests cannot be shown safely because provider configuration could not be verified."
       }
     }
   },

@@ -229,6 +229,7 @@ const normalizeWallet = (response: unknown): RestaurantWallet => {
     data.customerWalletExposure,
   );
   const automaticPayout = getRecord(wallet.automaticPayout);
+  const monthlyFee = getRecord(wallet.monthlyFee);
 
   return {
     type: getString(wallet.type, "RESTAURANT_WALLET"),
@@ -270,7 +271,7 @@ const normalizeWallet = (response: unknown): RestaurantWallet => {
     monthlyFeeVatAmount: getNumber(wallet.monthlyFeeVatAmount),
     monthlyFeeDeductedThisMonth: getNumber(wallet.monthlyFeeDeductedThisMonth),
     monthlyFeeDueNextPayoutAmount: getNumber(
-      wallet.monthlyFeeDueNextPayoutAmount,
+      monthlyFee.dueNextPayoutAmount ?? wallet.monthlyFeeDueNextPayoutAmount,
     ),
     monthlyFeeOutstandingAmount: getNumber(wallet.monthlyFeeOutstandingAmount),
     previousPayoutAmount: getNumber(wallet.previousPayoutAmount),

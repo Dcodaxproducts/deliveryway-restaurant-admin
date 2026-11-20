@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { RestaurantWallet } from "@/services/restaurant-payment-management";
 import {
+  getApprovedPayoutProviders,
   getCarryForwardAmount,
   getCurrentPeriodNetContribution,
   getDirectCollectedAmount,
@@ -65,11 +66,41 @@ describe("wallet payout presentation helpers", () => {
     });
   });
 
-  it("derives an explicitly marked fallback only when every formula input exists", () => {
+  it("does not invent current or carry-forward amounts when the API omits them", () => {
     const current = getCurrentPeriodNetContribution(wallet());
-    expect(current.amount).toBeCloseTo(817.2);
-    expect(current.derived).toBe(true);
-    expect(getCarryForwardAmount(wallet()).derived).toBe(true);
+    expect(current).toEqual({ amount: null, derived: false });
+    expect(getCarryForwardAmount(wallet())).toEqual({
+      amount: null,
+      derived: false,
+    });
+  });
+
+  it("blocks manual requests for every approved provider configuration", () => {
+    expect(
+      getApprovedPayoutProviders([
+        {
+          provider: "PAYPAL",
+          enabled: false,
+          publicDetails: {},
+          credentialsConfigured: true,
+          approvedAt: "2026-11-20",
+        },
+        {
+          provider: "STRIPE",
+          enabled: true,
+          publicDetails: {},
+          credentialsConfigured: true,
+          approvedAt: null,
+        },
+        {
+          provider: "STRIPE",
+          enabled: false,
+          publicDetails: {},
+          credentialsConfigured: false,
+          approvedAt: null,
+        },
+      ]),
+    ).toHaveLength(2);
   });
 
   it("returns honest unavailable values when older contracts omit formula inputs", () => {

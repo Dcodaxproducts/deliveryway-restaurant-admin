@@ -32,6 +32,7 @@ import {
 } from "@/hooks/useRestaurantPaymentManagement";
 import { getApiErrorMessage } from "@/lib/errors";
 import {
+  getApprovedPayoutProviders,
   getDirectCollectedAmount,
   getWalletReconciliation,
 } from "./wallet-payout.helpers";
@@ -77,15 +78,55 @@ export function RestaurantWalletPayoutSection({
     accountNumber.trim().length > 0 &&
     !createPayoutRequest.isPending;
 
-  const enabledProvider = providerSettingsQuery.data?.configurations.find(
+  const providerConfigurations =
+    providerSettingsQuery.data?.configurations ?? [];
+  const approvedProviders = getApprovedPayoutProviders(providerConfigurations);
+  const enabledProvider = providerConfigurations.find(
     (configuration) => configuration.enabled,
   );
+  const manualRequestsBlocked = approvedProviders.length > 0;
   const automaticPayout = wallet?.automaticPayout;
   const automaticEnabled = automaticPayout?.enabled ?? Boolean(enabledProvider);
   const automaticProvider =
     automaticPayout?.provider ?? enabledProvider?.provider ?? null;
   const automaticStatus =
     automaticPayout?.status ?? (enabledProvider ? "READY" : "MANUAL");
+  const providerLabel = (provider?: string | null) => {
+    const normalized = provider?.toUpperCase();
+    if (normalized === "STRIPE") return t("providers.stripe");
+    if (normalized === "PAYPAL") return t("providers.paypal");
+    return t("providers.unknown");
+  };
+  const statusLabel = (status?: string | null) => {
+    const normalized = status?.toUpperCase();
+    if (["READY", "ACTIVE", "ENABLED"].includes(normalized || ""))
+      return t("statuses.ready");
+    if (["PENDING", "REQUESTED"].includes(normalized || ""))
+      return t("statuses.pending");
+    if (["BLOCKED", "DISABLED", "REJECTED"].includes(normalized || ""))
+      return t("statuses.blocked");
+    if (normalized === "MANUAL") return t("statuses.manual");
+    return t("statuses.unknown");
+  };
+  const reasonLabel = (reason?: string | null) => {
+    if (!reason) return t("reasons.none");
+    const normalized = reason.trim().toUpperCase();
+    if (normalized.includes("CREDENTIAL"))
+      return t("reasons.credentialsMissing");
+    if (normalized.includes("CONFIG"))
+      return t("reasons.configurationIncomplete");
+    if (normalized.includes("DISABLED")) return t("reasons.providerDisabled");
+    return t("reasons.unknown");
+  };
+  const approvedProviderNames = [
+    ...new Set(approvedProviders.map((item) => providerLabel(item.provider))),
+  ];
+  const blockedReasonKey =
+    approvedProviders.length > 1
+      ? "providerBlock.multiple"
+      : approvedProviders[0]?.provider === "PAYPAL"
+        ? "providerBlock.paypal"
+        : "providerBlock.single";
 
   useEffect(() => {
     if (walletCurrency && currency === "EUR") setCurrency(walletCurrency);
@@ -224,11 +265,7 @@ export function RestaurantWalletPayoutSection({
             icon={<RefreshCw size={18} />}
             label={t("metrics.carryForward")}
             value={money(reconciliation.carryForward.amount)}
-            hint={t(
-              reconciliation.carryForward.derived
-                ? "hints.carryForwardDerived"
-                : "hints.carryForward",
-            )}
+            hint={t("hints.carryForward")}
           />
           <p className="sm:col-span-2 xl:col-span-3 rounded-xl bg-primary/5 px-4 py-3 text-xs leading-5 text-gray-700">
             {t("reconciliation", {
@@ -282,11 +319,7 @@ export function RestaurantWalletPayoutSection({
             icon={<Banknote size={18} />}
             label={t("metrics.netContribution")}
             value={money(reconciliation.currentPeriod.amount)}
-            hint={t(
-              reconciliation.currentPeriod.derived
-                ? "hints.netContributionDerived"
-                : "hints.netContribution",
-            )}
+            hint={t("hints.netContribution")}
             strong
           />
         </WalletGroup>
@@ -315,12 +348,13 @@ export function RestaurantWalletPayoutSection({
             label={t("metrics.automaticPayout")}
             value={
               automaticProvider
-                ? prettyLabel(automaticProvider)
+                ? providerLabel(automaticProvider)
                 : t("manualPayout")
             }
             hint={
-              automaticPayout?.reason ||
-              t("automaticStatus", { status: prettyLabel(automaticStatus) })
+              automaticPayout?.reason
+                ? reasonLabel(automaticPayout.reason)
+                : t("automaticStatus", { status: statusLabel(automaticStatus) })
             }
             tone={automaticEnabled ? "success" : "neutral"}
           />
@@ -392,14 +426,49 @@ export function RestaurantWalletPayoutSection({
         </section>
 
         <div className="grid gap-5 xl:grid-cols-[1fr_1.1fr]">
-          {automaticEnabled ? (
+          {providerSettingsQuery.isLoading ? (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <h3 className="font-semibold text-slate-900">
+                {t("providerBlock.checkingTitle")}
+              </h3>
+              <p className="mt-1 text-sm text-slate-700">
+                {t("providerBlock.checkingDescription")}
+              </p>
+            </div>
+          ) : providerSettingsQuery.isError ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+              <h3 className="font-semibold text-red-900">
+                {t("providerBlock.unavailableTitle")}
+              </h3>
+              <p className="mt-1 text-sm text-red-800">
+                {t("providerBlock.unavailableDescription")}
+              </p>
+              <p className="mt-2 text-sm font-medium text-red-900">
+                {t("providerBlock.nextAction")}
+              </p>
+            </div>
+          ) : manualRequestsBlocked ? (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <h3 className="font-semibold text-amber-950">
+                {t("providerBlock.title")}
+              </h3>
+              <p className="mt-1 text-sm leading-5 text-amber-900">
+                {t(blockedReasonKey, {
+                  providers: approvedProviderNames.join(", "),
+                })}
+              </p>
+              <p className="mt-2 text-sm font-medium text-amber-950">
+                {t("providerBlock.nextAction")}
+              </p>
+            </div>
+          ) : automaticEnabled ? (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
               <h3 className="font-semibold text-emerald-900">
                 {t("automaticReadyTitle")}
               </h3>
               <p className="mt-1 text-sm leading-5 text-emerald-800">
                 {t("automaticReadyDescription", {
-                  provider: prettyLabel(automaticProvider),
+                  provider: providerLabel(automaticProvider),
                 })}
               </p>
             </div>
@@ -658,6 +727,7 @@ function PayoutInput({
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const t = useTranslations("settings.walletPayout.statuses");
   const normalized = status.toUpperCase();
   const className =
     normalized === "APPROVED" || normalized === "PAID"
@@ -669,7 +739,12 @@ function StatusBadge({ status }: { status: string }) {
     <span
       className={`rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}
     >
-      {prettyLabel(normalized)}
+      {normalized === "APPROVED" ||
+      normalized === "PAID" ||
+      normalized === "REJECTED" ||
+      normalized === "REQUESTED"
+        ? t(normalized.toLowerCase())
+        : t("unknown")}
     </span>
   );
 }

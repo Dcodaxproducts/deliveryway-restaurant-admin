@@ -2,11 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import type { GeneratedInvoice } from "@/services/reports";
 import {
+  BILLING_INVOICE_PAGE_LIMIT,
   buildBillingInvoiceParams,
+  buildBillingInvoiceRequests,
   buildGeneratedInvoiceActionParams,
   getGeneratedInvoiceStatusTone,
   getInvoiceDownloads,
   getInvoiceLinkedRecord,
+  getInvoiceSnapshotName,
+  mergeBillingInvoices,
   isRestaurantBillingInvoice,
 } from "./generated-invoice-history.helpers";
 
@@ -43,6 +47,7 @@ describe("generated invoice history helpers", () => {
       status: "PAID",
       fromDate: "2026-11-01",
       toDate: "2026-11-20",
+      limit: BILLING_INVOICE_PAGE_LIMIT,
     });
   });
 
@@ -59,7 +64,54 @@ describe("generated invoice history helpers", () => {
       status: undefined,
       fromDate: undefined,
       toDate: undefined,
+      limit: BILLING_INVOICE_PAGE_LIMIT,
     });
+  });
+
+  it("uses bounded parallel kind requests and merges them deterministically", () => {
+    const requests = buildBillingInvoiceRequests({
+      restaurantId: "restaurant-1",
+      branchId: "branch-1",
+      filters: {
+        kind: "ALL",
+        status: "ALL",
+        fromDate: "",
+        toDate: "2026-11-20",
+      },
+    });
+    expect(requests.map((request) => request.kind)).toEqual([
+      "SUBSCRIPTION",
+      "WEEKLY_PAYOUT",
+    ]);
+    expect(
+      requests.every((request) => request.limit === BILLING_INVOICE_PAGE_LIMIT),
+    ).toBe(true);
+    const duplicate = invoice({
+      id: "duplicate",
+      createdAt: "2026-11-19T10:00:00Z",
+    });
+    expect(
+      mergeBillingInvoices([
+        [
+          invoice({ id: "older", createdAt: "2026-11-18T10:00:00Z" }),
+          duplicate,
+        ],
+        [
+          invoice({
+            id: "newer",
+            kind: "WEEKLY_PAYOUT",
+            createdAt: "2026-11-20T10:00:00Z",
+          }),
+          duplicate,
+        ],
+      ]).map((item) => item.id),
+    ).toEqual(["newer", "duplicate", "older"]);
+  });
+
+  it("falls back to the scoped branch ID when names are absent", () => {
+    expect(
+      getInvoiceSnapshotName(invoice({ branchId: "branch-1" }), "branch"),
+    ).toBe("branch-1");
   });
 
   it("keeps view and download actions inside the invoice restaurant and branch scope", () => {

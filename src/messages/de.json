@@ -787,7 +787,9 @@
       "branch": "Filiale",
       "order": "Bestellung",
       "subscription": "Abonnement",
-      "lastSentValue": "Zuletzt gesendet: {date} · {email}"
+      "lastSentValue": "Zuletzt gesendet: {date} · {email}",
+      "toDateHint": "Der gesamte ausgewählte Kalendertag in der Zeitzone des Restaurants ist eingeschlossen.",
+      "boundedNotice": "Pro Filter werden höchstens {limit} Abonnementrechnungen und {limit} Auszahlungsrechnungen angezeigt. Grenzen Sie den Zeitraum ein, um ältere Einträge zu prüfen."
     }
   },
   "tableReservations": {
@@ -2968,7 +2970,7 @@
       "automaticStatus": "Bereitschaft: {status}",
       "automaticReadyTitle": "Automatische Auszahlung ist bereit",
       "automaticReadyDescription": "Berechtigte Auszahlungen können über {provider} überwiesen werden; ein manueller Bankantrag ist nicht erforderlich.",
-      "reconciliation": "Übertrag {carry} + Beitrag des aktuellen Zeitraums {current} = geschätzter verfügbarer Betrag {available}.",
+      "reconciliation": "Geschätzter verfügbarer Betrag: {available}. Nettobeitrag des aktuellen Zeitraums: {current}. Vom Backend gemeldeter früherer/übertragener Beitrag: {carry}. Gebühren, abgeschlossene oder ausstehende Auszahlungen und Ledger-Verfügbarkeitsgrenzen können den verfügbaren Betrag reduzieren; diese Komponenten bilden keine clientseitig berechnete Gleichung.",
       "groups": {
         "allPeriods": "Saldo über alle Zeiträume",
         "allPeriodsSubtitle": "Dauerhafte Wallet-Summen; diese Werte werden bei einer Abonnementverlängerung nicht zurückgesetzt.",
@@ -2998,15 +3000,13 @@
       "hints": {
         "available": "Geschätzter, derzeit über alle Zeiträume zur Auszahlung verfügbarer Betrag.",
         "ledger": "Buchhalterischer Ledger-Saldo vor Verfügbarkeitsregeln und ausstehenden Auszahlungen.",
-        "carryForward": "Aus früheren Zeiträumen übertragener Betrag.",
-        "carryForwardDerived": "Fallback: verfügbare Auszahlung minus Nettobeitrag des aktuellen Zeitraums.",
+        "carryForward": "Vom Backend gemeldeter früherer/übertragener Beitrag. Er wird nicht aus dem verfügbaren Saldo abgeleitet.",
         "orders": "Bruttowert erfolgreicher Bestellungen in diesem Abrechnungszeitraum.",
         "platformHeld": "Von DeliveryWays oder einer verbundenen Plattform eingezogenes Geld, das für die Restaurantauszahlung gehalten wird.",
         "directCollected": "Direkt an das Restaurant gezahlte Bestellungen, z. B. Barzahlung/Nachnahme. Dies ist Umsatz, aber kein von der Plattform gehaltenes Auszahlungsgeld.",
         "commission": "Planprovision auf berechtigte erfolgreiche Bestellungen.",
         "vat": "MwSt. auf Plattformgebühren/Provision, nicht auf den gesamten Restaurantumsatz.",
         "netContribution": "Von der API berechneter Betrag, den dieser Zeitraum zum dauerhaften Auszahlungssaldo beiträgt.",
-        "netContributionDerived": "Fallback: Plattformbetrag abzüglich Provision, Transaktionsgebühren, MwSt. und der diesen Monat eingezogenen Monatsgebühr.",
         "payoutEstimate": "Aktuell verfügbarer Saldo; die endgültige Überweisung kann sich vor der Verarbeitung ändern.",
         "cadence": "Konfigurierter Auszahlungsrhythmus: {cadence}.",
         "configuredFee": "Für den aktiven Plan konfigurierte monatliche Abonnementgebühr.",
@@ -3040,6 +3040,40 @@
         "empty": "Noch keine Auszahlungsanfragen eingereicht.",
         "bankUnavailable": "Bankdaten nicht verfügbar",
         "reference": "Referenz: {reference}"
+      },
+      "providers": {
+        "stripe": "Stripe",
+        "paypal": "PayPal",
+        "unknown": "Konfigurierter Anbieter"
+      },
+      "statuses": {
+        "ready": "Bereit",
+        "pending": "Einrichtung ausstehend",
+        "blocked": "Blockiert",
+        "manual": "Manuell",
+        "requested": "Angefordert",
+        "approved": "Genehmigt",
+        "paid": "Bezahlt",
+        "rejected": "Abgelehnt",
+        "unknown": "Status nicht verfügbar"
+      },
+      "reasons": {
+        "none": "Kein Sperrgrund gemeldet.",
+        "credentialsMissing": "Die Anbieter-Zugangsdaten müssen noch geprüft werden.",
+        "configurationIncomplete": "Die Anbieter-Einrichtung ist unvollständig.",
+        "providerDisabled": "Der konfigurierte Anbieter ist deaktiviert.",
+        "unknown": "Die Anbieterbereitschaft muss in den Auszahlungseinstellungen geprüft werden."
+      },
+      "providerBlock": {
+        "title": "Manuelle Auszahlungsanfragen sind nicht verfügbar",
+        "single": "{providers} ist für dieses Restaurant genehmigt; manuelle Bankanfragen sind daher deaktiviert.",
+        "paypal": "PayPal ist für dieses Restaurant genehmigt; manuelle Bankanfragen sind daher deaktiviert.",
+        "multiple": "Mehrere genehmigte Auszahlungsanbieter sind konfiguriert ({providers}); manuelle Bankanfragen sind zur Vermeidung doppelter Überweisungen deaktiviert.",
+        "nextAction": "Prüfen Sie die genehmigte Anbieter-Einrichtung oder bitten Sie den Superadmin um eine Änderung. Berechtigte Auszahlungen nutzen den konfigurierten Anbieter.",
+        "checkingTitle": "Auszahlungsanbieter wird geprüft",
+        "checkingDescription": "Manuelle Anfragen bleiben ausgeblendet, bis der genehmigte Anbieterstatus bekannt ist.",
+        "unavailableTitle": "Status des Auszahlungsanbieters nicht verfügbar",
+        "unavailableDescription": "Manuelle Anfragen können nicht sicher angezeigt werden, da die Anbieterkonfiguration nicht geprüft werden konnte."
       }
     }
   },

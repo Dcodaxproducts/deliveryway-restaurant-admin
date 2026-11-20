@@ -146,11 +146,14 @@ export type GeneratedInvoiceStatus =
 
 export type GeneratedInvoicesParams = BaseReportParams & {
   kind?: GeneratedInvoiceKind | string;
+  kinds?: GeneratedInvoiceKind[];
   status?: GeneratedInvoiceStatus | string;
   subscriptionId?: string;
   orderId?: string;
   fromDate?: string;
   toDate?: string;
+  cursor?: string;
+  limit?: number;
 };
 
 export type ReportRestaurant = {
@@ -237,6 +240,11 @@ export type GeneratedInvoicesResponse = {
   success?: boolean;
   data: GeneratedInvoice[];
   message?: string;
+  meta?: {
+    nextCursor?: string | null;
+    hasMore?: boolean;
+    limit?: number;
+  };
 };
 
 export type AdminInvoice = {

@@ -1,4 +1,7 @@
-import type { RestaurantWallet } from "@/services/restaurant-payment-management";
+import type {
+  RestaurantPayoutProviderConfiguration,
+  RestaurantWallet,
+} from "@/services/restaurant-payment-management";
 
 export type WalletValue = number | null;
 
@@ -21,66 +24,17 @@ export const getDirectCollectedAmount = (
 
 export const getCurrentPeriodNetContribution = (
   wallet?: RestaurantWallet,
-): { amount: WalletValue; derived: boolean } => {
-  if (
-    wallet?.currentPeriodNetContributionAmount !== null &&
-    wallet?.currentPeriodNetContributionAmount !== undefined
-  ) {
-    return {
-      amount: wallet.currentPeriodNetContributionAmount,
-      derived: false,
-    };
-  }
-
-  const platformHeld =
-    wallet?.platformCollectedAmount ?? wallet?.grossCollectedAmount;
-  const deductions = [
-    wallet?.commissionLiabilityAmount,
-    wallet?.restaurantTransactionFeeAmount,
-    wallet?.vatAmount,
-    wallet?.monthlyFeeDeductedThisMonth ?? wallet?.monthlyFeeDeductedAmount,
-  ];
-
-  if (
-    platformHeld === null ||
-    platformHeld === undefined ||
-    deductions.some((value) => value === null || value === undefined)
-  ) {
-    return { amount: null, derived: false };
-  }
-
-  return {
-    amount:
-      platformHeld -
-      deductions.reduce<number>((total, value) => total + Number(value), 0),
-    derived: true,
-  };
-};
+): { amount: WalletValue; derived: boolean } => ({
+  amount: wallet?.currentPeriodNetContributionAmount ?? null,
+  derived: false,
+});
 
 export const getCarryForwardAmount = (
   wallet?: RestaurantWallet,
-): { amount: WalletValue; derived: boolean } => {
-  if (
-    wallet?.carryForwardAvailableAmount !== null &&
-    wallet?.carryForwardAvailableAmount !== undefined
-  ) {
-    return { amount: wallet.carryForwardAvailableAmount, derived: false };
-  }
-
-  const current = getCurrentPeriodNetContribution(wallet).amount;
-  if (
-    wallet?.availablePayoutBalance === null ||
-    wallet?.availablePayoutBalance === undefined ||
-    current === null
-  ) {
-    return { amount: null, derived: false };
-  }
-
-  return {
-    amount: wallet.availablePayoutBalance - current,
-    derived: true,
-  };
-};
+): { amount: WalletValue; derived: boolean } => ({
+  amount: wallet?.carryForwardAvailableAmount ?? null,
+  derived: false,
+});
 
 export const getWalletReconciliation = (wallet?: RestaurantWallet) => ({
   available: wallet?.availablePayoutBalance ?? null,
@@ -88,3 +42,11 @@ export const getWalletReconciliation = (wallet?: RestaurantWallet) => ({
   carryForward: getCarryForwardAmount(wallet),
   currentPeriod: getCurrentPeriodNetContribution(wallet),
 });
+
+export const getApprovedPayoutProviders = (
+  configurations: RestaurantPayoutProviderConfiguration[] = [],
+) =>
+  configurations.filter(
+    (configuration) =>
+      Boolean(configuration.approvedAt) || configuration.enabled,
+  );
