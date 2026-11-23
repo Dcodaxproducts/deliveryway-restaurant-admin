@@ -17,6 +17,7 @@ export type LegalBusinessAddressPayload = Omit<
 
 export type LegalProfile = {
   restaurantId: string;
+  ownerName: string;
   legalBusinessName: string;
   taxNumber: string;
   businessAddress: LegalBusinessAddress;
@@ -75,6 +76,7 @@ export const normalizeLegalProfileResponse = (
 
   return {
     restaurantId: getString(data, "restaurantId") || fallbackRestaurantId,
+    ownerName: getString(profile, "ownerName"),
     legalBusinessName: getString(profile, "legalBusinessName"),
     taxNumber: getString(profile, "taxNumber"),
     businessAddress: normalizeBusinessAddress(profile.businessAddress),
@@ -86,6 +88,7 @@ export const createEmptyLegalProfile = (
   restaurantId = ""
 ): LegalProfile => ({
   restaurantId,
+  ownerName: "",
   legalBusinessName: "",
   taxNumber: "",
   businessAddress: { ...emptyAddress },

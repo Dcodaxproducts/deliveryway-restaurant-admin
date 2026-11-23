@@ -11,7 +11,6 @@ import {
   RefreshCw,
   Save,
   ShieldCheck,
-  UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -30,7 +29,6 @@ import {
   type LegalProfile,
   type LegalProfilePayload,
 } from "@/services/legal-profile";
-import { getDisplayName } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import {
   reconcileLegalProfileDraft,
@@ -38,6 +36,7 @@ import {
 } from "./legal-profile-draft";
 
 const toPayload = (profile: LegalProfile): LegalProfilePayload => ({
+  ownerName: profile.ownerName.trim(),
   legalBusinessName: profile.legalBusinessName.trim(),
   taxNumber: profile.taxNumber.trim(),
   businessAddress: {
@@ -65,7 +64,7 @@ const formatAddressPreview = (profile: LegalProfile) =>
 export function LegalProfilePage() {
   const t = useTranslations("legalProfile");
   const commonT = useTranslations("common");
-  const { user, restaurantId, isBranchAdmin, loading: authLoading } = useAuth();
+  const { restaurantId, isBranchAdmin, loading: authLoading } = useAuth();
   const [draftState, setDraftState] = useState<LegalProfileDraftState>({});
   const { draftProfile, loadedRestaurantId } = draftState;
 
@@ -97,8 +96,8 @@ export function LegalProfilePage() {
   const isDirty = Boolean(activeDraftProfile) &&
     JSON.stringify(draftPayload) !== JSON.stringify(savedPayload);
   const addressPreview = formatAddressPreview(displayedProfile);
-  const ownerName = user ? getDisplayName(user) : "-";
   const completionItems = [
+    Boolean(draftPayload.ownerName),
     Boolean(draftPayload.legalBusinessName),
     Boolean(draftPayload.taxNumber),
     Boolean(addressPreview),
@@ -272,28 +271,15 @@ export function LegalProfilePage() {
               description={t("businessSectionDescription")}
             />
 
-            <div className="rounded-2xl border border-[#EAECF0] bg-[#FCFCFD] p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-[#C1121F] ring-1 ring-[#FEE4E2]">
-                    <UserRound className="size-5" />
-                  </span>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#98A2B3]">
-                      {t("ownerName")}
-                    </p>
-                    <p className="mt-1 text-base font-semibold text-[#101828]">
-                      {ownerName}
-                    </p>
-                  </div>
-                </div>
-                <span className="w-fit rounded-full border border-[#EAECF0] bg-white px-3 py-1 text-xs font-semibold text-[#667085]">
-                  {t("authProfileOwner")}
-                </span>
-              </div>
-            </div>
-
             <div className="grid gap-4 md:grid-cols-2">
+              <Field
+                id="owner-name"
+                label={t("ownerName")}
+                value={displayedProfile.ownerName}
+                placeholder={t("ownerName")}
+                disabled={formDisabled}
+                onChange={(value) => updateField("ownerName", value)}
+              />
               <Field
                 id="legal-business-name"
                 label={t("legalBusinessName")}
@@ -387,7 +373,10 @@ export function LegalProfilePage() {
                 {displayedProfile.legalBusinessName || t("emptyBusinessName")}
               </h2>
               <div className="mt-4 space-y-3 text-sm">
-                <PreviewRow label={t("ownerName")} value={ownerName} />
+                <PreviewRow
+                  label={t("ownerName")}
+                  value={displayedProfile.ownerName || "-"}
+                />
                 <PreviewRow label={t("taxNumber")} value={displayedProfile.taxNumber || "-"} />
                 <PreviewRow label={t("address")} value={addressPreview || "-"} />
               </div>

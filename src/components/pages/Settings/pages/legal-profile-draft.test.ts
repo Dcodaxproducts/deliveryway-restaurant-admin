@@ -9,6 +9,7 @@ import {
 
 const profile = (restaurantId: string, legalBusinessName: string): LegalProfile => ({
   restaurantId,
+  ownerName: "Owner Name",
   legalBusinessName,
   taxNumber: "",
   businessAddress: {
