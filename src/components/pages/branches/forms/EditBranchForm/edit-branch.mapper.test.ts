@@ -646,6 +646,18 @@ describe("edit branch delivery and settings mapper", () => {
     });
   });
 
+  it("never repopulates a returned password value into the edit form", () => {
+    const hydrated = hydrateBranchForEdit({
+      name: "Blue Area",
+      branchAdmin: {
+        email: "admin@example.com",
+        password: "legacy-or-hashed-value",
+      },
+    });
+
+    expect(hydrated.branchAdmin?.password).toBe("");
+  });
+
   it("hydrates branch admin info from assignedManager or users fallback", () => {
     const assignedHydrated = hydrateBranchForEdit({
       name: "Blue Area",

@@ -1,46 +1,49 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "@/lib/axios";
-import { getCustomersList } from "@/services/customers";
+import { getCustomersList } from "./customers";
 
 vi.mock("@/lib/axios", () => ({
   api: { get: vi.fn() },
 }));
 
-describe("customer list filters", () => {
-  beforeEach(() => {
-    vi.mocked(api.get).mockReset();
-    vi.mocked(api.get).mockResolvedValue({ data: { data: [], meta: {} } });
-  });
+describe("customer management API client", () => {
+  beforeEach(() => vi.clearAllMocks());
 
-  it("forwards bounded server-side filters including the selected branch scope", async () => {
+  it("sends every selected filter, including explicit false values", async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: { data: [], meta: { page: 1, limit: 10, total: 0, totalPages: 1 } },
+    });
+
     await getCustomersList({
-      page: 2,
-      limit: 25,
-      restaurantId: "restaurant-1",
-      branchId: "jwt-branch",
-      isGuest: false,
-      isVerified: true,
-      isActive: false,
+      page: 1,
+      search: "Nino",
+      sortOrder: "ASC",
+      withDeleted: false,
       includeInactive: true,
-      fromDate: "2026-11-01",
-      toDate: "2026-11-15",
-      sortOrder: "DESC",
+      isGuest: false,
+      isVerified: false,
+      isActive: false,
+      fromDate: "2026-09-01",
+      toDate: "2026-11-10",
+      restaurantId: "restaurant-1",
+      branchId: "branch-1",
     });
 
     expect(api.get).toHaveBeenCalledWith("/admin/users/customers", {
       params: {
-        page: 2,
-        limit: 25,
-        restaurantId: "restaurant-1",
-        branchId: "jwt-branch",
-        isGuest: false,
-        isVerified: true,
-        isActive: false,
+        page: 1,
+        search: "Nino",
+        sortOrder: "ASC",
+        withDeleted: false,
         includeInactive: true,
-        fromDate: "2026-11-01",
-        toDate: "2026-11-15",
-        sortOrder: "DESC",
+        isGuest: false,
+        isVerified: false,
+        isActive: false,
+        fromDate: "2026-09-01",
+        toDate: "2026-11-10",
+        restaurantId: "restaurant-1",
+        branchId: "branch-1",
       },
     });
   });

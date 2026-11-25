@@ -184,6 +184,18 @@ describe("branding service", () => {
           },
         },
       });
+      mockedHttpClient.get.mockResolvedValueOnce({
+        data: {
+          name: "Patch Restaurant",
+          slug: "patch-restaurant",
+          branding: {
+            primaryColor: "#112233",
+            assets: {
+              faviconUrl: "https://cdn.example.com/favicon.webp",
+            },
+          },
+        },
+      });
 
       await saveBrandingSettings(
         {
@@ -215,6 +227,10 @@ describe("branding service", () => {
               theme: {
                 ...defaultRestaurant.branding.theme,
                 primaryColor: "#112233",
+              },
+              assets: {
+                ...defaultRestaurant.branding.assets,
+                faviconUrl: "https://cdn.example.com/favicon.webp",
               },
             },
           },
@@ -250,11 +266,16 @@ describe("branding service", () => {
           theme: expect.any(Object),
           app: expect.any(Object),
           checkout: expect.any(Object),
-          assets: expect.any(Object),
+          assets: expect.objectContaining({
+            faviconUrl: "https://cdn.example.com/favicon.webp",
+          }),
           logo: expect.any(Object),
         },
       });
       expectNoReadOnlyPatchFields(patchPayload);
+      expect(mockedHttpClient.get).toHaveBeenCalledWith(
+        "/restaurants/restaurant-1",
+      );
     });
   });
 

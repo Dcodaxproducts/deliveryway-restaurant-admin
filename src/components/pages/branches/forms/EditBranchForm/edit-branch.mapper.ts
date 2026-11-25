@@ -81,7 +81,9 @@ const normalizeBranchAdminForEdit = (
       adminRecord.email,
       toStringValue(managerRecord.email),
     ),
-    password: toStringValue(adminRecord.password),
+    // Password hashes/legacy password fields must never be hydrated back into
+    // the edit form. A blank value means "preserve the current password".
+    password: "",
     firstName: toStringValue(
       adminRecord.firstName,
       toStringValue(

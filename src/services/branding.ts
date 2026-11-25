@@ -90,12 +90,14 @@ export const saveBrandingSettings = async (
     return normalizeBrandingPayload(payload);
   }
 
-  const response = await httpClient.patch<unknown, RestaurantBrandingPatchPayload>(
+  await httpClient.patch<unknown, RestaurantBrandingPatchPayload>(
     getRestaurantEndpoint(normalizedRestaurantId),
     buildRestaurantBrandingPatchPayload(payload),
   );
 
-  return normalizeBrandingApiResponse(response);
+  // PATCH responses may be sparse. Read the canonical saved contract so
+  // uploaded assets such as faviconUrl remain visible after saving.
+  return getBrandingSettings(normalizedRestaurantId);
 };
 
 export const resetBrandingSettings = async (restaurantId?: string | null): Promise<RestaurantBrandingPayload> => {

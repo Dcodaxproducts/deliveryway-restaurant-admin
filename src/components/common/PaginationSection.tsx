@@ -9,18 +9,16 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useTranslations } from "next-intl";
-
-type PaginationMeta = {
-  page: number;
-  totalPages: number;
-  total: number;
-  limit: number;
-};
+import {
+  getPaginationModel,
+  type PaginationMeta,
+} from "@/components/common/pagination-model";
 
 type PaginationSectionProps = {
   meta?: PaginationMeta | null;
   onPageChange?: (page: number) => void;
 };
+
 
 const PaginationSection = ({
   meta,
@@ -30,16 +28,16 @@ const PaginationSection = ({
 
   if (!meta) return null;
 
-  const { page, totalPages, total, limit } = meta;
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  const { page, totalPages, total, from, to, pages } =
+    getPaginationModel(meta);
 
   return (
     <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
       <div>
         <p className="text-sm">
           {t("paginationSummary", {
-            from: (page - 1) * limit + 1,
-            to: Math.min(page * limit, total),
+            from,
+            to,
             total,
           })}
         </p>

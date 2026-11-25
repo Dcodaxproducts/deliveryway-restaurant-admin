@@ -67,6 +67,10 @@ export const useGetCustomersList = (params?: CustomerListParams) => {
       params?.branchId,
     ],
     queryFn: () => getCustomersList(params),
+    enabled: Boolean(params?.restaurantId),
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always",
   });
 };
 
