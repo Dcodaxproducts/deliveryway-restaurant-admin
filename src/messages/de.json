@@ -776,6 +776,8 @@
       "allStatuses": "Alle Status",
       "clear": "Filter zurücksetzen",
       "loading": "Erzeugte Rechnungen werden geladen…",
+      "loadFailed": "Die erzeugten Rechnungen konnten nicht geladen werden. Versuchen Sie erneut, die Rechnungshistorie anzuzeigen.",
+      "retry": "Erneut versuchen",
       "invoice": "Rechnung / Erstellungsdatum",
       "scope": "Mandant / Restaurant / Filiale",
       "linkedId": "Verknüpfte ID",

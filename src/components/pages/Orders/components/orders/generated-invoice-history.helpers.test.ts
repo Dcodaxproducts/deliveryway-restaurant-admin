@@ -10,9 +10,19 @@ import {
   getInvoiceDownloads,
   getInvoiceLinkedRecord,
   getInvoiceSnapshotName,
+  hasBillingInvoiceQueryError,
   mergeBillingInvoices,
   isRestaurantBillingInvoice,
 } from "./generated-invoice-history.helpers";
+
+it("treats either failed billing request as an error instead of an empty history", () => {
+  expect(
+    hasBillingInvoiceQueryError([{ isError: false }, { isError: true }]),
+  ).toBe(true);
+  expect(
+    hasBillingInvoiceQueryError([{ isError: false }, { isError: false }]),
+  ).toBe(false);
+});
 
 const invoice = (
   overrides: Partial<GeneratedInvoice> = {},

@@ -6,6 +6,10 @@ import type {
 export const BILLING_INVOICE_KINDS = ["SUBSCRIPTION", "WEEKLY_PAYOUT"] as const;
 export type BillingInvoiceKind = (typeof BILLING_INVOICE_KINDS)[number];
 export const BILLING_INVOICE_PAGE_LIMIT = 50;
+
+export const hasBillingInvoiceQueryError = (
+  queries: ReadonlyArray<{ isError: boolean }>,
+) => queries.some((query) => query.isError);
 export type BillingInvoiceFilters = {
   kind: "ALL" | BillingInvoiceKind;
   status: string;

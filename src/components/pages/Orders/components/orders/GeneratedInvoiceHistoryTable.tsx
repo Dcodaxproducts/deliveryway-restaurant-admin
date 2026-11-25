@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import EmptyState from "@/components/common/EmptyState";
 import TableSkeleton from "@/components/common/TableSkeleton";
+import { ReportSummaryError } from "@/components/pages/reports/components/report-summary-error";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,7 @@ import {
   getInvoiceDownloads,
   getInvoiceLinkedRecord,
   getInvoiceSnapshotName,
+  hasBillingInvoiceQueryError,
   mergeBillingInvoices,
   numericInvoiceValue,
   type BillingInvoiceFilters,
@@ -107,6 +109,11 @@ export function GeneratedInvoiceHistoryTable({
     mode === "billing"
       ? billingQueries.some((query) => query.isLoading || query.isFetching)
       : loading;
+  const hasBillingError =
+    mode === "billing" && hasBillingInvoiceQueryError(billingQueries);
+  const retryBillingQueries = () => {
+    void Promise.all(billingQueries.map((query) => query.refetch()));
+  };
   const sendInvoiceEmailMutation = useSendOrderInvoiceEmail({
     success: t("invoiceEmailSent"),
     error: t("invoiceEmailFailed"),
@@ -412,6 +419,12 @@ export function GeneratedInvoiceHistoryTable({
           <Loader2 className="size-5 animate-spin" />
           {t("generatedHistory.loading")}
         </div>
+      ) : hasBillingError ? (
+        <ReportSummaryError
+          message={t("generatedHistory.loadFailed")}
+          retryLabel={t("generatedHistory.retry")}
+          onRetry={retryBillingQueries}
+        />
       ) : !invoices.length ? (
         <EmptyState
           title={t(
