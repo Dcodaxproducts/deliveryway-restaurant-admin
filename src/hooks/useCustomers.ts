@@ -12,6 +12,7 @@ import {
   verifyCustomerEmail,
 } from "@/services/customers/customers.api";
 import type { CustomerListParams } from "@/validations/customers";
+import { customerListQueryKey } from "@/lib/customer-list-query";
 
 type CustomerMutationMessages = {
   success?: string;
@@ -51,21 +52,7 @@ export const useCreateCustomer = (options?: CustomerMutationOptions) => {
 
 export const useGetCustomersList = (params?: CustomerListParams) => {
   return useQuery({
-    queryKey: [
-      "customers",
-      params?.page,
-      params?.search,
-      params?.sortOrder,
-      params?.withDeleted,
-      params?.includeInactive,
-      params?.isGuest,
-      params?.isVerified,
-      params?.isActive,
-      params?.fromDate,
-      params?.toDate,
-      params?.restaurantId,
-      params?.branchId,
-    ],
+    queryKey: customerListQueryKey(params),
     queryFn: () => getCustomersList(params),
     enabled: Boolean(params?.restaurantId),
     staleTime: 0,

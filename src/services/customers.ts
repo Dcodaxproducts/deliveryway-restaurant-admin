@@ -1,4 +1,5 @@
 import { api } from "@/lib/axios";
+import { buildCustomerListParams } from "@/lib/customer-list-query";
 import {
   CreateCustomerValues,
   UpdateCustomerValues,
@@ -29,7 +30,9 @@ export const createCustomer = async (payload: CreateCustomerValues) => {
  * search, sortOrder, withDeleted, includeInactive, restaurantId
  */
 export const getCustomersList = async (params?: CustomerListParams) => {
-  const { data } = await api.get("/admin/users/customers", { params });
+  const { data } = await api.get("/admin/users/customers", {
+    params: buildCustomerListParams(params),
+  });
   return data;
 };
 

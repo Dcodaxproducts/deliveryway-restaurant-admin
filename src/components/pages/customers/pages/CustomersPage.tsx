@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGetCustomersList } from "@/hooks/useCustomers";
 import { useGetCustomersStats } from "@/hooks/useDashboard";
 import { useTranslations } from "next-intl";
+import { mergeCustomerListFilters } from "@/lib/customer-list-query";
 
 interface Customer {
   id: string;
@@ -88,13 +89,7 @@ export default function CustomerSettingsPage() {
   const meta = data?.meta ?? null;
 
   const handleFilterChange = (updatedFilters: Partial<typeof filters>) => {
-    setFilters((prev) => ({
-      ...prev,
-      ...updatedFilters,
-      page:
-        updatedFilters.page ??
-        (Object.keys(updatedFilters).some((key) => key !== "page") ? 1 : prev.page),
-    }));
+    setFilters((prev) => mergeCustomerListFilters(prev, updatedFilters));
   };
 
   const handlePageChange = (newPage: number) => {
