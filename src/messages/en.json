@@ -776,6 +776,8 @@
       "allStatuses": "All statuses",
       "clear": "Clear filters",
       "loading": "Loading generated invoices…",
+      "loadFailed": "Generated invoices could not be loaded. Try again to view the invoice history.",
+      "retry": "Retry",
       "invoice": "Invoice / generated date",
       "scope": "Tenant / Restaurant / Branch",
       "linkedId": "Linked ID",
