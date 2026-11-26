@@ -37,6 +37,7 @@ import {
 } from "@/validations/branches";
 import { DEFAULT_ALLOWED_PAYMENT_METHODS } from "@/components/pages/branches/forms/EditBranchForm/edit-branch.defaults";
 import { useTranslations } from "next-intl";
+import { BRANCH_ADMIN_PLACEHOLDER_KEYS } from "@/components/pages/Branches/branch-admin-placeholders";
 
 interface CreateBranchModalProps {
   hasExistingBranches?: boolean;
@@ -163,29 +164,29 @@ const adminFieldConfigs: FieldConfig[] = [
   {
     name: "branchAdmin.firstName",
     labelKey: "firstName",
-    placeholderKey: "firstName",
+    placeholderKey: BRANCH_ADMIN_PLACEHOLDER_KEYS.firstName,
   },
   {
     name: "branchAdmin.lastName",
     labelKey: "lastName",
-    placeholderKey: "lastName",
+    placeholderKey: BRANCH_ADMIN_PLACEHOLDER_KEYS.lastName,
   },
   {
     name: "branchAdmin.email",
     labelKey: "email",
-    placeholderKey: "email",
+    placeholderKey: BRANCH_ADMIN_PLACEHOLDER_KEYS.email,
     type: "email",
   },
   {
     name: "branchAdmin.password",
     labelKey: "password",
-    placeholderKey: "password",
+    placeholderKey: BRANCH_ADMIN_PLACEHOLDER_KEYS.passwordCreate,
     type: "password",
   },
   {
     name: "branchAdmin.phone",
     labelKey: "phone",
-    placeholderKey: "phone",
+    placeholderKey: BRANCH_ADMIN_PLACEHOLDER_KEYS.phone,
     type: "tel",
   },
 ];

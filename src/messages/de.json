@@ -1772,6 +1772,7 @@
     }
   },
   "customers": {
+    "searchPlaceholder": "Nach Name, E-Mail, Telefon, Kunden-ID oder Bestell-ID suchen",
     "title": "Kunden",
     "description": "Alle Kunden hier anzeigen und verwalten",
     "listTitle": "Kundenliste",
@@ -1936,6 +1937,7 @@
     "branchAdminLastNamePlaceholder": "Nachname eingeben",
     "branchAdminEmailPlaceholder": "E-Mail-Adresse eingeben",
     "branchAdminPhonePlaceholder": "Telefonnummer eingeben",
+    "branchAdminPasswordCreatePlaceholder": "Sicheres Passwort erstellen",
     "branchAdminPasswordEditPlaceholder": "Leer lassen, um das aktuelle Passwort beizubehalten.",
     "phone": "Telefon",
     "mainBranch": "Hauptfiliale",

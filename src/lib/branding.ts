@@ -324,6 +324,29 @@ export const deepMergeBrandingPayload = (
 ): RestaurantBrandingPayload =>
   normalizeBrandingPayload(deepMergeRecords(base, override));
 
+export const synchronizeBrandingFavicon = (
+  payload: RestaurantBrandingPayload,
+): RestaurantBrandingPayload => {
+  const assets = payload.restaurant.branding.assets;
+  const faviconUrl =
+    assets.faviconUrl.trim() || assets.logos.faviconUrl?.trim() || "";
+
+  return {
+    ...payload,
+    restaurant: {
+      ...payload.restaurant,
+      branding: {
+        ...payload.restaurant.branding,
+        assets: {
+          ...assets,
+          faviconUrl,
+          logos: { ...assets.logos, faviconUrl },
+        },
+      },
+    },
+  };
+};
+
 export const normalizeBrandingApiResponse = (
   response: unknown,
 ): RestaurantBrandingPayload => {
@@ -333,15 +356,19 @@ export const normalizeBrandingApiResponse = (
     return cloneDefaultPayload();
   }
 
-  return normalizeBrandingPayload({
-    restaurant: normalizeApiRestaurantRecord(restaurantCandidate),
-  });
+  return synchronizeBrandingFavicon(
+    normalizeBrandingPayload({
+      restaurant: normalizeApiRestaurantRecord(restaurantCandidate),
+    }),
+  );
 };
 
 export const buildRestaurantBrandingPatchPayload = (
   payload: RestaurantBrandingPayload,
 ): RestaurantBrandingPatchPayload => {
-  const normalizedPayload = normalizeBrandingPayload(payload);
+  const normalizedPayload = synchronizeBrandingFavicon(
+    normalizeBrandingPayload(payload),
+  );
   const { restaurant } = normalizedPayload;
   const { branding } = restaurant;
   const { theme } = branding;

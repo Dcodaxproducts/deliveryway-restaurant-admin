@@ -148,6 +148,27 @@ describe("branding service", () => {
     });
   });
 
+  it("canonicalizes legacy favicon readback before the form renders", async () => {
+    mockedHttpClient.get.mockResolvedValueOnce({
+      data: {
+        name: "Legacy Favicon Restaurant",
+        branding: {
+          assets: {
+            faviconUrl: "",
+            logos: { faviconUrl: "https://cdn.example.com/legacy.ico" },
+          },
+        },
+      },
+    });
+
+    const result = await getBrandingSettings("restaurant-legacy");
+
+    expect(result.restaurant.branding.assets).toMatchObject({
+      faviconUrl: "https://cdn.example.com/legacy.ico",
+      logos: { faviconUrl: "https://cdn.example.com/legacy.ico" },
+    });
+  });
+
   describe("saveBrandingSettings", () => {
     it("missing restaurantId returns normalized payload and does not call PATCH", async () => {
       const result = await saveBrandingSettings(
@@ -268,6 +289,9 @@ describe("branding service", () => {
           checkout: expect.any(Object),
           assets: expect.objectContaining({
             faviconUrl: "https://cdn.example.com/favicon.webp",
+            logos: expect.objectContaining({
+              faviconUrl: "https://cdn.example.com/favicon.webp",
+            }),
           }),
           logo: expect.any(Object),
         },

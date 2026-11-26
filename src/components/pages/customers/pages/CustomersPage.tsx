@@ -8,7 +8,6 @@ import Header from "@/components/pages/Customers/components/customer-settings/he
 import BranchFilters from "@/components/pages/Branches/components/BranchFilters";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetCustomersList } from "@/hooks/useCustomers";
-import { useGetCustomersStats } from "@/hooks/useDashboard";
 import { useTranslations } from "next-intl";
 import { mergeCustomerListFilters } from "@/lib/customer-list-query";
 
@@ -66,21 +65,7 @@ export default function CustomerSettingsPage() {
       : undefined,
   );
 
-  const {
-    data: customerStatsResponse,
-    isLoading: isStatsLoading,
-    isFetching: isStatsFetching,
-    refetch: refetchCustomerStats,
-  } = useGetCustomersStats(
-    restaurantId
-      ? {
-          restaurantId,
-          ...(scopedBranchId ? { branchId: scopedBranchId } : {}),
-        }
-      : undefined,
-  );
-
-  const customerStats = customerStatsResponse?.data;
+  const customerStats = data?.stats;
 
   const customers: Customer[] = useMemo(() => {
     return data?.data ?? [];
@@ -117,7 +102,6 @@ export default function CustomerSettingsPage() {
 
   const handleRefresh = () => {
     refetch();
-    refetchCustomerStats();
   };
 
   return (
@@ -131,7 +115,7 @@ export default function CustomerSettingsPage() {
       <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm space-y-6">
         <StatsSection
           stats={customerStats}
-          loading={isStatsLoading || isStatsFetching}
+          loading={isLoading || isFetching}
         />
 
         {!isBranchAdmin ? (
@@ -140,6 +124,7 @@ export default function CustomerSettingsPage() {
             filters={filters}
             onFilterChange={handleFilterChange}
             showCustomerFilters
+            totalResults={meta?.total}
           />
         ) : null}
 

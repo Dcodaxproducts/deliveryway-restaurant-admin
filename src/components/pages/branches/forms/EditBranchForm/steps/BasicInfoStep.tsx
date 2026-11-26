@@ -12,6 +12,7 @@ import ImageDropzoneUpload from "@/components/ui/ImageDropzoneUpload";
 import { Switch } from "@/components/ui/switch";
 import type { BranchFormData } from "@/components/pages/branches/forms/EditBranchForm/types";
 import { useTranslations } from "next-intl";
+import { BRANCH_ADMIN_PLACEHOLDER_KEYS } from "@/components/pages/Branches/branch-admin-placeholders";
 
 type EditBranchStepOneProps = {
   data: BranchFormData | null;
@@ -30,25 +31,25 @@ const adminFieldConfigs = [
   {
     name: "firstName",
     labelKey: "firstName",
-    placeholderKey: "branchAdminFirstNamePlaceholder",
+    placeholderKey: BRANCH_ADMIN_PLACEHOLDER_KEYS.firstName,
     type: "text",
   },
   {
     name: "lastName",
     labelKey: "lastName",
-    placeholderKey: "branchAdminLastNamePlaceholder",
+    placeholderKey: BRANCH_ADMIN_PLACEHOLDER_KEYS.lastName,
     type: "text",
   },
   {
     name: "email",
     labelKey: "email",
-    placeholderKey: "branchAdminEmailPlaceholder",
+    placeholderKey: BRANCH_ADMIN_PLACEHOLDER_KEYS.email,
     type: "email",
   },
   {
     name: "phone",
     labelKey: "phone",
-    placeholderKey: "branchAdminPhonePlaceholder",
+    placeholderKey: BRANCH_ADMIN_PLACEHOLDER_KEYS.phone,
     type: "text",
   },
   { name: "password", labelKey: "password", type: "password" },
@@ -220,7 +221,7 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
               type={field.type}
               placeholder={
                 field.type === "password"
-                  ? t("branchAdminPasswordEditPlaceholder")
+                  ? t(BRANCH_ADMIN_PLACEHOLDER_KEYS.passwordEdit)
                   : t(field.placeholderKey)
               }
               value={data.branchAdmin?.[field.name] || ""}

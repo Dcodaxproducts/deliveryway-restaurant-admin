@@ -1772,6 +1772,7 @@
     }
   },
   "customers": {
+    "searchPlaceholder": "Search by name, email, phone, customer ID, or order ID",
     "title": "Customers",
     "description": "View and manage all customers from here",
     "listTitle": "Customer List",
@@ -1936,6 +1937,7 @@
     "branchAdminLastNamePlaceholder": "Enter last name",
     "branchAdminEmailPlaceholder": "Enter email address",
     "branchAdminPhonePlaceholder": "Enter phone number",
+    "branchAdminPasswordCreatePlaceholder": "Create a secure password",
     "branchAdminPasswordEditPlaceholder": "Leave blank to keep current password.",
     "phone": "Phone",
     "mainBranch": "Main Branch",

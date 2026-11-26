@@ -28,6 +28,7 @@ interface Props {
   filters: SharedFilters;
   onFilterChange: (filters: Partial<SharedFilters>) => void;
   showCustomerFilters?: boolean;
+  totalResults?: number;
 }
 
 export default function BranchFilters({
@@ -35,9 +36,11 @@ export default function BranchFilters({
   filters,
   onFilterChange,
   showCustomerFilters = false,
+  totalResults,
 }: Props) {
   const t = useTranslations("branches");
   const commonT = useTranslations("common");
+  const customersT = useTranslations("customers");
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState(filters?.search ?? "");
 
@@ -87,11 +90,6 @@ export default function BranchFilters({
     document.body.removeChild(link);
   };
 
-  const filteredBranches =
-    branches?.filter(({ name }) =>
-      name?.toLowerCase().includes(search.toLowerCase()),
-    ) ?? [];
-
   return (
     <div className="w-full bg-white rounded-lg">
       <div className="w-full flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-3">
@@ -103,7 +101,11 @@ export default function BranchFilters({
 
           <Input
             type="text"
-            placeholder={commonT("searchByName")}
+            placeholder={
+              showCustomerFilters
+                ? customersT("searchPlaceholder")
+                : commonT("searchByName")
+            }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="
@@ -175,8 +177,8 @@ export default function BranchFilters({
       {branches && (
         <p className="text-sm text-gray-400 mt-3">
           {t("filtersShowing", {
-            visible: filteredBranches.length,
-            total: branches.length,
+            visible: branches.length,
+            total: totalResults ?? branches.length,
           })}
         </p>
       )}
