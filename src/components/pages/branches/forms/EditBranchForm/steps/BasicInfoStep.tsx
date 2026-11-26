@@ -27,10 +27,30 @@ const toCoordinate = (value: unknown) => {
 };
 
 const adminFieldConfigs = [
-  { name: "firstName", labelKey: "firstName", type: "text" },
-  { name: "lastName", labelKey: "lastName", type: "text" },
-  { name: "email", labelKey: "email", type: "email" },
-  { name: "phone", labelKey: "phone", type: "text" },
+  {
+    name: "firstName",
+    labelKey: "firstName",
+    placeholderKey: "branchAdminFirstNamePlaceholder",
+    type: "text",
+  },
+  {
+    name: "lastName",
+    labelKey: "lastName",
+    placeholderKey: "branchAdminLastNamePlaceholder",
+    type: "text",
+  },
+  {
+    name: "email",
+    labelKey: "email",
+    placeholderKey: "branchAdminEmailPlaceholder",
+    type: "email",
+  },
+  {
+    name: "phone",
+    labelKey: "phone",
+    placeholderKey: "branchAdminPhonePlaceholder",
+    type: "text",
+  },
   { name: "password", labelKey: "password", type: "password" },
 ] as const;
 
@@ -201,7 +221,7 @@ function EditBranchStepOne({ data, setData }: EditBranchStepOneProps) {
               placeholder={
                 field.type === "password"
                   ? t("branchAdminPasswordEditPlaceholder")
-                  : undefined
+                  : t(field.placeholderKey)
               }
               value={data.branchAdmin?.[field.name] || ""}
               onChange={(val) => update(["branchAdmin", field.name], val)}
