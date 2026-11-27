@@ -19,6 +19,7 @@ import {
   setClientStorageItem,
 } from "@/services/storage";
 import { getApiErrorMessage } from "@/lib/errors";
+import { resolvePosCheckoutErrorMessage } from "@/components/pages/Pos/components/pos/pos-checkout-errors";
 import {
   DATE_TIME_24_HOUR_INPUT_LANG,
   getLocalTodayDateTimeInputValue,
@@ -846,7 +847,13 @@ export default function PosCart() {
       });
 
       if (!res || res.error) {
-        return toast.error(getResponseMessage(res, t("toast.checkoutFailed")));
+        return toast.error(
+          resolvePosCheckoutErrorMessage(
+            res,
+            t,
+            getResponseMessage(res, t("toast.checkoutFailed")),
+          ),
+        );
       }
 
       const orderData = getCartData(res);
@@ -880,7 +887,13 @@ export default function PosCart() {
       setAddresses([]);
       setSelectedAddress(null);
     } catch (err) {
-      toast.error(getApiErrorMessage(err, t("toast.orderFailed")));
+      toast.error(
+        resolvePosCheckoutErrorMessage(
+          err,
+          t,
+          getApiErrorMessage(err, t("toast.orderFailed")),
+        ),
+      );
     } finally {
       setPlacingOrder(false);
     }
