@@ -9,9 +9,10 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "check": "npm run lint && npm run typecheck && npm test && npm run build",
+    "check": "npm run lint && npm run typecheck && npm run check:i18n && npm test && npm run build",
     "check:imports": "node scripts/check-import-paths.mjs",
-    "check:i18n": "node scripts/check-messages.mjs"
+    "check:i18n": "node scripts/check-messages.mjs && npm run check:localization",
+    "check:localization": "node scripts/check-localization.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

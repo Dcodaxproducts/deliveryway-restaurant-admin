@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -71,13 +72,13 @@ export const useUpdateRestaurantGiftCardsVisibility = () => {
       });
       toast.success(
         variables.isEnabled
-          ? "Gift cards are visible on the customer website."
-          : "Gift cards are hidden from the customer website.",
+          ? getLocalizedMessage("notification102")
+          : getLocalizedMessage("notification101"),
       );
     },
     onError: (error) => {
       toast.error(
-        getApiErrorMessage(error, "Unable to update gift card visibility."),
+        getApiErrorMessage(error, getLocalizedMessage("notification137")),
       );
     },
   });

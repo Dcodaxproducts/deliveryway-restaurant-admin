@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import {
@@ -158,7 +161,7 @@ export default function CreateFAQPage() {
       <div className="min-h-screen bg-[#F8F9FB] px-4 py-5 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[1400px]">
           <Header
-            title="FAQ Manager"
+            title={getLocalizedMessage("message126")}
             description="Loading FAQ details..."
             titleClassName="text-[24px] sm:text-[28px] font-semibold text-[#101828] leading-tight"
             descriptionClassName="mt-1 max-w-[760px] text-sm text-[#667085] leading-6"
@@ -173,7 +176,7 @@ export default function CreateFAQPage() {
       <div className="mx-auto max-w-[1400px]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <Header
-            title="FAQ Manager"
+            title={getLocalizedMessage("message126")}
             description="Manage your restaurant's frequently asked questions to help customers navigate ordering, payments, and policy information."
             titleClassName="text-[24px] sm:text-[28px] font-semibold text-[#101828] leading-tight"
             descriptionClassName="mt-1 max-w-[760px] text-sm text-[#667085] leading-6"
@@ -203,11 +206,11 @@ export default function CreateFAQPage() {
               {/* Question */}
               <div>
                 <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-[#344054]">
-                  Question
+                  <LocalizedText messageKey="message303" />
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. How do I track my order in real-time?"
+                  placeholder={getLocalizedMessage("message114")}
                   {...register("question")}
                   className="h-12 w-full rounded-xl border border-[#E4E7EC] bg-[#F9FAFB] px-4 text-sm text-[#101828] outline-none placeholder:text-[#98A2B3] focus:border-[#D0D5DD] focus:bg-white"
                 />
@@ -216,18 +219,18 @@ export default function CreateFAQPage() {
               {/* Category */}
               <div className="mt-5">
                 <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-[#344054]">
-                  Category
+                  <LocalizedText messageKey="message065" />
                 </label>
                 <div className="relative">
                   <select
                     {...register("category")}
                     className="h-12 w-full appearance-none rounded-xl border border-[#E4E7EC] bg-[#F9FAFB] px-4 pr-10 text-sm text-[#101828] outline-none focus:border-[#D0D5DD] focus:bg-white"
                   >
-                    <option value="">Select a category</option>
-                    <option value="Orders">Orders</option>
-                    <option value="Delivery">Delivery</option>
-                    <option value="Payments">Payments</option>
-                    <option value="Policy">Policy</option>
+                    <option value=""><LocalizedText messageKey="message340" /></option>
+                    <option value="Orders"><LocalizedText messageKey="message266" /></option>
+                    <option value="Delivery"><LocalizedText messageKey="message100" /></option>
+                    <option value="Payments"><LocalizedText messageKey="message277" /></option>
+                    <option value="Policy"><LocalizedText messageKey="message286" /></option>
                   </select>
 
                   <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[#667085]">
@@ -239,7 +242,7 @@ export default function CreateFAQPage() {
               {/* Answer */}
               <div className="mt-5">
                 <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-[#344054]">
-                  Answer
+                  <LocalizedText messageKey="message035" />
                 </label>
 
                 <div className="overflow-hidden rounded-xl border border-[#E4E7EC] bg-[#F9FAFB]">
@@ -260,7 +263,7 @@ export default function CreateFAQPage() {
                   </div>
 
                   <textarea
-                    placeholder="Provide a detailed answer here..."
+                    placeholder={getLocalizedMessage("message294")}
                     {...register("answer")}
                     className="min-h-[220px] w-full resize-none bg-[#F9FAFB] px-4 py-3 text-sm leading-6 text-[#101828] outline-none placeholder:text-[#98A2B3]"
                   />
@@ -273,7 +276,7 @@ export default function CreateFAQPage() {
               {/* Live Preview */}
               <div className="rounded-2xl border border-[#F1D6D8] bg-white p-4 shadow-[0_1px_3px_rgba(16,24,40,0.05)]">
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#C1121F]">
-                  Live Preview
+                  <LocalizedText messageKey="message173" />
                 </p>
                 <p className="mt-2 text-sm font-semibold leading-5 text-[#101828]">
                   {question?.trim()
@@ -285,13 +288,13 @@ export default function CreateFAQPage() {
               {/* Publishing Status */}
               <div className="mt-6">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#667085]">
-                  Publishing Status
+                  <LocalizedText messageKey="message300" />
                 </p>
 
                 <div className="mt-3 rounded-xl border border-[#EAECF0] bg-white px-4 py-3">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-semibold text-[#101828]">Status</p>
+                      <p className="text-sm font-semibold text-[#101828]"><LocalizedText messageKey="message366" /></p>
                       <p className="mt-1 text-xs text-[#98A2B3]">
                         {status ? "Published" : "Currently Draft"}
                       </p>
@@ -317,7 +320,7 @@ export default function CreateFAQPage() {
               {/* Visibility */}
               <div className="mt-6">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#667085]">
-                  Visibility
+                  <LocalizedText messageKey="message406" />
                 </p>
 
                 <div className="mt-3 space-y-3">
@@ -343,10 +346,10 @@ export default function CreateFAQPage() {
 
                       <div>
                         <p className="text-sm font-semibold text-[#101828]">
-                          Visible to all
+                          <LocalizedText messageKey="message407" />
                         </p>
                         <p className="text-xs text-[#98A2B3]">
-                          Publicly accessible on the web
+                          <LocalizedText messageKey="message296" />
                         </p>
                       </div>
                     </div>
@@ -374,10 +377,10 @@ export default function CreateFAQPage() {
 
                       <div>
                         <p className="text-sm font-semibold text-[#101828]">
-                          Logged-in only
+                          <LocalizedText messageKey="message186" />
                         </p>
                         <p className="text-xs text-[#98A2B3]">
-                          Restricted to registered customers
+                          <LocalizedText messageKey="message324" />
                         </p>
                       </div>
                     </div>
@@ -390,7 +393,7 @@ export default function CreateFAQPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-4">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#98A2B3]">
-                      Mode
+                      <LocalizedText messageKey="message214" />
                     </p>
                     <p className="text-xs font-semibold uppercase text-[#344054]">
                       {isEditMode ? "Editing" : "Creating"}
@@ -399,7 +402,7 @@ export default function CreateFAQPage() {
 
                   <div className="flex items-center justify-between gap-4">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#98A2B3]">
-                      Last Sync
+                      <LocalizedText messageKey="message167" />
                     </p>
                     <p className="text-xs font-semibold uppercase text-[#344054]">
                       {isEditMode ? "Loaded" : "New Draft"}
@@ -428,7 +431,7 @@ export default function CreateFAQPage() {
                   onClick={() => router.push("/faqs")}
                   className="w-full rounded-xl border border-transparent bg-transparent px-4 py-3 text-sm font-semibold text-[#667085] transition hover:bg-white"
                 >
-                  Cancel
+                  <LocalizedText messageKey="message064" />
                 </button>
               </div>
             </div>
@@ -444,11 +447,9 @@ export default function CreateFAQPage() {
               </div>
 
               <div>
-                <p className="text-sm font-semibold text-[#344054]">Editorial Tip</p>
+                <p className="text-sm font-semibold text-[#344054]"><LocalizedText messageKey="message117" /></p>
                 <p className="mt-1 text-sm leading-6 text-[#667085]">
-                  Keep questions concise. Use active voice to help customers find
-                  solutions faster. Asymmetric layouts for your answers can improve
-                  scanability.
+                  <LocalizedText messageKey="message160" />
                 </p>
               </div>
             </div>
@@ -462,12 +463,10 @@ export default function CreateFAQPage() {
 
               <div>
                 <p className="text-sm font-semibold text-[#344054]">
-                  Draft Handling
+                  <LocalizedText messageKey="message111" />
                 </p>
                 <p className="mt-1 text-sm leading-6 text-[#667085]">
-                  Use draft mode while preparing content, then publish once the FAQ
-                  is reviewed. Edit mode is automatically enabled when the page URL
-                  contains an FAQ id.
+                  <LocalizedText messageKey="message393" />
                 </p>
               </div>
             </div>

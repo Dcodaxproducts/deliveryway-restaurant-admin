@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { z } from "zod";
 import { parseSchema } from "@/lib/zod-errors";
@@ -878,7 +880,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
 
             <p className="text-xs leading-5 text-gray-400">
               {t("allergenCodesHelp")}{" "}
-              <span className="font-medium">allergenCodes</span>.
+              <span className="font-medium"><LocalizedText messageKey="message034" /></span>.
             </p>
           </div>
 
@@ -913,7 +915,7 @@ const StepTwo = forwardRef(({ form, setForm }: any, ref: any) => {
 
             <p className="text-xs leading-5 text-gray-400">
               {t("additiveCodesHelpPrefix")}{" "}
-              <span className="font-medium">allergenCodes</span> payload with
+              <span className="font-medium"><LocalizedText messageKey="message034" /></span> <LocalizedText messageKey="message271" />
               {t("additiveCodesHelpSuffix")}
             </p>
           </div>

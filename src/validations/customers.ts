@@ -1,21 +1,22 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 const phoneSchema = z
   .string()
   .trim()
-  .min(10, "Phone number must be at least 10 digits")
-  .max(20, "Phone number is too long");
+  .min(10, getLocalizedMessage("validation085"))
+  .max(20, getLocalizedMessage("validation084"));
 
 const customerBaseSchema = z.object({
-  email: z.string().trim().email("Invalid email address"),
-  firstName: z.string().trim().min(1, "First name is required"),
-  lastName: z.string().trim().min(1, "Last name is required"),
+  email: z.string().trim().email(getLocalizedMessage("validation049")),
+  firstName: z.string().trim().min(1, getLocalizedMessage("validation039")),
+  lastName: z.string().trim().min(1, getLocalizedMessage("validation060")),
   phone: phoneSchema,
 });
 
 export const createCustomerSchema = customerBaseSchema.extend({
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  restaurantId: z.string().min(1, "Restaurant is required"),
+  password: z.string().min(8, getLocalizedMessage("validation080")),
+  restaurantId: z.string().min(1, getLocalizedMessage("validation097")),
 });
 
 export type CreateCustomerValues = z.infer<typeof createCustomerSchema>;
@@ -38,8 +39,8 @@ export type CustomerStatusValues = z.infer<typeof customerStatusSchema>;
 
 export const forceDeleteCustomerSchema = z.object({
   emails: z
-    .array(z.string().trim().email("Invalid email"))
-    .min(1, "At least one email is required"),
+    .array(z.string().trim().email(getLocalizedMessage("validation048")))
+    .min(1, getLocalizedMessage("validation006")),
 });
 
 export type ForceDeleteCustomerValues = z.infer<
@@ -68,9 +69,9 @@ export const verifyCustomerOtpSchema = z.object({
   otp: z
     .string()
     .trim()
-    .min(1, "OTP is required")
-    .min(4, "OTP is too short")
-    .max(10, "OTP is too long"),
+    .min(1, getLocalizedMessage("validation076"))
+    .min(4, getLocalizedMessage("validation078"))
+    .max(10, getLocalizedMessage("validation077")),
 });
 
 export type VerifyCustomerOtpValues = z.infer<typeof verifyCustomerOtpSchema>;

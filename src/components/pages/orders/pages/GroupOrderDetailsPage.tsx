@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import Header from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { formatDateTime24 } from "@/lib/date-time-format";
@@ -148,7 +150,7 @@ export default function GroupOrderDetails() {
                     </div>
 
                     <span className="text-red-600 text-xs">
-                      x{item.quantity}
+                      <LocalizedText messageKey="message410" />{item.quantity}
                     </span>
                   </div>
                 ))}
@@ -196,7 +198,7 @@ export default function GroupOrderDetails() {
             </div>
 
             <div className="text-right text-sm">
-              <p>x{item.quantity}</p>
+              <p><LocalizedText messageKey="message410" />{item.quantity}</p>
               <p className="text-green-600 font-medium">
                 {formatMoney(item.lineTotal)}
               </p>

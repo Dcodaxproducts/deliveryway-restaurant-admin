@@ -104,9 +104,8 @@ const getDefaultValues = ({
   isActive: initialDeal?.isActive ?? true,
 });
 
-const showFirstValidationError = (errors: FieldErrors<AdminDealFormValues>) => {
-  const firstError = Object.values(errors).find((error) => error?.message);
-  if (typeof firstError?.message === "string") toast.error(firstError.message);
+const showFirstValidationError = (_errors: FieldErrors<AdminDealFormValues>, message: string) => {
+  toast.error(message);
 };
 
 export default function AdminDealForm({
@@ -269,7 +268,7 @@ export default function AdminDealForm({
   return (
     <PageWrapper title={title}>
       <form
-        onSubmit={handleSubmit(onSubmit, showFirstValidationError)}
+        onSubmit={handleSubmit(onSubmit, (errors) => showFirstValidationError(errors, commonT("invalidForm")))}
         className="space-y-8"
         noValidate
       >

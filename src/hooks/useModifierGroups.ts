@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getApiErrorMessage } from "@/lib/errors";
@@ -59,10 +60,10 @@ export const useCreateModifierGroup = () => {
       createModifierGroup(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: modifierGroupKeys.all });
-      toast.success("Modifier group created successfully!");
+      toast.success(getLocalizedMessage("message227"));
     },
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to create modifier group"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification038")));
     },
   });
 };
@@ -83,10 +84,10 @@ export const useUpdateModifierGroup = () => {
       queryClient.invalidateQueries({
         queryKey: modifierGroupKeys.detail(variables.id),
       });
-      toast.success("Modifier group updated successfully!");
+      toast.success(getLocalizedMessage("message229"));
     },
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to update modifier group"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification093")));
     },
   });
 };
@@ -98,10 +99,10 @@ export const useDeleteModifierGroup = () => {
     mutationFn: (id: string) => deleteModifierGroup(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: modifierGroupKeys.all });
-      toast.success("Modifier group deleted successfully!");
+      toast.success(getLocalizedMessage("message228"));
     },
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to delete modifier group"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification052")));
     },
   });
 };
@@ -135,10 +136,10 @@ export const useAttachModifierToGroup = () => {
           variables.restaurantId
         ),
       });
-      toast.success("Modifier attached to group successfully!");
+      toast.success(getLocalizedMessage("message215"));
     },
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to attach modifier"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification021")));
     },
   });
 };
@@ -171,10 +172,10 @@ export const useDetachModifierFromGroup = () => {
           variables.restaurantId
         ),
       });
-      toast.success("Modifier detached from group");
+      toast.success(getLocalizedMessage("message222"));
     },
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to detach modifier"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification056")));
     },
   });
 };

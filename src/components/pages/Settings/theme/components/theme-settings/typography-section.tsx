@@ -1,3 +1,4 @@
+import { LocalizedText } from "@/components/common/LocalizedText";
 import type { FieldPath, UseFormRegister } from "react-hook-form";
 import { Type } from "lucide-react";
 
@@ -104,7 +105,7 @@ export default function TypographySection({ register, getError }: TypographySect
     <div className={BRANDING_PANEL_CLASS}>
       <div className="mb-6 flex items-center gap-3">
         <Type className="text-gray-500" />
-        <h3 className={BRANDING_SECTION_TITLE_CLASS}>Typography & Layout</h3>
+        <h3 className={BRANDING_SECTION_TITLE_CLASS}><LocalizedText messageKey="message389" /></h3>
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {textFields.map(({ id, label, name, placeholder }) => (

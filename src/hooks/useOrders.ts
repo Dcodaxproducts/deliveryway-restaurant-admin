@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -160,13 +162,13 @@ export const useDownloadOrderInvoicePdf = (messages?: {
     onSuccess: ({ blob, orderId, orderNumber }) => {
       const invoiceLabel = sanitizeFileName(orderNumber || orderId || "order");
       downloadBlobFile(blob, `invoice-${invoiceLabel}.pdf`);
-      toast.success(messages?.success || "Invoice downloaded");
+      toast.success(messages?.success || getLocalizedMessage("notification106"));
     },
     onError: (error) => {
       toast.error(
         getApiErrorMessage(
           error,
-          messages?.error || "Unable to download invoice",
+          messages?.error || getLocalizedMessage("notification127"),
         ),
       );
     },
@@ -186,13 +188,13 @@ export const useSendOrderInvoiceEmail = (messages?: {
       params?: SendOrderInvoiceEmailParams;
     }) => sendOrderInvoiceEmail(orderId, params),
     onSuccess: () => {
-      toast.success(messages?.success || "Invoice sent to customer email");
+      toast.success(messages?.success || getLocalizedMessage("notification107"));
     },
     onError: (error) => {
       toast.error(
         getApiErrorMessage(
           error,
-          messages?.error || "Unable to send invoice email",
+          messages?.error || getLocalizedMessage("notification130"),
         ),
       );
     },
@@ -225,7 +227,7 @@ export const useUpdateOrderStatus = () => {
       queryClient.invalidateQueries({
         queryKey: ["orders", "detail", order.id],
       });
-      toast.success("Order status updated");
+      toast.success(getLocalizedMessage("message265"));
 
       if (
         shouldPrintAcceptedOrder({
@@ -242,12 +244,12 @@ export const useUpdateOrderStatus = () => {
             order.branchId ??
             (isBranchAdmin ? (branchId ?? undefined) : undefined),
         }).catch(() => {
-          toast.error("Order accepted, but automatic printing failed.");
+          toast.error(getLocalizedMessage("message259"));
         });
       }
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Unable to update order status"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification139")));
     },
   });
 };
@@ -265,11 +267,11 @@ export const useSendOrderOutForDelivery = () => {
       queryClient.invalidateQueries({
         queryKey: ["orders", "detail", order.id],
       });
-      toast.success("Order sent out for delivery");
+      toast.success(getLocalizedMessage("message263"));
     },
     onError: (error) => {
       toast.error(
-        getApiErrorMessage(error, "Unable to send order out for delivery"),
+        getApiErrorMessage(error, getLocalizedMessage("notification131")),
       );
     },
   });
@@ -290,11 +292,11 @@ export const useSendOrderWithExternalDriver = () => {
       queryClient.invalidateQueries({
         queryKey: ["orders", "detail", order.id],
       });
-      toast.success("Order sent with external driver");
+      toast.success(getLocalizedMessage("message264"));
     },
     onError: (error) => {
       toast.error(
-        getApiErrorMessage(error, "Unable to send order with external driver"),
+        getApiErrorMessage(error, getLocalizedMessage("notification132")),
       );
     },
   });
@@ -320,10 +322,10 @@ export const useRefundPaymentTransaction = (orderId?: string | null) => {
           queryKey: ["orders", "detail", orderId],
         });
       }
-      toast.success("Payment refunded");
+      toast.success(getLocalizedMessage("message273"));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Unable to refund payment"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification128")));
     },
   });
 };
@@ -358,10 +360,10 @@ export const useUpdatePaymentTransactionStatus = (orderId?: string | null) => {
           queryKey: ["orders", "detail", orderId],
         });
       }
-      toast.success("Payment status updated");
+      toast.success(getLocalizedMessage("message276"));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Unable to update payment status"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification141")));
     },
   });
 };

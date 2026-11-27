@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import Container from "@/components/common/Container";
 import Header from "@/components/common/PageHeader";
 import CuisinesTable from "@/components/pages/Menu/cuisines/components/CuisinesTable";
@@ -8,7 +10,7 @@ export default function CuisinesPage() {
   return (
     <Container>
       <Header
-        title="Cuisines"
+        title={getLocalizedMessage("message084")}
         description="View global cuisine tags available for menu items."
       />
 

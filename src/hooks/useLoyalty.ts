@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -65,13 +66,13 @@ export const useAdjustCustomerWallet = (options?: LoyaltyMutationOptions) => {
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.all });
       toast.success(
         variables.payload.isCredit
-          ? options?.messages?.creditSuccess || options?.messages?.success || "Wallet credited successfully"
-          : options?.messages?.debitSuccess || options?.messages?.success || "Wallet debited successfully",
+          ? options?.messages?.creditSuccess || options?.messages?.success || getLocalizedMessage("notification145")
+          : options?.messages?.debitSuccess || options?.messages?.success || getLocalizedMessage("notification146"),
       );
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || options?.messages?.error || "Failed to adjust wallet",
+        error?.response?.data?.message || options?.messages?.error || getLocalizedMessage("notification015"),
       );
     },
   });
@@ -116,10 +117,10 @@ export const useAdjustCustomerLoyaltyPoints = (
         variables.payload.isCredit
           ? options?.messages?.creditSuccess ||
               options?.messages?.success ||
-              "Loyalty points added successfully"
+              getLocalizedMessage("notification108")
           : options?.messages?.debitSuccess ||
               options?.messages?.success ||
-              "Loyalty points deducted successfully",
+              getLocalizedMessage("notification109"),
       );
     },
 
@@ -127,7 +128,7 @@ export const useAdjustCustomerLoyaltyPoints = (
       toast.error(
         error?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to adjust loyalty points",
+          getLocalizedMessage("notification014"),
       );
     },
   });
@@ -163,7 +164,7 @@ export const useUpdateLoyaltyProgram = (options?: LoyaltyMutationOptions) => {
       });
 
       toast.success(
-        options?.messages?.success || "Loyalty program updated successfully",
+        options?.messages?.success || getLocalizedMessage("notification110"),
       );
     },
 
@@ -171,7 +172,7 @@ export const useUpdateLoyaltyProgram = (options?: LoyaltyMutationOptions) => {
       toast.error(
         error?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to update loyalty program",
+          getLocalizedMessage("notification086"),
       );
     },
   });

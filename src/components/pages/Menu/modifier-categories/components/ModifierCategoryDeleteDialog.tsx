@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import DeleteDialog from "@/components/common/dialogs/delete-dialog";
 import type { ModifierCategory } from "@/types/modifier-categories";
 
@@ -25,7 +26,7 @@ export default function ModifierCategoryDeleteDialog({
         onOpenChange={onOpenChange}
         onConfirm={onConfirm}
         isLoading={isLoading}
-        title="Delete modifier category"
+        title={getLocalizedMessage("message099")}
         description={
           category
             ? `Are you sure you want to delete "${category.name}"?`

@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
@@ -52,7 +55,7 @@ export default function OngoingOrdersModal({
      <DialogContent className="w-full sm:max-w-[630px] rounded-[28px] px-10 py-8 bg-[#F5F5F5]">
 
        <PosModalHeader
-              title="Ongoing Orders"
+              title={getLocalizedMessage("message254")}
               description="Track your ongoing orders from here"
             />
        
@@ -60,7 +63,7 @@ export default function OngoingOrdersModal({
           <BorderedSearchBar
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name"
+            placeholder={getLocalizedMessage("message332")}
           />
         </div>
 
@@ -95,32 +98,32 @@ export default function OngoingOrdersModal({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <p className="text-[16px] font-medium text-[#101828]">
-                Order ID:{" "}
+                <LocalizedText messageKey="message262" />{" "}
                 <span className="font-semibold">#131220251001</span>
               </p>
 
               <Badge className="bg-[#00A63E0F] text-[#00A63E] rounded-full px-3 py-1">
-                Paid
+                <LocalizedText messageKey="message269" />
               </Badge>
             </div>
 
             <span className="text-sm font-semibold text-primary">
-              Dine-in
+              <LocalizedText messageKey="message105" />
             </span>
           </div>
 
           {/* Row 2 */}
           <p className="text-sm text-[#667085]">
-            Item: 1, Addons: 0
+            <LocalizedText messageKey="message158" />
           </p>
 
           {/* Row 3 (TABLE-LIKE BAR) */}
           <div className="flex items-center gap-4 border border-gray-200 rounded-xl px-4 py-3 text-sm text-[#667085]">
-            <span>0 Table</span>
+            <span><LocalizedText messageKey="message004" /></span>
             <span className="text-gray-300">|</span>
-            <span>Token: 100421</span>
+            <span><LocalizedText messageKey="message386" /></span>
             <span className="text-gray-300">|</span>
-            <span>Counter: Counter 1</span>
+            <span><LocalizedText messageKey="message081" /></span>
 
             {/* Status Dropdown */}
             <DropdownMenu>

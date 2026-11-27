@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -38,11 +39,11 @@ export const useCreateFaq = () => {
       queryClient.invalidateQueries({
         queryKey: ["faqs", variables.restaurantId],
       });
-      toast.success("FAQ created successfully!");
+      toast.success(getLocalizedMessage("message124"));
     },
 
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to create FAQ");
+      toast.error(err?.response?.data?.message || getLocalizedMessage("notification030"));
     },
   });
 };
@@ -108,11 +109,11 @@ export const useUpdateFaq = () => {
       queryClient.invalidateQueries({
         queryKey: ["faqs", variables.restaurantId, variables.faqId],
       });
-      toast.success("FAQ updated successfully!");
+      toast.success(getLocalizedMessage("message127"));
     },
 
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to update FAQ");
+      toast.error(err?.response?.data?.message || getLocalizedMessage("notification080"));
     },
   });
 };
@@ -133,11 +134,11 @@ export const useDeleteFaq = () => {
       queryClient.invalidateQueries({
         queryKey: ["faqs", variables.restaurantId],
       });
-      toast.success("FAQ deleted successfully!");
+      toast.success(getLocalizedMessage("message125"));
     },
 
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to delete FAQ");
+      toast.error(err?.response?.data?.message || getLocalizedMessage("notification044"));
     },
   });
 };

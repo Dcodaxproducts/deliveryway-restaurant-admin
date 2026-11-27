@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Check, Loader2, Search, X } from "lucide-react";
@@ -231,7 +234,7 @@ export function ModifierGroupAssignmentForm({
     });
 
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message || "Invalid assignment");
+      toast.error(parsed.error.issues[0]?.message || getLocalizedMessage("notification104"));
       return;
     }
 
@@ -306,11 +309,10 @@ export function ModifierGroupAssignmentForm({
     <section className="w-full min-w-0 rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
       <div className="mb-4">
         <h3 className="text-base font-semibold text-gray-900">
-          Modifier Groups
+          <LocalizedText messageKey="message230" />
         </h3>
         <p className="mt-1 text-sm text-gray-500">
-          Assign customer-facing modifier sets such as Choose Bread or Choose
-          Sauces.
+          <LocalizedText messageKey="message041" />
         </p>
       </div>
 
@@ -324,7 +326,7 @@ export function ModifierGroupAssignmentForm({
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search modifier groups..."
+              placeholder={getLocalizedMessage("message338")}
               className="h-[40px] w-full rounded-[12px] border border-gray-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-primary/40"
             />
           </div>
@@ -336,11 +338,11 @@ export function ModifierGroupAssignmentForm({
             {isLoading && groupOptions.length === 0 ? (
               <div className="flex items-center justify-center gap-2 rounded-[12px] bg-white p-5 text-sm text-gray-500">
                 <Loader2 size={16} className="animate-spin" />
-                Loading groups...
+                <LocalizedText messageKey="message178" />
               </div>
             ) : groupOptions.length === 0 ? (
               <p className="rounded-[12px] border border-dashed border-gray-200 bg-white p-5 text-center text-sm text-gray-400">
-                No modifier groups found.
+                <LocalizedText messageKey="message244" />
               </p>
             ) : (
               <>
@@ -379,7 +381,7 @@ export function ModifierGroupAssignmentForm({
                         </span>
                         {assigned ? (
                           <span className="w-fit shrink-0 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary">
-                            Added
+                            <LocalizedText messageKey="message023" />
                           </span>
                         ) : null}
                       </div>
@@ -395,10 +397,10 @@ export function ModifierGroupAssignmentForm({
                     {isFetching ? (
                       <>
                         <Loader2 size={14} className="animate-spin" />
-                        Loading more groups...
+                        <LocalizedText messageKey="message182" />
                       </>
                     ) : (
-                      <span className="sr-only">Load more groups</span>
+                      <span className="sr-only"><LocalizedText messageKey="message174" /></span>
                     )}
                   </div>
                 ) : null}
@@ -439,8 +441,8 @@ export function ModifierGroupAssignmentForm({
               }
               className="h-[40px] w-full rounded-[10px] border border-gray-200 px-3 text-sm outline-none focus:border-primary/40"
             >
-              <option value="SINGLE">Single</option>
-              <option value="MULTIPLE">Multiple</option>
+              <option value="SINGLE"><LocalizedText messageKey="message360" /></option>
+              <option value="MULTIPLE"><LocalizedText messageKey="message232" /></option>
             </select>
           </FieldLabel>
 
@@ -489,7 +491,7 @@ export function ModifierGroupAssignmentForm({
                 </p>
                 <p className="mt-1 break-words text-xs leading-5 text-gray-500">
                   {assignment.selectionType} · {assignment.minSelect}/
-                  {assignment.maxSelect} · Sort {assignment.sortOrder ?? 0} ·{" "}
+                  {assignment.maxSelect} <LocalizedText messageKey="message001" /> {assignment.sortOrder ?? 0} ·{" "}
                   {isRequiredModifierGroupAssignment(assignment)
                     ? "Required"
                     : "Optional"}
@@ -501,7 +503,7 @@ export function ModifierGroupAssignmentForm({
                   type="button"
                   onClick={() => removeDraftAssignment(assignment.groupId)}
                   className="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-white hover:text-red-500"
-                  aria-label="Remove draft modifier group assignment"
+                  aria-label={getLocalizedMessage("message311")}
                 >
                   <X size={16} />
                 </button>

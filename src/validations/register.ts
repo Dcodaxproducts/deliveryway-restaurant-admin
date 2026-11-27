@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 import {
@@ -9,26 +10,26 @@ import {
 
 export const image2MB = z
   .any()
-  .refine((file) => file instanceof File, "File is required")
+  .refine((file) => file instanceof File, getLocalizedMessage("validation038"))
   .refine(
     (file) => file?.size <= MAX_UPLOAD_FILE_SIZE_BYTES,
     `File must be less than ${MAX_UPLOAD_FILE_SIZE_MB}MB`,
   )
   .refine(
     (file) => ["image/png", "image/jpeg", "image/jpg"].includes(file?.type),
-    "Only PNG, JPG, JPEG allowed",
+    getLocalizedMessage("validation074"),
   );
 
 export const image1MB = z
   .any()
-  .refine((file) => file instanceof File, "Image is required")
+  .refine((file) => file instanceof File, getLocalizedMessage("validation045"))
   .refine(
     (file) => file?.size <= MAX_UPLOAD_FILE_SIZE_BYTES,
     `Image must be less than ${MAX_UPLOAD_FILE_SIZE_MB}MB`,
   )
   .refine(
     (file) => ["image/png", "image/jpeg", "image/jpg"].includes(file?.type),
-    "Only PNG, JPG, JPEG allowed",
+    getLocalizedMessage("validation074"),
   );
 
 /* ---------------- USER ---------------- */
@@ -36,25 +37,25 @@ export const image1MB = z
 export const userSchema = z.object({
   firstName: z
     .string()
-    .min(1, "First name is required")
-    .min(2, "First name must be at least 2 characters"),
+    .min(1, getLocalizedMessage("validation039"))
+    .min(2, getLocalizedMessage("validation040")),
 
   lastName: z
     .string()
-    .min(1, "Last name is required")
-    .min(2, "Last name must be at least 2 characters"),
+    .min(1, getLocalizedMessage("validation060"))
+    .min(2, getLocalizedMessage("validation061")),
 
-  email: z.string().min(1, "Email is required").email("Invalid email format"),
+  email: z.string().min(1, getLocalizedMessage("validation032")).email(getLocalizedMessage("validation050")),
 
   phone: z
     .string()
-    .min(1, "Phone number is required")
-    .regex(/^\+?[0-9]{10,15}$/, "Invalid phone number"),
+    .min(1, getLocalizedMessage("validation083"))
+    .regex(/^\+?[0-9]{10,15}$/, getLocalizedMessage("validation052")),
 
   password: z
     .string()
-    .min(1, "Password is required")
-    .min(8, "Password must be at least 8 characters"),
+    .min(1, getLocalizedMessage("validation079"))
+    .min(8, getLocalizedMessage("validation080")),
 
   profileUrl: image2MB,
 });
@@ -62,37 +63,37 @@ export const userSchema = z.object({
 /* ---------------- TENANT ---------------- */
 
 export const tenantSchema = z.object({
-  name: z.string().min(1, "Tenant name is required"),
-  bio: z.string().min(1, "Tenant bio is required"),
+  name: z.string().min(1, getLocalizedMessage("validation124")),
+  bio: z.string().min(1, getLocalizedMessage("validation123")),
   logoUrl: image2MB,
 });
 
 /* ---------------- RESTAURANT ---------------- */
 
 export const restaurantSchema = z.object({
-  name: z.string().min(1, "Restaurant name is required"),
+  name: z.string().min(1, getLocalizedMessage("validation098")),
 
   logoUrl: image2MB,
 
   slug: z
     .string()
-    .min(1, "Slug is required")
+    .min(1, getLocalizedMessage("validation110"))
     .regex(
       /^[a-z0-9-]+$/,
-      "Slug must contain lowercase letters, numbers, and hyphens only",
+      getLocalizedMessage("validation111"),
     ),
 
-  tagline: z.string().min(1, "Tagline is required"),
+  tagline: z.string().min(1, getLocalizedMessage("validation121")),
 
   supportContact: z.object({
     email: z
       .string()
-      .min(1, "Support email is required")
-      .email("Invalid email"),
-    phone: z.string().min(1, "Support phone is required"),
+      .min(1, getLocalizedMessage("validation118"))
+      .email(getLocalizedMessage("validation048")),
+    phone: z.string().min(1, getLocalizedMessage("validation119")),
     whatsapp: z
       .string()
-      .regex(/^\+?[0-9]{10,15}$/, "Invalid WhatsApp number")
+      .regex(/^\+?[0-9]{10,15}$/, getLocalizedMessage("validation057"))
       .or(z.literal(""))
       .optional(),
   }),
@@ -100,60 +101,60 @@ export const restaurantSchema = z.object({
   branding: z.object({
     primaryColor: z
       .string()
-      .min(1, "Primary color is required")
-      .regex(/^#([0-9A-Fa-f]{3}){1,2}$/, "Invalid hex color"),
+      .min(1, getLocalizedMessage("validation093"))
+      .regex(/^#([0-9A-Fa-f]{3}){1,2}$/, getLocalizedMessage("validation051")),
 
     secondaryColor: z
       .string()
-      .min(1, "Secondary color is required")
-      .regex(/^#([0-9A-Fa-f]{3}){1,2}$/, "Invalid hex color"),
+      .min(1, getLocalizedMessage("validation102"))
+      .regex(/^#([0-9A-Fa-f]{3}){1,2}$/, getLocalizedMessage("validation051")),
 
-    fontFamily: z.string().min(1, "Font family is required"),
+    fontFamily: z.string().min(1, getLocalizedMessage("validation042")),
   }),
 });
 
 /* ---------------- BRANCH ---------------- */
 
 export const branchSchema = z.object({
-  name: z.string().min(1, "Branch name is required"),
+  name: z.string().min(1, getLocalizedMessage("validation015")),
 
-  description: z.string().min(1, "Description is required"),
+  description: z.string().min(1, getLocalizedMessage("validation028")),
 
   coverImage: image1MB,
 
   address: z.object({
-    street: z.string().min(1, "Street is required"),
-    area: z.string().min(1, "Area is required"),
-    city: z.string().min(1, "City is required"),
-    state: z.string().min(1, "State is required"),
-    country: z.string().min(1, "Country is required"),
+    street: z.string().min(1, getLocalizedMessage("validation117")),
+    area: z.string().min(1, getLocalizedMessage("validation004")),
+    city: z.string().min(1, getLocalizedMessage("validation020")),
+    state: z.string().min(1, getLocalizedMessage("validation115")),
+    country: z.string().min(1, getLocalizedMessage("validation021")),
 
     lat: z
       .string()
-      .min(1, "Latitude is required")
-      .refine((val) => !isNaN(Number(val)), "Latitude must be a number"),
+      .min(1, getLocalizedMessage("validation062"))
+      .refine((val) => !isNaN(Number(val)), getLocalizedMessage("validation063")),
 
     lng: z
       .string()
-      .min(1, "Longitude is required")
-      .refine((val) => !isNaN(Number(val)), "Longitude must be a number"),
+      .min(1, getLocalizedMessage("validation064"))
+      .refine((val) => !isNaN(Number(val)), getLocalizedMessage("validation065")),
   }),
 
   settings: z.object({
     taxPercentage: z
-      .number({ invalid_type_error: "Tax percentage required" })
-      .min(0, "Invalid tax value"),
+      .number({ invalid_type_error: getLocalizedMessage("validation122") })
+      .min(0, getLocalizedMessage("validation056")),
 
     minOrderAmount: z
-      .number({ invalid_type_error: "Minimum order required" })
-      .min(0, "Invalid amount"),
+      .number({ invalid_type_error: getLocalizedMessage("validation068") })
+      .min(0, getLocalizedMessage("validation047")),
 
     radiusKm: z
-      .number({ invalid_type_error: "Radius required" })
-      .min(0, "Invalid radius"),
+      .number({ invalid_type_error: getLocalizedMessage("validation095") })
+      .min(0, getLocalizedMessage("validation054")),
 
     estimatedPrepTime: z
-      .number({ invalid_type_error: "Prep time required" })
-      .min(0, "Invalid prep time"),
+      .number({ invalid_type_error: getLocalizedMessage("validation092") })
+      .min(0, getLocalizedMessage("validation053")),
   }),
 });

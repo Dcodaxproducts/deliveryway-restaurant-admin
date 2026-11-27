@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useState, useEffect, useRef } from "react";
 import { Send, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -298,7 +301,7 @@ useEffect(() => {
     <div className="flex min-h-0 flex-1 overflow-hidden bg-[#f7f6f5] text-[13px] text-[#1f1f1f]">
       <aside className="hidden min-h-0 w-[260px] shrink-0 flex-col bg-white px-4 py-5 md:flex">
         <p className="text-[10px] tracking-widest text-gray-400 mb-3">
-          USER CONTEXT
+          <LocalizedText messageKey="message398" />
         </p>
 
         <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
@@ -311,7 +314,7 @@ useEffect(() => {
                 {user?.profile?.firstName}
               </p>
               <p className="text-[11px] text-gray-400">
-                Premium Member
+                <LocalizedText messageKey="message290" />
               </p>
             </div>
           </div>
@@ -319,7 +322,7 @@ useEffect(() => {
           <div className="mt-4 space-y-3 text-[11px]">
             <div>
               <p className="text-gray-400 uppercase text-[9px] tracking-wider">
-                Account Since
+                <LocalizedText messageKey="message012" />
               </p>
               <p className="text-[12px] mt-[2px]">
                 {user?.profile?.createdAt
@@ -330,7 +333,7 @@ useEffect(() => {
 
             <div>
               <p className="text-gray-400 uppercase text-[9px] tracking-wider">
-                Recent Topic
+                <LocalizedText messageKey="message306" />
               </p>
               <p className="text-[12px] mt-[2px]">
                 {threads[0]?.subject || "Support Chat"}
@@ -342,7 +345,7 @@ useEffect(() => {
         {/* THREADS */}
         <div className="mt-6 flex min-h-0 flex-1 flex-col">
           <p className="text-[10px] tracking-widest text-gray-400 mb-3">
-            CONVERSATIONS
+            <LocalizedText messageKey="message079" />
           </p>
 
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1 custom-scrollbar">
@@ -362,7 +365,7 @@ useEffect(() => {
                 </p>
                  {t.orderId && (
   <span className="text-[9px] px-2 py-[1px] bg-orange-100 text-orange-600 rounded-full">
-    Order
+    <LocalizedText messageKey="message258" />
   </span>
 )}</div>
                 <p className="text-[10px] text-gray-400 mt-1 truncate">
@@ -384,7 +387,7 @@ useEffect(() => {
 </h2>
 
           <span className="text-[10px] px-3 py-[3px] rounded-full bg-[#e9e7e5] text-gray-500">
-            ENCRYPTED
+            <LocalizedText messageKey="message119" />
           </span>
         </div>
 
@@ -392,10 +395,10 @@ useEffect(() => {
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 custom-scrollbar">
           <div className="bg-[#2f2f2f] text-white rounded-md px-4 py-3 max-w-[720px]">
             <p className="text-[10px] uppercase tracking-wider opacity-60 mb-1">
-              Note
+              <LocalizedText messageKey="message248" />
             </p>
             <p className="text-[12px] leading-relaxed">
-              Please do not share personal or card details in this chat.
+              <LocalizedText messageKey="message280" />
             </p>
           </div>
 {creatingThread && (
@@ -404,7 +407,7 @@ useEffect(() => {
       <Loader2 className="animate-spin text-[#ef5a2a]" size={16} />
     </div>
     <p className="text-[12px] text-gray-500">
-      Setting up your order conversation...
+      <LocalizedText messageKey="message353" />
     </p>
   </div>
 )}
@@ -421,7 +424,7 @@ useEffect(() => {
                   </div>
 
                   <p className="text-[10px] text-gray-400 mt-1 mr-1">
-                    You · {formatTime(msg.createdAt)}
+                    <LocalizedText messageKey="message411" /> {formatTime(msg.createdAt)}
                   </p>
                 </div>
               </div>
@@ -431,7 +434,7 @@ useEffect(() => {
                   <p className="text-[12px]">{msg.body}</p>
                 </div>
                 <p className="text-[10px] text-gray-400 mt-1 ml-1">
-                  Support · {formatTime(msg.createdAt)}
+                  <LocalizedText messageKey="message371" /> {formatTime(msg.createdAt)}
                 </p>
               </div>
             );
@@ -445,7 +448,7 @@ useEffect(() => {
                 transition-all duration-200">
             <input
               type="text"
-              placeholder="Type a message..."
+              placeholder={getLocalizedMessage("message388")}
               className="flex-1 bg-transparent outline-none text-[12px]"
               value={message}
               onChange={(e) => setMessage(e.target.value)}

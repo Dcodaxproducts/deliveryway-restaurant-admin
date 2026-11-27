@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -52,13 +54,13 @@ export const useUpdateRestaurantCustomerPaymentMethods = () => {
           variables.restaurantId,
         ),
       });
-      toast.success("Payment methods updated");
+      toast.success(getLocalizedMessage("message272"));
     },
     onError: (
       error: Error & { response?: { data?: { message?: string } } },
     ) => {
       toast.error(
-        error.response?.data?.message ?? "Unable to update payment methods",
+        error.response?.data?.message ?? getLocalizedMessage("notification140"),
       );
     },
   });
@@ -100,13 +102,13 @@ export const useCreateRestaurantPayoutRequest = () => {
           variables.restaurantId,
         ),
       });
-      toast.success("Payout request submitted");
+      toast.success(getLocalizedMessage("message278"));
     },
     onError: (
       error: Error & { response?: { data?: { message?: string } } },
     ) => {
       toast.error(
-        error.response?.data?.message ?? "Unable to submit payout request",
+        error.response?.data?.message ?? getLocalizedMessage("notification134"),
       );
     },
   });

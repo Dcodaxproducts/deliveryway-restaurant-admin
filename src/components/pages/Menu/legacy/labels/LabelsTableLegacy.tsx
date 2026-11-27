@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { FaPen, FaTrash } from "react-icons/fa";
 import {
@@ -506,8 +508,8 @@ export default function LabelsTable() {
               }}
               className="h-[44px] w-full min-w-0 rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm text-gray-700 outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
             >
-              <option value="ASC">ASC</option>
-              <option value="DESC">DESC</option>
+              <option value="ASC"><LocalizedText messageKey="message039" /></option>
+              <option value="DESC"><LocalizedText messageKey="message103" /></option>
             </select>
           </div>
 

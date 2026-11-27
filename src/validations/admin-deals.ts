@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 import { fromDateTimeLocalValue } from "@/components/pages/Menu/deals/utils/admin-deals-formatters";
@@ -26,13 +27,13 @@ const requiredQuantitySchema = z.preprocess(
 );
 
 const categoryRuleSchema = z.object({
-  menuCategoryId: z.string().trim().min(1, "Category is required."),
+  menuCategoryId: z.string().trim().min(1, getLocalizedMessage("validation018")),
   itemLimit: z.preprocess(
     (value) => {
       if (value === "" || value === null || value === undefined) return null;
       return Number(value);
     },
-    z.number().int().min(1, "Item limit must be at least 1.")
+    z.number().int().min(1, getLocalizedMessage("validation058"))
   ),
   variationId: optionalText,
   includedMenuItemIds: z.array(z.string()).default([]),
@@ -68,7 +69,7 @@ const getDateFromOptionalDateTime = (value: string | undefined) => {
 
 export const adminDealFormSchema = z
   .object({
-    title: z.string().trim().min(1, "Title is required."),
+    title: z.string().trim().min(1, getLocalizedMessage("validation126")),
     description: optionalText,
     audience: z.enum(["GUEST", "REGISTERED", "BOTH"]).default("BOTH"),
     restaurantId: optionalText,
@@ -97,7 +98,7 @@ export const adminDealFormSchema = z
       context.addIssue({
         code: "custom",
         path: ["expiresAt"],
-        message: "Expires At must be after Starts At.",
+        message: getLocalizedMessage("validation035"),
       });
     }
 
@@ -106,7 +107,7 @@ export const adminDealFormSchema = z
         context.addIssue({
           code: "custom",
           path: ["dealSourceType"],
-          message: "Fixed item deals must use selected menu items.",
+          message: getLocalizedMessage("validation041"),
         });
       }
 
@@ -114,7 +115,7 @@ export const adminDealFormSchema = z
         context.addIssue({
           code: "custom",
           path: ["scopeMenuItemIds"],
-          message: "Select at least 2 menu items for a fixed item deal.",
+          message: getLocalizedMessage("validation104"),
         });
       }
 
@@ -122,7 +123,7 @@ export const adminDealFormSchema = z
         context.addIssue({
           code: "custom",
           path: ["scopeCategoryIds"],
-          message: "Categories are only available for flexible deals.",
+          message: getLocalizedMessage("validation016"),
         });
       }
 
@@ -134,7 +135,7 @@ export const adminDealFormSchema = z
         context.addIssue({
           code: "custom",
           path: ["dealRequiredQuantity"],
-          message: "Required quantity is required for flexible item deals.",
+          message: getLocalizedMessage("validation096"),
         });
       }
 
@@ -142,7 +143,7 @@ export const adminDealFormSchema = z
         context.addIssue({
           code: "custom",
           path: ["scopeCategoryIds"],
-          message: "Category scope must be empty for item-based deals.",
+          message: getLocalizedMessage("validation019"),
         });
       }
 
@@ -153,7 +154,7 @@ export const adminDealFormSchema = z
       context.addIssue({
         code: "custom",
         path: ["scopeCategoryIds"],
-        message: "Select at least 1 category for a flexible category deal.",
+        message: getLocalizedMessage("validation103"),
       });
     }
 
@@ -166,7 +167,7 @@ export const adminDealFormSchema = z
       context.addIssue({
         code: "custom",
         path: ["scopeCategoryRules"],
-        message: "Each selected category needs an item limit rule.",
+        message: getLocalizedMessage("validation031"),
       });
     }
 
@@ -177,7 +178,7 @@ export const adminDealFormSchema = z
       context.addIssue({
         code: "custom",
         path: ["scopeMenuItemIds"],
-        message: "Menu item scope must be empty for category-based deals.",
+        message: getLocalizedMessage("validation067"),
       });
     }
 
@@ -188,7 +189,7 @@ export const adminDealFormSchema = z
       context.addIssue({
         code: "custom",
         path: ["scopeMenuItemIds"],
-        message: "Select at least one required item for a mixed deal.",
+        message: getLocalizedMessage("validation106"),
       });
     }
 
@@ -198,7 +199,7 @@ export const adminDealFormSchema = z
         context.addIssue({
           code: "custom",
           path: ["scopeCategoryRules", index],
-          message: "An item cannot be both included and excluded.",
+          message: getLocalizedMessage("validation002"),
         });
       }
     });

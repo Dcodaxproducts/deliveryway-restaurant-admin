@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -38,14 +39,14 @@ export const useCreateStaff = (options?: EmployeeMutationOptions) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
       toast.success(
-        options?.messages?.success || "Staff created successfully!",
+        options?.messages?.success || getLocalizedMessage("notification118"),
       );
     },
     onError: (err: any) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to create staff",
+          getLocalizedMessage("notification040"),
       );
     },
   });
@@ -92,7 +93,7 @@ export const useUpdateStaff = (options?: EmployeeMutationOptions) => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
       queryClient.invalidateQueries({ queryKey: ["staff", variables.id] });
       toast.success(
-        options?.messages?.success || "Staff updated successfully!",
+        options?.messages?.success || getLocalizedMessage("notification121"),
       );
     },
 
@@ -100,7 +101,7 @@ export const useUpdateStaff = (options?: EmployeeMutationOptions) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to update staff",
+          getLocalizedMessage("notification098"),
       );
     },
   });
@@ -112,14 +113,14 @@ export const useDeleteStaff = (options?: EmployeeMutationOptions) => {
   return useMutation({
     mutationFn: deleteStaff,
     onSuccess: () => {
-      toast.success(options?.messages?.success || "Staff deleted successfully");
+      toast.success(options?.messages?.success || getLocalizedMessage("notification119"));
       queryClient.invalidateQueries({ queryKey: ["staff"] });
     },
     onError: (err: any) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to delete staff",
+          getLocalizedMessage("notification054"),
       );
     },
   });
@@ -137,14 +138,14 @@ export const useUpdateStaffStatus = (options?: EmployeeMutationOptions) => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
-      toast.success(options?.messages?.success || "Staff status updated");
+      toast.success(options?.messages?.success || getLocalizedMessage("notification120"));
     },
 
     onError: (err: any) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to update status",
+          getLocalizedMessage("notification099"),
       );
     },
   });
@@ -163,13 +164,13 @@ export const useCreateStaffRole = (options?: EmployeeMutationOptions) => {
     mutationFn: createStaffRole,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff-roles"] });
-      toast.success(options?.messages?.success || "Role created successfully!");
+      toast.success(options?.messages?.success || getLocalizedMessage("notification115"));
     },
     onError: (err: any) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to create role",
+          getLocalizedMessage("notification039"),
       );
     },
   });
@@ -213,14 +214,14 @@ export const useUpdateStaffRole = (options?: EmployeeMutationOptions) => {
       queryClient.invalidateQueries({
         queryKey: ["staff-role", variables.id],
       });
-      toast.success(options?.messages?.success || "Role updated successfully!");
+      toast.success(options?.messages?.success || getLocalizedMessage("notification117"));
     },
 
     onError: (err: any) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to update role",
+          getLocalizedMessage("notification097"),
       );
     },
   });
@@ -232,14 +233,14 @@ export const useDeleteStaffRole = (options?: EmployeeMutationOptions) => {
   return useMutation({
     mutationFn: deleteStaffRole,
     onSuccess: () => {
-      toast.success(options?.messages?.success || "Role deleted successfully");
+      toast.success(options?.messages?.success || getLocalizedMessage("notification116"));
       queryClient.invalidateQueries({ queryKey: ["staff-roles"] });
     },
     onError: (err: any) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to delete role",
+          getLocalizedMessage("notification053"),
       );
     },
   });

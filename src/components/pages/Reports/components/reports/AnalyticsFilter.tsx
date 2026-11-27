@@ -1,3 +1,4 @@
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Calendar } from "lucide-react";  // Assuming you're using Lucide icons for the calendar
@@ -25,16 +26,16 @@ const AnalyticsFilter = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => handleSelectFilter("Today")}>
-            Today
+            <LocalizedText messageKey="message384" />
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleSelectFilter("This Week")}>
-            This Week
+            <LocalizedText messageKey="message383" />
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleSelectFilter("This Month")}>
-            This Month
+            <LocalizedText messageKey="message381" />
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleSelectFilter("Last Month")}>
-            Last Month
+            <LocalizedText messageKey="message166" />
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

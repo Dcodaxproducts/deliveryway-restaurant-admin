@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -65,10 +67,10 @@ export function useUpdateContactSubmissionStatus() {
       queryClient.invalidateQueries({
         queryKey: contactSubmissionsQueryKeys.detail(submission.id),
       });
-      toast.success("Contact submission status updated");
+      toast.success(getLocalizedMessage("message077"));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Unable to update submission status"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification143")));
     },
   });
 }
@@ -89,10 +91,10 @@ export function useReplyToContactSubmission() {
       queryClient.invalidateQueries({
         queryKey: contactSubmissionsQueryKeys.detail(submission.id),
       });
-      toast.success("Reply sent to customer");
+      toast.success(getLocalizedMessage("message313"));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Unable to send reply"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification133")));
     },
   });
 }

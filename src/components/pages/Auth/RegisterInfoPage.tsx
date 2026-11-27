@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { useTranslations } from "next-intl";
 
 const RegisterInfoPage = () => {
@@ -10,7 +12,7 @@ const RegisterInfoPage = () => {
       <section className="mx-auto flex min-h-[70vh] max-w-4xl items-center justify-center">
         <div className="w-full rounded-3xl border border-border bg-card p-6 text-center shadow-sm sm:p-10 lg:p-14">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <span className="text-2xl font-bold">A</span>
+            <span className="text-2xl font-bold"><LocalizedText messageKey="message008" /></span>
           </div>
 
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-primary">

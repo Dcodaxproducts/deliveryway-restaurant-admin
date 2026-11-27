@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, PlusCircle, X } from "lucide-react";
@@ -90,7 +92,7 @@ useEffect(() => {
                 disabled={!hasPreviousCategoryPage || fetching}
                 onClick={() => setCategoryPage((page) => Math.max(1, page - 1))}
                 className="h-9 w-9 rounded-[10px] border-gray-200 text-gray-700 hover:bg-white hover:text-gray-900 hover:shadow-md disabled:opacity-40"
-                aria-label="Show previous categories"
+                aria-label={getLocalizedMessage("message357")}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -103,7 +105,7 @@ useEffect(() => {
                   setCategoryPage((page) => page + 1)
                 }
                 className="h-9 w-9 rounded-[10px] border-gray-200 text-gray-700 hover:bg-white hover:text-gray-900 hover:shadow-md disabled:opacity-40"
-                aria-label="Show next categories"
+                aria-label={getLocalizedMessage("message356")}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

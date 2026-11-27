@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { Loader2 } from "lucide-react";
 import type { RefObject } from "react";
 
@@ -30,7 +32,7 @@ export default function InfiniteScrollFooter({
       {isFetching ? (
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <Loader2 size={16} className="animate-spin" />
-          Loading more {label}...
+          <LocalizedText messageKey="message181" /> {label}...
         </div>
       ) : hasMore ? (
         <button
@@ -38,11 +40,11 @@ export default function InfiniteScrollFooter({
           onClick={onLoadMore}
           className="rounded-lg px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
         >
-          Scroll down or click to load more {label}
+          <LocalizedText messageKey="message330" /> {label}
         </button>
       ) : shown > 0 ? (
         <p className="text-sm text-gray-400">
-          Showing {shown} of {total || shown} {label}
+          <LocalizedText messageKey="message358" /> {shown} <LocalizedText messageKey="message252" /> {total || shown} {label}
         </p>
       ) : null}
     </div>

@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import {
   useInfiniteQuery,
   useMutation,
@@ -96,11 +97,11 @@ export const useCreateModifierCategory = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: modifierCategoryKeys.all });
       queryClient.invalidateQueries({ queryKey: ["modifiers"] });
-      toast.success("Modifier category created successfully!");
+      toast.success(getLocalizedMessage("message217"));
     },
     onError: (error: unknown) => {
       toast.error(
-        getApiErrorMessage(error, "Failed to create modifier category")
+        getApiErrorMessage(error, getLocalizedMessage("notification037"))
       );
     },
   });
@@ -120,11 +121,11 @@ export const useUpdateModifierCategory = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: modifierCategoryKeys.all });
       queryClient.invalidateQueries({ queryKey: ["modifiers"] });
-      toast.success("Modifier category updated successfully!");
+      toast.success(getLocalizedMessage("message219"));
     },
     onError: (error: unknown) => {
       toast.error(
-        getApiErrorMessage(error, "Failed to update modifier category")
+        getApiErrorMessage(error, getLocalizedMessage("notification092"))
       );
     },
   });
@@ -138,11 +139,11 @@ export const useDeleteModifierCategory = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: modifierCategoryKeys.all });
       queryClient.invalidateQueries({ queryKey: ["modifiers"] });
-      toast.success("Modifier category deleted successfully!");
+      toast.success(getLocalizedMessage("message218"));
     },
     onError: (error: unknown) => {
       toast.error(
-        getApiErrorMessage(error, "Failed to delete modifier category")
+        getApiErrorMessage(error, getLocalizedMessage("notification051"))
       );
     },
   });

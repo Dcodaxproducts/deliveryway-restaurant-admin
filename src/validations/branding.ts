@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 const themeModes = ["light", "dark", "system"] as const;
@@ -9,7 +10,7 @@ export const hexColorSchema = z
   .string()
   .regex(
     /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
-    "Use a valid #RGB or #RRGGBB color",
+    getLocalizedMessage("validation127"),
   );
 
 export const optionalUrlSchema = z.string().refine((value) => {
@@ -27,11 +28,11 @@ export const optionalUrlSchema = z.string().refine((value) => {
   } catch {
     return false;
   }
-}, "Use an empty value, a relative path, or a valid http/https URL");
+}, getLocalizedMessage("validation129"));
 
 const borderRadiusSchema = z
   .string()
-  .regex(/^(?:0|\d+(?:\.\d+)?)(?:px|rem)$/, "Use a valid px or rem radius");
+  .regex(/^(?:0|\d+(?:\.\d+)?)(?:px|rem)$/, getLocalizedMessage("validation128"));
 
 const supportContactSchema = z.object({
   email: z.string().email().or(z.literal("")).optional(),
@@ -138,14 +139,14 @@ export const restaurantBrandingProfileSchema = z.object({
         /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(
           value.trim().replace(/\.$/, ""),
         ),
-      "Enter a hostname without protocol, path, or port",
+      getLocalizedMessage("validation033"),
     )
     .optional(),
   customDomainVerifiedAt: z.string().nullable().optional(),
-  subdomain: z.string().min(1, "Restaurant subdomain is required"),
+  subdomain: z.string().min(1, getLocalizedMessage("validation100")),
   settings: z.record(z.unknown()).optional(),
-  name: z.string().min(1, "Restaurant name is required"),
-  slug: z.string().min(1, "Restaurant slug is required"),
+  name: z.string().min(1, getLocalizedMessage("validation098")),
+  slug: z.string().min(1, getLocalizedMessage("validation099")),
   logoUrl: optionalUrlSchema,
   coverImage: optionalUrlSchema,
   tagline: z.string(),

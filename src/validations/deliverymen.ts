@@ -1,16 +1,17 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 const phoneRegex = /^[0-9]{10,15}$/;
 
 export const deliverymanSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  phone: z.string().regex(phoneRegex, "Invalid phone number"),
+  firstName: z.string().min(1, getLocalizedMessage("validation039")),
+  lastName: z.string().min(1, getLocalizedMessage("validation060")),
+  email: z.string().email(getLocalizedMessage("validation048")).optional().or(z.literal("")),
+  phone: z.string().regex(phoneRegex, getLocalizedMessage("validation052")),
   vehicleType: z.string().optional(),
   vehicleNumber: z.string().optional(),
-  restaurantId: z.string().min(1, "Restaurant is required"),
-  branchId: z.string().min(1, "Branch is required"),
+  restaurantId: z.string().min(1, getLocalizedMessage("validation097")),
+  branchId: z.string().min(1, getLocalizedMessage("validation014")),
   status: z.enum(["AVAILABLE", "OFFLINE", "BUSY", "INACTIVE"]),
 });
 
@@ -31,7 +32,7 @@ export const deliverymanStatusSchema = z.object({
 export type DeliverymanStatusValues = z.infer<typeof deliverymanStatusSchema>;
 
 export const assignOrderSchema = z.object({
-  orderId: z.string().min(1, "Order ID is required"),
+  orderId: z.string().min(1, getLocalizedMessage("validation075")),
 });
 
 export type AssignOrderValues = z.infer<typeof assignOrderSchema>;

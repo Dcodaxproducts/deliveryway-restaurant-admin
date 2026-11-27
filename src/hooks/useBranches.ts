@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -49,11 +50,11 @@ export const useCreateBranch = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["branches"] });
-      toast.success("Branch created successfully!");
+      toast.success(getLocalizedMessage("message051"));
     },
 
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to create branch"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification026")));
     },
   });
 };
@@ -116,11 +117,11 @@ export const useUpdateBranch = () => {
       queryClient.invalidateQueries({
         queryKey: ["branches", variables.id],
       });
-      toast.success("Branch updated successfully!");
+      toast.success(getLocalizedMessage("message060"));
     },
 
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to update branch"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification074")));
     },
   });
 };
@@ -136,11 +137,11 @@ export const useDeleteBranch = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["branches"] });
-      toast.success("Branch deleted successfully!");
+      toast.success(getLocalizedMessage("message052"));
     },
 
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to delete branch"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification041")));
     },
   });
 };
@@ -156,11 +157,11 @@ export const useForceDeleteBranch = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["branches"] });
-      toast.success("Branch permanently deleted!");
+      toast.success(getLocalizedMessage("message058"));
     },
 
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to force delete branch"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification063")));
     },
   });
 };
@@ -176,11 +177,11 @@ export const useCreateBranchesBulk = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["branches"] });
-      toast.success("Branches created successfully!");
+      toast.success(getLocalizedMessage("message062"));
     },
 
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to create branches"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification027")));
     },
   });
 };
@@ -215,11 +216,11 @@ export const useUpdateOpeningHours = () => {
       queryClient.invalidateQueries({
         queryKey: ["branch-opening-hours", variables.branchId],
       });
-      toast.success("Opening hours updated successfully!");
+      toast.success(getLocalizedMessage("message255"));
     },
 
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to update opening hours"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification095")));
     },
   });
 };
@@ -252,11 +253,11 @@ export const useUpdateDeliveryHours = () => {
       queryClient.invalidateQueries({
         queryKey: ["branches", variables.branchId],
       });
-      toast.success("Delivery hours updated successfully!");
+      toast.success(getLocalizedMessage("message101"));
     },
 
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to update delivery hours"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification078")));
     },
   });
 };
@@ -291,11 +292,11 @@ export const useUpdateBranchDeliveryTime = () => {
       queryClient.invalidateQueries({
         queryKey: ["branches", "edit", variables.branchId],
       });
-      toast.success("Branch delivery time updated successfully!");
+      toast.success(getLocalizedMessage("message053"));
     },
     onError: (error: unknown) => {
       toast.error(
-        getApiErrorMessage(error, "Failed to update branch delivery time"),
+        getApiErrorMessage(error, getLocalizedMessage("notification076")),
       );
     },
   });
@@ -315,11 +316,11 @@ export const useSuspendBranch = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["branches"] });
-      toast.success("Branch suspended successfully!");
+      toast.success(getLocalizedMessage("message059"));
     },
 
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to suspend branch"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification071")));
     },
   });
 };
@@ -332,11 +333,11 @@ export const useActivateBranch = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["branches"] });
-      toast.success("Branch activated successfully!");
+      toast.success(getLocalizedMessage("message048"));
     },
 
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to activate branch"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification011")));
     },
   });
 };
@@ -366,11 +367,11 @@ export const useUpdateBranchImages = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["branches"] });
-      toast.success("Branch images updated!");
+      toast.success(getLocalizedMessage("message055"));
     },
 
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to update images"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification082")));
     },
   });
 };
@@ -393,14 +394,14 @@ export const useUpdateBranchTemporaryClosure = () => {
 
       toast.success(
         variables.payload.isClosed
-          ? "Branch closed temporarily!"
-          : "Branch reopened successfully!",
+          ? getLocalizedMessage("notification002")
+          : getLocalizedMessage("notification003"),
       );
     },
 
     onError: (error: unknown) => {
       toast.error(
-        getApiErrorMessage(error, "Failed to update branch closure status"),
+        getApiErrorMessage(error, getLocalizedMessage("notification075")),
       );
     },
   });
@@ -443,12 +444,12 @@ export const useUpdateBranchHolidayOpeningHours = () => {
         queryKey: ["branches"],
       });
 
-      toast.success("Holiday opening hours updated successfully");
+      toast.success(getLocalizedMessage("message145"));
     },
 
     onError: (error: unknown) => {
       toast.error(
-        getApiErrorMessage(error, "Failed to update holiday opening hours"),
+        getApiErrorMessage(error, getLocalizedMessage("notification081")),
       );
     },
   });
@@ -476,7 +477,7 @@ export const useUpdateBranchForEdit = () => {
       });
     },
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to update branch"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification074")));
     },
   });
 };

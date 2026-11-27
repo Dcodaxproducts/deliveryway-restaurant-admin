@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -16,7 +18,7 @@ const UserProfile = ({ order }: { order: any }) => {
         {/* Avatar */}
         <img
           src={customer?.avatarUrl || "/dummy-user-2.jpg"}
-          alt="User"
+          alt={getLocalizedMessage("message397")}
           className="w-32 h-32 rounded-xl object-cover mb-4"
         />
 

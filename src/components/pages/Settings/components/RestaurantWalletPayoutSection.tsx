@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import {
   Banknote,
   CalendarClock,
@@ -505,7 +507,7 @@ export function RestaurantWalletPayoutSection({
                   label={t("request.bankName")}
                   value={bankName}
                   onChange={setBankName}
-                  placeholder="Bank"
+                  placeholder={getLocalizedMessage("message045")}
                 />
                 <PayoutInput
                   id="payout-title"
@@ -526,7 +528,7 @@ export function RestaurantWalletPayoutSection({
                   label={t("request.iban")}
                   value={iban}
                   onChange={setIban}
-                  placeholder="DE00..."
+                  placeholder={getLocalizedMessage("message093")}
                 />
                 <PayoutInput
                   id="payout-phone"

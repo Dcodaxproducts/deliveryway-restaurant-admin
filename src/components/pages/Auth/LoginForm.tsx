@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
@@ -370,7 +372,7 @@ function LoginFormContent() {
 
 export function LoginForm() {
   return (
-    <Suspense fallback={<div className="py-10 text-center">Loading login...</div>}>
+    <Suspense fallback={<div className="py-10 text-center"><LocalizedText messageKey="message180" /></div>}>
       <LoginFormContent />
     </Suspense>
   );

@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import Link from "next/link";
 import {
   CalendarClock,
@@ -84,8 +86,7 @@ export default function BranchWorkspace() {
 
         {!effectiveBranchId && !loading ? (
           <div className="rounded-[18px] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-700">
-            This account does not have a branch assignment. Please assign a
-            branchId to the branch-admin user from the backend/admin console.
+            <LocalizedText messageKey="message379" />
           </div>
         ) : null}
 
@@ -98,10 +99,10 @@ export default function BranchWorkspace() {
 
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Assigned branch
+                  <LocalizedText messageKey="message042" />
                 </h2>
                 <p className="text-sm text-gray-500">
-                  Restaurant {restaurantId || "-"} • Branch {effectiveBranchId || "-"}
+                  <LocalizedText messageKey="message318" /> {restaurantId || "-"} <LocalizedText messageKey="message002" /> {effectiveBranchId || "-"}
                 </p>
               </div>
             </div>
@@ -114,13 +115,13 @@ export default function BranchWorkspace() {
                 onClick={() => refetch()}
                 disabled={!effectiveBranchId || isBusy}
               >
-                Refresh
+                <LocalizedText messageKey="message308" />
               </Button>
 
               {effectiveBranchId ? (
                 <Link href={`/branches/edit?branchId=${effectiveBranchId}`}>
                   <Button type="button" className="rounded-[12px]">
-                    Edit branch profile
+                    <LocalizedText messageKey="message115" />
                   </Button>
                 </Link>
               ) : null}
@@ -145,7 +146,7 @@ export default function BranchWorkspace() {
             />
           ) : effectiveBranchId ? (
             <div className="rounded-[16px] border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
-              Branch details could not be loaded.
+              <LocalizedText messageKey="message054" />
             </div>
           ) : null}
         </section>

@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -74,10 +76,10 @@ export function useCreateAdminDeal() {
     mutationFn: (payload: AdminDealCreatePayload) => createAdminDeal(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: adminDealsQueryKeys.all });
-      toast.success("Deal created successfully.");
+      toast.success(getLocalizedMessage("message094"));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Unable to create deal."));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification123")));
     },
   });
 }
@@ -100,10 +102,10 @@ export function useUpdateAdminDeal() {
       queryClient.invalidateQueries({
         queryKey: adminDealsQueryKeys.detail(variables.id, variables.params),
       });
-      toast.success("Deal updated successfully.");
+      toast.success(getLocalizedMessage("message096"));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Unable to update deal."));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification136")));
     },
   });
 }
@@ -122,10 +124,10 @@ export function useDeleteAdminDeal() {
       queryClient.invalidateQueries({
         queryKey: adminDealsQueryKeys.stats(variables.id, variables.params),
       });
-      toast.success("Deal deleted successfully.");
+      toast.success(getLocalizedMessage("message095"));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Unable to delete deal."));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification125")));
     },
   });
 }

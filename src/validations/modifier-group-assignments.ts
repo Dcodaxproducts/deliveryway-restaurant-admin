@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 const requiredString = (message: string) => z.string().trim().min(1, message);
@@ -20,13 +21,13 @@ const numberFromInput = ({
       return value;
     },
     z
-      .number({ invalid_type_error: "Must be a number" })
-      .refine((value) => !Number.isNaN(value), "Must be a valid number")
+      .number({ invalid_type_error: getLocalizedMessage("validation069") })
+      .refine((value) => !Number.isNaN(value), getLocalizedMessage("validation070"))
       .superRefine((value, context) => {
         if (integer && !Number.isInteger(value)) {
           context.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Must be an integer",
+            message: getLocalizedMessage("validation071"),
           });
         }
 
@@ -43,7 +44,7 @@ export const modifierGroupAssignmentSchema = z
   .object({
     groupId: requiredString("Modifier group is required"),
     selectionType: z.enum(["SINGLE", "MULTIPLE"], {
-      required_error: "Selection type is required",
+      required_error: getLocalizedMessage("validation107"),
     }),
     minSelect: numberFromInput({
       min: 0,
@@ -62,7 +63,7 @@ export const modifierGroupAssignmentSchema = z
     if (value.maxSelect < value.minSelect) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Maximum selection cannot be less than minimum selection.",
+        message: getLocalizedMessage("validation066"),
         path: ["maxSelect"],
       });
     }
@@ -70,7 +71,7 @@ export const modifierGroupAssignmentSchema = z
     if (value.selectionType === "SINGLE" && value.maxSelect !== 1) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Single-select groups must have a maximum selection of 1.",
+        message: getLocalizedMessage("validation109"),
         path: ["maxSelect"],
       });
     }

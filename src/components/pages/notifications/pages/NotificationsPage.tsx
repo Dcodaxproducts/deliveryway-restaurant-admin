@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import Container from "@/components/common/Container";
 import NotificationsHeader from "@/components/pages/Notifications/components/notifications/header";
 import Notifications from "@/components/pages/Notifications/components/notifications/Notification";
@@ -31,7 +33,7 @@ const NotificationsPage = () => {
   return (
     <Container>
       <NotificationsHeader
-        title="Notifications"
+        title={getLocalizedMessage("message251")}
         description={
           isBranchAdmin
             ? "Manage alerts and customer activity for your assigned branch."

@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import {
   Dialog,
   DialogContent,
@@ -469,7 +471,7 @@ export default function CreateMenuModal({
                         onValueChange={(value) => updateForm("timezone", value)}
                       >
                         <SelectTrigger className="mt-2 h-[44px] min-w-0 rounded-[12px] border-gray-200 bg-white text-left text-sm font-semibold text-gray-900 shadow-none">
-                          <SelectValue placeholder="Asia/Karachi" />
+                          <SelectValue placeholder={getLocalizedMessage("message040")} />
                         </SelectTrigger>
                         <SelectContent className="max-h-[280px] min-w-[var(--radix-select-trigger-width)]">
                           {timezoneOptions.map((timezone) => (

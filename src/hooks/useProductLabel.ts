@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -65,11 +66,11 @@ export const useCreateMenuItemLabel = () => {
         queryKey: ["menu-items"],
       });
 
-      toast.success("Label created successfully");
+      toast.success(getLocalizedMessage("message161"));
     },
 
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to create label");
+      toast.error(error?.response?.data?.message || getLocalizedMessage("notification031"));
     },
   });
 };
@@ -94,11 +95,11 @@ export const useUpdateMenuItemLabel = () => {
         queryKey: ["menu-items"],
       });
 
-      toast.success("Label updated successfully");
+      toast.success(getLocalizedMessage("message163"));
     },
 
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to update label");
+      toast.error(error?.response?.data?.message || getLocalizedMessage("notification083"));
     },
   });
 };
@@ -123,11 +124,11 @@ export const useDeleteMenuItemLabel = () => {
         queryKey: ["menu-items"],
       });
 
-      toast.success("Label deleted successfully");
+      toast.success(getLocalizedMessage("message162"));
     },
 
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to delete label");
+      toast.error(error?.response?.data?.message || getLocalizedMessage("notification045"));
     },
   });
 };

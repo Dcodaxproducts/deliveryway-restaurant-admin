@@ -318,21 +318,21 @@ export function OpeningHoursModalLegacy({
 
           if (!breakTime.startTime || !breakTime.endTime) {
             toast.error(
-              `${formatDayLabel(day.dayOfWeek)} break requires start and end time`
+              `${formatDayLabel(day.dayOfWeek)} ${t("breakRequiresTime")}`
             );
             return false;
           }
 
           if (breakTime.startTime === breakTime.endTime) {
             toast.error(
-              `${formatDayLabel(day.dayOfWeek)} break end time must be after start time`
+              `${formatDayLabel(day.dayOfWeek)} ${t("breakEndAfterStart")}`
             );
             return false;
           }
 
           if (!isBreakWithinOpeningWindow(breakTime, day.openTime, day.closeTime)) {
             toast.error(
-              `${formatDayLabel(day.dayOfWeek)} break must be within opening hours`
+              `${formatDayLabel(day.dayOfWeek)} ${t("breakWithinHours")}`
             );
             return false;
           }

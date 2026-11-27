@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -136,7 +138,7 @@ export default function BranchDetailsPage() {
           href="/branches"
           className="inline-flex items-center gap-2 text-sm font-semibold text-primary"
         >
-          <ArrowLeft size={17} aria-hidden="true" /> Back to branches
+          <ArrowLeft size={17} aria-hidden="true" /> <LocalizedText messageKey="message044" />
         </Link>
         <div className="mt-6 rounded-[18px] border border-red-100 bg-red-50 px-6 py-10 text-center text-sm text-red-700">
           {getApiErrorMessage(branchQuery.error, "Unable to load this branch.")}
@@ -169,7 +171,7 @@ export default function BranchDetailsPage() {
           href="/branches"
           className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-slate-600 transition-colors hover:text-primary"
         >
-          <ArrowLeft size={17} aria-hidden="true" /> Back to branches
+          <ArrowLeft size={17} aria-hidden="true" /> <LocalizedText messageKey="message044" />
         </Link>
         <Button
           asChild
@@ -268,7 +270,7 @@ export default function BranchDetailsPage() {
             <div className="space-y-6">
               <section className="rounded-[18px] bg-white p-5 ring-1 ring-slate-200 sm:p-6">
                 <h2 className="text-lg font-semibold tracking-tight text-slate-950">
-                  Branch information
+                  <LocalizedText messageKey="message056" />
                 </h2>
                 <dl className="mt-3">
                   <DetailRow label={t("branchName")} value={branch.name} />
@@ -299,13 +301,13 @@ export default function BranchDetailsPage() {
 
               <section className="rounded-[18px] bg-white p-5 ring-1 ring-slate-200 sm:p-6">
                 <h2 className="text-lg font-semibold tracking-tight text-slate-950">
-                  Manager & contact
+                  <LocalizedText messageKey="message191" />
                 </h2>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <div className="rounded-[14px] bg-slate-50 p-4">
                     <Mail className="size-5 text-primary" aria-hidden="true" />
                     <p className="mt-3 text-xs font-medium text-slate-500">
-                      Email
+                      <LocalizedText messageKey="message118" />
                     </p>
                     <p className="mt-1 break-all text-sm font-semibold text-slate-900">
                       {text(manager.email) || commonT("noData")}
@@ -314,7 +316,7 @@ export default function BranchDetailsPage() {
                   <div className="rounded-[14px] bg-slate-50 p-4">
                     <Phone className="size-5 text-primary" aria-hidden="true" />
                     <p className="mt-3 text-xs font-medium text-slate-500">
-                      Phone
+                      <LocalizedText messageKey="message279" />
                     </p>
                     <p className="mt-1 text-sm font-semibold text-slate-900">
                       {text(managerProfile.phone) || commonT("noData")}

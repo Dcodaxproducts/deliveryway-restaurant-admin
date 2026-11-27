@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -71,10 +73,10 @@ export const useUpdateCustomerAppPrivacyPolicy = () => {
       queryClient.invalidateQueries({
         queryKey: customerAppContentKeys.publicPrivacyPolicy(variables.restaurantId),
       });
-      toast.success("Privacy policy updated successfully.");
+      toast.success(getLocalizedMessage("message292"));
     },
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to update privacy policy"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification096")));
     },
   });
 };
@@ -105,10 +107,10 @@ export const useUpdateCustomerAppAboutUs = () => {
       queryClient.invalidateQueries({
         queryKey: customerAppContentKeys.publicAboutUs(variables.restaurantId),
       });
-      toast.success("About Us content updated successfully.");
+      toast.success(getLocalizedMessage("message011"));
     },
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to update About Us content"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification072")));
     },
   });
 };

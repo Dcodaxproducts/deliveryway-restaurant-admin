@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useState } from "react";
 import {
   Dialog,
@@ -40,7 +43,7 @@ export default function ImportModal({
       const selected = event.target.files[0];
 
       if (selected.size > 2 * 1024 * 1024) {
-        toast.error("File must be less than 2MB");
+        toast.error(getLocalizedMessage("message129"));
         return;
       }
 
@@ -115,13 +118,13 @@ export default function ImportModal({
   const handleImport = async () => {
     try {
       if (!file) {
-        toast.error("Please select a file");
+        toast.error(getLocalizedMessage("message282"));
         return;
       }
 
       const restaurantId = user?.restaurantId;
       if (!restaurantId) {
-        toast.error("Restaurant not found");
+        toast.error(getLocalizedMessage("message321"));
         return;
       }
 
@@ -138,7 +141,7 @@ export default function ImportModal({
       setFile(null);
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Import failed");
+      toast.error(error instanceof Error ? error.message : getLocalizedMessage("notification103"));
     }
   };
 
@@ -203,18 +206,18 @@ export default function ImportModal({
             >
               <img
                 src="/excel.png"
-                alt="Excel"
+                alt={getLocalizedMessage("message121")}
                 className="w-[64px] h-[64px]"
               />
             </div>
 
             <p className="mt-4 text-xs text-gray-500 text-center">
-              Format : csv | Size : Max 2 MB
+              <LocalizedText messageKey="message133" />
             </p>
 
             {file && (
               <p className="mt-2 text-xs text-green-600">
-                Selected: {file.name}
+                <LocalizedText messageKey="message349" /> {file.name}
               </p>
             )}
 
@@ -232,11 +235,11 @@ export default function ImportModal({
             className="mt-6 flex items-center justify-center flex-col gap-2 rounded-[12px] bg-[#EEF6FF] px-4 py-4 text-sm text-primary cursor-pointer border border-[#C0E1FC]"
           >
             <span className="text-gray-500">
-              If you don't know the file format
+              <LocalizedText messageKey="message147" />
             </span>
 
             <span className="font-semibold text-[#4153C4] underline">
-              Download Empty File
+              <LocalizedText messageKey="message107" />
             </span>
           </div>
         </div>
@@ -247,7 +250,7 @@ export default function ImportModal({
             variant="outline"
             className="px-6 py-2 rounded-[10px]"
           >
-            Cancel
+            <LocalizedText messageKey="message064" />
           </Button>
 
           <Button

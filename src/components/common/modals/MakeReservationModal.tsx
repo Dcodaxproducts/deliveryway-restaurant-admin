@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -110,12 +113,12 @@ export default function MakeReservationModal({
   const handleSubmit = async () => {
     try {
       if (!selectedBranch || !selectedCustomer) {
-        toast.error("Please select branch and customer");
+        toast.error(getLocalizedMessage("message283"));
         return;
       }
 
       if (!reservationDate || !startTime || !guestCount) {
-        toast.error("Please fill all required fields");
+        toast.error(getLocalizedMessage("message281"));
         return;
       }
 
@@ -136,17 +139,17 @@ export default function MakeReservationModal({
       });
 
       if (res?.error) {
-        toast.error(res.error);
+        toast.error(getLocalizedMessage("message364"));
         return;
       }
 
-      toast.success("Reservation created successfully");
+      toast.success(getLocalizedMessage("message315"));
 
       onOpenChange(false);
       router.push("/orders?tab=reservation");
     } catch (err) {
       void err;
-      toast.error("Something went wrong");
+      toast.error(getLocalizedMessage("message364"));
     }
   };
 
@@ -157,13 +160,13 @@ export default function MakeReservationModal({
         onClick={(e) => e.stopPropagation()}
       >
         <PosModalHeader
-          title="Make Reservation"
+          title={getLocalizedMessage("message190")}
           description="Create a new Reservation by filling necessary info from here"
         />
 
         <Collapsible defaultOpen className="mt-6">
           <CollapsibleTrigger className="flex items-center justify-between w-full text-[16px] text-[#909090]">
-            Reservation Information
+            <LocalizedText messageKey="message316" />
             <ChevronDown />
           </CollapsibleTrigger>
 
@@ -196,7 +199,7 @@ export default function MakeReservationModal({
               fetchOptions={fetchBranches}
               labelKey="name"
               valueKey="id"
-              placeholder="Select branch"
+              placeholder={getLocalizedMessage("message341")}
             />
 
             {/* TABLE TYPE */}
@@ -210,7 +213,7 @@ export default function MakeReservationModal({
             </div>
 
             <FormSelect
-              placeholder="Select Table"
+              placeholder={getLocalizedMessage("message347")}
               options={["Table 1", "Table 2", "Table 3"]}
             />
 
@@ -224,7 +227,7 @@ export default function MakeReservationModal({
 
         <div className="mt-6">
           <label className="block mb-2 text-[16px] text-black">
-            Customer<span className="text-red-500">*</span>
+            <LocalizedText messageKey="message087" /><span className="text-red-500">*</span>
           </label>
 
         <AsyncSelect
@@ -233,7 +236,7 @@ export default function MakeReservationModal({
   fetchOptions={fetchCustomers}
   labelKey="fullName"
   valueKey="id"
-  placeholder="Select customer"
+  placeholder={getLocalizedMessage("message343")}
 />
         </div>
 

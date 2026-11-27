@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { useState } from "react";
 import {
   AlertTriangle,
@@ -460,7 +462,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
               ) : null}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-semibold text-gray-800">
-                  {quantity}×{" "}
+                  {quantity}<LocalizedText messageKey="message003" />{" "}
                   {getIncludedDealItemName(includedItem, t("itemFallback"))}
                 </p>
                 {modifiers.length ? (
@@ -765,7 +767,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                                   {formatMoney(item.lineTotal, primaryCurrency)}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                  {item.quantity ?? 0} x{" "}
+                                  {item.quantity ?? 0} <LocalizedText messageKey="message410" />{" "}
                                   {formatMoney(item.unitPrice, primaryCurrency)}
                                 </p>
                               </div>
@@ -778,7 +780,7 @@ const OrderDetailsMain = ({ order }: { order: OrderDetails }) => {
                                     key={`${modifier.name}-${modifierIndex}`}
                                     className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-100"
                                   >
-                                    {modifier.name} x{modifier.quantity ?? 1}
+                                    {modifier.name} <LocalizedText messageKey="message410" />{modifier.quantity ?? 1}
                                   </span>
                                 ))}
                               </div>

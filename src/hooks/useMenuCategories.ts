@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import {
   useInfiniteQuery,
   useMutation,
@@ -42,11 +43,11 @@ export const useCreateMenuCategory = () => {
     mutationFn: (payload: MenuCategoryValues) => createMenuCategory(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menu-categories"] });
-      toast.success("Menu category created successfully!");
+      toast.success(getLocalizedMessage("message195"));
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to create menu category"
+        err?.response?.data?.message || getLocalizedMessage("notification033")
       );
     },
   });
@@ -139,11 +140,11 @@ export const useUpsertMenuCategoryBranchOverride = () => {
       upsertMenuCategoryBranchOverride(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menu-categories"] });
-      toast.success("Branch category override saved");
+      toast.success(getLocalizedMessage("message050"));
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to save branch category override"
+        err?.response?.data?.message || getLocalizedMessage("notification069")
       );
     },
   });
@@ -157,12 +158,12 @@ export const useBulkCreateMenuCategories = () => {
       bulkCreateMenuCategories(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menu-categories"] });
-      toast.success("Menu categories created successfully!");
+      toast.success(getLocalizedMessage("message193"));
     },
     onError: (err: any) => {
       toast.error(
         err?.response?.data?.message ||
-          "Failed to bulk create menu categories"
+          getLocalizedMessage("notification024")
       );
     },
   });
@@ -185,12 +186,12 @@ export const useUpdateMenuCategory = () => {
       queryClient.invalidateQueries({
         queryKey: ["menu-category", variables.id],
       });
-      toast.success("Menu category updated successfully!");
+      toast.success(getLocalizedMessage("message197"));
     },
 
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to update menu category"
+        err?.response?.data?.message || getLocalizedMessage("notification088")
       );
     },
   });
@@ -203,11 +204,11 @@ export const useDeleteMenuCategory = () => {
     mutationFn: (id: string) => deleteMenuCategory(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menu-categories"] });
-      toast.success("Menu category deleted successfully!");
+      toast.success(getLocalizedMessage("message196"));
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to delete menu category"
+        err?.response?.data?.message || getLocalizedMessage("notification047")
       );
     },
   });
@@ -239,12 +240,12 @@ export const useReorderMenuCategories = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menu-categories"] });
       queryClient.invalidateQueries({ queryKey: ["categories"] });
-      toast.success("Menu categories reordered successfully");
+      toast.success(getLocalizedMessage("message194"));
     },
 
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || "Failed to reorder menu categories"
+        error?.response?.data?.message || getLocalizedMessage("notification067")
       );
     },
   });

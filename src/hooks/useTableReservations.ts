@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -54,10 +56,10 @@ export const useUpdateTableReservationStatus = () => {
       queryClient.invalidateQueries({
         queryKey: ["table-reservations", "detail", reservation.id],
       });
-      toast.success("Reservation status updated");
+      toast.success(getLocalizedMessage("message317"));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Unable to update reservation status"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification142")));
     },
   });
 };

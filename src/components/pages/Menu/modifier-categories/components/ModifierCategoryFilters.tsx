@@ -1,3 +1,5 @@
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -27,7 +29,7 @@ export default function ModifierCategoryFilters({
         />
 
         <input
-          placeholder="Search categories..."
+          placeholder={getLocalizedMessage("message333")}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
           className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -41,7 +43,7 @@ export default function ModifierCategoryFilters({
           onChange={(event) => onInactiveChange(event.target.checked)}
           className="size-4 rounded border-gray-300 text-primary focus:ring-primary"
         />
-        Show inactive
+        <LocalizedText messageKey="message355" />
       </label>
 
       <Button
@@ -49,7 +51,7 @@ export default function ModifierCategoryFilters({
         disabled={disabled}
         className="h-[44px] rounded-[14px] bg-primary px-5 text-white shadow-sm disabled:opacity-60"
       >
-        Search
+        <LocalizedText messageKey="message331" />
       </Button>
     </div>
   );

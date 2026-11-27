@@ -1,3 +1,5 @@
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import {
   Table,
   TableBody,
@@ -17,7 +19,7 @@ const OrdersTable = () => {
   if (!ordersReport || ordersReport.length === 0) {
     return (
       <EmptyState
-        title="Looks like there are no orders yet!"
+        title={getLocalizedMessage("message189")}
         description="You haven’t received any orders yet."
       />
     );
@@ -48,18 +50,18 @@ const OrdersTable = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-y-2 text-sm">
-              <div className="text-gray-500">Order ID</div>
+              <div className="text-gray-500"><LocalizedText messageKey="message261" /></div>
               <div className="text-right font-medium">{order.id}</div>
 
-              <div className="text-gray-500">Order Amount</div>
+              <div className="text-gray-500"><LocalizedText messageKey="message260" /></div>
               <div className="text-right font-semibold text-green-600">
                 {order.orderAmount}
               </div>
 
-              <div className="text-gray-500">Discount</div>
+              <div className="text-gray-500"><LocalizedText messageKey="message106" /></div>
               <div className="text-right">{order.discountAmount}</div>
 
-              <div className="text-gray-500">Tax</div>
+              <div className="text-gray-500"><LocalizedText messageKey="message372" /></div>
               <div className="text-right">{order.taxAmount}</div>
             </div>
           </div>
@@ -73,12 +75,12 @@ const OrdersTable = () => {
               <TableHead className="w-[50px]">
                 <Checkbox />
               </TableHead>
-              <TableHead className="w-[50px] font-semibold">SL</TableHead>
+              <TableHead className="w-[50px] font-semibold"><LocalizedText messageKey="message362" /></TableHead>
               <SortableHeader label="Order ID" />
               <SortableHeader label="Total Order Amount" />
               <SortableHeader label="Total Discount Amount" />
               <SortableHeader label="Total Tax Amount" />
-              <TableHead className="text-center">Actions</TableHead>
+              <TableHead className="text-center"><LocalizedText messageKey="message013" /></TableHead>
             </TableRow>
           </TableHeader>
 

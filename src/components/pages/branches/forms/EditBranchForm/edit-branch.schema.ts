@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 import { parseLocalizedDecimal } from "@/lib/decimal";
 import { validationMessages } from "@/lib/validation";
@@ -50,7 +51,7 @@ export const serviceChargeSchema = z
     if (serviceCharge.value <= 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Service charge value must be greater than 0 when enabled",
+        message: getLocalizedMessage("validation108"),
         path: ["value"],
       });
       return;
@@ -59,7 +60,7 @@ export const serviceChargeSchema = z
     if (serviceCharge.type === "PERCENTAGE" && serviceCharge.value > 100) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Percentage service charge cannot exceed 100",
+        message: getLocalizedMessage("validation082"),
         path: ["value"],
       });
     }
@@ -81,7 +82,7 @@ export const deliveryConfigSchema = z.object({
   if (!deliveryConfig.postalCodeRules.length) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Please add at least one postal code delivery rule",
+      message: getLocalizedMessage("validation087"),
       path: ["postalCodeRules"],
     });
     return;
@@ -95,7 +96,7 @@ export const deliveryConfigSchema = z.object({
     if (seenPostalCodes.has(postalCode)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Duplicate postal codes are not allowed",
+        message: getLocalizedMessage("validation030"),
         path: ["postalCodeRules", index, "postalCode"],
       });
       return;

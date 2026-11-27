@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -190,7 +192,7 @@ export function useOrderNotificationPolling() {
         }
       }
 
-      toast.success(orders("newOrderReceived", { order: orderLabel }), {
+      toast.success(orders(getLocalizedMessage("notification112"), { order: orderLabel }), {
         id: getNewOrderToastId(orderId),
         description: orders("ordersUpdatedAutomatically"),
         duration: Number.POSITIVE_INFINITY,
@@ -241,7 +243,7 @@ export function useOrderNotificationPolling() {
         orderId: order.id,
         restaurantId: order.restaurantId ?? restaurantId,
         branchId: order.branchId ?? scopeBranchId,
-      }).catch(() => toast.error(orders("newOrderAutoPrintFailed")));
+      }).catch(() => toast.error(orders(getLocalizedMessage("notification111"))));
     }
 
     const newOrders = updateOrderDiscoverySnapshot(
@@ -265,7 +267,7 @@ export function useOrderNotificationPolling() {
           orderId: order.id,
           restaurantId,
           branchId: order.branchId ?? scopeBranchId,
-        }).catch(() => toast.error(orders("acceptedOrderAutoPrintFailed")));
+        }).catch(() => toast.error(orders(getLocalizedMessage("notification001"))));
       }
       if (!["PAYMENT_PENDING", "PLACED"].includes(order.status)) {
         silenceOrderAlert(order.id);

@@ -1,13 +1,14 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 const permissionSchema = z.object({
-  access: z.string().min(1, "Access is required"),
-  operations: z.array(z.string().min(1)).min(1, "At least one operation is required"),
+  access: z.string().min(1, getLocalizedMessage("validation001")),
+  operations: z.array(z.string().min(1)).min(1, getLocalizedMessage("validation009")),
 });
 
 export const staffRoleSchema = z.object({
-  name: z.string().min(2, "Role name is required"),
-  permissions: z.array(permissionSchema).min(1, "At least one permission is required"),
+  name: z.string().min(2, getLocalizedMessage("validation101")),
+  permissions: z.array(permissionSchema).min(1, getLocalizedMessage("validation010")),
   description: z.string().max(300).optional(),
 });
 
@@ -15,13 +16,13 @@ export type StaffRoleValues = z.infer<typeof staffRoleSchema>;
 export type StaffPermissionValues = z.infer<typeof permissionSchema>;
 
 export const staffSchema = z.object({
-  email: z.string().email("Invalid email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  staffRoleId: z.string().min(1, "Staff role is required"),
-  phone: z.string().min(10, "Invalid phone number").optional(),
-  bio: z.string().max(500, "Bio must be under 500 characters").optional(),
+  email: z.string().email(getLocalizedMessage("validation048")),
+  password: z.string().min(8, getLocalizedMessage("validation080")),
+  firstName: z.string().min(1, getLocalizedMessage("validation039")),
+  lastName: z.string().min(1, getLocalizedMessage("validation060")),
+  staffRoleId: z.string().min(1, getLocalizedMessage("validation112")),
+  phone: z.string().min(10, getLocalizedMessage("validation052")).optional(),
+  bio: z.string().max(500, getLocalizedMessage("validation013")).optional(),
   isActive: z.boolean().default(true),
   restaurantId: z.string().optional(),
   branchId: z.string().optional(),

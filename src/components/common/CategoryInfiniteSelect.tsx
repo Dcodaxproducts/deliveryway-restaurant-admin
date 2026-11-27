@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Loader2, Search, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -135,7 +138,7 @@ export default function CategoryInfiniteSelect({
                 }
               }}
               className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-              aria-label="Clear category filter"
+              aria-label={getLocalizedMessage("message070")}
             >
               <X size={14} />
             </span>
@@ -152,7 +155,7 @@ export default function CategoryInfiniteSelect({
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search categories..."
+                placeholder={getLocalizedMessage("message333")}
                 className="min-w-0 flex-1 bg-transparent text-sm outline-none"
               />
             </div>
@@ -182,13 +185,13 @@ export default function CategoryInfiniteSelect({
             {isLoading || isFetchingNextPage ? (
               <div className="flex items-center justify-center gap-2 px-3 py-3 text-sm text-gray-500">
                 <Loader2 size={15} className="animate-spin" />
-                Loading categories...
+                <LocalizedText messageKey="message176" />
               </div>
             ) : null}
 
             {!isLoading && categories.length === 0 ? (
               <div className="px-3 py-4 text-center text-sm text-gray-400">
-                No categories found
+                <LocalizedText messageKey="message238" />
               </div>
             ) : null}
           </div>
@@ -229,7 +232,7 @@ function CategoryOption({
           <span className="block truncate font-medium">{label}</span>
           {typeof category?.itemCount === "number" ? (
             <span className="block text-[11px] text-gray-400">
-              {category.itemCount} items
+              {category.itemCount} <LocalizedText messageKey="message159" />
             </span>
           ) : null}
         </span>

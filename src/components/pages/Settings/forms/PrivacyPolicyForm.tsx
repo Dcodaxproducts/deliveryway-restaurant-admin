@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import {
   useEffect,
   useMemo,
@@ -454,7 +457,7 @@ export function RichPolicyEditor({
             onChange={(event) =>
               runCommand({ type: "command", command: "foreColor", value: event.target.value })
             }
-            aria-label="Custom text color"
+            aria-label={getLocalizedMessage("message086")}
           />
         </label>
 
@@ -468,10 +471,10 @@ export function RichPolicyEditor({
               event.target.value = "";
             }}
             className="cursor-pointer bg-transparent text-sm font-semibold text-[#475467] outline-none disabled:cursor-not-allowed"
-            aria-label="Font size"
+            aria-label={getLocalizedMessage("message132")}
           >
             <option value="" disabled>
-              Font size
+              <LocalizedText messageKey="message132" />
             </option>
             {editorFontSizes.map((option) => (
               <option key={option.value} value={option.value}>
@@ -490,7 +493,7 @@ export function RichPolicyEditor({
             onChange={(event) =>
               runCommand({ type: "command", command: "hiliteColor", value: event.target.value })
             }
-            aria-label="Highlight color"
+            aria-label={getLocalizedMessage("message142")}
           />
         </label>
 
@@ -506,9 +509,9 @@ export function RichPolicyEditor({
                 insertLink();
               }
             }}
-            placeholder="Paste link"
+            placeholder={getLocalizedMessage("message270")}
             className="h-9 w-28 min-w-0 bg-transparent text-sm text-[#475467] outline-none placeholder:text-[#98A2B3] sm:w-40"
-            aria-label="Policy link URL"
+            aria-label={getLocalizedMessage("message287")}
           />
           <button
             type="button"
@@ -516,7 +519,7 @@ export function RichPolicyEditor({
             disabled={disabled || !linkUrl.trim()}
             className="inline-flex h-8 items-center rounded-full bg-[#101828] px-3 text-xs font-semibold text-white transition hover:bg-[#344054] disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
           >
-            Add
+            <LocalizedText messageKey="message015" />
           </button>
         </div>
       </div>
@@ -646,7 +649,7 @@ function AboutImageUpload({
     if (!file || uploading) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Please upload a valid image file.");
+      toast.error(getLocalizedMessage("message284"));
       return;
     }
 
@@ -715,9 +718,9 @@ function AboutImageUpload({
               style={{ backgroundImage: previewBackgroundImage }}
             />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent px-4 py-3">
-              <p className="text-sm font-semibold text-white">Image selected</p>
+              <p className="text-sm font-semibold text-white"><LocalizedText messageKey="message148" /></p>
               <p className="text-xs text-white/80">
-                Drop another image here to replace it.
+                <LocalizedText messageKey="message113" />
               </p>
             </div>
             <Button
@@ -751,12 +754,12 @@ function AboutImageUpload({
               )}
             </div>
             <p className="mt-4 text-sm font-semibold text-[#101828]">
-              Drag & drop image here
+              <LocalizedText messageKey="message112" />
             </p>
             <p className="mt-1 text-xs text-[#667085]">
-              or <span className="font-medium text-[#C1121F]">click to browse</span>
+              <LocalizedText messageKey="message257" /> <span className="font-medium text-[#C1121F]"><LocalizedText messageKey="message073" /></span>
             </p>
-            <p className="mt-1 text-[11px] text-[#98A2B3]">PNG, JPG, WEBP</p>
+            <p className="mt-1 text-[11px] text-[#98A2B3]"><LocalizedText messageKey="message285" /></p>
           </div>
         )}
       </div>
@@ -794,7 +797,7 @@ function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps
 
   return (
     <div className="space-y-4">
-      <EditableSectionCard icon={ImageIcon} title="Hero / banner">
+      <EditableSectionCard icon={ImageIcon} title={getLocalizedMessage("message141")}>
         <div className="grid gap-4 lg:grid-cols-2">
           <AboutImageUpload
             label="Hero image"
@@ -826,7 +829,7 @@ function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps
         </div>
       </EditableSectionCard>
 
-      <EditableSectionCard icon={FileText} title="Our Story">
+      <EditableSectionCard icon={FileText} title={getLocalizedMessage("message267")}>
         <div className="grid gap-4 lg:grid-cols-2">
           <AboutImageUpload
             label="Story image"
@@ -857,7 +860,7 @@ function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps
         />
       </EditableSectionCard>
 
-      <EditableSectionCard icon={Target} title="Mission / Vision / Values">
+      <EditableSectionCard icon={Target} title={getLocalizedMessage("message213")}>
         <div className="grid gap-4 lg:grid-cols-3">
           {value.missionVisionValues.map((item, index) => (
             <CardFields
@@ -870,7 +873,7 @@ function AboutPageSectionEditor({ value, onChange }: AboutPageSectionEditorProps
         </div>
       </EditableSectionCard>
 
-      <EditableSectionCard icon={MousePointerClick} title="Why Choose Us">
+      <EditableSectionCard icon={MousePointerClick} title={getLocalizedMessage("message409")}>
         <div className="grid gap-4 lg:grid-cols-3">
           {value.whyChooseUs.map((item, index) => (
             <CardFields

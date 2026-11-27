@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { SlidersHorizontal } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
@@ -63,18 +65,17 @@ export default function VariationModifierPriceMatrix({
 
           <div className="min-w-0">
             <h3 className="text-base font-semibold text-gray-900">
-              Variation Modifier Prices
+              <LocalizedText messageKey="message400" />
             </h3>
             <p className="mt-1 text-sm text-gray-600">
-              Set custom modifier prices for each variation. Empty cells use
-              the default modifier price.
+              <LocalizedText messageKey="message350" />
             </p>
           </div>
         </div>
       </div>
 
       <p className="text-sm text-gray-500">
-        Leave empty to use the default modifier price.
+        <LocalizedText messageKey="message169" />
       </p>
 
       <div className="w-full min-w-0 overflow-x-auto rounded-[18px] border border-gray-100 bg-white shadow-sm [scrollbar-width:thin]">
@@ -82,7 +83,7 @@ export default function VariationModifierPriceMatrix({
           <thead>
             <tr className="bg-[#FAFAFA]">
               <th className="sticky left-0 z-10 w-[220px] border-b border-gray-100 bg-[#FAFAFA] p-4 text-sm font-semibold text-gray-900">
-                Variation
+                <LocalizedText messageKey="message399" />
               </th>
               {modifiers.map((modifier) => (
                 <th
@@ -111,7 +112,7 @@ export default function VariationModifierPriceMatrix({
                   </span>
                   {variation.price !== null && variation.price !== undefined ? (
                     <span className="mt-1 block text-xs font-normal text-gray-500">
-                      Base {variation.price}
+                      <LocalizedText messageKey="message046" /> {variation.price}
                     </span>
                   ) : null}
                 </th>
@@ -171,11 +172,10 @@ function MatrixEmptyState({ message }: { message: string }) {
           </div>
           <div className="min-w-0">
             <h3 className="text-base font-semibold text-gray-900">
-              Variation Modifier Prices
+              <LocalizedText messageKey="message400" />
             </h3>
             <p className="mt-1 text-sm text-gray-600">
-              Set custom modifier prices for each variation. Empty cells use
-              the default modifier price.
+              <LocalizedText messageKey="message350" />
             </p>
           </div>
         </div>

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { getApiErrorMessage } from "@/lib/errors";
 
 describe("getApiErrorMessage", () => {
-  it("returns the API validation message for actionable form feedback", () => {
+  it("does not expose raw backend validation messages", () => {
     const error = {
       response: {
         data: {
@@ -18,7 +18,7 @@ describe("getApiErrorMessage", () => {
     };
 
     expect(getApiErrorMessage(error, "Something went wrong.")).toBe(
-      "property selectedMenuItems should not exist",
+      "Something went wrong.",
     );
   });
 });

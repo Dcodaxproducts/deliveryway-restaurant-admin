@@ -1,3 +1,4 @@
+import { LocalizedText } from "@/components/common/LocalizedText";
 import type { FieldPath, UseFormRegister, UseFormSetValue } from "react-hook-form";
 import { Palette } from "lucide-react";
 
@@ -175,26 +176,26 @@ export default function ColorSchemeSection({ register, setValue, values, getErro
     <div className={BRANDING_PANEL_SPACED_CLASS}>
       <div className="flex items-center gap-3">
         <Palette className="text-gray-500" />
-        <h3 className={BRANDING_SECTION_TITLE_CLASS}>Color Scheme</h3>
+        <h3 className={BRANDING_SECTION_TITLE_CLASS}><LocalizedText messageKey="message075" /></h3>
       </div>
       <div className={colorGroupClassName}>
         <div>
-          <h4 className={colorGroupTitleClassName}>Light Theme Colors</h4>
-          <p className={colorGroupDescriptionClassName}>Used when storefront theme mode is Light.</p>
+          <h4 className={colorGroupTitleClassName}><LocalizedText messageKey="message171" /></h4>
+          <p className={colorGroupDescriptionClassName}><LocalizedText messageKey="message396" /></p>
         </div>
         {lightColorFields.map(renderColorField)}
       </div>
       <div className={colorGroupClassName}>
         <div>
-          <h4 className={colorGroupTitleClassName}>Dark Theme Colors</h4>
-          <p className={colorGroupDescriptionClassName}>Used when storefront theme mode is Dark, or System while the customer prefers dark mode.</p>
+          <h4 className={colorGroupTitleClassName}><LocalizedText messageKey="message090" /></h4>
+          <p className={colorGroupDescriptionClassName}><LocalizedText messageKey="message395" /></p>
         </div>
         {darkColorFields.map(renderColorField)}
       </div>
       <div className={colorGroupClassName}>
         <div>
-          <h4 className={colorGroupTitleClassName}>App & Checkout Colors</h4>
-          <p className={colorGroupDescriptionClassName}>Shared mobile app and checkout state colors.</p>
+          <h4 className={colorGroupTitleClassName}><LocalizedText messageKey="message036" /></h4>
+          <p className={colorGroupDescriptionClassName}><LocalizedText messageKey="message354" /></p>
         </div>
         {appColorFields.map(renderColorField)}
       </div>

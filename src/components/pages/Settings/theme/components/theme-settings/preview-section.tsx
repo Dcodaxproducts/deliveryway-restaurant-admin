@@ -1,3 +1,4 @@
+import { LocalizedText } from "@/components/common/LocalizedText";
 import type { BrandingThemeMode } from "@/types/branding";
 import type { BrandingFormValues } from "@/validations/branding";
 
@@ -46,7 +47,7 @@ export default function PreviewSection({ values }: PreviewSectionProps) {
   return (
     <div className={BRANDING_PANEL_CLASS}>
       <div className="mb-[24px] flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-base text-dark">Preview</h3>
+        <h3 className="text-base text-dark"><LocalizedText messageKey="message291" /></h3>
         <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           {getPreviewModeLabel(theme.mode)}
         </span>
@@ -98,19 +99,19 @@ export default function PreviewSection({ values }: PreviewSectionProps) {
             className="flex h-[41px] items-center justify-center px-5 text-sm text-white transition hover:-translate-y-0.5 hover:shadow-md"
             style={{ backgroundColor: activeTheme.primaryColor, borderRadius: buttonRadius }}
           >
-            Featured
+            <LocalizedText messageKey="message128" />
           </span>
           <span
             className="flex h-[41px] items-center justify-center px-5 text-sm text-white transition hover:-translate-y-0.5 hover:shadow-md"
             style={{ backgroundColor: activeTheme.accentColor, borderRadius: buttonRadius }}
           >
-            New
+            <LocalizedText messageKey="message234" />
           </span>
           <span
             className="flex h-[41px] items-center justify-center border px-5 text-sm transition hover:-translate-y-0.5 hover:shadow-md"
             style={{ borderColor: activeTheme.secondaryColor, borderRadius: buttonRadius, color: activeTheme.secondaryColor }}
           >
-            Popular
+            <LocalizedText messageKey="message288" />
           </span>
         </div>
       </div>

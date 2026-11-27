@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -514,7 +516,7 @@ export default function AutoPrintingSettings({
               className="h-11 w-full appearance-none rounded-[10px] border border-[#BBBBBB] px-4 pr-12 text-sm text-gray-500 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             >
               <option value="">{t("selectConnectionType")}</option>
-              <option value="USB">USB</option>
+              <option value="USB"><LocalizedText messageKey="message392" /></option>
               <option value="LAN">{t("networkIp")}</option>
               <option value="BLUETOOTH">{t("bluetooth")}</option>
               <option value="CLOUD">{t("printQueue")}</option>
@@ -595,13 +597,13 @@ export default function AutoPrintingSettings({
             }
             className="h-11 w-full rounded-[10px] border border-[#BBBBBB] px-4 text-sm text-gray-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           >
-            <option value="80MM">80 mm</option>
-            <option value="58MM">58 mm</option>
+            <option value="80MM"><LocalizedText messageKey="message007" /></option>
+            <option value="58MM"><LocalizedText messageKey="message006" /></option>
             <option value="A4" disabled={form.printMode === "ESC_POS"}>
-              A4
+              <LocalizedText messageKey="message009" />
             </option>
             <option value="A5" disabled={form.printMode === "ESC_POS"}>
-              A5
+              <LocalizedText messageKey="message010" />
             </option>
           </select>
           <p className="mt-2 text-xs text-gray-500">{t("paperSizeHint")}</p>

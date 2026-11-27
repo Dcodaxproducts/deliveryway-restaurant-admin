@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useState } from "react";
 
 import {
@@ -24,7 +27,7 @@ export default function HoldOrdersModal({
       <DialogContent className="max-w-[720px] rounded-[28px] px-10 py-8 bg-[#F5F5F5]">
       
         <PosModalHeader
-        title="Hold Orders"
+        title={getLocalizedMessage("message144")}
         description="View your hold orders from here"
       />
       
@@ -32,7 +35,7 @@ export default function HoldOrdersModal({
           <BorderedSearchBar
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name"
+            placeholder={getLocalizedMessage("message332")}
           />
         </div>
 
@@ -41,7 +44,7 @@ export default function HoldOrdersModal({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <p className="text-[16px]  text-[#101828]">
-                  Hold ID:{" "}
+                  <LocalizedText messageKey="message143" />{" "}
                  #11106
                 </p>
 
@@ -50,13 +53,13 @@ export default function HoldOrdersModal({
               </div>
 
               <span className="text-sm font-semibold text-primary">
-                Dine-in
+                <LocalizedText messageKey="message105" />
               </span>
             </div>
 
             {/* Row 2 */}
             <p className="text-sm text-[#667085]">
-              Item: 1, Addons: 0
+              <LocalizedText messageKey="message158" />
             </p>
           </div>
         

@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMemo, useState } from "react";
 import Container from "@/components/common/Container";
 import Header from "@/components/common/PageHeader";
@@ -119,7 +122,7 @@ export default function InventoryPage() {
 
       {!branchId ? (
         <div className="rounded-[16px] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-700">
-          No assigned branch was found in your session. Please login again with a branch-admin account.
+          <LocalizedText messageKey="message237" />
         </div>
       ) : null}
 
@@ -142,20 +145,20 @@ export default function InventoryPage() {
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search inventory..."
+            placeholder={getLocalizedMessage("message335")}
             className="h-[44px] max-w-[360px] rounded-[14px]"
           />
         </div>
 
         <div className="mb-6 rounded-[16px] border border-gray-100 bg-gray-50 p-4">
-          <h3 className="mb-3 text-sm font-semibold text-gray-800">Record stock movement</h3>
+          <h3 className="mb-3 text-sm font-semibold text-gray-800"><LocalizedText messageKey="message307" /></h3>
           <div className="grid gap-3 md:grid-cols-4">
             <Input
               value={movement.itemId}
               onChange={(event) =>
                 setMovement((prev) => ({ ...prev, itemId: event.target.value }))
               }
-              placeholder="Inventory item ID"
+              placeholder={getLocalizedMessage("message150")}
               className="h-[42px] rounded-[12px]"
             />
             <select
@@ -165,9 +168,9 @@ export default function InventoryPage() {
               }
               className="h-[42px] rounded-[12px] border border-gray-200 bg-white px-3 text-sm"
             >
-              <option value="IN">IN</option>
-              <option value="OUT">OUT</option>
-              <option value="ADJUSTMENT">ADJUSTMENT</option>
+              <option value="IN"><LocalizedText messageKey="message149" /></option>
+              <option value="OUT"><LocalizedText messageKey="message268" /></option>
+              <option value="ADJUSTMENT"><LocalizedText messageKey="message026" /></option>
             </select>
             <Input
               type="number"
@@ -175,7 +178,7 @@ export default function InventoryPage() {
               onChange={(event) =>
                 setMovement((prev) => ({ ...prev, quantity: event.target.value }))
               }
-              placeholder="Quantity"
+              placeholder={getLocalizedMessage("message302")}
               className="h-[42px] rounded-[12px]"
             />
             <Input
@@ -183,7 +186,7 @@ export default function InventoryPage() {
               onChange={(event) =>
                 setMovement((prev) => ({ ...prev, reason: event.target.value }))
               }
-              placeholder="Reason / note"
+              placeholder={getLocalizedMessage("message304")}
               className="h-[42px] rounded-[12px]"
             />
           </div>
@@ -201,10 +204,10 @@ export default function InventoryPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left text-gray-500">
-                <th className="py-3 pr-3">Name / Reference</th>
-                <th className="py-3 pr-3">Category / Type</th>
-                <th className="py-3 pr-3">Quantity</th>
-                <th className="py-3 pr-3">Status / Updated</th>
+                <th className="py-3 pr-3"><LocalizedText messageKey="message233" /></th>
+                <th className="py-3 pr-3"><LocalizedText messageKey="message066" /></th>
+                <th className="py-3 pr-3"><LocalizedText messageKey="message302" /></th>
+                <th className="py-3 pr-3"><LocalizedText messageKey="message367" /></th>
               </tr>
             </thead>
             <tbody>
@@ -258,7 +261,7 @@ export default function InventoryPage() {
               ) : (
                 <tr>
                   <td colSpan={4} className="py-10 text-center text-gray-400">
-                    No inventory records found.
+                    <LocalizedText messageKey="message241" />
                   </td>
                 </tr>
               )}

@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import Container from "@/components/common/Container";
 import Header from "@/components/pages/Settings/restaurants/components/restaurants/header";
 import Filters from "@/components/common/FilterPanel";
@@ -8,7 +9,7 @@ export default function RestaurantsPage() {
     return (
         <Container>
             <Header
-                title="Restaurants List"
+                title={getLocalizedMessage("message323")}
                 description="View and manage all Restaurants from here"
             />
 

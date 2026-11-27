@@ -1,8 +1,9 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 export const profileSchema = z.object({
-  firstName: z.string().trim().min(1, "First name is required"),
-  lastName: z.string().trim().min(1, "Last name is required"),
+  firstName: z.string().trim().min(1, getLocalizedMessage("validation039")),
+  lastName: z.string().trim().min(1, getLocalizedMessage("validation060")),
   avatarUrl: z.string().optional(),
   phone: z.string().optional(),
   bio: z.string().optional(),

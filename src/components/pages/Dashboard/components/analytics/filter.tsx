@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -18,44 +21,44 @@ export default function Filter() {
         
         {/* Date Range Selector */}
         <div className="flex-1 w-full space-y-[12px]">
-          <Label>Date Range</Label>
+          <Label><LocalizedText messageKey="message092" /></Label>
           <Select>
             <SelectTrigger className="h-[52px] border-gray-200 rounded-[12px] focus:ring-primary w-full">
-              <SelectValue placeholder="Select Date Range" />
+              <SelectValue placeholder={getLocalizedMessage("message344")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="last-7">Last 7 Days</SelectItem>
-              <SelectItem value="last-30">Last 30 Days</SelectItem>
-              <SelectItem value="this-month">This Month</SelectItem>
+              <SelectItem value="last-7"><LocalizedText messageKey="message165" /></SelectItem>
+              <SelectItem value="last-30"><LocalizedText messageKey="message164" /></SelectItem>
+              <SelectItem value="this-month"><LocalizedText messageKey="message381" /></SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Tenant / Region Selector */}
         <div className="flex-1 w-full space-y-[12px]">
-          <Label>Tenant / Region</Label>
+          <Label><LocalizedText messageKey="message376" /></Label>
           <Select>
             <SelectTrigger className="h-[52px] border-gray-200 rounded-[12px] focus:ring-primary w-full">
-              <SelectValue placeholder="All Regions" />
+              <SelectValue placeholder={getLocalizedMessage("message030")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Regions</SelectItem>
-              <SelectItem value="north">North America</SelectItem>
-              <SelectItem value="europe">Europe</SelectItem>
+              <SelectItem value="all"><LocalizedText messageKey="message030" /></SelectItem>
+              <SelectItem value="north"><LocalizedText messageKey="message247" /></SelectItem>
+              <SelectItem value="europe"><LocalizedText messageKey="message120" /></SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Export Reports Section */}
         <div className="flex-1 w-full space-y-[12px]">
-          <Label>Export Reports</Label>
+          <Label><LocalizedText messageKey="message122" /></Label>
           <div className="flex gap-[12px] overflow-x-auto scroll-hidden">
             <Button
               variant="outline"
               className="h-[52px] flex-1 flex items-center justify-center gap-2 border-gray-200 rounded-[12px] text-gray font-medium hover:bg-gray-50 transition-colors"
             >
               <FileText size={18} className="text-gray-400" />
-              CSV
+              <LocalizedText messageKey="message083" />
             </Button>
 
             <Button
@@ -63,7 +66,7 @@ export default function Filter() {
               className="h-[52px] flex-1 flex items-center justify-center gap-2 border-gray-200 rounded-[12px] text-gray font-medium hover:bg-gray-50 transition-colors"
             >
               <FileText size={18} className="text-gray-400" />
-              Excel
+              <LocalizedText messageKey="message121" />
             </Button>
 
             <Button

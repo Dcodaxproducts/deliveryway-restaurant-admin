@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 const isValidThumbnailUrl = (value: string) => {
@@ -16,7 +17,7 @@ const isValidThumbnailUrl = (value: string) => {
 export const thumbnailUrlSchema = z
   .string()
   .refine(isValidThumbnailUrl, {
-    message: "Thumbnail URL must be a valid http(s) URL or relative path.",
+    message: getLocalizedMessage("validation125"),
   });
 
 export const getOptionalThumbnailUrl = (value?: string | null) => {

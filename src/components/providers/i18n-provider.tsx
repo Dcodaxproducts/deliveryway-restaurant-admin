@@ -88,10 +88,14 @@ export function I18nProvider({ children }: I18nProviderProps) {
 
   const setLocale = useCallback((nextLocale: AppLocale) => {
     const normalizedLocale = normalizeLocale(nextLocale);
+    if (normalizedLocale === locale) return;
 
-    setLocaleState(normalizedLocale);
     persistLocale(normalizedLocale);
-  }, []);
+    setLocaleState(normalizedLocale);
+    // Validation schemas are created at module scope, so reload them with the
+    // newly persisted locale instead of leaving stale validation copy behind.
+    window.location.reload();
+  }, [locale]);
 
   const contextValue = useMemo<I18nContextValue>(
     () => ({

@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 /**
@@ -10,9 +11,9 @@ export const faqStatusEnum = z.enum(["DRAFT", "PUBLISHED"]);
 export const faqVisibilityEnum = z.enum(["PUBLIC", "PRIVATE"]);
 
 export const faqSchema = z.object({
-  question: z.string().min(3, "Question is required"),
-  category: z.string().min(1, "Category is required"),
-  answer: z.string().min(3, "Answer is required"),
+  question: z.string().min(3, getLocalizedMessage("validation094")),
+  category: z.string().min(1, getLocalizedMessage("validation017")),
+  answer: z.string().min(3, getLocalizedMessage("validation003")),
   status: faqStatusEnum,
   visibility: faqVisibilityEnum,
 });

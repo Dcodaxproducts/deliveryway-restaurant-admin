@@ -132,13 +132,8 @@ export default function MenusPage() {
   useEffect(() => {
     if (!isError) return;
 
-    const message =
-      (error as any)?.response?.data?.message ||
-      (error as any)?.message ||
-      t("loadError");
-
-    toast.error(message);
-  }, [isError, error]);
+    toast.error(t("loadError"));
+  }, [isError, error, t]);
 
   const handleFilterChange = (newFilters: any) => {
     setFilters({

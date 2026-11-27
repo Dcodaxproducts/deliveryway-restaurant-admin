@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { useCallback, useMemo, useState } from "react";
 import {
   Coins,
@@ -835,7 +837,7 @@ export default function CustomerLoyaltyManager() {
               </p>
 
               <p className="mt-1 break-all text-xs text-gray-500">
-                ID: {activeCustomerId}
+                <LocalizedText messageKey="message146" /> {activeCustomerId}
               </p>
             </div>
 

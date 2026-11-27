@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { FileText } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -18,7 +20,7 @@ export default function ExportSection() {
           className="flex h-[52px] min-w-[180px] flex-1 items-center justify-center gap-3 rounded-[12px] border-gray-200 font-medium text-gray transition-colors hover:bg-gray-50"
         >
           <FileText size={20} className="text-gray-400" />
-          CSV
+          <LocalizedText messageKey="message083" />
         </Button>
 
         <Button
@@ -26,7 +28,7 @@ export default function ExportSection() {
           className="flex h-[52px] min-w-[180px] flex-1 items-center justify-center gap-3 rounded-[12px] border-gray-200 font-medium text-gray transition-colors hover:bg-gray-50"
         >
           <FileText size={20} className="text-gray-400" />
-          Excel
+          <LocalizedText messageKey="message121" />
         </Button>
 
         <Button

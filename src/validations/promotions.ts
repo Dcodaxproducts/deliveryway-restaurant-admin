@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 import type { SelectOption } from "@/components/pages/Promotions/utils/option-normalizers";
@@ -13,7 +14,7 @@ const positiveNumberStringSchema = (message: string) =>
     .string()
     .min(1, message)
     .refine((value) => Number(value) > 0, {
-      message: "Discount value must be greater than 0.",
+      message: getLocalizedMessage("validation029"),
     });
 
 const getDateBoundary = (value: string, boundary: "start" | "end") => {
@@ -35,12 +36,12 @@ const getDateBoundary = (value: string, boundary: "start" | "end") => {
 export const promotionSchema = z
   .object({
     code: optionalStringSchema,
-    title: z.string().trim().min(1, "Offer title is required."),
+    title: z.string().trim().min(1, getLocalizedMessage("validation073")),
     description: optionalStringSchema,
     audience: z.enum(["GUEST", "REGISTERED", "BOTH"]).default("BOTH"),
     allowedOrderTypes: z
       .array(orderTypeSchema)
-      .min(1, "Please select at least one order type.")
+      .min(1, getLocalizedMessage("validation090"))
       .default(["DELIVERY", "TAKEAWAY", "DINE_IN"]),
     thumbnailUrl: thumbnailUrlSchema.optional().default(""),
     discountType: discountTypeSchema,
@@ -49,7 +50,7 @@ export const promotionSchema = z
     minOrderAmount: optionalStringSchema,
     maxUses: optionalStringSchema,
     maxUsesPerCustomer: optionalStringSchema,
-    startsAt: z.string().min(1, "Start date is required."),
+    startsAt: z.string().min(1, getLocalizedMessage("validation113")),
     expiresAt: optionalStringSchema,
     applyMode: applyModeSchema.default("ORDER_TOTAL"),
     autoApply: z.boolean(),
@@ -68,7 +69,7 @@ export const promotionSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["discountValue"],
-        message: "Percentage discount cannot be greater than 100.",
+        message: getLocalizedMessage("validation081"),
       });
     }
 
@@ -76,7 +77,7 @@ export const promotionSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["expiresAt"],
-        message: "Expiry date is required.",
+        message: getLocalizedMessage("validation036"),
       });
     }
 
@@ -89,7 +90,7 @@ export const promotionSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["expiresAt"],
-        message: "Expiry date must be after start date.",
+        message: getLocalizedMessage("validation037"),
       });
     }
   });
@@ -99,7 +100,7 @@ export type PromotionFormValues = z.infer<typeof promotionSchema>;
 export const happyHourSchema = z
   .object({
     code: optionalStringSchema,
-    title: z.string().trim().min(1, "Happy hour title is required."),
+    title: z.string().trim().min(1, getLocalizedMessage("validation043")),
     description: optionalStringSchema,
     audience: z.enum(["REGISTERED", "BOTH"]).default("BOTH"),
     discountType: discountTypeSchema,
@@ -108,15 +109,15 @@ export const happyHourSchema = z
     minOrderAmount: optionalStringSchema,
     maxUses: optionalStringSchema,
     maxUsesPerCustomer: optionalStringSchema,
-    startsAt: z.string().min(1, "Start date is required."),
-    expiresAt: z.string().min(1, "Expiry date is required."),
+    startsAt: z.string().min(1, getLocalizedMessage("validation113")),
+    expiresAt: z.string().min(1, getLocalizedMessage("validation036")),
     isActive: z.boolean(),
     applyMode: applyModeSchema.default("ORDER_TOTAL"),
     activeDays: z
       .array(z.number())
-      .min(1, "Please select at least one active day."),
-    dailyStartTime: z.string().min(1, "Daily start time is required."),
-    dailyEndTime: z.string().min(1, "Daily end time is required."),
+      .min(1, getLocalizedMessage("validation089")),
+    dailyStartTime: z.string().min(1, getLocalizedMessage("validation026")),
+    dailyEndTime: z.string().min(1, getLocalizedMessage("validation024")),
     selectedMenuItems: z.custom<SelectOption[]>().default([]),
     selectedCategories: z.custom<SelectOption[]>().default([]),
   })
@@ -128,7 +129,7 @@ export const happyHourSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["discountValue"],
-        message: "Percentage discount cannot be greater than 100.",
+        message: getLocalizedMessage("validation081"),
       });
     }
 
@@ -143,7 +144,7 @@ export const happyHourSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["expiresAt"],
-        message: "Expiry date must be after start date.",
+        message: getLocalizedMessage("validation037"),
       });
     }
 
@@ -155,7 +156,7 @@ export const happyHourSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["dailyEndTime"],
-        message: "Daily end time must be after daily start time.",
+        message: getLocalizedMessage("validation025"),
       });
     }
   });
@@ -163,8 +164,8 @@ export const happyHourSchema = z
 export type HappyHourFormValues = z.infer<typeof happyHourSchema>;
 
 export const couponSchema = z.object({
-  code: z.string().trim().min(1, "Coupon code is required."),
-  title: z.string().trim().min(1, "Coupon title is required."),
+  code: z.string().trim().min(1, getLocalizedMessage("validation022")),
+  title: z.string().trim().min(1, getLocalizedMessage("validation023")),
   discountType: discountTypeSchema,
   discountValue: optionalStringSchema,
   startsAt: optionalStringSchema,

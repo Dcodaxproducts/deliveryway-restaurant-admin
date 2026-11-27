@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { Input } from "@/components/ui/input";
 import {
   blockInvalidNumberKeys,
@@ -88,11 +90,11 @@ export function EditBranchStepThree({
 
             <div>
               <h3 className="text-sm font-semibold text-gray-900">
-                Delivery Time
+                <LocalizedText messageKey="message102" />
               </h3>
 
               <p className="mt-1 text-xs leading-5 text-gray-500">
-                Set the estimated delivery time and customer slot intervals for this branch.
+                <LocalizedText messageKey="message352" />
               </p>
             </div>
           </div>
@@ -130,7 +132,7 @@ export function EditBranchStepThree({
                   />
 
                   <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-400">
-                    min
+                    <LocalizedText messageKey="message212" />
                   </span>
                 </div>
               </div>

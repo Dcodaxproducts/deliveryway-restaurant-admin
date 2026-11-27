@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
@@ -33,7 +36,7 @@ export default function RestaurantTable() {
                     <Header label="Domain" className="text-center" />
                     <Header label="Created Date" />
                     <Header label="Status" />
-                    <TableHead className="text-right font-medium">Actions</TableHead>
+                    <TableHead className="text-right font-medium"><LocalizedText messageKey="message013" /></TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -48,7 +51,7 @@ export default function RestaurantTable() {
                                 <div className="w-[42px] h-[42px] rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                                     <Image
                                         src="/table-pic.png"
-                                        alt="logo"
+                                        alt={getLocalizedMessage("message188")}
                                         width={256}
                                         height={256}
                                         className="w-[42px] h-[42px] object-contain"

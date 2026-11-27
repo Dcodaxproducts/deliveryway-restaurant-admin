@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 import { validationMessages } from "@/lib/validation";
 
@@ -14,8 +15,8 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   email: z.string().min(1, validationMessages.required).email(validationMessages.email),
-  restaurantId: z.string().min(1, "Invalid restaurant ID"),
-  otp: z.string().min(5, "Please enter the 5 digit OTP"),
+  restaurantId: z.string().min(1, getLocalizedMessage("validation055")),
+  otp: z.string().min(5, getLocalizedMessage("validation088")),
   newPassword: z.string().min(8, validationMessages.passwordMin),
 });
 

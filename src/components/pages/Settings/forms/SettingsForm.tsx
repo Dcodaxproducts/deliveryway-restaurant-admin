@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Info } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -134,7 +137,7 @@ export default function SettingsForm({
           />
         ) : (
           <p className="rounded-[10px] bg-amber-50 px-4 py-3 text-sm text-amber-700">
-            Payment settings are available for restaurant and branch admins.
+            <LocalizedText messageKey="message275" />
           </p>
         )}
       </div>
@@ -159,10 +162,9 @@ export default function SettingsForm({
       <div className="lg:col-span-8 space-y-[48px]">
         <section className="space-y-[24px]">
           <div className={formGroupClassName}>
-            <Label htmlFor="global-tax-percentage">Global Tax %</Label>
+            <Label htmlFor="global-tax-percentage"><LocalizedText messageKey="message139" /></Label>
             <p className="text-sm text-gray mb-2">
-              Set the default tax percentage applied to transactions across the
-              platform.
+              <LocalizedText messageKey="message351" />
             </p>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dark font-medium">
@@ -170,7 +172,7 @@ export default function SettingsForm({
               </span>
               <Input
                 id="global-tax-percentage"
-                placeholder="Add Percentage"
+                placeholder={getLocalizedMessage("message021")}
                 className={`pl-8 ${textInputClassName}`}
                 {...register("globalTaxPercentage")}
               />
@@ -178,9 +180,9 @@ export default function SettingsForm({
           </div>
 
           <div className={formGroupClassName}>
-            <Label id="tax-handling-rule-label">VAT/GST handling rules</Label>
+            <Label id="tax-handling-rule-label"><LocalizedText messageKey="message401" /></Label>
             <p className="text-sm text-gray">
-              Choose how VAT/GST should be calculated and displayed system-wide.
+              <LocalizedText messageKey="message069" />
             </p>
             <RadioGroup
               aria-labelledby="tax-handling-rule-label"
@@ -207,10 +209,10 @@ export default function SettingsForm({
         <section className="space-y-[24px]">
           <div className={formGroupClassName}>
             <Label htmlFor="default-platform-currency">
-              Default Platform Currency
+              <LocalizedText messageKey="message097" />
             </Label>
             <p className="text-sm text-gray mb-2">
-              This currency will be used as the default for all monetary values.
+              <LocalizedText messageKey="message380" />
             </p>
             <Select
               value={defaultPlatformCurrency}
@@ -226,7 +228,7 @@ export default function SettingsForm({
               >
                 <div className="flex items-center gap-2">
                   <span className="text-dark">{currency}</span>
-                  <SelectValue placeholder="Select Currency" />
+                  <SelectValue placeholder={getLocalizedMessage("message342")} />
                 </div>
               </SelectTrigger>
               <SelectContent>
@@ -239,7 +241,7 @@ export default function SettingsForm({
 
           <div className="space-y-[12px]">
             <Label id="currency-display-format-label">
-              Currency Display Format
+              <LocalizedText messageKey="message085" />
             </Label>
             <div
               aria-labelledby="currency-display-format-label"
@@ -265,7 +267,7 @@ export default function SettingsForm({
             id="default-platform-language"
             label="Default Platform Language"
             type="select"
-            placeholder="Select Language"
+            placeholder={getLocalizedMessage("message346")}
             value={defaultPlatformLanguage}
             onValueChange={(value) =>
               setValue("defaultPlatformLanguage", value, { shouldDirty: true })
@@ -273,7 +275,7 @@ export default function SettingsForm({
           />
 
           <div className="space-y-[12px]">
-            <Label id="date-format-label">Date Format</Label>
+            <Label id="date-format-label"><LocalizedText messageKey="message091" /></Label>
             <div
               aria-labelledby="date-format-label"
               className="grid grid-cols-3 gap-2"
@@ -296,7 +298,7 @@ export default function SettingsForm({
             id="timezone"
             label="Timezone"
             type="select"
-            placeholder="Select Timezone"
+            placeholder={getLocalizedMessage("message348")}
             value={timezone}
             onValueChange={(value) =>
               setValue("timezone", value, { shouldDirty: true })
@@ -323,7 +325,7 @@ export default function SettingsForm({
             id="font-selection"
             label="Font Selection (Optional)"
             type="select"
-            placeholder="Select font"
+            placeholder={getLocalizedMessage("message345")}
             value={fontSelection}
             onValueChange={(value) =>
               setValue("fontSelection", value, { shouldDirty: true })
@@ -337,14 +339,14 @@ export default function SettingsForm({
             variant="outline"
             className="h-[52px] px-10 rounded-[10px] text-dark border-gray-200"
           >
-            Cancel
+            <LocalizedText messageKey="message064" />
           </Button>
           <Button
             type="submit"
             variant="default"
             className="h-[52px] px-10 rounded-[10px]"
           >
-            Save & Activate
+            <LocalizedText messageKey="message328" />
           </Button>
         </section>
       </div>
@@ -436,7 +438,7 @@ function ColorField({
           </span>
           <Input
             id={id}
-            placeholder="Add Color Code"
+            placeholder={getLocalizedMessage("message018")}
             className={`pl-7 ${textInputClassName}`}
             {...registration}
           />

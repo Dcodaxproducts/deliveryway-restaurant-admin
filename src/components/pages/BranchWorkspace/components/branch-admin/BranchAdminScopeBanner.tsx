@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { Store, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetBranch } from "@/hooks/useBranches";
@@ -31,10 +33,9 @@ export default function BranchAdminScopeBanner({
           </div>
 
           <div>
-            <p className="font-semibold">Branch admin scope is active</p>
+            <p className="font-semibold"><LocalizedText messageKey="message049" /></p>
             <p className="mt-1 text-green-700/75">
-              This account can manage only its assigned branch. Branch switching,
-              branch creation, and cross-branch destructive actions are hidden.
+              <LocalizedText messageKey="message378" />
             </p>
           </div>
         </div>
@@ -42,16 +43,16 @@ export default function BranchAdminScopeBanner({
         <div className="flex flex-wrap gap-2 text-xs">
           {restaurantId ? (
             <span className="rounded-full bg-white px-3 py-1 font-medium text-green-700 shadow-sm">
-              Restaurant: {restaurantId}
+              <LocalizedText messageKey="message322" /> {restaurantId}
             </span>
           ) : null}
           {branchId ? (
             <span className="rounded-full bg-white px-3 py-1 font-medium text-green-700 shadow-sm" title={branchId}>
-              Branch: {branchName}
+              <LocalizedText messageKey="message061" /> {branchName}
             </span>
           ) : null}
           <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 font-medium text-green-700 shadow-sm">
-            <ShieldCheck size={13} /> Token scoped
+            <ShieldCheck size={13} /> <LocalizedText messageKey="message385" />
           </span>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 import { PAYMENT_METHOD_CODES } from "@/types/payment-methods";
 import { parseLocalizedDecimal } from "@/lib/decimal";
@@ -59,7 +60,7 @@ export const DeliveryConfigSchema = z.object({
   postalCodeRules: z
     .array(
       z.object({
-        postalCode: z.string().trim().min(1, "Postal code is required"),
+        postalCode: z.string().trim().min(1, getLocalizedMessage("validation091")),
         deliveryFee: decimal,
         minOrderAmount: decimal,
         freeDeliveryThreshold: decimal,
@@ -73,7 +74,7 @@ export const DeliveryConfigSchema = z.object({
   if (!deliveryConfig.postalCodeRules.length) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "At least one postal code rule is required",
+      message: getLocalizedMessage("validation011"),
       path: ["postalCodeRules"],
     });
     return;
@@ -87,7 +88,7 @@ export const DeliveryConfigSchema = z.object({
     if (seenPostalCodes.has(postalCode)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Duplicate postal codes are not allowed",
+        message: getLocalizedMessage("validation030"),
         path: ["postalCodeRules", index, "postalCode"],
       });
       return;
@@ -123,7 +124,7 @@ export const ServiceChargeSchema = z
     if (serviceCharge.value <= 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Service charge value must be greater than 0 when enabled",
+        message: getLocalizedMessage("validation108"),
         path: ["value"],
       });
       return;
@@ -132,7 +133,7 @@ export const ServiceChargeSchema = z
     if (serviceCharge.type === "PERCENTAGE" && serviceCharge.value > 100) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Percentage service charge cannot exceed 100",
+        message: getLocalizedMessage("validation082"),
         path: ["value"],
       });
     }
@@ -142,7 +143,7 @@ const BranchSettingsBaseSchema = z.object({
   allowedOrderTypes: z.array(OrderTypeEnum),
   allowedPaymentMethods: z
     .array(PaymentMethodEnum)
-    .min(1, "Select at least one payment method"),
+    .min(1, getLocalizedMessage("validation105")),
   deliveryConfig: DeliveryConfigSchema,
   automation: AutomationSchema,
   taxation: TaxationSchema,
@@ -158,7 +159,7 @@ export const BranchSettingsSchema = BranchSettingsBaseSchema.superRefine((settin
 
   ctx.addIssue({
     code: z.ZodIssueCode.custom,
-    message: "Table count must be at least 1 when table reservations are enabled",
+    message: getLocalizedMessage("validation120"),
     path: ["tableCount"],
   });
 });
@@ -190,7 +191,7 @@ export const BranchSchema = z.object({
 
 export const createBranchSchema = z.object({
   restaurantId: z.string().optional(),
-  name: z.string().trim().min(1, "Branch name is required"),
+  name: z.string().trim().min(1, getLocalizedMessage("validation015")),
   street: z.string().optional(),
   shopNumber: z.string().optional(),
   postalCode: z.string().optional(),
@@ -215,7 +216,7 @@ export const createBranchSchema = z.object({
 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Table count must be at least 1 when table reservations are enabled",
+      message: getLocalizedMessage("validation120"),
       path: ["tableCount"],
     });
   }).optional(),

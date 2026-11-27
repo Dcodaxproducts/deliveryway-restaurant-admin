@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -47,11 +48,11 @@ export const useCreateInventoryMovement = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventory-items"] });
       queryClient.invalidateQueries({ queryKey: ["inventory-movements"] });
-      toast.success("Inventory movement recorded");
+      toast.success(getLocalizedMessage("message151"));
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to record inventory movement"
+        err?.response?.data?.message || getLocalizedMessage("notification065")
       );
     },
   });

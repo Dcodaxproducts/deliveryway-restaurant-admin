@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -810,7 +813,7 @@ function ProgressCard({
 function CredentialField({ label, value }: { label: string; value: string }) {
   const copy = async () => {
     await navigator.clipboard.writeText(value);
-    toast.success("Copied");
+    toast.success(getLocalizedMessage("message080"));
   };
   return (
     <div className="min-w-0">
@@ -852,7 +855,7 @@ function MappingRow({
         <p className="truncate text-sm font-medium">{value.localName}</p>
         {value.variationName ? (
           <p className="text-xs text-muted-foreground">
-            ArticleSize: {value.variationName}
+            <LocalizedText messageKey="message038" /> {value.variationName}
           </p>
         ) : null}
         <code className="text-xs text-muted-foreground">{localKey}</code>

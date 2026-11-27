@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 import { fromDateTimeLocalValue } from "@/components/pages/Promotions/gift-cards/utils/gift-card-formatters";
@@ -32,7 +33,7 @@ export const giftCardFormSchema = z
     restaurantId: optionalText,
     branchId: optionalText,
     code: optionalText,
-    title: z.string().trim().min(1, "Title is required."),
+    title: z.string().trim().min(1, getLocalizedMessage("validation126")),
     description: optionalText,
     imageUrl: optionalImageUrlSchema,
     thumbnailUrl: optionalImageUrlSchema,
@@ -42,8 +43,8 @@ export const giftCardFormSchema = z
     ),
     maxUses: optionalPositiveInteger,
     maxUsesPerCustomer: optionalPositiveInteger,
-    startsAt: z.string().trim().min(1, "Starts At is required."),
-    expiresAt: z.string().trim().min(1, "Expires At is required."),
+    startsAt: z.string().trim().min(1, getLocalizedMessage("validation114")),
+    expiresAt: z.string().trim().min(1, getLocalizedMessage("validation034")),
     isActive: z.boolean().default(true),
   })
   .superRefine((values, context) => {
@@ -58,7 +59,7 @@ export const giftCardFormSchema = z
       context.addIssue({
         code: "custom",
         path: ["expiresAt"],
-        message: "Expires At must be after Starts At.",
+        message: getLocalizedMessage("validation035"),
       });
     }
   });

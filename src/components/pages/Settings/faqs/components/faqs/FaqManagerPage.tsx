@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMemo, useState } from "react";
 import {
   Search,
@@ -140,7 +143,7 @@ function FAQRow({
               </span>
 
               <span className="text-xs text-[#98A2B3]">
-                Updated {formatRelativeDate(item.updatedAt)}
+                <LocalizedText messageKey="message391" /> {formatRelativeDate(item.updatedAt)}
               </span>
             </div>
 
@@ -157,7 +160,7 @@ function FAQRow({
             <Link
               href={`/faqs/add?id=${item.id}`}
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#EAECF0] text-[#667085] transition hover:border-[#C1121F] hover:bg-[#FFF5F5] hover:text-[#C1121F]"
-              title="Edit FAQ"
+              title={getLocalizedMessage("message116")}
             >
               <Pencil size={16} />
             </Link>
@@ -167,7 +170,7 @@ function FAQRow({
               disabled={deleting || !restaurantId}
               onClick={() => onDeleteClick(item)}
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#EAECF0] text-[#667085] transition hover:border-red-300 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
-              title="Delete FAQ"
+              title={getLocalizedMessage("message098")}
             >
               {deleting ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -289,7 +292,7 @@ export default function FAQManagerPage() {
       <div className="mx-auto max-w-[1400px]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <Header
-            title="FAQ Manager"
+            title={getLocalizedMessage("message126")}
             description="Manage your restaurant's frequently asked questions to help customers navigate ordering, payments, and policy information."
             titleClassName="text-[24px] sm:text-[28px] font-semibold text-[#101828] leading-tight"
             descriptionClassName="mt-1 max-w-[720px] text-sm text-[#667085] leading-6"
@@ -300,7 +303,7 @@ export default function FAQManagerPage() {
             className="inline-flex h-10 items-center justify-center gap-2 self-start rounded-full bg-[#C1121F] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#a50f1a]"
           >
             <Plus size={15} />
-            <span>New FAQ Item</span>
+            <span><LocalizedText messageKey="message235" /></span>
           </Link>
         </div>
 
@@ -325,7 +328,7 @@ export default function FAQManagerPage() {
 
             <div className="relative z-10">
               <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#98A2B3]">
-                Published FAQs
+                <LocalizedText messageKey="message298" />
               </p>
 
               <div className="mt-2 flex items-center gap-2.5">
@@ -356,7 +359,7 @@ export default function FAQManagerPage() {
 
             <input
               type="text"
-              placeholder="Filter by question or keyword..."
+              placeholder={getLocalizedMessage("message130")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="h-11 w-full rounded-xl border border-[#ECEEF2] bg-white pl-11 pr-4 text-sm text-[#101828] outline-none placeholder:text-[#98A2B3] focus:border-[#D0D5DD]"
@@ -369,7 +372,7 @@ export default function FAQManagerPage() {
               onChange={(e) => setCategory(e.target.value)}
               className="h-11 min-w-[160px] rounded-xl border border-[#ECEEF2] bg-white px-4 text-sm font-medium text-[#344054] outline-none focus:border-[#D0D5DD]"
             >
-              <option value="All Categories">All Categories</option>
+              <option value="All Categories"><LocalizedText messageKey="message028" /></option>
 
               {categories.map((item) => (
                 <option key={item} value={item}>
@@ -383,9 +386,9 @@ export default function FAQManagerPage() {
               onChange={(e) => setStatus(e.target.value as any)}
               className="h-11 min-w-[140px] rounded-xl border border-[#ECEEF2] bg-white px-4 text-sm font-medium text-[#344054] outline-none focus:border-[#D0D5DD]"
             >
-              <option value="ALL">All Status</option>
-              <option value="PUBLISHED">Published</option>
-              <option value="DRAFT">Draft</option>
+              <option value="ALL"><LocalizedText messageKey="message031" /></option>
+              <option value="PUBLISHED"><LocalizedText messageKey="message297" /></option>
+              <option value="DRAFT"><LocalizedText messageKey="message110" /></option>
             </select>
 
             <select
@@ -393,9 +396,9 @@ export default function FAQManagerPage() {
               onChange={(e) => setVisibility(e.target.value as any)}
               className="h-11 min-w-[140px] rounded-xl border border-[#ECEEF2] bg-white px-4 text-sm font-medium text-[#344054] outline-none focus:border-[#D0D5DD]"
             >
-              <option value="ALL">All Visibility</option>
-              <option value="PUBLIC">Public</option>
-              <option value="PRIVATE">Private</option>
+              <option value="ALL"><LocalizedText messageKey="message032" /></option>
+              <option value="PUBLIC"><LocalizedText messageKey="message295" /></option>
+              <option value="PRIVATE"><LocalizedText messageKey="message293" /></option>
             </select>
 
             <select
@@ -403,9 +406,9 @@ export default function FAQManagerPage() {
               onChange={(e) => setSortBy(e.target.value)}
               className="h-11 min-w-[140px] rounded-xl border border-[#ECEEF2] bg-white px-4 text-sm font-medium text-[#344054] outline-none focus:border-[#D0D5DD]"
             >
-              <option>Latest</option>
-              <option>Oldest</option>
-              <option>Published First</option>
+              <option><LocalizedText messageKey="message168" /></option>
+              <option><LocalizedText messageKey="message253" /></option>
+              <option><LocalizedText messageKey="message299" /></option>
             </select>
           </div>
         </div>
@@ -428,12 +431,11 @@ export default function FAQManagerPage() {
           ) : (
             <div className="rounded-2xl border border-dashed border-[#D0D5DD] bg-white px-6 py-12 text-center">
               <p className="text-base font-medium text-[#344054]">
-                No FAQs found
+                <LocalizedText messageKey="message240" />
               </p>
 
               <p className="mt-1 text-sm text-[#667085]">
-                Try adjusting your search, status, visibility, or category
-                filter.
+                <LocalizedText messageKey="message387" />
               </p>
             </div>
           )}
@@ -445,7 +447,7 @@ export default function FAQManagerPage() {
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleConfirmDelete}
         isLoading={Boolean(deletingFaqId)}
-        title="Delete FAQ"
+        title={getLocalizedMessage("message098")}
         description={
           selectedFaq?.question
             ? `Are you sure you want to delete "${selectedFaq.question}"? This action cannot be undone.`

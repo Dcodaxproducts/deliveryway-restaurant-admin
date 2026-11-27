@@ -1,5 +1,7 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import {
   createDeliveryman,
   getDeliverymenList,
@@ -72,7 +74,7 @@ export const useCreateDeliveryman = (options?: DeliverymanMutationOptions) => {
         queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
       ]);
       toast.success(
-        options?.messages?.success || "Deliveryman created successfully!",
+        options?.messages?.success || getLocalizedMessage("notification008"),
       );
       router.push("/deliveryman");
       router.refresh();
@@ -81,7 +83,7 @@ export const useCreateDeliveryman = (options?: DeliverymanMutationOptions) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to create deliveryman",
+          getLocalizedMessage("notification029"),
       );
     },
   });
@@ -108,7 +110,7 @@ export const useUpdateDeliveryman = (options?: DeliverymanMutationOptions) => {
         queryKey: ["deliveryman", variables.id],
       });
       toast.success(
-        options?.messages?.success || "Deliveryman updated successfully!",
+        options?.messages?.success || getLocalizedMessage("notification010"),
       );
       router.push("/deliveryman");
     },
@@ -116,7 +118,7 @@ export const useUpdateDeliveryman = (options?: DeliverymanMutationOptions) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to update deliveryman",
+          getLocalizedMessage("notification079"),
       );
     },
   });
@@ -139,14 +141,14 @@ export const useDeleteDeliveryman = (options?: DeliverymanMutationOptions) => {
       });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success(
-        options?.messages?.success || "Deliveryman deleted successfully!",
+        options?.messages?.success || getLocalizedMessage("notification009"),
       );
     },
     onError: (err: any) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to delete deliveryman",
+          getLocalizedMessage("notification043"),
       );
     },
   });
@@ -177,7 +179,7 @@ export const useUpdateDeliverymanStatus = (
       });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success(
-        options?.messages?.success || "Status updated successfully!",
+        options?.messages?.success || getLocalizedMessage("notification122"),
       );
     },
 
@@ -185,7 +187,7 @@ export const useUpdateDeliverymanStatus = (
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to update status",
+          getLocalizedMessage("notification099"),
       );
     },
   });
@@ -208,7 +210,7 @@ export const useAssignOrderToDeliveryman = (
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deliverymen"] });
       toast.success(
-        options?.messages?.success || "Order assigned successfully!",
+        options?.messages?.success || getLocalizedMessage("notification113"),
       );
     },
 
@@ -216,7 +218,7 @@ export const useAssignOrderToDeliveryman = (
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to assign order",
+          getLocalizedMessage("notification019"),
       );
     },
   });
@@ -226,6 +228,7 @@ export const useAssignOrdersToDeliveryman = (
   options?: DeliverymanMutationOptions,
 ) => {
   const queryClient = useQueryClient();
+  const t = useTranslations("deliverymen.messages");
 
   return useMutation({
     mutationFn: async ({
@@ -263,24 +266,24 @@ export const useAssignOrdersToDeliveryman = (
 
       if (successCount > 0 && failedCount === 0) {
         toast.success(
-          options?.messages?.success || "Orders assigned successfully!",
+          options?.messages?.success || getLocalizedMessage("notification114"),
         );
         return;
       }
 
       if (successCount > 0) {
-        toast.warning(`${successCount} assigned, ${failedCount} failed`);
+        toast.warning(t("bulkAssignmentResult", { successCount, failedCount }));
         return;
       }
 
-      toast.error(options?.messages?.error || "Failed to assign orders");
+      toast.error(options?.messages?.error || getLocalizedMessage("notification020"));
     },
 
     onError: (err: any) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to assign orders",
+          getLocalizedMessage("notification020"),
       );
     },
   });

@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -65,7 +67,7 @@ export default function BranchCoverModal({
 
       onOpenChange(false);
     } catch (error) {
-      toast.error(getApiErrorMessage(error, "Unable to update branch images."));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification135")));
     }
   };
 

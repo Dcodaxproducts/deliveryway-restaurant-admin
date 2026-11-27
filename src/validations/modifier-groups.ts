@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 const requiredString = (message: string) => z.string().trim().min(1, message);
@@ -30,13 +31,13 @@ const numberFromInput = ({
       return value;
     },
     z
-      .number({ invalid_type_error: "Must be a number" })
-      .refine((value) => !Number.isNaN(value), "Must be a valid number")
+      .number({ invalid_type_error: getLocalizedMessage("validation069") })
+      .refine((value) => !Number.isNaN(value), getLocalizedMessage("validation070"))
       .superRefine((value, context) => {
         if (integer && !Number.isInteger(value)) {
           context.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Must be an integer",
+            message: getLocalizedMessage("validation071"),
           });
         }
 
@@ -80,7 +81,7 @@ export const modifierGroupSchema = modifierGroupBaseSchema.superRefine(
     if (value.maxSelect < value.minSelect) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Maximum selection cannot be less than minimum selection.",
+        message: getLocalizedMessage("validation066"),
         path: ["maxSelect"],
       });
     }
@@ -88,7 +89,7 @@ export const modifierGroupSchema = modifierGroupBaseSchema.superRefine(
     if (value.includedSelect > value.maxSelect) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Included selections cannot exceed maximum selection.",
+        message: getLocalizedMessage("validation046"),
         path: ["includedSelect"],
       });
     }
@@ -109,7 +110,7 @@ export const updateModifierGroupSchema = modifierGroupBaseSchema
     ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Maximum selection cannot be less than minimum selection.",
+        message: getLocalizedMessage("validation066"),
         path: ["maxSelect"],
       });
     }
@@ -121,7 +122,7 @@ export const updateModifierGroupSchema = modifierGroupBaseSchema
     ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Included selections cannot exceed maximum selection.",
+        message: getLocalizedMessage("validation046"),
         path: ["includedSelect"],
       });
     }

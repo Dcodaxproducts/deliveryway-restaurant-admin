@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { ImagePlus, Loader2, Trash2, UploadCloud } from "lucide-react";
 import Image from "next/image";
 import {
@@ -235,7 +237,7 @@ export function ImageUploadField<TFieldValues extends FieldValues>({
                 ),
               })}
             </p>
-            <p className="mt-1 text-[11px] text-gray-400">PNG, JPG, WEBP</p>
+            <p className="mt-1 text-[11px] text-gray-400"><LocalizedText messageKey="message285" /></p>
           </div>
         )}
       </div>

@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMemo, useState } from "react";
 import {
   LineChart,
@@ -123,7 +126,7 @@ const RevenueGraph = ({
 
             {hasOnlyOneRevenuePoint ? (
               <div className="inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600">
-                Single revenue point
+                <LocalizedText messageKey="message361" />
               </div>
             ) : null}
           </div>
@@ -160,8 +163,8 @@ const RevenueGraph = ({
             type="button"
             onClick={() => refetch()}
             className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[#E7EAF0] text-gray-500 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
-            aria-label="Refresh revenue trend"
-            title="Refresh"
+            aria-label={getLocalizedMessage("message310")}
+            title={getLocalizedMessage("message308")}
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
           </button>
@@ -188,7 +191,7 @@ const RevenueGraph = ({
           </div>
         ) : chartData.length === 0 ? (
           <div className="flex h-full items-center justify-center rounded-[16px] border border-dashed border-gray-200 text-sm text-gray-400">
-            No revenue trend data available.
+            <LocalizedText messageKey="message246" />
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">

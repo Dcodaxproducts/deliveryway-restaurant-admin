@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo } from "react";
 import { useForm, type Path, type UseFormRegisterReturn } from "react-hook-form";
@@ -179,7 +182,7 @@ export default function NotificationForm() {
       ) : (
         <>
           <ChannelSection
-            title="Email"
+            title={getLocalizedMessage("message118")}
             inputId="notification-email-address"
             value={emailAddress}
             enabled={enabledChannels.email}
@@ -188,7 +191,7 @@ export default function NotificationForm() {
           />
 
           <ChannelSection
-            title="SMS"
+            title={getLocalizedMessage("message363")}
             inputId="notification-sms-number"
             value={phoneNumber}
             enabled={enabledChannels.sms}
@@ -197,7 +200,7 @@ export default function NotificationForm() {
           />
 
           <ChannelSection
-            title="Whatsapp"
+            title={getLocalizedMessage("message408")}
             inputId="notification-whatsapp-number"
             value={whatsappNumber}
             enabled={enabledChannels.whatsapp}
@@ -252,7 +255,7 @@ export default function NotificationForm() {
             </div>
           ) : (
             <EmptyStateCard
-              title="No active channels available"
+              title={getLocalizedMessage("message236")}
               description="Enable at least one channel to configure notification type preferences."
             />
           )}
@@ -266,7 +269,7 @@ export default function NotificationForm() {
                 onClick={handleCancel}
                 disabled={mutation.isPending}
               >
-                Cancel
+                <LocalizedText messageKey="message064" />
               </Button>
 
               <Button

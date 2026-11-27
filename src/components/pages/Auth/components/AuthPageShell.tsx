@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import Image from "next/image";
 import type { ReactNode } from "react";
 
@@ -17,7 +18,7 @@ export default function AuthPageShell({ children }: AuthPageShellProps) {
       <div className="relative hidden lg:block">
         <Image
           src="/login_banner.jpg"
-          alt="Login Banner"
+          alt={getLocalizedMessage("message187")}
           fill
           className="object-cover"
           priority

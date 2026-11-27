@@ -1,5 +1,7 @@
 "use client"
 
+import { LocalizedText } from "@/components/common/LocalizedText";
+
 import { HelpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Header from '@/components/common/PageHeader'
@@ -20,7 +22,7 @@ export default function RestaurantsHeader({ title, description }: HeaderProps) {
                     variant="outline"
                     className="w-full sm:w-auto justify-between sm:justify-start"
                 >
-                    <p className='pt-1'>View Trash</p>
+                    <p className='pt-1'><LocalizedText messageKey="message405" /></p>
                     <HelpCircle size={18} className="text-gray/60" />
                 </Button>
 
@@ -28,7 +30,7 @@ export default function RestaurantsHeader({ title, description }: HeaderProps) {
                     variant="outline"
                     className="w-full sm:w-auto justify-between sm:justify-start"
                 >
-                    <p className='pt-1'>View Drafts</p>
+                    <p className='pt-1'><LocalizedText messageKey="message404" /></p>
                     <HelpCircle size={18} className="text-gray/60" />
                 </Button>
 
@@ -37,7 +39,7 @@ export default function RestaurantsHeader({ title, description }: HeaderProps) {
                     onClick={() => router.push('/restaurants/add')}
                     className="w-full sm:w-auto whitespace-nowrap"
                 >
-                    Add New Restaurant
+                    <LocalizedText messageKey="message020" />
                 </Button>
             </div>
         </div>

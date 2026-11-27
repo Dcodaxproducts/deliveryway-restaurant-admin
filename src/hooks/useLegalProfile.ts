@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -41,10 +43,10 @@ export const useUpdateLegalProfile = () => {
       queryClient.invalidateQueries({
         queryKey: legalProfileQueryKeys.detail(variables.restaurantId),
       });
-      toast.success("Legal profile updated successfully.");
+      toast.success(getLocalizedMessage("message170"));
     },
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to update legal profile"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification084")));
     },
   });
 };

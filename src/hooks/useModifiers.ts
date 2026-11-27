@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getApiErrorMessage } from "@/lib/errors";
@@ -45,10 +46,10 @@ export const useCreateModifier = () => {
       queryClient.invalidateQueries({ queryKey: modifierKeys.all });
       queryClient.invalidateQueries({ queryKey: ["modifier-categories"] });
       queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
-      toast.success("Modifier created successfully!");
+      toast.success(getLocalizedMessage("message220"));
     },
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to create modifier"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification036")));
     },
   });
 };
@@ -68,10 +69,10 @@ export const useUpdateModifier = () => {
       queryClient.invalidateQueries({ queryKey: modifierKeys.all });
       queryClient.invalidateQueries({ queryKey: ["modifier-categories"] });
       queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
-      toast.success("Modifier updated successfully!");
+      toast.success(getLocalizedMessage("message231"));
     },
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to update modifier"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification091")));
     },
   });
 };
@@ -85,10 +86,10 @@ export const useDeleteModifier = () => {
       queryClient.invalidateQueries({ queryKey: modifierKeys.all });
       queryClient.invalidateQueries({ queryKey: ["modifier-categories"] });
       queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
-      toast.success("Modifier deleted successfully!");
+      toast.success(getLocalizedMessage("message221"));
     },
     onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, "Failed to delete modifier"));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification050")));
     },
   });
 };

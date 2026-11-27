@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 /**
@@ -42,20 +43,20 @@ const optionalNumberFromInput = ({
       return val;
     },
     z
-      .number({ invalid_type_error: "Must be a number" })
-      .refine((v) => !Number.isNaN(v), "Must be a valid number")
+      .number({ invalid_type_error: getLocalizedMessage("validation069") })
+      .refine((v) => !Number.isNaN(v), getLocalizedMessage("validation070"))
       .superRefine((v, ctx) => {
         if (integer && !Number.isInteger(v)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Must be an integer",
+            message: getLocalizedMessage("validation071"),
           });
         }
 
         if (nonnegative && v < 0) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Must be greater than or equal to 0",
+            message: getLocalizedMessage("validation072"),
           });
         }
 
@@ -98,21 +99,21 @@ const requiredNumberFromInput = ({
     z
       .number({
         required_error: message,
-        invalid_type_error: "Must be a number",
+        invalid_type_error: getLocalizedMessage("validation069"),
       })
-      .refine((v) => !Number.isNaN(v), "Must be a valid number")
+      .refine((v) => !Number.isNaN(v), getLocalizedMessage("validation070"))
       .superRefine((v, ctx) => {
         if (integer && !Number.isInteger(v)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Must be an integer",
+            message: getLocalizedMessage("validation071"),
           });
         }
 
         if (nonnegative && v < 0) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Must be greater than or equal to 0",
+            message: getLocalizedMessage("validation072"),
           });
         }
 
@@ -147,7 +148,7 @@ const optionalStringArray = () =>
     .optional()
     .default([]);
 
-const idSchema = z.string().trim().min(1, "Id is required");
+const idSchema = z.string().trim().min(1, getLocalizedMessage("validation044"));
 
 const menuItemModifierSchema = z.object({
   modifierId: idSchema,
@@ -267,7 +268,7 @@ export type UpdateMenuItemValues = z.infer<typeof updateMenuItemSchema>;
  */
 
 export const bulkMenuItemsSchema = z.object({
-  items: z.array(menuItemSchema).min(1, "At least one item is required"),
+  items: z.array(menuItemSchema).min(1, getLocalizedMessage("validation007")),
 });
 
 export type BulkMenuItemsValues = z.infer<typeof bulkMenuItemsSchema>;
@@ -291,7 +292,7 @@ const menuVariationShape = {
   price: requiredNumberFromInput({
     min: 0,
     nonnegative: true,
-    message: "Variation price is required",
+    message: getLocalizedMessage("validation130"),
   }),
 
   isDefault: optionalBoolean(false),
@@ -397,7 +398,7 @@ const modifierShape = {
 
   modifierGroupIds: z
     .array(idSchema)
-    .min(1, "At least one modifier group is required"),
+    .min(1, getLocalizedMessage("validation008")),
 
   isActive: optionalBoolean(true),
 };

@@ -52,13 +52,13 @@ describe("resolvePosCheckoutErrorMessage", () => {
     expect(message).not.toContain("guestContact");
   });
 
-  it("preserves unrelated actionable API messages", () => {
+  it("does not expose unrelated raw API messages", () => {
     expect(
       resolvePosCheckoutErrorMessage(
         { error: { message: "Specific API explanation" } },
         translator(en),
         "fallback",
       ),
-    ).toBe("Specific API explanation");
+    ).toBe("fallback");
   });
 });

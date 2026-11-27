@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -37,14 +38,14 @@ export const useCreateCustomer = (options?: CustomerMutationOptions) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       toast.success(
-        options?.messages?.success || "Customer created successfully!",
+        options?.messages?.success || getLocalizedMessage("notification004"),
       );
     },
     onError: (err: any) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to create customer",
+          getLocalizedMessage("notification028"),
       );
     },
   });
@@ -80,7 +81,7 @@ export const useUpdateCustomer = (options?: CustomerMutationOptions) => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       queryClient.invalidateQueries({ queryKey: ["customer", variables.id] });
       toast.success(
-        options?.messages?.success || "Customer updated successfully!",
+        options?.messages?.success || getLocalizedMessage("notification007"),
       );
     },
 
@@ -88,7 +89,7 @@ export const useUpdateCustomer = (options?: CustomerMutationOptions) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to update customer",
+          getLocalizedMessage("notification077"),
       );
     },
   });
@@ -101,7 +102,7 @@ export const useDeleteCustomer = (options?: CustomerMutationOptions) => {
     mutationFn: deleteCustomer,
     onSuccess: () => {
       toast.success(
-        options?.messages?.success || "Customer deleted successfully",
+        options?.messages?.success || getLocalizedMessage("notification005"),
       );
       queryClient.invalidateQueries({ queryKey: ["customers"] });
     },
@@ -109,7 +110,7 @@ export const useDeleteCustomer = (options?: CustomerMutationOptions) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to delete customer",
+          getLocalizedMessage("notification042"),
       );
     },
   });
@@ -128,14 +129,14 @@ export const useUpdateCustomerStatus = (options?: CustomerMutationOptions) => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       queryClient.invalidateQueries({ queryKey: ["customer", variables.id] });
-      toast.success(options?.messages?.success || "Customer status updated");
+      toast.success(options?.messages?.success || getLocalizedMessage("notification006"));
     },
 
     onError: (err: any) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Failed to update status",
+          getLocalizedMessage("notification099"),
       );
     },
   });
@@ -150,12 +151,12 @@ export const useForceDeleteCustomers = () => {
   return useMutation({
     mutationFn: forceDeleteCustomers,
     onSuccess: () => {
-      toast.success("Customer(s) force deleted successfully");
+      toast.success(getLocalizedMessage("message089"));
       queryClient.invalidateQueries({ queryKey: ["customers"] });
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to force delete customer(s)",
+        err?.response?.data?.message || getLocalizedMessage("notification064"),
       );
     },
   });
@@ -171,12 +172,12 @@ export const useApproveBusinessAdmin = () => {
   return useMutation({
     mutationFn: (id: string) => approveBusinessAdmin(id),
     onSuccess: () => {
-      toast.success("Business admin approved successfully");
+      toast.success(getLocalizedMessage("message063"));
       queryClient.invalidateQueries({ queryKey: ["business-admins"] });
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to approve business admin",
+        err?.response?.data?.message || getLocalizedMessage("notification016"),
       );
     },
   });
@@ -195,7 +196,7 @@ export const useVerifyCustomerEmail = (options?: CustomerMutationOptions) => {
       toast.error(
         err?.response?.data?.message ||
           options?.messages?.error ||
-          "Verification failed",
+          getLocalizedMessage("notification144"),
       );
     },
   });

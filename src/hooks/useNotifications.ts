@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -45,12 +46,12 @@ export const useUpdateNotificationSettings = () => {
         queryKey: ["notification-settings", restaurantId],
       });
 
-      toast.success("Notification settings updated successfully!");
+      toast.success(getLocalizedMessage("message250"));
     },
 
     onError: (error: unknown) => {
       toast.error(
-        getApiErrorMessage(error, "Failed to update notification settings"),
+        getApiErrorMessage(error, getLocalizedMessage("notification094")),
       );
     },
   });

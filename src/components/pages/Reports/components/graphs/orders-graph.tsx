@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMemo, useState } from "react";
 import {
   LineChart,
@@ -118,8 +121,8 @@ const OrdersGraph = ({
           <button
             onClick={() => refetch()}
             className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[#E7EAF0] text-gray-500 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
-            aria-label="Refresh order trend"
-            title="Refresh"
+            aria-label={getLocalizedMessage("message309")}
+            title={getLocalizedMessage("message308")}
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
           </button>
@@ -141,7 +144,7 @@ const OrdersGraph = ({
           </div>
         ) : chartData.length === 0 ? (
           <div className="flex h-full items-center justify-center rounded-[16px] border border-dashed border-gray-200 text-sm text-gray-400">
-            No order trend data available.
+            <LocalizedText messageKey="message245" />
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">

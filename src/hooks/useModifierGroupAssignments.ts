@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getApiErrorMessage } from "@/lib/errors";
@@ -28,11 +29,11 @@ export const useAssignModifierGroupToItem = () => {
       });
       queryClient.invalidateQueries({ queryKey: ["menus"] });
       queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
-      toast.success("Modifier group assigned to item successfully!");
+      toast.success(getLocalizedMessage("message225"));
     },
     onError: (error: unknown) => {
       toast.error(
-        getApiErrorMessage(error, "Failed to assign modifier group to item")
+        getApiErrorMessage(error, getLocalizedMessage("notification018"))
       );
     },
   });
@@ -59,7 +60,7 @@ export const useDetachModifierGroupFromItem = () => {
     },
     onError: (error: unknown) => {
       toast.error(
-        getApiErrorMessage(error, "Failed to detach modifier group from item")
+        getApiErrorMessage(error, getLocalizedMessage("notification057"))
       );
     },
   });
@@ -85,13 +86,13 @@ export const useAssignModifierGroupToCategory = () => {
       });
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
       queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
-      toast.success("Modifier group assigned to category successfully!");
+      toast.success(getLocalizedMessage("message224"));
     },
     onError: (error: unknown) => {
       toast.error(
         getApiErrorMessage(
           error,
-          "Failed to assign modifier group to category"
+          getLocalizedMessage("notification017")
         )
       );
     },

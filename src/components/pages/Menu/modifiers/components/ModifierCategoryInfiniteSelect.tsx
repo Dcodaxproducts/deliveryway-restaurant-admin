@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Loader2, Search, X } from "lucide-react";
 import { useInfiniteModifierCategories } from "@/hooks/useModifierCategories";
@@ -154,7 +157,7 @@ export default function ModifierCategoryInfiniteSelect({
                 }
               }}
               className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-              aria-label="Clear modifier category"
+              aria-label={getLocalizedMessage("message072")}
             >
               <X size={14} />
             </span>
@@ -171,7 +174,7 @@ export default function ModifierCategoryInfiniteSelect({
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search modifier categories..."
+                placeholder={getLocalizedMessage("message337")}
                 className="min-w-0 flex-1 bg-transparent text-sm outline-none"
               />
             </div>
@@ -194,13 +197,13 @@ export default function ModifierCategoryInfiniteSelect({
             {isLoading || isFetchingNextPage ? (
               <div className="flex items-center justify-center gap-2 px-3 py-3 text-sm text-gray-500">
                 <Loader2 size={15} className="animate-spin" />
-                Loading categories...
+                <LocalizedText messageKey="message176" />
               </div>
             ) : null}
 
             {!isLoading && categories.length === 0 ? (
               <div className="px-3 py-4 text-center text-sm text-gray-400">
-                No modifier categories found
+                <LocalizedText messageKey="message243" />
               </div>
             ) : null}
           </div>

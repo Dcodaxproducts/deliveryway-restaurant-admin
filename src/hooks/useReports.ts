@@ -1,5 +1,7 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import {
   exportCustomersReport,
@@ -63,17 +65,7 @@ const downloadCsvExportResponse = (
   downloadBlobFile(blob, fileName);
 };
 
-const getExportRowCountText = (response: CsvExportResponse) => {
-  const rowCount = response?.data?.rowCount;
-
-  if (typeof rowCount !== "number") return "";
-
-  return ` (${rowCount} rows)`;
-};
-
-const getErrorMessage = (err: any, fallback: string) => {
-  return err?.response?.data?.message || err?.message || fallback;
-};
+const getErrorMessage = (_error: unknown, fallback: string) => fallback;
 
 /**
  * ==============================
@@ -191,6 +183,7 @@ export const useGetAdminReportInvoiceDetails = (
  */
 
 export const useExportMenuReport = () => {
+  const t = useTranslations("reports");
   return useMutation({
     mutationFn: (params?: MenuExportReportParams) => exportMenuReport(params),
 
@@ -198,17 +191,18 @@ export const useExportMenuReport = () => {
       downloadCsvExportResponse(response, "menu-report.csv");
 
       toast.success(
-        `Menu report exported successfully${getExportRowCountText(response)}`
+        t("menuExportSuccess", { count: response?.data?.rowCount ?? -1 })
       );
     },
 
     onError: (err: any) => {
-      toast.error(getErrorMessage(err, "Failed to export menu report"));
+      toast.error(getErrorMessage(err, getLocalizedMessage("notification061")));
     },
   });
 };
 
 export const useExportOrdersReport = () => {
+  const t = useTranslations("reports");
   return useMutation({
     mutationFn: (params?: OrdersExportReportParams) =>
       exportOrdersReport(params),
@@ -217,17 +211,18 @@ export const useExportOrdersReport = () => {
       downloadCsvExportResponse(response, "orders-report.csv");
 
       toast.success(
-        `Orders report exported successfully${getExportRowCountText(response)}`
+        t("ordersExportSuccess", { count: response?.data?.rowCount ?? -1 })
       );
     },
 
     onError: (err: any) => {
-      toast.error(getErrorMessage(err, "Failed to export orders report"));
+      toast.error(getErrorMessage(err, getLocalizedMessage("notification062")));
     },
   });
 };
 
 export const useExportCustomersReport = () => {
+  const t = useTranslations("reports");
   return useMutation({
     mutationFn: (params?: CustomersExportReportParams) =>
       exportCustomersReport(params),
@@ -236,14 +231,12 @@ export const useExportCustomersReport = () => {
       downloadCsvExportResponse(response, "customers-report.csv");
 
       toast.success(
-        `Customers report exported successfully${getExportRowCountText(
-          response
-        )}`
+        t("customersExportSuccess", { count: response?.data?.rowCount ?? -1 })
       );
     },
 
     onError: (err: any) => {
-      toast.error(getErrorMessage(err, "Failed to export customers report"));
+      toast.error(getErrorMessage(err, getLocalizedMessage("notification060")));
     },
   });
 };

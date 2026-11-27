@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -535,7 +537,7 @@ export function useRealtimeOrderNotifications() {
         restaurantId: payload.restaurantId,
         branchId: payload.branchId,
       }).catch(() => {
-        toast.error(orders("newOrderAutoPrintFailed"));
+        toast.error(orders(getLocalizedMessage("notification111")));
       });
 
       try {
@@ -566,7 +568,7 @@ export function useRealtimeOrderNotifications() {
       }
 
       toast.success(
-        orders("newOrderReceived", {
+        orders(getLocalizedMessage("notification112"), {
           order: payload.id.slice(-8),
         }),
         {
@@ -656,7 +658,7 @@ export function useRealtimeOrderNotifications() {
             restaurantId,
             branchId: order.branchId ?? branchId,
           }).catch(() =>
-            toast.error(orders("acceptedOrderAutoPrintFailed")),
+            toast.error(orders(getLocalizedMessage("notification001"))),
           );
         }
       });
@@ -714,7 +716,7 @@ export function useRealtimeOrderNotifications() {
             restaurantId: accepted.restaurantId,
             branchId: accepted.branchId,
           }).catch(() =>
-            toast.error(orders("acceptedOrderAutoPrintFailed")),
+            toast.error(orders(getLocalizedMessage("notification001"))),
           );
         },
       });

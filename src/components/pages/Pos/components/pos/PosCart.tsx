@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import Image from "next/image";
 import { ChevronDown, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -956,11 +958,11 @@ export default function PosCart() {
                           <span className="font-semibold text-primary">
                             {formatMoney(item.unitPrice)}
                           </span>
-                          <span>× {item.quantity}</span>
+                          <span><LocalizedText messageKey="message003" /> {item.quantity}</span>
                         </div>
                       ) : (
                         <p>
-                          {formatMoney(item.unitPrice)} × {item.quantity}
+                          {formatMoney(item.unitPrice)} <LocalizedText messageKey="message003" /> {item.quantity}
                         </p>
                       )}
                     </div>
@@ -972,7 +974,7 @@ export default function PosCart() {
                             className="text-[11px] leading-4 text-gray-400"
                           >
                             {modifier.name} + {formatMoney(modifier.unitPrice)}{" "}
-                            × {modifier.quantity}
+                            <LocalizedText messageKey="message003" /> {modifier.quantity}
                           </p>
                         ))}
                       </div>

@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import {
   Dialog,
   DialogContent,
@@ -1247,7 +1249,7 @@ export default function CreateMenuItemModal({
       if (itemId) {
         await attachModifierGroupAssignments(itemId, modifierGroupAssignments);
       } else if (modifierGroupAssignments.length > 0) {
-        toast.error("Menu item created but no item id was returned.");
+        toast.error(getLocalizedMessage("message200"));
         return;
       }
 

@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -46,10 +48,10 @@ export function useCreateGiftCard() {
     mutationFn: (payload: GiftCardCreatePayload) => createGiftCard(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.giftCards.all });
-      toast.success("Gift card created successfully.");
+      toast.success(getLocalizedMessage("message135"));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Unable to create gift card."));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification124")));
     },
   });
 }
@@ -72,10 +74,10 @@ export function useUpdateGiftCard() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.giftCards.detail(variables.id, variables.params),
       });
-      toast.success("Gift card updated successfully.");
+      toast.success(getLocalizedMessage("message137"));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Unable to update gift card."));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification138")));
     },
   });
 }
@@ -91,10 +93,10 @@ export function useDeleteGiftCard() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.giftCards.detail(variables.id, variables.params),
       });
-      toast.success("Gift card deleted successfully.");
+      toast.success(getLocalizedMessage("message136"));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Unable to delete gift card."));
+      toast.error(getApiErrorMessage(error, getLocalizedMessage("notification126")));
     },
   });
 }

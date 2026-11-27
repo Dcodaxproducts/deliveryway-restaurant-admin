@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Building2,
@@ -484,7 +487,7 @@ export default function RestaurantInvoicesModal({
 
   const handleDownloadInvoice = async (invoice: AdminInvoice) => {
     if (!restaurantId) {
-      toast.error("Restaurant is not available");
+      toast.error(getLocalizedMessage("message320"));
       return;
     }
 
@@ -502,9 +505,9 @@ export default function RestaurantInvoicesModal({
         additionalCharges,
       });
 
-      toast.success("Invoice PDF downloaded successfully");
+      toast.success(getLocalizedMessage("message153"));
     } catch {
-      toast.error("Failed to download invoice PDF");
+      toast.error(getLocalizedMessage("message123"));
     } finally {
       setDownloadOrderId(null);
     }
@@ -535,18 +538,17 @@ export default function RestaurantInvoicesModal({
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <DialogTitle className="text-[28px] font-semibold tracking-tight text-gray-950">
-                Restaurant Invoices
+                <LocalizedText messageKey="message319" />
               </DialogTitle>
 
               <p className="mt-2 max-w-[680px] text-sm leading-6 text-gray-700">
-                Add an optional invoice message and amount adjustment, then
-                download invoice PDFs for this restaurant.
+                <LocalizedText messageKey="message016" />
               </p>
             </div>
 
             <div className="rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 py-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">
-                Shown
+                <LocalizedText messageKey="message359" />
               </p>
               <p className="mt-1 text-xl font-bold text-gray-950">
                 {filteredInvoices.length}
@@ -559,7 +561,7 @@ export default function RestaurantInvoicesModal({
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_310px]">
             <div>
               <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-gray-700">
-                Invoice Message
+                <LocalizedText messageKey="message152" />
               </label>
 
               <div className="relative">
@@ -571,7 +573,7 @@ export default function RestaurantInvoicesModal({
                 <textarea
                   value={message}
                   onChange={(event) => setMessage(event.target.value)}
-                  placeholder="Add an optional message for downloaded invoice PDFs..."
+                  placeholder={getLocalizedMessage("message017")}
                   rows={2}
                   className="min-h-[86px] w-full resize-none rounded-[14px] border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm leading-6 text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
@@ -580,7 +582,7 @@ export default function RestaurantInvoicesModal({
 
             <div>
               <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-gray-700">
-                Additional Charges
+                <LocalizedText messageKey="message024" />
               </label>
 
               <input
@@ -590,14 +592,14 @@ export default function RestaurantInvoicesModal({
                 onChange={(event) =>
                   setAdditionalChargesInput(event.target.value)
                 }
-                placeholder="0.00 or -25.00"
+                placeholder={getLocalizedMessage("message005")}
                 className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-950 outline-none transition placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/15"
               />
 
               <div className="mt-2 rounded-[14px] border border-gray-200 bg-[#FAFAFA] p-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-semibold text-gray-700">
-                    Adjustment
+                    <LocalizedText messageKey="message025" />
                   </span>
                   <span
                     className={`font-bold ${
@@ -613,7 +615,7 @@ export default function RestaurantInvoicesModal({
                 </div>
 
                 <p className="mt-1.5 text-xs leading-5 text-gray-600">
-                  Positive values are added. Negative values are subtracted.
+                  <LocalizedText messageKey="message289" />
                 </p>
               </div>
             </div>
@@ -634,7 +636,7 @@ export default function RestaurantInvoicesModal({
                     handleSearchClick();
                   }
                 }}
-                placeholder="Search invoice, customer, branch, order ID..."
+                placeholder={getLocalizedMessage("message336")}
                 className="h-[48px] w-full rounded-[14px] border border-gray-200 bg-white pl-10 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/15"
               />
             </div>
@@ -645,7 +647,7 @@ export default function RestaurantInvoicesModal({
               className="h-[48px] rounded-[14px] px-9 font-semibold bg-primary text-white transition hover:bg-primary/90"
             >
               <Search size={17}  />
-              Search
+              <LocalizedText messageKey="message331" />
             </Button>
           </div>
         </div>
@@ -654,7 +656,7 @@ export default function RestaurantInvoicesModal({
           {isLoading || isFetching ? (
             <div className="flex min-h-[520px] items-center justify-center gap-2 text-gray-600">
               <Loader2 size={18} className="animate-spin" />
-              Loading invoices...
+              <LocalizedText messageKey="message179" />
             </div>
           ) : filteredInvoices.length === 0 ? (
             <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
@@ -663,11 +665,11 @@ export default function RestaurantInvoicesModal({
               </div>
 
               <h3 className="text-base font-semibold text-gray-950">
-                No invoices found
+                <LocalizedText messageKey="message242" />
               </h3>
 
               <p className="mt-1 max-w-[420px] text-sm text-gray-700">
-                There are no generated invoices matching your current search.
+                <LocalizedText messageKey="message377" />
               </p>
             </div>
           ) : (
@@ -775,7 +777,7 @@ export default function RestaurantInvoicesModal({
 
                       <div className="rounded-[16px] border border-gray-200 bg-white p-4 shadow-sm">
                         <p className="text-xs font-bold uppercase tracking-wide text-gray-700">
-                          Final PDF Amount
+                          <LocalizedText messageKey="message131" />
                         </p>
 
                         <p className="mt-1 text-2xl font-bold text-green">
@@ -797,7 +799,7 @@ export default function RestaurantInvoicesModal({
                           ) : (
                             <Download size={16} className="mr-2" />
                           )}
-                          Download PDF
+                          <LocalizedText messageKey="message108" />
                         </Button>
                       </div>
                     </div>
@@ -812,10 +814,10 @@ export default function RestaurantInvoicesModal({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-gray-900">
-                {filteredInvoices.length} invoice(s) shown
+                {filteredInvoices.length} <LocalizedText messageKey="message154" />
               </p>
               <p className="mt-0.5 text-xs text-gray-600">
-                Downloads include message and adjustment values when provided.
+                <LocalizedText messageKey="message109" />
               </p>
             </div>
 
@@ -825,7 +827,7 @@ export default function RestaurantInvoicesModal({
               onClick={() => onOpenChange(false)}
               className="h-[42px] rounded-[12px] border-gray-300 px-6 font-semibold text-gray-900"
             >
-              Close
+              <LocalizedText messageKey="message074" />
             </Button>
           </div>
         </div>

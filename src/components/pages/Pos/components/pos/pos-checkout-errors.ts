@@ -57,5 +57,5 @@ export const resolvePosCheckoutErrorMessage = (
     pattern.test(message),
   )?.key;
 
-  return legacyKey ? t(legacyKey) : message || fallback;
+  return legacyKey ? t(legacyKey) : fallback;
 };

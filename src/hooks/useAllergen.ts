@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -71,13 +72,13 @@ export const useUpdateAllergenAdditiveTemplates = () => {
         queryKey: ["menu-items"],
       });
 
-      toast.success("Allergen and additive templates updated successfully");
+      toast.success(getLocalizedMessage("message033"));
     },
 
     onError: (error: any) => {
       toast.error(
         error?.response?.data?.message ||
-          "Failed to update allergen and additive templates",
+          getLocalizedMessage("notification073"),
       );
     },
   });
@@ -101,11 +102,11 @@ export const useCreateAllergenAdditiveTemplate = () => {
         queryKey: allergenAdditiveTemplateKeys.all,
       });
 
-      toast.success("Template added successfully");
+      toast.success(getLocalizedMessage("message373"));
     },
 
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to add template");
+      toast.error(error?.response?.data?.message || getLocalizedMessage("notification013"));
     },
   });
 };
@@ -128,12 +129,12 @@ export const useUpdateSingleAllergenAdditiveTemplate = () => {
         queryKey: allergenAdditiveTemplateKeys.all,
       });
 
-      toast.success("Template updated successfully");
+      toast.success(getLocalizedMessage("message375"));
     },
 
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || "Failed to update template",
+        error?.response?.data?.message || getLocalizedMessage("notification100"),
       );
     },
   });
@@ -157,12 +158,12 @@ export const useDeleteAllergenAdditiveTemplate = () => {
         queryKey: allergenAdditiveTemplateKeys.all,
       });
 
-      toast.success("Template deleted successfully");
+      toast.success(getLocalizedMessage("message374"));
     },
 
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || "Failed to delete template",
+        error?.response?.data?.message || getLocalizedMessage("notification055"),
       );
     },
   });

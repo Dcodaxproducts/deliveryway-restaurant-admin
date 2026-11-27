@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -110,14 +113,14 @@ export default function ModifierCategoryFormDialog({
 
   const handleSubmit = async () => {
     if (!canSubmit || !restaurantId) {
-      toast.error("Category name is required.");
+      toast.error(getLocalizedMessage("message067"));
       return;
     }
 
     const sortOrder = Number(form.sortOrder);
 
     if (form.sortOrder === "" || Number.isNaN(sortOrder)) {
-      toast.error("Sort order must be a valid number.");
+      toast.error(getLocalizedMessage("message365"));
       return;
     }
 
@@ -134,7 +137,7 @@ export default function ModifierCategoryFormDialog({
         const parsed = updateModifierCategorySchema.safeParse(basePayload);
 
         if (!parsed.success) {
-          toast.error(parsed.error.issues[0]?.message || "Invalid category data.");
+          toast.error(parsed.error.issues[0]?.message || getLocalizedMessage("notification105"));
           return;
         }
 
@@ -149,7 +152,7 @@ export default function ModifierCategoryFormDialog({
         });
 
         if (!parsed.success) {
-          toast.error(parsed.error.issues[0]?.message || "Invalid category data.");
+          toast.error(parsed.error.issues[0]?.message || getLocalizedMessage("notification105"));
           return;
         }
 
@@ -159,7 +162,7 @@ export default function ModifierCategoryFormDialog({
       closeDialog();
     } catch (error: unknown) {
       toast.error(
-        getApiErrorMessage(error, "Unable to save modifier category.")
+        getApiErrorMessage(error, getLocalizedMessage("notification129"))
       );
     }
   };
@@ -183,7 +186,7 @@ export default function ModifierCategoryFormDialog({
           </DialogTitle>
 
           <p className="text-sm text-gray-500">
-            Create categories such as Bread, Sauces, Cheese, and Toppings.
+            <LocalizedText messageKey="message082" />
           </p>
         </DialogHeader>
 
@@ -192,7 +195,7 @@ export default function ModifierCategoryFormDialog({
             label="Name"
             value={form.name}
             onChange={handleNameChange}
-            placeholder="Sauces"
+            placeholder={getLocalizedMessage("message327")}
             disabled={isSubmitting}
           />
 
@@ -206,12 +209,12 @@ export default function ModifierCategoryFormDialog({
                 slug: slugifyModifierCategoryName(value),
               }));
             }}
-            placeholder="sauces"
+            placeholder={getLocalizedMessage("message326")}
             disabled={isSubmitting}
           />
 
           <div className="space-y-1">
-            <p className="text-sm text-gray-600">Description</p>
+            <p className="text-sm text-gray-600"><LocalizedText messageKey="message104" /></p>
             <textarea
               value={form.description}
               onChange={(event) =>
@@ -221,7 +224,7 @@ export default function ModifierCategoryFormDialog({
                 }))
               }
               rows={3}
-              placeholder="Sauce options"
+              placeholder={getLocalizedMessage("message325")}
               disabled={isSubmitting}
               className="w-full rounded-[10px] border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-400 disabled:cursor-not-allowed disabled:opacity-60"
             />
@@ -257,7 +260,7 @@ export default function ModifierCategoryFormDialog({
                 disabled={isSubmitting}
                 className="size-4 rounded border-gray-300 text-primary focus:ring-primary"
               />
-              Active
+              <LocalizedText messageKey="message014" />
             </label>
           ) : null}
 
@@ -270,7 +273,7 @@ export default function ModifierCategoryFormDialog({
             {isSubmitting ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="animate-spin" size={18} />
-                Saving
+                <LocalizedText messageKey="message329" />
               </span>
             ) : isEditMode ? (
               "Update category"

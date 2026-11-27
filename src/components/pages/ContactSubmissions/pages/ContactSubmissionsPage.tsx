@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   Archive,
@@ -142,9 +145,9 @@ function ContactSubmissionReplyDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[560px] rounded-[20px] p-6">
         <DialogHeader>
-          <DialogTitle>Reply to customer</DialogTitle>
+          <DialogTitle><LocalizedText messageKey="message314" /></DialogTitle>
           <DialogDescription>
-            This sends an email reply and marks the submission as replied.
+            <LocalizedText messageKey="message382" />
           </DialogDescription>
         </DialogHeader>
 
@@ -158,7 +161,7 @@ function ContactSubmissionReplyDialog({
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <Label htmlFor="reply-subject">Subject</Label>
+            <Label htmlFor="reply-subject"><LocalizedText messageKey="message368" /></Label>
             <input
               id="reply-subject"
               value={subject}
@@ -170,7 +173,7 @@ function ContactSubmissionReplyDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reply-message">Message</Label>
+            <Label htmlFor="reply-message"><LocalizedText messageKey="message211" /></Label>
             <Textarea
               id="reply-message"
               value={message}
@@ -183,7 +186,7 @@ function ContactSubmissionReplyDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              <LocalizedText messageKey="message064" />
             </Button>
             <Button
               type="submit"
@@ -214,16 +217,16 @@ function ContactSubmissionDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[620px] rounded-[20px] p-6">
         <DialogHeader>
-          <DialogTitle>Contact submission</DialogTitle>
+          <DialogTitle><LocalizedText messageKey="message076" /></DialogTitle>
           <DialogDescription>
-            Customer message, routing scope, and reply status.
+            <LocalizedText messageKey="message088" />
           </DialogDescription>
         </DialogHeader>
 
         {submissionQuery.isLoading ? (
           <div className="flex items-center gap-2 py-8 text-sm text-gray-500">
             <Loader2 size={16} className="animate-spin" />
-            Loading submission...
+            <LocalizedText messageKey="message185" />
           </div>
         ) : submission ? (
           <div className="space-y-4">
@@ -241,14 +244,14 @@ function ContactSubmissionDetailDialog({
 
             <div className="grid gap-3 rounded-[16px] bg-gray-50 p-4 text-sm md:grid-cols-2">
               <div>
-                <p className="text-xs font-medium uppercase text-gray-400">Customer</p>
+                <p className="text-xs font-medium uppercase text-gray-400"><LocalizedText messageKey="message087" /></p>
                 <p className="mt-1 font-semibold text-gray-900">
                   {getCustomerLabel(submission)}
                 </p>
                 <p className="break-words text-gray-500">{submission.email}</p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase text-gray-400">Branch</p>
+                <p className="text-xs font-medium uppercase text-gray-400"><LocalizedText messageKey="message047" /></p>
                 <p className="mt-1 font-semibold text-gray-900">
                   {getBranchLabel(submission)}
                 </p>
@@ -256,7 +259,7 @@ function ContactSubmissionDetailDialog({
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-semibold text-gray-900">Message</p>
+              <p className="mb-2 text-sm font-semibold text-gray-900"><LocalizedText messageKey="message211" /></p>
               <p className="whitespace-pre-wrap break-words rounded-[16px] border border-gray-100 p-4 text-sm text-gray-600">
                 {submission.message}
               </p>
@@ -264,7 +267,7 @@ function ContactSubmissionDetailDialog({
 
             {submission.replyMessage ? (
               <div>
-                <p className="mb-2 text-sm font-semibold text-gray-900">Reply</p>
+                <p className="mb-2 text-sm font-semibold text-gray-900"><LocalizedText messageKey="message312" /></p>
                 <div className="rounded-[16px] border border-green-100 bg-green-50 p-4 text-sm text-green-800">
                   <p className="font-semibold">{submission.replySubject}</p>
                   <p className="mt-2 whitespace-pre-wrap break-words">
@@ -276,7 +279,7 @@ function ContactSubmissionDetailDialog({
           </div>
         ) : (
           <EmptyState
-            title="Submission unavailable"
+            title={getLocalizedMessage("message370")}
             description="The selected submission could not be loaded."
           />
         )}
@@ -366,7 +369,7 @@ export default function ContactSubmissionsPage() {
       <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-2">
           <PageHeader
-            title="Contact Submissions"
+            title={getLocalizedMessage("message078")}
             description={
               isBranchAdmin
                 ? "Manage customer contact requests for your assigned branch."
@@ -374,7 +377,7 @@ export default function ContactSubmissionsPage() {
             }
           />
           <p className="text-sm text-gray-500">
-            {meta.total} submission{meta.total === 1 ? "" : "s"} found
+            {meta.total} <LocalizedText messageKey="message369" />{meta.total === 1 ? "" : "s"} <LocalizedText messageKey="message134" />
           </p>
         </div>
 
@@ -389,7 +392,7 @@ export default function ContactSubmissionsPage() {
             size={18}
             className={submissionsQuery.isFetching ? "animate-spin" : ""}
           />
-          Refresh
+          <LocalizedText messageKey="message308" />
         </Button>
       </div>
 
@@ -397,7 +400,7 @@ export default function ContactSubmissionsPage() {
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
           <div className="xl:col-span-4">
             <Label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Search
+              <LocalizedText messageKey="message331" />
             </Label>
             <div className="relative">
               <Search
@@ -407,7 +410,7 @@ export default function ContactSubmissionsPage() {
               <input
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
-                placeholder="Search name, email, subject, or message"
+                placeholder={getLocalizedMessage("message339")}
                 className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] pl-11 pr-4 text-sm outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
               />
             </div>
@@ -415,7 +418,7 @@ export default function ContactSubmissionsPage() {
 
           <div className="xl:col-span-2">
             <Label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Status
+              <LocalizedText messageKey="message366" />
             </Label>
             <select
               value={status}
@@ -435,7 +438,7 @@ export default function ContactSubmissionsPage() {
 
           <div className="xl:col-span-3">
             <Label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Branch
+              <LocalizedText messageKey="message047" />
             </Label>
             {isBranchAdmin ? (
               <div className="flex h-[44px] items-center rounded-[14px] border border-gray-200 bg-gray-50 px-4 text-sm text-gray-600">
@@ -450,7 +453,7 @@ export default function ContactSubmissionsPage() {
                 }}
                 className="h-[44px] w-full rounded-[14px] border border-gray-200 bg-[#FAFAFA] px-4 text-sm outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
               >
-                <option value="">All branches</option>
+                <option value=""><LocalizedText messageKey="message027" /></option>
                 {branchOptions.map((branch) => (
                   <option key={branch.id} value={branch.id}>
                     {branch.name}
@@ -473,23 +476,23 @@ export default function ContactSubmissionsPage() {
                 setPage(1);
               }}
             >
-              Clear filters
+              <LocalizedText messageKey="message071" />
             </Button>
           </div>
         </div>
 
         {submissionsQuery.isLoading ? (
           <div className="py-10 text-center text-sm text-gray-400">
-            Loading contact submissions...
+            <LocalizedText messageKey="message177" />
           </div>
         ) : submissionsQuery.error ? (
           <EmptyState
-            title="Unable to load contact submissions"
+            title={getLocalizedMessage("message390")}
             description={submissionsQuery.error.message}
           />
         ) : submissions.length === 0 ? (
           <EmptyState
-            title="No contact submissions found"
+            title={getLocalizedMessage("message239")}
             description="Customer messages from the public contact form will appear here."
           />
         ) : (
@@ -498,12 +501,12 @@ export default function ContactSubmissionsPage() {
               <table className="w-full table-fixed text-sm">
                 <thead>
                   <tr className="border-b bg-[#FAFAFA] text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    <th className="w-[22%] px-5 py-4">Customer</th>
-                    <th className="w-[28%] px-3 py-4">Message</th>
-                    <th className="w-[16%] px-3 py-4">Branch</th>
-                    <th className="w-[14%] px-3 py-4">Received</th>
-                    <th className="w-[12%] px-3 py-4 text-center">Status</th>
-                    <th className="w-[8%] px-5 py-4 text-center">Actions</th>
+                    <th className="w-[22%] px-5 py-4"><LocalizedText messageKey="message087" /></th>
+                    <th className="w-[28%] px-3 py-4"><LocalizedText messageKey="message211" /></th>
+                    <th className="w-[16%] px-3 py-4"><LocalizedText messageKey="message047" /></th>
+                    <th className="w-[14%] px-3 py-4"><LocalizedText messageKey="message305" /></th>
+                    <th className="w-[12%] px-3 py-4 text-center"><LocalizedText messageKey="message366" /></th>
+                    <th className="w-[8%] px-5 py-4 text-center"><LocalizedText messageKey="message013" /></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -554,25 +557,25 @@ export default function ContactSubmissionsPage() {
                               onClick={() => setDetailSubmissionId(submission.id)}
                             >
                               <Eye size={16} />
-                              View details
+                              <LocalizedText messageKey="message403" />
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => updateStatus(submission, "READ")}
                             >
                               <Mail size={16} />
-                              Mark as read
+                              <LocalizedText messageKey="message192" />
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => setReplySubmission(submission)}
                             >
                               <MessageSquareReply size={16} />
-                              Reply
+                              <LocalizedText messageKey="message312" />
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => updateStatus(submission, "ARCHIVED")}
                             >
                               <Archive size={16} />
-                              Archive
+                              <LocalizedText messageKey="message037" />
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -610,14 +613,14 @@ export default function ContactSubmissionsPage() {
                       variant="outline"
                       onClick={() => setDetailSubmissionId(submission.id)}
                     >
-                      View
+                      <LocalizedText messageKey="message402" />
                     </Button>
                     <Button
                       type="button"
                       size="sm"
                       onClick={() => setReplySubmission(submission)}
                     >
-                      Reply
+                      <LocalizedText messageKey="message312" />
                     </Button>
                   </div>
                 </div>

@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cleanParams } from "@/lib/params";
 import type { MenuItemsListParams } from "@/types/menu-items";
@@ -59,10 +60,10 @@ export const useCreateMenuItem = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
       queryClient.invalidateQueries({ queryKey: ["menus"] });
-      toast.success("Menu item created successfully!");
+      toast.success(getLocalizedMessage("message201"));
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to create menu item");
+      toast.error(err?.response?.data?.message || getLocalizedMessage("notification034"));
     },
   });
 };
@@ -96,11 +97,11 @@ export const useUpsertMenuItemBranchOverride = () => {
       upsertMenuItemBranchOverride(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
-      toast.success("Branch menu item override saved");
+      toast.success(getLocalizedMessage("message057"));
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to save branch item override"
+        err?.response?.data?.message || getLocalizedMessage("notification070")
       );
     },
   });
@@ -114,11 +115,11 @@ export const useBulkCreateMenuItems = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
       queryClient.invalidateQueries({ queryKey: ["menus"] });
-      toast.success("Menu items created successfully!");
+      toast.success(getLocalizedMessage("message205"));
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to bulk create menu items"
+        err?.response?.data?.message || getLocalizedMessage("notification025")
       );
     },
   });
@@ -135,11 +136,11 @@ export const useUpdateMenuItem = () => {
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
       queryClient.invalidateQueries({ queryKey: ["menu-item", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["menus"] });
-      toast.success("Menu item updated successfully!");
+      toast.success(getLocalizedMessage("message204"));
     },
 
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to update menu item");
+      toast.error(err?.response?.data?.message || getLocalizedMessage("notification089"));
     },
   });
 };
@@ -152,10 +153,10 @@ export const useDeleteMenuItem = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
       queryClient.invalidateQueries({ queryKey: ["menus"] });
-      toast.success("Menu item deleted successfully!");
+      toast.success(getLocalizedMessage("message202"));
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to delete menu item");
+      toast.error(err?.response?.data?.message || getLocalizedMessage("notification048"));
     },
   });
 };
@@ -175,12 +176,12 @@ export const useCreateMenuVariation = () => {
       queryClient.invalidateQueries({ queryKey: ["menu-variations"] });
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
 
-      toast.success("Menu variation created successfully!");
+      toast.success(getLocalizedMessage("message208"));
     },
 
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to create menu variation"
+        err?.response?.data?.message || getLocalizedMessage("notification035")
       );
     },
   });
@@ -214,12 +215,12 @@ export const useUpdateMenuVariation = () => {
       queryClient.invalidateQueries({ queryKey: ["menu-variations"] });
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
 
-      toast.success("Menu variation updated successfully!");
+      toast.success(getLocalizedMessage("message210"));
     },
 
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to update menu variation"
+        err?.response?.data?.message || getLocalizedMessage("notification090")
       );
     },
   });
@@ -235,12 +236,12 @@ export const useDeleteMenuVariation = () => {
       queryClient.invalidateQueries({ queryKey: ["menu-variations"] });
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
 
-      toast.success("Menu variation deleted successfully!");
+      toast.success(getLocalizedMessage("message209"));
     },
 
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to delete menu variation"
+        err?.response?.data?.message || getLocalizedMessage("notification049")
       );
     },
   });
@@ -258,11 +259,11 @@ export const useCreateModifierGroup = () => {
     mutationFn: createModifierGroup,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
-      toast.success("Modifier group created successfully!");
+      toast.success(getLocalizedMessage("message227"));
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to create modifier group"
+        err?.response?.data?.message || getLocalizedMessage("notification038")
       );
     },
   });
@@ -304,12 +305,12 @@ export const useUpdateModifierGroup = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
-      toast.success("Modifier group updated successfully!");
+      toast.success(getLocalizedMessage("message229"));
     },
 
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to update modifier group"
+        err?.response?.data?.message || getLocalizedMessage("notification093")
       );
     },
   });
@@ -322,11 +323,11 @@ export const useDeleteModifierGroup = () => {
     mutationFn: deleteModifierGroup,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
-      toast.success("Modifier group deleted successfully!");
+      toast.success(getLocalizedMessage("message228"));
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to delete modifier group"
+        err?.response?.data?.message || getLocalizedMessage("notification052")
       );
     },
   });
@@ -346,10 +347,10 @@ export const useCreateModifier = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["modifiers"] });
       queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
-      toast.success("Modifier created successfully!");
+      toast.success(getLocalizedMessage("message220"));
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to create modifier");
+      toast.error(err?.response?.data?.message || getLocalizedMessage("notification036"));
     },
   });
 };
@@ -385,11 +386,11 @@ export const useUpdateModifier = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["modifiers"] });
       queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
-      toast.success("Modifier updated successfully!");
+      toast.success(getLocalizedMessage("message231"));
     },
 
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to update modifier");
+      toast.error(err?.response?.data?.message || getLocalizedMessage("notification091"));
     },
   });
 };
@@ -402,10 +403,10 @@ export const useDeleteModifier = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["modifiers"] });
       queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
-      toast.success("Modifier deleted successfully!");
+      toast.success(getLocalizedMessage("message221"));
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to delete modifier");
+      toast.error(err?.response?.data?.message || getLocalizedMessage("notification050"));
     },
   });
 };
@@ -431,13 +432,13 @@ export const useAttachModifierGroupToItem = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
       queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
-      toast.success("Modifier group attached successfully!");
+      toast.success(getLocalizedMessage("message226"));
     },
 
     onError: (err: any) => {
       toast.error(
         err?.response?.data?.message ||
-          "Failed to attach modifier group to item"
+          getLocalizedMessage("notification023")
       );
     },
   });
@@ -456,10 +457,10 @@ export const useCreateRestaurantMenu = () => {
     mutationFn: createRestaurantMenu,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menus"] });
-      toast.success("Menu created successfully!");
+      toast.success(getLocalizedMessage("message198"));
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to create menu");
+      toast.error(err?.response?.data?.message || getLocalizedMessage("notification032"));
     },
   });
 };
@@ -504,11 +505,11 @@ export const useUpdateRestaurantMenu = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["menus"] });
       queryClient.invalidateQueries({ queryKey: ["menus", variables.id] });
-      toast.success("Menu updated successfully!");
+      toast.success(getLocalizedMessage("message207"));
     },
 
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to update menu");
+      toast.error(err?.response?.data?.message || getLocalizedMessage("notification087"));
     },
   });
 };
@@ -520,10 +521,10 @@ export const useDeleteRestaurantMenu = () => {
     mutationFn: deleteRestaurantMenu,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menus"] });
-      toast.success("Menu deleted successfully!");
+      toast.success(getLocalizedMessage("message199"));
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to delete menu");
+      toast.error(err?.response?.data?.message || getLocalizedMessage("notification046"));
     },
   });
 };
@@ -549,11 +550,11 @@ export const useAddItemToMenu = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["menus"] });
       queryClient.invalidateQueries({ queryKey: ["menu-items-by-menu", variables.menuId] });
-      toast.success("Item added to menu successfully!");
+      toast.success(getLocalizedMessage("message156"));
     },
 
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to add item to menu");
+      toast.error(err?.response?.data?.message || getLocalizedMessage("notification012"));
     },
   });
 };
@@ -600,12 +601,12 @@ export const useUpdateMenuItemLink = () => {
       queryClient.invalidateQueries({
         queryKey: ["menu-items-by-menu", variables.menuId],
       });
-      toast.success("Linked menu item updated successfully!");
+      toast.success(getLocalizedMessage("message172"));
     },
 
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to update linked menu item"
+        err?.response?.data?.message || getLocalizedMessage("notification085")
       );
     },
   });
@@ -628,12 +629,12 @@ export const useDeleteMenuItemLink = () => {
       queryClient.invalidateQueries({
         queryKey: ["menu-items-by-menu", variables.menuId],
       });
-      toast.success("Item removed from menu successfully!");
+      toast.success(getLocalizedMessage("message157"));
     },
 
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || "Failed to remove item from menu"
+        err?.response?.data?.message || getLocalizedMessage("notification066")
       );
     },
   });
@@ -669,7 +670,7 @@ export const useAttachModifierGroupToCategory = () => {
     onError: (err: any) => {
       toast.error(
         err?.response?.data?.message ||
-          "Failed to attach modifier group to category"
+          getLocalizedMessage("notification022")
       );
     },
   });
@@ -724,12 +725,12 @@ export const useDuplicateModifier = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["modifiers"] });
-      toast.success("Modifier duplicated successfully");
+      toast.success(getLocalizedMessage("message223"));
     },
 
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || "Failed to duplicate modifier"
+        error?.response?.data?.message || getLocalizedMessage("notification059")
       );
     },
   });
@@ -746,12 +747,12 @@ export const useDuplicateMenuItem = () => {
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
       queryClient.invalidateQueries({ queryKey: ["menu-item"] });
 
-      toast.success("Menu item duplicated successfully");
+      toast.success(getLocalizedMessage("message203"));
     },
 
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || "Failed to duplicate menu item"
+        error?.response?.data?.message || getLocalizedMessage("notification058")
       );
     },
   });
@@ -766,12 +767,12 @@ export const useReorderMenuItems = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
-      toast.success("Menu items reordered successfully");
+      toast.success(getLocalizedMessage("message206"));
     },
 
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || "Failed to reorder menu items"
+        error?.response?.data?.message || getLocalizedMessage("notification068")
       );
     },
   });
@@ -786,10 +787,10 @@ export const useAttachModifierGroupToItemWithSort = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
       queryClient.invalidateQueries({ queryKey: ["modifier-groups"] });
-      toast.success("Modifier group attached successfully!");
+      toast.success(getLocalizedMessage("message226"));
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to attach modifier group to item");
+      toast.error(err?.response?.data?.message || getLocalizedMessage("notification023"));
     },
   });
 };

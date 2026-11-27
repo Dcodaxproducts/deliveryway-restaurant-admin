@@ -1,5 +1,8 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
+import { getLocalizedMessage } from "@/lib/localized-message";
 import {
   useEffect,
   useMemo,
@@ -25,8 +28,8 @@ import {
 import { useTranslations } from "next-intl";
 
 const schema = z.object({
-  name: z.string().trim().min(1, "Item name is required"),
-  categoryId: z.string().trim().min(1, "Category is required"),
+  name: z.string().trim().min(1, getLocalizedMessage("validation059")),
+  categoryId: z.string().trim().min(1, getLocalizedMessage("validation017")),
   pricingMode: z.enum(["SINGLE", "MULTIPLE"]).default("SINGLE"),
   taxTypeCode: z.string().trim().optional(),
 
@@ -42,7 +45,7 @@ const schema = z.object({
         return !Number.isNaN(numeric) && numeric >= 0;
       },
       {
-        message: "Base price must be a valid non-negative number",
+        message: getLocalizedMessage("validation012"),
       }
     ),
   deliveryPriceAdjustment: z
@@ -57,7 +60,7 @@ const schema = z.object({
         return !Number.isNaN(numeric) && numeric >= 0;
       },
       {
-        message: "Delivery price adjustment must be a valid non-negative number",
+        message: getLocalizedMessage("validation027"),
       }
     ),
   takeawayPriceAdjustment: z
@@ -72,7 +75,7 @@ const schema = z.object({
         return !Number.isNaN(numeric) && numeric >= 0;
       },
       {
-        message: "Pickup price adjustment must be a valid non-negative number",
+        message: getLocalizedMessage("validation086"),
       }
     ),
 });
@@ -424,7 +427,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
       </div>
 
       <div className="space-y-2">
-        <Label>Cuisines</Label>
+        <Label><LocalizedText messageKey="message084" /></Label>
 
         <AsyncSelect
           value={selectedCuisine}
@@ -434,7 +437,7 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
             setSelectedCuisine(value);
             setCuisineSelection([...selectedCuisines, value]);
           }}
-          placeholder="Add cuisine"
+          placeholder={getLocalizedMessage("message019")}
           fetchOptions={fetchCuisines}
           labelKey="name"
           valueKey="id"
@@ -462,14 +465,14 @@ const StepOne = forwardRef(({ form, setForm }: any, ref: any) => {
                   className="text-primary/70 hover:text-primary"
                   aria-label={`Remove ${cuisine.name || "cuisine"}`}
                 >
-                  ×
+                  <LocalizedText messageKey="message003" />
                 </button>
               </span>
             ))}
           </div>
         ) : (
           <p className="text-xs text-gray-500">
-            Optional. Select one or more cuisine tags for this item.
+            <LocalizedText messageKey="message256" />
           </p>
         )}
       </div>

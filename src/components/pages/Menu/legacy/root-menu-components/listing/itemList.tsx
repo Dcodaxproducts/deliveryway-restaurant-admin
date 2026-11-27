@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import MenuItemCard from "@/components/cards/MenuItemCard";
@@ -81,7 +83,7 @@ export default function ItemList({
         <div className="flex items-center gap-3">
         {isPOS && typeof shownCount === "number" ? (
           <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-600">
-            Showing {shownCount} of {totalCount ?? shownCount} items
+            <LocalizedText messageKey="message358" /> {shownCount} <LocalizedText messageKey="message252" /> {totalCount ?? shownCount} <LocalizedText messageKey="message159" />
           </span>
         ) : null}
 
@@ -163,7 +165,7 @@ export default function ItemList({
               {isLoadingMore ? (
                 <div className="flex items-center gap-3 rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm">
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  Loading more items...
+                  <LocalizedText messageKey="message183" />
                 </div>
               ) : hasMore ? (
                 <button
@@ -171,10 +173,10 @@ export default function ItemList({
                   onClick={onLoadMore}
                   className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition hover:border-primary/30 hover:text-primary hover:shadow-md"
                 >
-                  Load more items
+                  <LocalizedText messageKey="message175" />
                 </button>
               ) : items.length > 0 ? (
-                <span className="text-sm font-medium text-gray-400">All items loaded</span>
+                <span className="text-sm font-medium text-gray-400"><LocalizedText messageKey="message029" /></span>
               ) : null}
             </div>
           ) : null}

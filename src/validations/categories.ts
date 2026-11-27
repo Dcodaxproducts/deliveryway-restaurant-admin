@@ -1,3 +1,4 @@
+import { getLocalizedMessage } from "@/lib/localized-message";
 import { z } from "zod";
 
 /**
@@ -38,19 +39,19 @@ const optionalNumberFromInput = ({
       return val;
     },
     z
-      .number({ invalid_type_error: "Must be a number" })
-      .refine((v) => !Number.isNaN(v), "Must be a valid number")
+      .number({ invalid_type_error: getLocalizedMessage("validation069") })
+      .refine((v) => !Number.isNaN(v), getLocalizedMessage("validation070"))
       .superRefine((v, ctx) => {
         if (integer && !Number.isInteger(v)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Must be an integer",
+            message: getLocalizedMessage("validation071"),
           });
         }
         if (nonnegative && v < 0) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Must be greater than or equal to 0",
+            message: getLocalizedMessage("validation072"),
           });
         }
         if (min !== undefined && v < min) {
@@ -69,7 +70,7 @@ const optionalNumberFromInput = ({
       .optional()
   );
 
-const idSchema = z.string().trim().min(1, "Id is required");
+const idSchema = z.string().trim().min(1, getLocalizedMessage("validation044"));
 
 /**
  * ==============================
@@ -123,7 +124,7 @@ export type UpdateMenuCategoryValues = z.infer<
 export const bulkMenuCategoriesSchema = z.object({
   categories: z
     .array(menuCategorySchema)
-    .min(1, "At least one category is required"),
+    .min(1, getLocalizedMessage("validation005")),
 });
 
 export type BulkMenuCategoriesValues = z.infer<

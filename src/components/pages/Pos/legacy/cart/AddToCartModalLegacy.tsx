@@ -1,5 +1,7 @@
 "use client";
 
+
+import { LocalizedText } from "@/components/common/LocalizedText";
 import Image from "next/image";
 import { Loader2, Minus, Plus, ShoppingCart, User } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -1688,7 +1690,7 @@ export default function AddToCartModal({
                       {showQuantitySelector ? (
                         <div className="mt-3 flex items-center justify-between gap-3 rounded-full border border-primary/10 bg-white/90 px-2 py-1.5 shadow-sm">
                           <span className="pl-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
-                            Qty
+                            <LocalizedText messageKey="message301" />
                           </span>
 
                           <div className="flex items-center rounded-full bg-gray-100 p-0.5">
