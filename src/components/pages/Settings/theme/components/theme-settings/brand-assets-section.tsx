@@ -22,6 +22,7 @@ type AssetFieldConfig = {
   name: FieldPath<BrandingFormValues>;
   linkedNames?: FieldPath<BrandingFormValues>[];
   value: string;
+  restaurantFavicon?: boolean;
 };
 
 const defaultBranding = DEFAULT_RESTAURANT_BRANDING_PAYLOAD.restaurant.branding;
@@ -97,6 +98,7 @@ export default function BrandAssetsSection({ register, setValue, values, getErro
       name: "restaurant.branding.assets.faviconUrl",
       linkedNames: ["restaurant.branding.assets.logos.faviconUrl"],
       value: branding.assets.faviconUrl,
+      restaurantFavicon: true,
     },
     {
       id: "branding-placeholder-image",
@@ -113,7 +115,7 @@ export default function BrandAssetsSection({ register, setValue, values, getErro
         <ImageIcon className="text-gray-500" />
         <h3 className={BRANDING_SECTION_TITLE_CLASS}>{t("brandAssets")}</h3>
       </div>
-      {assetFields.map(({ id, title, recommendation, name, linkedNames, value }) => (
+      {assetFields.map(({ id, title, recommendation, name, linkedNames, value, restaurantFavicon }) => (
         <FileUploader
           key={name}
           id={id}
@@ -125,6 +127,8 @@ export default function BrandAssetsSection({ register, setValue, values, getErro
           register={register}
           setValue={setValue}
           error={getError(name)}
+          restaurantId={restaurant.id}
+          restaurantFavicon={restaurantFavicon}
         />
       ))}
     </div>

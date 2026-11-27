@@ -8,6 +8,17 @@ export const createPresignedUpload = async (payload: { fileName: string; content
   return data;
 };
 
+export const createRestaurantFaviconUpload = async (
+  restaurantId: string,
+  payload: { fileName: string; contentType: string; fileSize: number },
+) => {
+  const { data } = await api.post(
+    `/restaurants/${encodeURIComponent(restaurantId)}/branding/favicon/presigned-upload`,
+    payload,
+  );
+  return data;
+};
+
 export const getClientStorageItem = (key: string): string | null => {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(key);

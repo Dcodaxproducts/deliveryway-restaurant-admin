@@ -6,18 +6,29 @@ import { useTranslations } from "next-intl";
 
 import { getApiErrorMessage } from "@/lib/errors";
 import { prepareUploadFile } from "@/lib/prepare-upload-file";
-import { createPresignedUpload } from "@/services/storage";
+import {
+  createPresignedUpload,
+  createRestaurantFaviconUpload,
+} from "@/services/storage";
 
 interface UploadResult {
   key: string;
   fileUrl: string;
 }
 
+type UploadOptions = {
+  restaurantId?: string;
+  restaurantFavicon?: boolean;
+};
+
 export const useFileUpload = () => {
   const t = useTranslations("uploads");
   const [uploading, setUploading] = useState(false);
 
-  const uploadFile = async (event: ChangeEvent<HTMLInputElement>): Promise<UploadResult | null> => {
+  const uploadFile = async (
+    event: ChangeEvent<HTMLInputElement>,
+    options?: UploadOptions,
+  ): Promise<UploadResult | null> => {
     const file = event.target.files?.[0];
     if (!file) return null;
 
@@ -26,11 +37,18 @@ export const useFileUpload = () => {
 
       const prepared = await prepareUploadFile(file);
 
-      const presigned = await createPresignedUpload({
+      const payload = {
         fileName: prepared.file.name,
         contentType: prepared.file.type,
         fileSize: prepared.file.size,
-      });
+      };
+      const restaurantId = options?.restaurantId;
+      if (options?.restaurantFavicon && !restaurantId) {
+        throw new Error(t("invalidResponse"));
+      }
+      const presigned = options?.restaurantFavicon && restaurantId
+        ? await createRestaurantFaviconUpload(restaurantId, payload)
+        : await createPresignedUpload(payload);
 
       const uploadData = presigned?.data;
 

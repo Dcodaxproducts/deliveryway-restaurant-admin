@@ -29,6 +29,8 @@ type FileUploaderProps = {
   register: UseFormRegister<BrandingFormValues>;
   setValue: UseFormSetValue<BrandingFormValues>;
   error?: string;
+  restaurantId?: string;
+  restaurantFavicon?: boolean;
 };
 
 const helperClassName = "max-w-[368px] text-sm text-gray";
@@ -45,6 +47,8 @@ export default function FileUploader({
   register,
   setValue,
   error,
+  restaurantId,
+  restaurantFavicon = false,
 }: FileUploaderProps) {
   const t = useTranslations("settings.assets");
   const { uploadFile, uploading } = useFileUpload();
@@ -101,7 +105,10 @@ export default function FileUploader({
       setLocalPreviewUrl(objectUrl);
     }
 
-    const result = await uploadFile(event);
+    const result = await uploadFile(event, {
+      restaurantId,
+      restaurantFavicon,
+    });
     event.target.value = "";
 
     finalizeAssetUpload(result?.fileUrl, updateAssetFields, revokeLocalPreview);

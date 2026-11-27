@@ -35,5 +35,7 @@ describe("brand asset localization", () => {
     expect(uploader).not.toContain('Uploading...');
     expect(uploader).toContain("finalizeAssetUpload(");
     expect(uploader).toContain("clearAssetUpload(");
+    expect(section).toContain("restaurantFavicon: true");
+    expect(section).toContain("restaurantId={restaurant.id}");
   });
 });
