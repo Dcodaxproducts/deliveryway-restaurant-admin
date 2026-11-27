@@ -33,7 +33,7 @@ describe("brand asset localization", () => {
     expect(section).not.toContain('title: "Placeholder Image"');
     expect(uploader).toContain('useTranslations("settings.assets")');
     expect(uploader).not.toContain('Uploading...');
-    expect(uploader).toContain("if (!result?.fileUrl)");
-    expect(uploader).toContain("revokeLocalPreview();");
+    expect(uploader).toContain("finalizeAssetUpload(");
+    expect(uploader).toContain("clearAssetUpload(");
   });
 });

@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import type { FieldPath, UseFormRegister, UseFormSetValue } from "react-hook-form";
+import type {
+  FieldPath,
+  UseFormRegister,
+  UseFormSetValue,
+} from "react-hook-form";
 import { Image as ImageIcon, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useFileUpload } from "@/hooks/useFileUpload";
 import type { BrandingFormValues } from "@/validations/branding";
 
+import { clearAssetUpload, finalizeAssetUpload } from "./file-uploader-state";
 import {
   BRANDING_ERROR_COMPACT_CLASS,
   BRANDING_LABEL_COMPACT_CLASS,
@@ -99,18 +104,11 @@ export default function FileUploader({
     const result = await uploadFile(event);
     event.target.value = "";
 
-    if (!result?.fileUrl) {
-      revokeLocalPreview();
-      return;
-    }
-
-    updateAssetFields(result.fileUrl);
-    revokeLocalPreview();
+    finalizeAssetUpload(result?.fileUrl, updateAssetFields, revokeLocalPreview);
   };
 
   const handleClear = () => {
-    revokeLocalPreview();
-    updateAssetFields("");
+    clearAssetUpload(updateAssetFields, revokeLocalPreview);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -174,7 +172,9 @@ export default function FileUploader({
               {t("clear")}
             </button>
           </div>
-          {error ? <p className={BRANDING_ERROR_COMPACT_CLASS}>{error}</p> : null}
+          {error ? (
+            <p className={BRANDING_ERROR_COMPACT_CLASS}>{error}</p>
+          ) : null}
         </div>
       </div>
     </div>
